@@ -3,6 +3,11 @@
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
 
+The main `stdlib_xlsx.py read input.et` / `read input.ett` entrypoint also calls this
+reader and preserves its `biff8_readonly_v1` schema and diagnostics. Both routes validate
+contents and retain all subset limits. The main entrypoint accepts `--compatibility` for
+ET/ETT reads only; it never enables ET/ETT writing or general OOXML analysis.
+
 Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检), requiring exit 0 and
 status ready. Confirm the authorized task input is readable. This reader writes no files;
 no write probe is required for inspection. Resolve `<skill_dir>` from the actual SKILL.md,

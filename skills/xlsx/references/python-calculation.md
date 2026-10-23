@@ -3,6 +3,12 @@
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
 
+For ET/ETT input only, `read input.et` or `read input.ett` dispatches to the
+[BIFF8 subset reader](biff8-readonly.md), returning its separate `biff8_readonly_v1` schema.
+The optional `--compatibility legacy_excel_clsid` applies only to those reads.
+Exit 0 means subset extraction, not verified native WPS compatibility or formula calculation.
+All write/calculation commands remain limited to their existing XLSX/XLSM contracts.
+
 All commands run from the task directory. Replace `<skill_dir>` with the confirmed
 skill directory. Python 3.9+; no pip packages, external applications or network access.
 

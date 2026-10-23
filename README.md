@@ -6,7 +6,7 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261023.1811.5119 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261023.1835.5058 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析；ET/ETT 的 BIFF8 子集读取 |
 | [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261023.1811.5119 | DOCX 生成、DOCX/DOTX 读取和受控编辑、模板填充、表格和图片修改、基础批注，以及受支持 WPS 文件的文本提取 |
 
 ## 目录结构
@@ -59,6 +59,7 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
 
 ```console
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.xlsx
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.et
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create ./report.json ./report.xlsx
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
 ```
@@ -94,7 +95,7 @@ python3 -I -S -B "<skill_dir>/scripts/read_docx.py" ./output.docx
 
 ## 能力边界
 
-- XLSX 现有文件编辑仅支持单元格值、公式和现有样式索引，不支持行、列或工作表的结构增删移动；宏不执行，图表和透视表不刷新。单独的 BIFF8 读取器只支持其文档列出的只读子集。
+- XLSX 现有文件编辑仅支持单元格值、公式和现有样式索引，不支持行、列或工作表的结构增删移动；宏不执行，图表和透视表不刷新。主命令 `read` 已接入 ET/ETT 的 BIFF8 只读子集，按实际内容校验；ETT 仅有合成测试，尚无真实样本验收，不能视为通用 WPS 格式支持。
 - DOCX 支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 支持仅限明确列出的兼容格式及文本读取。
 - 更详细的限制、错误处理、验收和中间文件清理规则以各 skill 的 `SKILL.md` 为准。
 
@@ -117,6 +118,8 @@ print(version)
 这是日历时间加 12 小时的版本编码，不是时区转换。检查器验证格式与日历合法性，不验证历史版本与当前时刻相等。规则及校验逻辑由本项目维护，已不同于最初迁移的来源版本。
 
 ## 开发验证
+
+本项目主流程保持纯 Python 标准库。每次更新内容时，必须人工核对 description、正文、引用说明、README、依赖和实际 CLI 行为是否一致，按需同步优化描述；结构检查不能替代能力与证据核对。
 
 仓库维护约定见 [AGENTS.md](AGENTS.md)。新建、修改、导入、迁移或发布 skill 前，先读取 [Skill 开发规范](skills/skill-development-standards/SKILL.md)。规范附带标准库检查器和测试；`.agents/skills/skill-development-standards` 通过相对符号链接指向同一份规范。
 

@@ -100,7 +100,11 @@ allocation chains/directory structure and list streams. Container readability do
 establish BIFF or ET/ETT semantics. A header alone is insufficient; invalid or outside-subset
 structures are reported. Known encrypted payloads are unsupported. Native ET/ETT cell
 parsing is not implemented, and support-level flags always distinguish those claims.
-For a trusted file, open a copy locally in WPS Spreadsheets, Save As a new XLSX, preserve
+The main `stdlib_xlsx.py read input.et` / `read input.ett` route separately attempts
+the documented [BIFF8 record subset](biff8-readonly.md); inspector flags remain container-only.
+This does not verify native WPS compatibility.
+Outside this standard-library runtime, a user can independently open a trusted copy
+locally in WPS Spreadsheets, Save As a new XLSX, preserve
 the original template, then verify sheets, values, formulas and formatting. Renaming
 is not conversion. No application is launched and no conversion happens automatically.
 The inspector exits 0 for a completed diagnosis, including unsupported/invalid contents;

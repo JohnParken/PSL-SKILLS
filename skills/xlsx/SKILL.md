@@ -1,7 +1,7 @@
 ---
 name: xlsx
-version: "20261023.1811.5119"
-description: "Use to inspect Excel XLSX/XLSM files, create XLSX reports, make limited cell edits, and exchange CSV/TSV data; no structural edits."
+version: "20261023.1835.5058"
+description: 用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV 数据，支持纯 Python 标准库分析。ET/ETT 仅按文件内容尝试读取已实现的 BIFF8 记录子集，不代表通用 WPS 格式支持；不支持结构编辑。
 license: MIT
 ---
 
@@ -107,7 +107,7 @@ script path, not the path together with its arguments.
 | Profile a region, filter or group data | `<skill_dir>/scripts/xlsx_analysis.py`, subcommand `profile` / `summarize` | [data-analysis.md](references/data-analysis.md) |
 | Diagnose file contents or ET/ETT candidates | `<skill_dir>/scripts/xlsx_identify.py` | [data-analysis.md](references/data-analysis.md) |
 | Import CSV/TSV or export a worksheet/range | `<skill_dir>/scripts/xlsx_tabular.py`, subcommand `import` / `export` | [tabular-interchange.md](references/tabular-interchange.md) |
-| Inspect XLSX/XLSM or CSV/TSV | `read` | [read-analyze.md](references/read-analyze.md) |
+| Inspect XLSX/XLSM or CSV/TSV; ET/ETT BIFF8 subset read | `read` | [read-analyze.md](references/read-analyze.md) |
 | Style a newly created table for readability | `<skill_dir>/scripts/stdlib_xlsx.py`: `create --appearance`; `<skill_dir>/scripts/xlsx_tabular.py`: `import --appearance` | [readable-appearance.md](references/readable-appearance.md) |
 | Create a report | JSON specification → `create` | [create.md](references/create.md) |
 | Fill or correct existing cells | JSON patch → `edit` | [edit.md](references/edit.md) |
@@ -121,6 +121,28 @@ Use [format.md](references/format.md) for optional financial conventions and sup
 In maintained tasks, use existing style indices for edits and the template's supported
 style indices or [new-workbook appearance presets](references/readable-appearance.md)
 for creation; the reference does not authorize direct XML style edits.
+
+## ET/ETT subset reading
+
+The main `read` command now routes `.et`/`.ett` (case-insensitive) to the bundled
+CFB/BIFF8 reader. The extension selects a candidate reader; actual CFB structure,
+Workbook/Book stream, BOF and every supported record must validate before cells are returned.
+Use the default strict mode first. For the exact documented legacy header variant,
+explicitly opt in after reviewing [biff8-readonly.md](references/biff8-readonly.md):
+
+```console
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.et
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.ett --compatibility legacy_excel_clsid
+```
+
+This returns the separate `biff8_readonly_v1` schema with typed cells and diagnostics,
+not the OOXML inspection schema. Exit 0 means the documented record subset was extracted;
+check issues and unverified formula caches. `native_et_ett_parsed` and
+`wps_compatibility_verified` remain false. Unknown/private records and invalid containers
+fail without partial cell output. ETT dispatch has synthetic coverage only; no real ETT
+sample has been accepted. This route adds no private-record decoding, formula calculation,
+ET/ETT editing, or integration with the OOXML analysis APIs. Runtime remains standard-library
+only; no converter, third-party parser or application is invoked.
 
 ## Calculation policy
 

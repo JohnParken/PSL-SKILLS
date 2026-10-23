@@ -3,6 +3,11 @@
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
 
+The main `stdlib_xlsx.py read input.et` / `read input.ett` commands now dispatch to
+the separate BIFF8 subset reader, with optional explicit `--compatibility legacy_excel_clsid`.
+This does not change the CFB-only inspector or add WPS private-record semantics. Real ETT
+acceptance remains unverified; new CLI tests use synthetic CFB/BIFF8 data only.
+
 Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) and require exit 0,
 status ready. Confirm the input is authorized and readable in the task directory. This
 reader writes no files; no write probe is needed for inspection. Resolve `<skill_dir>`
@@ -115,6 +120,8 @@ producer/platform metadata. Establish stream signatures and private record rules
 extend the documented BIFF8 subset only after verifying ET private records and comparing
 real sheet/type/date/merge data. The separate BIFF8 tests are still synthetic. Unknown records must not be silently skipped to claim full data
 recovery. Formula caches would remain unverified with raw representation, never computed.
-Until then use a trusted local WPS copy to Save As a new XLSX and verify it; renaming is
+For files outside the subset, the skill stops with a diagnostic. Independently of this
+standard-library runtime, a user may use a trusted local WPS copy to Save As a new XLSX
+and verify it; renaming is
 not conversion. The one public ET text/merge comparison is limited evidence; no ETT or general native
 ET/ETT acceptance has been performed. Dates and formula caches still need real samples.

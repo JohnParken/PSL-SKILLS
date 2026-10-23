@@ -3,6 +3,11 @@
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
 
+ET/ETT files can also be passed to the main `read` command. They return the separate
+BIFF8 subset schema, not the OOXML schema described above. See
+[the entrypoint](../SKILL.md#etett-subset-reading) and
+[biff8-readonly.md](biff8-readonly.md) for explicit compatibility, diagnostics and limits.
+
 Use `python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.xlsx` as described in
 [python-calculation.md](python-calculation.md). The JSON lists sheets and coordinate-keyed
 cells containing type, raw value, style index, formula, formula attributes and cache status.

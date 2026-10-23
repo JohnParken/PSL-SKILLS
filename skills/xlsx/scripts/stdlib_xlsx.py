@@ -10,6 +10,7 @@ import io
 import json
 import posixpath
 import re
+import struct
 import sys
 import zipfile
 from decimal import Decimal, InvalidOperation
@@ -586,6 +587,8 @@ def main():
     read = commands.add_parser("read")
     read.add_argument("input")
     read.add_argument("--encoding", default="utf-8-sig", help="CSV/TSV encoding")
+    read.add_argument("--compatibility", choices=("strict", "legacy_excel_clsid"), default="strict",
+                      help="BIFF8 ET/ETT read only; explicit known legacy header compatibility")
     for name in ("create", "edit", "calculate"):
         sub = commands.add_parser(name)
         if name != "create":
@@ -606,7 +609,17 @@ def main():
             result = {"status": "ready", "python": sys.version.split()[0], "dependencies": "standard_library_only"}
         elif args.command == "read":
             suffix = Path(args.input).suffix.lower()
-            if suffix in (".csv", ".tsv"):
+            if suffix not in (".et", ".ett") and args.compatibility != "strict":
+                raise ValueError("--compatibility applies only to ET/ETT subset reads")
+            if suffix in (".et", ".ett"):
+                from xlsx_biff8 import read_file
+                result = read_file(args.input, compatibility=args.compatibility)
+                encoded = json.dumps(result, ensure_ascii=False, default=str, allow_nan=False)
+                if len(encoded.encode("utf-8")) > 16 * 1024 * 1024:
+                    raise ValueError("Decoded JSON exceeds 16 MiB budget")
+                print(encoded)
+                return 0
+            elif suffix in (".csv", ".tsv"):
                 result = read_csv(args.input, args.encoding, "\t" if suffix == ".tsv" else ",")
             else:
                 result = Workbook.load(args.input).inspect()
@@ -624,7 +637,7 @@ def main():
                 result["output"] = args.output
         print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
         return 1 if result.get("status") == "failed" else 2 if result.get("status") == "incomplete" else 0
-    except (ValueError, csv.Error, LookupError, OSError, InvalidOperation, zipfile.BadZipFile, ET.ParseError) as exc:
+    except (ValueError, csv.Error, LookupError, OSError, struct.error, OverflowError, InvalidOperation, zipfile.BadZipFile, ET.ParseError) as exc:
         print(json.dumps({"status": "failed", "output_written": False, "message": str(exc)}, ensure_ascii=False))
         return 1
 
