@@ -6,18 +6,21 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [minimax-xlsx](skills/minimax-xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 2.1.1 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 2.1.1 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析 |
 | [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 1.2.0 | DOCX 生成、DOCX/DOTX 读取和受控编辑、模板填充、表格和图片修改、基础批注，以及受支持 WPS 文件的文本提取 |
 
 ## 目录结构
 
 ```text
 PSL-SKILLS/
+├── AGENTS.md
+├── .agents/skills/skill-development-standards  # 指向规范目录的相对链接
 ├── README.md
 ├── licenses/
 │   └── minimax-skills-MIT.txt
 └── skills/
-    ├── minimax-xlsx/
+    ├── skill-development-standards/  # 开发规范、检查器及其测试
+    ├── xlsx/
     │   ├── SKILL.md
     │   ├── requirements.txt
     │   ├── scripts/          # 标准库入口、分析模块、兼容工具和测试
@@ -33,7 +36,7 @@ PSL-SKILLS/
 
 ## 环境要求
 
-- **minimax-xlsx**：Python 3.9 及以上；维护中的主流程仅依赖标准库。
+- **xlsx**：Python 3.9 及以上；维护中的主流程仅依赖标准库。
 - **docx**：Python 3.10 及以上，标准库包含 zlib，Expat 至少为 2.6.0。
 - 两者的主流程均无需安装第三方 Python 包或办公软件。使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存。
 - XLSX 目录中保留的旧工具可能依赖 pandas、openpyxl 或 LibreOffice，不属于推荐流程；不要据此为主流程安装依赖。
@@ -52,7 +55,7 @@ PSL-SKILLS/
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
 ```
 
-按 [计算与文件契约](skills/minimax-xlsx/references/python-calculation.md) 准备输入，确认输入可读、输出目录可写后，在任务目录执行：
+按 [计算与文件契约](skills/xlsx/references/python-calculation.md) 准备输入，确认输入可读、输出目录可写后，在任务目录执行：
 
 ```console
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.xlsx
@@ -60,7 +63,7 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create ./report.json ./rep
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
 ```
 
-输出路径必须尚不存在。创建示例见 [calculation_example.json](skills/minimax-xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
+输出路径必须尚不存在。创建示例见 [calculation_example.json](skills/xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
 
 ### DOCX
 
@@ -97,21 +100,30 @@ python3 -I -S -B "<skill_dir>/scripts/read_docx.py" ./output.docx
 
 ## 开发验证
 
+仓库维护约定见 [AGENTS.md](AGENTS.md)。新建、修改、导入、迁移或发布 skill 前，先读取 [Skill 开发规范](skills/skill-development-standards/SKILL.md)。规范附带标准库检查器和测试；`.agents/skills/skill-development-standards` 通过相对符号链接指向同一份规范。
+
+规范及检查器从本地 `skills` 项目迁移；检查器保持原样，本项目为规范补充了“执行环境约束与首步自检”章节。使用 Python 3.10 及以上，从仓库根目录检查本次维护的目标，例如：
+
+```console
+python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict
+python3 -I -S -B -m unittest discover -s skills/skill-development-standards/scripts -p 'test_check_skill.py' -v
+```
+
 在仓库根目录运行 XLSX 自带测试：
 
 ```console
-python3 -I -S -B -m unittest discover -s skills/minimax-xlsx/scripts -p 'test_*.py' -v
+python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
 ```
 
 DOCX 本次复制的目录未附带测试套件。维护时至少执行环境自检，以及在独立任务目录中生成、`--verify` 检查和重新读取文档；涉及其他编辑入口时补充对应行为验证。环境自检、单元测试和视觉验收各自覆盖不同内容。
 
 ## 迁移来源与许可
 
-本次于 2026-10-23 从本地相邻项目复制，保留原目录名称及 skill 内部文件内容，排除系统缓存文件。复制的是来源项目**当时的工作区内容，包含未提交修改**，不是对应提交的纯净快照。来源仓库当时的 HEAD 仅供追溯：
+本次于 2026-10-23 从本地相邻项目复制，首次迁移保留原目录名称及 skill 内部文件内容，排除系统缓存文件；随后将本仓库的 `minimax-xlsx` 更名为 `xlsx`，同步更新名称和路径引用，脚本及资源内容不变。复制的是来源项目**当时的工作区内容，包含未提交修改**，不是对应提交的纯净快照。来源仓库当时的 HEAD 仅供追溯：
 
 | 本地来源项目 | HEAD |
 | --- | --- |
 | `minimax-skills` | `c76df1161a0ae889604da6db9d1ecb90bf12f687` |
 | `skills` | `0f0895690dfde8c203e6c2f5dbbac5a2615faf5e` |
 
-`minimax-xlsx` 声明采用 MIT，来源项目的许可文本保存在 [licenses/minimax-skills-MIT.txt](licenses/minimax-skills-MIT.txt)。`skills` 来源项目的 README 将 DOCX 等文档 skills 描述为 source-available；本次本地 DOCX 目录没有独立许可证文件，未为其补写或推定新的许可证。本仓库不以单一许可证覆盖两个来源。
+`xlsx` 声明采用 MIT，来源项目的许可文本保存在 [licenses/minimax-skills-MIT.txt](licenses/minimax-skills-MIT.txt)。`skills` 来源项目的 README 将 DOCX 等文档 skills 描述为 source-available；本次本地 DOCX 目录没有独立许可证文件，未为其补写或推定新的许可证。本仓库不以单一许可证覆盖两个来源。

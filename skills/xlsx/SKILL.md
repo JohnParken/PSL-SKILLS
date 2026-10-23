@@ -1,11 +1,11 @@
 ---
-name: minimax-xlsx
+name: xlsx
 version: "2.1.1"
 description: "Use to inspect Excel XLSX/XLSM files, create XLSX reports, make limited cell edits, and exchange CSV/TSV data; no structural edits."
 license: MIT
 ---
 
-# MiniMax XLSX — Python Standard Library
+# XLSX — Python Standard Library
 
 Category: productivity. Format reference: ECMA-376 Office Open XML File Formats.
 
@@ -195,10 +195,10 @@ and runtime contract. Do not invoke it or treat the main self-check as validatin
 ## Development verification
 
 Maintenance only: run from the confirmed repository root, not the business task
-directory. `skills/minimax-xlsx/scripts` below is repository-relative and is not an
+directory. `skills/xlsx/scripts` below is repository-relative and is not an
 installation path to copy into task commands. Tests use isolated temporary directories;
 this does not authorize business workflows to choose a different temporary root.
 
 ```console
-python3 -I -S -B -m unittest discover -s skills/minimax-xlsx/scripts -p 'test_*.py' -v
+python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
 ```
