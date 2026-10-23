@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "2.1.1"
+version: "20261023.1811.5119"
 description: "Use to inspect Excel XLSX/XLSM files, create XLSX reports, make limited cell edits, and exchange CSV/TSV data; no structural edits."
 license: MIT
 ---

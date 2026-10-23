@@ -9,6 +9,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -151,6 +152,17 @@ def _frontmatter(text: str, rel: str, issues: list[Issue]) -> tuple[dict[str, ob
             issues.append(Issue("error", "version-length", rel, "Version must not exceed 100 characters."))
         if any(not 32 <= ord(char) <= 126 for char in version):
             issues.append(Issue("error", "version-characters", rel, "Version must contain only printable ASCII characters."))
+        if not re.fullmatch(r"[0-9]{8}\.[0-9]{4}\.[0-9]{4}", version):
+            issues.append(Issue("error", "version-format", rel, "Version must use YYYYMMDD.HHmm.ssff (seconds and hundredths)."))
+        else:
+            try:
+                datetime(
+                    int(version[:4]), int(version[4:6]), int(version[6:8]),
+                    int(version[9:11]), int(version[11:13]), int(version[14:16]),
+                    int(version[16:18]) * 10000,
+                )
+            except ValueError:
+                issues.append(Issue("error", "version-value", rel, "Version contains an invalid calendar date or time."))
     desc = fields.get("description")
     if isinstance(desc, str) and not 100 <= len(desc) <= 150:
         issues.append(Issue("warning", "description-length", rel, f"Description is {len(desc)} characters; recommended length is 100–150."))

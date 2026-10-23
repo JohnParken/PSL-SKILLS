@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "1.2.0"
+version: "20261023.1811.5119"
 description: 用于新建 Word 公文、报告和信函，读取或受控修改 DOCX/DOTX，并提取兼容 OOXML 或受支持的未加密 MS-DOC 类型 WPS 文本。支持模板填充、文字替换、简单排版和基础批注；WPS 仅限文本读取，不支持任意版本、编辑、排版还原、页面预览或 PDF 导出。
 ---
 

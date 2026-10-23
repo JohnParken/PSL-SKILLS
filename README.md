@@ -6,8 +6,8 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 2.1.1 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析 |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 1.2.0 | DOCX 生成、DOCX/DOTX 读取和受控编辑、模板填充、表格和图片修改、基础批注，以及受支持 WPS 文件的文本提取 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261023.1811.5119 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析 |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261023.1811.5119 | DOCX 生成、DOCX/DOTX 读取和受控编辑、模板填充、表格和图片修改、基础批注，以及受支持 WPS 文件的文本提取 |
 
 ## 目录结构
 
@@ -98,11 +98,29 @@ python3 -I -S -B "<skill_dir>/scripts/read_docx.py" ./output.docx
 - DOCX 支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 支持仅限明确列出的兼容格式及文本读取。
 - 更详细的限制、错误处理、验收和中间文件清理规则以各 skill 的 `SKILL.md` 为准。
 
+## 版本规则
+
+所有 Skill 的 `version` 使用带引号的 `YYYYMMDD.HHmm.ssff` 时间戳，末四位表示秒和百分之一秒。以当前纽约时间（`America/New_York`）的日历时间加 12 小时，跨日时日期同步进位。例如原时间 `2026-10-22 18:08:11.20` 生成 `20261023.0608.1120`。每次维护目标 Skill 时更新其版本；同批修改可共用一个采样时间。
+
+使用 Python 3.10 及以上生成版本（需要系统可用的 IANA 时区数据；缺失时报告环境问题，不回退到机器默认时区）：
+
+```python
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+now = datetime.now(ZoneInfo("America/New_York"))
+shifted = now.replace(tzinfo=None) + timedelta(hours=12)
+version = shifted.strftime("%Y%m%d.%H%M.%S%f")[:-4]
+print(version)
+```
+
+这是日历时间加 12 小时的版本编码，不是时区转换。检查器验证格式与日历合法性，不验证历史版本与当前时刻相等。规则及校验逻辑由本项目维护，已不同于最初迁移的来源版本。
+
 ## 开发验证
 
 仓库维护约定见 [AGENTS.md](AGENTS.md)。新建、修改、导入、迁移或发布 skill 前，先读取 [Skill 开发规范](skills/skill-development-standards/SKILL.md)。规范附带标准库检查器和测试；`.agents/skills/skill-development-standards` 通过相对符号链接指向同一份规范。
 
-规范及检查器从本地 `skills` 项目迁移；检查器保持原样，本项目为规范补充了“执行环境约束与首步自检”章节。使用 Python 3.10 及以上，从仓库根目录检查本次维护的目标，例如：
+规范及检查器从本地 `skills` 项目迁移；本项目已增加时间戳版本校验，并为规范补充了“执行环境约束与首步自检”章节。使用 Python 3.10 及以上，从仓库根目录检查本次维护的目标，例如：
 
 ```console
 python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict
