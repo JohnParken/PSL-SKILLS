@@ -1,0 +1,117 @@
+# PSL-SKILLS
+
+面向电子表格和 Word 文档处理的 Agent Skills 集合。每个 skill 包含独立的 `SKILL.md`、脚本、参考文档和资源，可按完整目录加载或分发。
+
+## 收录内容
+
+| Skill | 来源 | 版本 | 主要能力 |
+| --- | --- | --- | --- |
+| [minimax-xlsx](skills/minimax-xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 2.1.1 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析 |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 1.2.0 | DOCX 生成、DOCX/DOTX 读取和受控编辑、模板填充、表格和图片修改、基础批注，以及受支持 WPS 文件的文本提取 |
+
+## 目录结构
+
+```text
+PSL-SKILLS/
+├── README.md
+├── licenses/
+│   └── minimax-skills-MIT.txt
+└── skills/
+    ├── minimax-xlsx/
+    │   ├── SKILL.md
+    │   ├── requirements.txt
+    │   ├── scripts/          # 标准库入口、分析模块、兼容工具和测试
+    │   ├── references/       # 输入格式、能力边界和使用说明
+    │   └── assets/           # XLSX 模板和示例数据
+    └── docx/
+        ├── SKILL.md
+        ├── requirements.txt
+        ├── scripts/          # 生成、读取、编辑和检查工具
+        ├── references/       # 文档结构、生成和编辑说明
+        └── assets/           # 批注 XML 资源
+```
+
+## 环境要求
+
+- **minimax-xlsx**：Python 3.9 及以上；维护中的主流程仅依赖标准库。
+- **docx**：Python 3.10 及以上，标准库包含 zlib，Expat 至少为 2.6.0。
+- 两者的主流程均无需安装第三方 Python 包或办公软件。使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存。
+- XLSX 目录中保留的旧工具可能依赖 pandas、openpyxl 或 LibreOffice，不属于推荐流程；不要据此为主流程安装依赖。
+
+## 如何使用
+
+将目标 skill 的**完整目录**交给支持 Agent Skills 的宿主加载；具体安装位置由宿主决定。也可以让代理先读取对应 `SKILL.md`，再根据任务读取其引用文档并调用脚本。只复制 `SKILL.md` 或单个脚本会丢失必要模块和模板。
+
+业务输入、输出和临时文件应放在宿主确认的任务工作目录中，不写入 skill 安装目录。脚本和资源以实际读取的 `SKILL.md` 所在目录定位；任务数据使用任务目录内的相对路径。下文的 `<skill_dir>` 必须替换为实际 skill 目录，`python3` 必须指向满足版本要求的解释器。
+
+### XLSX
+
+首次操作前运行自检，要求退出码为 0 且 JSON 中 `status` 为 `ready`：
+
+```console
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
+```
+
+按 [计算与文件契约](skills/minimax-xlsx/references/python-calculation.md) 准备输入，确认输入可读、输出目录可写后，在任务目录执行：
+
+```console
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.xlsx
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create ./report.json ./report.xlsx
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
+```
+
+输出路径必须尚不存在。创建示例见 [calculation_example.json](skills/minimax-xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
+
+### DOCX
+
+首次操作前在任务目录运行自检，要求退出码为 0，且输出包含 `check-ok` 和 `output_dir=. writable=True`：
+
+```console
+python3 -I -S -B "<skill_dir>/scripts/create_docx.py" --check
+```
+
+按照 [生成说明](skills/docx/references/generation.md) 准备 `document.json`，例如：
+
+```json
+{
+  "theme": "business",
+  "blocks": [
+    {"type": "title", "text": "项目报告"},
+    {"type": "paragraph", "text": "本期工作进展。"}
+  ]
+}
+```
+
+```console
+python3 -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json ./output.docx --verify --require-no-placeholders
+python3 -I -S -B "<skill_dir>/scripts/read_docx.py" ./output.docx
+```
+
+`--verify` 核对生成子集的内容与 XML 排版意图，不等同于页面视觉验收；字体显示、实际分页和页码仍需在文档阅读器中检查。
+
+## 能力边界
+
+- XLSX 现有文件编辑仅支持单元格值、公式和现有样式索引，不支持行、列或工作表的结构增删移动；宏不执行，图表和透视表不刷新。单独的 BIFF8 读取器只支持其文档列出的只读子集。
+- DOCX 支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 支持仅限明确列出的兼容格式及文本读取。
+- 更详细的限制、错误处理、验收和中间文件清理规则以各 skill 的 `SKILL.md` 为准。
+
+## 开发验证
+
+在仓库根目录运行 XLSX 自带测试：
+
+```console
+python3 -I -S -B -m unittest discover -s skills/minimax-xlsx/scripts -p 'test_*.py' -v
+```
+
+DOCX 本次复制的目录未附带测试套件。维护时至少执行环境自检，以及在独立任务目录中生成、`--verify` 检查和重新读取文档；涉及其他编辑入口时补充对应行为验证。环境自检、单元测试和视觉验收各自覆盖不同内容。
+
+## 迁移来源与许可
+
+本次于 2026-10-23 从本地相邻项目复制，保留原目录名称及 skill 内部文件内容，排除系统缓存文件。复制的是来源项目**当时的工作区内容，包含未提交修改**，不是对应提交的纯净快照。来源仓库当时的 HEAD 仅供追溯：
+
+| 本地来源项目 | HEAD |
+| --- | --- |
+| `minimax-skills` | `c76df1161a0ae889604da6db9d1ecb90bf12f687` |
+| `skills` | `0f0895690dfde8c203e6c2f5dbbac5a2615faf5e` |
+
+`minimax-xlsx` 声明采用 MIT，来源项目的许可文本保存在 [licenses/minimax-skills-MIT.txt](licenses/minimax-skills-MIT.txt)。`skills` 来源项目的 README 将 DOCX 等文档 skills 描述为 source-available；本次本地 DOCX 目录没有独立许可证文件，未为其补写或推定新的许可证。本仓库不以单一许可证覆盖两个来源。
