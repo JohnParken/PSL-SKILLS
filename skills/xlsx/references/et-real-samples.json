@@ -1,0 +1,98 @@
+{
+  "checked_on": "2026-10-23",
+  "compatibility": "legacy_excel_clsid",
+  "scope": "Original public downloads; no renamed/generated file counted as genuine ET/ETT. Three files extract BIFF8 subsets, one chart-containing template remains refused. Producer versions unknown. Not full native WPS compatibility acceptance.",
+  "independent_checks": "Standard-library record framing independently counted cell records and compared all 21 raw formula cache byte sequences; manual spot checks of template titles. No second application/parser, formula recalculation, private-stream semantics or visual verification.",
+  "samples": [
+    {
+      "filename": "newfile.et",
+      "source_page": "https://github.com/qiangitchen/tlv8-python-flask/tree/94a814569289d5427667c61932e7d010ea23bfd0/app/static/system/doc/docOcx/wps",
+      "download_url": "https://raw.githubusercontent.com/qiangitchen/tlv8-python-flask/94a814569289d5427667c61932e7d010ea23bfd0/app/static/system/doc/docOcx/wps/newfile.et",
+      "sha256": "5f34a68ab8061be391836530be7a9b13436b404acd90aa3d8320aa7cca4e3ac6",
+      "bytes": 7168,
+      "producer_version": "Unknown; original WPS integration resource, original extension retained",
+      "redistribution": "Not established; original used locally only, not bundled",
+      "baseline_error": "Strict mode refuses 0xe1; compatibility mode already reads the blank workbook",
+      "expected_exit": 0,
+      "sheets": [
+        "Sheet1",
+        "Sheet2",
+        "Sheet3"
+      ],
+      "cell_count": 0,
+      "merge_count": 0,
+      "formula_count": 0,
+      "text_checks": {}
+    },
+    {
+      "filename": "Balance_Sheet.ett",
+      "source_page": "https://github.com/winunix/wps-office-templates/tree/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7",
+      "download_url": "https://raw.githubusercontent.com/winunix/wps-office-templates/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7/deb_package/opt/kingsoft/wps-office/office6/mui/pt_BR/templates/et/Business/Balance%20Sheet.ett",
+      "sha256": "1124b720ad792c52cf5a5e39cd99bbebd512b200523070dd3fd035ea37af427b",
+      "bytes": 55808,
+      "producer_version": "Unknown; published WPS template package resource, original extension retained",
+      "redistribution": "Not established; originals used locally only, not bundled",
+      "baseline_error": "Unsupported global record 0x1ae at 4016",
+      "expected_exit": 0,
+      "sheets": [
+        "Balance Sheet"
+      ],
+      "cell_count": 717,
+      "merge_count": 2,
+      "formula_count": 21,
+      "text_checks": {
+        "A1": "Balance Sheet (Projected)"
+      }
+    },
+    {
+      "filename": "Schedule.ett",
+      "source_page": "https://github.com/winunix/wps-office-templates/tree/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7",
+      "download_url": "https://raw.githubusercontent.com/winunix/wps-office-templates/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7/deb_package/opt/kingsoft/wps-office/office6/mui/pt_BR/templates/et/Office/Schedule.ett",
+      "sha256": "23d27b4e72eb4c83dd888593df2552d9d4134749762918baeffa57b97799a9eb",
+      "bytes": 52736,
+      "producer_version": "Unknown; published WPS template package resource, original extension retained",
+      "redistribution": "Not established; originals used locally only, not bundled",
+      "baseline_error": "Unsupported global record 0x60 at 20",
+      "expected_exit": 1,
+      "error_contains": "Unsupported global record 0xeb"
+    },
+    {
+      "filename": "Telephone_List.ett",
+      "source_page": "https://github.com/winunix/wps-office-templates/tree/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7",
+      "download_url": "https://raw.githubusercontent.com/winunix/wps-office-templates/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7/deb_package/opt/kingsoft/wps-office/office6/mui/pt_BR/templates/et/Office/Telephone%20List.ett",
+      "sha256": "34c0dd4473cca5b16bd4719e7d7d05e5c88a7ed346d5e593964ae8217b7d1b07",
+      "bytes": 57344,
+      "producer_version": "Unknown; published WPS template package resource, original extension retained",
+      "redistribution": "Not established; originals used locally only, not bundled",
+      "baseline_error": "Unsupported global record 0x60 at 20",
+      "expected_exit": 0,
+      "sheets": [
+        "Telephone List"
+      ],
+      "cell_count": 3976,
+      "merge_count": 0,
+      "formula_count": 0,
+      "text_checks": {
+        "A1": "Our Organizational Telephone List"
+      }
+    }
+  ],
+  "unavailable_sources": [
+    {
+      "url": "https://nync.zs.gov.cn/attachment/0/568/568622/2615444.et",
+      "result": "TLS EOF/empty response in this run; previous evidence not counted as a new download"
+    },
+    {
+      "url": "https://www.dpxq.gov.cn/attachment/1/1500/1500384/11660114.et",
+      "result": "TLS connection failure"
+    },
+    {
+      "url": "https://m.excelcn.com/7/7836.ett",
+      "result": "TLS failure/HTTP timeout"
+    },
+    {
+      "url": "https://img.zhaojiao.net/file/2026-09-03/12101323148On.et",
+      "result": "TLS connection failure"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ only; no macro/formula execution, network requests, Office tools or dependency i
 
 - [Evidence and input](#evidence-and-input)
 - [Observed legacy compatibility](#observed-legacy-compatibility)
+- [Real-template compatibility additions](#real-template-compatibility-additions)
 - [Supported records and retained values](#supported-records-and-retained-values)
 - [Dates and formula caches](#dates-and-formula-caches)
 - [Headers and output](#headers-and-output)
@@ -78,6 +79,26 @@ real-sample validation. Source/hash and limitations are in
 [the evidence manifest](et-format-evidence.json). The file is not redistributed and its
 WPS version is unknown. This is observed BIFF8 cell-subset interoperability, not general
 native ET/ETT acceptance; native_et_ett_parsed and wps_compatibility_verified stay false.
+
+## Real-template compatibility additions
+
+The explicit `legacy_excel_clsid` mode also accepts these narrowly checked records
+found in original public ETT templates, even when their CFB header CLSID is already zero:
+
+- Empty, nonduplicate `Template` marker, retained as raw metadata.
+- One self-referencing `SupBook` (exact four-byte layout, cch 0x0401).
+- Bounded `ExternSheet` entries referring only to that self link and actual worksheet indices.
+- Sheet-local built-in `Print_Area` names with the exact supported static absolute
+  `PtgArea3d` layout. Macro flags, other names, relative areas, invalid references and
+  duplicate print areas fail; no name formula is executed or applied as page layout.
+- Raw preservation of known `Protect`, `Password`, `ScenarioProtect`, `ObjProtect`,
+  `Scl` and `SheetExt` sheet metadata under the existing metadata budgets.
+
+These additions do not allow external workbook/add-in/DDE links, arbitrary names,
+private records or embedded chart substreams. Record bytes are retained for diagnosis;
+metadata retention is not full semantic or layout validation. Strict mode is unchanged.
+See [real sample validation](et-real-validation.md) for original-file hashes, results,
+spot checks, the remaining chart rejection and reproducible offline verification.
 
 ## Supported records and retained values
 
@@ -150,8 +171,10 @@ regions are capped at 200000 cells and BIFF8's 65536 rows/256 columns. Inherited
 allocation and memory budgets apply before record decoding. Trailing producer padding is
 not guessed or discarded, so some noncanonical streams are deliberately refused.
 
-The single public ET comparison above does not verify WPS private extensions, other ET
-variants, ETT, numeric dates, formula caches or real Excel acceptance. Next samples must include
+The earlier public ET comparison above and newer template checks do not establish WPS
+private-extension semantics, general ET/ETT support, numeric-date rendering, formula-cache
+correctness or real Excel acceptance. ETT subset extraction now has real-file evidence,
+as described in the linked validation report. Next samples must include
 permitted provenance/license or user authorization, WPS version/platform, untouched ET/ETT
 and corresponding XLSX, and expectations for typed cells/merges/date system/formula caches.
 Comparisons must distinguish stored IEEE754 from rounded decimal display and unverified

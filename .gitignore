@@ -2,3 +2,6 @@ __pycache__/
 *.py[cod]
 .DS_Store
 *.[zZ][iI][pP]
+*.[eE][tT]
+*.[eE][tT][tT]
+/test_workspace/

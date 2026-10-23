@@ -41,7 +41,9 @@ LEGACY_SHEET_METADATA={
     0x0015:'Footer',0x0083:'HCenter',0x0084:'VCenter',0x0026:'LeftMargin',
     0x0027:'RightMargin',0x0028:'TopMargin',0x0029:'BottomMargin',0x00A1:'Setup',
     0x089C:'HeaderFooter',0x0055:'DefColWidth',0x007D:'ColInfo',0x088B:'PLV',
-    0x001D:'Selection',0x0099:'DxGCol',0x0867:'FeatHdr'}
+    0x001D:'Selection',0x0099:'DxGCol',0x0867:'FeatHdr',
+    0x0012:'Protect',0x0013:'Password',0x00DD:'ScenarioProtect',
+    0x0063:'ObjProtect',0x00A0:'Scl',0x0862:'SheetExt'}
 
 
 
@@ -127,6 +129,7 @@ class Reader:
         if self.compatibility=="legacy_excel_clsid":
             self.issue({"code":"known_metadata_retained_uninterpreted","message":"Explicit compatibility mode retains only allowlisted MS-XLS metadata bytes. Internal metadata semantics, protection, style extensions and calculation settings are not validated or applied; unknown/data extension records still fail."})
         bounds=[]; names=set(); date_system=None; seen_sst=False; global_end=None
+        template_seen=False; self_link=False; internal_refs=[]; print_areas=set()
         for index,record in enumerate(self.records[1:],1):
             offset,kind,payload=record
             if kind==0x000A:
@@ -158,11 +161,43 @@ class Reader:
                 for _ in range(unique):
                     value,position=unicode_string(payload,position); self.strings.append(value)
                 require(position==len(payload),'Unparsed SST tail; rich/continued strings unsupported')
+            elif self.compatibility=="legacy_excel_clsid" and kind==0x0060:
+                require(not template_seen and not payload,'Duplicate/malformed Template marker')
+                template_seen=True
+                self.metadata_record(record,{kind:'Template'},'globals')
+            elif self.compatibility=="legacy_excel_clsid" and kind==0x01AE:
+                require(not self_link and len(payload)==4 and payload[2:]==b'\x01\x04',
+                        'Only one self-referencing SupBook supported; external/add-in links refused')
+                self_link=True
+                self.metadata_record(record,{kind:'SupBookSelf'},'globals')
+            elif self.compatibility=="legacy_excel_clsid" and kind==0x0017:
+                require(self_link and not internal_refs and len(payload)>=2,'Missing self link or duplicate/truncated ExternSheet')
+                count=struct.unpack_from('<H',payload)[0]
+                require(1<=count<=128 and len(payload)==2+6*count,'Malformed/oversized ExternSheet')
+                for start in range(2,len(payload),6):
+                    link,first,last=struct.unpack_from('<Hhh',payload,start)
+                    require(link==0 and 0<=first<=last<128,'Only valid internal sheet references supported')
+                    internal_refs.append((first,last))
+                self.metadata_record(record,{kind:'ExternSheetInternal'},'globals')
+            elif self.compatibility=="legacy_excel_clsid" and kind==0x0018:
+                # Retain only a static built-in Print_Area, never an executable name.
+                require(len(payload)==27 and payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00'
+                        and payload[10:16]==b'\x00\x00\x00\x00\x00\x06' and payload[16]==0x3B,
+                        'Only static built-in Print_Area names supported; macros/other names refused')
+                sheet=struct.unpack_from('<H',payload,8)[0]
+                ref,r1,r2,c1,c2=struct.unpack_from('<5H',payload,17)
+                require(1<=sheet<=128 and sheet not in print_areas and ref<len(internal_refs)
+                        and internal_refs[ref]==(sheet-1,sheet-1) and r1<=r2 and c1<=c2<256,
+                        'Invalid/duplicate/nonlocal Print_Area reference')
+                print_areas.add(sheet)
+                self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
             elif kind in self.global_metadata:
                 if kind==0x0042: require(len(payload)==2 and struct.unpack('<H',payload)[0]==1200,'Only Unicode CodePage 1200 accepted')
                 self.metadata_record(record,self.global_metadata,'globals')
             else: raise ValueError('Unsupported global record '+hex(kind)+' at '+str(offset))
         require(global_end is not None and bounds and self.styles and date_system is not None,'Require complete globals, at least one worksheet/XF and explicit Date1904')
+        require(all(last<len(bounds) for first,last in internal_refs) and all(sheet<=len(bounds) for sheet in print_areas),
+                'Internal/Print_Area reference exceeds actual worksheet count')
         offset_index={record[0]:index for index,record in enumerate(self.records)}
         require(len({item['offset'] for item in bounds})==len(bounds),'Aliased worksheet substreams')
         physical=sorted(bounds,key=lambda item:item['offset']); position=global_end; sheets={}

@@ -5,8 +5,9 @@ before using this reference; internal resources and task data have different pat
 
 The main `stdlib_xlsx.py read input.et` / `read input.ett` commands now dispatch to
 the separate BIFF8 subset reader, with optional explicit `--compatibility legacy_excel_clsid`.
-This does not change the CFB-only inspector or add WPS private-record semantics. Real ETT
-acceptance remains unverified; new CLI tests use synthetic CFB/BIFF8 data only.
+This does not change the CFB-only inspector or add WPS private-record semantics. Real-file BIFF8 subset checks now include original ET and ETT downloads;
+see [real sample validation](et-real-validation.md). Native WPS private-record semantics
+and general ET/ETT compatibility remain unverified.
 
 Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) and require exit 0,
 status ready. Confirm the input is authorized and readable in the task directory. This
@@ -23,7 +24,7 @@ Python 3.9+, standard library only; no Office launch, network calls or installat
 
 ## Evidence and provenance
 
-Research checked 2026-10-22. Sources were read for specifications/support/licensing; no
+Initial research checked 2026-10-22; real-template follow-up checked 2026-10-23. Sources were read for specifications/support/licensing; no
 third-party parser code or test files were copied, installed or bundled. Exact source URLs
 are recorded in the [evidence manifest](et-format-evidence.json) as bibliographic provenance,
 not runtime resources or downloadable dependencies.
@@ -38,7 +39,7 @@ not runtime resources or downloadable dependencies.
 | libwps upstream | Microsoft Works import library; its name does not establish Kingsoft WPS ET support |
 | WPS format list | Vendor service lists ET/ETT support, but that page is not a binary layout specification |
 
-No real ET/ETT binary sample is bundled in the maintained skill. One public ET template
+No real ET/ETT binary sample is bundled in the maintained skill. An earlier public ET template
 was tested locally; its source, original SHA-256 and limited comparison results are
 recorded in the evidence manifest. No authorized user sample was supplied. The public
 SheetJS/test_files repository was disabled when checked, so it was not usable as a
@@ -123,5 +124,6 @@ recovery. Formula caches would remain unverified with raw representation, never 
 For files outside the subset, the skill stops with a diagnostic. Independently of this
 standard-library runtime, a user may use a trusted local WPS copy to Save As a new XLSX
 and verify it; renaming is
-not conversion. The one public ET text/merge comparison is limited evidence; no ETT or general native
-ET/ETT acceptance has been performed. Dates and formula caches still need real samples.
+not conversion. The earlier ET comparison and current original-template checks are limited evidence;
+full native ET/ETT acceptance has not been performed. Real formula-cache bytes were retained
+and cross-checked, but their calculation correctness and real numeric-date interpretation remain unverified.

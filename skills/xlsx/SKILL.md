@@ -1,7 +1,7 @@
 ---
 name: xlsx
-version: "20261023.1835.5058"
-description: 用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV 数据，支持纯 Python 标准库分析。ET/ETT 仅按文件内容尝试读取已实现的 BIFF8 记录子集，不代表通用 WPS 格式支持；不支持结构编辑。
+version: "20261023.1858.1847"
+description: 用于读取 XLSX/XLSM、创建报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持读取已验证 ET/ETT 样本的 BIFF8 子集，保留文字、数值、合并区域和未验证公式缓存；复杂图表、WPS 私有扩展及结构编辑不支持。
 license: MIT
 ---
 
@@ -84,7 +84,7 @@ script path, not the path together with its arguments.
 
 | Task | Action | Reference |
 |---|---|---|
-| Read a strict BIFF8 record subset, raw dates/caches and merges | `<skill_dir>/scripts/xlsx_biff8.py`; explicit observed-legacy profile, broader ET/ETT unverified | [biff8-readonly.md](references/biff8-readonly.md) |
+| Read a strict BIFF8 record subset, raw dates/caches and merges | `<skill_dir>/scripts/xlsx_biff8.py`; explicit compatibility profile; real ET/ETT sample coverage remains bounded | [biff8-readonly.md](references/biff8-readonly.md) |
 | Inspect bounded compound-container structure for ET/ETT investigation | `<skill_dir>/scripts/xlsx_cfb.py`; no spreadsheet cell decoding | [et-ett-readonly.md](references/et-ett-readonly.md) |
 | Summarize explicit deposit maturity buckets and cumulative windows | `<skill_dir>/scripts/xlsx_maturity.py` | [maturity-distribution.md](references/maturity-distribution.md) |
 | Aggregate observed customers, product coverage and two-period sets | `<skill_dir>/scripts/xlsx_customers.py` | [customer-structure.md](references/customer-structure.md) |
@@ -139,8 +139,9 @@ This returns the separate `biff8_readonly_v1` schema with typed cells and diagno
 not the OOXML inspection schema. Exit 0 means the documented record subset was extracted;
 check issues and unverified formula caches. `native_et_ett_parsed` and
 `wps_compatibility_verified` remain false. Unknown/private records and invalid containers
-fail without partial cell output. ETT dispatch has synthetic coverage only; no real ETT
-sample has been accepted. This route adds no private-record decoding, formula calculation,
+fail without partial cell output. Original public-file checks now cover one blank ET workbook and three ETT templates:
+the ET and two ETT templates extract successfully in explicit compatibility mode; the
+chart-containing ETT remains refused. See [real sample validation](references/et-real-validation.md). This route adds no private-record decoding, formula calculation,
 ET/ETT editing, or integration with the OOXML analysis APIs. Runtime remains standard-library
 only; no converter, third-party parser or application is invoked.
 

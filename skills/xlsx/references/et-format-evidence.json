@@ -1,5 +1,5 @@
 {
-  "checked_on": "2026-10-22",
+  "checked_on": "2026-10-23",
   "purpose": "Bibliographic provenance only; no runtime network dependency or copied parser code",
   "sources": [
     {
@@ -46,7 +46,7 @@
   "format_basis": {
     "CFB": "Microsoft MS-CFB revision 12.0, published 2024-04-23",
     "ET": "SheetJS describes BIFF8 plus proprietary extensions; not an all-version ET/ETT specification",
-    "ETT": "No verified version-specific binary layout or real sample"
+    "ETT": "Three original public WPS template package ETT files checked; two BIFF8 subsets extracted, embedded-chart sample refused. No complete private-record specification."
   },
   "licenses_reviewed": {
     "SheetJS CE": "Apache-2.0; no code copied",
@@ -83,9 +83,10 @@
     "repository_search": "No .et/.ett sample in maintained skill",
     "public_test_corpus": "SheetJS/test_files disabled when checked; not downloaded or relicensed",
     "synthetic": "In-memory CFB v3/v4 builders in test_xlsx_cfb.py; not WPS producer files or ET acceptance",
-    "biff8_synthetic": "In-memory record fixtures in test_xlsx_biff8.py; not WPS/Excel producer files"
+    "biff8_synthetic": "In-memory record fixtures in test_xlsx_biff8.py; not WPS/Excel producer files",
+    "followup_manifest": "et-real-samples.json"
   },
-  "validation_limit": "One original public ET verified for BIFF8 text/blank/merges and date-system flag under explicit compatibility mode, with independent LibreOffice XLSX value/merge comparison. Date serial cells and caches remain synthetic only; no ETT or complete ET/private-extension acceptance.",
+  "validation_limit": "Historical government ET text/merge comparison plus 2026-10-23 original blank ET and three ETT checks in et-real-samples.json. Two ETT subsets extracted with raw caches retained, one embedded-chart ETT refused. Raw-cache byte comparison does not verify calculation correctness, dates, visual layout, private streams or general WPS compatibility.",
   "biff8_record_sources": [
     {
       "title": "MS-XLS overview",
@@ -174,6 +175,22 @@
     {
       "title": "Record IDs",
       "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/43684742-8fcd-4fcd-92df-157d8d7241f9"
+    },
+    {
+      "title": "Template",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/7d9326d6-691a-4fa1-8dce-42082f38e943"
+    },
+    {
+      "title": "SupBook",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/31ed3738-e4ff-4b60-804c-ac49ac1ee6c0"
+    },
+    {
+      "title": "ExternSheet",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/475df8d4-a3be-47a5-9a01-4ec828059f43"
+    },
+    {
+      "title": "Lbl",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d148e898-4504-4841-a793-ee85f3ea9eef"
     }
   ]
 }
