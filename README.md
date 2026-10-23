@@ -6,7 +6,7 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261023.1858.1847 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析；ET/ETT 的 BIFF8 子集读取 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261023.1913.5483 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析；ET/ETT 的 BIFF8 子集读取 |
 | [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261023.1811.5119 | DOCX 生成、DOCX/DOTX 读取和受控编辑、模板填充、表格和图片修改、基础批注，以及受支持 WPS 文件的文本提取 |
 
 ## 目录结构
@@ -95,7 +95,7 @@ python3 -I -S -B "<skill_dir>/scripts/read_docx.py" ./output.docx
 
 ## 能力边界
 
-- XLSX 现有文件编辑仅支持单元格值、公式和现有样式索引，不支持行、列或工作表的结构增删移动；宏不执行，图表和透视表不刷新。主命令 `read` 已接入 ET/ETT 的 BIFF8 只读子集，按实际内容校验；已用一个真实空白 ET 和三个真实 ETT 模板验证：ET 及其中两个 ETT 可提取子集，含图表的 ETT 仍拒绝；详见 [真实样本验证](skills/xlsx/references/et-real-validation.md)，不能视为通用 WPS 格式支持。
+- XLSX 现有文件编辑仅支持单元格值、公式和现有样式索引，不支持行、列或工作表的结构增删移动；宏不执行，图表和透视表不刷新。主命令 `read` 已接入 ET/ETT 的 BIFF8 只读子集，按实际内容校验；已用一个真实空白 ET 和三个真实 ETT 模板验证：ET 及其中两个 ETT 可提取子集，Schedule.ett 可通过显式 `--chart-policy opaque` 保留图表原始记录并提取单元格（默认仍拒绝，不解析或渲染图表）；详见 [真实样本验证](skills/xlsx/references/et-real-validation.md)，不能视为通用 WPS 格式支持。
 - DOCX 支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 支持仅限明确列出的兼容格式及文本读取。
 - 更详细的限制、错误处理、验收和中间文件清理规则以各 skill 的 `SKILL.md` 为准。
 

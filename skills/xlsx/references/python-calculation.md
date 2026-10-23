@@ -6,6 +6,9 @@ before using this reference; internal resources and task data have different pat
 For ET/ETT input only, `read input.et` or `read input.ett` dispatches to the
 [BIFF8 subset reader](biff8-readonly.md), returning its separate `biff8_readonly_v1` schema.
 The optional `--compatibility legacy_excel_clsid` applies only to those reads.
+For a supported embedded chart, add `--chart-policy opaque` alongside that explicit
+compatibility mode; see [embedded-charts.md](embedded-charts.md). This retains chart bytes
+without decoding/rendering and reports diagnostics. The default remains rejection.
 Exit 0 means subset extraction, not verified native WPS compatibility or formula calculation.
 All write/calculation commands remain limited to their existing XLSX/XLSM contracts.
 

@@ -1,8 +1,8 @@
 {
   "checked_on": "2026-10-23",
   "compatibility": "legacy_excel_clsid",
-  "scope": "Original public downloads; no renamed/generated file counted as genuine ET/ETT. Three files extract BIFF8 subsets, one chart-containing template remains refused. Producer versions unknown. Not full native WPS compatibility acceptance.",
-  "independent_checks": "Standard-library record framing independently counted cell records and compared all 21 raw formula cache byte sequences; manual spot checks of template titles. No second application/parser, formula recalculation, private-stream semantics or visual verification.",
+  "scope": "Original public downloads; no renamed/generated file counted as genuine ET/ETT. All four extract worksheet BIFF8 subsets with explicit compatibility plus chart_policy opaque; default chart policy still refuses Schedule. Producer versions unknown. Not full native WPS compatibility acceptance.",
+  "independent_checks": "Standard-library source record framing cross-checked worksheet cell counts, all 33 raw formula-cache byte sequences across Balance Sheet and Schedule, and all 1530 bytes of the retained Schedule chart. Titles spot-checked. No independent application/parser, recalculation, private-stream semantics or visual verification.",
   "samples": [
     {
       "filename": "newfile.et",
@@ -54,7 +54,23 @@
       "redistribution": "Not established; originals used locally only, not bundled",
       "baseline_error": "Unsupported global record 0x60 at 20",
       "expected_exit": 1,
-      "error_contains": "Unsupported global record 0xeb"
+      "error_contains": "Unsupported global record 0xeb",
+      "opaque_expectations": {
+        "expected_exit": 0,
+        "sheets": [
+          "work schedule"
+        ],
+        "cell_count": 343,
+        "merge_count": 1,
+        "formula_count": 12,
+        "chart_count": 1,
+        "text_checks": {
+          "B1": "Work Schedule"
+        },
+        "chart_sha256": [
+          "cebdf2e57746c8eed25b6d9ba4a3e6dd71153457ec0d4fbf44ba7f4dd10df554"
+        ]
+      }
     },
     {
       "filename": "Telephone_List.ett",

@@ -9,11 +9,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from xlsx_biff8 import read_file
 
 
-def verify(directory):
+def verify(directory, chart_policy="reject"):
     manifest = Path(__file__).resolve().parent.parent / 'references' / 'et-real-samples.json'
     entries = json.loads(manifest.read_text(encoding='utf-8'))['samples']
     reports = []
     for entry in entries:
+        if chart_policy == 'opaque':
+            entry = {**entry, **entry.get('opaque_expectations', {})}
         path = directory / entry['filename']
         report = {'filename': entry['filename'], 'passed': False}
         try:
@@ -22,7 +24,7 @@ def verify(directory):
             if len(data) != entry['bytes'] or hashlib.sha256(data).hexdigest() != entry['sha256']:
                 raise ValueError('Sample length/SHA-256 differs from the original download')
             try:
-                result = read_file(path, compatibility='legacy_excel_clsid')
+                result = read_file(path, compatibility='legacy_excel_clsid', chart_policy=chart_policy)
             except ValueError as exc:
                 if entry['expected_exit'] != 1 or entry['error_contains'] not in str(exc):
                     raise
@@ -38,8 +40,11 @@ def verify(directory):
                     'merge_count': sum(len(sheet['merges']) for sheet in sheets),
                     'formula_count': sum('formula' in cell for sheet in sheets for cell in sheet['cells'].values()),
                 }
-                if any(metrics[key] != entry[key] for key in metrics):
+                metrics['chart_count'] = len(result['embedded_charts'])
+                if any(metrics[key] != entry.get(key, 0) for key in metrics):
                     raise ValueError('Extracted sheet/cell/merge/formula metrics changed')
+                if 'chart_sha256' in entry and [c['sha256'] for c in result['embedded_charts']] != entry['chart_sha256']:
+                    raise ValueError('Retained chart hash changed')
                 for address, text in entry['text_checks'].items():
                     if sheets[0]['cells'].get(address, {}).get('value') != text:
                         raise ValueError('Text spot check changed at ' + address)
@@ -60,8 +65,9 @@ def verify(directory):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path, help='Task-relative directory containing separately obtained original samples')
+    parser.add_argument("--chart-policy", choices=("reject", "opaque"), default="reject")
     args = parser.parse_args()
-    reports = verify(args.directory)
+    reports = verify(args.directory, args.chart_policy)
     passed = all(report['passed'] for report in reports)
     print(json.dumps({'status': 'passed' if passed else 'failed', 'samples': reports}, ensure_ascii=False))
     return 0 if passed else 1

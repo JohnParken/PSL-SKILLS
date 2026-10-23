@@ -16,6 +16,7 @@ from xlsx_cfb import CompoundFile,MAX_STREAM_BYTES,COMPATIBILITY_MODES
 from xlsx_tabular import column_name
 from stdlib_xlsx import address
 from xlsx_headers import reconstruct
+from xlsx_biff8_charts import CHART_POLICIES, drawing_frame, chart_end
 
 MAX_RECORDS=100000
 MAX_CELLS=200000
@@ -106,8 +107,11 @@ def bof(record,expected):
 
 
 class Reader:
-    def __init__(self,data,*,compatibility="strict"):
+    def __init__(self,data,*,compatibility="strict",chart_policy="reject"):
         require(compatibility in COMPATIBILITY_MODES,"Unknown BIFF compatibility mode")
+        require(chart_policy in CHART_POLICIES,"Unknown chart policy")
+        require(chart_policy=="reject" or compatibility=="legacy_excel_clsid","Opaque chart retention requires explicit compatibility mode")
+        self.chart_policy=chart_policy; self.embedded_charts=[]; self.drawing_group_seen=False
         self.compatibility=compatibility
         self.global_metadata={**GLOBAL_METADATA,**(LEGACY_GLOBAL_METADATA if compatibility=="legacy_excel_clsid" else {})}
         self.sheet_metadata={**SHEET_METADATA,**(LEGACY_SHEET_METADATA if compatibility=="legacy_excel_clsid" else {})}
@@ -191,6 +195,11 @@ class Reader:
                         'Invalid/duplicate/nonlocal Print_Area reference')
                 print_areas.add(sheet)
                 self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
+            elif kind==0x00EB and self.chart_policy=="opaque":
+                require(not self.drawing_group_seen,'Duplicate drawing group unsupported')
+                drawing_frame(payload,0xF000)
+                self.drawing_group_seen=True
+                self.metadata_record(record,{kind:'MsoDrawingGroupOpaque'},'globals')
             elif kind in self.global_metadata:
                 if kind==0x0042: require(len(payload)==2 and struct.unpack('<H',payload)[0]==1200,'Only Unicode CodePage 1200 accepted')
                 self.metadata_record(record,self.global_metadata,'globals')
@@ -205,8 +214,10 @@ class Reader:
             require(bound['offset'] in offset_index and offset_index[bound['offset']]==position,'Worksheet offset gap/overlap or unbound records')
             sheet,position=self.sheet(position,bound); sheets[bound['name']]=sheet
         require(position==len(self.records),'Trailing/unbound BIFF records are not ignored')
+        require(not self.drawing_group_seen or self.embedded_charts,'Drawing group without supported embedded chart')
         return {'status':'read_biff8_subset_with_diagnostics' if self.issues else 'read_biff8_subset',
                 'schema_version':'biff8_readonly_v1','compatibility_mode':self.compatibility,'support_level':'biff8_strict_record_subset','biff_parsed':True,
+                'chart_policy':self.chart_policy,'charts_decoded':False,'embedded_charts':self.embedded_charts,
                 'native_et_ett_parsed':False,'wps_compatibility_verified':False,'formulas_executed':False,'external_links_followed':False,
                 'date_system':date_system,'sheets':[sheets[item['name']] for item in bounds],
                 'styles':self.styles,'custom_number_formats':{str(key):value for key,value in self.formats.items()},
@@ -219,6 +230,7 @@ class Reader:
 
     def sheet(self,index,bound):
         bof_raw=bof(self.records[index],0x0010); index+=1; cells={}; merges=[]; ws_bool=False; pending=None
+        drawing_pending=False; chart_pending=None; object_ids=set()
         def put(row,col,xf,kind,value,record,**extra):
             require(0<=row<65536 and 0<=col<256 and 0<=xf<len(self.styles),'Cell coordinate or XF index outside BIFF8 bounds')
             address=column_name(col+1)+str(row+1)
@@ -235,6 +247,31 @@ class Reader:
                     cells[pending].update(type='text',value=value,cache_status='unverified',cache_record_offset=offset); pending=None; continue
                 cells[pending].update(type='blank',value=None,cache_status='missing')
                 self.issue({'sheet':bound['name'],'cell':pending,'code':'missing_formula_string_cache','expected':'Immediate String record'}); pending=None
+            if drawing_pending:
+                require(kind==0x005D and len(payload)==26 and payload[:6]==b'\x15\x00\x12\x00\x05\x00'
+                        and payload[10:]==bytes(16),'Only a chart Obj with FtCmo and FtEnd is supported')
+                identity=struct.unpack_from('<H',payload,6)[0]
+                require(identity and identity not in object_ids,'Duplicate/invalid chart object ID')
+                object_ids.add(identity); chart_pending=identity; drawing_pending=False
+                self.metadata_record(record,{kind:'ObjChartOpaque'},bound['name'])
+                continue
+            if chart_pending is not None:
+                require(len(self.embedded_charts)<128,'Embedded chart count exceeds 128')
+                stop,report=chart_end(self.records,index-1)
+                for item in self.records[index-1:stop]:
+                    self.metadata_record(item,{item[1]:'EmbeddedChartRecordOpaque'},bound['name'])
+                report.update(sheet=bound['name'],object_id=chart_pending)
+                self.embedded_charts.append(report)
+                self.issue({'sheet':bound['name'],'code':'embedded_chart_retained_opaque',
+                            'message':'Chart/drawing bytes retained; chart semantics, caches and rendering are not decoded or verified'})
+                chart_pending=None; index=stop
+                continue
+            if kind==0x00EC and self.chart_policy=="opaque":
+                require(self.drawing_group_seen,'Embedded drawing requires a drawing group')
+                drawing_frame(payload,0xF002)
+                self.metadata_record(record,{kind:'MsoDrawingOpaque'},bound['name'])
+                drawing_pending=True
+                continue
             if kind==0x000A:
                 require(not payload and ws_bool,'Require empty EOF and exactly one non-dialog WsBool')
                 return {**bound,'bof_raw_hex':bof_raw,'cells':cells,'merges':merges},index
@@ -303,17 +340,17 @@ class Reader:
         raise ValueError('Truncated worksheet without EOF')
 
 
-def parse_stream(data,*,compatibility="strict"):
-    return Reader(data,compatibility=compatibility).parse()
+def parse_stream(data,*,compatibility="strict",chart_policy="reject"):
+    return Reader(data,compatibility=compatibility,chart_policy=chart_policy).parse()
 
 
-def read_file(path,*,compatibility="strict"):
+def read_file(path,*,compatibility="strict",chart_policy="reject"):
     container=CompoundFile.load(path,compatibility=compatibility)
     require(not container.encrypted,'Encrypted compound workbook unsupported')
     require(not any(part.casefold() in ('vba','_vba_project_cur','macros') for stream in container.paths for part in stream),'Macro storage unsupported')
     candidates=[stream for stream in container.streams if len(stream)==1 and stream[0].casefold() in ('workbook','book')]
     require(len(candidates)==1,'Require exactly one root Workbook/Book stream; name is only a candidate until BOF validation')
-    content=container.read_stream(candidates[0]); result=parse_stream(content,compatibility=compatibility)
+    content=container.read_stream(candidates[0]); result=parse_stream(content,compatibility=compatibility,chart_policy=chart_policy)
     return {**result,'source':{'file':str(path),'extension':Path(path).suffix.lower(),'stream_path':list(candidates[0]),
                              'stream_sha256':hashlib.sha256(content).hexdigest(),'container_version':container.major,'container_compatibility':container.compatibility,'container_issues':container.issues},
             'other_container_streams_not_decoded':[item for item in container.report()['streams'] if item['path']!=list(candidates[0])]}
@@ -348,9 +385,10 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__); parser.add_argument('input')
     parser.add_argument('--sheet'); parser.add_argument('--range',dest='cell_range'); parser.add_argument('--header-rows')
     parser.add_argument('--header-formulas',choices=('reject','cached'),default='reject')
-    parser.add_argument('--compatibility',choices=COMPATIBILITY_MODES,default='strict'); args=parser.parse_args()
+    parser.add_argument('--compatibility',choices=COMPATIBILITY_MODES,default='strict')
+    parser.add_argument('--chart-policy',choices=CHART_POLICIES,default='reject'); args=parser.parse_args()
     try:
-        result=read_file(args.input,compatibility=args.compatibility)
+        result=read_file(args.input,compatibility=args.compatibility,chart_policy=args.chart_policy)
         if args.header_rows is not None:
             require(args.sheet is not None and args.cell_range is not None,'Header reconstruction requires explicit sheet/range/header-rows')
             result['header_schema']=reconstruct_headers(result,args.sheet,args.cell_range,args.header_rows,args.header_formulas)

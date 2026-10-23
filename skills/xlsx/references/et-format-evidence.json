@@ -46,7 +46,7 @@
   "format_basis": {
     "CFB": "Microsoft MS-CFB revision 12.0, published 2024-04-23",
     "ET": "SheetJS describes BIFF8 plus proprietary extensions; not an all-version ET/ETT specification",
-    "ETT": "Three original public WPS template package ETT files checked; two BIFF8 subsets extracted, embedded-chart sample refused. No complete private-record specification."
+    "ETT": "Three original public WPS templates checked. All worksheet subsets extract with explicit compatibility and chart_policy opaque; Schedule is refused by default. No complete private-record or chart semantics acceptance."
   },
   "licenses_reviewed": {
     "SheetJS CE": "Apache-2.0; no code copied",
@@ -86,7 +86,7 @@
     "biff8_synthetic": "In-memory record fixtures in test_xlsx_biff8.py; not WPS/Excel producer files",
     "followup_manifest": "et-real-samples.json"
   },
-  "validation_limit": "Historical government ET text/merge comparison plus 2026-10-23 original blank ET and three ETT checks in et-real-samples.json. Two ETT subsets extracted with raw caches retained, one embedded-chart ETT refused. Raw-cache byte comparison does not verify calculation correctness, dates, visual layout, private streams or general WPS compatibility.",
+  "validation_limit": "Original blank ET and three ETT checks in et-real-samples.json. Schedule worksheet extraction additionally requires chart_policy opaque; all 1530 chart bytes and worksheet record counts were cross-checked. Formula caches remain unverified, chart/drawing payloads are opaque, private streams/layout are not decoded. Default chart policy still rejects Schedule.",
   "biff8_record_sources": [
     {
       "title": "MS-XLS overview",
@@ -191,6 +191,18 @@
     {
       "title": "Lbl",
       "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d148e898-4504-4841-a793-ee85f3ea9eef"
+    },
+    {
+      "title": "Embedded chart substream",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/732ff614-d939-416b-b7c7-6d983471ff11"
+    },
+    {
+      "title": "FtCmo chart object",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/29161566-5018-4356-8d25-50e6674c66fa"
+    },
+    {
+      "title": "OfficeArtDggContainer",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/dd7133b6-ed10-4bcb-be29-67b0544f884f"
     }
   ]
 }

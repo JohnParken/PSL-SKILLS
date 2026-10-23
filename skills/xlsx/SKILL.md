@@ -1,7 +1,7 @@
 ---
 name: xlsx
-version: "20261023.1858.1847"
-description: 用于读取 XLSX/XLSM、创建报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持读取已验证 ET/ETT 样本的 BIFF8 子集，保留文字、数值、合并区域和未验证公式缓存；复杂图表、WPS 私有扩展及结构编辑不支持。
+version: "20261023.1913.5483"
+description: 用于读取 XLSX/XLSM、创建报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持已验证 ET/ETT 的 BIFF8 子集，含图表时可显式保留原始记录并提取单元格；不解析或渲染图表，公式缓存未验证，不支持结构编辑。
 license: MIT
 ---
 
@@ -127,7 +127,7 @@ for creation; the reference does not authorize direct XML style edits.
 The main `read` command now routes `.et`/`.ett` (case-insensitive) to the bundled
 CFB/BIFF8 reader. The extension selects a candidate reader; actual CFB structure,
 Workbook/Book stream, BOF and every supported record must validate before cells are returned.
-Use the default strict mode first. For the exact documented legacy header variant,
+Use the default strict mode first. For the documented legacy header/record compatibility subset,
 explicitly opt in after reviewing [biff8-readonly.md](references/biff8-readonly.md):
 
 ```console
@@ -140,10 +140,15 @@ not the OOXML inspection schema. Exit 0 means the documented record subset was e
 check issues and unverified formula caches. `native_et_ett_parsed` and
 `wps_compatibility_verified` remain false. Unknown/private records and invalid containers
 fail without partial cell output. Original public-file checks now cover one blank ET workbook and three ETT templates:
-the ET and two ETT templates extract successfully in explicit compatibility mode; the
-chart-containing ETT remains refused. See [real sample validation](references/et-real-validation.md). This route adds no private-record decoding, formula calculation,
+the ET and two ETT templates extract in explicit compatibility mode. Schedule.ett also
+extracts worksheet cells when `--chart-policy opaque` is explicitly selected; the default
+chart policy still refuses it. See [real sample validation](references/et-real-validation.md). This route adds no private-record decoding, formula calculation,
 ET/ETT editing, or integration with the OOXML analysis APIs. Runtime remains standard-library
 only; no converter, third-party parser or application is invoked.
+
+For this bounded embedded-chart route, read [embedded-charts.md](references/embedded-charts.md).
+The parser retains chart/drawing payloads and reports `charts_decoded: false`; it does not
+render charts or execute their formulas. Unknown chart records remain refused.
 
 ## Calculation policy
 

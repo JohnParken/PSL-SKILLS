@@ -589,6 +589,8 @@ def main():
     read.add_argument("--encoding", default="utf-8-sig", help="CSV/TSV encoding")
     read.add_argument("--compatibility", choices=("strict", "legacy_excel_clsid"), default="strict",
                       help="BIFF8 ET/ETT read only; explicit known legacy header compatibility")
+    read.add_argument("--chart-policy", choices=("reject", "opaque"), default="reject",
+                      help="ET/ETT only: retain bounded embedded chart bytes without decoding")
     for name in ("create", "edit", "calculate"):
         sub = commands.add_parser(name)
         if name != "create":
@@ -609,11 +611,13 @@ def main():
             result = {"status": "ready", "python": sys.version.split()[0], "dependencies": "standard_library_only"}
         elif args.command == "read":
             suffix = Path(args.input).suffix.lower()
+            if suffix not in (".et", ".ett") and args.chart_policy != "reject":
+                raise ValueError("--chart-policy applies only to ET/ETT subset reads")
             if suffix not in (".et", ".ett") and args.compatibility != "strict":
                 raise ValueError("--compatibility applies only to ET/ETT subset reads")
             if suffix in (".et", ".ett"):
                 from xlsx_biff8 import read_file
-                result = read_file(args.input, compatibility=args.compatibility)
+                result = read_file(args.input, compatibility=args.compatibility, chart_policy=args.chart_policy)
                 encoded = json.dumps(result, ensure_ascii=False, default=str, allow_nan=False)
                 if len(encoded.encode("utf-8")) > 16 * 1024 * 1024:
                     raise ValueError("Decoded JSON exceeds 16 MiB budget")

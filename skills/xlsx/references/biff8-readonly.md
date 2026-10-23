@@ -41,7 +41,7 @@ python3 -I -S -B "<skill_dir>/scripts/xlsx_biff8.py" input.xls
 The file must pass the [CFB container reader](et-ett-readonly.md), contain exactly one
 root Workbook/Book stream, and start with the 16-byte BOF payload identifying 0x0600
 BIFF8 globals. A stream name or .et/.ett suffix does not establish its encoding. Worksheet
-BOFs, BoundSheet8 offsets, EOF boundaries and the non-dialog WsBool must agree. Chart,
+BOFs, BoundSheet8 offsets, EOF boundaries and the non-dialog WsBool must agree. Standalone chart,
 macro/VBA and dialog sheets, recognized macro storages and encryption are refused.
 ET/ETT names may be inspected by content but native_et_ett_parsed and
 wps_compatibility_verified always remain false, even after successful BIFF extraction.
@@ -95,10 +95,12 @@ found in original public ETT templates, even when their CFB header CLSID is alre
   `Scl` and `SheetExt` sheet metadata under the existing metadata budgets.
 
 These additions do not allow external workbook/add-in/DDE links, arbitrary names,
-private records or embedded chart substreams. Record bytes are retained for diagnosis;
+private records or embedded chart substreams by default.
+The explicit [opaque chart policy](embedded-charts.md) adds bounded framing/raw retention
+for a supported embedded-chart subset without decoding or rendering charts. Record bytes are retained for diagnosis;
 metadata retention is not full semantic or layout validation. Strict mode is unchanged.
 See [real sample validation](et-real-validation.md) for original-file hashes, results,
-spot checks, the remaining chart rejection and reproducible offline verification.
+spot checks, default chart rejection, the explicit opaque policy and reproducible offline verification.
 
 ## Supported records and retained values
 
