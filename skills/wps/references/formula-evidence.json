@@ -1,0 +1,22 @@
+{
+  "checked_on": "2026-10-25",
+  "purpose": "Development sources only, never runtime requests",
+  "sources": [
+    {
+      "section": "ShrFmla",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/984826cc-8bb7-412b-9907-7bbb9b08b4ad"
+    },
+    {
+      "section": "Array",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/c6ee7512-d6ec-4d81-8dfb-a01a744a1f39"
+    },
+    {
+      "section": "PtgExp",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/f9aa266f-f1e9-4341-a232-e9f7ec94b8f1"
+    },
+    {
+      "section": "FORMULA 顺序",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/a1b3d8b4-7442-41fd-9c57-bbd2a6394082"
+    }
+  ]
+}

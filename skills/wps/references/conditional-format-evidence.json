@@ -1,0 +1,16 @@
+{
+  "checked_on": "2026-10-25",
+  "runtime_network": false,
+  "sources": [
+    {
+      "url": "https://support.microsoft.com/en-us/excel/review-guidelines-for-customizing-a-number-format",
+      "used_for": "comparison operator and constant; numeric format sections and scaling; region-dependence"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.numberingformat?view=openxml-3.0.1",
+      "used_for": "ISO29500 NumberingFormat description; locale-prefixed builtin examples only, no locale renderer"
+    }
+  ],
+  "inference": "Equal resolved row/column numFmt IDs prove numeric equivalence without selecting precedence.",
+  "validation": "Synthetic independent expectations only; no real display comparison."
+}

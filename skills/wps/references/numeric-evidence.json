@@ -1,0 +1,17 @@
+{
+  "purpose": "Development references only; no runtime network",
+  "sources": [
+    {
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/cdb0d11f-5699-426f-89c7-81c0543d6fc4",
+      "used_for": "ifmt=2 two decimals; fStyle, ixfParent and fAtrNum direct/inherited distinction"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/fff4f122-e663-4471-a3c3-279cc2cdc41a",
+      "used_for": "XF literal bit layout, CellXF fAtrNum after two reserved bits in byte9"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/troubleshoot/microsoft-365-apps/excel/wrongly-assumes-1900-is-leap-year",
+      "used_for": "1900 fictional leap day"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "checked_on": "2026-10-25",
+  "purpose": "Development sources only; no runtime requests",
+  "sources": [
+    {"section":"FibRgFcLcb97 index12", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/0c9df81f-98d0-454e-ad84-b612cd05b1a4"},
+    {"section":"PlcBteChpx", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/e8121c61-b84e-496c-8213-0dabb3e49d7c"},
+    {"section":"PnFkpChpx", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/0ba67316-ce25-4c87-b0cc-bd63d58466bd"},
+    {"section":"ChpxFkp", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/f5f10f04-d4cc-4ebd-86df-0de6d227675c"},
+    {"section":"Chpx", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/a19087bd-e712-42dd-ab02-8a812d6f107e"},
+    {"section":"Prl", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/4eabffa2-b8b6-444c-9a92-3291ab5035ef"},
+    {"section":"Sprm operand sizes", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/099eb99c-a927-4caf-a80c-66254ea83d6a"},
+    {"section":"Character Properties and style/reset semantics", "url":"https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/7022285b-9621-42e9-ad4d-4e02c115ef18"}
+  ]
+}

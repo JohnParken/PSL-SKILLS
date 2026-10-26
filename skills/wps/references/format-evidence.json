@@ -1,0 +1,82 @@
+{
+  "checked_on": "2026-10-25",
+  "purpose": "Development references only; no runtime network access",
+  "sources": [
+    {
+      "section": "MS-DOC 2.5.2 FibBase",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/26fb6c06-4e5c-4778-ab4e-edbf26a545bb",
+      "used_for": "reserved offsets 24/28 must be ignored; nFibBack BF/C1"
+    },
+    {
+      "section": "MS-DOC 2.5.4 FibRgLw97",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/37713d3c-a0c8-40f5-821f-bc9622c7de48",
+      "used_for": "cbMac"
+    },
+    {
+      "section": "MS-DOC 2.9.216 Prm1",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/6891279f-5855-441b-96f2-7455081147be",
+      "used_for": "zero-based Prc index"
+    },
+    {
+      "section": "MS-DOC 3.1 example",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/a30a9a42-cf78-4974-b99f-d559639ee383",
+      "used_for": "independently transcribed synthetic CLX expectation"
+    },
+    {
+      "section": "MS-DOC FIB layouts",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/9aeaa2e7-4a45-468e-ab13-3f6193eb9394",
+      "used_for": "do not infer newer version support from nFib alone"
+    },
+    {
+      "section": "MS-DOC version determination",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/fe661052-9c88-4ae1-aec4-44799b2b4777",
+      "used_for": "effective version comes from nFibNew when cswNew is nonzero; validate exact version-specific extension and fc/lcb counts"
+    },
+    {
+      "section": "MS-CFB header",
+      "url": "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/05060311-bfce-4b12-874d-71fd4ce63aea",
+      "used_for": "CLSID_NULL required; minor 3E recommended"
+    },
+    {
+      "section": "MS-DOC FibRgCswNewData2000",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/261cd297-425d-401c-b032-8c8569a24297",
+      "used_for": "cQuickSavesNew 0..15"
+    },
+    {
+      "section": "MS-DOC 2.8.25 Plcfld",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/751b09bb-72f0-45ef-8e87-666dea68219f",
+      "used_for": "field delimiters/nesting; cached extraction does not validate sprmCFSpec/Plcfld"
+    },
+    {
+      "section": "MS-DOC Pictures",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/85d6d318-0afc-4e6f-83f9-54d8444e3c35",
+      "used_for": "U+0001 picture/data marker; no type inference or object read"
+    },
+    {
+      "section": "MS-DOC FibRgFcLcb2000",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/265bca68-c4ef-4a03-8517-61d7e79850eb",
+      "used_for": "D9 extends FibRgFcLcb97; CLX prefix stays at pair 33"
+    },
+    {
+      "section": "MS-DOC FibRgFcLcb2007",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/f04ad697-5027-46c0-bf4c-52fc7843a2f6",
+      "used_for": "112 extends FibRgFcLcb2003; main-story extraction does not interpret extra metadata"
+    },
+    {
+      "section": "MS-DOC FibRgCswNew",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/a4876d81-6ff1-485e-8655-75266ec84c07",
+      "used_for": "D9/101/10C use 2-byte extension data; 112 uses 8-byte data after nFibNew"
+    },
+    {
+      "section": "MS-DOC FibRgCswNewData2007",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/a37cd1b4-2d7d-4eed-9089-1c73095b245c",
+      "used_for": "quick-save count plus three 16-bit theme language values; latter MUST be ignored"
+    }
+  ],
+  "observed_word_profile": {
+    "guid": "00020906-0000-0000-C000-000000000046",
+    "bytes_le_hex": "0609020000000000c000000000000046",
+    "scope": "empirical explicit v3 exception, not MS-CFB conformance or producer proof",
+    "sample_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+  }
+}

@@ -1,7 +1,7 @@
 ---
 name: docx
-version: "20261023.1811.5119"
-description: 用于新建 Word 公文、报告和信函，读取或受控修改 DOCX/DOTX，并提取兼容 OOXML 或受支持的未加密 MS-DOC 类型 WPS 文本。支持模板填充、文字替换、简单排版和基础批注；WPS 仅限文本读取，不支持任意版本、编辑、排版还原、页面预览或 PDF 导出。
+version: "20261025.1814.1677"
+description: 用于新建 Word 公文、报告和信函，读取 DOCX/DOTX 正文、表格与显式结构，以及受控修改文字、表格、图片和批注。支持模板填充、基础排版和结构检查，采用纯 Python 标准库；不支持读取 WPS 格式，请使用 wps 技能，不承诺任意编辑、页面预览或 PDF 导出。
 ---
 
 <!-- SKILL_DEFINITION_START -->
@@ -28,9 +28,11 @@ description: 用于新建 Word 公文、报告和信函，读取或受控修改 
 | 表格行增删与图片替换 | 使用 `<skill_dir>/scripts/edit_tables.py` 或 `<skill_dir>/scripts/replace_image.py`；前者仅编辑规则纯文本数据行，后者仅替换显式选定的同格式媒体部件。 |
 | 批注管理 | 使用 `<skill_dir>/scripts/manage_comments.py`；查询及严格子集的文字自动锚定、修改、删除、一级回复，拒绝歧义或未知线程语义。 |
 | 读取内容 | 使用 `<skill_dir>/scripts/read_docx.py`；默认纯文本，可用 `--format json` 读取显式结构；不计算继承样式、列表显示值或页面布局。 |
-| WPS 文本读取 | 使用同一读取入口，按内容识别 `.wps`；读取兼容 OOXML 包或受支持的未加密 CFB/MS-DOC 正文，其他格式明确报错。仅支持纯文本，不支持 JSON、编辑、格式转换或排版还原。 |
+| WPS 家族读取 | `.wps`、`.et`、`.ett` 统一交由 wps 技能；本入口明确拒绝，不修改后缀绕过路由。 |
 | 结构检查 | 使用 `<skill_dir>/scripts/office/validate.py`；包含基础规则及表格合并/编号层级的进阶子集，禁止声称已通过完整 OOXML/XSD 校验。 |
 | 高级 XML 操作 | 仅在目标结构已明确时使用打包、批注和 run 辅助脚本；不要承诺任意复杂文档无损编辑。 |
+
+不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill。后缀大小写不影响拒绝；本技能不自动调用 wps，也不转换文件。WPS 软件保存的原生 DOCX/DOTX 仍按原生格式读取，不能仅凭生成软件名称判为 WPS 家族格式。
 
 ## 执行环境约束与首步自检
 
@@ -205,20 +207,14 @@ python -I -S -B "<skill_dir>/scripts/edit_docx.py" ./template.docx ./replacement
 
 按 [表格行与图片编辑](references/table-media-editing.md) 使用专用入口。表格每文件一个增删操作，核验原始表索引、行数及整行原文；仅编辑有显式网格的规则纯文本表，保护前置连续 `tblHeader` 标记行和最后剩余数据行，拒绝合并、嵌套及活动范围。图片替换核验原媒体 SHA-256、关系数及 DrawingML picture 引用数；共享媒体须显式选择全部引用。保持 PNG/JPEG 格式、关系、内容类型、显示尺寸和布局不变，仅检查基本文件标志，不解码。两个入口均拒绝数字签名包，不自动删除签名或拆分共享媒体。
 
-## WPS 格式识别与文本读取
+## WPS 家族路由
 
-完成相同首步自检后，使用原文件名读取，无需改扩展名：
-
-```console
-python -I -S -B "<skill_dir>/scripts/read_docx.py" ./input.wps -o ./content.txt
-```
-
-- `.wps` 按内容分流为 OOXML 或 CFB/MS-DOC；扩展名不证明格式，不代表所有金山 WPS 或 Microsoft Works 文件都受支持。
-- OOXML 分支支持 Transitional OOXML、主部件 `word/document.xml` 及非宏 DOCX/DOTX 主内容类型，保留原有正文/表格文本、`--include-related` 和修订文本视图。
-- CFB 分支支持 v3/v4 的普通流与 MiniFAT；仅支持有效 FIB 版本 `0x00C1`、`0x00D9`、`0x0101`、`0x010C`、`0x0112` 的未加密 MS-DOC 正文。按文本片段表解码 UTF-16 和规范规定的单字节文本，不扫描二进制字符串。扩展 DIFAT、模板/AutoText、字段和未实现的正文控制标记明确拒绝；完整范围及限制见 [二进制正文读取](references/binary-reading.md)。
-- Python API 为 `read_docx(path, revisions=None, include_related=False)`；不指定修订参数时 OOXML 仍按 `accepted` 读取，二进制按存储的正文文本读取。二进制允许 `all`，拒绝显式 `accepted`、`original` 和 `--include-related`；不解释隐藏文字或修订属性，结果可能包含这些文字，不得称为净稿。`.wps` 的 `--format json` 和 `read_docx_structure()` 继续拒绝。
-- RTF、空文件、未知格式、普通 ZIP、Strict OOXML、宏主文档及不支持的结构明确报错。损坏、加密或超限文件不回退到字符串扫描、转换器或网络服务；失败不覆盖已有输出。
-- 识别及读取成功不等于完整 CFB/MS-DOC/OOXML 校验或真实 WPS 打开验证；不还原排版，不执行宏、外部链接或嵌入对象，不开放 WPS 编辑。实际正文验收与环境自检分别记录。
+`.wps`、`.et`、`.ett` 统一使用 wps 技能，由其按容器及内部结构识别支持范围。
+本技能文本和 JSON API 均拒绝这些后缀；即便内容实际为 OOXML，也应保留原名交给 wps。
+伪装为 `.docx` / `.dotx` 的 CFB 内容同样拒绝并引导 wps；扩展名不证明内部格式。
+普通 DOCX/DOTX 的 ZIP/XML 预检、修订视图及关联部件读取保持原有规则。
+仅凭 OOXML 内容无法证明生成软件；WPS 软件保存的真正 DOCX/DOTX 仍属于本技能的原生格式范围。
+旧二进制入口见 [迁移说明](references/binary-reading.md)。
 
 ## 读取与高级编辑
 

@@ -1,0 +1,20 @@
+{
+  "checked_on": "2026-10-25",
+  "sources": [
+    {
+      "section": "ISO 29500 xf via official OpenXML SDK",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cellformat?view=openxml-3.0.1",
+      "basis": "xfId present only in cellXfs, not cellStyleXfs; applyNumberFormat"
+    },
+    {
+      "section": "MS-OE376 cellStyleXfs",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/bcf98682-e8d3-44b8-b8f8-0bf696878ba1",
+      "basis": "Office stored cellXF behavior differs from naive parent substitution"
+    },
+    {
+      "section": "MS-OE376 xf apply flags",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/59922f8b-0edc-4e93-a822-9f22254aec46",
+      "basis": "cellStyleXfs applyNumberFormat defaults true; cellXfs default false; stored number-format disagreement requires true, not blind parent substitution"
+    }
+  ]
+}

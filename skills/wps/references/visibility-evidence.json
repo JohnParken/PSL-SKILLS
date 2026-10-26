@@ -1,0 +1,21 @@
+{
+  "sources": [
+    {
+      "name": "Row",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/4aab09eb-49ed-4d01-a3b1-1d726247d3c2"
+    },
+    {
+      "name": "ColInfo",
+      "url": "https://learn.microsoft.com/nl-nl/openspecs/office_file_formats/MS-XLS/2c339a18-0819-4221-9c5d-3e9cf304224b"
+    },
+    {
+      "name": "Col256U",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/5574907b-97e6-4e79-845d-0ecef9d56038"
+    },
+    {
+      "name": "AutoFilterInfo",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/48d72277-d805-4ea0-8a51-8a36bc6e32d1"
+    }
+  ],
+  "scope": "saved flags only; filters retained uninterpreted"
+}

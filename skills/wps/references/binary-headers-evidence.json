@@ -1,0 +1,12 @@
+{
+  "checked_on": "2026-10-25",
+  "scope": "Development references only, no runtime network",
+  "sources": [
+    {"section": "MS-DOC 2.3.3 Headers", "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/8465bee7-6c79-45a9-812e-58b0c5fd6cdc", "used_for": "six separators, six slots per section, guard paragraphs and empty-slot stored inheritance"},
+    {"section": "MS-DOC 2.8.22 Plcfhdd", "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/8f336b7e-66cb-4346-9fd4-88ede9a4a9db", "used_for": "CP-only PLC, empty slots, penultimate ccpHdd-1 and undefined final CP"},
+    {"section": "MS-DOC 2.8.26 PlcfSed", "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/68a959a6-11e0-4f3e-9a99-76ca8cc4dddc", "used_for": "12-byte Sed elements, section start CPs and terminal CP at or beyond main story"},
+    {"section": "MS-DOC 2.9.243 Sed", "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/ae1ec5fc-e3c0-4e27-956e-9ceedc41cc2a", "used_for": "signed fcSepx, other descriptor fields MUST ignored"},
+    {"section": "MS-DOC 2.9.245 Sepx", "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/1cc8d6e1-17e2-4667-99b6-39b2c70a0ebe", "used_for": "signed byte count; raw properties retained unexecuted, semantic parsing not implemented"},
+    {"section": "MS-DOC 2.5.6 FibRgFcLcb97", "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/0c9df81f-98d0-454e-ad84-b612cd05b1a4", "used_for": "fc/lcb indexes6 and11"}
+  ]
+}

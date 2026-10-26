@@ -1,0 +1,22 @@
+{
+  "checked_on": "2026-10-25",
+  "purpose": "Development references only; no runtime network",
+  "sources": [
+    {
+      "section": "HeaderReference and section relationship semantics",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.headerreference?view=openxml-3.0.1"
+    },
+    {
+      "section": "FooterReference",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.footerreference?view=openxml-3.0.1"
+    },
+    {
+      "section": "FootnoteReference IDs",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.footnotereference?view=openxml-3.0.1"
+    },
+    {
+      "section": "WordprocessingML parts",
+      "url": "https://learn.microsoft.com/en-us/office/open-xml/word/structure-of-a-wordprocessingml-document"
+    }
+  ]
+}

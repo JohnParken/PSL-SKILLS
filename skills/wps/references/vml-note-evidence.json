@@ -1,0 +1,14 @@
+{
+  "checked_on": "2026-10-25",
+  "sources": [
+    {
+      "title": "ISO 29500 ClientData Note example as published by Microsoft Open XML SDK",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.spreadsheet.clientdata?view=openxml-3.0.1"
+    },
+    {
+      "title": "ISO 29500 Anchor fields as published by Microsoft Open XML SDK",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.spreadsheet.anchor?view=openxml-3.0.1"
+    }
+  ],
+  "scope": "Development references only, limited synthetic validation; no runtime network"
+}

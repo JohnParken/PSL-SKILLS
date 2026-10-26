@@ -1,0 +1,26 @@
+{
+  "version": "20261026.0822.1894",
+  "schema_version": "ofd-read-2",
+  "package": "skills/ofd-20261026.0822.1894.zip",
+  "sha256": "98ef911d6c333dadf0d99476795bce75525d07402fb862e8e14d5f5fe3f932e6",
+  "bytes": 23922,
+  "members": {
+    "SKILL.md": "a0b85a442aa3497c4d0d69f9f9e0aae9c607183a222bd26275c058632189cd5a",
+    "references/boundaries.md": "abd899713cb413e0a68f0e935b5aebc49cf93d85cf4d0d5706f544a444dbddc4",
+    "references/contract.md": "0bcc97f45d83acb9e40d0c55eadf2bc6ae7623305ccd8e49679c26a1219abd55",
+    "references/validation.md": "fa50ef72393dc1087157a22d5414d601c7fdf9dcc1927e9a94fa26235312be04",
+    "requirements.txt": "423841be34df23375c319889cc694b1fd76cfebc8cd5712a008356f4d44259c8",
+    "scripts/read_ofd.py": "431b1cf3b78983830fd4f7cd07d278b77f448879b43b3eeb72abc8e6295b22e5",
+    "scripts/test_ofd.py": "bb1fab79ed694647b68c4a52e02d3816678668376f9a8f98abead6fd428ad541"
+  },
+  "tests": 27,
+  "strict_check": "passed",
+  "self_check": "passed",
+  "stdlib_import_audit": "passed",
+  "readonly_whole_package_tests": "passed",
+  "real_samples": "not_completed",
+  "formal_spec_clause_review": "selected_clauses_only",
+  "independent_review": "reproduced issues fixed and verified",
+  "library_file_id": "libfile_00d8a309d5908191912d34ea556e884c",
+  "library_version": 1
+}

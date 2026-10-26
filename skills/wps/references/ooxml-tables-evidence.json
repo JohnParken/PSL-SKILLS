@@ -1,0 +1,16 @@
+{
+  "checked_on": "2026-10-25",
+  "purpose": "Development sources; no runtime network access",
+  "sources": [
+    {
+      "section": "WordprocessingML GridSpan",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.gridspan?view=openxml-3.0.1",
+      "used_for": "positive grid span; implicit augmentation of declared grid is possible"
+    },
+    {
+      "section": "WordprocessingML VerticalMerge",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.verticalmerge?view=openxml-3.0.1",
+      "used_for": "restart/continue and equal column span in merged group"
+    }
+  ]
+}

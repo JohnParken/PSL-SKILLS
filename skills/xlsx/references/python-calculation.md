@@ -1,16 +1,12 @@
 # Standard-library calculation and file contract
 
+不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
+
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
 
-For ET/ETT input only, `read input.et` or `read input.ett` dispatches to the
-[BIFF8 subset reader](biff8-readonly.md), returning its separate `biff8_readonly_v1` schema.
-The optional `--compatibility legacy_excel_clsid` applies only to those reads.
-For a supported embedded chart, add `--chart-policy opaque` alongside that explicit
-compatibility mode; see [embedded-charts.md](embedded-charts.md). This retains chart bytes
-without decoding/rendering and reports diagnostics. The default remains rejection.
-Exit 0 means subset extraction, not verified native WPS compatibility or formula calculation.
-All write/calculation commands remain limited to their existing XLSX/XLSM contracts.
+WPS family files are read by the separate `wps` skill. Native spreadsheet commands
+refuse `.wps`, `.et`, `.ett` and CFB data; no automatic conversion is performed.
 
 All commands run from the task directory. Replace `<skill_dir>` with the confirmed
 skill directory. Python 3.9+; no pip packages, external applications or network access.
@@ -170,5 +166,19 @@ API data paths use the same task-directory base as CLI data paths. `calculate` r
 formula caches but does not refresh the in-memory inspection index; reopen the saved
 file to inspect results. Caller-supplied caches are never accepted through the JSON API.
 
-JSON input exceeding the parser nesting depth returns a structured failure. Bounded query
+JSON input deeper than 128 object/array levels returns a structured nesting failure before decoding, independently of CPython recursion behavior. Brackets inside quoted/escaped strings do not count toward this budget. Bounded query
 readers also enforce byte limits on actual reads, not only filesystem size metadata.
+
+## Interpreter and test boundaries
+
+The maintained XLSX workflow supports Python 3.9+ using only its standard library.
+Its XML entrypoint rejects DTD/entity declarations; it currently has no Expat-version
+minimum gate. This differs from the standalone WPS OOXML reader (Expat >=2.6) and
+DOCX workflow (Python >=3.10 and Expat >=2.6). Use each skill's own self-check rather
+than inferring availability from Python's version alone.
+
+The WPS suite skips OOXML behavior tests on older Expat because that branch is
+intentionally unavailable there. A skip is not a successful OOXML extraction test;
+binary CFB/BIFF/MS-DOC tests can still run. The XLSX JSON-depth regression is unrelated
+to Expat: Python 3.12 can decode nesting that Python 3.9 rejects through RecursionError,
+so explicit structural depth checks are required for stable failures on both.

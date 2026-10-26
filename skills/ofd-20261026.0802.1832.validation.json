@@ -1,0 +1,20 @@
+{
+  "package": "skills/ofd-20261026.0802.1832.zip",
+  "sha256": "d5405fa84557d098afd6266b0dbc3e5720572ac7614c066579a067f8540b920d",
+  "bytes": 20798,
+  "members": {
+    "SKILL.md": "81d78337a17ed3f66bb09695617cd50ceef377df89f7cb99bf80f7570092b9e1",
+    "references/boundaries.md": "96e81a66e4a5e7bbc19d9871ebd79955af73ea2239c481303aa2abfde468a568",
+    "references/contract.md": "33de47aa51e362c481341f9213c71d3e20e2f6585d3ee73d4f27d77962350e44",
+    "references/validation.md": "71975810614a977cc87666e8b950a6234ced39eac617a1aaccbf6f977c4fe3c9",
+    "requirements.txt": "700203be0547374afe4cf77ebc15b6fa52c9c2022b755243600105d6d2a990a6",
+    "scripts/read_ofd.py": "22888c374b79018ae244a1323f007754798d63a1b330056246496bddebc83fec",
+    "scripts/test_ofd.py": "68045f3965685531b943fd91f62f2171ef0f6fa1a6eea2954de8f5278e509c51"
+  },
+  "tests": 18,
+  "strict_check": "passed",
+  "self_check": "passed",
+  "real_samples": "not_completed",
+  "formal_spec_clause_review": "not_completed",
+  "independent_review": "reproduced issues fixed and verified"
+}

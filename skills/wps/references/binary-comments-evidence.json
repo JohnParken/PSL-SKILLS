@@ -1,0 +1,30 @@
+{
+  "checked_on": "2026-10-25",
+  "purpose": "development sources, no runtime network",
+  "sources": [
+    {
+      "section": "PlcfandRef",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/9d82ca25-ff21-488c-bee2-dd654935c65a"
+    },
+    {
+      "section": "PlcfandTxt",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/ac1c69d1-b6b9-4d2c-8cc6-4300e0ee5921"
+    },
+    {
+      "section": "ATRDPre10",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/f2327847-8ba3-4b9c-b9a3-b0bdfac1206c"
+    },
+    {
+      "section": "LPXCharBuffer9",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/12dc49ca-7704-44f1-8136-c0cd721c5a35"
+    },
+    {
+      "section": "FibRgFcLcb97",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/0c9df81f-98d0-454e-ad84-b612cd05b1a4"
+    },
+    {
+      "section": "Xst",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/4acc83cc-44b3-4ef7-a2f7-d01d3aecb6a5"
+    }
+  ]
+}

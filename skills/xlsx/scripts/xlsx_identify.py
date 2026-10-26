@@ -14,39 +14,27 @@ from xml.etree import ElementTree as ET
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from stdlib_xlsx import Workbook, MAX_BYTES, MAX_MEMBERS, xml
-from xlsx_cfb import CompoundFile,COMPATIBILITY_MODES
 
 MAX_FILE_BYTES = 32 * 1024 * 1024
 COMPOUND_SIGNATURE = bytes.fromhex('D0CF11E0A1B11AE1')
-GUIDANCE = 'Open a trusted copy locally in WPS Spreadsheets; Save As Excel Workbook (.xlsx) to a new file, then verify sheets, values, formulas and formatting. Keep the original ET/ETT template. Renaming is not conversion.'
+GUIDANCE = '不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill 的 scripts/read_wps.py；本入口不会自动调用该技能。'
 
 
-def identify(path,*,compatibility="strict"):
+def identify(path):
     with open(path, 'rb') as handle:
         data = handle.read(MAX_FILE_BYTES + 1)
     result = {'extension': Path(path).suffix.lower(), 'container': 'unknown',
               'status': 'unrecognized', 'parser_supported': False,
-              'native_et_ett_parsed': False, 'guidance': GUIDANCE}
+              'native_et_ett_parsed': False}
     if len(data) > MAX_FILE_BYTES:
         return {**result, 'status': 'limit_exceeded', 'message': 'Input exceeds 32 MiB inspection limit'}
+    if result['extension'] in ('.wps', '.et', '.ett') or data.startswith(COMPOUND_SIGNATURE):
+        return {**result, 'container': 'compound_binary' if data.startswith(COMPOUND_SIGNATURE) else 'not_inspected',
+                'status': 'unsupported', 'recommended_skill': 'wps',
+                'message': GUIDANCE if result['extension'] in ('.wps', '.et', '.ett') else
+                'CFB 内容不是原生 XLSX/XLSM，不支持读取；请使用 wps skill 的 scripts/read_wps.py 识别。CFB 签名不证明 WPS 来源。'}
     if not data:
         return {**result, 'status': 'invalid', 'message': 'Empty input'}
-    if data.startswith(COMPOUND_SIGNATURE):
-        valid = len(data) >= 512 and data[28:30] == b'\xfe\xff'
-        if valid:
-            major, shift = struct.unpack_from('<H', data, 26)[0], struct.unpack_from('<H', data, 30)[0]
-            valid = (major, shift) in ((3, 9), (4, 12)) and len(data) >= 2**shift
-        if not valid:
-            return {**result,'container':'compound_binary','status':'invalid','header_consistent':False,
-                    'support_level':'none','message':'Truncated/inconsistent compound header'}
-        try:
-            probe=CompoundFile(data,compatibility=compatibility).report()
-            return {**result,**probe,'container_status':probe['status'],
-                    'status':'encrypted_unsupported' if probe['status']=='encrypted_unsupported' else 'conversion_required',
-                    'parser_supported':False,'header_consistent':True}
-        except (ValueError,struct.error) as exc:
-            return {**result,'container':'compound_binary','status':'invalid_or_unsupported',
-                    'header_consistent':True,'support_level':'none','message':str(exc)}
     if not data.startswith((b'PK\x03\x04', b'PK\x05\x06', b'PK\x07\x08')):
         return result
     result['container'] = 'zip'
@@ -99,15 +87,14 @@ def identify(path,*,compatibility="strict"):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input')
-    parser.add_argument("--compatibility",choices=COMPATIBILITY_MODES,default="strict")
     args = parser.parse_args()
     try:
-        result = identify(args.input,compatibility=args.compatibility)
+        result = identify(args.input)
     except OSError as exc:
         print(json.dumps({'status': 'failed', 'message': str(exc)}))
         return 1
     print(json.dumps(result, ensure_ascii=False))
-    return 0
+    return 1 if result.get('recommended_skill') == 'wps' else 0
 
 
 if __name__ == '__main__':

@@ -1,0 +1,18 @@
+# BIFF8 富文本 Continue 子集
+
+支持 SST 的字符和 FormatRun 续段，不解释字体效果，不恢复样式。每个字符串的固定头（cch、flags、cRun）必须在同一记录；字符阶段续段带 0/1 编码字节，可切换压缩低字节/UTF-16。UTF-16 不得在单个 code unit 内断开，代理对可跨记录并在逻辑拼接后校验。字符读完后切换为原始格式 run 阶段，续段不消费编码字节；严格按 cRun×4 收集，支持 run 字节跨记录边界。下一个字符串从实际游标开始，不能把其头吞入 run。
+
+记录原字符串起始流偏移与 payload 偏移，保留每个 SST 字符串的一份原始 run 字节。run 索引递增且不得越出字符串；末尾哨兵的 font 按规范忽略。其他 font 必须是已存在的有效索引。返回 rich_string_formatting_not_applied 诊断，仍为 partial。
+
+cch≤32767，继续沿用记录数和文件/流预算；在收集 run 前检查剩余累计 metadata 预算。缺 Continue、空续段、非法编码、截断、奇数字节断点及不完整固定头明确拒绝。fExtSt/ExtRst 音标扩展仍 unsupported，在进入字符阶段前拒绝，不把扩展字节误当正文或格式 run。公式 String 富格式仍不支持。
+
+依据：Microsoft MS-XLS XLUnicodeRichExtendedString（2.5.293）、FormatRun（2.5.132）、Continue（2.4.58）；继续使用原有字符循环。MS-XLS 对 variable fields 续段的概括文字没有单独解释 run 阶段编码 byte，因此交叉检查 Apache POI 自有 UnicodeString writer：字符与 run 独立输出，run 续段没有编码 byte。未复制 POI 代码，未安装或执行 Java/POI。对 run 内切分采用长度限定的原始数组拼接；不猜测私有变体。
+
+规范链接（开发依据，运行时不访问）：
+
+- https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/173d9f51-e5d3-43da-8de2-be7f22e119b9
+- https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/24d30c9e-350e-4d55-a1c3-f4404cc41f99
+- https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/999fae21-d3d9-42e8-8290-639782460c67
+- https://raw.githubusercontent.com/apache/poi/trunk/poi/src/main/java/org/apache/poi/hssf/record/common/UnicodeString.java
+
+验证：test_wps_rich_strings.py 为标准库构造的合成规范样例，包含中文/ASCII/跨记录代理对、编码切换、长字符串、run 各字节分界、后接字符串、固定头/长度/编码/预算错误及固定种子结构扰动。当前已有合法 ET/ETT 样本未观察到富文本，不能称这些新行为已通过真实富文本语义验收。

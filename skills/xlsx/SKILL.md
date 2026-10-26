@@ -1,7 +1,7 @@
 ---
 name: xlsx
-version: "20261023.1913.5483"
-description: 用于读取 XLSX/XLSM、创建报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持已验证 ET/ETT 的 BIFF8 子集，含图表时可显式保留原始记录并提取单元格；不解析或渲染图表，公式缓存未验证，不支持结构编辑。
+version: "20261025.2012.3111"
+description: 用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；不支持读取 WPS 格式，请使用 wps 技能，不支持任意结构编辑或办公软件排版还原。
 license: MIT
 ---
 
@@ -14,6 +14,8 @@ The maintained entrypoint is `<skill_dir>/scripts/stdlib_xlsx.py`. Keep the comp
 Skill directory structure intact: bundled modules (including optional appearance and
 analysis modules) live in `<skill_dir>/scripts/`, and templates in
 `<skill_dir>/assets/minimal_xlsx/`. Do not distribute only the entrypoint and its direct imports.
+
+不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill。后缀大小写不影响拒绝；本技能不自动调用 wps，也不转换文件。WPS 软件保存的原生 XLSX/XLSM 仍按原生格式读取，不能仅凭生成软件名称判为 WPS 家族格式。
 
 ## 执行环境约束与首步自检
 
@@ -84,8 +86,6 @@ script path, not the path together with its arguments.
 
 | Task | Action | Reference |
 |---|---|---|
-| Read a strict BIFF8 record subset, raw dates/caches and merges | `<skill_dir>/scripts/xlsx_biff8.py`; explicit compatibility profile; real ET/ETT sample coverage remains bounded | [biff8-readonly.md](references/biff8-readonly.md) |
-| Inspect bounded compound-container structure for ET/ETT investigation | `<skill_dir>/scripts/xlsx_cfb.py`; no spreadsheet cell decoding | [et-ett-readonly.md](references/et-ett-readonly.md) |
 | Summarize explicit deposit maturity buckets and cumulative windows | `<skill_dir>/scripts/xlsx_maturity.py` | [maturity-distribution.md](references/maturity-distribution.md) |
 | Aggregate observed customers, product coverage and two-period sets | `<skill_dir>/scripts/xlsx_customers.py` | [customer-structure.md](references/customer-structure.md) |
 | Validate management policy, explicit plan deviation and comparable peers | `<skill_dir>/scripts/xlsx_management_policy.py` | [management-policy.md](references/management-policy.md) |
@@ -105,9 +105,9 @@ script path, not the path together with its arguments.
 | Suggest possible header ranges for review | `<skill_dir>/scripts/xlsx_header_candidates.py` | [header-candidates.md](references/header-candidates.md) |
 | Reconstruct or select multi-level headers | `<skill_dir>/scripts/xlsx_headers.py`; `--header-rows` in data operations | [multi-level-headers.md](references/multi-level-headers.md) |
 | Profile a region, filter or group data | `<skill_dir>/scripts/xlsx_analysis.py`, subcommand `profile` / `summarize` | [data-analysis.md](references/data-analysis.md) |
-| Diagnose file contents or ET/ETT candidates | `<skill_dir>/scripts/xlsx_identify.py` | [data-analysis.md](references/data-analysis.md) |
+| Diagnose native file contents or route WPS candidates | `<skill_dir>/scripts/xlsx_identify.py` | [data-analysis.md](references/data-analysis.md) |
 | Import CSV/TSV or export a worksheet/range | `<skill_dir>/scripts/xlsx_tabular.py`, subcommand `import` / `export` | [tabular-interchange.md](references/tabular-interchange.md) |
-| Inspect XLSX/XLSM or CSV/TSV; ET/ETT BIFF8 subset read | `read` | [read-analyze.md](references/read-analyze.md) |
+| Inspect XLSX/XLSM or CSV/TSV | `read` | [read-analyze.md](references/read-analyze.md) |
 | Style a newly created table for readability | `<skill_dir>/scripts/stdlib_xlsx.py`: `create --appearance`; `<skill_dir>/scripts/xlsx_tabular.py`: `import --appearance` | [readable-appearance.md](references/readable-appearance.md) |
 | Create a report | JSON specification → `create` | [create.md](references/create.md) |
 | Fill or correct existing cells | JSON patch → `edit` | [edit.md](references/edit.md) |
@@ -124,31 +124,10 @@ for creation; the reference does not authorize direct XML style edits.
 
 ## ET/ETT subset reading
 
-The main `read` command now routes `.et`/`.ett` (case-insensitive) to the bundled
-CFB/BIFF8 reader. The extension selects a candidate reader; actual CFB structure,
-Workbook/Book stream, BOF and every supported record must validate before cells are returned.
-Use the default strict mode first. For the documented legacy header/record compatibility subset,
-explicitly opt in after reviewing [biff8-readonly.md](references/biff8-readonly.md):
-
-```console
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.et
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.ett --compatibility legacy_excel_clsid
-```
-
-This returns the separate `biff8_readonly_v1` schema with typed cells and diagnostics,
-not the OOXML inspection schema. Exit 0 means the documented record subset was extracted;
-check issues and unverified formula caches. `native_et_ett_parsed` and
-`wps_compatibility_verified` remain false. Unknown/private records and invalid containers
-fail without partial cell output. Original public-file checks now cover one blank ET workbook and three ETT templates:
-the ET and two ETT templates extract in explicit compatibility mode. Schedule.ett also
-extracts worksheet cells when `--chart-policy opaque` is explicitly selected; the default
-chart policy still refuses it. See [real sample validation](references/et-real-validation.md). This route adds no private-record decoding, formula calculation,
-ET/ETT editing, or integration with the OOXML analysis APIs. Runtime remains standard-library
-only; no converter, third-party parser or application is invoked.
-
-For this bounded embedded-chart route, read [embedded-charts.md](references/embedded-charts.md).
-The parser retains chart/drawing payloads and reports `charts_decoded: false`; it does not
-render charts or execute their formulas. Unknown chart records remain refused.
+WPS family files (`.wps`, `.et`, `.ett`, case-insensitive) are routed to the separate
+`wps` skill. This skill does not parse those files, even when their contents are OOXML.
+CFB binary content under an XLSX/XLSM extension is refused with the same guidance.
+The standalone WPS result is JSON data, not an implicit XLSX conversion.
 
 ## Calculation policy
 
@@ -182,7 +161,7 @@ array or other specially attributed formulas is refused. Macro parts can be reta
 in XLSM files, but macros are never run. Charts and pivots are retained, not refreshed.
 Dates are exposed as stored serials or ISO strings, without display-format conversion.
 Signed/encrypted files, chart sheets and strict OOXML are unsupported. The OOXML workflow
-rejects legacy XLS/XLSB; the separate BIFF8 reader supports only its documented read-only
+rejects legacy XLS/XLSB; use the wps skill for its documented read-only
 record subset and does not enable generic XLS editing or native ET/ETT compatibility.
 
 ## Legacy utilities
@@ -230,3 +209,5 @@ this does not authorize business workflows to choose a different temporary root.
 ```console
 python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
 ```
+
+WPS JSON分析适配明确接受 biff8_readonly_v1 与 ooxml_spreadsheet_readonly_v1，保留实际输入schema、原数字和缓存诊断；不重新读取WPS原件，不转换文件。

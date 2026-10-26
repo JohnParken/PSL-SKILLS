@@ -1,0 +1,8 @@
+{
+  "purpose": "Development bibliography; runtime never accesses these sources",
+  "sources": [
+    {"title": "ECMA-376 Office Open XML File Formats, Parts 1/2/4", "url": "https://ecma-international.org/publications-and-standards/standards/ecma-376/", "scope": "OPC relationships; SpreadsheetML workbook, sheet, cell and styles schema; namespace families"},
+    {"title": "Microsoft Open XML Spreadsheet Cell", "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cell", "scope": "Stored cell type/value/formula representation; not runtime SDK dependency"}
+  ],
+  "validation": "Standard-library synthetic fixtures; no real WPS-family OOXML semantic acceptance"
+}

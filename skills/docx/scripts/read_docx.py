@@ -1,4 +1,4 @@
-"""Read DOCX/DOTX, or text from supported OOXML/MS-DOC content in .wps files."""
+"""Read native DOCX/DOTX text and explicit XML structure."""
 
 from __future__ import annotations
 
@@ -17,65 +17,32 @@ if __package__ in (None, ""):
 
 from office import xmlio as SafeET
 from office.archiveio import open_archive
-from office.binary_doc import read_ms_doc
 from office.helpers import atomic_write_bytes, check_archive, read_part
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-CONTENT_TYPES = "http://schemas.openxmlformats.org/package/2006/content-types"
-RELATIONSHIPS = "http://schemas.openxmlformats.org/package/2006/relationships"
-OFFICE_DOCUMENT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
-WPS_MAIN_TYPES = {
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml",
-}
+CFB_SIGNATURE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+WPS_SUFFIXES = {".wps", ".et", ".ett"}
 
 
-def _check_wps_signature(path):
-    """Classify only the bounded signature; ZIP content still needs validation."""
+class UnsupportedInputError(ValueError):
+    """The input belongs outside the native document reader."""
+
+
+WPS_UNSUPPORTED_MESSAGE = '不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill 的 scripts/read_wps.py；本入口不会自动调用该技能。'
+
+def _check_native_input(path):
+    """Suffix sets skill ownership; signature still gates the native parser."""
+    if Path(path).suffix.lower() in WPS_SUFFIXES:
+        raise UnsupportedInputError(WPS_UNSUPPORTED_MESSAGE)
     descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0))
     try:
         if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-            raise ValueError("WPS input must be a regular file")
+            raise ValueError("DOCX input must be a regular file")
         prefix = os.read(descriptor, 8)
     finally:
         os.close(descriptor)
-    if prefix.startswith((b"PK\x03\x04", b"PK\x05\x06")):
-        return "ooxml"
-    if prefix == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
-        return "cfb"
-    elif prefix.startswith(b"{\\rtf"):
-        kind = "RTF content"
-    elif not prefix:
-        kind = "empty file"
-    else:
-        kind = "unknown content (including unsupported legacy WPS variants)"
-    raise ValueError(f"unsupported WPS format: {kind}; only compatible OOXML or unencrypted MS-DOC text reading is supported")
-
-
-def _check_wps_package(package, budget):
-    """Recognize a narrow OOXML subset, without claiming full format validation."""
-    required = {"[Content_Types].xml", "_rels/.rels", "word/document.xml"}
-    if not required.issubset(package.namelist()):
-        raise ValueError("unsupported WPS ZIP content: required OOXML document parts are missing")
-    types = SafeET.fromstring(read_part(package, "[Content_Types].xml"), budget=budget)
-    if types.tag != f"{{{CONTENT_TYPES}}}Types":
-        raise ValueError("unsupported WPS ZIP content: invalid OOXML content-types root")
-    declarations = [node.get("ContentType") for node in types
-                    if node.tag == f"{{{CONTENT_TYPES}}}Override"
-                    and node.get("PartName") == "/word/document.xml"]
-    if len(declarations) != 1 or declarations[0] not in WPS_MAIN_TYPES:
-        raise ValueError("unsupported WPS ZIP content: ambiguous or unsupported main content type")
-    relationships = SafeET.fromstring(read_part(package, "_rels/.rels"), budget=budget)
-    if relationships.tag != f"{{{RELATIONSHIPS}}}Relationships":
-        raise ValueError("unsupported WPS ZIP content: invalid OOXML relationships root")
-    main = [node for node in relationships if node.tag == f"{{{RELATIONSHIPS}}}Relationship"
-            and node.get("Type") == OFFICE_DOCUMENT]
-    if (len(main) != 1 or main[0].get("TargetMode", "Internal") != "Internal"
-            or main[0].get("Target") not in ("word/document.xml", "/word/document.xml")):
-        raise ValueError("unsupported WPS ZIP content: ambiguous or unsupported main document relationship")
-    # Check every member's bounded length and CRC, including unparsed binary parts.
-    for name in package.namelist():
-        read_part(package, name)
+    if prefix == CFB_SIGNATURE:
+        raise UnsupportedInputError("不支持读取 CFB 二进制内容；它不是原生 DOCX/DOTX，请使用 wps skill 的 scripts/read_wps.py 识别其有限支持范围；CFB 签名不证明 WPS 来源。")
 
 
 _REVISION_TAGS = {
@@ -188,19 +155,11 @@ def read_docx(path: str | Path, *, revisions: str | None = None, include_related
     if revisions is not None and revisions not in _REVISION_TAGS:
         raise ValueError("revisions must be 'accepted', 'original', or 'all'")
     xml_budget = SafeET.XmlBudget()
-    is_wps = Path(path).suffix.lower() == ".wps"
-    if is_wps and _check_wps_signature(path) == "cfb":
-        if include_related:
-            raise ValueError("binary WPS supports main body only; --include-related is not supported")
-        if revisions not in (None, "all"):
-            raise ValueError("binary WPS cannot filter revisions; omit --revisions or use all for stored text")
-        return read_ms_doc(path)
+    _check_native_input(path)
     revisions = revisions or "accepted"
     try:
         with open_archive(path) as package:
             check_archive(package)
-            if is_wps:
-                _check_wps_package(package, xml_budget)
             try:
                 document = SafeET.fromstring(read_part(package, "word/document.xml"), budget=xml_budget)
             except KeyError as exc:
@@ -313,8 +272,7 @@ def read_docx_structure(path: str | Path, *, revisions: str = "accepted",
     Unknown elements are opaque nodes with their children, not silently dropped.
     This JSON is a versioned inspection format, not a lossless DOCX import format.
     """
-    if Path(path).suffix.lower() == ".wps":
-        raise ValueError("WPS supports text reading only; structured JSON is not supported")
+    _check_native_input(path)
     if revisions not in _REVISION_TAGS:
         raise ValueError("revisions must be 'accepted', 'original', or 'all'")
     result = {
@@ -363,15 +321,15 @@ def read_docx_structure(path: str | Path, *, revisions: str = "accepted",
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", type=Path, help="input .docx, .dotx, or supported OOXML/MS-DOC .wps file (text only)")
+    parser.add_argument("input", type=Path, help="input .docx or .dotx file")
     parser.add_argument("-o", "--output", type=Path)
     parser.add_argument("--revisions", choices=tuple(_REVISION_TAGS), default=None,
-                        help="OOXML defaults to accepted; binary WPS defaults to stored text, only all is supported")
+                        help="OOXML defaults to accepted")
     parser.add_argument("--include-related", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
-    if args.input.suffix.lower() not in (".docx", ".dotx", ".wps"):
-        parser.error("input must have a .docx, .dotx or .wps extension")
+    if args.input.suffix.lower() not in WPS_SUFFIXES | {".docx", ".dotx"}:
+        parser.error("input must have a .docx or .dotx extension")
     try:
         if args.output and args.output.exists():
             try:
@@ -389,6 +347,12 @@ def main(argv: list[str] | None = None) -> int:
             atomic_write_bytes(args.output, text.encode("utf-8"))
         else:
             sys.stdout.write(text)
+    except UnsupportedInputError as exc:
+        if args.format == "json":
+            print(json.dumps({"status": "unsupported", "message": str(exc)}, ensure_ascii=False))
+        else:
+            print("unsupported: " + str(exc), file=sys.stderr)
+        return 1
     except (ValueError, OSError, zipfile.BadZipFile) as exc:
         parser.error(str(exc))
     return 0

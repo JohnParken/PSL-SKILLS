@@ -1,5 +1,7 @@
 # Read-only data analysis and file identification
 
+不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
+
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
 
@@ -82,33 +84,23 @@ Exit 0 indicates completed analysis; exit 1 returns JSON `status: failed`.
 
 ## Identify contents, including ET/ETT candidates
 
+`xlsx_identify.py` inspects native OOXML inputs. WPS family suffixes and CFB signatures
+return `unsupported` with `recommended_skill: wps`; this does not validate the binary container or extract cells.
+Use the separately installed wps skill for those inputs. Never rename input to bypass routing.
+
+## Analyze a WPS result without conversion
+
+Save the JSON result from the wps skill, then pass that `.json` to the same region-based
+analysis command. Only successful `biff8_readonly_v1` typed-cell results are accepted.
+This validates schema/budgets and restores explicitly tagged numeric values as Decimal;
+text remains text, date serials remain numbers, and no XLSX file is created.
+
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_identify.py" input.et
+python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" profile result.json --sheet Data
+python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" summarize result.json --sheet Data --query query.json
 ```
 
-The inspector reads at most 32 MiB plus one limit-detection byte. ZIP limits are 10,000
-members and 128 MiB declared uncompressed data. It checks ZIP member safety, content
-types and the maintained OOXML worksheet indexer. `supported_subset` means that indexer
-accepted matching XLSX/XLSM contents; it does not validate formulas or application layout.
-`extension_mismatch` can identify OOXML contents under another suffix, with the expected
-extension reported; the maintained reader still rejects that suffix. A ZIP signature
-alone never yields spreadsheet support. Templates or other OOXML document types may be
-unsupported. Unrecognized data is not automatically declared corrupt.
-
-`compound_binary` now uses the bounded [CFB container reader](et-ett-readonly.md) to check
-allocation chains/directory structure and list streams. Container readability does not
-establish BIFF or ET/ETT semantics. A header alone is insufficient; invalid or outside-subset
-structures are reported. Known encrypted payloads are unsupported. Native ET/ETT cell
-parsing is not implemented, and support-level flags always distinguish those claims.
-The main `stdlib_xlsx.py read input.et` / `read input.ett` route separately attempts
-the documented [BIFF8 record subset](biff8-readonly.md); inspector flags remain container-only.
-This does not verify native WPS compatibility.
-Outside this standard-library runtime, a user can independently open a trusted copy
-locally in WPS Spreadsheets, Save As a new XLSX, preserve
-the original template, then verify sheets, values, formulas and formatting. Renaming
-is not conversion. No application is launched and no conversion happens automatically.
-The inspector exits 0 for a completed diagnosis, including unsupported/invalid contents;
-inspect JSON `status` and `parser_supported`. File I/O failure returns exit 1.
-
-Ranges must be nonempty coordinate strings. Query byte limits are enforced during reads;
-excessive JSON nesting returns structured failure without a Python traceback.
+Extraction diagnostics are included as `source_issues` and `source_status`. Formula cells
+still require explicit `--formulas cached`; missing/error caches fail. This is analysis of
+previously extracted JSON, not WPS binary parsing or cache validation. Other native loader
+APIs still require XLSX/XLSM. Dates, private streams and opaque charts retain the source limits.

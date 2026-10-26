@@ -1,0 +1,10 @@
+{
+  "checked_on": "2026-10-25",
+  "sources": [
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/0c9df81f-98d0-454e-ad84-b612cd05b1a4",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/b30472e7-569e-4c9c-a8ca-07fd5432f365",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/3ed81d85-ea74-4790-8579-ab7f8eb651f7",
+    "https://learn.microsoft.com/de-at/openspecs/office_file_formats/ms-doc/49650ca7-1bfc-49e5-93ac-01a86bd2fc3e"
+  ],
+  "evidence": "synthetic only; no real nonempty note acceptance"
+}

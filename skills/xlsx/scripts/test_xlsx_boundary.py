@@ -57,6 +57,20 @@ class BoundaryTests(unittest.TestCase):
             with self.subTest(command=arguments[0]):
                 self.assertIn('nesting',self.run_cli(arguments)['message'])
 
+    def test_json_depth_is_explicit_and_ignores_quoted_delimiters(self):
+        from stdlib_xlsx import MAX_JSON_DEPTH
+        text = '[' * MAX_JSON_DEPTH + '0' + ']' * MAX_JSON_DEPTH
+        self.query.write_text(text)
+        self.assertIsInstance(read_spec(self.query), list)
+        self.assertIsInstance(read_spec(self.query, max_bytes=65536), list)
+        self.query.write_text('[' + text + ']')
+        for budget in (None, 65536):
+            with self.assertRaisesRegex(ValueError, 'nesting'):
+                read_spec(self.query, max_bytes=budget)
+        value = {'text': '[{' * 2000 + '"\\' + '}]' * 2000}
+        self.query.write_text(json.dumps(value))
+        self.assertEqual(read_spec(self.query, max_bytes=65536), value)
+
     def test_deep_creation_spec_leaves_no_output(self):
         self.query.write_text('['*2000+'0'+']'*2000)
         output=self.path.with_name('output.xlsx')

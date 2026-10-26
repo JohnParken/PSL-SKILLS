@@ -1,13 +1,15 @@
 # PSL-SKILLS
 
-面向电子表格和 Word 文档处理的 Agent Skills 集合。每个 skill 包含独立的 `SKILL.md`、脚本、参考文档和资源，可按完整目录加载或分发。
+面向电子表格、Word 文档处理和 OFD 有限只读提取的 Agent Skills 集合。每个 skill 包含独立的 `SKILL.md`、脚本、参考文档和资源，可按完整目录加载或分发。
 
 ## 收录内容
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261023.1913.5483 | XLSX/XLSM 读取、XLSX 创建、受控单元格编辑、有限公式计算、CSV/TSV 交换及数据分析；ET/ETT 的 BIFF8 子集读取 |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261023.1811.5119 | DOCX 生成、DOCX/DOTX 读取和受控编辑、模板填充、表格和图片修改、基础批注，以及受支持 WPS 文件的文本提取 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261025.2012.3111 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的 BIFF JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261025.1814.1677 | DOCX/DOTX 原生生成、读取与受控编辑；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261025.2304.0172 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；日期与公式缓存、部分读取诊断 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261026.0822.1894 | 文本型 OFD 安全只读提取；保留页码、坐标与来源；不渲染、OCR、验签或转换；真实样本验收未完成 |
 
 ## 目录结构
 
@@ -26,6 +28,12 @@ PSL-SKILLS/
     │   ├── scripts/          # 标准库入口、分析模块、兼容工具和测试
     │   ├── references/       # 输入格式、能力边界和使用说明
     │   └── assets/           # XLSX 模板和示例数据
+    ├── wps/
+    │   ├── SKILL.md
+    │   ├── requirements.txt
+    │   ├── scripts/          # 独立正文/表格读取、CFB 与合成回归
+    │   └── references/       # 固定 FIB 范围、来源与验证限制
+    ├── ofd/                  # 独立安全只读提取与验证记录
     └── docx/
         ├── SKILL.md
         ├── requirements.txt
@@ -38,7 +46,9 @@ PSL-SKILLS/
 
 - **xlsx**：Python 3.9 及以上；维护中的主流程仅依赖标准库。
 - **docx**：Python 3.10 及以上，标准库包含 zlib，Expat 至少为 2.6.0。
-- 两者的主流程均无需安装第三方 Python 包或办公软件。使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存。
+- **ofd**：仅 Python >=3.10 自带标准库（含 zlib、Expat >=2.6.0）；零第三方包、零外部软件。自带能力缺失则诊断并停止，不额外安装组件。
+- **wps**：Python 3.9+，全部 OOXML 分支另需 Expat >=2.6；仅标准库，独立包内读取，不转换文件。
+- 以上主流程均无需安装第三方 Python 包或办公软件。使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存。
 - XLSX 目录中保留的旧工具可能依赖 pandas、openpyxl 或 LibreOffice，不属于推荐流程；不要据此为主流程安装依赖。
 
 ## 如何使用
@@ -59,7 +69,6 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
 
 ```console
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.et
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create ./report.json ./report.xlsx
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
 ```
@@ -93,10 +102,21 @@ python3 -I -S -B "<skill_dir>/scripts/read_docx.py" ./output.docx
 
 `--verify` 核对生成子集的内容与 XML 排版意图，不等同于页面视觉验收；字体显示、实际分页和页码仍需在文档阅读器中检查。
 
+### OFD
+
+独立入口见 [ofd](skills/ofd/SKILL.md)。先运行自检，再在任务目录读取相对输入路径；结果保留文字来源和诊断，不恢复页面或语义阅读顺序：
+
+```console
+python3 -I -S -B "<skill_dir>/scripts/read_ofd.py" --check
+python3 -I -S -B "<skill_dir>/scripts/read_ofd.py" ./input.ofd
+```
+
+OFD 离线分发包沿用仓库现有位置 `skills/ofd-<version>.zip`；完整目录独立安装，不依赖相邻 wps/docx/xlsx。版本化 ZIP 按现有 `.gitignore` 规则不纳入版本控制，源目录和 README 是维护入口。
+
 ## 能力边界
 
-- XLSX 现有文件编辑仅支持单元格值、公式和现有样式索引，不支持行、列或工作表的结构增删移动；宏不执行，图表和透视表不刷新。主命令 `read` 已接入 ET/ETT 的 BIFF8 只读子集，按实际内容校验；已用一个真实空白 ET 和三个真实 ETT 模板验证：ET 及其中两个 ETT 可提取子集，Schedule.ett 可通过显式 `--chart-policy opaque` 保留图表原始记录并提取单元格（默认仍拒绝，不解析或渲染图表）；详见 [真实样本验证](skills/xlsx/references/et-real-validation.md)，不能视为通用 WPS 格式支持。
-- DOCX 支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 支持仅限明确列出的兼容格式及文本读取。
+- XLSX 原生编辑仅支持受控单元格操作，不支持任意结构编辑；ET/ETT 的 CFB/BIFF8 引擎、样本清单与回归已迁至 wps。docx/xlsx 不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；读取入口明确拒绝，不自动调用。四个既有 ET/ETT 真实样本可在显式兼容/opaque 策略下提取有限子集；详见 [真实样本记录](skills/wps/references/et-real-validation.md)。这不是通用 WPS 格式支持。
+- DOCX 支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 家族读取能力见独立 wps 技能；不再由 docx 提供。
 - 更详细的限制、错误处理、验收和中间文件清理规则以各 skill 的 `SKILL.md` 为准。
 
 ## 版本规则
@@ -148,3 +168,18 @@ DOCX 本次复制的目录未附带测试套件。维护时至少执行环境自
 | `skills` | `0f0895690dfde8c203e6c2f5dbbac5a2615faf5e` |
 
 `xlsx` 声明采用 MIT，来源项目的许可文本保存在 [licenses/minimax-skills-MIT.txt](licenses/minimax-skills-MIT.txt)。`skills` 来源项目的 README 将 DOCX 等文档 skills 描述为 source-available；本次本地 DOCX 目录没有独立许可证文件，未为其补写或推定新的许可证。本仓库不以单一许可证覆盖两个来源。
+
+## 当前办公格式范围
+
+| 后缀/输入 | 读取 | 生成或编辑 | 验证与边界 |
+|---|---|---|---|
+| .docx | 正文与显式结构 | 生成及受控编辑 | 原生行为回归；不保证任意排版 |
+| .dotx | ZIP/XML读取 | 同后缀定点编辑，不生成DOTX | 规则受控，不以改后缀转换 |
+| .xlsx | 原生读取与分析 | XLSX生成、受控编辑/公式子集 | 不等于完整Excel引擎 |
+| .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
+| .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
+| .ofd | ofd 提取文字与元数据 | 不支持 | 合成回归；真实样本及全文规范逐条核对未完成 |
+| .wps/.et/.ett | wps按实际结构读取有限子集 | 不生成、不编辑、不转换 | 五真实原件仅partial；新增容器主要合成验证 |
+| 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
+
+仓库没有PDF、PPT/PPTX、ODT/ODS/ODP、RTF专用技能或通用转换器。旧DOC/XLS内部结构只能由wps识别其有限MS-DOC/BIFF子集，不能称完整支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。推荐下一步先补有合法来源的真实样本与独立内容预期，再按实际办公需求单独规划PDF/PPT等技能；不要通过后缀或依赖推断已支持。

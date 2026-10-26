@@ -175,7 +175,7 @@ class XlsxPathIntegrationTests(unittest.TestCase):
                 )
                 # Every maintained CLI must load its own dependencies outside the install cwd.
                 entrypoints = (
-                    "stdlib_xlsx", "xlsx_biff8", "xlsx_cfb", "xlsx_maturity",
+                    "stdlib_xlsx", "xlsx_maturity",
                     "xlsx_customers", "xlsx_management_policy", "xlsx_deposits",
                     "xlsx_deposit_structure", "xlsx_reconcile", "xlsx_dashboard",
                     "xlsx_management", "xlsx_daily", "xlsx_result_export",

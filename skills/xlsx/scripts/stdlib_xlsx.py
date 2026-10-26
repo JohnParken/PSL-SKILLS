@@ -22,6 +22,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from formula_engine import FormulaError, evaluate
 from xlsx_xml import parse_xml
 
+class UnsupportedInputError(ValueError):
+    """The input is outside native spreadsheet reading support."""
+
+
+WPS_UNSUPPORTED_MESSAGE = '不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill 的 scripts/read_wps.py；本入口不会自动调用该技能。'
+
 MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PKG = "http://schemas.openxmlformats.org/package/2006/relationships"
@@ -98,8 +104,13 @@ class Workbook:
 
     @classmethod
     def load(cls, path):
+        if Path(path).suffix.lower() in (".wps", ".et", ".ett"):
+            raise UnsupportedInputError(WPS_UNSUPPORTED_MESSAGE)
         if Path(path).suffix.lower() not in (".xlsx", ".xlsm"):
             raise ValueError("Only .xlsx and .xlsm packages are supported")
+        with open(path, "rb") as probe:
+            if probe.read(8) == bytes.fromhex("d0cf11e0a1b11ae1"):
+                raise UnsupportedInputError("不支持读取 CFB 二进制内容；它不是原生 XLSX/XLSM，请使用 wps skill 的 scripts/read_wps.py 识别其有限支持范围；CFB 签名不证明 WPS 来源。")
         with zipfile.ZipFile(path) as archive:
             infos = archive.infolist()
             if len(infos) > MAX_MEMBERS or sum(i.file_size for i in infos) > MAX_BYTES:
@@ -534,6 +545,33 @@ def validate_spec(spec):
     return spec["sheets"]
 
 
+MAX_JSON_DEPTH = 128
+
+
+def check_json_depth(text):
+    """Bound structural nesting independently of CPython decoder recursion."""
+    depth = 0
+    quoted = False
+    escaped = False
+    for character in text:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                quoted = False
+        elif character == '"':
+            quoted = True
+        elif character in "[{":
+            depth += 1
+            if depth > MAX_JSON_DEPTH:
+                raise ValueError("JSON nesting exceeds supported depth: " + str(MAX_JSON_DEPTH))
+        elif character in "}]":
+            depth -= 1
+    # Syntax validity, including mismatched delimiters, remains json.loads' job.
+
+
 def read_spec(path, max_bytes=None):
     def pairs(items):
         result = {}
@@ -547,14 +585,18 @@ def read_spec(path, max_bytes=None):
     try:
         if max_bytes is None:
             with open(path, encoding="utf-8-sig") as handle:
-                return json.load(handle, parse_float=Decimal, parse_constant=reject, object_pairs_hook=pairs)
+                text = handle.read()
+            check_json_depth(text)
+            return json.loads(text, parse_float=Decimal, parse_constant=reject, object_pairs_hook=pairs)
         if type(max_bytes) is not int or max_bytes < 1:
             raise ValueError("JSON byte limit must be a positive integer")
         with open(path, "rb") as handle:
             data = handle.read(max_bytes + 1)
         if len(data) > max_bytes:
             raise ValueError("JSON query exceeds byte limit: " + str(max_bytes))
-        return json.loads(data.decode("utf-8-sig"), parse_float=Decimal,
+        text = data.decode("utf-8-sig")
+        check_json_depth(text)
+        return json.loads(text, parse_float=Decimal,
                           parse_constant=reject, object_pairs_hook=pairs)
     except RecursionError as exc:
         raise ValueError("JSON nesting exceeds supported parser depth") from exc
@@ -587,10 +629,6 @@ def main():
     read = commands.add_parser("read")
     read.add_argument("input")
     read.add_argument("--encoding", default="utf-8-sig", help="CSV/TSV encoding")
-    read.add_argument("--compatibility", choices=("strict", "legacy_excel_clsid"), default="strict",
-                      help="BIFF8 ET/ETT read only; explicit known legacy header compatibility")
-    read.add_argument("--chart-policy", choices=("reject", "opaque"), default="reject",
-                      help="ET/ETT only: retain bounded embedded chart bytes without decoding")
     for name in ("create", "edit", "calculate"):
         sub = commands.add_parser(name)
         if name != "create":
@@ -611,19 +649,9 @@ def main():
             result = {"status": "ready", "python": sys.version.split()[0], "dependencies": "standard_library_only"}
         elif args.command == "read":
             suffix = Path(args.input).suffix.lower()
-            if suffix not in (".et", ".ett") and args.chart_policy != "reject":
-                raise ValueError("--chart-policy applies only to ET/ETT subset reads")
-            if suffix not in (".et", ".ett") and args.compatibility != "strict":
-                raise ValueError("--compatibility applies only to ET/ETT subset reads")
-            if suffix in (".et", ".ett"):
-                from xlsx_biff8 import read_file
-                result = read_file(args.input, compatibility=args.compatibility, chart_policy=args.chart_policy)
-                encoded = json.dumps(result, ensure_ascii=False, default=str, allow_nan=False)
-                if len(encoded.encode("utf-8")) > 16 * 1024 * 1024:
-                    raise ValueError("Decoded JSON exceeds 16 MiB budget")
-                print(encoded)
-                return 0
-            elif suffix in (".csv", ".tsv"):
+            if suffix in (".wps", ".et", ".ett"):
+                raise UnsupportedInputError(WPS_UNSUPPORTED_MESSAGE)
+            if suffix in (".csv", ".tsv"):
                 result = read_csv(args.input, args.encoding, "\t" if suffix == ".tsv" else ",")
             else:
                 result = Workbook.load(args.input).inspect()
@@ -641,6 +669,9 @@ def main():
                 result["output"] = args.output
         print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
         return 1 if result.get("status") == "failed" else 2 if result.get("status") == "incomplete" else 0
+    except UnsupportedInputError as exc:
+        print(json.dumps({"status": "unsupported", "output_written": False, "message": str(exc)}, ensure_ascii=False))
+        return 1
     except (ValueError, csv.Error, LookupError, OSError, struct.error, OverflowError, InvalidOperation, zipfile.BadZipFile, ET.ParseError) as exc:
         print(json.dumps({"status": "failed", "output_written": False, "message": str(exc)}, ensure_ascii=False))
         return 1

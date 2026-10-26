@@ -1,0 +1,9 @@
+{
+  "checked_on": "2026-10-25",
+  "sources": [
+    {
+      "url": "https://support.microsoft.com/en-us/excel/review-guidelines-for-customizing-a-number-format",
+      "used_for": "Positional sections, quoted text, underscore spacing, asterisk repetition, numeric placeholders; bounded interpretation only"
+    }
+  ]
+}

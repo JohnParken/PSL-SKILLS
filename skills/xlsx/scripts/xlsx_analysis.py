@@ -11,7 +11,7 @@ from xml.etree import ElementTree as ET
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stdlib_xlsx import MAX_CELLS, Workbook, address, read_spec
+from stdlib_xlsx import MAX_CELLS, Workbook, address, read_spec, UnsupportedInputError
 from xlsx_tabular import column_name
 from xlsx_headers import reconstruct, resolve_column
 
@@ -60,7 +60,11 @@ def region(source, sheet, cell_range=None, header=True, formulas='reject',
            header_rows=None, header_exclude=(), include_spanning_headings=False):
     if formulas not in ('reject', 'cached'):
         raise ValueError('Formula policy must be reject or cached')
-    book = Workbook.load(source)
+    if Path(source).suffix.lower() == '.json':
+        from xlsx_wps_result import load_result
+        book = load_result(source, address)
+    else:
+        book = Workbook.load(source)
     if sheet not in book.cells:
         raise ValueError('Unknown worksheet: ' + sheet)
     cells = book.cells[sheet]
@@ -100,7 +104,8 @@ def region(source, sheet, cell_range=None, header=True, formulas='reject',
     data_start = r1
     if header_rows is not None:
         schema = reconstruct(book, sheet, (r1,c1,r2,c2), header_rows, read_cell,
-                             header_exclude, include_spanning_headings)
+                             header_exclude, include_spanning_headings,
+                             merge_nodes=book.wps_merges[sheet] if hasattr(book, 'wps_merges') else None)
         data_start = schema['data_first_row']
     rows = [(row, [read_cell(column_name(col)+str(row)) for col in range(c1,c2+1)])
             for row in range(data_start,r2+1)]
@@ -117,6 +122,11 @@ def region(source, sheet, cell_range=None, header=True, formulas='reject',
                 'precision': 'exact sums up to 1000 digits; means 34 significant digits, ROUND_HALF_EVEN',
                 'decimals': 'JSON strings; use type tags to distinguish numbers from text',
                 'visibility': 'includes hidden rows/columns and filtered-out rows; merges are not expanded'}
+    if hasattr(book, 'wps_source_status'):
+        metadata['input_schema'] = book.wps_input_schema
+        metadata['source_status'] = book.wps_source_status
+        metadata['source_issues'] = book.wps_issues
+        metadata['source_warning'] = 'Stored subset only; diagnostics and unverified caches remain applicable'
     if schema is None and headers is not None:
         metadata['column_headers'] = [{'column':col,'type':item[0],'value':item[1],
                                        'coordinate':col+str(r1)} for col,item in zip(columns,headers)]
@@ -277,6 +287,9 @@ def main():
                              args.header_rows, args.header_exclude, args.include_spanning_headings)
         print(json.dumps(result, ensure_ascii=False, default=str))
         return 0
+    except UnsupportedInputError as exc:
+        print(json.dumps({'status': 'unsupported', 'message': str(exc)}, ensure_ascii=False))
+        return 1
     except (ValueError, OSError, LookupError, DecimalException, ET.ParseError, zipfile.BadZipFile) as exc:
         print(json.dumps({'status': 'failed', 'message': str(exc)}, ensure_ascii=False))
         return 1

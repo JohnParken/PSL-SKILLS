@@ -1,6 +1,8 @@
 # 结构读取与进阶检查
 
-`.wps` 仅支持经内容识别的兼容 OOXML 包文本及受支持的未加密 CFB/MS-DOC 正文读取，具体范围见 [WPS 格式识别与文本读取](../SKILL.md#wps-格式识别与文本读取)。本节 JSON 模式只适用于 DOCX/DOTX，不接受 `.wps`。
+不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
+
+`.wps`、`.et`、`.ett` 统一交给 wps 技能；本技能文本及 JSON 读取均拒绝这些后缀。伪装为 DOCX/DOTX 的 CFB 内容同样明确引导 wps。
 
 ## 结构化 JSON
 
