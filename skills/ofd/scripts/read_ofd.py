@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import posixpath
 import re
@@ -62,6 +63,77 @@ def ofd_nodes(root):
 
 def text_of(element):
     return (element.text or '').strip()
+
+
+def single_child(root, name, *, required=False):
+    """Reject ambiguity in the single-value containers this reader relies on."""
+    children = root.findall(q(name))
+    if len(children) > 1:
+        raise ReadError('duplicate ' + name)
+    if not children:
+        if required:
+            raise ReadError('missing ' + name)
+        return None
+    return children[0]
+
+
+def confined_environment():
+    """Require the standard-library platform primitives used by confined reads."""
+    if (os.open not in os.supports_dir_fd or not hasattr(os, 'O_NOFOLLOW')
+            or not hasattr(os, 'O_DIRECTORY')):
+        raise ReadError('unsupported: confined input requires dir_fd, O_NOFOLLOW and O_DIRECTORY')
+
+
+def confined_descriptor(path, task_root):
+    """Walk an explicitly trusted task root with directory-relative nofollow opens."""
+    confined_environment()
+    if path.is_absolute() or not path.parts or '..' in path.parts:
+        raise ReadError('input must stay within task directory')
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, 'O_CLOEXEC', 0)
+    descriptor = os.open(task_root, directory_flags)
+    try:
+        for component in path.parts[:-1]:
+            next_descriptor = os.open(component, directory_flags, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        flags = (os.O_RDONLY | os.O_NOFOLLOW | getattr(os, 'O_NONBLOCK', 0)
+                 | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_CLOEXEC', 0))
+        return os.open(path.parts[-1], flags, dir_fd=descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def read_input(path, *, task_root=None):
+    """Read one regular descriptor and reject detected concurrent byte changes.
+
+    The default API trusts its path. A supplied task_root confines relative input
+    through nofollow descriptor walks; CLI passes '.' to anchor the current task.
+    This is not a filesystem sandbox against privileged concurrent writers.
+    """
+    if task_root is None:
+        flags = (os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0)
+                 | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_CLOEXEC', 0))
+        descriptor = os.open(path, flags)
+    else:
+        descriptor = confined_descriptor(path, task_root)
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            raise ReadError('input must be a regular file')
+        if before.st_size > LIMITS['input_bytes']:
+            raise ReadError('limit: input bytes')
+        with os.fdopen(descriptor, 'rb') as handle:
+            descriptor = None
+            data = handle.read(before.st_size + 1)
+            after = os.fstat(handle.fileno())
+        identity = ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_ctime_ns')
+        if (len(data) != before.st_size
+                or any(getattr(before, key) != getattr(after, key) for key in identity)):
+            raise ReadError('input changed during read')
+        return data
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def safe_name(name):
@@ -271,15 +343,9 @@ class Package:
                            text=node.text or '') for node in root.iter()]
 
 
-def read_ofd(path):
+def read_ofd(path, *, task_root=None):
     environment()
-    path = Path(path)
-    if not path.is_file():
-        raise ReadError('input must be a regular file')
-    with path.open('rb') as handle:
-        data = handle.read(LIMITS['input_bytes'] + 1)
-    if len(data) > LIMITS['input_bytes']:
-        raise ReadError('limit: input bytes')
+    data = read_input(Path(path), task_root=task_root)
     package = Package(data)
     result = dict(schema_version='ofd-read-2', status='complete', scope='literal-text-subset',
                   sha256=hashlib.sha256(data).hexdigest(), documents=[], diagnostics=[],
@@ -306,15 +372,13 @@ def read_ofd(path):
         raise ReadError('missing DocBody')
     page_count = 0
     for body in bodies:
-        doc_root = body.find(q('DocRoot'))
-        if doc_root is None:
-            raise ReadError('missing DocRoot')
+        doc_root = single_child(body, 'DocRoot', required=True)
         doc_path = package.reference('OFD.xml', text_of(doc_root))
         document = package.xml(doc_path, 'Document')
         package.budget(document)
         doc = dict(source=doc_path, pages=[], resources=[], metadata=[], template_sources={})
         append_to(result['documents'], doc)
-        common = document.find(q('CommonData'))
+        common = single_child(document, 'CommonData')
         templates = {}
         resource_ids = {}
         if common is not None:
@@ -362,7 +426,7 @@ def read_ofd(path):
             for node in package.xml(sig_path).findall(q('Signature')):
                 detail_path, detail_nodes = package.metadata(sig_path, node.get('BaseLoc', ''), 'Signature')
                 append_to(doc['metadata'], dict(kind='Signature', source=detail_path, nodes=detail_nodes))
-        pages = document.find(q('Pages'))
+        pages = single_child(document, 'Pages', required=True)
         if pages is None or not len(pages):
             raise ReadError('missing/empty Pages')
         page_ids = set()
@@ -497,16 +561,14 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         environment()
+        confined_environment()
         if args.check:
             print('environment-ok Python>=3.10 Expat>=2.6.0 stdlib-only')
             return 0
         if not args.input:
             parser.error('input required unless --check')
-        # Data path boundary is enforced at the CLI as well as in the instructions.
-        path = Path(args.input)
-        if path.is_absolute() or '..' in path.parts or not path.resolve().is_relative_to(Path.cwd().resolve()):
-            raise ReadError('input must stay within task directory')
-        result = read_ofd(path)
+        # Root '.' is opened once; every relative component is nofollow-opened.
+        result = read_ofd(args.input, task_root='.')
         print(json.dumps(result, ensure_ascii=False, allow_nan=False))
         return 0 if result['status'] == 'complete' else 3
     except (ReadError, OSError, zipfile.BadZipFile, expat.ExpatError, RuntimeError, ValueError, ZLIB_ERROR, struct.error) as exc:

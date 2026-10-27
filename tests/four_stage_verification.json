@@ -1,0 +1,171 @@
+{
+  "branch": "main",
+  "head": "7b54bb2f5b3299b0eec2552b4249b012c597dfdb",
+  "python": "3.12.12",
+  "expat": "2.6.3",
+  "runtime": "Python standard library only; -I -S -B; executable PATH empty for full source and installed regressions",
+  "tests": {
+    "docx": 51,
+    "xlsx": 269,
+    "wps": 296,
+    "ofd": 35
+  },
+  "skips": 0,
+  "strict": "all four passed",
+  "source_and_readonly_installations_unchanged": "New clean OFD source and read-only installation unchanged during this cleanup; other packages retain prior validation records.",
+  "packages": [
+    {
+      "skill": "docx",
+      "version": "20261026.2106.1644",
+      "package": "skills/docx-20261026.2106.1644.zip",
+      "sha256": "0f21f8db43ba7f331a43875aad103575014782b9fa13bb77421c276b93f50661",
+      "file_count": 41,
+      "installed_test_exit": 0,
+      "installed_test_summary": "...................................................\n----------------------------------------------------------------------\nRan 51 tests in 0.969s\n\nOK\n",
+      "installed_source_unchanged": true
+    },
+    {
+      "skill": "xlsx",
+      "version": "20261026.2106.1644",
+      "package": "skills/xlsx-20261026.2106.1644.zip",
+      "sha256": "7845b4b957057644048d7100b07936aa287f1e6a7e6071675d62143465b2a6e1",
+      "file_count": 124,
+      "installed_test_exit": 0,
+      "installed_test_summary": ".....................................................................................................................................................\n----------------------------------------------------------------------\nRan 269 tests in 14.608s\n\nOK\n",
+      "installed_source_unchanged": true
+    },
+    {
+      "skill": "wps",
+      "version": "20261026.2106.1644",
+      "package": "skills/wps-20261026.2106.1644.zip",
+      "sha256": "239aa47122f10caa9885bd1da589a7fb9a8f2e8ed0f52ced6e6526c800133df1",
+      "file_count": 114,
+      "installed_test_exit": 0,
+      "installed_test_summary": "......................................................................................................................................................\n----------------------------------------------------------------------\nRan 296 tests in 1.534s\n\nOK\n",
+      "installed_source_unchanged": true
+    },
+    {
+      "skill": "ofd",
+      "version": "20261026.2117.0168",
+      "package": "skills/ofd-20261026.2117.0168.zip",
+      "sha256": "940e5283f0f25525d61d2bcaf94ef6d070ad84c5c549615e96a0c8e802c22191",
+      "members": [
+        "ofd/SKILL.md",
+        "ofd/references/boundaries.md",
+        "ofd/references/contract.md",
+        "ofd/references/real-samples.json",
+        "ofd/references/validation.md",
+        "ofd/requirements.txt",
+        "ofd/scripts/read_ofd.py",
+        "ofd/scripts/test_ofd.py"
+      ],
+      "source_sha256": {
+        "SKILL.md": "734496e39d907cf21dfdfb88b1f6fd0208ad12d974aab9bfc1752b003457617f",
+        "references/boundaries.md": "cf596cc656b9664a13202310c7a4de0a742137bddf9348daea1794365c0114a3",
+        "references/contract.md": "c5a81988694453c010dac7942ebeae4fa8c6d23ab2f645beb0746904ca1cb0f1",
+        "references/real-samples.json": "981c11a0607840406764a606c9d713792fd222f90de130fc84642f9d5b86047a",
+        "references/validation.md": "641889b42b497631987b0ef3db894a068310f0e5fe5189784e891e30e58ee5a9",
+        "requirements.txt": "423841be34df23375c319889cc694b1fd76cfebc8cd5712a008356f4d44259c8",
+        "scripts/read_ofd.py": "f20c9e4be8d929e251cb523c0d236ae6c31dce2a628f1fda8e993f15e8e3ca27",
+        "scripts/test_ofd.py": "4e6e430e53e141e4d552804a4354b0ba0921a08e1f69433ce25395144fa5882e"
+      },
+      "crc": "passed",
+      "source_member_hash_identity": "passed",
+      "source_and_installation_unchanged": true,
+      "delivery_status": "LOCAL_READY_NO_UPLOAD"
+    }
+  ],
+  "task_selection": {
+    "correct": 20,
+    "total": 20,
+    "method": "independent blinded finite simulation",
+    "real_host_trigger": "untested"
+  },
+  "real_samples": {
+    "wps": "four hash-pinned ET/ETT originals, 198 independent typed stored-value observations including 33 unverified formula caches; .wps original not reacquired",
+    "ofd": "Valid evidence: one producer-published OFD 1.0 sample only. Official-original evidence withdrawn for scope violation; government body-content acceptance incomplete."
+  },
+  "unverified": [
+    "real host automatic skill activation",
+    "broad WPS/OFD compatibility and government OFD content acceptance",
+    "Office rendering/fonts/page layout and full XSD or GB/T conformance",
+    "dedicated Python naming linter unavailable; not installed"
+  ],
+  "restricted_library_samples": "Correction: the public-reacquired official_guideline.ofd is confirmed byte-identical to a scope-403-denied Library original. Evidence withdrawn; no further access or distribution.",
+  "git_staged": false,
+  "committed_or_pushed": false,
+  "report_correction": "Withdrawn: parent confirmed this input is byte-identical to a Library original denied with scope 403. Public reacquisition did not authorize access. Excluded from valid acceptance; no government body-content acceptance completed. No further input access or distribution.",
+  "validation_scope": "Historical four-skill 651-test baseline retained. This cleanup reran only OFD 35 synthetic tests plus selfcheck, strict, links and new package/source hashes; no restricted input accessed.",
+  "historical_baseline_version": "20261026.2106.1644",
+  "current_versions": {
+    "docx": "20261026.2106.1644",
+    "xlsx": "20261026.2106.1644",
+    "wps": "20261026.2106.1644",
+    "ofd": "20261026.2117.0168"
+  },
+  "historical_package_validation": [
+    {
+      "skill": "docx",
+      "version": "20261026.2106.1644",
+      "package": "skills/docx-20261026.2106.1644.zip",
+      "sha256": "0f21f8db43ba7f331a43875aad103575014782b9fa13bb77421c276b93f50661",
+      "file_count": 41,
+      "installed_test_exit": 0,
+      "installed_test_summary": "...................................................\n----------------------------------------------------------------------\nRan 51 tests in 0.969s\n\nOK\n",
+      "installed_source_unchanged": true
+    },
+    {
+      "skill": "xlsx",
+      "version": "20261026.2106.1644",
+      "package": "skills/xlsx-20261026.2106.1644.zip",
+      "sha256": "7845b4b957057644048d7100b07936aa287f1e6a7e6071675d62143465b2a6e1",
+      "file_count": 124,
+      "installed_test_exit": 0,
+      "installed_test_summary": ".....................................................................................................................................................\n----------------------------------------------------------------------\nRan 269 tests in 14.608s\n\nOK\n",
+      "installed_source_unchanged": true
+    },
+    {
+      "skill": "wps",
+      "version": "20261026.2106.1644",
+      "package": "skills/wps-20261026.2106.1644.zip",
+      "sha256": "239aa47122f10caa9885bd1da589a7fb9a8f2e8ed0f52ced6e6526c800133df1",
+      "file_count": 114,
+      "installed_test_exit": 0,
+      "installed_test_summary": "......................................................................................................................................................\n----------------------------------------------------------------------\nRan 296 tests in 1.534s\n\nOK\n",
+      "installed_source_unchanged": true
+    },
+    {
+      "skill": "ofd",
+      "version": "20261026.2106.1644",
+      "package": "skills/ofd-20261026.2106.1644.zip",
+      "sha256": "9f9a5268d027b9abfaf750beed4419fa3e4531a1f1d8dc911f293510f2d3042a",
+      "file_count": 8,
+      "installed_test_exit": 0,
+      "installed_test_summary": "...................................\n----------------------------------------------------------------------\nRan 35 tests in 0.301s\n\nOK\n",
+      "installed_source_unchanged": true,
+      "delivery_status": "WITHHELD_SCOPE_DERIVED_EVIDENCE",
+      "contains_original_binary": false,
+      "contains_derived_restricted_metadata_and_claims": true,
+      "manifest_basis": "Previously recorded source/ZIP member identity and eight source filenames; no ZIP or restricted input reread."
+    }
+  ],
+  "superseded_ofd_packages": {
+    "status": "DO_NOT_USE_FOR_CURRENT_DELIVERY_RETAINED_NOT_DELETED",
+    "paths": [
+      "skills/ofd-20261026.0802.1832.zip",
+      "skills/ofd-20261026.0822.1894.zip",
+      "skills/ofd-20261026.2100.4983.zip",
+      "skills/ofd-20261026.2104.5788.zip",
+      "skills/ofd-20261026.2106.1644.zip"
+    ]
+  },
+  "local_cleanup_validation": {
+    "ofd_tests": 35,
+    "strict": "passed",
+    "links_checked": 6,
+    "new_package_identity": "passed",
+    "restricted_input_access": false,
+    "old_zip_read": false,
+    "upload": false
+  }
+}

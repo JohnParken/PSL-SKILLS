@@ -26,7 +26,7 @@ class RoutingTests(unittest.TestCase):
             for output_format in ('json', 'text'):
                 run = subprocess.run([sys.executable, '-I', '-S', '-B', script,
                                       'missing' + suffix, '--format', output_format],
-                                     capture_output=True, text=True)
+                                     capture_output=True, text=True, encoding="utf-8")
                 self.assertEqual(run.returncode, 1, run.stderr)
                 if output_format == 'json':
                     result = json.loads(run.stdout)
@@ -65,14 +65,14 @@ class RoutingTests(unittest.TestCase):
             spec = {'blocks': [{'type': 'heading', 'level': 1, 'text': '验证'},
                                {'type': 'paragraph', 'text': '中文 ABC'},
                                {'type': 'table', 'rows': [['甲', '乙'], ['1', '2']], 'header': True}]}
-            (work / 'input.json').write_text(json.dumps(spec, ensure_ascii=False))
-            (work / 'replacements.json').write_text(json.dumps({'replacements': [{'old': '中文 ABC', 'new': '修改 XYZ', 'count': 1}]}))
+            (work / 'input.json').write_text(json.dumps(spec, ensure_ascii=False), encoding='utf-8')
+            (work / 'replacements.json').write_text(json.dumps({'replacements': [{'old': '中文 ABC', 'new': '修改 XYZ', 'count': 1}]}), encoding='utf-8')
             env = dict(os.environ, PATH='')
             for script, args in (
                 ('create_docx.py', ['input.json', 'native.docx', '--verify']),
                 ('edit_docx.py', ['native.docx', 'replacements.json', 'edited.docx'])):
                 proc = subprocess.run([sys.executable, '-I', '-S', '-B', str(scripts / script)] + args,
-                                      cwd=folder, env=env, capture_output=True, text=True)
+                                      cwd=folder, env=env, capture_output=True, text=True, encoding="utf-8")
                 self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
             self.assertEqual(read_docx(work / 'edited.docx'), '验证\n修改 XYZ\n甲\t乙\n1\t2')
             self.assertEqual(read_docx_structure(work / 'edited.docx')['format'], 'docx-structure')

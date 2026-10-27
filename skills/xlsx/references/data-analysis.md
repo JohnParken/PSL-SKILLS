@@ -7,9 +7,11 @@ before using this reference; internal resources and task data have different pat
 
 ## Contents
 
+- [Specialized task directory](#specialized-task-directory)
 - [Profile a sheet or region](#profile-a-sheet-or-region)
 - [Filter and summarize](#filter-and-summarize)
 - [Identify contents, including ET/ETT candidates](#identify-contents-including-etett-candidates)
+- [Analyze a WPS result without conversion](#analyze-a-wps-result-without-conversion)
 
 Resolve `<skill_dir>` from the actual SKILL.md path before running commands. Run the
 [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) first, require exit 0 and
@@ -91,7 +93,9 @@ Use the separately installed wps skill for those inputs. Never rename input to b
 ## Analyze a WPS result without conversion
 
 Save the JSON result from the wps skill, then pass that `.json` to the same region-based
-analysis command. Only successful `biff8_readonly_v1` typed-cell results are accepted.
+analysis command. Accepted typed-cell schemas are `biff8_readonly_v1` and
+`ooxml_spreadsheet_readonly_v1`; successful/partial extraction retains its actual
+input schema and diagnostics. Failed extraction and Word-text results are rejected.
 This validates schema/budgets and restores explicitly tagged numeric values as Decimal;
 text remains text, date serials remain numbers, and no XLSX file is created.
 
@@ -102,5 +106,30 @@ python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" summarize result.json --
 
 Extraction diagnostics are included as `source_issues` and `source_status`. Formula cells
 still require explicit `--formulas cached`; missing/error caches fail. This is analysis of
-previously extracted JSON, not WPS binary parsing or cache validation. Other native loader
+previously extracted JSON, not reopening WPS originals or validating caches. Other native loader
 APIs still require XLSX/XLSM. Dates, private streams and opaque charts retain the source limits.
+
+## Specialized task directory
+
+Read the selected reference before invoking its script. Paths use the confirmed `<skill_dir>`; inputs and outputs remain in the task directory.
+
+| Task | Action | Reference |
+|---|---|---|
+| Summarize explicit deposit maturity buckets and cumulative windows | `<skill_dir>/scripts/xlsx_maturity.py` | [maturity-distribution.md](maturity-distribution.md) |
+| Aggregate observed customers, product coverage and two-period sets | `<skill_dir>/scripts/xlsx_customers.py` | [customer-structure.md](customer-structure.md) |
+| Validate management policy, explicit plan deviation and comparable peers | `<skill_dir>/scripts/xlsx_management_policy.py` | [management-policy.md](management-policy.md) |
+| Analyze deposit snapshot changes, daily/end differences and explicit targets | `<skill_dir>/scripts/xlsx_deposits.py` | [deposit-analysis.md](deposit-analysis.md) |
+| Calculate explicit deposit category shares and Top N concentration | `<skill_dir>/scripts/xlsx_deposit_structure.py` | [deposit-analysis.md](deposit-analysis.md) |
+| Reconcile two comparable management reports and allocate arithmetic changes | `<skill_dir>/scripts/xlsx_reconcile.py`; optional `--xlsx` | [management-reconciliation.md](management-reconciliation.md) |
+| Build a static management dashboard from a native wide report | `<skill_dir>/scripts/xlsx_dashboard.py`; optional `--xlsx` | [management-dashboard.md](management-dashboard.md) |
+| Roll leaf institutions up a validated static hierarchy | `<skill_dir>/scripts/xlsx_management.py` with hierarchy config | [institution-hierarchy.md](institution-hierarchy.md) |
+| Compute explicit daily means or month/YTD daily-flow sums | `<skill_dir>/scripts/xlsx_daily.py`, subcommand `average` / `accumulate` | [daily-analysis.md](daily-analysis.md) |
+| Build configured management wide reports | `<skill_dir>/scripts/xlsx_management.py`; optional `--xlsx` | [management-wide.md](management-wide.md) |
+| Export known analysis JSON to readable XLSX | `<skill_dir>/scripts/xlsx_result_export.py` | [result-export.md](result-export.md) |
+| Rank observations and calculate group shares | `<skill_dir>/scripts/xlsx_rank_share.py` | [rank-share.md](rank-share.md) |
+| Compute median, quantiles and variance/stddev | `<skill_dir>/scripts/xlsx_advanced.py`, subcommand `describe` | [advanced-statistics.md](advanced-statistics.md) |
+| Compare explicit monthly periods | `<skill_dir>/scripts/xlsx_advanced.py`, subcommand `compare` | [period-comparison.md](period-comparison.md) |
+| Match tables by typed composite keys | `<skill_dir>/scripts/xlsx_match.py` | [table-matching.md](table-matching.md) |
+| Deduplicate and stably sort typed rows | `<skill_dir>/scripts/xlsx_rows.py` | [row-processing.md](row-processing.md) |
+| Suggest possible header ranges for review | `<skill_dir>/scripts/xlsx_header_candidates.py` | [header-candidates.md](header-candidates.md) |
+| Reconstruct or select multi-level headers | `<skill_dir>/scripts/xlsx_headers.py`; `--header-rows` in data operations | [multi-level-headers.md](multi-level-headers.md) |

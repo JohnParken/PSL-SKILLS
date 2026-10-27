@@ -216,7 +216,7 @@ def edit_structure(source, destination, specification, *, require_no_placeholder
     operations = specification["operations"]
     if not isinstance(operations, list) or not operations:
         raise ValueError("operations must be a nonempty list")
-    with tempfile.TemporaryDirectory(prefix="docx-structure-edit-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="docx-structure-edit-", dir=".") as temporary:
         unpacked = unpack_document(source, Path(temporary) / "package")
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():

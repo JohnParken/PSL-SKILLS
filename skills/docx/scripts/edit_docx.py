@@ -307,7 +307,7 @@ def replace_text(source, destination, specification, *, parts=None, require_no_p
         for part in parts
     ):
         raise ValueError("Only document.xml and numbered header/footer parts are supported")
-    with tempfile.TemporaryDirectory(prefix="docx-edit-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="docx-edit-", dir=".") as tmp:
         unpacked = unpack_document(source, Path(tmp) / "package")
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():

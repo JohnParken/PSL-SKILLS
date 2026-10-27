@@ -1,8 +1,8 @@
 # CLI 与 JSON 契约
 
-`python -I -S -B "<skill_dir>/scripts/read_ofd.py" --check` 检查解释器、Expat 和 zlib 压缩解压往返，成功输出固定前缀 `environment-ok` 并退出 0。`--check` 不读取业务文件。
+`python -I -S -B "<skill_dir>/scripts/read_ofd.py" --check` 检查解释器、Expat、zlib 压缩解压往返，以及受限输入必需的 dir_fd / O_NOFOLLOW / O_DIRECTORY 平台能力，成功输出固定前缀 `environment-ok` 并退出 0。缺少受限读取能力时 unsupported/4，不安装组件或自动降级。`--check` 不读取业务文件。
 
-默认命令只有一个相对输入参数，输出一个 UTF-8 JSON 对象到 stdout，无磁盘产物。只接受任务目录内路径；符号链接解析后也须留在目录内。无纯文本模式，避免丢失诊断和来源。`--help` 为 argparse 帮助。参数错误退出 2，帮助与参数错误采用 argparse 常规通道，不保证 JSON。
+默认命令只有一个相对输入参数，输出一个 UTF-8 JSON 对象到 stdout，无磁盘产物。只接受任务目录内路径，拒绝绝对路径、父目录段和所有层级的符号链接（包括指向任务内的链接）。以可信任务根的目录描述符逐级打开，并在同一文件描述符上核对普通文件、大小和读取期间变化；不是针对特权并发写者的完整文件系统沙箱。无纯文本模式，避免丢失诊断和来源。`--help` 为 argparse 帮助。参数错误退出 2，帮助与参数错误采用 argparse 常规通道，不保证 JSON。
 
 | status | 退出码 | 含义 |
 |---|---:|---|
@@ -22,6 +22,8 @@
 - `references[]`：被跟随的 `source, value, target`；`members[]` 为 ZIP 目录元数据 `path, bytes`，不代表每个成员内容均已验收。
 - `parsed_xml, unparsed_members, diagnostics, tables`：实际 XML 覆盖、未解析成员、诊断、空表格数组。诊断包含 `code, source, detail`；有诊断即 partial。code 可增加，消费者不得只按当前枚举忽略新诊断。
 
-失败 JSON 仅保证 `schema_version, status, diagnostics`；诊断为 `code="read_error", detail`，不返回之前累积内容。异常消息是说明文字，非稳定机器枚举；机器逻辑使用 status 和退出码。Python API `read_ofd(path)` 返回相同成功结构，失败抛出异常；API 不强制任务目录边界，由调用者落实。禁止将 API 的绝对输入便利性用作绕过 CLI 边界。
+失败 JSON 仅保证 `schema_version, status, diagnostics`；诊断为 `code="read_error", detail`，不返回之前累积内容。异常消息是说明文字，非稳定机器枚举；机器逻辑使用 status 和退出码。Python API `read_ofd(path)` 返回相同成功结构，失败抛出异常；默认保留调用者授权的绝对路径便利性，不强制任务目录边界。调用 `read_ofd(relative_path, task_root=trusted_directory)` 可启用与 CLI 相同的逐级拒绝符号链接边界；task_root 必须由宿主或调用者确认可信，不能来自不可信文档。禁止用默认 API 绕过 CLI 或宿主限制。
+
+本实现依赖的单值 `DocRoot`、`CommonData`、`Pages` 容器重复时失败，不静默取第一处；这项歧义检查不代表完整 XSD 验证。
 
 未来兼容改动可增加字段或诊断；字段删除或含义变化必须提升 schema_version。JSON 属性顺序无契约；数组顺序的具体含义如上，均不保证阅读顺序。

@@ -45,7 +45,7 @@ class RedliningValidator:
             print(f"FAILED - Modified document.xml not found at {modified_file}")
             return False
 
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with tempfile.TemporaryDirectory(dir=".") as temp_dir:
             temp_path = Path(temp_dir)
 
             try:

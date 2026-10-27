@@ -174,7 +174,7 @@ def edit_tables(source, destination, specification, *, require_no_placeholders=F
     required = common | ({"position", "cells"} if kind == "insert_row" else set())
     if set(operation) != required or type(operation["expected_rows"]) is not int:
         raise ValueError("Missing, unknown or invalid operation fields")
-    with tempfile.TemporaryDirectory(prefix="docx-table-edit-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="docx-table-edit-", dir=".") as temporary:
         unpacked = unpack_document(source, Path(temporary) / "package")
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():

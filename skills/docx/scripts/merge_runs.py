@@ -267,7 +267,7 @@ def main(argv=None):
                 raise ValueError("Input and output must have the same DOCX/DOTX extension")
             if output.is_symlink():
                 raise ValueError("Symbolic link outputs are unsupported")
-            with tempfile.TemporaryDirectory(prefix="docx-merge-") as temporary:
+            with tempfile.TemporaryDirectory(prefix="docx-merge-", dir=".") as temporary:
                 directory = Path(temporary)
                 with open_archive(source) as package:
                     safe_extract(package, directory)

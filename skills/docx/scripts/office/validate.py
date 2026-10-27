@@ -54,7 +54,7 @@ def main(argv=None):
                     return 1
             print("Basic structure checks PASSED. XSD and visual validation were not performed.")
             return 0
-        with tempfile.TemporaryDirectory(prefix="docx-check-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="docx-check-", dir=".") as tmp:
             unpacked = args.path
             extension = None
             if args.path.is_file():

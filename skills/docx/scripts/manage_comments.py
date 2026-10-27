@@ -626,7 +626,7 @@ def manage_comments(source, specification, destination=None):
             raise ValueError("Output must not refer to the input")
         if destination.is_symlink():
             raise ValueError("Symbolic link outputs are unsupported")
-    with tempfile.TemporaryDirectory(prefix="docx-comment-manage-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="docx-comment-manage-", dir=".") as temporary:
         directory = unpack_document(source, Path(temporary) / "package")
         state = _state(directory)
         if action == "list":

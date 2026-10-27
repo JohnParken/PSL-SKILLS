@@ -3,9 +3,19 @@
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
 
+## Contents
+
+- [Sources and scope](#sources-and-scope)
+- [Results](#results)
+- [Reproduce offline](#reproduce-offline)
+- [Remaining limits](#remaining-limits)
+- [Independent source-value observations](#independent-source-value-observations)
+
 ## Sources and scope
 
-Checked 2026-10-23. The [sample manifest](et-real-samples.json) records immutable
+Original baseline checked 2026-10-23; the four pinned originals were reacquired and
+stored-value expectations checked 2026-10-26 using only Python standard-library tools.
+The [sample manifest](et-real-samples.json) records immutable
 source URLs, original byte lengths, SHA-256 hashes, producer uncertainty, expected
 results and unavailable alternative downloads. Originals retain the source extension;
 no generated or renamed XLS/XLSX file is counted as a real ET/ETT sample.
@@ -58,6 +68,10 @@ python3 -I -S -B "<skill_dir>/scripts/read_wps.py" ./samples/Balance_Sheet.ett -
 
 The verifier checks original hashes before parsing, expected extraction/rejection,
 sheet/cell/merge/formula counts, title spot checks and input hashes after parsing.
+It also compares [frozen typed values](real-value-expectations.json): 122 in Balance,
+66 in Schedule and 10 in Telephone List (79 text values and 119 numbers including
+33 formula caches). The empty ET has no stored-value observations. A wrong value,
+type, missing address or lost formula-cache provenance fails independently of counts.
 It is read-only and emits JSON to stdout. Exit 0 and `status: passed` mean the fixed
 sample expectations matched, including the expected Schedule rejection under the default chart policy; they do
 not mean every sample was readable. Missing or changed originals return exit 1. The opaque policy checks all four files
@@ -72,3 +86,23 @@ formula-cache correctness have not been verified. No office application, JavaScr
 parser, third-party package or cloud converter was used in this validation run.
 The earlier government ET comparison in the older evidence manifest is historical;
 its original download was unavailable in this run and was not counted again.
+
+## Independent source-value observations
+
+The 198 expectations were frozen before invoking the target reader. A separate
+test-only Python standard-library implementation framed the pinned CFB Workbook
+stream and observed plain LabelSst, Number, RK/MulRK and numeric Formula caches;
+it imports no WPS parser. The repository maintenance tool is
+`tests/wps_source_oracle.py` (relative to the repository root, not inside the
+distributed skill); its source digest and original execution digest are recorded
+in the expectation file. To reproduce from the confirmed repository root:
+
+```console
+python -I -S -B tests/wps_source_oracle.py ./samples ./source-observations.json
+```
+
+The output must be new. Compare its samples to the bundled frozen expectations,
+then run the offline verifier above. This is source-record value agreement, not
+independent recalculation, effective styling, private-stream semantics or rendered
+WPS/Excel verification. Original binaries and the source-observation tool are not
+runtime dependencies and are not bundled with this skill.

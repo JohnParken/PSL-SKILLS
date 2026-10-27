@@ -1,0 +1,30 @@
+{
+  "schema_version": "ofd_public_sample_expectations_v1",
+  "checked_on": "2026-10-26",
+  "runtime": "Python 3.12.12 / Expat 2.6.3, standard library only; no OCR, Office, PDF/text converter or rendering oracle",
+  "scope": "One producer-published OFD 1.0 test sample literal/provenance acceptance only; government real-sample acceptance remains incomplete; no broad OFD or visual conformance.",
+  "samples": [
+    {
+      "filename": "producer_helloworld.ofd",
+      "original_path": "ofdrw-reader/src/test/resources/helloworld.ofd",
+      "source_url": "https://raw.githubusercontent.com/ofdrw/ofdrw/cfff87a210109080fbdf2bdf4025da5c3a70d3a3/ofdrw-reader/src/test/resources/helloworld.ofd",
+      "sha256": "edaf7b227ebff5d7621e05fefc251e572bffa6cb24e9ab1485988b39ba8d4429",
+      "bytes": 1652,
+      "retrieved_utc": "2026-10-26T12:44:56.391396+00:00",
+      "classification": "producer published test sample, not a government/business original and not produced by this workflow",
+      "source_tree": "cfff87a210109080fbdf2bdf4025da5c3a70d3a3",
+      "expected_exit": 0,
+      "expected_status": "complete",
+      "root_version": "1.0",
+      "expected_pages": 1,
+      "expected_text": "你好呀，OFD Reader&Writer！",
+      "expected_page_source": "Doc_0/Pages/Page_0/Content.xml",
+      "expected_object_id": "4",
+      "expected_boundary": "31.7 25.4 40.5 5",
+      "independent_expected_source": "https://raw.githubusercontent.com/ofdrw/ofdrw/cfff87a210109080fbdf2bdf4025da5c3a70d3a3/ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java",
+      "independent_expected_source_sha256": "01778e9453f3c2b829b9fed890ec133e9b4a71098bbb0bb808ba23ca7bd12237",
+      "independent_expected": "Upstream getPageContent/extractAll assertions and README HelloWorld literal; XML properties inspected independently before target execution. No Java or OFDRW code executed.",
+      "content_acceptance": true
+    }
+  ]
+}

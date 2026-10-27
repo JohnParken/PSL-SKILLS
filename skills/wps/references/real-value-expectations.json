@@ -1,0 +1,1268 @@
+{
+  "schema_version": "wps_public_value_expectations_v1",
+  "checked_on": "2026-10-26",
+  "method": "Independent test-only Python standard-library CFB stream framing plus BIFF LabelSst, Number, RK/MulRK and numeric Formula cache observations; no wps reader/module imports. Expectations frozen before target invocation.",
+  "scope": "198 stored text/number/cache values, not blanks, display, formula calculation, private streams or broad WPS compatibility. newfile.et has no value observations.",
+  "samples": {
+    "newfile.et": {
+      "sha256": "5f34a68ab8061be391836530be7a9b13436b404acd90aa3d8320aa7cca4e3ac6",
+      "sheets": {
+        "Sheet1": {},
+        "Sheet2": {},
+        "Sheet3": {}
+      }
+    },
+    "Balance_Sheet.ett": {
+      "sha256": "1124b720ad792c52cf5a5e39cd99bbebd512b200523070dd3fd035ea37af427b",
+      "sheets": {
+        "Balance Sheet": {
+          "A1": {
+            "type": "text",
+            "value": "Balance Sheet (Projected)",
+            "record_offset": 7133
+          },
+          "A2": {
+            "type": "text",
+            "value": "Enter your Company Name here",
+            "record_offset": 7667
+          },
+          "B3": {
+            "type": "text",
+            "value": "Beginning",
+            "record_offset": 8211
+          },
+          "C3": {
+            "type": "text",
+            "value": "Projected",
+            "record_offset": 8225
+          },
+          "B4": {
+            "type": "text",
+            "value": "as of mm/dd/yyyy",
+            "record_offset": 8263
+          },
+          "C4": {
+            "type": "text",
+            "value": "as of mm/dd/yyyy",
+            "record_offset": 8277
+          },
+          "A5": {
+            "type": "text",
+            "value": "Assets",
+            "record_offset": 8301
+          },
+          "A7": {
+            "type": "text",
+            "value": "Current Assets",
+            "record_offset": 8349
+          },
+          "A8": {
+            "type": "text",
+            "value": "Cash in bank",
+            "record_offset": 8379
+          },
+          "B8": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8393,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C8": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8393,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A9": {
+            "type": "text",
+            "value": "Accounts receivable",
+            "record_offset": 8425
+          },
+          "A10": {
+            "type": "text",
+            "value": "Inventory",
+            "record_offset": 8455
+          },
+          "B10": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8469,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C10": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8469,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A11": {
+            "type": "text",
+            "value": "Prepaid expenses",
+            "record_offset": 8501
+          },
+          "B11": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8515,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C11": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8515,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A12": {
+            "type": "text",
+            "value": "Other current assets",
+            "record_offset": 8547
+          },
+          "B12": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8561,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C12": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8561,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A13": {
+            "type": "text",
+            "value": "Total Current Assets",
+            "record_offset": 8593
+          },
+          "B13": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8607,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C13": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8646,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A14": {
+            "type": "text",
+            "value": "Fixed Assets",
+            "record_offset": 8695
+          },
+          "B14": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8709,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A15": {
+            "type": "text",
+            "value": "Machinery & equipment",
+            "record_offset": 8763
+          },
+          "A16": {
+            "type": "text",
+            "value": "Furniture & fixtures",
+            "record_offset": 8793
+          },
+          "B16": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8807,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C16": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8807,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A17": {
+            "type": "text",
+            "value": "Leasehold improvements",
+            "record_offset": 8839
+          },
+          "B17": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8853,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C17": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8853,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A18": {
+            "type": "text",
+            "value": "Land & buildings",
+            "record_offset": 8885
+          },
+          "B18": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8899,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C18": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8899,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A19": {
+            "type": "text",
+            "value": "Other fixed assets",
+            "record_offset": 8931
+          },
+          "B19": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8945,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C19": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8945,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A20": {
+            "type": "text",
+            "value": "(LESS accumulated depreciation on all fixed assets)",
+            "record_offset": 8977
+          },
+          "B20": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8991,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C20": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 8991,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A21": {
+            "type": "text",
+            "value": "Total Fixed Assets (net of depreciation)",
+            "record_offset": 9023
+          },
+          "B21": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9037,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C21": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9076,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A22": {
+            "type": "text",
+            "value": "Other Assets",
+            "record_offset": 9125
+          },
+          "A23": {
+            "type": "text",
+            "value": "Intangibles",
+            "record_offset": 9155
+          },
+          "B23": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9169,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C23": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9169,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A24": {
+            "type": "text",
+            "value": "Deposits",
+            "record_offset": 9201
+          },
+          "B24": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9215,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C24": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9215,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A25": {
+            "type": "text",
+            "value": "Goodwill",
+            "record_offset": 9247
+          },
+          "B25": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9261,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C25": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9261,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A26": {
+            "type": "text",
+            "value": "Other",
+            "record_offset": 9293
+          },
+          "B26": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9307,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C26": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9307,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A27": {
+            "type": "text",
+            "value": "Total Other Assets",
+            "record_offset": 9339
+          },
+          "B27": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9353,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C27": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9392,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A28": {
+            "type": "text",
+            "value": "TOTAL Assets",
+            "record_offset": 9441
+          },
+          "B28": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9455,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C28": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 9500,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A30": {
+            "type": "text",
+            "value": "Liabilities and Equity",
+            "record_offset": 9573
+          },
+          "A32": {
+            "type": "text",
+            "value": "Current Liabilities",
+            "record_offset": 9621
+          },
+          "A33": {
+            "type": "text",
+            "value": "Accounts payable",
+            "record_offset": 10143
+          },
+          "B33": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10157,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C33": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10157,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A34": {
+            "type": "text",
+            "value": "Interest payable",
+            "record_offset": 10189
+          },
+          "B34": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10203,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C34": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10203,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A35": {
+            "type": "text",
+            "value": "Taxes payable",
+            "record_offset": 10235
+          },
+          "B35": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10249,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C35": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10249,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A36": {
+            "type": "text",
+            "value": "Notes, short-term (due within 12 months)",
+            "record_offset": 10281
+          },
+          "B36": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10295,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C36": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10295,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A37": {
+            "type": "text",
+            "value": "Current part, long-term debt",
+            "record_offset": 10327
+          },
+          "B37": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10341,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C37": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10341,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A38": {
+            "type": "text",
+            "value": "Other current liabilities",
+            "record_offset": 10373
+          },
+          "B38": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10387,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C38": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10387,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A39": {
+            "type": "text",
+            "value": "Total Current Liabilities",
+            "record_offset": 10419
+          },
+          "B39": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10433,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C39": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10472,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A40": {
+            "type": "text",
+            "value": "Long-term Debt",
+            "record_offset": 10521
+          },
+          "A41": {
+            "type": "text",
+            "value": "Bank loans payable",
+            "record_offset": 10551
+          },
+          "B41": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10565,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C41": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10565,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A42": {
+            "type": "text",
+            "value": "Notes payable to stockholders",
+            "record_offset": 10597
+          },
+          "B42": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10611,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C42": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10611,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A43": {
+            "type": "text",
+            "value": "LESS: Short-term portion",
+            "record_offset": 10643
+          },
+          "B43": {
+            "type": "number",
+            "value": "-0",
+            "record_offset": 10657,
+            "ieee754_hex": "0000000000000080",
+            "formula": true
+          },
+          "C43": {
+            "type": "number",
+            "value": "-0",
+            "record_offset": 10689,
+            "ieee754_hex": "0000000000000080",
+            "formula": true
+          },
+          "A44": {
+            "type": "text",
+            "value": "Other long term debt",
+            "record_offset": 10731
+          },
+          "B44": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10745,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C44": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10745,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A45": {
+            "type": "text",
+            "value": "Total Long-term Debt",
+            "record_offset": 10777
+          },
+          "B45": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10791,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C45": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10830,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A46": {
+            "type": "text",
+            "value": "Total Liabilities",
+            "record_offset": 10879
+          },
+          "B46": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10893,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C46": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 10931,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A47": {
+            "type": "text",
+            "value": "Owners' Equity",
+            "record_offset": 10979
+          },
+          "A48": {
+            "type": "text",
+            "value": "Invested capital",
+            "record_offset": 11009
+          },
+          "B48": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11023,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C48": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11023,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A49": {
+            "type": "text",
+            "value": "Retained earnings - beginning",
+            "record_offset": 11055
+          },
+          "B49": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11069,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C49": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11069,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A50": {
+            "type": "text",
+            "value": "Retained earnings - current",
+            "record_offset": 11101
+          },
+          "B50": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11115,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "C50": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11115,
+            "rk_raw": 0,
+            "formula": false
+          },
+          "A51": {
+            "type": "text",
+            "value": "Total Owners' Equity",
+            "record_offset": 11147
+          },
+          "B51": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11161,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C51": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11200,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "A52": {
+            "type": "text",
+            "value": "Total Liabilities & Equity",
+            "record_offset": 11249
+          },
+          "B52": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11263,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          },
+          "C52": {
+            "type": "number",
+            "value": "0",
+            "record_offset": 11300,
+            "ieee754_hex": "0000000000000000",
+            "formula": true
+          }
+        }
+      }
+    },
+    "Schedule.ett": {
+      "sha256": "23d27b4e72eb4c83dd888593df2552d9d4134749762918baeffa57b97799a9eb",
+      "sheets": {
+        "work schedule": {
+          "B1": {
+            "type": "text",
+            "value": "Work Schedule",
+            "record_offset": 4343
+          },
+          "C3": {
+            "type": "text",
+            "value": "Serial Number",
+            "record_offset": 4421
+          },
+          "D3": {
+            "type": "text",
+            "value": "Task",
+            "record_offset": 4435
+          },
+          "E3": {
+            "type": "text",
+            "value": "Start Date",
+            "record_offset": 4449
+          },
+          "F3": {
+            "type": "text",
+            "value": "Duration",
+            "record_offset": 4463
+          },
+          "G3": {
+            "type": "text",
+            "value": "End Date",
+            "record_offset": 4477
+          },
+          "C4": {
+            "type": "number",
+            "value": "1",
+            "record_offset": 4517,
+            "rk_raw": 1072693248,
+            "formula": false
+          },
+          "D4": {
+            "type": "text",
+            "value": "Step 1",
+            "record_offset": 4531
+          },
+          "E4": {
+            "type": "number",
+            "value": "35793",
+            "record_offset": 4545,
+            "rk_raw": 1088518688,
+            "formula": false
+          },
+          "F4": {
+            "type": "number",
+            "value": "1",
+            "record_offset": 4545,
+            "rk_raw": 1072693248,
+            "formula": false
+          },
+          "G4": {
+            "type": "number",
+            "value": "35793",
+            "record_offset": 4567,
+            "ieee754_hex": "00000000207ae140",
+            "formula": true
+          },
+          "C5": {
+            "type": "number",
+            "value": "2",
+            "record_offset": 4634,
+            "rk_raw": 1073741824,
+            "formula": false
+          },
+          "D5": {
+            "type": "text",
+            "value": "Step 2",
+            "record_offset": 4648
+          },
+          "E5": {
+            "type": "number",
+            "value": "35794",
+            "record_offset": 4662,
+            "rk_raw": 1088518720,
+            "formula": false
+          },
+          "F5": {
+            "type": "number",
+            "value": "11",
+            "record_offset": 4662,
+            "rk_raw": 1076232192,
+            "formula": false
+          },
+          "G5": {
+            "type": "number",
+            "value": "35804",
+            "record_offset": 4684,
+            "ieee754_hex": "00000000807be140",
+            "formula": true
+          },
+          "C6": {
+            "type": "number",
+            "value": "3",
+            "record_offset": 4751,
+            "rk_raw": 1074266112,
+            "formula": false
+          },
+          "D6": {
+            "type": "text",
+            "value": "Step 3",
+            "record_offset": 4765
+          },
+          "E6": {
+            "type": "number",
+            "value": "35808",
+            "record_offset": 4779,
+            "rk_raw": 1088519168,
+            "formula": false
+          },
+          "F6": {
+            "type": "number",
+            "value": "9",
+            "record_offset": 4779,
+            "rk_raw": 1075970048,
+            "formula": false
+          },
+          "G6": {
+            "type": "number",
+            "value": "35816",
+            "record_offset": 4801,
+            "ieee754_hex": "00000000007de140",
+            "formula": true
+          },
+          "C7": {
+            "type": "number",
+            "value": "4",
+            "record_offset": 4868,
+            "rk_raw": 1074790400,
+            "formula": false
+          },
+          "D7": {
+            "type": "text",
+            "value": "Step 4",
+            "record_offset": 4882
+          },
+          "E7": {
+            "type": "number",
+            "value": "35811",
+            "record_offset": 4896,
+            "rk_raw": 1088519264,
+            "formula": false
+          },
+          "F7": {
+            "type": "number",
+            "value": "15",
+            "record_offset": 4896,
+            "rk_raw": 1076756480,
+            "formula": false
+          },
+          "G7": {
+            "type": "number",
+            "value": "35825",
+            "record_offset": 4918,
+            "ieee754_hex": "00000000207ee140",
+            "formula": true
+          },
+          "C8": {
+            "type": "number",
+            "value": "5",
+            "record_offset": 4985,
+            "rk_raw": 1075052544,
+            "formula": false
+          },
+          "D8": {
+            "type": "text",
+            "value": "Step 5",
+            "record_offset": 4999
+          },
+          "E8": {
+            "type": "number",
+            "value": "35811",
+            "record_offset": 5013,
+            "rk_raw": 1088519264,
+            "formula": false
+          },
+          "F8": {
+            "type": "number",
+            "value": "18",
+            "record_offset": 5013,
+            "rk_raw": 1077018624,
+            "formula": false
+          },
+          "G8": {
+            "type": "number",
+            "value": "35828",
+            "record_offset": 5035,
+            "ieee754_hex": "00000000807ee140",
+            "formula": true
+          },
+          "C9": {
+            "type": "number",
+            "value": "6",
+            "record_offset": 5102,
+            "rk_raw": 1075314688,
+            "formula": false
+          },
+          "D9": {
+            "type": "text",
+            "value": "Step 6",
+            "record_offset": 5116
+          },
+          "E9": {
+            "type": "number",
+            "value": "35829",
+            "record_offset": 5130,
+            "rk_raw": 1088519840,
+            "formula": false
+          },
+          "F9": {
+            "type": "number",
+            "value": "4",
+            "record_offset": 5130,
+            "rk_raw": 1074790400,
+            "formula": false
+          },
+          "G9": {
+            "type": "number",
+            "value": "35832",
+            "record_offset": 5152,
+            "ieee754_hex": "00000000007fe140",
+            "formula": true
+          },
+          "C10": {
+            "type": "number",
+            "value": "7",
+            "record_offset": 5219,
+            "rk_raw": 1075576832,
+            "formula": false
+          },
+          "D10": {
+            "type": "text",
+            "value": "Step 7",
+            "record_offset": 5233
+          },
+          "E10": {
+            "type": "number",
+            "value": "35835",
+            "record_offset": 5247,
+            "rk_raw": 1088520032,
+            "formula": false
+          },
+          "F10": {
+            "type": "number",
+            "value": "12",
+            "record_offset": 5247,
+            "rk_raw": 1076363264,
+            "formula": false
+          },
+          "G10": {
+            "type": "number",
+            "value": "35846",
+            "record_offset": 5269,
+            "ieee754_hex": "00000000c080e140",
+            "formula": true
+          },
+          "C11": {
+            "type": "number",
+            "value": "8",
+            "record_offset": 5336,
+            "rk_raw": 1075838976,
+            "formula": false
+          },
+          "D11": {
+            "type": "text",
+            "value": "Step 8",
+            "record_offset": 5350
+          },
+          "E11": {
+            "type": "number",
+            "value": "35849",
+            "record_offset": 5364,
+            "rk_raw": 1088520480,
+            "formula": false
+          },
+          "F11": {
+            "type": "number",
+            "value": "1",
+            "record_offset": 5364,
+            "rk_raw": 1072693248,
+            "formula": false
+          },
+          "G11": {
+            "type": "number",
+            "value": "35849",
+            "record_offset": 5386,
+            "ieee754_hex": "000000002081e140",
+            "formula": true
+          },
+          "C12": {
+            "type": "number",
+            "value": "9",
+            "record_offset": 5453,
+            "rk_raw": 1075970048,
+            "formula": false
+          },
+          "D12": {
+            "type": "text",
+            "value": "Step 9",
+            "record_offset": 5467
+          },
+          "E12": {
+            "type": "number",
+            "value": "35850",
+            "record_offset": 5481,
+            "rk_raw": 1088520512,
+            "formula": false
+          },
+          "F12": {
+            "type": "number",
+            "value": "4",
+            "record_offset": 5481,
+            "rk_raw": 1074790400,
+            "formula": false
+          },
+          "G12": {
+            "type": "number",
+            "value": "35853",
+            "record_offset": 5503,
+            "ieee754_hex": "00000000a081e140",
+            "formula": true
+          },
+          "C13": {
+            "type": "number",
+            "value": "10",
+            "record_offset": 5570,
+            "rk_raw": 1076101120,
+            "formula": false
+          },
+          "D13": {
+            "type": "text",
+            "value": "Step 10",
+            "record_offset": 5584
+          },
+          "E13": {
+            "type": "number",
+            "value": "35856",
+            "record_offset": 5598,
+            "rk_raw": 1088520704,
+            "formula": false
+          },
+          "F13": {
+            "type": "number",
+            "value": "5",
+            "record_offset": 5598,
+            "rk_raw": 1075052544,
+            "formula": false
+          },
+          "G13": {
+            "type": "number",
+            "value": "35860",
+            "record_offset": 5620,
+            "ieee754_hex": "000000008082e140",
+            "formula": true
+          },
+          "C14": {
+            "type": "number",
+            "value": "11",
+            "record_offset": 5687,
+            "rk_raw": 1076232192,
+            "formula": false
+          },
+          "D14": {
+            "type": "text",
+            "value": "Step 11",
+            "record_offset": 5701
+          },
+          "E14": {
+            "type": "number",
+            "value": "35863",
+            "record_offset": 5715,
+            "rk_raw": 1088520928,
+            "formula": false
+          },
+          "F14": {
+            "type": "number",
+            "value": "1",
+            "record_offset": 5715,
+            "rk_raw": 1072693248,
+            "formula": false
+          },
+          "G14": {
+            "type": "number",
+            "value": "35863",
+            "record_offset": 5737,
+            "ieee754_hex": "00000000e082e140",
+            "formula": true
+          },
+          "C15": {
+            "type": "number",
+            "value": "12",
+            "record_offset": 5804,
+            "rk_raw": 1076363264,
+            "formula": false
+          },
+          "D15": {
+            "type": "text",
+            "value": "Step 12",
+            "record_offset": 5818
+          },
+          "E15": {
+            "type": "number",
+            "value": "35871",
+            "record_offset": 5832,
+            "rk_raw": 1088521184,
+            "formula": false
+          },
+          "F15": {
+            "type": "number",
+            "value": "2",
+            "record_offset": 5832,
+            "rk_raw": 1073741824,
+            "formula": false
+          },
+          "G15": {
+            "type": "number",
+            "value": "35872",
+            "record_offset": 5854,
+            "ieee754_hex": "000000000084e140",
+            "formula": true
+          }
+        }
+      }
+    },
+    "Telephone_List.ett": {
+      "sha256": "34c0dd4473cca5b16bd4719e7d7d05e5c88a7ed346d5e593964ae8217b7d1b07",
+      "sheets": {
+        "Telephone List": {
+          "A1": {
+            "type": "text",
+            "value": "Our Organizational Telephone List",
+            "record_offset": 4471
+          },
+          "G1": {
+            "type": "text",
+            "value": "Last Updated: __________",
+            "record_offset": 4505
+          },
+          "A2": {
+            "type": "text",
+            "value": "Last Name",
+            "record_offset": 4529
+          },
+          "B2": {
+            "type": "text",
+            "value": "First Name",
+            "record_offset": 4543
+          },
+          "C2": {
+            "type": "text",
+            "value": "Spouse/Kids",
+            "record_offset": 4557
+          },
+          "D2": {
+            "type": "text",
+            "value": "Address",
+            "record_offset": 4571
+          },
+          "E2": {
+            "type": "text",
+            "value": "Home Number",
+            "record_offset": 4585
+          },
+          "F2": {
+            "type": "text",
+            "value": "Work Number",
+            "record_offset": 4599
+          },
+          "G2": {
+            "type": "text",
+            "value": "Cell Number",
+            "record_offset": 4613
+          },
+          "H2": {
+            "type": "text",
+            "value": "E-Mail",
+            "record_offset": 4627
+          }
+        }
+      }
+    }
+  },
+  "original_oracle_execution_sha256": "9038d77d6da9916aba85ca644913f2a3d50990432041c8b980094937aef98d32",
+  "repository_maintenance_oracle": "tests/wps_source_oracle.py (repository-relative; not bundled and not a runtime dependency)",
+  "repository_oracle_sha256": "74746845b7a7dffa0aea399c36b73578b9eb563b8ab5d83d7e3fca327218e66e"
+}

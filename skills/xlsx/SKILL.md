@@ -1,7 +1,7 @@
 ---
 name: xlsx
-version: "20261025.2012.3111"
-description: 用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；不支持读取 WPS 格式，请使用 wps 技能，不支持任意结构编辑或办公软件排版还原。
+version: "20261026.2106.1644"
+description: 用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；.wps/.et/.ett 读取使用 wps 技能，不支持任意结构编辑或办公软件排版还原。
 license: MIT
 ---
 
@@ -86,24 +86,6 @@ script path, not the path together with its arguments.
 
 | Task | Action | Reference |
 |---|---|---|
-| Summarize explicit deposit maturity buckets and cumulative windows | `<skill_dir>/scripts/xlsx_maturity.py` | [maturity-distribution.md](references/maturity-distribution.md) |
-| Aggregate observed customers, product coverage and two-period sets | `<skill_dir>/scripts/xlsx_customers.py` | [customer-structure.md](references/customer-structure.md) |
-| Validate management policy, explicit plan deviation and comparable peers | `<skill_dir>/scripts/xlsx_management_policy.py` | [management-policy.md](references/management-policy.md) |
-| Analyze deposit snapshot changes, daily/end differences and explicit targets | `<skill_dir>/scripts/xlsx_deposits.py` | [deposit-analysis.md](references/deposit-analysis.md) |
-| Calculate explicit deposit category shares and Top N concentration | `<skill_dir>/scripts/xlsx_deposit_structure.py` | [deposit-analysis.md](references/deposit-analysis.md) |
-| Reconcile two comparable management reports and allocate arithmetic changes | `<skill_dir>/scripts/xlsx_reconcile.py`; optional `--xlsx` | [management-reconciliation.md](references/management-reconciliation.md) |
-| Build a static management dashboard from a native wide report | `<skill_dir>/scripts/xlsx_dashboard.py`; optional `--xlsx` | [management-dashboard.md](references/management-dashboard.md) |
-| Roll leaf institutions up a validated static hierarchy | `<skill_dir>/scripts/xlsx_management.py` with hierarchy config | [institution-hierarchy.md](references/institution-hierarchy.md) |
-| Compute explicit daily means or month/YTD daily-flow sums | `<skill_dir>/scripts/xlsx_daily.py`, subcommand `average` / `accumulate` | [daily-analysis.md](references/daily-analysis.md) |
-| Build configured management wide reports | `<skill_dir>/scripts/xlsx_management.py`; optional `--xlsx` | [management-wide.md](references/management-wide.md) |
-| Export known analysis JSON to readable XLSX | `<skill_dir>/scripts/xlsx_result_export.py` | [result-export.md](references/result-export.md) |
-| Rank observations and calculate group shares | `<skill_dir>/scripts/xlsx_rank_share.py` | [rank-share.md](references/rank-share.md) |
-| Compute median, quantiles and variance/stddev | `<skill_dir>/scripts/xlsx_advanced.py`, subcommand `describe` | [advanced-statistics.md](references/advanced-statistics.md) |
-| Compare explicit monthly periods | `<skill_dir>/scripts/xlsx_advanced.py`, subcommand `compare` | [period-comparison.md](references/period-comparison.md) |
-| Match tables by typed composite keys | `<skill_dir>/scripts/xlsx_match.py` | [table-matching.md](references/table-matching.md) |
-| Deduplicate and stably sort typed rows | `<skill_dir>/scripts/xlsx_rows.py` | [row-processing.md](references/row-processing.md) |
-| Suggest possible header ranges for review | `<skill_dir>/scripts/xlsx_header_candidates.py` | [header-candidates.md](references/header-candidates.md) |
-| Reconstruct or select multi-level headers | `<skill_dir>/scripts/xlsx_headers.py`; `--header-rows` in data operations | [multi-level-headers.md](references/multi-level-headers.md) |
 | Profile a region, filter or group data | `<skill_dir>/scripts/xlsx_analysis.py`, subcommand `profile` / `summarize` | [data-analysis.md](references/data-analysis.md) |
 | Diagnose native file contents or route WPS candidates | `<skill_dir>/scripts/xlsx_identify.py` | [data-analysis.md](references/data-analysis.md) |
 | Import CSV/TSV or export a worksheet/range | `<skill_dir>/scripts/xlsx_tabular.py`, subcommand `import` / `export` | [tabular-interchange.md](references/tabular-interchange.md) |
@@ -114,6 +96,8 @@ script path, not the path together with its arguments.
 | Compute supported formulas in an existing file | `calculate` to a new file | [python-calculation.md](references/python-calculation.md) |
 | Repair a known formula defect | Diagnose intent, then `edit` | [fix.md](references/fix.md) |
 | Validate output | Inspect calculation report and preserved content | [validate.md](references/validate.md) |
+
+Specialized banking reports, matching, grouping and header reconstruction: use the [analysis task directory](references/data-analysis.md#specialized-task-directory) only when requested.
 
 Read [python-calculation.md](references/python-calculation.md) before any calculation
 or writing task. It defines the JSON contract, commands, formula subset and exit codes.

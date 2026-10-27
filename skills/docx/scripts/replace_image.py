@@ -123,7 +123,7 @@ def replace_image(source, replacement, destination, specification):
     if len(replacement_bytes) > MAX_PART_BYTES:
         raise ValueError("Replacement image exceeds the 32 MiB member limit")
     replacement_type = _image_kind(replacement, replacement_bytes)
-    with tempfile.TemporaryDirectory(prefix="docx-image-replace-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="docx-image-replace-", dir=".") as temporary:
         unpacked = unpack_document(source, Path(temporary) / "package")
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():

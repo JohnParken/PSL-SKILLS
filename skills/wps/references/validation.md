@@ -35,7 +35,7 @@ python -I -S -B -m unittest discover -s "<skill_dir>/scripts" -p "test_*.py"
 
 ## 已记录的真实样本证据
 
-以下保留既有原件记录，不表示此文档维护重新获取或重跑了真实文件：
+2026-10-26 已重新取得四份固定哈希的公开 ET/ETT 原件，并按独立原始记录预期核对 198 项文字、数字和公式缓存值；结果继续保留 partial，不重算、不转换。详细方法、范围和离线命令见 [真实样本验证](et-real-validation.md) 及 [固定值预期](real-value-expectations.json)。以下 sample.wps 为保留的历史记录，不表示重新取得该原件：
 
 - 四份 ET/ETT 原件在显式 legacy_excel_clsid + opaque 下为 partial，单元格数量依次为 newfile.et 0、Balance_Sheet.ett 717、Schedule.ett 343、Telephone_List.ett 3976；strict 拒绝，Schedule 默认图表策略拒绝。来源、SHA-256、预期与离线复核命令见 [样本清单](et-real-samples.json) 和 [真实样本验证](et-real-validation.md)。
 - Balance 的格式 181 曾保留 28 项会计附加解释，原数字及公式缓存不变；原格式字节和合成数值预期不能替代独立真实显示对照。
@@ -48,3 +48,7 @@ python -I -S -B -m unittest discover -s "<skill_dir>/scripts" -p "test_*.py"
 真实非空批注、脚注/尾注、页眉及隐藏/修订语义，以及新 OOXML 容器、复杂格式显示、VML 锚点等，需要合法原件与不依赖本解析器的内容或显示预期。合成样例改后缀不算真实 WPS 验收，测试数量不代表兼容率。
 
 批注非零长度书签和扩展时间、有效页眉选择、二进制有效隐藏/修订筛选尚未实现；所需结构和边界分别见 [批注](binary-comments.md)、[分节](binary-headers.md)、[字符属性](ms-doc-charprops.md)。私有格式无可靠依据时继续 unsupported。真实宿主自动触发、生产软件显示对照和完整格式认证均不在上述本地检查结论内。
+
+## 本批补充验证
+
+2026-10-26，Python 3.12.12 / Expat 2.6.3、`-I -S -B` 和空 PATH 下 296 项回归通过；新增四项固定语义预期的反例检查。四个原始 ET/ETT 公开样本重新取得并核对 SHA-256，独立观察记录冻结的 198 个保存值逐项核对通过，其中 33 个公式缓存仍标注未验证，未重算公式。详见 [真实样本验证](et-real-validation.md)。历史 MS-DOC `.wps` 原件本批未重新取得；合成测试不能替代其新增真实验收。

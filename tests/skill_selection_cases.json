@@ -1,0 +1,126 @@
+{
+  "method": "固定20项正反例提供给未见标准答案的独立评估者；评估者只读四个候选入口，不运行文件处理。初次容量失败后恢复执行。另有人工作用边界核对。",
+  "independent_evaluation": "completed_simulated_selection_not_host_trigger",
+  "cases": [
+    {
+      "id": "01",
+      "request": "新建中文公文 DOCX",
+      "expected_skill": "docx",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "02",
+      "request": "读取 WPS 软件保存的原生 .docx 正文",
+      "expected_skill": "docx",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "03",
+      "request": "读取 WPS 软件保存的原生 .xlsx 单元格",
+      "expected_skill": "xlsx",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "04",
+      "request": "读取未知 .wps 文件可识别文字并报告缺口",
+      "expected_skill": "wps",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "05",
+      "request": "读取 .et 单元格和保存公式缓存，不重算",
+      "expected_skill": "wps",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "06",
+      "request": "读取 .ett 模板保存内容",
+      "expected_skill": "wps",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "07",
+      "request": "提取 OFD 1.0 文本页文字与来源",
+      "expected_skill": "ofd",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "08",
+      "request": "从扫描 OFD 做 OCR",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "09",
+      "request": "验证 OFD 数字签名有效性",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "10",
+      "request": "把 OFD 转成 PDF",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "11",
+      "request": "编辑 .wps 原格式文字并保存",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "12",
+      "request": "新建 .dotx 模板文件",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "13",
+      "request": "读取原生 .dotx 模板正文",
+      "expected_skill": "docx",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "14",
+      "request": "将已知 XLSX 单元格 B2 替换为 8",
+      "expected_skill": "xlsx",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "15",
+      "request": "任意重排 XLSX 工作表结构并保持所有扩展",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "16",
+      "request": "给 DOCX 精确已核对的普通文本替换并要求次数",
+      "expected_skill": "docx",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "17",
+      "request": "将 .et 转 .xlsx",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "18",
+      "request": "从 OFD 提取图片元数据，不解码",
+      "expected_skill": "ofd",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "19",
+      "request": "计算 XLSX 已支持公式子集并保存新文件",
+      "expected_skill": "xlsx",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    },
+    {
+      "id": "20",
+      "request": "为 DOCX 生成逐页截图验证分页",
+      "expected_skill": "none",
+      "manual_review": "入口的支持/拒绝边界与此选择一致"
+    }
+  ]
+}

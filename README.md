@@ -6,10 +6,10 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261025.2012.3111 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的 BIFF JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261025.1814.1677 | DOCX/DOTX 原生生成、读取与受控编辑；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261025.2304.0172 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；日期与公式缓存、部分读取诊断 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261026.0822.1894 | 文本型 OFD 安全只读提取；保留页码、坐标与来源；不渲染、OCR、验签或转换；真实样本验收未完成 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261026.2106.1644 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261026.2106.1644 | DOCX 生成、DOCX/DOTX 读取与受控编辑；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261026.2106.1644 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；日期与公式缓存、部分读取诊断 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261026.2117.0168 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
 
 ## 目录结构
 
@@ -156,7 +156,13 @@ python3 -I -S -B -m unittest discover -s skills/skill-development-standards/scri
 python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
 ```
 
-DOCX 本次复制的目录未附带测试套件。维护时至少执行环境自检，以及在独立任务目录中生成、`--verify` 检查和重新读取文档；涉及其他编辑入口时补充对应行为验证。环境自检、单元测试和视觉验收各自覆盖不同内容。
+DOCX 已包含标准库固定预期回归，覆盖生成、编辑、ZIP/XML 拒绝边界和格式路由。从仓库根目录使用满足 DOCX 环境要求的解释器执行：
+
+```console
+python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
+```
+
+原生行为测试要求 Python >=3.10、Expat >=2.6.0；跳过测试不算行为验收。范围、命令和证据见 [DOCX 验证记录](skills/docx/references/validation.md)。环境自检、固定预期回归和视觉验收覆盖不同内容，当前流程不调用办公软件做视觉验证。
 
 ## 迁移来源与许可
 
@@ -178,8 +184,12 @@ DOCX 本次复制的目录未附带测试套件。维护时至少执行环境自
 | .xlsx | 原生读取与分析 | XLSX生成、受控编辑/公式子集 | 不等于完整Excel引擎 |
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
 | .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
-| .ofd | ofd 提取文字与元数据 | 不支持 | 合成回归；真实样本及全文规范逐条核对未完成 |
+| .ofd | ofd 提取 1.0 字面文字与元数据 | 不支持 | 合成回归及生产工具原始样例；政务 1.1 正确拒绝；无全文/视觉或全规范认证 |
 | .wps/.et/.ett | wps按实际结构读取有限子集 | 不生成、不编辑、不转换 | 五真实原件仅partial；新增容器主要合成验证 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 
 仓库没有PDF、PPT/PPTX、ODT/ODS/ODP、RTF专用技能或通用转换器。旧DOC/XLS内部结构只能由wps识别其有限MS-DOC/BIFF子集，不能称完整支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。推荐下一步先补有合法来源的真实样本与独立内容预期，再按实际办公需求单独规划PDF/PPT等技能；不要通过后缀或依赖推断已支持。
+
+本批四技能任务选择的固定正反例见 `tests/skill_selection_cases.json`。20 项人工边界核对及未见标准答案的独立选择模拟均匹配预期；这是有限用例的选择评测，不是真实宿主自动触发验收。
+
+OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不计为有效授权验收。此前本批 OFD ZIP 含该项派生元数据和说明，不应使用，保留但停止交付；仅从清理后的源码重建新的本地 OFD 包，不读取旧 ZIP，不上传。其他合成回归与允许样本证据单独保留。

@@ -1,0 +1,121 @@
+{
+  "schema_version": "skill_selection_simulation_v1",
+  "version": "20261026.2106.1644",
+  "method": "Independent evaluator, candidate SKILL.md files only, 20 fixed requests, no golden labels or tests directory access. No document processing or actual harness auto-trigger. Initial capacity failure recovered once.",
+  "correct": 20,
+  "total": 20,
+  "entry_sha256": {
+    "docx": "b0cf5098064afb130c119f7b960a5b0fa5e759eba0bc17e980c65da299c6374d",
+    "xlsx": "dc7a9b6711ba6db90a0287c1378993cdc05e1de06bb7fcd495b36f3535666cd9",
+    "wps": "d7e00dc614a97030c26d2290d21a64910bfc7b6d0886be0d8f2253ab65450962",
+    "ofd": "56f6493e1e05124a82d083d710745358bd14747a765294dfa9cde6aa41e56b4b"
+  },
+  "predictions": [
+    {
+      "id": "01",
+      "skill": "docx",
+      "matches_expected": true
+    },
+    {
+      "id": "02",
+      "skill": "docx",
+      "matches_expected": true
+    },
+    {
+      "id": "03",
+      "skill": "xlsx",
+      "matches_expected": true
+    },
+    {
+      "id": "04",
+      "skill": "wps",
+      "matches_expected": true
+    },
+    {
+      "id": "05",
+      "skill": "wps",
+      "matches_expected": true
+    },
+    {
+      "id": "06",
+      "skill": "wps",
+      "matches_expected": true
+    },
+    {
+      "id": "07",
+      "skill": "ofd",
+      "matches_expected": true
+    },
+    {
+      "id": "08",
+      "skill": "none",
+      "matches_expected": true
+    },
+    {
+      "id": "09",
+      "skill": "none",
+      "matches_expected": true
+    },
+    {
+      "id": "10",
+      "skill": "none",
+      "matches_expected": true
+    },
+    {
+      "id": "11",
+      "skill": "none",
+      "matches_expected": true
+    },
+    {
+      "id": "12",
+      "skill": "none",
+      "matches_expected": true
+    },
+    {
+      "id": "13",
+      "skill": "docx",
+      "matches_expected": true
+    },
+    {
+      "id": "14",
+      "skill": "xlsx",
+      "matches_expected": true
+    },
+    {
+      "id": "15",
+      "skill": "none",
+      "matches_expected": true
+    },
+    {
+      "id": "16",
+      "skill": "docx",
+      "matches_expected": true
+    },
+    {
+      "id": "17",
+      "skill": "none",
+      "matches_expected": true
+    },
+    {
+      "id": "18",
+      "skill": "ofd",
+      "matches_expected": true
+    },
+    {
+      "id": "19",
+      "skill": "xlsx",
+      "matches_expected": true
+    },
+    {
+      "id": "20",
+      "skill": "none",
+      "matches_expected": true
+    }
+  ],
+  "limitations": [
+    "small fixed task set",
+    "not real host activation",
+    "not unseen population accuracy",
+    "does not replace runtime acceptance"
+  ]
+}

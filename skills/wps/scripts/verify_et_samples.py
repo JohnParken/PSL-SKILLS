@@ -1,5 +1,6 @@
 """Read-only, offline checks of exact public ET/ETT samples listed in the manifest."""
 import argparse
+from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
@@ -9,9 +10,33 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from wps_biff8 import read_file
 
 
+def check_fixed_values(result, expectation):
+    """Compare stored typed values with independently frozen source observations."""
+    sheets = {sheet['name']: sheet['cells'] for sheet in result['sheets']}
+    checked = formula_caches = 0
+    for name, cells in expectation['sheets'].items():
+        if name not in sheets:
+            raise ValueError('Expected source sheet missing: ' + name)
+        for address, expected in cells.items():
+            actual = sheets[name].get(address)
+            if actual is None or actual['type'] != expected['type']:
+                raise ValueError('Stored value type differs at ' + name + '!' + address)
+            value = Decimal(expected['value']) if expected['type'] == 'number' else expected['value']
+            if actual['value'] != value:
+                raise ValueError('Stored value differs at ' + name + '!' + address)
+            if expected.get('formula'):
+                if 'formula' not in actual or actual.get('cache_status') != 'unverified':
+                    raise ValueError('Expected unverified formula cache at ' + name + '!' + address)
+                formula_caches += 1
+            checked += 1
+    return {'semantic_values_checked': checked, 'formula_caches_checked': formula_caches}
+
+
 def verify(directory, chart_policy="reject"):
     manifest = Path(__file__).resolve().parent.parent / 'references' / 'et-real-samples.json'
     entries = json.loads(manifest.read_text(encoding='utf-8'))['samples']
+    expected_path = manifest.with_name('real-value-expectations.json')
+    expectations = json.loads(expected_path.read_text(encoding='utf-8'))['samples']
     reports = []
     for entry in entries:
         if chart_policy == 'opaque':
@@ -50,7 +75,11 @@ def verify(directory, chart_policy="reject"):
                         raise ValueError('Text spot check changed at ' + address)
                 if result['native_et_ett_parsed'] or result['wps_compatibility_verified']:
                     raise ValueError('Subset results must not claim full native WPS acceptance')
-                report.update(observed='biff8_subset_extracted', **metrics)
+                expectation = expectations[entry['filename']]
+                if expectation['sha256'] != entry['sha256']:
+                    raise ValueError('Frozen value expectations refer to different source bytes')
+                semantic = check_fixed_values(result, expectation)
+                report.update(observed='biff8_subset_extracted', **metrics, **semantic)
             with path.open('rb') as stream:
                 after = stream.read(32 * 1024 * 1024 + 1)
             if hashlib.sha256(after).hexdigest() != entry['sha256']:

@@ -4,6 +4,7 @@ import hashlib
 import io
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -52,6 +53,16 @@ class ReaderTests(unittest.TestCase):
         write_package(self.path, fixture() if files is None else files)
         return READER.read_ofd(self.path)
 
+    def cli_result(self, args, directory=None):
+        previous = Path.cwd()
+        os.chdir(self.root if directory is None else directory)
+        try:
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                code = READER.main(args)
+            return code, json.loads(output.getvalue())
+        finally:
+            os.chdir(previous)
+
     def test_literal_provenance_and_repeat(self):
         result = self.read()
         before = hashlib.sha256(self.path.read_bytes()).hexdigest()
@@ -62,6 +73,180 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual(run['source'], 'Doc/Pages/P.xml')
         self.assertEqual(result, READER.read_ofd(self.path))
         self.assertEqual(before, hashlib.sha256(self.path.read_bytes()).hexdigest())
+
+    def test_duplicate_single_value_containers_cannot_silently_omit_content(self):
+        cases = []
+        files = fixture()
+        files['OFD.xml'] = files['OFD.xml'].replace(
+            b'</ofd:DocBody>', b'<ofd:DocRoot>Doc/Other.data</ofd:DocRoot></ofd:DocBody>')
+        files['Doc/Other.data'] = xml('Document', '<ofd:Pages><ofd:Page ID="9" BaseLoc="Pages/P.xml"/></ofd:Pages>')
+        cases.append(('DocRoot', files))
+        files = fixture()
+        files['Doc/Document.xml'] = files['Doc/Document.xml'].replace(
+            b'</ofd:CommonData>', b'</ofd:CommonData><ofd:CommonData><ofd:PublicRes>Other.data</ofd:PublicRes></ofd:CommonData>')
+        files['Doc/Other.data'] = xml('Res', '<ofd:Fonts><ofd:Font ID="7"/></ofd:Fonts>')
+        cases.append(('CommonData', files))
+        files = fixture()
+        files['Doc/Document.xml'] = files['Doc/Document.xml'].replace(
+            b'</ofd:Document>', b'<ofd:Pages><ofd:Page ID="9" BaseLoc="Pages/Other.data"/></ofd:Pages></ofd:Document>')
+        files['Doc/Pages/Other.data'] = xml('Page', '<ofd:Content><ofd:Layer><ofd:TextObject><ofd:TextCode>SECOND PAGE</ofd:TextCode></ofd:TextObject></ofd:Layer></ofd:Content>')
+        cases.append(('Pages', files))
+        for name, files in cases:
+            with self.subTest(container=name):
+                with self.assertRaisesRegex(READER.ReadError, 'duplicate ' + name):
+                    self.read(files)
+
+    def test_cli_legacy_path_open_swap_does_not_read_outside_file(self):
+        task = self.root / 'task'
+        task.mkdir()
+        inside = task / 'input.ofd'
+        outside = self.root / 'outside.ofd'
+        write_package(inside, fixture(text='INSIDE SYNTHETIC'))
+        write_package(outside, fixture(text='OUTSIDE SYNTHETIC'))
+        original_open = Path.open
+        state = {'swapped': False}
+
+        def replace_before_open(path, *args, **kwargs):
+            if not state['swapped'] and path == Path('input.ofd'):
+                state['swapped'] = True
+                path.unlink()
+                path.symlink_to('../outside.ofd')
+            return original_open(path, *args, **kwargs)
+
+        previous = Path.cwd()
+        os.chdir(task)
+        try:
+            with mock.patch.object(Path, 'open', replace_before_open), contextlib.redirect_stdout(io.StringIO()) as output:
+                code = READER.main(['input.ofd'])
+            result = json.loads(output.getvalue())
+            if code == 0:
+                self.assertEqual([run['text'] for doc in result['documents']
+                                  for page in doc['pages'] for run in page['text_runs']], ['INSIDE SYNTHETIC'])
+            else:
+                self.assertEqual(code, 1)
+                self.assertEqual(result['status'], 'failed')
+                self.assertNotIn('documents', result)
+        finally:
+            os.chdir(previous)
+
+    @unittest.skipUnless(hasattr(os, 'O_NOFOLLOW') and os.open in os.supports_dir_fd,
+                         'requires descriptor-relative nofollow opens')
+    def test_confined_relative_regular_file_and_all_symlink_components(self):
+        directory = self.root / 'sub'
+        directory.mkdir()
+        write_package(directory / 'input.ofd', fixture())
+        code, result = self.cli_result(['sub/input.ofd'])
+        self.assertEqual((code, result['status']), (0, 'complete'))
+        (self.root / 'file-link.ofd').symlink_to('sub/input.ofd')
+        (self.root / 'dir-link').symlink_to('sub', target_is_directory=True)
+        for name in ('file-link.ofd', 'dir-link/input.ofd'):
+            with self.subTest(name=name):
+                code, result = self.cli_result([name])
+                self.assertEqual((code, result['status']), (1, 'failed'))
+                self.assertNotIn('documents', result)
+        self.assertEqual(READER.read_ofd(directory / 'input.ofd')['status'], 'complete')
+        self.assertEqual(READER.read_ofd('sub/input.ofd', task_root=self.root)['status'], 'complete')
+
+    @unittest.skipUnless(hasattr(os, 'O_NOFOLLOW') and os.open in os.supports_dir_fd,
+                         'requires descriptor-relative nofollow opens')
+    def test_confined_final_component_swap_is_rejected_before_read(self):
+        task = self.root / 'task'
+        task.mkdir()
+        inside = task / 'input.ofd'
+        write_package(inside, fixture(text='INSIDE'))
+        write_package(self.root / 'outside.ofd', fixture(text='OUTSIDE'))
+        original_open = os.open
+        state = {'swapped': False}
+
+        def replace_before_open(path, flags, *args, **kwargs):
+            if path == 'input.ofd' and kwargs.get('dir_fd') is not None:
+                state['swapped'] = True
+                inside.unlink()
+                inside.symlink_to('../outside.ofd')
+            return original_open(path, flags, *args, **kwargs)
+
+        with mock.patch.object(READER.os, 'open', side_effect=replace_before_open) as opened:
+            with mock.patch.object(READER.os, 'supports_dir_fd', {opened}):
+                code, result = self.cli_result(['input.ofd'], task)
+        self.assertTrue(state['swapped'])
+        self.assertEqual((code, result['status']), (1, 'failed'))
+        self.assertNotIn('documents', result)
+
+    @unittest.skipUnless(hasattr(os, 'O_NOFOLLOW') and os.open in os.supports_dir_fd,
+                         'requires descriptor-relative nofollow opens')
+    def test_confined_intermediate_directory_swap_is_rejected(self):
+        task = self.root / 'task'
+        task.mkdir()
+        directory = task / 'sub'
+        directory.mkdir()
+        outside = self.root / 'outside'
+        outside.mkdir()
+        write_package(directory / 'input.ofd', fixture(text='INSIDE'))
+        write_package(outside / 'input.ofd', fixture(text='OUTSIDE'))
+        original_open = os.open
+
+        def replace_before_open(path, flags, *args, **kwargs):
+            if path == 'sub' and kwargs.get('dir_fd') is not None:
+                directory.rename(task / 'original-sub')
+                directory.symlink_to('../outside', target_is_directory=True)
+            return original_open(path, flags, *args, **kwargs)
+
+        with mock.patch.object(READER.os, 'open', side_effect=replace_before_open) as opened:
+            with mock.patch.object(READER.os, 'supports_dir_fd', {opened}):
+                code, result = self.cli_result(['sub/input.ofd'], task)
+        self.assertEqual((code, result['status']), (1, 'failed'))
+        self.assertNotIn('documents', result)
+
+    @unittest.skipUnless(hasattr(os, 'O_NOFOLLOW') and os.open in os.supports_dir_fd,
+                         'requires descriptor-relative nofollow opens')
+    def test_opened_intermediate_directory_remains_anchored_after_replacement(self):
+        task = self.root / 'task'
+        task.mkdir()
+        directory = task / 'sub'
+        directory.mkdir()
+        outside = self.root / 'outside'
+        outside.mkdir()
+        write_package(directory / 'input.ofd', fixture(text='INSIDE'))
+        write_package(outside / 'input.ofd', fixture(text='OUTSIDE'))
+        original_open = os.open
+
+        def replace_before_open(path, flags, *args, **kwargs):
+            if path == 'input.ofd' and kwargs.get('dir_fd') is not None:
+                directory.rename(task / 'original-sub')
+                directory.symlink_to('../outside', target_is_directory=True)
+            return original_open(path, flags, *args, **kwargs)
+
+        with mock.patch.object(READER.os, 'open', side_effect=replace_before_open) as opened:
+            with mock.patch.object(READER.os, 'supports_dir_fd', {opened}):
+                code, result = self.cli_result(['sub/input.ofd'], task)
+        self.assertEqual((code, result['status']), (0, 'complete'))
+        self.assertEqual(result['documents'][0]['pages'][0]['text_runs'][0]['text'], 'INSIDE')
+
+    def test_confined_mode_has_no_insecure_platform_fallback(self):
+        write_package(self.path, fixture())
+        with mock.patch.object(READER.os, 'supports_dir_fd', set()):
+            for arguments in (['sample.ofd'], ['--check']):
+                code, result = self.cli_result(arguments)
+                self.assertEqual((code, result['status']), (4, 'unsupported'))
+                self.assertNotIn('documents', result)
+                self.assertIn('dir_fd', result['diagnostics'][0]['detail'])
+
+    def test_nonregular_input_and_detected_changes_fail_without_content(self):
+        with self.assertRaisesRegex(READER.ReadError, 'regular file'):
+            READER.read_ofd(self.root)
+        write_package(self.path, fixture())
+        original_fstat = os.fstat
+        state = {'calls': 0}
+
+        def changed_stat(descriptor):
+            state['calls'] += 1
+            if state['calls'] == 2:
+                self.path.write_bytes(b'replaced during read')
+            return original_fstat(descriptor)
+
+        with mock.patch.object(READER.os, 'fstat', side_effect=changed_stat):
+            with self.assertRaisesRegex(READER.ReadError, 'changed during read'):
+                READER.read_ofd(self.path)
 
     def test_storage_order_not_coordinates(self):
         files = fixture()

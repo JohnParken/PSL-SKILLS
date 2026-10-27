@@ -527,7 +527,7 @@ def main() -> None:
                 raise ValueError("Comment output must be distinct from input")
             if out.is_symlink() or out.suffix.lower() != src.suffix.lower():
                 raise ValueError("Comment output must have the same DOCX/DOTX extension and not be a symbolic link")
-            with tempfile.TemporaryDirectory() as tmp:
+            with tempfile.TemporaryDirectory(dir=".") as tmp:
                 tmp_path = Path(tmp)
                 with open_archive(src) as zf:
                     _safe_extract(zf, tmp_path)
