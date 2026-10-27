@@ -25,6 +25,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from office import xmlio
+from output_location import OutputLocation, resolve_output_location
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -1513,7 +1514,7 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
 
     parent = output_path.parent
     parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{output_path.name}.", suffix=".tmp", dir=parent)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=".docx-", suffix=".tmp", dir=parent)
     try:
         with os.fdopen(descriptor, "w+b") as file:
             with zipfile.ZipFile(file, "w", compression=zipfile.ZIP_DEFLATED) as package:
@@ -1554,7 +1555,58 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
     return output_path
 
 
-def _runtime_check() -> bool:
+def _delivery_location() -> OutputLocation:
+    location = resolve_output_location(os.environ.get("ROUTER_CONFIG_VARIABLES"))
+    if location.used_fallback:
+        print("output-location: using default ./; reason=" + location.fallback_reason,
+              file=sys.stderr)
+    return location
+
+
+def _check_delivery_path(task_dir: Path, relative_path: Path, *, directory: bool = False) -> None:
+    """Check existing components without following delivery-path symlinks."""
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise ValueError("delivery paths must stay within the task directory")
+    current = task_dir
+    for index, part in enumerate(relative_path.parts):
+        current = current / part
+        if current.is_symlink():
+            raise ValueError("symbolic links are unsupported in delivery paths")
+        if current.exists():
+            is_directory = directory or index < len(relative_path.parts) - 1
+            if is_directory and not current.is_dir():
+                raise ValueError("delivery output directory is blocked by a non-directory")
+            if not is_directory and not current.is_file():
+                raise ValueError("delivery output must be a regular file")
+
+
+def _delivery_output_path(task_dir: Path, location: OutputLocation, file_name: str) -> Path:
+    """Accept a filename only; the configuration owns its parent directory."""
+    if (not file_name or file_name in {".", ".."}
+            or file_name.endswith((" ", "."))
+            or any(character in '/\\<>:"|?*' or unicodedata.category(character).startswith("C")
+                   for character in file_name)):
+        raise ValueError("output must be a single DOCX filename without a directory or control characters")
+    if len(file_name.encode("utf-8")) > 255:
+        raise ValueError("output filename exceeds 255 UTF-8 bytes")
+    if Path(file_name).suffix.lower() != ".docx":
+        raise ValueError("output filename must use the .docx extension")
+    device_name = file_name.split(".", 1)[0].upper()
+    if (device_name in {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
+            or re.fullmatch(r"(?:COM|LPT)[1-9¹²³]", device_name)):
+        raise ValueError("output filename must not use a reserved device name")
+    output_path = location.output_dir / file_name
+    _check_delivery_path(task_dir, output_path)
+    return output_path
+
+
+def _prepare_delivery_directory(task_dir: Path, output_dir: Path) -> None:
+    _check_delivery_path(task_dir, output_dir, directory=True)
+    (task_dir / output_dir).mkdir(parents=True, exist_ok=True)
+    _check_delivery_path(task_dir, output_dir, directory=True)
+
+
+def _runtime_check(task_dir: Path, location: OutputLocation) -> bool:
     checks_passed = True
     version = ".".join(map(str, sys.version_info[:3]))
     print(f"python={version} required>=3.10 supported={sys.version_info >= (3, 10)}")
@@ -1581,14 +1633,16 @@ def _runtime_check() -> bool:
         checks_passed = False
 
     writable = False
-    try:
-        with tempfile.TemporaryFile(mode="w+b", dir=".") as probe:
-            probe.write(payload)
-            probe.seek(0)
-            writable = probe.read() == payload
-    except Exception:
-        writable = False
-    print(f"output_dir=. writable={writable}")
+    if checks_passed:
+        try:
+            _prepare_delivery_directory(task_dir, location.output_dir)
+            with tempfile.TemporaryFile(mode="w+b", dir=task_dir / location.output_dir) as probe:
+                probe.write(payload)
+                probe.seek(0)
+                writable = probe.read() == payload
+        except (OSError, ValueError) as exc:
+            print(f"output-check-failed: {exc}", file=sys.stderr)
+    print(f"output_dir={location.output_dir.as_posix()} writable={writable}")
     if not checks_passed or not writable:
         print("check-failed: runtime environment check failed", file=sys.stderr)
         return False
@@ -1608,8 +1662,9 @@ def _json_object(pairs):
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, nargs="?", help="JSON document specification")
-    parser.add_argument("output", type=Path, nargs="?", help="output DOCX path")
-    parser.add_argument("--check", action="store_true", help="check runtime support and current-directory write access")
+    parser.add_argument("output", nargs="?", metavar="filename.docx",
+                        help="DOCX filename only; output directory comes from ROUTER_CONFIG_VARIABLES")
+    parser.add_argument("--check", action="store_true", help="check runtime support and resolved output-directory write access")
     parser.add_argument("--preflight", action="store_true", help="validate input and resource budgets without writing")
     parser.add_argument("--verify", action="store_true", help="check ZIP CRC, structure and input coverage before publishing")
     parser.add_argument("--require-no-placeholders", action="store_true", help="also verify and reject remaining {{...}} markers")
@@ -1617,27 +1672,38 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         if args.input is not None or args.output is not None or args.preflight or args.verify or args.require_no_placeholders:
             parser.error("--check does not accept positional arguments or generation options")
-        return 0 if _runtime_check() else 1
+        return 0 if _runtime_check(Path.cwd(), _delivery_location()) else 1
     if args.preflight and (args.output is not None or args.verify or args.require_no_placeholders):
         parser.error("--preflight accepts input only, without output or verification options")
     if args.input is None or (args.output is None and not args.preflight):
         parser.error("input is required; output is required unless --check or --preflight is used")
     try:
-        if args.output is not None and args.input.resolve() == args.output.resolve():
-            parser.error("output must not refer to the input JSON file")
+        task_dir = Path.cwd()
+        output_path = None
+        if not args.preflight:
+            location = _delivery_location()
+            output_path = _delivery_output_path(task_dir, location, args.output)
+            if args.input.resolve() == (task_dir / output_path).resolve():
+                parser.error("output must not refer to the input JSON file")
         spec = json.loads(args.input.read_text(encoding="utf-8"), object_pairs_hook=_json_object)
         if args.preflight:
             print(json.dumps(preflight_document(spec, args.input.resolve().parent), ensure_ascii=False))
         else:
             verified = args.verify or args.require_no_placeholders
-            create_document(spec, args.output, base_dir=args.input.resolve().parent,
+            _prepare_delivery_directory(task_dir, location.output_dir)
+            create_document(spec, output_path, base_dir=args.input.resolve().parent,
                             verify=verified, require_no_placeholders=args.require_no_placeholders)
+            summary = {"status": "verified" if verified else "created",
+                       "output": output_path.as_posix(),
+                       "output_dir": location.output_dir.as_posix(),
+                       "used_fallback": location.used_fallback,
+                       "fallback_reason": location.fallback_reason}
             if verified:
-                print(json.dumps({"status": "verified", "output": args.output.as_posix(),
-                                  "blocks": len(spec["blocks"]), "zip_crc": True,
-                                  "structure": True, "content_coverage": True,
-                                  "layout_intent": True,
-                                  "visual_validation": False, "xsd_validation": False}, ensure_ascii=False))
+                summary.update({"blocks": len(spec["blocks"]), "zip_crc": True,
+                                "structure": True, "content_coverage": True,
+                                "layout_intent": True,
+                                "visual_validation": False, "xsd_validation": False})
+            print(json.dumps(summary, ensure_ascii=True))
     except (OSError, UnicodeError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         parser.error(str(exc))
     return 0

@@ -3,6 +3,7 @@
 ## 目录
 
 - [预检与集成验收](#预检与集成验收)
+- [输出目录与文件名](#输出目录与文件名)
 - [主题与文档标题](#主题与文档标题)
 - [顶层字段](#顶层字段)
 - [默认格式与页面](#默认格式与页面)
@@ -12,7 +13,7 @@
 - [显式覆盖示例](#显式覆盖示例)
 - [中文 JSON 与引号](#中文-json-与引号)
 
-先按 [执行环境约束](../SKILL.md#执行环境约束与首步自检) 定位脚本并完成自检。在宿主的下载工作目录调用生成器，输入输出使用 `./document.json`、`./output.docx` 等相对路径；不要切换到 skill 源码目录。脚本和内部资源均基于入口定义的 `<skill_dir>` 定位，执行前替换为真实目录。相对图片路径以输入 JSON 所在目录为基准。需要 Python API 时调用 `create_document(spec, output, base_dir=None, verify=True, require_no_placeholders=False)`，输入输出及 `base_dir` 同样使用任务目录内的相对路径；API 模块从 `<skill_dir>/scripts/` 加载。禁止传入未声明的字段，生成器会拒绝未知字段、错误类型和不支持的块。
+先按 [执行环境约束](../SKILL.md#执行环境约束与首步自检) 定位脚本并完成自检。在宿主的下载工作目录调用生成器，输入使用 `./document.json` 等相对路径，输出参数只填写文件名；不要切换到 skill 源码目录。脚本和内部资源均基于入口定义的 `<skill_dir>` 定位，执行前替换为真实目录。相对图片路径以输入 JSON 所在目录为基准，与输出目录无关。API 模块从 `<skill_dir>/scripts/` 加载；路径接口区别见下节。禁止传入未声明的字段，生成器会拒绝未知字段、错误类型和不支持的块。
 
 ## 预检与集成验收
 
@@ -20,7 +21,7 @@
 
 ```console
 python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json --preflight
-python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json ./output.docx --verify --require-no-placeholders
+python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json output.docx --verify --require-no-placeholders
 ```
 
 `--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条为可选路径：普通生成直接用第二条，无需先重复预检。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。验收遇到未验证警告同样拒绝发布。成功摘要增加 `layout_intent: true`；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。
@@ -28,6 +29,25 @@ python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json ./output.do
 API 默认 `verify=False` 保持兼容；按本 Skill 流程生成交付时显式设为 `True`。所有生成调用在写出前检查共享 XML 预算，避免输出自身校验器拒绝的超限文件。调用 `preflight_document(spec, base_dir=None)` 获取预检摘要，返回块数、部件数和未压缩大小。使用 Python 字典可直接调用 API，无需先写 JSON。CLI 拒绝重复 JSON 键，未知字段在可确定时提示相近字段名；非法字符诊断包含字段路径、从 1 起的字符位置和 Unicode 码位，不静默清洗内容。
 
 生成失败时执行 [生成失败修正与有限重试](../SKILL.md#生成失败修正与有限重试)：由助手按诊断修正可确定的输入或调用错误，首次之外最多重试 2 次，每次重新完整验收；脚本本身仍为单次执行。安全、资源、环境或能力边界受阻时停止，不绕过校验，也不将旧输出交付为本次结果。
+
+## 输出目录与文件名
+
+命令行第二个参数现在是单个 DOCX 文件名，旧调用中的 `./output.docx`、目录或完整路径需要改为 `output.docx`。命令入口在每次自检或生成时读取 `ROUTER_CONFIG_VARIABLES`，不会在模块导入时缓存环境。宿主必须先确认任务工作目录，并使自检与生成使用同一配置；`./` 始终指该任务工作目录，不是脚本安装目录。
+
+| 配置结果 | 输出目录 | 文件名为 `报告.docx` 时的实际路径 |
+|---|---|---|
+| 有效 `idRecord` 为 `12345` | `./12345/output/` | `./12345/output/报告.docx` |
+| 配置缺失、JSON/字段结构异常、ID 缺失或无效 | `./` | `./报告.docx` |
+
+环境配置的外层必须是 JSON 对象。`commonParam` 接受参数列表，或编码为 JSON 字符串的参数列表；各项须有非空字符串类型的 `name`，并包含 `value` 字段，额外字段允许。必须恰有一项 `name` 为 `idRecord`；重复 ID、重复 JSON 对象键和非标准 JSON 常量触发回退。ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受非负整数并转成十进制字符串；不接受布尔值、浮点数、空白、路径或 Windows 保留设备名。不擅自裁剪或改写 ID。回退只输出固定原因码，不打印原始配置或其他公共参数。
+
+文件名支持中文和空格，须以 `.docx` 结尾，UTF-8 长度不超过 255 字节；禁止附带目录、路径分隔符、控制字符、Windows 非法字符或保留设备名、尾点及尾空格。目录不存在时自动创建；已存在的目录组件和目标文件不得是符号链接，包括悬空链接。目录创建、权限、写入或生成验证失败明确报错，不再回退到其他目录。同名普通文件在生成及所请求的验证成功后原子替换；失败保留已有文件。主入口路径检查依赖宿主隔离同一任务目录中的并发修改，不提供针对恶意并发改写目录的隔离。
+
+每次成功生成均向标准输出返回 JSON：`output` 是实际文件相对于任务目录的路径，`output_dir` 是采用的目录，`used_fallback` 和 `fallback_reason` 说明是否回退及原因。未启用验证时 `status` 为 `created`；启用且通过时为 `verified`，并附原有验证字段。摘要使用标准 JSON 转义，中文文件名可由 JSON 解码还原。后续验收和交付依据本次 `output` 核实实际文件，不根据文件名猜测位置。`--preflight` 保持只读，不解析输出配置、不创建输出目录。
+
+路径规则独立放在 `<skill_dir>/scripts/output_location.py`，`resolve_output_location(router_config_str)` 是不读环境、不操作文件、不打印日志的纯函数，返回不可变 `OutputLocation(output_dir, used_fallback, fallback_reason)`；`output_dir` 为任务目录内的相对目录。其他 Python 调用方可以显式传入配置字符串复用它，环境读取和文件操作由调用方负责。模块随 DOCX 完整目录分发，不依赖仓库外公共代码或第三方包。
+
+低层 `create_document(spec, output, base_dir=None, verify=False, require_no_placeholders=False)` 保持原接口，不自动读取环境或重定向路径。需要 Python API 时，调用方先解析目录、校验文件名和实际目录边界，再传入组合后的任务内相对路径，并显式启用 `verify=True`；使用命令入口可统一执行这些路径检查。`base_dir` 仅用于图片路径解析，不代表输出目录。其他读取、编辑及打包入口的路径接口保持原样，本次自动路由仅用于新建 DOCX。
 
 ## 主题与文档标题
 
@@ -305,4 +325,4 @@ work = Path(".")
 
 使用 `ensure_ascii=False` 使中文在 JSON 文件中直接可读；它不负责修复已有非法 JSON，英文双引号等必要字符仍会由序列化器正确转义。生成器使用标准 JSON 解析器，不会自动修复错误引号。
 
-将输入 JSON 和文档输出放在任务工作目录。不要在 skill 中保存用户数据、生成产物或临时图片；输出失败时保留已有目标文件。
+将输入 JSON 和文档输出放在任务工作目录及其子目录，新建命令的输出目录由程序确定。不要在 skill 中保存用户数据、生成产物或临时图片；输出失败时保留已有目标文件。

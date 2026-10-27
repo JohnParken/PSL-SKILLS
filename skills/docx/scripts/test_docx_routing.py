@@ -68,6 +68,7 @@ class RoutingTests(unittest.TestCase):
             (work / 'input.json').write_text(json.dumps(spec, ensure_ascii=False), encoding='utf-8')
             (work / 'replacements.json').write_text(json.dumps({'replacements': [{'old': '中文 ABC', 'new': '修改 XYZ', 'count': 1}]}), encoding='utf-8')
             env = dict(os.environ, PATH='')
+            env.pop('ROUTER_CONFIG_VARIABLES', None)
             for script, args in (
                 ('create_docx.py', ['input.json', 'native.docx', '--verify']),
                 ('edit_docx.py', ['native.docx', 'replacements.json', 'edited.docx'])):

@@ -1,15 +1,14 @@
 {
-  "schema_version": "skill_selection_simulation_v1",
-  "version": "20261026.2106.1644",
-  "method": "Independent evaluator, candidate SKILL.md files only, 20 fixed requests, no golden labels or tests directory access. No document processing or actual harness auto-trigger. Initial capacity failure recovered once.",
+  "checked_on": "2026-10-27",
+  "method": "Independent read-only evaluator given only twenty requests and current candidate entries; not provided golden labels or prior results. No actual host activation.",
+  "entry_versions": {
+    "docx": "20261026.2106.1644",
+    "xlsx": "20261026.2106.1644",
+    "wps": "20261026.2106.1644",
+    "ofd": "20261026.2117.0168"
+  },
   "correct": 20,
   "total": 20,
-  "entry_sha256": {
-    "docx": "b0cf5098064afb130c119f7b960a5b0fa5e759eba0bc17e980c65da299c6374d",
-    "xlsx": "dc7a9b6711ba6db90a0287c1378993cdc05e1de06bb7fcd495b36f3535666cd9",
-    "wps": "d7e00dc614a97030c26d2290d21a64910bfc7b6d0886be0d8f2253ab65450962",
-    "ofd": "56f6493e1e05124a82d083d710745358bd14747a765294dfa9cde6aa41e56b4b"
-  },
   "predictions": [
     {
       "id": "01",
@@ -112,10 +111,11 @@
       "matches_expected": true
     }
   ],
-  "limitations": [
-    "small fixed task set",
-    "not real host activation",
-    "not unseen population accuracy",
-    "does not replace runtime acceptance"
-  ]
+  "entry_sha256": {
+    "docx": "b0cf5098064afb130c119f7b960a5b0fa5e759eba0bc17e980c65da299c6374d",
+    "xlsx": "dc7a9b6711ba6db90a0287c1378993cdc05e1de06bb7fcd495b36f3535666cd9",
+    "wps": "d7e00dc614a97030c26d2290d21a64910bfc7b6d0886be0d8f2253ab65450962",
+    "ofd": "734496e39d907cf21dfdfb88b1f6fd0208ad12d974aab9bfc1752b003457617f"
+  },
+  "real_host_trigger": "not_tested"
 }

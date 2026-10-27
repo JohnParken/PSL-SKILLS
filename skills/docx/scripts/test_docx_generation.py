@@ -44,8 +44,10 @@ class GenerationTests(unittest.TestCase):
         if ascii_locale:
             command += ['-X', 'utf8=0']
         command += [str(Path(create_docx.__file__)), *args]
+        environment = dict(os.environ, PATH='', LC_ALL='C')
+        environment.pop('ROUTER_CONFIG_VARIABLES', None)
         return subprocess.run(command, cwd=self.work,
-                              env=dict(os.environ, PATH='', LC_ALL='C'),
+                              env=environment,
                               capture_output=True, encoding='utf-8')
 
     def test_chinese_xml_literal_table_and_related_roundtrip(self):

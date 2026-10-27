@@ -7,7 +7,7 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261026.2106.1644 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261026.2106.1644 | DOCX 生成、DOCX/DOTX 读取与受控编辑；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261027.1715.1211 | DOCX 生成、DOCX/DOTX 读取与受控编辑；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261026.2106.1644 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；日期与公式缓存、部分读取诊断 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261026.2117.0168 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
 
@@ -77,7 +77,7 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.
 
 ### DOCX
 
-首次操作前在任务目录运行自检，要求退出码为 0，且输出包含 `check-ok` 和 `output_dir=. writable=True`：
+首次操作前在任务目录运行自检，要求退出码为 0、输出包含 `check-ok`，且 `output_dir=...` 行中 `writable=True`。自检会检查程序实际选定的输出目录，必要时创建目录并清理写入探针：
 
 ```console
 python3 -I -S -B "<skill_dir>/scripts/create_docx.py" --check
@@ -96,9 +96,10 @@ python3 -I -S -B "<skill_dir>/scripts/create_docx.py" --check
 ```
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json ./output.docx --verify --require-no-placeholders
-python3 -I -S -B "<skill_dir>/scripts/read_docx.py" ./output.docx
+python3 -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json output.docx --verify --require-no-placeholders
 ```
+
+新建命令只接收输出文件名，不带 `./` 或目录。Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得 `idRecord`：有效时保存到 `./{idRecord}/output/`，配置缺失或解析失败时回退到 `./` 并记录固定原因码；目录或写入失败不触发回退。成功 JSON 的 `output` 返回实际相对路径，后续读取、验收及交付使用该路径。`commonParam` 支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation.md#输出目录与文件名)。其他读取和编辑命令仍接收相对路径。
 
 `--verify` 核对生成子集的内容与 XML 排版意图，不等同于页面视觉验收；字体显示、实际分页和页码仍需在文档阅读器中检查。
 

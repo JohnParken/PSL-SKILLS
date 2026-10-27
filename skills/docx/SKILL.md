@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261026.2106.1644"
+version: "20261027.1715.1211"
 description: 用于新建 Word 公文、报告和信函，读取 DOCX/DOTX 正文、表格与显式结构，以及受控修改文字、表格、图片和批注。支持模板填充、基础排版和结构检查，采用纯 Python 标准库；.wps/.et/.ett 读取使用 wps 技能，不承诺任意编辑、页面预览或 PDF 导出。
 ---
 
@@ -16,7 +16,7 @@ description: 用于新建 Word 公文、报告和信函，读取 DOCX/DOTX 正�
 - 使用 Python 3.10 及以上版本，要求标准库包含 zlib，且内置 XML 解析器 Expat 版本至少为 2.6.0；解析器不满足条件时报告环境受阻。
 - 仅使用 Python 标准库；不要安装或导入第三方包，不要调用办公软件、转换器、Shell 命令、Git 或编译器。
 - 在宿主提供的可下载工作目录执行，使用宿主已确认可用的 Python 解释器；下文的 `python` 仅表示该入口。使用 `-I -S -B` 禁用环境路径、site 初始化及缓存写入；脚本只添加自身所在的源码目录以加载本 skill 模块。
-- 将输入、输出及任务临时文件放在当前下载工作目录，使用 `./document.json`、`./output.docx` 等相对路径。禁止将任务文件写入 skill 源码目录。创建辅助文件前记录本次新建的确切路径及用途，任务结束按 [任务中间文件清理](#任务中间文件清理) 收尾。
+- 将输入、输出及任务临时文件放在当前下载工作目录及其子目录，输入使用 `./document.json` 等相对路径。新建 DOCX 的命令只接收输出文件名，程序自动选择输出目录；其他读取和编辑入口仍接收任务目录内的相对路径。禁止将任务文件写入 skill 源码目录。创建辅助文件前记录本次新建的确切路径及用途，任务结束按 [任务中间文件清理](#任务中间文件清理) 收尾。
 - 按 [requirements.txt](requirements.txt) 确认无第三方运行时依赖；无需运行包安装命令。
 - 生成 DOCX；仅使用 ZIP/XML 工具读取、定点编辑和检查已有 DOTX。禁止通过改扩展名转换格式。
 
@@ -47,9 +47,10 @@ description: 用于新建 Word 公文、报告和信函，读取 DOCX/DOTX 正�
 python -I -S -B "<skill_dir>/scripts/create_docx.py" --check
 ```
 
-- 仅在返回码为 0 且输出包含 `check-ok`、`output_dir=. writable=True` 时继续。自检逐项显示 Python、zlib、Expat 的实际版本或状态及要求，并在当前目录实际写入、读回和清理探针文件；不生成报告。失败时根据具体失败项报告，不猜测版本或安装路径。
-- 当前版本只有当前目录这一个输出候选。看到 `writable=False`、非零返回码或缺少成功标记时立即停止，报告环境异常；禁止反复重试、切换路径或退回其他挂载目录。不要依赖其他脚本的“自动选择输出目录”行为。
-- 自检只验证运行条件及当前目录写入能力，不能证明宿主一定提供下载功能；交付前还须按文末步骤验证实际生成的文件。
+- 仅在返回码为 0、输出包含 `check-ok`，且 `output_dir=...` 行中 `writable=True` 时继续。自检逐项显示 Python、zlib、Expat 的实际版本或状态及要求，并在程序解析出的输出目录实际写入、读回和清理探针文件；必要时创建该目录，不生成文档。失败时根据具体失败项报告，不猜测版本或安装路径。
+- Python 根据环境变量 `ROUTER_CONFIG_VARIABLES` 中的 `commonParam` 取得 `idRecord`：有效时使用 `./{idRecord}/output/`；配置缺失、解析失败或 ID 无效时使用 `./`，并输出不含原始配置的回退原因。助手只提供文件名，不读取或打印环境配置、不自行拼接输出目录。详见 [输出目录与文件名](references/generation.md#输出目录与文件名)。
+- 只有配置解析失败触发默认目录回退。看到 `writable=False`、非零返回码或缺少成功标记时立即停止，报告环境异常；目录创建、权限、符号链接或写入失败不切换目录，不反复重试。自检和生成必须在同一任务目录及同一环境配置下执行。
+- 自检只验证运行条件及选定目录写入能力，不能证明宿主一定提供下载功能；交付前还须按文末步骤验证实际生成的文件。
 - 长会话压缩后若本技能指令缺失或记忆不清，立即重新读取真实的 `SKILL.md`，恢复约束后继续；保留已确认的任务目录和文件名，不要凭记忆重建路径。
 
 ## 按任务读取说明
@@ -85,8 +86,10 @@ python -I -S -B "<skill_dir>/scripts/create_docx.py" --check
 ```
 
 ```console
-python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json ./output.docx --verify --require-no-placeholders
+python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json output.docx --verify --require-no-placeholders
 ```
+
+第二个参数仅填写文件名，例如 `output.docx` 或 `报告.docx`，不要带 `./`、父目录、子目录或绝对路径。生成成功会返回 JSON，其中 `output` 是本次文件相对于任务目录的实际路径，`output_dir`、`used_fallback` 和 `fallback_reason` 说明目录选择结果；验证、后续读取和交付使用已核实的 `output`，不要重新解析环境配置或假定文件位于 `./output.docx`。未启用验证时也返回路径，但状态为 `created`，不包含已通过验证的声明。同名文件继续在成功后原子替换；验证失败保留旧文件。
 
 生成器始终在写出前检查生成 XML 的共享资源预算。生成交付使用 `--verify` 在原子替换最终文件前读回 ZIP、检查全部成员 CRC、结构规则、输入内容及已支持的排版意图；`--require-no-placeholders` 同时开启验证并拒绝双花括号标记。按 [集成验收范围](references/generation.md#预检与集成验收) 核对块顺序、分页、样式、列表、表格和图片对应关系。失败保留已有输出并清理暂存文件，按文末 [生成失败修正与有限重试](#生成失败修正与有限重试) 处理；成功摘要中的 `layout_intent: true` 不代表视觉或 XSD 验证。仅检查输入而不写文件时使用 `python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json --preflight`；普通生成无需先重复预检，该选项不代替环境自检或最终 ZIP 验收。
 
@@ -173,13 +176,13 @@ OOXML 使用默认 `--revisions accepted` 排除删除文字，使用 `original`
 
 ## 基础结构检查与验收
 
-使用 `--verify` 成功生成时，已在发布前完成 ZIP、结构与输入内容覆盖核对，无需重复执行下述独立 CRC/结构/文本回读命令；仍须确认本次文件存在且非空，并按需求核对格式与交付链接。未使用集成验收或检查已有文件时，先验证本次指定的目标文件真实存在且非空，再执行结构检查；禁止仅凭生成函数返回、打印的路径或其他会话留下的文件交付。使用标准库完成与文件列表核对等价的验证，不调用 Shell 的文件列表命令：
+使用 `--verify` 成功生成时，已在发布前完成 ZIP、结构与输入内容覆盖核对，无需重复执行下述独立 CRC/结构/文本回读命令；仍须按成功摘要的 `output` 确认本次文件存在且非空，并按需求核对格式与交付链接。未使用集成验收或检查已有文件时，先验证本次指定的目标文件真实存在且非空，再执行结构检查；禁止仅凭生成函数返回、打印的路径或其他会话留下的文件交付。下面示例的 `generation_result` 指本次成功生成返回的 JSON 对象，使用前须从实际命令结果取得，不要填入猜测值。使用标准库完成与文件列表核对等价的验证，不调用 Shell 的文件列表命令：
 
 ```python
 from pathlib import Path
 import zipfile
 
-output = Path("./output.docx")  # 与本次生成目标保持一致。
+output = Path(generation_result["output"])
 if not output.is_file() or output.stat().st_size <= 0:
     raise RuntimeError("目标文件不存在或为空")
 with zipfile.ZipFile(output) as package:
@@ -188,7 +191,7 @@ with zipfile.ZipFile(output) as package:
 print(f"./{output.as_posix()} exists=True size={output.stat().st_size} zip-ok")
 ```
 
-禁止用其他目录中的同名文件代替该目标；验证失败时停止本次交付，新建文档仅可按下述有限重试规则修正后重新验收。无法修正时报告实际失败。以上步骤不替代下列结构检查：
+禁止用其他目录中的同名文件代替该目标；验证失败时停止本次交付，新建文档仅可按下述有限重试规则修正后重新验收。无法修正时报告实际失败。以上步骤不替代下列结构检查。下面两条仅示范检查已有 `./output.docx`；检查本次新生成文件时，将其替换为成功摘要中已核实的实际 `output` 路径：
 
 ```console
 python -I -S -B "<skill_dir>/scripts/office/validate.py" ./output.docx --require-no-placeholders
