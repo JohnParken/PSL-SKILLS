@@ -2,6 +2,7 @@
 
 ## 目录
 
+- [路径解析示例](#路径解析示例)
 - [预检与集成验收](#预检与集成验收)
 - [交付文件命名](#交付文件命名)
 - [输出目录与文件名](#输出目录与文件名)
@@ -15,7 +16,31 @@
 - [中文 JSON 与引号](#中文-json-与引号)
 - [生成后格式引导](#生成后格式引导)
 
-先按 [执行环境约束](../SKILL.md#执行环境约束与首步自检) 定位脚本并完成自检。在宿主的下载工作目录调用生成器，输入使用 `./document.json` 等相对路径，输出参数只填写文件名；不要切换到 skill 源码目录。脚本和内部资源均基于入口定义的 `<skill_dir>` 定位，执行前替换为真实目录。相对图片路径以输入 JSON 所在目录为基准，与输出目录无关。API 模块从 `<skill_dir>/scripts/` 加载；路径接口区别见下节。禁止传入未声明的字段，生成器会拒绝未知字段、错误类型和不支持的块。
+先按 [执行环境约束](../SKILL.md#执行环境约束与首步自检) 定位脚本并完成自检。在宿主确认的任务工作目录调用生成器，输入使用 `./document.json` 等相对路径，输出参数只填写文件名；不要切换到 skill 源码目录。脚本和内部资源均基于入口定义的 `<skill_dir>` 定位，执行前替换为真实目录。路径基准统一见 [文件定位与读取规则](../SKILL.md#文件定位与读取规则)；CLI 图片相对输入 JSON 所在目录，字典 API 图片相对 `base_dir`（省略为任务目录），均与主文件输出目录无关。API 模块从 `<skill_dir>/scripts/` 加载；路径接口区别见下节。禁止传入未声明的字段，生成器会拒绝未知字段、错误类型和不支持的块。
+
+## 路径解析示例
+
+假设任务目录已有 `./inputs/document.json` 和 `./inputs/images/logo.png`，JSON 内图片字段使用 `"path": "images/logo.png"`。完成自检后仍从任务目录调用：
+
+```console
+python -I -S -B "<skill_dir>/scripts/create_docx.py" ./inputs/document.json "客户服务改进方案.docx" --verify --require-no-placeholders
+```
+
+读取的是 `./inputs/images/logo.png`，主文件为 `./客户服务改进方案.docx`；有效 `requestId` 下副本为 `./output/{requestId}/客户服务改进方案.docx`。不把主文件写入 `inputs/`，不切换到该目录。如果在 Python 中自行读取这个 JSON 再调用字典 API，须明确保留图片基准并保护输入：
+
+```python
+import json
+from pathlib import Path
+from create_docx import create_document_delivery
+
+spec = json.loads(Path("inputs/document.json").read_text(encoding="utf-8"))
+result = create_document_delivery(
+    spec, "客户服务改进方案.docx", base_dir="inputs",
+    protected_inputs=["inputs/document.json"],
+)
+```
+
+模块从已确认的 `<skill_dir>/scripts/` 加载；`base_dir="inputs"` 只影响图片读取，不改变输出和归档位置。省略 `base_dir` 时，`images/logo.png` 将按任务目录下的 `./images/logo.png` 读取，不会自动沿用 JSON 的目录。
 
 ## 预检与集成验收
 
@@ -28,7 +53,7 @@ python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json "客户服�
 
 `--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条为可选路径：普通生成直接用第二条，无需先重复预检。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。验收遇到未验证警告同样拒绝发布。成功摘要增加 `layout_intent: true`；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。
 
-API 默认 `verify=False` 保持兼容；按本 Skill 流程生成交付时显式设为 `True`。所有生成调用在写出前检查共享 XML 预算，避免输出自身校验器拒绝的超限文件。调用 `preflight_document(spec, base_dir=None)` 获取预检摘要，返回块数、部件数和未压缩大小。使用 Python 字典可直接调用 API，无需先写 JSON。CLI 拒绝重复 JSON 键，未知字段在可确定时提示相近字段名；非法字符诊断包含字段路径、从 1 起的字符位置和 Unicode 码位，不静默清洗内容。
+低层 `create_document()` 的 `verify=False` 保持兼容；最终交付使用默认 `verify=True` 的 `create_document_delivery()`，由代码自动归档。所有生成调用在写出前检查共享 XML 预算，避免输出自身校验器拒绝的超限文件。调用 `preflight_document(spec, base_dir=None)` 获取预检摘要，返回块数、部件数和未压缩大小。使用 Python 字典可直接调用 API，无需先写 JSON。CLI 拒绝重复 JSON 键，未知字段在可确定时提示相近字段名；非法字符诊断包含字段路径、从 1 起的字符位置和 Unicode 码位，不静默清洗内容。
 
 生成失败时执行 [生成失败修正与有限重试](validation.md#生成失败修正与有限重试)：由助手按诊断修正可确定的输入或调用错误，首次之外最多重试 2 次，每次重新完整验收；脚本本身仍为单次执行。安全、资源、环境或能力边界受阻时停止，不绕过校验，也不将旧输出交付为本次结果。
 
@@ -49,11 +74,13 @@ API 默认 `verify=False` 保持兼容；按本 Skill 流程生成交付时显�
 | 输入为 `output.docx`，实际内容是设备采购申请 | `设备采购申请_修订版.docx` |
 | 用户明确要求保存为 `output.docx`，且不与输入冲突 | `output.docx` |
 
-同名检查是助手写入前的职责：核对主输出，以及自检已报告且可访问的本轮归档目录中是否存在同名文件；不要自行读取或打印环境配置。脚本无法识别文件的业务归属，仍会原子替换同名普通输出和归档，并不会自动加序号。只有明确更新同一交付物时才复用名称；否则选择对已知主文件和归档均无冲突的新名称。归档目录不可访问或配置无效只按既有规则警告，不把归档检查作为主文件生成的成功条件；不能声称已核实不可访问目录中的同名情况。
+同名检查是助手写入前的职责：核对主输出，以及自检已报告且可访问的本轮归档目录中是否存在同名文件，仅按候选名定点检查，不遍历目录、不阅读旧文档判断归属；不要自行读取或打印环境配置。脚本无法识别文件的业务归属，仍会原子替换同名普通输出和归档，并不会自动加序号。只有明确更新同一交付物时才复用名称；否则选择对已知主文件和归档均无冲突的新名称。归档目录不可访问或配置无效只按既有规则警告，不把归档检查作为主文件生成的成功条件；不能声称已核实不可访问目录中的同名情况。
 
 ## 输出目录与文件名
 
-命令行第二个参数是单个 DOCX 文件名，不接受 `./output.docx`、目录或完整路径。主文件始终生成到宿主确认的任务工作目录 `./`，不是脚本安装目录。生成器在每次写入自检或生成时读取 `ROUTER_CONFIG_VARIABLES`，不在导入时缓存；自检与生成须使用同一任务目录和配置。
+归档目录默认只保存副本，不作为输入来源或主动检索范围；必要的同名、输入同源及本次副本检查按 [归档目录使用边界](delivery.md#归档目录使用边界) 执行，默认不读取历史文档内容；用户明确授权的指定归档输入按该边界处理。
+
+命令行第二个参数是单个 DOCX 文件名，不接受 `./output.docx`、目录或完整路径。新建主文件始终生成到宿主确认的任务工作目录 `./`，不是脚本安装目录。生成器在每次写入自检或生成时读取 `ROUTER_CONFIG_VARIABLES`，不在导入时缓存；自检与生成须使用同一任务目录和配置。
 
 | 配置结果 | 主文件 | 生成成功后的归档副本 |
 |---|---|---|
@@ -78,7 +105,9 @@ API 默认 `verify=False` 保持兼容；按本 Skill 流程生成交付时显�
 
 配置解析保留在 `<skill_dir>/scripts/output_location.py`：`resolve_output_location(router_config_str)` 不读环境、不操作文件、不打印日志，返回不可变 `OutputLocation(output_dir, used_fallback, fallback_reason)`。保留返回字段名，其 `output_dir` 改为有效配置的 `output/{requestId}` 或失败时的 `.`；命令入口仅在 `used_fallback=False` 时将其作为归档目录，不用它选择主文件位置。模块随 DOCX 完整目录分发，仅依赖标准库。
 
-低层 `create_document(spec, output, base_dir=None, verify=False, require_no_placeholders=False)` 保持显式路径接口，不自动读取环境、重定向或复制归档。API 调用方负责路径边界及所需归档，并在交付时显式启用 `verify=True`；使用命令入口可统一执行上述流程。`base_dir` 仅用于图片路径解析。本节摘要格式仅用于 CLI 新建 DOCX。编辑 CLI 写操作也自动归档，其他当轮交付物按 [统一归档](delivery.md) 的显式清单流程执行；低层 API 不自动归档。
+公开 `create_document_delivery(spec, output, base_dir=None, *, verify=True, require_no_placeholders=False, protected_inputs=())` 与新建 CLI 共用发布流程；主文件成功后自动调用统一归档入口，返回主状态和归档摘要。新建 CLI 保留原验证选项和单文件字段，并增加统一入口的 `files` 明细；归档预检查失败、无文件明细时 `archive_output` 为 `null`，以 `warnings` 解释失败，不猜测副本路径。API 默认开启验证；输入字典来自磁盘时将源 JSON 路径加入 `protected_inputs`。`base_dir` 仅用于图片路径解析，图片只验证读取一次，并自动加入保护清单。完整接口和示例见 [公开交付 API](delivery.md#公开交付-api)。
+
+低层 `create_document(spec, output, base_dir=None, verify=False, require_no_placeholders=False)` 保持显式路径接口及返回 Path，不读取环境、不自动归档，仅用于中间处理或由调用方显式收尾的场景。五种编辑也提供自动归档的公开交付 API；不要将底层函数的成功误当成归档完成。
 
 ## 主题与文档标题
 
@@ -344,7 +373,7 @@ API 默认 `verify=False` 保持兼容；按本 Skill 流程生成交付时显�
 
 第一例使用了中文语法引号；第二例没有转义正文中的英文双引号。不要把正文中合法的中文引号全部替换掉。出现 `JSONDecodeError` 时，根据报错的行号、列号检查该位置及其前面的引号、冒号和逗号；仅凭“有中文引号”无法确定原始输入的具体错误。
 
-需要避免手工转义时，在下载工作目录执行以下 Python 示例，使用字典构造输入后序列化；不要手工拼接 JSON 字符串：
+需要避免手工转义时，在宿主确认的任务工作目录执行以下 Python 示例，使用字典构造输入后序列化；不要手工拼接 JSON 字符串：
 
 ```python
 import json
@@ -362,7 +391,7 @@ work = Path(".")
 
 使用 `ensure_ascii=False` 使中文在 JSON 文件中直接可读；它不负责修复已有非法 JSON，英文双引号等必要字符仍会由序列化器正确转义。生成器使用标准 JSON 解析器，不会自动修复错误引号。
 
-将输入 JSON 和文档输出放在任务工作目录及其子目录，新建命令的输出目录由程序确定。不要在 skill 中保存用户数据、生成产物或临时图片；主文件生成失败时保留已有目标；主文件发布后的归档失败按上文附加步骤警告契约处理，不回滚主文件。
+输入 JSON 可放在任务工作目录及其子目录；新建 CLI 和公开交付 API 的主文件位于任务目录根部，编辑输出可使用明确的相对子目录，按主入口的文件定位规则执行。不要在 skill 中保存用户数据、生成产物或临时图片；主文件生成失败时保留已有目标；主文件发布后的归档失败按上文附加步骤警告契约处理，不回滚主文件。
 
 ## 生成后格式引导
 

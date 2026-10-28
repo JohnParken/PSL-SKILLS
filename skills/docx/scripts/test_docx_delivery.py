@@ -16,6 +16,7 @@ if sys.version_info < (3, 10):
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import create_docx
+import archive_deliverables
 from read_docx import read_docx
 from test_docx_editing import png_pixel
 
@@ -262,7 +263,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual((self.work / 'output').read_bytes(), b'keep-blocker')
 
     def test_archive_resolver_failure_warns_without_failing_verified_generation(self):
-        with patch.object(create_docx, '_delivery_location',
+        with patch.object(archive_deliverables, 'resolve_output_location',
                           side_effect=RuntimeError('injected archive resolver failure')):
             code, stdout, stderr = self.run_main(
                 'input.json', 'report.docx', '--verify', config=self.config())
@@ -438,7 +439,7 @@ class DeliveryTests(unittest.TestCase):
         process = self.run_cli(archive_output.relative_to(self.work).as_posix(),
                                'report.docx', '--verify', config=self.config())
         result = self.assert_archive_warning(
-            process, detail='must not refer to the input JSON file')
+            process, detail='archive target conflicts with an input or another deliverable')
         self.assertEqual(read_docx(self.work / 'report.docx'), '交付内容 & 原样保留')
         self.assertNotEqual((self.work / 'report.docx').read_bytes(), raw_input)
         self.assertEqual(archive_output.read_bytes(), raw_input)
@@ -450,7 +451,7 @@ class DeliveryTests(unittest.TestCase):
         os.link(self.work / 'input.json', archive_output)
         process = self.run_cli('input.json', 'report.docx', '--verify', config=self.config())
         result = self.assert_archive_warning(
-            process, detail='must not refer to the input JSON file')
+            process, detail='archive target conflicts with an input or another deliverable')
         self.assertEqual((self.work / 'input.json').read_bytes(), input_bytes)
         self.assertEqual(archive_output.read_bytes(), input_bytes)
         self.assertEqual(read_docx(self.work / 'report.docx'), '交付内容 & 原样保留')
@@ -489,7 +490,7 @@ class DeliveryTests(unittest.TestCase):
                     process = self.run_cli('input.json', 'report.docx', '--verify',
                                            config=self.config())
                     result = self.assert_archive_warning(process)
-                    self.assertTrue(any('input image' in warning
+                    self.assertTrue(any('archive target conflicts with an input or another deliverable' in warning
                                         for warning in result['warnings']))
                     self.assertEqual(archive_output.read_bytes(), image_bytes)
                     self.assertEqual(image_path.read_bytes(), image_bytes)

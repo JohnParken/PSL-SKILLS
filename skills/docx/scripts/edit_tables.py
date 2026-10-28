@@ -22,7 +22,7 @@ from edit_structure import RUN_PROPERTY_ORDER, _blocked_anchors, _elements, _ind
 from office.package import pack_document, unpack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import archive_outputs, validate_output_path
+from archive_deliverables import finalize_delivery, validate_output_path
 
 TABLE_PROPERTIES = {
     "tblStyle", "tblpPr", "tblOverlap", "bidiVisual", "tblStyleRowBandSize", "tblStyleColBandSize",
@@ -228,6 +228,16 @@ def edit_tables(source, destination, specification, *, require_no_placeholders=F
         return pack_document(unpacked, destination)
 
 
+def edit_tables_delivery(source, destination, specification, *,
+                         require_no_placeholders=False, protected_inputs=()):
+    """Publish a final edited document and automatically attempt shared archival."""
+    protected = [Path(source), *map(Path, protected_inputs)]
+    destination = validate_output_path(Path(destination), protected_inputs=protected)
+    result = edit_tables(source, destination, specification,
+                         require_no_placeholders=require_no_placeholders)
+    return finalize_delivery(destination, protected, status="edited", result=result)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
@@ -238,20 +248,14 @@ def main(argv=None):
     protected_inputs = [args.input, args.operation]
     try:
         args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
-        result = edit_tables(args.input, args.output, json.loads(args.operation.read_text(encoding="utf-8")),
-                             require_no_placeholders=args.require_no_placeholders)
+        payload = edit_tables_delivery(args.input, args.output, json.loads(args.operation.read_text(encoding="utf-8")),
+                             require_no_placeholders=args.require_no_placeholders,
+                                protected_inputs=protected_inputs)
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
-    archive_result = archive_outputs([args.output], protected_inputs)
-    payload = {
-        "result": result if isinstance(result, dict) else str(result),
-        "output": args.output.as_posix(),
-        **archive_result,
-        "status": "edited",
-    }
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    for warning in archive_result["warnings"]:
+    for warning in payload["warnings"]:
         print("archive-warning: " + warning, file=sys.stderr)
     return 0
 

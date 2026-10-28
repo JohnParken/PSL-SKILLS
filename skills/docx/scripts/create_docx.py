@@ -1511,6 +1511,34 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
                                       require_no_placeholders=require_no_placeholders)
 
 
+def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
+                             verify: bool = True, require_no_placeholders: bool = False,
+                             protected_inputs=()) -> dict:
+    """Publish a final task-root DOCX and automatically attempt shared archival."""
+    from archive_deliverables import finalize_delivery, validate_output_path
+
+    if not isinstance(verify, bool) or not isinstance(require_no_placeholders, bool):
+        raise ValueError("verify and require_no_placeholders must be booleans")
+    output_path = _delivery_output_path(Path.cwd(), str(output))
+    protected = [Path(path) for path in protected_inputs]
+    validate_output_path(output_path, protected_inputs=protected)
+    validated = _validate_spec(spec, Path(base_dir) if base_dir is not None else Path.cwd())
+    protected.extend(validated["image_paths"])
+    verified = verify or require_no_placeholders
+    _create_validated_document(validated, output_path, verify=verified,
+                               require_no_placeholders=require_no_placeholders)
+    status = "verified" if verified else "created"
+    summary = finalize_delivery(output_path, protected, status=status)
+    files = summary.get("files", [])
+    summary.update(generation_status=status, output_dir=".",
+                   archive_output=files[0]["archive_output"] if files else None)
+    if verified:
+        summary.update(blocks=len(spec["blocks"]), zip_crc=True, structure=True,
+                       content_coverage=True, layout_intent=True,
+                       visual_validation=False, xsd_validation=False)
+    return summary
+
+
 def _create_validated_document(validated: dict, output_path: Path, *, verify: bool,
                                require_no_placeholders: bool) -> Path:
     """Publish once from validated input, retaining image identities for CLI archival."""
@@ -1739,7 +1767,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, nargs="?", help="JSON document specification")
     parser.add_argument("output", nargs="?", metavar="filename.docx",
-                        help="DOCX filename only; save in the task directory and optionally archive it")
+                        help="DOCX filename only; save in the task directory and automatically attempt archival")
     parser.add_argument("--check", action="store_true", help="check runtime support and task/archive-directory write access")
     parser.add_argument("--preflight", action="store_true", help="validate input and resource budgets without writing")
     parser.add_argument("--verify", action="store_true", help="check ZIP CRC, structure and input coverage before publishing")
@@ -1765,40 +1793,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.preflight:
             print(json.dumps(preflight_document(spec, args.input.resolve().parent), ensure_ascii=False))
         else:
-            verified = args.verify or args.require_no_placeholders
-            validated = _validate_spec(spec, args.input.resolve().parent)
-            _create_validated_document(validated, output_path, verify=verified,
-                                       require_no_placeholders=args.require_no_placeholders)
-            generation_status = "verified" if verified else "created"
-            archive_status = "skipped"
-            archive_output = None
-            warnings = []
-            location = OutputLocation(Path("."), True, "archive_config_error")
-            try:
-                location = _delivery_location()
-                if not location.used_fallback:
-                    archive_output = (location.output_dir / args.output).as_posix()
-                    _copy_main_to_archive(task_dir, output_path, location, args.output,
-                                          input_path, validated["image_paths"])
-                    archive_status = "copied"
-            except Exception as exc:
-                archive_status = "failed"
-                warnings.append(str(exc))
-                print("archive-warning: " + str(exc), file=sys.stderr)
-            summary = {"status": generation_status,
-                       "generation_status": generation_status,
-                       "output": output_path.as_posix(),
-                       "output_dir": ".",
-                       "used_fallback": location.used_fallback,
-                       "fallback_reason": location.fallback_reason,
-                       "archive_output": archive_output,
-                       "archive_status": archive_status,
-                       "warnings": warnings}
-            if verified:
-                summary.update({"blocks": len(spec["blocks"]), "zip_crc": True,
-                                "structure": True, "content_coverage": True,
-                                "layout_intent": True,
-                                "visual_validation": False, "xsd_validation": False})
+            summary = create_document_delivery(
+                spec, args.output, args.input.resolve().parent, verify=args.verify,
+                require_no_placeholders=args.require_no_placeholders,
+                protected_inputs=[args.input])
+            if summary["archive_status"] == "skipped":
+                print("archive-location: skipped; reason=" + summary["fallback_reason"],
+                      file=sys.stderr)
+            for warning in summary["warnings"]:
+                print("archive-warning: " + warning, file=sys.stderr)
             print(json.dumps(summary, ensure_ascii=True))
     except (OSError, UnicodeError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         parser.error(str(exc))

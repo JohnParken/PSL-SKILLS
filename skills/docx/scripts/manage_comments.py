@@ -25,7 +25,7 @@ from office.helpers import XML_SPACE, opc_target
 from office.package import pack_document, unpack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import archive_outputs, validate_output_path
+from archive_deliverables import finalize_delivery, validate_output_path
 
 W14 = "http://schemas.microsoft.com/office/word/2010/wordml"
 W15 = "http://schemas.microsoft.com/office/word/2012/wordml"
@@ -699,6 +699,17 @@ def manage_comments(source, specification, destination=None):
     return {"action": action, "comment_id": value}
 
 
+def manage_comments_delivery(source, specification, destination=None, *, protected_inputs=()):
+    """Keep list read-only; automatically archive a successful comment mutation."""
+    protected = [Path(source), *map(Path, protected_inputs)]
+    if destination is not None:
+        destination = validate_output_path(Path(destination), protected_inputs=protected)
+    result = manage_comments(source, specification, destination)
+    if result.get("action") == "list":
+        return result
+    return finalize_delivery(destination, protected, status="edited", result=result)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
@@ -711,22 +722,17 @@ def main(argv=None):
             args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         with args.action.open(encoding="utf-8") as stream:
             specification = json.load(stream)
-        result = manage_comments(args.input, specification, args.output)
+        result = manage_comments_delivery(args.input, specification, args.output,
+                                         protected_inputs=protected_inputs)
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     if result.get("action") == "list":
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
-    archive_result = archive_outputs([args.output], protected_inputs)
-    payload = {
-        "result": result if isinstance(result, dict) else str(result),
-        "output": args.output.as_posix(),
-        **archive_result,
-        "status": "edited",
-    }
+    payload = result
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    for warning in archive_result["warnings"]:
+    for warning in payload["warnings"]:
         print("archive-warning: " + warning, file=sys.stderr)
     return 0
 

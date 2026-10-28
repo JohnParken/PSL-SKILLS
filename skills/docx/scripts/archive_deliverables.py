@@ -86,6 +86,21 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
     return summary
 
 
+def finalize_delivery(output, protected_inputs, *, status, result=None) -> dict:
+    """Archive a published file without turning an archive error into primary failure."""
+    output = Path(output)
+    try:
+        archive_result = archive_outputs([output], protected_inputs)
+    except Exception as exc:
+        archive_result = {'archive_status': 'failed', 'used_fallback': True,
+                          'fallback_reason': 'archive_error', 'files': [],
+                          'warnings': [str(exc)]}
+    payload = {**archive_result, 'status': status, 'output': output.as_posix()}
+    if result is not None:
+        payload['result'] = result if isinstance(result, dict) else str(result)
+    return payload
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('outputs', type=Path, nargs='*', help='explicit completed delivery files only')

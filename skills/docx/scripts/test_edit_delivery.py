@@ -450,7 +450,7 @@ class EditDeliveryTests(unittest.TestCase):
             os.chdir(self.work)
             expected = manage_comments.manage_comments("source.docx", {"action": "list"})
             with patch.dict(os.environ, {"ROUTER_CONFIG_VARIABLES": self.config("must-not-be-read")}):
-                with patch.object(manage_comments, "archive_outputs",
+                with patch.object(manage_comments, "finalize_delivery",
                                   side_effect=AssertionError("archive helper called")), \
                         patch.object(manage_comments, "validate_output_path",
                                      side_effect=AssertionError("output helper called")):
