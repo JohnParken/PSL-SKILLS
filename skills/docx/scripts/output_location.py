@@ -2,11 +2,13 @@
 
 from dataclasses import dataclass
 import json
+import os
+import sys
 from pathlib import Path
 import re
 
 
-_REQUEST_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,128}")
+_QUESTION_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _WINDOWS_DEVICE_NAMES = frozenset(
     {"CON", "PRN", "AUX", "NUL"}
     | {f"COM{number}" for number in range(1, 10)}
@@ -46,7 +48,7 @@ def _fallback(reason: str) -> OutputLocation:
     return OutputLocation(Path("."), True, reason)
 
 
-def _normalize_request_id(value: object) -> str | None:
+def _normalize_question_id(value: object) -> str | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, int):
@@ -58,10 +60,22 @@ def _normalize_request_id(value: object) -> str | None:
             return None
     if not isinstance(value, str):
         return None
-    if _REQUEST_ID_PATTERN.fullmatch(value) is None:
+    if _QUESTION_ID_PATTERN.fullmatch(value) is None:
         return None
     if value.upper() in _WINDOWS_DEVICE_NAMES:
         return None
+    return value
+
+
+def read_router_config_from_environment() -> str | None:
+    """Read configuration, logging its raw value by default unless debug is disabled."""
+    value = os.environ.get("ROUTER_CONFIG_VARIABLES")
+    if os.environ.get("DOCX_DEBUG_ROUTER_CONFIG", "1") == "1":
+        try:
+            print("router-config-debug: ROUTER_CONFIG_VARIABLES="
+                  + json.dumps(value, ensure_ascii=True), file=sys.stderr)
+        except (OSError, UnicodeError):
+            pass  # Debug output must not change configuration or primary success.
     return value
 
 
@@ -79,12 +93,29 @@ def resolve_output_location(router_config_str: str | None) -> OutputLocation:
     except (ValueError, RecursionError):
         return _fallback("invalid_router_config_json")
 
-    if not isinstance(router_config, dict):
+    if isinstance(router_config, list):
+        common_values: list[object] = []
+        for entry in router_config:
+            if not isinstance(entry, dict):
+                return _fallback("invalid_router_config_entry")
+            name = entry.get("name")
+            if not isinstance(name, str) or not name or "value" not in entry:
+                return _fallback("invalid_router_config_entry")
+            if name == "commonParam":
+                common_values.append(entry["value"])
+        if not common_values:
+            return _fallback("missing_common_param")
+        if len(common_values) != 1:
+            return _fallback("duplicate_common_param")
+        common_param = common_values[0]
+    elif isinstance(router_config, dict):
+        # Preserve the previously documented direct-object configuration.
+        if "commonParam" not in router_config:
+            return _fallback("missing_common_param")
+        common_param = router_config["commonParam"]
+    else:
         return _fallback("invalid_router_config_shape")
-    if "commonParam" not in router_config:
-        return _fallback("missing_common_param")
 
-    common_param = router_config["commonParam"]
     if isinstance(common_param, str):
         try:
             common_param = _parse_json(common_param)
@@ -93,23 +124,23 @@ def resolve_output_location(router_config_str: str | None) -> OutputLocation:
     if not isinstance(common_param, list):
         return _fallback("invalid_common_param_shape")
 
-    request_id_values: list[object] = []
+    question_id_values: list[object] = []
     for entry in common_param:
         if not isinstance(entry, dict):
             return _fallback("invalid_common_param_entry")
         name = entry.get("name")
         if not isinstance(name, str) or not name or "value" not in entry:
             return _fallback("invalid_common_param_entry")
-        if name == "requestId":
-            request_id_values.append(entry["value"])
+        if name == "questionId":
+            question_id_values.append(entry["value"])
 
-    if not request_id_values:
-        return _fallback("missing_request_id")
-    if len(request_id_values) != 1:
-        return _fallback("duplicate_request_id")
+    if not question_id_values:
+        return _fallback("missing_question_id")
+    if len(question_id_values) != 1:
+        return _fallback("duplicate_question_id")
 
-    request_id = _normalize_request_id(request_id_values[0])
-    if request_id is None:
-        return _fallback("invalid_request_id")
+    question_id = _normalize_question_id(question_id_values[0])
+    if question_id is None:
+        return _fallback("invalid_question_id")
 
-    return OutputLocation(Path("output") / request_id, False, None)
+    return OutputLocation(Path("output") / question_id, False, None)

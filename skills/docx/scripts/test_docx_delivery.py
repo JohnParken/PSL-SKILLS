@@ -33,11 +33,14 @@ class DeliveryTests(unittest.TestCase):
     @staticmethod
     def config(record='record-123', *, encoded=True):
         parameters = [{'name': 'unrelated', 'value': 'do-not-log-this-secret'},
-                      {'name': 'requestId', 'value': record}]
-        return json.dumps({'commonParam': json.dumps(parameters) if encoded else parameters})
+                      {'name': 'questionId', 'value': record}]
+        return json.dumps([{'name': 'commonParam', 'value': json.dumps(parameters) if encoded else parameters},
+                           {'name': 'otherParam', 'value': 'something'}])
 
     def run_cli(self, *arguments, config=None):
         environment = dict(os.environ, PATH='')
+        # Keep no-log assertions meaningful under explicit debug disablement.
+        environment["DOCX_DEBUG_ROUTER_CONFIG"] = "0"
         environment.pop('ROUTER_CONFIG_VARIABLES', None)
         if config is not None:
             environment['ROUTER_CONFIG_VARIABLES'] = config
@@ -65,7 +68,7 @@ class DeliveryTests(unittest.TestCase):
     def archive_path(self, name='report.docx'):
         return self.work / 'output/record-123' / name
 
-    def test_request_id_creates_missing_archive_directory_without_prior_check(self):
+    def test_question_id_creates_missing_archive_directory_without_prior_check(self):
         self.assertFalse((self.work / 'output').exists())
         input_bytes = (self.work / 'input.json').read_bytes()
         process = self.run_cli('input.json', 'report.docx', '--verify',
@@ -86,9 +89,38 @@ class DeliveryTests(unittest.TestCase):
         result = json.loads(process.stdout)
         self.assertEqual(result['status'], 'verified')
         self.assertEqual(result['archive_status'], 'skipped')
-        self.assertEqual(result['fallback_reason'], 'missing_request_id')
+        self.assertEqual(result['fallback_reason'], 'missing_question_id')
         self.assertFalse((self.work / 'output').exists())
         self.assertEqual(read_docx(self.work / 'report.docx'), '交付内容 & 原样保留')
+
+    def test_generation_archive_reads_debug_config_with_question_id(self):
+        config = self.config('abc123')
+        with patch.dict(os.environ, {'DOCX_DEBUG_ROUTER_CONFIG': '1'}):
+            code, stdout, stderr = self.run_main(
+                'input.json', 'report.docx', '--verify', config=config)
+        self.assertEqual(code, 0)
+        result = json.loads(stdout)
+        self.assertEqual(result['archive_status'], 'copied')
+        self.assertEqual(result['archive_output'], 'output/abc123/report.docx')
+        prefix = 'router-config-debug: ROUTER_CONFIG_VARIABLES='
+        lines = [line for line in stderr.splitlines() if line.startswith(prefix)]
+        self.assertEqual(len(lines), 1)
+        self.assertEqual(json.loads(lines[0][len(prefix):]), config)
+        self.assertIn('questionId', json.loads(lines[0][len(prefix):]))
+
+    def test_old_request_id_logs_new_missing_question_id_reason_and_keeps_main(self):
+        config = json.dumps([{"name":"commonParam", "value":json.dumps([
+            {"name":"requestId", "value":"legacy"}])}])
+        process = self.run_cli('input.json', 'report.docx', '--verify', config=config)
+        self.assertEqual(process.returncode, 0, process.stderr)
+        result = json.loads(process.stdout)
+        self.assertEqual(result['status'], 'verified')
+        self.assertEqual(result['archive_status'], 'skipped')
+        self.assertEqual(result['fallback_reason'], 'missing_question_id')
+        self.assertIn('reason=missing_question_id', process.stderr)
+        self.assertNotIn('reason=missing_request_id', process.stderr)
+        self.assertEqual(read_docx(self.work / 'report.docx'), '交付内容 & 原样保留')
+        self.assertFalse((self.work / 'output').exists())
 
     def test_archive_mkdir_failure_only_warns_and_preserves_inputs_and_old_archive(self):
         archive = self.archive_path()
@@ -194,8 +226,8 @@ class DeliveryTests(unittest.TestCase):
 
     def test_configuration_failures_skip_archive_and_keep_existing_fallback_reasons(self):
         cases = (None, '', 'malformed-secret-json', '{}', self.config('../escape'),
-                 json.dumps({'commonParam': [{'name': 'requestId', 'value': 'a'},
-                                            {'name': 'requestId', 'value': 'b'}]}))
+                 json.dumps({'commonParam': [{'name': 'questionId', 'value': 'a'},
+                                            {'name': 'questionId', 'value': 'b'}]}))
         for config in cases:
             with self.subTest(config=config):
                 process = self.run_cli('input.json', 'report.docx', '--verify', config=config)

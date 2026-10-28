@@ -42,8 +42,9 @@ class DeliveryApiTests(unittest.TestCase):
         self.temporary.cleanup()
 
     @staticmethod
-    def router_config(request_id="api-record"):
-        return json.dumps({"commonParam": [{"name": "requestId", "value": request_id}]})
+    def router_config(question_id="api-record"):
+        return json.dumps([{"name": "commonParam", "value": json.dumps(
+            [{"name": "questionId", "value": question_id}])}])
 
     @contextlib.contextmanager
     def router_environment(self, value=None):
@@ -68,14 +69,14 @@ class DeliveryApiTests(unittest.TestCase):
         archive_call.assert_called_once()
         return result
 
-    def assert_archived(self, summary, output, *, status="edited", request_id="api-record"):
+    def assert_archived(self, summary, output, *, status="edited", question_id="api-record"):
         self.assertEqual(summary["status"], status)
         self.assertEqual(summary["archive_status"], "copied")
         self.assertEqual(summary["output"], output)
         self.assertEqual(summary["warnings"], [])
         self.assertEqual(len(summary["files"]), 1)
         item = summary["files"][0]
-        expected_archive = f"output/{request_id}/{Path(output).name}"
+        expected_archive = f"output/{question_id}/{Path(output).name}"
         self.assertEqual(item["output"], output)
         self.assertEqual(item["archive_output"], expected_archive)
         self.assertEqual(item["archive_status"], "copied")
@@ -290,11 +291,11 @@ class DeliveryApiTests(unittest.TestCase):
         self.assertEqual(local_alias.read_bytes(), protected_json_bytes)
         self.assertEqual(source.read_bytes(), source_bytes)
 
-        archive_request_id = "archive-json-alias"
-        archive_target = Path("output") / archive_request_id / "archive-alias.docx"
+        archive_question_id = "archive-json-alias"
+        archive_target = Path("output") / archive_question_id / "archive-alias.docx"
         archive_target.parent.mkdir(parents=True)
         os.link(protected_json, archive_target)
-        with self.router_environment(self.router_config(archive_request_id)):
+        with self.router_environment(self.router_config(archive_question_id)):
             summary = self.invoke_delivery(lambda: edit_docx.replace_text_delivery(
                 source, "archive-alias.docx", specification, protected_inputs=(protected_json,),
             ))

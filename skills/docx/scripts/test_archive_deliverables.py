@@ -20,7 +20,7 @@ class ArchiveOutputsTests(unittest.TestCase):
         self.work = Path(self.temporary.name).resolve()
         os.chdir(self.work)
         self.environment = patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': json.dumps(
-            {'commonParam': [{'name': 'requestId', 'value': 'record'}]})})
+            {'commonParam': [{'name': 'questionId', 'value': 'record'}]})})
         self.environment.start()
 
     def tearDown(self):
@@ -47,7 +47,7 @@ class ArchiveOutputsTests(unittest.TestCase):
         delivery.archive_outputs([Path('report.docx')], [])
         self.assertEqual(Path('output/record/report.docx').read_bytes(), b'new turn')
         self.assertEqual(Path('output/record/summary.txt').read_bytes(), b'summary.txt')
-        os.environ['ROUTER_CONFIG_VARIABLES'] = json.dumps({'commonParam': [{'name': 'requestId', 'value': 'next'}]})
+        os.environ['ROUTER_CONFIG_VARIABLES'] = json.dumps({'commonParam': [{'name': 'questionId', 'value': 'next'}]})
         delivery.archive_outputs([Path('report.docx')], [])
         self.assertEqual([p.name for p in Path('output/next').iterdir()], ['report.docx'])
 

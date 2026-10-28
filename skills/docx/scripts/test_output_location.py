@@ -3,6 +3,8 @@
 import builtins
 from contextlib import ExitStack
 import json
+import io
+from contextlib import redirect_stdout, redirect_stderr
 import os
 from pathlib import Path
 import sys
@@ -12,7 +14,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from output_location import OutputLocation, resolve_output_location
+from output_location import OutputLocation, resolve_output_location, read_router_config_from_environment
 
 
 def encode_config(parameters: object) -> str:
@@ -20,16 +22,107 @@ def encode_config(parameters: object) -> str:
 
 
 class OutputLocationTests(unittest.TestCase):
-    def test_request_id_is_the_only_archive_identifier(self) -> None:
+    def test_raw_config_debug_defaults_on_is_stderr_only_and_preserves_value(self):
+        value = '{"other":"test-secret",\n"commonParam":[]}'
+        for setting in (None, "", "0", "true", "1"):
+            with self.subTest(setting=setting), mock.patch.dict(os.environ, {}, clear=True):
+                os.environ["ROUTER_CONFIG_VARIABLES"] = value
+                if setting is not None:
+                    os.environ["DOCX_DEBUG_ROUTER_CONFIG"] = setting
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    self.assertEqual(read_router_config_from_environment(), value)
+                self.assertEqual(stdout.getvalue(), "")
+                if setting in (None, "1"):
+                    logged = stderr.getvalue().removeprefix(
+                        "router-config-debug: ROUTER_CONFIG_VARIABLES=")
+                    self.assertEqual(json.loads(logged), value)
+                else:
+                    self.assertEqual(stderr.getvalue(), "")
+        with mock.patch.dict(os.environ, {"DOCX_DEBUG_ROUTER_CONFIG":"1"}, clear=True):
+            stderr = io.StringIO()
+            with redirect_stderr(stderr):
+                self.assertIsNone(read_router_config_from_environment())
+            self.assertTrue(stderr.getvalue().endswith("=null\n"))
+        with mock.patch.dict(os.environ, {"DOCX_DEBUG_ROUTER_CONFIG":"1",
+                                          "ROUTER_CONFIG_VARIABLES":value}, clear=True):
+            with mock.patch("sys.stderr.write", side_effect=OSError("closed log")):
+                self.assertEqual(read_router_config_from_environment(), value)
+
+    def test_host_parameter_list_extracts_string_encoded_question_id(self):
+        raw = '[{"name":"commonParam","value":"[{\\"name\\":\\"questionId\\",\\"value\\":\\"abc123\\"}]"},{"name":"otherParam","value":"something"}]'
+        self.assert_valid(raw, "abc123")
+        entries = json.loads(raw)
+        self.assert_valid(json.dumps(list(reversed(entries))), "abc123")
+        entries[0]["value"] = json.loads(entries[0]["value"])
+        self.assert_valid(json.dumps(entries), "abc123")
+
+    def test_host_parameter_list_rejects_missing_duplicate_and_bad_entries(self):
+        common = {"name":"commonParam", "value": '[{"name":"questionId","value":"abc123"}]'}
+        cases = [
+            ([], "missing_common_param"),
+            ([{"name":"otherParam", "value":"something"}], "missing_common_param"),
+            ([common, common], "duplicate_common_param"),
+            ([common, {"name":"commonParam", "value":"bad"}], "duplicate_common_param"),
+        ]
+        for bad in [None, "text", {}, {"name":"commonParam"}, {"name":3,"value":1}, {"name":"","value":1}]:
+            cases.append(([common, bad], "invalid_router_config_entry"))
+        for entries, reason in cases:
+            with self.subTest(entries=entries):
+                self.assertEqual(self.assert_fallback(json.dumps(entries)).fallback_reason, reason)
+
+    def test_host_parameter_list_keeps_inner_validation_and_no_legacy_fallback(self):
+        cases = [
+            ("bad JSON", "invalid_common_param_json"),
+            ({"questionId":"abc123"}, "invalid_common_param_shape"),
+            ([], "missing_question_id"),
+            ([{"name":"idRecord","value":"abc123"}], "missing_question_id"),
+            ([{"name":"questionId","value":"../unsafe"}], "invalid_question_id"),
+            ([{"name":"questionId","value":"one"},{"name":"questionId","value":"two"}], "duplicate_question_id"),
+        ]
+        for value, reason in cases:
+            with self.subTest(value=value):
+                encoded = value if isinstance(value, str) else json.dumps(value)
+                raw = json.dumps([{"name":"commonParam","value":encoded}])
+                self.assertEqual(self.assert_fallback(raw).fallback_reason, reason)
+
+    def test_host_parameter_list_rejects_duplicate_json_keys_at_both_levels(self):
+        raw = '[{"name":"commonParam","name":"otherParam","value":"[]"}]'
+        self.assertEqual(self.assert_fallback(raw).fallback_reason, "invalid_router_config_json")
+        inner = '[{"name":"questionId","value":"one","value":"two"}]'
+        raw = json.dumps([{"name":"commonParam","value":inner}])
+        self.assertEqual(self.assert_fallback(raw).fallback_reason, "invalid_common_param_json")
+
+    def test_request_id_is_not_a_question_id_alias_in_either_envelope(self):
+        legacy = {"name": "requestId", "value": "old-value"}
+        cases = [
+            ([legacy], "missing_question_id"),
+            ([legacy, {"name":"questionId","value":"abc123"}], None),
+            ([legacy, {"name":"questionId","value":"../unsafe"}], "invalid_question_id"),
+            ([legacy, {"name":"questionId","value":"one"},
+              {"name":"questionId","value":"two"}], "duplicate_question_id"),
+        ]
+        for params, reason in cases:
+            for config in [{"commonParam": json.dumps(params)},
+                           [{"name":"commonParam","value":json.dumps(params)}]]:
+                with self.subTest(params=params, envelope=type(config).__name__):
+                    result = resolve_output_location(json.dumps(config))
+                    self.assertEqual(result.fallback_reason, reason)
+                    if reason is None:
+                        self.assertEqual(result.output_dir, Path("output/abc123"))
+                    else:
+                        self.assertTrue(result.used_fallback)
+
+    def test_question_id_is_the_only_archive_identifier(self) -> None:
         legacy = {'name': 'idRecord', 'value': 'legacy'}
         self.assertEqual(resolve_output_location(encode_config([legacy])).fallback_reason,
-                         'missing_request_id')
-        self.assert_valid(encode_config([legacy, {'name': 'requestId', 'value': 'current'}]),
+                         'missing_question_id')
+        self.assert_valid(encode_config([legacy, {'name': 'questionId', 'value': 'current'}]),
                           'current')
-        for values, reason in ((['../unsafe'], 'invalid_request_id'),
-                               (['one', 'two'], 'duplicate_request_id')):
+        for values, reason in ((['../unsafe'], 'invalid_question_id'),
+                               (['one', 'two'], 'duplicate_question_id')):
             with self.subTest(values=values):
-                config = encode_config([legacy] + [{'name': 'requestId', 'value': value}
+                config = encode_config([legacy] + [{'name': 'questionId', 'value': value}
                                                    for value in values])
                 self.assertEqual(resolve_output_location(config).fallback_reason, reason)
 
@@ -52,17 +145,17 @@ class OutputLocationTests(unittest.TestCase):
         parameters = [
             {"name": "locale", "value": "en", "extra": True},
             {"name": "locale", "value": "fr"},
-            {"name": "requestId", "value": "rec_A-19", "source": "router"},
+            {"name": "questionId", "value": "rec_A-19", "source": "router"},
         ]
         self.assert_valid(encode_config(parameters), "rec_A-19")
 
     def test_string_encoded_common_param_is_supported(self) -> None:
-        inner = json.dumps([{"name": "requestId", "value": "folder_7"}])
+        inner = json.dumps([{"name": "questionId", "value": "folder_7"}])
         self.assert_valid(json.dumps({"commonParam": inner}), "folder_7")
 
     def test_nonnegative_integers_are_converted_to_decimal(self) -> None:
-        self.assert_valid(encode_config([{"name": "requestId", "value": 0}]), "0")
-        self.assert_valid(encode_config([{"name": "requestId", "value": 125}]), "125")
+        self.assert_valid(encode_config([{"name": "questionId", "value": 0}]), "0")
+        self.assert_valid(encode_config([{"name": "questionId", "value": 125}]), "125")
 
     def test_missing_and_empty_configuration_fall_back(self) -> None:
         missing = self.assert_fallback(None)
@@ -81,7 +174,7 @@ class OutputLocationTests(unittest.TestCase):
             "[]",
             "null",
             "{}",
-            json.dumps({"commonParam": {"name": "requestId", "value": "a"}}),
+            json.dumps({"commonParam": {"name": "questionId", "value": "a"}}),
             json.dumps({"commonParam": 4}),
             json.dumps({"commonParam": None}),
         ]
@@ -102,25 +195,25 @@ class OutputLocationTests(unittest.TestCase):
             with self.subTest(parameters=parameters):
                 self.assert_fallback(encode_config(parameters))
 
-    def test_missing_or_duplicate_request_id_falls_back(self) -> None:
+    def test_missing_or_duplicate_question_id_falls_back(self) -> None:
         missing = self.assert_fallback(encode_config([{"name": "locale", "value": "en"}]))
         duplicate = self.assert_fallback(
             encode_config(
                 [
-                    {"name": "requestId", "value": "first"},
-                    {"name": "requestId", "value": "second"},
+                    {"name": "questionId", "value": "first"},
+                    {"name": "questionId", "value": "second"},
                 ]
             )
         )
-        self.assertEqual(missing.fallback_reason, "missing_request_id")
-        self.assertEqual(duplicate.fallback_reason, "duplicate_request_id")
+        self.assertEqual(missing.fallback_reason, "missing_question_id")
+        self.assertEqual(duplicate.fallback_reason, "duplicate_question_id")
 
     def test_duplicate_json_object_keys_are_rejected_at_both_levels(self) -> None:
         duplicate_outer = '{"commonParam": [], "commonParam": []}'
         duplicate_inner = json.dumps(
             {
                 "commonParam": (
-                    '[{"name":"requestId","value":"one","value":"two"}]'
+                    '[{"name":"questionId","value":"one","value":"two"}]'
                 )
             }
         )
@@ -142,20 +235,20 @@ class OutputLocationTests(unittest.TestCase):
                     "invalid_router_config_json",
                 )
             with self.subTest(level="inner", constant=constant):
-                inner = f'[{{"name":"requestId","value":{constant}}}]'
+                inner = f'[{{"name":"questionId","value":{constant}}}]'
                 config = json.dumps({"commonParam": inner})
                 self.assertEqual(
                     self.assert_fallback(config).fallback_reason,
                     "invalid_common_param_json",
                 )
 
-    def test_invalid_request_id_types_fall_back(self) -> None:
+    def test_invalid_question_id_types_fall_back(self) -> None:
         values = [None, True, False, -1, 1.25, [], {}]
         for value in values:
             with self.subTest(value=value):
-                self.assert_fallback(encode_config([{"name": "requestId", "value": value}]))
+                self.assert_fallback(encode_config([{"name": "questionId", "value": value}]))
 
-    def test_invalid_request_id_paths_and_characters_fall_back(self) -> None:
+    def test_invalid_question_id_paths_and_characters_fall_back(self) -> None:
         values = [
             "",
             " ",
@@ -175,7 +268,7 @@ class OutputLocationTests(unittest.TestCase):
         ]
         for value in values:
             with self.subTest(value=value):
-                self.assert_fallback(encode_config([{"name": "requestId", "value": value}]))
+                self.assert_fallback(encode_config([{"name": "questionId", "value": value}]))
 
     def test_windows_device_identifiers_are_rejected_case_insensitively(self) -> None:
         device_names = ["CON", "PRN", "AUX", "NUL"]
@@ -185,7 +278,7 @@ class OutputLocationTests(unittest.TestCase):
             for spelling in (value, value.lower()):
                 with self.subTest(value=spelling):
                     self.assert_fallback(
-                        encode_config([{"name": "requestId", "value": spelling}])
+                        encode_config([{"name": "questionId", "value": spelling}])
                     )
 
     def test_overly_nested_outer_and_inner_json_fall_back(self) -> None:
@@ -195,7 +288,7 @@ class OutputLocationTests(unittest.TestCase):
 
     def test_failure_reason_is_stable_and_does_not_echo_configuration(self) -> None:
         secret_value = "private-secret/segment"
-        config = encode_config([{"name": "requestId", "value": secret_value}])
+        config = encode_config([{"name": "questionId", "value": secret_value}])
         first = self.assert_fallback(config)
         second = self.assert_fallback(config)
         self.assertEqual(first.fallback_reason, second.fallback_reason)
@@ -203,8 +296,8 @@ class OutputLocationTests(unittest.TestCase):
         self.assertNotIn("private-secret", first.fallback_reason)
 
     def test_resolutions_are_independent_across_calls(self) -> None:
-        first_config = encode_config([{"name": "requestId", "value": "alpha"}])
-        second_config = encode_config([{"name": "requestId", "value": "beta"}])
+        first_config = encode_config([{"name": "questionId", "value": "alpha"}])
+        second_config = encode_config([{"name": "questionId", "value": "beta"}])
         expected_first = OutputLocation(Path("output/alpha"), False, None)
         expected_second = OutputLocation(Path("output/beta"), False, None)
 
@@ -221,7 +314,7 @@ class OutputLocationTests(unittest.TestCase):
         def forbidden(*args: object, **kwargs: object) -> None:
             raise AssertionError("filesystem access attempted")
 
-        config = encode_config([{"name": "requestId", "value": "record_1"}])
+        config = encode_config([{"name": "questionId", "value": "record_1"}])
         with ExitStack() as stack:
             stack.enter_context(mock.patch.object(os, "environ", ForbiddenEnvironment()))
             stack.enter_context(mock.patch.object(os, "getenv", side_effect=forbidden))

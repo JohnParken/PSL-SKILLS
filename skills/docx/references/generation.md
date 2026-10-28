@@ -6,6 +6,7 @@
 - [预检与集成验收](#预检与集成验收)
 - [交付文件命名](#交付文件命名)
 - [输出目录与文件名](#输出目录与文件名)
+- [配置调试](#配置调试)
 - [主题与文档标题](#主题与文档标题)
 - [顶层字段](#顶层字段)
 - [默认格式与页面](#默认格式与页面)
@@ -26,7 +27,7 @@
 python -I -S -B "<skill_dir>/scripts/create_docx.py" ./inputs/document.json "客户服务改进方案.docx" --verify --require-no-placeholders
 ```
 
-读取的是 `./inputs/images/logo.png`，主文件为 `./客户服务改进方案.docx`；有效 `requestId` 下副本为 `./output/{requestId}/客户服务改进方案.docx`。不把主文件写入 `inputs/`，不切换到该目录。如果在 Python 中自行读取这个 JSON 再调用字典 API，须明确保留图片基准并保护输入：
+读取的是 `./inputs/images/logo.png`，主文件为 `./客户服务改进方案.docx`；有效 `questionId` 下副本为 `./output/{questionId}/客户服务改进方案.docx`。不把主文件写入 `inputs/`，不切换到该目录。如果在 Python 中自行读取这个 JSON 再调用字典 API，须明确保留图片基准并保护输入：
 
 ```python
 import json
@@ -62,7 +63,7 @@ python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json "客户服�
 这是助手调用前的命名要求，适用于新建、编辑及其他最终交付物；脚本只校验路径与文件名合法性，不从正文自动推断名称，也不拒绝用户明确要求的 `output.docx`。
 
 1. 新建和编辑都优先采用用户明确指定的合法文件名；仅在未指定时执行下述自动命名规则，不擅自给指定名称加“修订版”。名称不合法、与输入同源或与无关已有文件冲突时，先保留已有文件并说明冲突；用户坚持精确名称且不能安全使用时，取得替代名称或明确的更新意图再写入。指定名称本身不等于授权覆盖无关文件，不通过改扩展名转换格式。
-2. 未指定时，优先提炼文档标题，其次依据任务主题，采用简洁的“主题＋文种”；使用用户的语言，保留有辨识度的对象，去除标题中不适合文件名的标点。不臆造机构、日期、年份或版本，也不默认加入时间戳、随机串或 `requestId`。仅知道文种时可用 `会议纪要.docx` 等已知信息，不为命名虚构主题。
+2. 未指定时，优先提炼文档标题，其次依据任务主题，采用简洁的“主题＋文种”；使用用户的语言，保留有辨识度的对象，去除标题中不适合文件名的标点。不臆造机构、日期、年份或版本，也不默认加入时间戳、随机串或 `questionId`。仅知道文种时可用 `会议纪要.docx` 等已知信息，不为命名虚构主题。
 3. 未指定输出名称的编辑结果沿用有意义的原名主题，必要时加 `_修订版`；原名为 `input.docx`、`output.docx` 等泛称时，改从实际内容或任务提炼。输入输出必须不同源。只有明确更新同一交付物时才复用原交付名称；无关或归属不明的同名文件须保留，以有意义的区别或递增序号选择新名称。需要保留多轮版本时使用不同名称，不能靠归档目录自动保存历史。
 4. 多个交付物分别体现用途，如 `客户服务改进方案.docx` 与 `客户服务改进方案_修改说明.txt`。先确定实际文件名，再调用生成、编辑和归档；归档保持主文件原名，返回实际文件链接。下列名称均为场景示例，不是固定默认值。
 
@@ -84,16 +85,23 @@ python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json "客户服�
 
 | 配置结果 | 主文件 | 生成成功后的归档副本 |
 |---|---|---|
-| 有效 `requestId` 为 `12345` | `./报告.docx` | `./output/12345/报告.docx` |
+| 有效 `questionId` 为 `12345` | `./报告.docx` | `./output/12345/报告.docx` |
 | 配置缺失、JSON/字段结构异常、ID 缺失或无效 | `./报告.docx` | 跳过归档，报告固定原因码 |
 
-环境配置的外层必须是 JSON 对象。`commonParam` 接受参数列表，或编码为 JSON 字符串的参数列表；各项须有非空字符串类型的 `name`，并包含 `value` 字段，额外字段允许。必须恰有一项 `name` 为 `requestId`；重复 ID、重复 JSON 对象键和非标准 JSON 常量使归档跳过。ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受非负整数并转成十进制字符串；不接受布尔值、浮点数、空白、路径或 Windows 保留设备名。不擅自裁剪或改写 ID。不打印原始配置或其他公共参数。 仅识别 `requestId`，不将旧参数 `idRecord` 当作别名；仅提供旧参数时跳过归档，原因码为 `missing_request_id`。两者同时提供时只使用 `requestId`，重复或无效的新参数不回退到旧参数。
-
-配置示例：
+`ROUTER_CONFIG_VARIABLES` 按宿主实际格式提供外层 JSON 参数列表。先找到唯一 `name="commonParam"` 的项，再取其 `value`；该值通常为 JSON 编码的参数列表字符串，代码再次解析，最后找到唯一 `name="questionId"` 的项并取其 `value`。例如：
 
 ```json
-{"commonParam": [{"name": "requestId", "value": "12345"}]}
+[
+  {"name": "commonParam", "value": "[{\"name\":\"questionId\",\"value\":\"abc123\"}]"},
+  {"name": "otherParam", "value": "something"}
+]
 ```
+
+该例归档目录为 `./output/abc123/`。外层各项和内层各项都须是字典，须有非空字符串类型的 `name`，并包含 `value` 字段，额外字段允许；其他参数不用于选择归档目录。`commonParam.value` 也接受已解码的列表。兼容旧配置 `{"commonParam": [...]}` 或 `{"commonParam": "JSON编码列表"}`，但不接受 `commonParam` 为按参数名索引的字典；不会从其他字段、聊天内容或旧 `requestId` / `idRecord` 推断 `questionId`。
+
+外层缺少 `commonParam` 返回 `missing_common_param`，重复返回 `duplicate_common_param`，外层参数项不合法返回 `invalid_router_config_entry`；外层既非列表也非兼容字典返回 `invalid_router_config_shape`。内层 JSON、列表结构和参数项错误分别沿用 `invalid_common_param_json`、`invalid_common_param_shape`、`invalid_common_param_entry`。内层缺少或重复 `questionId` 分别返回 `missing_question_id`、`duplicate_question_id`。两层 JSON 均拒绝重复对象键及非标准常量；所有配置错误仅跳过归档，不阻止主文件生成。
+
+ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受非负整数并转成十进制字符串；不接受布尔值、浮点数、空白、路径或 Windows 保留设备名。不擅自裁剪或改写 ID，无效返回 `invalid_question_id`。仅识别 `questionId`，不将旧参数 `requestId`、`idRecord` 当作别名；仅提供旧参数时跳过归档。两者同时提供时只使用新参数，重复或无效的新参数不回退到旧参数。默认开启原始配置调试日志，可显式关闭，见 [配置调试](#配置调试)。
 
 文件名支持中文和空格，须以 `.docx` 结尾，UTF-8 长度不超过 255 字节；禁止附带目录、路径分隔符、控制字符、Windows 非法字符或保留设备名、尾点及尾空格。主文件和归档路径均拒绝符号链接，包括悬空链接；归档目录不存在时自动创建。拒绝主文件或归档目标与输入 JSON、正文图片或表格内图片同源，包括经符号链接解析的路径及硬链接。图片校验与生成复用同一份已验证输入，不为归档重复读取图片。路径检查依赖宿主隔离同一任务目录中的并发修改，不提供针对恶意并发改写目录的隔离。
 
@@ -103,11 +111,19 @@ python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json "客户服�
 
 `--check` 分别检查主目录及有效配置的归档目录，独占写入、读回并清理探针；须退出 0、有 `check-ok` 和 `output_dir=. writable=True`，运行环境或主目录的创建、写入、读回、关闭或探针清理失败仍不通过，不输出 `check-ok`。有效配置的归档目录也会探测，但其任何检查失败仅输出 `archive-warning` 和 `archive_dir=... writable=False`，不阻止主目录检查成功后的 `check-ok` 或后续生成。`--preflight` 保持只读，不解析输出配置、不创建目录或复制文件。
 
-配置解析保留在 `<skill_dir>/scripts/output_location.py`：`resolve_output_location(router_config_str)` 不读环境、不操作文件、不打印日志，返回不可变 `OutputLocation(output_dir, used_fallback, fallback_reason)`。保留返回字段名，其 `output_dir` 改为有效配置的 `output/{requestId}` 或失败时的 `.`；命令入口仅在 `used_fallback=False` 时将其作为归档目录，不用它选择主文件位置。模块随 DOCX 完整目录分发，仅依赖标准库。
+配置解析保留在 `<skill_dir>/scripts/output_location.py`：`resolve_output_location(router_config_str)` 不读环境、不操作文件、不打印日志，返回不可变 `OutputLocation(output_dir, used_fallback, fallback_reason)`。保留返回字段名，其 `output_dir` 改为有效配置的 `output/{questionId}` 或失败时的 `.`；命令入口仅在 `used_fallback=False` 时将其作为归档目录，不用它选择主文件位置。模块随 DOCX 完整目录分发，仅依赖标准库。
 
 公开 `create_document_delivery(spec, output, base_dir=None, *, verify=True, require_no_placeholders=False, protected_inputs=())` 与新建 CLI 共用发布流程；主文件成功后自动调用统一归档入口，返回主状态和归档摘要。新建 CLI 保留原验证选项和单文件字段，并增加统一入口的 `files` 明细；归档预检查失败、无文件明细时 `archive_output` 为 `null`，以 `warnings` 解释失败，不猜测副本路径。API 默认开启验证；输入字典来自磁盘时将源 JSON 路径加入 `protected_inputs`。`base_dir` 仅用于图片路径解析，图片只验证读取一次，并自动加入保护清单。完整接口和示例见 [公开交付 API](delivery.md#公开交付-api)。
 
 低层 `create_document(spec, output, base_dir=None, verify=False, require_no_placeholders=False)` 保持显式路径接口及返回 Path，不读取环境、不自动归档，仅用于中间处理或由调用方显式收尾的场景。五种编辑也提供自动归档的公开交付 API；不要将底层函数的成功误当成归档完成。
+
+## 配置调试
+
+`DOCX_DEBUG_ROUTER_CONFIG` 未设置时默认按 `1` 处理，自动启用配置日志；显式设置 `DOCX_DEBUG_ROUTER_CONFIG=0` 可关闭，设置 `1` 可开启。新建/归档自检及实际归档读取配置时，代码在 stderr 输出 `router-config-debug: ROUTER_CONFIG_VARIABLES=...`；新建、五种编辑 CLI 和公开交付 API 共用该读取入口。stdout 的结果 JSON 不受影响。只读检查、只读批注、预检及不归档的底层 API 不读取配置，也不会输出该日志。
+
+日志中的值是完整原始环境字符串的 JSON 编码表示：换行和引号会转义，可用 JSON 解码还原；未设置为 `null`，空字符串为 `""`。不自动脱敏或截断，因此可能包含其他公共参数或凭据，当前按调试需要默认开启，不在回复中再次转贴完整配置；不需要日志时显式设置 `0`。除未设置或精确值 `1` 外，其他值（包括空字符串）均关闭日志。调试日志写入失败不改变配置解析或主文件成功状态。
+
+直接执行正常生成命令或 `create_docx.py --check`，查看该进程的 stderr 即可。需要关闭时，从现有调用程序为该次命令设置环境变量 `DOCX_DEBUG_ROUTER_CONFIG=0`；仅在提示词中写此值不会修改进程环境变量。`resolve_output_location(router_config_str)` 保持纯解析函数；日志在读取环境变量的 `read_router_config_from_environment()` 中输出，不改变原有原因码或失败策略。
 
 ## 主题与文档标题
 

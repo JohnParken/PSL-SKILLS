@@ -26,7 +26,7 @@ if __package__ in (None, ""):
 
 from office import xmlio
 from office.runtime import check_runtime
-from output_location import OutputLocation, resolve_output_location
+from output_location import OutputLocation, resolve_output_location, read_router_config_from_environment
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -1591,7 +1591,7 @@ def _create_validated_document(validated: dict, output_path: Path, *, verify: bo
 
 
 def _delivery_location() -> OutputLocation:
-    location = resolve_output_location(os.environ.get("ROUTER_CONFIG_VARIABLES"))
+    location = resolve_output_location(read_router_config_from_environment())
     if location.used_fallback:
         print("archive-location: skipped; reason=" + location.fallback_reason,
               file=sys.stderr)

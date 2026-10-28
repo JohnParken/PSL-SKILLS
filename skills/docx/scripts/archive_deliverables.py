@@ -12,7 +12,7 @@ if __package__ in (None, ""):
 
 from create_docx import (_check_delivery_path, _copy_main_to_archive,
                          _paths_alias, _check_cli_runtime)
-from output_location import resolve_output_location
+from output_location import resolve_output_location, read_router_config_from_environment
 
 
 def validate_output_path(path: Path, protected_inputs=()) -> Path:
@@ -40,7 +40,7 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
                'files': [], 'warnings': []}
     try:
         task_dir = Path.cwd()
-        location = resolve_output_location(os.environ.get('ROUTER_CONFIG_VARIABLES'))
+        location = resolve_output_location(read_router_config_from_environment())
         summary.update(archive_status='skipped' if location.used_fallback else 'copied',
                        used_fallback=location.used_fallback, fallback_reason=location.fallback_reason)
         sources = [validate_output_path(Path(path)) for path in outputs]

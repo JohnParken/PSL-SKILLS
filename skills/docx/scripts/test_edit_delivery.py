@@ -35,10 +35,13 @@ class EditDeliveryTests(unittest.TestCase):
 
     @staticmethod
     def config(record):
-        return json.dumps({"commonParam": [{"name": "requestId", "value": record}]})
+        return json.dumps([{"name": "commonParam", "value": json.dumps(
+            [{"name": "questionId", "value": record}])}])
 
     def run_cli(self, script, *arguments, record="turn-record", cwd=None):
         environment = dict(os.environ, PATH="")
+        # Keep no-log assertions meaningful under explicit debug disablement.
+        environment["DOCX_DEBUG_ROUTER_CONFIG"] = "0"
         environment.pop("ROUTER_CONFIG_VARIABLES", None)
         if record is not None:
             environment["ROUTER_CONFIG_VARIABLES"] = self.config(record)
