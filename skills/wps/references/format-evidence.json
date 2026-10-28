@@ -1,5 +1,5 @@
 {
-  "checked_on": "2026-10-25",
+  "checked_on": "2026-10-27",
   "purpose": "Development references only; no runtime network access",
   "sources": [
     {
@@ -71,6 +71,31 @@
       "section": "MS-DOC FibRgCswNewData2007",
       "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/a37cd1b4-2d7d-4eed-9089-1c73095b245c",
       "used_for": "quick-save count plus three 16-bit theme language values; latter MUST be ignored"
+    },
+    {
+      "section": "MS-DOC Overview of Tables",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/5b45f0e7-7760-4fdb-af88-0146de2feb4c",
+      "used_for": "Direct depth-one cell and row markers; grouping and merges remain unknown"
+    },
+    {
+      "section": "MS-DOC PapxFkp",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/34aaeaf3-9578-41af-a3f5-c12f6f66bf1b",
+      "used_for": "512-byte page; FC and BxPap arrays with bounded cpara"
+    },
+    {
+      "section": "MS-DOC PapxInFkp",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/580510b8-df7a-467e-a51c-0d71eb15c7cd",
+      "used_for": "Both PAPX size encodings"
+    },
+    {
+      "section": "MS-DOC Direct Paragraph Formatting",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/61b635c3-2c44-4155-bf17-fec281b30c71",
+      "used_for": "PAPX plus piece PRMs; nonzero PRM remains unresolved"
+    },
+    {
+      "section": "MS-DOC TDefTableOperand",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/de06ec41-a0ac-4046-9096-cdfaa0091ad9",
+      "used_for": "Exceptional two-byte operand size and initial column edges; no effective merge/grid claim"
     }
   ],
   "observed_word_profile": {

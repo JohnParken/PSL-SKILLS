@@ -110,5 +110,6 @@
       "url": "https://img.zhaojiao.net/file/2026-09-03/12101323148On.et",
       "result": "TLS connection failure"
     }
-  ]
+  ],
+  "current_reading_policy": "File entries default to data: existing allowlisted passive metadata and bounded opaque chart retention yield partial; explicit strict/legacy policies retain prior rules. Historical default-chart rejection below refers to explicit legacy policy. No unknown records or incomplete worksheets are skipped."
 }

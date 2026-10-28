@@ -1,0 +1,133 @@
+{
+  "final_version": "20261028.1418.3566",
+  "baseline_version": "20261028.1349.3335",
+  "initial_candidate_version": "20261028.1407.0121",
+  "changes": [
+    "Multi-turn editing preserves user scope, confirmed text and deletions; protected text conflicting with new facts is flagged outside the body.",
+    "Source differences identify values, time/scope, affected conclusions and required confirmation; confirmed scope updates dependent content.",
+    "Important complex drafts get reader-oriented checks without imposing interviews or independent tools on short tasks.",
+    "Pure writing, external DOCX prompt and no duplicate export confirmation remain unchanged."
+  ],
+  "initial_paired_run": {
+    "cases": 9,
+    "responses_per_version": 11,
+    "automated_checks_per_version": 22,
+    "all_automated_checks_passed": true,
+    "quality_preference_counts": {
+      "candidate_preferred": 2,
+      "baseline_preferred": 2,
+      "tie": 5
+    },
+    "quality_preferences": [
+      {
+        "case": "E1",
+        "preferred": "tie",
+        "reason": "两轮候选逐字相同，无法区分质量。读者适配、清晰度、信息密度、语气和成稿可用性均相当：直接返回完整简报，没有额外说明打断正文，节次与短句便于直接使用。"
+      },
+      {
+        "case": "E2",
+        "preferred": "tie",
+        "reason": "两者都能使读者理解数字差异及后续采用口径，但优势分散，未形成稳定优胜。Y首轮的文后说明更紧凑，第二轮开展情况也较少夹入编辑过程说明；X下一步表述更完整，最终稿没有待补占位符，更接近可直接使用的成稿。两者均把有限篇幅较多用于来源核对，季度工作本身的信息密度接近；语气同样审慎。综合两轮判为持平，不因X解释更多或Y更短直接判胜。"
+      },
+      {
+        "case": "E3L",
+        "preferred": "baseline",
+        "reason": "X小幅领先。两份均先交代提请决策的建议，再说明现状、问题、试行办法，适合不熟悉操作的领导阅读。X的试行边界、反馈用途和末段决策请求连接更紧，结尾较自然，成稿可用性略高。Y也清晰，提出观察周期和具体反馈来源很有价值，但末句重复申明文本不是批准或承诺，语气稍像附加审校说明。该偏好来自行文和决策阅读体验，而不是认为更多谨慎措辞更好或Y存在明确事实错误。"
+      },
+      {
+        "case": "E3O",
+        "preferred": "candidate",
+        "reason": "Y小幅领先，主要体现在落实岗位的读者适配和协作可操作性。两份都清楚区分工作状态，语气谨慎，基本可作工作汇报。Y把综合岗整理、运营岗核对、综合岗修订、负责人审定写成完整交接顺序，并为4项未决内容分别交代两岗要提供什么；清单字段和版本意见也方便实际交接。X对文字问题和业务口径问题的区分更简练、有解释力，但遇分歧时的岗位分工较概括。Y的优势是有用信息更具体，而非多一个章节或警告更多。"
+      },
+      {
+        "case": "T1",
+        "preferred": "baseline",
+        "reason": "Y仅有轻微优势。两者读者适配、审慎语气和核心可用性相当；Y将状态说明合成一个短句，并把末尾归为相关进展待核实，减少语义重复，更符合简短一段汇报的阅读节奏。这个差异很小，不代表X质量有实质缺陷。"
+      },
+      {
+        "case": "T2",
+        "preferred": "candidate",
+        "reason": "Y在精简活动方案的成稿可用性上略优：活动安排、前中后流程和岗位保障衔接自然，建议时长及费用处理让网点更容易把草案转成安排。X的讲解、互动和答疑也具体，针对现场疑似受骗情形的处置提示有用；但整体更多篇幅用于行为限制和效果口径，执行顺序略弱。两份语气都合适，Y并非因更长或更结构化获胜，而是给定用户允许提出建议时，其具体建议更集中服务于筹备。"
+      },
+      {
+        "case": "T3",
+        "preferred": "tie",
+        "reason": "两份均适合审校任务，逐处列问题及最小修改建议，信息足够且不整篇重写。X有简洁的问题标题，方便扫读，并解释投诉数量不能代表整体服务水平；Y直接引用原句，修改建议更集中地保留口径核实事项，并提醒不要只替换套话。两者清晰度、信息密度、语气和修订可用性相当，这些细节差别不足以稳定区分优劣。"
+      },
+      {
+        "case": "T4",
+        "preferred": "tie",
+        "reason": "两份都适合普通客户阅读，意思清楚，语气亲切，可直接提取正文使用。X更短，欢迎咨询和感谢配合形成完整提示；Y通过如不确定降低咨询门槛，并增加愿意解答的亲切感。用户同时要求亲切和简短，两种取舍都合理，没有足够依据认定其中一种稳定更好。"
+      },
+      {
+        "case": "T5",
+        "preferred": "tie",
+        "reason": "只看交付回复，二者都先给文件链接，再交代检查和限制，语气清楚，可用性相当。Y强调正文保持不变，更贴近已经确认最终正文的用户关注点；X额外列ZIP CRC，但这个技术细节对用户价值有限，也不能据此推断文件更可靠。两份尾部排版选项介绍均可省略。真正决定这类任务质量的文档内容与排版不在匿名包内，因此不凭交付声明判胜。"
+      }
+    ],
+    "meaning": "Single-run subjective comparisons: no evidence of a uniform improvement; small differences may reflect model variability. E2 had an acknowledged protected-paragraph consistency concern in both versions."
+  },
+  "final_targeted_rerun": {
+    "cases": [
+      "E1",
+      "E2"
+    ],
+    "responses": 4,
+    "automated_checks_passed": 9,
+    "automated_checks_total": 9,
+    "independent_quality_result": "E1 tie; E2 final candidate slightly preferred for exposing the protected-paragraph conflict. The unchanged body still needs user confirmation before alteration.",
+    "scope": "Final revision was a single editing-rule clarification plus version updates. Long-form and DOCX paired executions used initial candidate, not a full final-version rerun."
+  },
+  "independent_reader_test": {
+    "documents": 4,
+    "core_understanding": "Reader identified completed/pending quantities, target decision or actions, and core role assignments in all four drafts.",
+    "gaps": "Reader also identified absent year, detailed material locations, approval responsibilities and trial criteria. These were not supplied by the fictional source and were not fabricated; no claim of gap-free text."
+  },
+  "verification": {
+    "strict": "passed for final bank-writing",
+    "refs": "passed",
+    "independent_rule_review": "no blocking conflicts; final followup strict passed",
+    "docx": "Two real DOCX files verified by generator and parent exact-paragraph/CRC checks; original prompt absent from document body.",
+    "scope_changes": [
+      "skills/docx/scripts/test_archive_deliverables.py",
+      "skills/docx/scripts/output_location.py",
+      "skills/docx/references/generation.md",
+      "skills/docx/scripts/edit_docx.py",
+      "skills/docx/references/delivery.md",
+      "skills/docx/references/security.md",
+      "skills/docx/scripts/test_docx_delivery.py",
+      "skills/docx/scripts/test_edit_delivery.py",
+      "skills/docx/scripts/edit_tables.py",
+      "skills/docx/scripts/archive_deliverables.py",
+      "skills/docx/scripts/test_output_location.py",
+      "skills/docx/scripts/create_docx.py",
+      "skills/docx/scripts/edit_structure.py",
+      "skills/docx/references/validation.md",
+      "skills/docx/scripts/manage_comments.py",
+      "skills/docx/scripts/replace_image.py",
+      "skills/docx/SKILL.md"
+    ]
+  },
+  "evidence": {
+    "baseline_snapshot": "inputs/skill_a",
+    "initial_candidate_snapshot": "inputs/skill_b",
+    "final_snapshot": "inputs/skill_c",
+    "prompts": "fixtures.json",
+    "full_outputs": "runs/",
+    "hard_assertions": "hard_checks.json",
+    "targeted_assertions": "targeted_checks.json",
+    "blind_quality": "anonymous_quality_review.json",
+    "blind_quality_targeted": "targeted_anonymous_review.json",
+    "reader_answers": "reader_results.json",
+    "rule_consistency": "rule_review.json",
+    "protocol": "execution_protocol.json"
+  },
+  "limits": [
+    "Not a host automatic-trigger acceptance test.",
+    "Not a statistical benchmark; one execution per version/case and one anonymous quality reviewer.",
+    "Later export confirmation and DOCX unavailable branches were not run this round.",
+    "DOCX entry versions at execution matched, but sources changed elsewhere during this task; no claim about all current DOCX behavior.",
+    "No visual pagination, font availability, full XSD or real bank compliance validation.",
+    "Raw user prompts and model responses are preserved; framework/system internals are not exported."
+  ]
+}

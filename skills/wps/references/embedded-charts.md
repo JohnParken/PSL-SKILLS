@@ -15,8 +15,9 @@ python3 -I -S -B "<skill_dir>/scripts/read_wps.py" ./Schedule.ett --compatibilit
 python3 -I -S -B "<skill_dir>/scripts/wps_biff8.py" ./Schedule.ett --compatibility legacy_excel_clsid --chart-policy opaque
 ```
 
-`--chart-policy reject` remains the default. `opaque` requires explicit compatibility
-mode and is available for ET/ETT reads in the main entrypoint; it is not a write,
+`data` is now the file-entry default and selects opaque chart retention. Explicit
+strict/legacy modes still default to reject; `--chart-policy reject` always overrides
+data. Opaque requires data or legacy_excel_clsid and is available for BIFF8 reads; it is not a write,
 conversion or recalculation option. Python `read_file` and `parse_stream` accept
 `chart_policy="opaque"` with `compatibility="legacy_excel_clsid"`.
 

@@ -1,10 +1,10 @@
 # BIFF8 富文本 Continue 子集
 
-支持 SST 的字符和 FormatRun 续段，不解释字体效果，不恢复样式。每个字符串的固定头（cch、flags、cRun）必须在同一记录；字符阶段续段带 0/1 编码字节，可切换压缩低字节/UTF-16。UTF-16 不得在单个 code unit 内断开，代理对可跨记录并在逻辑拼接后校验。字符读完后切换为原始格式 run 阶段，续段不消费编码字节；严格按 cRun×4 收集，支持 run 字节跨记录边界。下一个字符串从实际游标开始，不能把其头吞入 run。
+支持 SST 的字符和 FormatRun 续段，不解释字体效果，不恢复样式。每个字符串的固定头（cch、flags、可选 cRun、可选有符号 cbExtRst）必须在同一记录；字符阶段续段带 0/1 编码字节，可切换压缩低字节/UTF-16。UTF-16 不得在单个 code unit 内断开，代理对可跨记录并在逻辑拼接后校验。字符读完后切换为原始格式 run 阶段，续段不消费编码字节；严格按 cRun×4 收集，支持 run 字节跨记录边界。下一个字符串从实际游标开始，不能把其头吞入 run。
 
 记录原字符串起始流偏移与 payload 偏移，保留每个 SST 字符串的一份原始 run 字节。run 索引递增且不得越出字符串；末尾哨兵的 font 按规范忽略。其他 font 必须是已存在的有效索引。返回 rich_string_formatting_not_applied 诊断，仍为 partial。
 
-cch≤32767，继续沿用记录数和文件/流预算；在收集 run 前检查剩余累计 metadata 预算。缺 Continue、空续段、非法编码、截断、奇数字节断点及不完整固定头明确拒绝。fExtSt/ExtRst 音标扩展仍 unsupported，在进入字符阶段前拒绝，不把扩展字节误当正文或格式 run。公式 String 富格式仍不支持。
+cch≤32767，继续沿用记录数和文件/流预算；在收集正文或元数据前检查 run 与 ExtRst 合并字节预算及共享条目数预算。缺 Continue、空续段、非法编码、截断、奇数字节断点及不完整固定头明确拒绝。SST 的 fExtSt/ExtRst 注音扩展按声明长度原样读取，续段不消费字符编码字节；返回 `shared_string_phonetics` 及 partial 诊断，不把扩展字节误当正文或格式 run。不解释注音结构，负长度与截断仍拒绝。公式 String 富格式和注音扩展仍不支持。
 
 依据：Microsoft MS-XLS XLUnicodeRichExtendedString（2.5.293）、FormatRun（2.5.132）、Continue（2.4.58）；继续使用原有字符循环。MS-XLS 对 variable fields 续段的概括文字没有单独解释 run 阶段编码 byte，因此交叉检查 Apache POI 自有 UnicodeString writer：字符与 run 独立输出，run 续段没有编码 byte。未复制 POI 代码，未安装或执行 Java/POI。对 run 内切分采用长度限定的原始数组拼接；不猜测私有变体。
 
@@ -16,3 +16,7 @@ cch≤32767，继续沿用记录数和文件/流预算；在收集 run 前检查
 - https://raw.githubusercontent.com/apache/poi/trunk/poi/src/main/java/org/apache/poi/hssf/record/common/UnicodeString.java
 
 验证：test_wps_rich_strings.py 为标准库构造的合成规范样例，包含中文/ASCII/跨记录代理对、编码切换、长字符串、run 各字节分界、后接字符串、固定头/长度/编码/预算错误及固定种子结构扰动。当前已有合法 ET/ETT 样本未观察到富文本，不能称这些新行为已通过真实富文本语义验收。
+
+新增注音验证见 `test_wps_phonetic.py`：字符编码切换、代理对、原始扩展的每个切分点、后接字符串、零长度扩展、组合预算及结构化失败位置。仍为合成证据，详见[解析增强边界](et-parser-stability.md)。
+
+纯文字 `Label` 内联单元格复用字符续段规则：从六字节单元格前缀之后读取完整字符串头，只接受 flags 0/1，不接受富格式或注音字段，末尾必须恰好消费完。`test_wps_biff_reading.py` 覆盖编码切换、跨记录代理对及失败边界；不扩大 SST 元数据或公式缓存的既有支持范围。详见[内联文字与兼容元数据](biff8-readonly.md#inline-text-and-passive-metadata)。

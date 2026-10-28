@@ -12,6 +12,61 @@ from types import SimpleNamespace
 MAX_RESULT_BYTES = 16 * 1024 * 1024
 
 
+def source_coverage(result):
+    """Preserve optional source assertions, not a new analysis coverage schema.
+
+    The entire JSON has already passed the byte/depth/finite-value gates. Check
+    the fields used to describe coverage before carrying the original assessment
+    through unchanged; older extraction results need not contain these fields.
+    """
+    fields = {}
+    if 'cell_value_coverage' in result:
+        coverage = result['cell_value_coverage']
+        if coverage not in ('complete_within_declared_sheets', 'missing_formula_caches'):
+            raise ValueError('Invalid WPS cell value coverage')
+        fields['cell_value_coverage'] = coverage
+    if 'omissions_affect_cell_values' in result:
+        omissions = result['omissions_affect_cell_values']
+        if type(omissions) is not bool:
+            raise ValueError('Invalid WPS cell value omissions flag')
+        fields['omissions_affect_cell_values'] = omissions
+    if len(fields) == 2 and fields['omissions_affect_cell_values'] != (
+            fields['cell_value_coverage'] == 'missing_formula_caches'):
+        raise ValueError('Conflicting WPS cell value coverage')
+    if 'reading_assessment' in result:
+        assessment = result['reading_assessment']
+        if (not isinstance(assessment, dict)
+                or assessment.get('schema_version') != 'wps_reading_assessment_v1'
+                or assessment.get('outcome') != result['status']
+                or assessment.get('full_format_verified') is not False
+                or assessment.get('completeness') not in
+                ('within_declared_scope', 'partial', 'no_content_delivered')):
+            raise ValueError('Invalid WPS reading assessment')
+        for key, expected_type in (('events', list), ('coverage', list), ('cell_values', dict)):
+            if key in assessment and not isinstance(assessment[key], expected_type):
+                raise ValueError('Invalid WPS reading assessment ' + key)
+        expected_completeness = {'ok': 'within_declared_scope', 'partial': 'partial'}.get(result['status'])
+        if expected_completeness is not None and assessment['completeness'] != expected_completeness:
+            raise ValueError('Conflicting WPS reading assessment completeness')
+        cell_values = assessment.get('cell_values', {})
+        if ('coverage' in cell_values and cell_values['coverage'] not in
+                ('complete_within_declared_sheets', 'missing_formula_caches')):
+            raise ValueError('Invalid WPS reading assessment cell coverage')
+        if ('omissions_affect_cell_values' in cell_values
+                and type(cell_values['omissions_affect_cell_values']) is not bool):
+            raise ValueError('Invalid WPS reading assessment cell omissions flag')
+        if ('coverage' in cell_values and 'omissions_affect_cell_values' in cell_values
+                and cell_values['omissions_affect_cell_values'] !=
+                (cell_values['coverage'] == 'missing_formula_caches')):
+            raise ValueError('Conflicting WPS reading assessment cell coverage')
+        for key, original_key in (('coverage', 'cell_value_coverage'),
+                                  ('omissions_affect_cell_values', 'omissions_affect_cell_values')):
+            if key in cell_values and original_key in fields and cell_values[key] != fields[original_key]:
+                raise ValueError('Conflicting WPS reading assessment cell values')
+        fields['reading_assessment'] = assessment
+    return fields
+
+
 def load_result(path, address):
     descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0))
     try:
@@ -64,6 +119,7 @@ def load_result(path, address):
         raise ValueError('Failed WPS extraction cannot be analyzed')
     if result.get('date_system') not in ('1900', '1904'):
         raise ValueError('Missing explicit WPS date system')
+    coverage = source_coverage(result)
     sheets = result.get('sheets')
     if not isinstance(sheets, list) or not 1 <= len(sheets) <= 128:
         raise ValueError('Invalid WPS result sheet list')
@@ -122,4 +178,4 @@ def load_result(path, address):
             merges[name].append({'ref': merge['range']})
     return SimpleNamespace(cells=cells, date1904=result['date_system'] == '1904',
                            wps_merges=merges, wps_input_schema=schema, wps_source_status=result['status'],
-                           wps_issues=result.get('issues', []))
+                           wps_issues=result.get('issues', []), wps_source_coverage=coverage)

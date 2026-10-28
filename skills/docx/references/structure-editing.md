@@ -1,10 +1,15 @@
 # 受控结构编辑输入约定
 
+写入前按 [交付文件命名](generation.md#交付文件命名) 确定实际名称；以下业务名称仅为示例，须按本次任务替换，用户指定名称优先。
+
+交付归档：编辑 CLI 的写操作成功后自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 [当轮统一归档](delivery.md) 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
+
+
 先执行技能入口要求的自检，保留输入文件，从确认的文档工作目录执行；将 `<skill_dir>` 替换为主入口定义的真实目录：
 
 ```console
-python -I -S -B "<skill_dir>/scripts/edit_structure.py" ./input.docx ./operations.json ./edited.docx
-python -I -S -B "<skill_dir>/scripts/office/validate.py" ./edited.docx
+python -I -S -B "<skill_dir>/scripts/edit_structure.py" ./采购管理办法.docx ./operations.json ./采购管理办法_修订版.docx
+python -I -S -B "<skill_dir>/scripts/office/validate.py" ./采购管理办法_修订版.docx
 ```
 
 顶层只接受非空 `operations` 列表。各操作按原始 XML 定位，全部验证通过后才应用。`paragraph_index` 从 0 开始，只计算 `w:body` 的直属 `w:p`，不计表格或容器内段落；`run_index` 从 0 开始，计算锚点段落的直属 `w:r`。同时提供完全一致的 `expected_text`，run 格式修改另提供 `expected_run_text`，避免索引漂移时改错内容。

@@ -1,0 +1,184 @@
+{
+  "checked_utc": "2026-10-27T14:27:14.466626+00:00",
+  "version": "20261027.2227.1446",
+  "head": "9d314ab06fb7220d0ab6eb307c5ce4fef9e6677b",
+  "scope": "WPS/ET shared file access and task-first structure; no new format records",
+  "regressions": [
+    {
+      "name": "wps",
+      "exit": 0,
+      "output": "................................................................................................................................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 400 tests in 2.925s\n\nOK\n"
+    },
+    {
+      "name": "xlsx",
+      "exit": 0,
+      "output": ".............................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 269 tests in 14.241s\n\nOK\n"
+    },
+    {
+      "name": "docx_routing",
+      "exit": 0,
+      "output": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.406s\n\nOK\n"
+    },
+    {
+      "name": "et_pipeline",
+      "exit": 0,
+      "output": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.075s\n\nOK\n"
+    },
+    {
+      "name": "strict",
+      "exit": 0,
+      "output": "OK skills/wps\n"
+    }
+  ],
+  "real_sample_verifier": {
+    "exit": 0,
+    "result": {
+      "status": "passed",
+      "samples": [
+        {
+          "filename": "newfile.et",
+          "passed": true,
+          "observed": "biff8_subset_extracted",
+          "sheets": [
+            "Sheet1",
+            "Sheet2",
+            "Sheet3"
+          ],
+          "cell_count": 0,
+          "merge_count": 0,
+          "formula_count": 0,
+          "chart_count": 0,
+          "semantic_values_checked": 0,
+          "formula_caches_checked": 0,
+          "unified_reader_status": "partial",
+          "unified_reader_checked": true
+        },
+        {
+          "filename": "Balance_Sheet.ett",
+          "passed": true,
+          "observed": "biff8_subset_extracted",
+          "sheets": [
+            "Balance Sheet"
+          ],
+          "cell_count": 717,
+          "merge_count": 2,
+          "formula_count": 21,
+          "chart_count": 0,
+          "semantic_values_checked": 122,
+          "formula_caches_checked": 21,
+          "unified_reader_status": "partial",
+          "unified_reader_checked": true
+        },
+        {
+          "filename": "Schedule.ett",
+          "passed": true,
+          "observed": "biff8_subset_extracted",
+          "sheets": [
+            "work schedule"
+          ],
+          "cell_count": 343,
+          "merge_count": 1,
+          "formula_count": 12,
+          "chart_count": 1,
+          "semantic_values_checked": 66,
+          "formula_caches_checked": 12,
+          "unified_reader_status": "partial",
+          "unified_reader_checked": true
+        },
+        {
+          "filename": "Telephone_List.ett",
+          "passed": true,
+          "observed": "biff8_subset_extracted",
+          "sheets": [
+            "Telephone List"
+          ],
+          "cell_count": 3976,
+          "merge_count": 0,
+          "formula_count": 0,
+          "chart_count": 0,
+          "semantic_values_checked": 10,
+          "formula_caches_checked": 0,
+          "unified_reader_status": "partial",
+          "unified_reader_checked": true
+        }
+      ]
+    }
+  },
+  "independent_review": "No blocking defect found; shared loading safety and dependency graph reviewed",
+  "selection": {
+    "method": "Independent evaluator saw candidate SKILL entries and requests, not expected answers; simulated, not host auto-trigger",
+    "requests": [
+      "读取季度.et保存值不重新计算",
+      "读取.ett模板中的原有文字单元格",
+      "WPS制作的原生.xlsx提取工作表",
+      "编辑.et金额并保存",
+      "重算.et公式得到最新结果",
+      "读取.wps正文和脚注",
+      "把.et转换.xlsx",
+      "从未知.et尽量读取并明确拒绝范围",
+      "读取DOCX正文",
+      "只提取.et缓存即使可能过时"
+    ],
+    "actual": [
+      "wps",
+      "wps",
+      "xlsx",
+      "none",
+      "none",
+      "wps",
+      "none",
+      "wps",
+      "docx",
+      "wps"
+    ],
+    "expected": [
+      "wps",
+      "wps",
+      "xlsx",
+      "none",
+      "none",
+      "wps",
+      "none",
+      "wps",
+      "docx",
+      "wps"
+    ],
+    "passed": 10,
+    "forward_task": "actual --check exit0; synthetic .et exit3 JSON retained precise numbers, identifier, caches, issues; input SHA unchanged"
+  },
+  "unrelated_sources_unchanged": true,
+  "limits": [
+    "Four existing public ET/ETT sources:198 frozen independently observed values and33 unverified caches; no producer evidence for additional format cases",
+    "No genuine user failing ET input supplied; no general ET/native WPS conformance claim",
+    "No real host skill auto-trigger acceptance",
+    "No third-party naming linter available/run; syntax and manual names reviewed"
+  ],
+  "python39_new_file_tests": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  },
+  "document_examples": "Both embedded standard-library snippets executed successfully by document evaluator; partial original Balance result and full issues retained",
+  "description_characters": 141,
+  "package": {
+    "path": "skills/wps-20261027.2227.1446.zip",
+    "sha256": "7ee330da9a85ec5d9635ea406f0f40da875b76223e9ef71c826fe3fd0014ed89",
+    "files": 132,
+    "crc": "passed",
+    "source_member_hashes": "exact",
+    "read_only_install": [
+      {
+        "name": "check",
+        "exit": 0,
+        "output": "environment-ok\nooxml-word=available\n"
+      },
+      {
+        "name": "full_regression",
+        "exit": 0,
+        "output": "................................................................................................................................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 400 tests in 3.058s\n\nOK\n"
+      }
+    ],
+    "source_and_install_unchanged": true,
+    "empty_path": true
+  }
+}

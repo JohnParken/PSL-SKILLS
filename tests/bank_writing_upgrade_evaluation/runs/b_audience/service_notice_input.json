@@ -1,0 +1,13 @@
+{
+  "theme": "business",
+  "blocks": [
+    {
+      "type": "title",
+      "text": "服务提示"
+    },
+    {
+      "type": "paragraph",
+      "text": "办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。"
+    }
+  ]
+}

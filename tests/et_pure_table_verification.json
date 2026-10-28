@@ -1,0 +1,156 @@
+{
+  "checked_utc": "2026-10-27T13:55:26.000344+00:00",
+  "head": "9d314ab06fb7220d0ab6eb307c5ce4fef9e6677b",
+  "version": "20261027.2150.4672",
+  "scope": "ET/ETT pure-table BIFF8 Unicode compatibility; no new image/chart feature",
+  "prior_wps_version": "20261027.2126.5830",
+  "implemented": [
+    "data accepts explicit CodePage932/936/1252 declarations with raw cv and diagnostics; Unicode fields retain self-describing encoding",
+    "data ignores only plain XLUnicodeString reserved header bits in supported Label, Formula String caches and Format; raw flags/locations retained",
+    "shared/array cached text linkage, exact numeric values, long text identifiers and sparse cells unchanged"
+  ],
+  "synthetic_differential": [
+    {
+      "scenario": "codepage",
+      "old_default_exit": 1,
+      "new_default_exit": 3,
+      "new_status": "partial",
+      "source": "synthetic fixed expected bytes; not producer acceptance"
+    },
+    {
+      "scenario": "inline_flags",
+      "old_default_exit": 1,
+      "new_default_exit": 3,
+      "new_status": "partial",
+      "source": "synthetic fixed expected bytes; not producer acceptance"
+    },
+    {
+      "scenario": "cache_flags",
+      "old_default_exit": 1,
+      "new_default_exit": 3,
+      "new_status": "partial",
+      "source": "synthetic fixed expected bytes; not producer acceptance"
+    },
+    {
+      "scenario": "format_flags",
+      "old_default_exit": 1,
+      "new_default_exit": 3,
+      "new_status": "partial",
+      "source": "synthetic fixed expected bytes; not producer acceptance"
+    }
+  ],
+  "regressions": [
+    {
+      "skill": "wps",
+      "pattern": "test_*.py",
+      "exit": 0,
+      "summary": "..........................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 388 tests in 2.624s\n\nOK\n"
+    },
+    {
+      "skill": "xlsx",
+      "pattern": "test_*.py",
+      "exit": 0,
+      "summary": ".........................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 269 tests in 14.324s\n\nOK\n"
+    },
+    {
+      "skill": "docx",
+      "pattern": "test_docx_routing.py",
+      "exit": 0,
+      "summary": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.465s\n\nOK\n"
+    }
+  ],
+  "total_passed": 662,
+  "failed": 0,
+  "skipped": 0,
+  "new_pure_table_tests": 13,
+  "python_3_9_new_tests_passed": 13,
+  "selfcheck": "passed",
+  "strict": "passed",
+  "resource_links": 213,
+  "independent_source_review": "No blocking issue found; output text budget negative test added; reviewer read no samples/ZIP and changed no files",
+  "allowed_real_sample_regression": [
+    {
+      "filename": "newfile.et",
+      "sha256": "5f34a68ab8061be391836530be7a9b13436b404acd90aa3d8320aa7cca4e3ac6",
+      "semantic_values_checked": 0,
+      "formula_caches_checked": 0,
+      "status": "partial",
+      "new_features_observed": {
+        "non1200_codepages": [],
+        "plain_reserved_flag_records": 0
+      },
+      "source_unchanged": true
+    },
+    {
+      "filename": "Balance_Sheet.ett",
+      "sha256": "1124b720ad792c52cf5a5e39cd99bbebd512b200523070dd3fd035ea37af427b",
+      "semantic_values_checked": 122,
+      "formula_caches_checked": 21,
+      "status": "partial",
+      "new_features_observed": {
+        "non1200_codepages": [],
+        "plain_reserved_flag_records": 0
+      },
+      "source_unchanged": true
+    },
+    {
+      "filename": "Schedule.ett",
+      "sha256": "23d27b4e72eb4c83dd888593df2552d9d4134749762918baeffa57b97799a9eb",
+      "semantic_values_checked": 66,
+      "formula_caches_checked": 12,
+      "status": "partial",
+      "new_features_observed": {
+        "non1200_codepages": [],
+        "plain_reserved_flag_records": 0
+      },
+      "source_unchanged": true
+    },
+    {
+      "filename": "Telephone_List.ett",
+      "sha256": "34c0dd4473cca5b16bd4719e7d7d05e5c88a7ed346d5e593964ae8217b7d1b07",
+      "semantic_values_checked": 10,
+      "formula_caches_checked": 0,
+      "status": "partial",
+      "new_features_observed": {
+        "non1200_codepages": [],
+        "plain_reserved_flag_records": 0
+      },
+      "source_unchanged": true
+    }
+  ],
+  "new_features_producer_acceptance": "NOT_VERIFIED: existing four originals contain no non1200 or plain reserved-header cases; no actual user ET supplied",
+  "analysis_chain": "New pure-table partial JSON consumed by existing XLSX profile, original source partial/issues preserved",
+  "package": {
+    "version": "20261027.2150.4672",
+    "package": "skills/wps-20261027.2150.4672.zip",
+    "sha256": "8fd82db7f876720d36e14b2b6f401d4d8a0642b91a735d382dabb0eaf3b2bccb",
+    "file_count": 129,
+    "source_and_installation_unchanged": true
+  },
+  "installed_wps_tests_passed": 388,
+  "installed_wps_tests_skipped": 0,
+  "description": {
+    "changed": false,
+    "unicode_characters": 144,
+    "reviewed_scope": "limited readonly stored text/cells/caches; no create/edit/convert or native DOCX/XLSX trigger expansion"
+  },
+  "other_skill_source_changes": false,
+  "preserved_existing_docx_xlsx_hashes": true,
+  "remaining_rejections": [
+    "BIFF versions before8 or unknown/private formats",
+    "RString and unknown data records",
+    "CodePages outside explicit whitelist",
+    "SST rich/phonetic control misuse and invalid short/Continue flags",
+    "missing Date1904, corrupt lengths/UTF16, allocation or merge conflicts, encryption and resource bounds"
+  ],
+  "remaining_input": "An authorized original image-free ET exercising a still-failing case, with provenance and independent expected cells; forbidden prior inputs remain excluded",
+  "unverified": [
+    "producer acceptance of new cases",
+    "real host automatic trigger",
+    "full format/visual equivalence or formula recalculation",
+    "dedicated naming linter unavailable and not installed"
+  ],
+  "restricted_input_access": false,
+  "new_sample_downloads": false,
+  "stage_commit_push_upload": false
+}

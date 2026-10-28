@@ -126,6 +126,8 @@ def region(source, sheet, cell_range=None, header=True, formulas='reject',
         metadata['input_schema'] = book.wps_input_schema
         metadata['source_status'] = book.wps_source_status
         metadata['source_issues'] = book.wps_issues
+        metadata.update(('source_' + key, value)
+                        for key, value in getattr(book, 'wps_source_coverage', {}).items())
         metadata['source_warning'] = 'Stored subset only; diagnostics and unverified caches remain applicable'
     if schema is None and headers is not None:
         metadata['column_headers'] = [{'column':col,'type':item[0],'value':item[1],

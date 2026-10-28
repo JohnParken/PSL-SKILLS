@@ -49,8 +49,10 @@ def reconstruct(book, sheet, bounds, header_rows, read_cell, exclude=(), include
     if merge_nodes is None:
         raise ValueError('Explicit merge nodes required for BIFF headers')
     merges = merge_nodes
-    if len(merges) > 10000:
-        raise ValueError('More than 10000 merged regions')
+    # Match the bounded BIFF reader capacity; only intersecting header merges
+    # are expanded below, within the independently checked selected-cell budget.
+    if len(merges) > 65536:
+        raise ValueError('More than 65536 merged regions')
     occupied = {}
     contexts = []
     for node in merges:

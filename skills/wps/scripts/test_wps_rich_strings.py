@@ -54,8 +54,12 @@ class RichStringTests(unittest.TestCase):
         raw=rich('Ab',[(0,0),(1,1)])
         result=parse_stream(rich_workbook(raw[:-4], rec(0x3C,raw[-4:])))
         self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'Ab')
+        cursor=ContinuedStrings([(0,0xFC,struct.pack('<HB',2,4)+struct.pack('<i',4)+b'Ab'+b'1234')],0)
         with self.assertRaises(UnsupportedError):
-            parse_stream(rich_workbook(struct.pack('<HB',2,4)+b'\0'*8))
+            cursor.string()
+        malformed=struct.pack('<HB',2,4)+struct.pack('<i',4)+b'Ab12'
+        with self.assertRaises(ValueError):
+            parse_stream(rich_workbook(malformed))
 
     def test_rich_metadata_budget_fails_before_retention(self):
         with patch('wps_biff8.MAX_METADATA_BYTES',70),self.assertRaises(ResourceLimitError):

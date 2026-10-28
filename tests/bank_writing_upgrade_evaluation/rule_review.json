@@ -1,0 +1,221 @@
+{
+  "review_type": "independent_read_only_rule_consistency_review",
+  "target": "skills/bank-writing",
+  "reviewed_version": "20261028.1407.0121",
+  "conclusion": "未发现阻断执行的真实规则冲突，无必要修改项。以下结论为文本规则复核，不代表模型行为、DOCX 生成或触发准确性已实测。",
+  "blocking_findings": [],
+  "nonblocking_findings": [],
+  "necessary_minimal_changes": [],
+  "reviewed_cases": [
+    {
+      "topic": "多轮局部修改与已删除内容",
+      "locations": [
+        "skills/bank-writing/SKILL.md:48",
+        "skills/bank-writing/SKILL.md:66",
+        "skills/bank-writing/references/writing-review.md:10",
+        "skills/bank-writing/references/writing-review.md:11"
+      ],
+      "trigger": "用户已经删除一项成绩或确认其他段落，随后只要求修改一个数字、句子，或者要求返回完整稿。",
+      "assessment": "规则明确禁止已删除内容自行回流、禁止局部修改时重设计全文；必要关联数字、指代和结论允许最小同步，无法确定时待确认。全文交付规则仅决定输出范围，不要求重写未授权段落。必要关联修改的简短说明是具体情形要求，与一般润色不主动解释全部改动可以同时执行。",
+      "impact": "没有发现会强制恢复已删除内容或无故改动已确认段落的指令。",
+      "minimal_change": null
+    },
+    {
+      "topic": "来源差异与用户确认口径",
+      "locations": [
+        "skills/bank-writing/SKILL.md:42",
+        "skills/bank-writing/references/writing-review.md:17",
+        "skills/bank-writing/references/writing-review.md:21",
+        "skills/bank-writing/references/writing-review.md:22"
+      ],
+      "trigger": "两份材料的统计期间、金额或责任主体不一致；用户随后指定其中一种作为本稿口径。",
+      "assessment": "主入口的统一口径被同句的不自行裁定及引用规则限定。参考要求列明实际差异及其结论影响，不凭文件新旧或署名自行选值；用户确认后同步必要关联内容，并保留未解决差异。采用本稿口径与外部事实核实被明确区分。",
+      "impact": "规则可形成差异识别、有限确认、关联修订的闭环，没有把用户确认等同于外部真实性核验。",
+      "minimal_change": null
+    },
+    {
+      "topic": "重要复杂文稿的读者检查",
+      "locations": [
+        "skills/bank-writing/SKILL.md:51",
+        "skills/bank-writing/references/writing-review.md:38",
+        "skills/bank-writing/references/writing-review.md:40"
+      ],
+      "trigger": "重要汇报或复杂长稿存在未解释简称、隐含背景或不清楚的决策事项；宿主不具备独立评阅条件或尚无相应授权。",
+      "assessment": "读者检查有具体检查对象；独立评阅以条件可用且获得授权为前提，并限制给评阅者的材料。缺少独立条件时允许作者检查，明确不得冒称独立盲读，也不得因此阻断正文交付。修正限于理解所需信息，事实核验仍独立保留。",
+      "impact": "独立评阅不是隐藏的强制依赖，且不存在通过补足理解背景而授权虚构事实的规则。",
+      "minimal_change": null
+    },
+    {
+      "topic": "短稿与非关键缺失信息",
+      "locations": [
+        "skills/bank-writing/SKILL.md:39",
+        "skills/bank-writing/SKILL.md:45",
+        "skills/bank-writing/SKILL.md:51",
+        "skills/bank-writing/SKILL.md:70",
+        "skills/bank-writing/references/writing-review.md:12",
+        "skills/bank-writing/references/writing-review.md:38"
+      ],
+      "trigger": "用户要求修改一段短通知，材料足够，只缺非关键场合细节。",
+      "assessment": "短稿直接完成，不强制访谈、提纲确认或逐段审批；非关键细节允许稳妥默认，事实不足以占位处理。默认结构和交付前审校可在内部执行，不要求展示流程。",
+      "impact": "没有发现需要对短稿强制执行长稿审批或独立读者流程的要求。",
+      "minimal_change": null
+    },
+    {
+      "topic": "纯文本写作与已授权 DOCX 交接",
+      "locations": [
+        "skills/bank-writing/SKILL.md:13",
+        "skills/bank-writing/SKILL.md:15",
+        "skills/bank-writing/SKILL.md:74",
+        "skills/bank-writing/SKILL.md:75",
+        "skills/bank-writing/SKILL.md:76",
+        "skills/bank-writing/SKILL.md:77",
+        "skills/bank-writing/SKILL.md:78"
+      ],
+      "trigger": "原始请求已要求起草并导出 DOCX，或用户在正文交付后确认导出；也包括用户只要文本以及 DOCX Skill 不可用的情况。",
+      "assessment": "纯写作边界约束本 Skill，文件生成交给独立 docx Skill，不构成相互否定。第 75 行明确覆盖已有导出授权，禁止重复询问，第 76 行允许交接按原始授权完成的正文，不要求再次审批同一正文。第 74 行的默认导出询问须连同第 75 行的已有授权例外理解；两者已有可执行的具体规则，不列为真实冲突。失败时保留文本并报告，无自行安装或转换回退。",
+      "impact": "已有授权可直接进入交接，文本请求可省略提示，生成受阻也不丢失正文。未对 docx Skill 本身及真实生成环境作验收。",
+      "minimal_change": null
+    }
+  ],
+  "optional_wording_preferences": [
+    {
+      "location": "skills/bank-writing/SKILL.md:74",
+      "suggestion": "如以后修改此段，可把默认导出询问写成‘尚未明确是否导出时’再提示，把已有授权的例外前置。",
+      "classification": "可选措辞优化，不是必要修复",
+      "reason": "第 75 行已经明确禁止已有授权时重复询问；当前整节可一致执行，不能仅因第一条未重复全部例外就认定阻塞。"
+    }
+  ],
+  "description_review": {
+    "result": "描述中的起草、改写、整合、审校、待核标记及可复制文本边界与正文和参考一致；未发现需要同步修正的能力声明。",
+    "trigger_tests": "未执行模型触发测试；仅人工对照典型文本写作请求、文件制作边界及文种路由。"
+  },
+  "sources_read": [
+    "AGENTS.md",
+    "skills/skill-development-standards/SKILL.md",
+    "skills/skill-development-standards/requirements.txt",
+    "skills/bank-writing/SKILL.md",
+    "skills/bank-writing/references/writing-review.md",
+    "skills/bank-writing/references/activity-planning.md",
+    "skills/bank-writing/references/speech-and-report.md",
+    "skills/bank-writing/references/official-documents.md",
+    "skills/bank-writing/references/comprehensive-writing.md",
+    "skills/bank-writing/references/business-analysis.md"
+  ],
+  "checks": {
+    "full_text_manual_consistency_review": "completed",
+    "checker_environment_self_check": {
+      "status": "passed",
+      "resolved_interpreter": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3",
+      "python_version": "3.13.12",
+      "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B -c \"import sys; assert sys.version_info >= (3, 10), 'Python >=3.10 required'; print(sys.version); print('environment-ok')\"",
+      "exit_code": 0,
+      "success_marker": "environment-ok",
+      "environment_fix": "父任务提供并已由宿主确认的兼容解释器，修复默认 Python 3.9 不满足要求的问题；未降低要求。"
+    },
+    "checker_help_and_strict_structure_check": {
+      "status": "passed",
+      "help_command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B /Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/check_skill.py --help",
+      "help_exit_code": 0,
+      "help_output": "usage: check_skill.py [-h] [--strict] paths [paths ...]",
+      "strict_command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/bank-writing --strict",
+      "strict_exit_code": 0,
+      "strict_output": "OK skills/bank-writing",
+      "scope_limit": "结构检查通过不替代模型行为、触发准确性或 DOCX 生成验收。"
+    },
+    "model_behavior_tests": "not_run",
+    "docx_environment_and_generation": "not_run",
+    "report_directory_write_permission": "confirmed",
+    "existing_report": "确认目标报告此前不存在，未覆盖已有文件。",
+    "previous_checker_environment_self_check": {
+      "status": "failed",
+      "command": "python3 -I -S -B -c \"import sys; assert sys.version_info >= (3, 10), 'Python >=3.10 required'; print('environment-ok')\"",
+      "resolved_interpreter": "/usr/bin/python3",
+      "exit_code": 1,
+      "reason": "AssertionError: Python >=3.10 required；未获得 environment-ok 成功标记。"
+    },
+    "report_json_validation": "passed"
+  },
+  "independence_and_changes": {
+    "model_outputs_or_comparison_records_read": false,
+    "network_install_publish_or_delegation": false,
+    "skill_files_modified": false,
+    "only_written_file": "tests/bank_writing_upgrade_evaluation/rule_review.json",
+    "existing_state": "git status 显示 skills/bank-writing/ 为已有未跟踪目录；未修改或清理。"
+  },
+  "remaining_blockers": [],
+  "resolved_blockers": [
+    {
+      "action": "运行开发规范检查器帮助命令及 bank-writing 严格结构检查",
+      "target": "skills/bank-writing",
+      "status": "not_run_environment_blocked",
+      "reason": "当前解析到的 /usr/bin/python3 不满足检查器 Python 3.10 及以上要求。",
+      "already_completed": "主入口、全部写作参考及项目规范的文本一致性复核已完成。",
+      "approval_state": "未发生审批拒绝，无待审批动作，未发生不确定执行。",
+      "resolution": "使用宿主确认的 Python 3.13.12 重新自检及运行严格检查，均退出 0；已解除。"
+    }
+  ],
+  "followup_review": {
+    "reviewed_version": "20261028.1418.3566",
+    "scope": [
+      "skills/bank-writing/SKILL.md",
+      "skills/bank-writing/references/writing-review.md"
+    ],
+    "conclusion": "重新完整阅读两份当前文件，未发现真实规则冲突或阻断执行的问题，无必要修改项。首轮结论保留。",
+    "blocking_findings": [],
+    "nonblocking_findings": [],
+    "necessary_minimal_changes": [],
+    "changed_rule_review": {
+      "location": "skills/bank-writing/references/writing-review.md:11",
+      "trigger": "用户明确要求保留某段，新数字或新口径又与该段冲突。",
+      "assessment": "新增规则具体限定了一般必要关联同步规则：先保留受保护段落，在正文外指出冲突和建议同步位置，确认后再改，并继续其他已明确修改。它没有授权忽略新事实，因为明确要求不将旧段默认为仍有效。与主入口事实准确、尊重原稿、待核事项正文外说明及来源口径同步规则可以共同执行。",
+      "interaction_with_source_confirmation": "一般采用口径后的关联同步仍适用于未被明确保护的关联内容；受保护段落按同文件更具体的确认规则处理。不得把口径已确认解释为自动撤销用户明确保留段落的要求。",
+      "impact": "进一步明确局部修订权限与事实冲突并存时的处理顺序，没有新增全稿阻塞或未经确认覆盖受保护内容的要求。",
+      "minimal_change": null
+    },
+    "other_reviewed_rules": [
+      "删除内容不得自行恢复，与输出全文要求不存在冲突。",
+      "来源差异不得自行裁定，用户指定本稿口径不等同外部事实核实。",
+      "重要复杂稿读者检查仍可在无独立条件时以作者检查完成，不冒称独立盲读。",
+      "短稿仍不强制访谈、提纲确认或逐段审批。",
+      "文本写作边界与授权后交给独立 docx Skill 仍一致，已有授权不重复询问。"
+    ],
+    "optional_wording_preferences": "未新增；首轮关于将已有授权例外前置的建议仍只是可选措辞优化。",
+    "description_review": "描述能力边界与本次更具体的多轮修改规则一致，无必要同步修改。",
+    "checks": {
+      "environment_self_check": {
+        "status": "passed",
+        "interpreter": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3",
+        "version": "3.13.12",
+        "flags": [
+          "-I",
+          "-S",
+          "-B"
+        ],
+        "version_assertion": "sys.version_info >= (3, 10)",
+        "exit_code": 0,
+        "success_marker": "environment-ok"
+      },
+      "checker_help": {
+        "status": "passed",
+        "exit_code": 0,
+        "output": "usage: check_skill.py [-h] [--strict] paths [paths ...]"
+      },
+      "strict_structure_check": {
+        "status": "passed",
+        "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/bank-writing --strict",
+        "exit_code": 0,
+        "output": "OK skills/bank-writing"
+      },
+      "report_json_validation": "passed",
+      "model_behavior_or_trigger_tests": "not_run",
+      "docx_generation": "not_run"
+    },
+    "independence": {
+      "model_outputs_or_comparison_material_read": false,
+      "skill_files_modified": false,
+      "only_written_file": "tests/bank_writing_upgrade_evaluation/rule_review.json"
+    },
+    "remaining_blockers": [],
+    "limitations": "仅复核当前规则文本并执行结构检查，未实测模型行为、触发准确性或 DOCX 交接生成。"
+  }
+}

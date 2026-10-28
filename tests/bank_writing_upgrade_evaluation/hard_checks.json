@@ -1,0 +1,462 @@
+{
+  "version_scope": "Initial candidate and baseline executions; not a claim about all future inputs.",
+  "automated_checks": [
+    {
+      "variant": "a",
+      "case": "E1.1",
+      "check": "confirmed paragraph preserved",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E1.1",
+      "check": "deleted sentence absent",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E1.1",
+      "check": "full draft returned",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E1.2",
+      "check": "confirmed paragraph preserved",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E1.2",
+      "check": "deleted sentence absent",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E1.2",
+      "check": "full draft returned",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E1.2",
+      "check": "only requested phrase changed",
+      "passed": true,
+      "actual": "季度服务简报\n一、服务提示\n本季度已更新厅堂服务提示。具体材料仍以所办业务要求为准。\n二、沟通安排\n拟在厅堂开展服务说明。活动时间尚未确定。\n三、下一步\n拟在下月安排一次员工交流，汇总客户咨询中的共性问题。",
+      "expected": "季度服务简报\n一、服务提示\n本季度已更新厅堂服务提示。具体材料仍以所办业务要求为准。\n二、沟通安排\n拟在厅堂开展服务说明。活动时间尚未确定。\n三、下一步\n拟在下月安排一次员工交流，汇总客户咨询中的共性问题。",
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E2.1",
+      "check": "both raw source values retained",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E2.1",
+      "check": "uncertainty disclosed",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E2.2",
+      "check": "adopted scope values in body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E2.2",
+      "check": "broader source numbers not substituted",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E2.2",
+      "check": "requested next-step paragraph preserved",
+      "passed": true,
+      "actual": "建议核对宣讲活动明细、覆盖人次及统计范围，说明差异原因，确认统一口径后完善小结。后续工作安排〔待补充〕。",
+      "expected": "建议核对宣讲活动明细、覆盖人次及统计范围，说明差异原因，确认统一口径后完善小结。后续工作安排〔待补充〕。",
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E3L",
+      "check": "core quantities retained",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E3L",
+      "check": "text-only request does not prompt export",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E3O",
+      "check": "core quantities retained",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "E3O",
+      "check": "text-only request does not prompt export",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "T1",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "T2",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "T3",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "T4",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "T5",
+      "check": "no redundant export question",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "a",
+      "case": "T5",
+      "check": "real docx exact text and crc",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E1.1",
+      "check": "confirmed paragraph preserved",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E1.1",
+      "check": "deleted sentence absent",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E1.1",
+      "check": "full draft returned",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E1.2",
+      "check": "confirmed paragraph preserved",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E1.2",
+      "check": "deleted sentence absent",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E1.2",
+      "check": "full draft returned",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E1.2",
+      "check": "only requested phrase changed",
+      "passed": true,
+      "actual": "季度服务简报\n一、服务提示\n本季度已更新厅堂服务提示。具体材料仍以所办业务要求为准。\n二、沟通安排\n拟在厅堂开展服务说明。活动时间尚未确定。\n三、下一步\n拟在下月安排一次员工交流，汇总客户咨询中的共性问题。",
+      "expected": "季度服务简报\n一、服务提示\n本季度已更新厅堂服务提示。具体材料仍以所办业务要求为准。\n二、沟通安排\n拟在厅堂开展服务说明。活动时间尚未确定。\n三、下一步\n拟在下月安排一次员工交流，汇总客户咨询中的共性问题。",
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E2.1",
+      "check": "both raw source values retained",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E2.1",
+      "check": "uncertainty disclosed",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E2.2",
+      "check": "adopted scope values in body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E2.2",
+      "check": "broader source numbers not substituted",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E2.2",
+      "check": "requested next-step paragraph preserved",
+      "passed": true,
+      "actual": "建议核对宣讲记录，明确统计范围及人次计算口径，确认季度汇总数据；后续材料统一注明期间、范围和单位，便于核验。",
+      "expected": "建议核对宣讲记录，明确统计范围及人次计算口径，确认季度汇总数据；后续材料统一注明期间、范围和单位，便于核验。",
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E3L",
+      "check": "core quantities retained",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E3L",
+      "check": "text-only request does not prompt export",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E3O",
+      "check": "core quantities retained",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "E3O",
+      "check": "text-only request does not prompt export",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "T1",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "T2",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "T3",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "T4",
+      "check": "export question outside response body",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "T5",
+      "check": "no redundant export question",
+      "passed": true,
+      "actual": false,
+      "expected": false,
+      "method": "literal/extracted content comparison"
+    },
+    {
+      "variant": "b",
+      "case": "T5",
+      "check": "real docx exact text and crc",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "method": "literal/extracted content comparison"
+    }
+  ],
+  "automated_summary": {
+    "a": {
+      "passed": 22,
+      "total": 22
+    },
+    "b": {
+      "passed": 22,
+      "total": 22
+    }
+  },
+  "manual_semantic_checks": [
+    {
+      "variant": "a",
+      "case": "E2.1",
+      "result": "pass",
+      "basis": "Both source texts and their different scopes remain visible; no newer-source authority assumption or summed training count."
+    },
+    {
+      "variant": "a",
+      "case": "E2.2",
+      "result": "concern",
+      "basis": "The explicitly protected next-step paragraph still recommends checking scope after the user resolved it. Neither output explains this tension. User requested this paragraph stay unchanged, so literal preservation passes; semantic coherence is not treated as an unqualified pass."
+    },
+    {
+      "variant": "a",
+      "case": "E3L/E3O",
+      "result": "pass",
+      "basis": "Both drafts keep 28 person-times distinct from unique staff and template unapproved; proposals stay conditional, with no fabricated satisfaction or complaint improvement."
+    },
+    {
+      "variant": "a",
+      "case": "T1/T2/T3",
+      "result": "pass",
+      "basis": "Status remains unconfirmed; proposal is labeled as suggestions with unresolved arrangements; review identifies factual and inferential problems without whole-draft rewriting."
+    },
+    {
+      "variant": "b",
+      "case": "E2.1",
+      "result": "pass",
+      "basis": "Both source texts and their different scopes remain visible; no newer-source authority assumption or summed training count."
+    },
+    {
+      "variant": "b",
+      "case": "E2.2",
+      "result": "concern",
+      "basis": "The explicitly protected next-step paragraph still recommends checking scope after the user resolved it. Neither output explains this tension. User requested this paragraph stay unchanged, so literal preservation passes; semantic coherence is not treated as an unqualified pass."
+    },
+    {
+      "variant": "b",
+      "case": "E3L/E3O",
+      "result": "pass",
+      "basis": "Both drafts keep 28 person-times distinct from unique staff and template unapproved; proposals stay conditional, with no fabricated satisfaction or complaint improvement."
+    },
+    {
+      "variant": "b",
+      "case": "T1/T2/T3",
+      "result": "pass",
+      "basis": "Status remains unconfirmed; proposal is labeled as suggestions with unresolved arrangements; review identifies factual and inferential problems without whole-draft rewriting."
+    }
+  ],
+  "limitations": "Literal checks alone do not prove full semantic quality. Contextual concerns are retained separately."
+}

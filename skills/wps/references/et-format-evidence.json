@@ -208,7 +208,7 @@
   "continuation_review": {
     "checked_on": "2026-10-25",
     "source": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/173d9f51-e5d3-43da-8de2-be7f22e119b9",
-    "scope": "Plain SST and String Unicode character continuation only; fixed headers same record; continuation encoding byte; UTF16 unit boundary. Rich/phonetic unsupported.",
+    "scope": "Historical plain-string baseline; current rich and opaque phonetic SST continuation scope is described in et-parser-stability.md.",
     "validation": "Synthetic only; no new real sample or Office/conversion verification in this iteration."
   },
   "rich_string_review": {
@@ -218,7 +218,77 @@
       "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/24d30c9e-350e-4d55-a1c3-f4404cc41f99",
       "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/b3413c2b-ca5b-4988-86be-ab44bfe9e4d3"
     ],
-    "scope": "Same-record rich SST characters and raw FormatRun retention only; no formatting application. Phonetic/continued-rich/shared-array formula outside subset.",
+    "scope": "Historical rich-string baseline; current raw FormatRun/ExtRst continuation and formula-group boundaries are described in biff-rich-continuation.md and formula-groups.md.",
     "validation": "Five synthetic tests; four existing real sample regressions contain zero rich strings, therefore not real rich-string evidence."
-  }
+  },
+  "parser_stability_review": {
+    "checked_on": "2026-10-27",
+    "scope": "BIFF8 SST phonetic raw metadata, 200000 unique strings, 65536 merge ranges with sweep intersection check, record-level failures; synthetic coverage does not establish native ET compatibility",
+    "source": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/173d9f51-e5d3-43da-8de2-be7f22e119b9",
+    "runtime": "offline Python standard library only"
+  },
+  "inline_text_and_passive_metadata_review": {
+    "checked_on": "2026-10-27",
+    "scope": "Plain BIFF8 worksheet Label strings and bounded character Continue; explicit legacy_excel_clsid raw retention of Palette, Pane, HorizontalPageBreaks and VerticalPageBreaks. No rendering, arbitrary record skipping or new CFB exceptions.",
+    "sources": [
+      {
+        "title": "Label / XLUnicodeString layout; modern MS-XLS describes chart-label use, legacy inline worksheet layout is a bounded reader extension",
+        "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/5e14d0af-5466-4709-a243-868a887351f2"
+      },
+      {
+        "title": "Microsoft Excel 97-2007 specification, historical LABEL cell record listing",
+        "url": "https://www.loc.gov/preservation/digital/formats/digformatspecs/Excel97-2007BinaryFileFormat%28xls%29Specification.pdf"
+      },
+      {
+        "title": "XLUnicodeString",
+        "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/36ca6de7-be16-48bc-aa5e-3eaf4942f671"
+      },
+      {
+        "title": "Palette: ccv exactly 56",
+        "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/bf61236a-a89e-4425-9679-34992c61ae5e"
+      },
+      {
+        "title": "Pane: local fields retained; Window2-dependent semantics not applied",
+        "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/9dcaa80b-6315-4aea-a802-872ccd4e8d1b"
+      },
+      {
+        "title": "HorizontalPageBreaks: count <=1026, sorting and nonoverlap",
+        "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/a57df991-6148-411f-9662-9c9857d72e1a"
+      },
+      {
+        "title": "VerticalPageBreaks: count <=255, sorting and nonoverlap",
+        "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/509d9161-29e1-4006-95cc-40e26acb7703"
+      }
+    ],
+    "validation_scope": "Synthetic new-record coverage; actual commands/results in validation.md. Existing real samples do not certify the new layouts or full WPS compatibility.",
+    "runtime": "offline Python standard library only; sources are development bibliography, not runtime dependencies"
+  },
+  "current_reading_policy": "File entries default to data: existing allowlisted passive metadata and bounded opaque chart retention yield partial; explicit strict/legacy policies retain prior rules. Historical default-chart rejection below refers to explicit legacy policy. No unknown records or incomplete worksheets are skipped.",
+  "pure_table_unicode_sources": [
+    {
+      "title": "MS-XLS CodePage 2.4.52",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/03651cf7-1926-4356-b42b-a378938975e5",
+      "used_for": "Code-page declaration is not restricted by the format to 1200; this implementation explicitly allows 932/936/1252 only in data mode."
+    },
+    {
+      "title": "Microsoft CODEPG reference",
+      "url": "https://learn.microsoft.com/en-us/globalization/encoding/code-pages",
+      "used_for": "932,936,1252 identities; no runtime codec or byte-decoding fallback."
+    },
+    {
+      "title": "MS-XLS XLUnicodeString 2.5.294",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/36ca6de7-be16-48bc-aa5e-3eaf4942f671",
+      "used_for": "Only fHighByte chooses low-byte/full UTF16 storage; seven reserved bits MUST be ignored. Applied only to plain fields, not SST/short/Continue flags."
+    },
+    {
+      "title": "MS-XLS String 2.4.268",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/504b6cfc-d57b-4296-92f4-ceefc0a2ca9b",
+      "used_for": "Formula text cache uses XLUnicodeString; no rich-cache layout inferred."
+    },
+    {
+      "title": "MS-XLS Format 2.4.126",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/300280fd-e4fe-4675-a924-4d383af48d3b",
+      "used_for": "stFormat is XLUnicodeString, length1..255; preserving text is not full format ABNF validation."
+    }
+  ]
 }

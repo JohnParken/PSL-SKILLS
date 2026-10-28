@@ -5,11 +5,27 @@ before using this reference; internal resources and task data have different pat
 
 ## Contents
 
+- [Default data-policy acceptance](#default-data-policy-acceptance)
 - [Sources and scope](#sources-and-scope)
-- [Results](#results)
+- [Historical explicit-legacy results](#historical-explicit-legacy-results)
 - [Reproduce offline](#reproduce-offline)
 - [Remaining limits](#remaining-limits)
 - [Independent source-value observations](#independent-source-value-observations)
+
+## Default data-policy acceptance
+
+The four pinned originals also pass default file/API reading with partial/3, without
+explicit compatibility or chart flags. All 198 independently frozen stored values,
+including 33 unverified formula caches, match. Explicit strict still rejects all four.
+The original legacy-policy verifier remains available and still expects Schedule to
+be refused when its explicit legacy chart policy is reject. To verify default data:
+
+```console
+python -I -S -B "<skill_dir>/scripts/verify_et_samples.py" ./samples --compatibility data
+```
+
+No original is rewritten or bundled; this is the same four-file provenance set and
+not a broader producer/version acceptance claim.
 
 ## Sources and scope
 
@@ -26,10 +42,10 @@ versions are unknown. Redistribution rights were not established, so the binary
 originals are not bundled. Only provenance, metrics and synthetic regressions are
 included in this skill; runtime does not download files or use third-party software.
 
-## Results
+## Historical explicit-legacy results
 
-All reads below use explicit `--compatibility legacy_excel_clsid`. Schedule additionally
-requires `--chart-policy opaque` for successful worksheet extraction. Default strict
+The historical comparison below uses explicit `--compatibility legacy_excel_clsid`. Schedule additionally
+requires `--chart-policy opaque` for successful worksheet extraction. Explicit strict
 mode still rejects these files at metadata records outside its smaller subset.
 
 | Original | Result | Evidence and limits |
@@ -37,7 +53,7 @@ mode still rejects these files at metadata records outside its smaller subset.
 | newfile.et | Extracted | Three empty sheets, zero cells; basic container/workbook coverage only |
 | Telephone List.ett | Extracted after fix | One sheet, 3,976 cells: 10 text and 3,966 blank; no formulas or merges |
 | Balance Sheet.ett | Extracted after fix | One sheet, 717 cells: 51 text, 71 numeric (including 21 formula caches), 595 blank; two merges |
-| Schedule.ett | Extracted with explicit opaque chart policy | 343 cells (277 blank, 18 text, 48 numeric including 12 caches), one merge; one chart retained as 125 records / 1530 bytes; default policy still refuses |
+| Schedule.ett | Extracted with explicit opaque chart policy | 343 cells (277 blank, 18 text, 48 numeric including 12 caches), one merge; one chart retained as 125 records / 1530 bytes; explicit legacy policy with omitted chart option refuses |
 
 Before the fix, Template (0x0060) or SupBook (0x01AE) blocked the two now-readable
 ETT files. The reader now validates a narrow internal-reference/static-print-area
@@ -54,6 +70,10 @@ independent formula recalculation or complete cell-by-cell verification by WPS/E
 The blank ET provides no evidence for populated ET values, dates or formulas.
 
 ## Reproduce offline
+
+For current default data-policy acceptance use the command above. The following
+commands reproduce the historical explicit-legacy comparison, including its chart
+rejection; they are maintenance validation, not the normal user reading workflow.
 
 Separately obtain the exact original files listed in the manifest, under its local
 filenames, in a task-relative directory such as `./samples`. Confirm inputs are
@@ -73,7 +93,7 @@ It also compares [frozen typed values](real-value-expectations.json): 122 in Bal
 33 formula caches). The empty ET has no stored-value observations. A wrong value,
 type, missing address or lost formula-cache provenance fails independently of counts.
 It is read-only and emits JSON to stdout. Exit 0 and `status: passed` mean the fixed
-sample expectations matched, including the expected Schedule rejection under the default chart policy; they do
+sample expectations matched, including the expected Schedule rejection under the explicit legacy default chart policy; they do
 not mean every sample was readable. Missing or changed originals return exit 1. The opaque policy checks all four files
 for successful extraction and verifies the retained Schedule chart hash. See
 [embedded chart scope](embedded-charts.md) for its limits.
@@ -106,3 +126,7 @@ then run the offline verifier above. This is source-record value agreement, not
 independent recalculation, effective styling, private-stream semantics or rendered
 WPS/Excel verification. Original binaries and the source-observation tool are not
 runtime dependencies and are not bundled with this skill.
+
+## Unified-reader regression
+
+The verifier now checks both the legacy BIFF entry and the unified WPS byte reader against the frozen typed values. The unified result must preserve `partial`, `biff8_subset` and a noncertifying reading assessment. Expected legacy default-chart rejection is also checked through both entries. Reacquired pinned originals on 2026-10-27 passed both legacy reject and opaque verifier runs; the opaque run checked all 198 stored values including 33 unverified formula caches. This extends entry-point acceptance, not producer-version or rendered-display coverage.

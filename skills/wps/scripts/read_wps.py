@@ -1,13 +1,11 @@
 """Bounded, content-identified WPS-family document and spreadsheet extraction."""
 import argparse
 from bisect import bisect_right
-import io
 import json
 import zipfile
 import zlib
 import os
 from pathlib import Path
-import stat
 import struct
 import sys
 
@@ -39,12 +37,7 @@ COMPRESSED_MAPPING = dict(zip(
      0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x0178)))
 
 
-class ParseError(ValueError):
-    def __init__(self, status, location, message):
-        self.status = status
-        self.location = location
-        super().__init__(message)
-
+from wps_access import ParseError, read_input, load_compound, resolve_chart_policy
 
 def require(condition, location, message, status='corrupt'):
     if not condition:
@@ -173,6 +166,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
     require(positions[-1] == total_count, plc.location(4 * piece_count), 'CP/story length mismatch')
     # Preflight ALL pieces and overlaps before decoding or allocating body text.
     pieces = []
+    piece_properties = False
     for index in range(piece_count):
         descriptor = cp_bytes + 8 * index
         location = plc.location(descriptor + 2, piece=index)
@@ -192,6 +186,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         prm = plc.number(descriptor + 6, 2)
         require(not prm & 1 or (prm >> 1) < prc_count,
                 plc.location(descriptor + 6, piece=index), 'Invalid Prm1 Prc index')
+        piece_properties = piece_properties or prm != 0
         pieces.append((file_offset, end, stride, index))
     ordered = sorted(pieces)
     for left, right in zip(ordered, ordered[1:]):
@@ -344,6 +339,18 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                            'count': len(object_locations), 'locations': object_locations,
                            'message': 'U+0001 replaced by U+FFFC outside hidden field instructions; '
                                       'picture/data bytes, sprmCFSpec and object type not decoded'})
+        table_structure = None
+        if '\x07' in text and not field_count:
+            from wps_binary_tables import inspect_tables
+            table_structure = inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
+                table_ranges=table_spans,
+                word_ranges=[(item['offset'], item['offset'] + item['size'])
+                             for item in header_mapping.get('word_ranges', [])] if header_mapping else (),
+                piece_properties=piece_properties)
+            issues.extend(table_structure['issues'])
+        elif '\x07' in text:
+            issues.append({'code': 'binary_table_fields_unresolved', 'stream': 'WordDocument',
+                           'cp_start': cp_start, 'cp_end': cp_end})
         paragraph_total = text.count('\r') + int(bool(text) and not text.endswith('\r'))
         require(paragraph_total <= remaining_paragraphs, word.location(76), 'Paragraph budget exceeded', 'resource_limit')
         remaining_paragraphs -= paragraph_total
@@ -353,15 +360,33 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         def normalize(value):
             return value.replace('\x0b', '\n').replace('\x07', '\t')
 
-        return {'status': 'partial' if issues else 'ok', 'format': 'ms_doc_subset', 'fib_version': hex(version),
+        story_result = {'status': 'partial' if issues else 'ok', 'format': 'ms_doc_subset', 'fib_version': hex(version),
                 'fib_base_version': hex(base_version),
                 'main_cp_units': main_count, 'text': normalize(text).replace('\r', '\n'),
                 'paragraphs': [normalize(value) for value in paragraphs], 'partial': bool(issues),
                 'field_policy': field_policy, 'fields_evaluated': False, 'issues': issues,
                 'object_policy': object_policy, 'objects_decoded': False,
                 'scope': 'stored_main_story_only', 'producer_verified': False}
+        if table_structure is not None:
+            story_result['binary_table_structure'] = table_structure
+        return story_result
 
     result = render_story(0, main_count, 'main')
+    if not include_related:
+        omitted = []
+        story_start = main_count
+        for story_type, count in zip(('footnotes', 'headers_footers', 'comments', 'endnotes', 'textboxes', 'header_textboxes'), other_counts):
+            if count:
+                omitted.append({'type': story_type, 'cp_units': count,
+                    'source': {'stream': 'WordDocument', 'cp_start': story_start, 'cp_end': story_start + count},
+                    'reason': 'include_related_not_requested'})
+            story_start += count
+        result['omitted_regions'] = omitted
+        if omitted:
+            result['issues'].append({'code': 'related_content_not_requested',
+                'stream': 'WordDocument', 'region_count': len(omitted),
+                'message': 'Nonempty related stories were not read; use include-related to request them'})
+            result['status'], result['partial'] = 'partial', True
     if include_related:
         related = []
         cp_start = main_count
@@ -390,6 +415,8 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 'references': references if references is not None else [],
                 'anchor_status': 'cp_mapped_properties_unverified' if references is not None else ('unknown' if count else 'not_applicable'),
                 'status': 'partial' if story_issues else 'ok', 'issues': story_issues}
+            if 'binary_table_structure' in story:
+                region['binary_table_structure'] = story['binary_table_structure']
             if story_type == 'headers_footers' and header_mapping is not None:
                 region['section_mapping'] = header_mapping
                 header_issue = {'code': 'section_header_properties_uninterpreted',
@@ -422,6 +449,13 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 for left, right in result['character_properties'].get('fkp_ranges', []):
                     require(stop <= left or right <= start, word.location(start),
                             'Section properties overlap character FKP page')
+        structures = [result.get('binary_table_structure', {})]
+        structures.extend(region.get('binary_table_structure', {}) for region in result.get('related_stories', []))
+        for structure in structures:
+            for left, right in structure.get('fkp_ranges', []):
+                for char_left, char_right in result['character_properties'].get('fkp_ranges', []):
+                    require(right <= char_left or char_right <= left, word.location(left),
+                            'Paragraph FKP overlaps character FKP')
         result['character_properties']['annotation_scope'] = 'selected_stories' if include_related else 'declared_main'
         result['issues'].append({'code': 'binary_character_properties_not_effective',
             'stream': table_name, 'message': 'CHPX evidence only; styles, piece PRMs and effective visibility/revisions unresolved. No text filtered.'})
@@ -435,19 +469,19 @@ def failure(status, location, message):
             'partial': False, 'text': None, 'producer_verified': False}
 
 
-def _read_bytes(data, *, source=None, compatibility='strict', chart_policy='reject',
+def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                field_policy='reject', object_policy='reject', revisions=None, include_related=False, hidden_text="include"):
     """Identify content first; the suffix is provenance, never a format selector."""
     require(isinstance(data, bytes) and len(data) <= MAX_FILE_BYTES,
             {'stage': 'input'}, 'Input exceeds byte budget or is not bytes', 'resource_limit')
-    require(compatibility in ('strict', 'legacy_excel_clsid', 'legacy_word_clsid'), {'stage': 'options'},
+    require(compatibility in ('strict', 'legacy_excel_clsid', 'legacy_word_clsid', 'data'), {'stage': 'options'},
             'Unknown compatibility mode', 'unsupported')
-    require(chart_policy in ('reject', 'opaque'), {'stage': 'options'},
-            'Unknown chart policy', 'unsupported')
+    requested_chart_policy = chart_policy
+    chart_policy = resolve_chart_policy(chart_policy, 'strict')
     require(revisions in (None, 'accepted', 'original', 'all'), {'stage': 'options'},
             'Unknown revisions policy', 'unsupported')
     if data.startswith((b'PK\x03\x04', b'PK\x05\x06')):
-        require(compatibility == 'strict' and chart_policy == 'reject' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
+        require(compatibility in ('strict', 'data') and chart_policy == 'reject' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
                 'Binary compatibility/field/chart options do not apply to OOXML', 'unsupported')
         from wps_ooxml_sheet import package_kind, read_bytes as read_sheet_bytes
         try:
@@ -463,35 +497,18 @@ def _read_bytes(data, *, source=None, compatibility='strict', chart_policy='reje
     require(data.startswith(SIGNATURE), {'stage': 'container'},
             'Unknown container; native private WPS/Works/ET formats unsupported', 'unsupported')
     require(hidden_text in ('include', 'annotate'), {'stage': 'options'}, 'Binary visibility is unknown; exclude unsupported', 'unsupported')
-    header = Region(data, 'CFB header')
-    require(header.number(24, 2) == 0x003E, header.location(24),
-            'Unsupported CFB minor version', 'unsupported')
-    clsid = bytes(header.view(8, 16))
-    require(clsid == bytes(16) or (compatibility == 'legacy_excel_clsid'
-            and clsid == bytes.fromhex('2008020000000000c000000000000046')
-            and header.number(26, 2) == 3) or (compatibility == 'legacy_word_clsid'
-            and clsid == bytes.fromhex('0609020000000000c000000000000046')
-            and header.number(26, 2) == 3), header.location(8),
-            'Nonzero CFB header CLSID outside the explicitly supported profile', 'unsupported')
-    try:
-        compound = CompoundFile(data, compatibility=compatibility)
-    except ValueError as exc:
-        raise ParseError('invalid_or_unsupported', {'stage': 'CFB'}, str(exc)) from exc
-    encrypted = [path for path in compound.streams
-                 if path[-1].casefold() in ('encryptedpackage', 'encryptioninfo', 'encryptedsummary', 'drmcontent')]
-    require(not encrypted, {'stage': 'CFB', 'stream': '/'.join(encrypted[0]) if encrypted else ''},
-            'Encrypted package', 'encrypted')
+    compound = load_compound(data, compatibility)
     word = ('WordDocument',) in compound.streams
     workbooks = [path for path in compound.streams if len(path) == 1 and path[0].casefold() in ('workbook', 'book')]
     require(not (word and workbooks), {'stage': 'routing'},
             'Ambiguous document and workbook payloads; no branch chosen', 'unsupported')
     if word:
-        require(compatibility in ('strict', 'legacy_word_clsid') and chart_policy == 'reject', {'stage': 'options'},
+        require(compatibility in ('strict', 'legacy_word_clsid', 'data') and chart_policy == 'reject', {'stage': 'options'},
                 'BIFF compatibility/chart options do not apply to MS-DOC', 'unsupported')
         require(revisions in (None, 'all'), {'stage': 'options'},
                 'MS-DOC reads stored text; revision filtering unsupported', 'unsupported')
         result = parse_streams(compound.streams, field_policy=field_policy, object_policy=object_policy, include_related=include_related, hidden_text=hidden_text)
-        result['compatibility_mode'] = compatibility
+        result['compatibility_mode'] = 'strict' if compatibility == 'data' else compatibility
         result['container_issues'] = compound.issues
         if compound.issues:
             result['issues'] = result.get('issues', []) + compound.issues
@@ -499,22 +516,20 @@ def _read_bytes(data, *, source=None, compatibility='strict', chart_policy='reje
             result['partial'] = True
         return result
     require(len(workbooks) == 1, {'stage': 'routing'},
-            'Require one supported document or workbook payload', 'unsupported')
+            'Require exactly one supported document or workbook payload', 'unsupported')
     require(revisions is None and not include_related and hidden_text == 'include' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
             'Document revision/related-story options do not apply to BIFF', 'unsupported')
     from wps_biff8 import read_container
     try:
-        result = read_container(compound, path=source, compatibility=compatibility, chart_policy=chart_policy)
+        result = read_container(compound, path=source, compatibility=compatibility,
+                                chart_policy=resolve_chart_policy(requested_chart_policy, compatibility))
     except ValueError as exc:
+        location = {'stage': 'BIFF', 'stream': workbooks[0][0]}
+        location.update(getattr(exc, 'location', {}))
         raise ParseError(getattr(exc, 'status', 'invalid_or_unsupported'),
-                         {'stage': 'BIFF', 'stream': workbooks[0][0]}, str(exc)) from exc
-    result['reader_status'] = result['status']
-    result['partial'] = bool(result.get('issues'))
-    result['status'] = 'partial' if result['partial'] else 'ok'
-    result['format'] = 'biff8_subset'
-    result['scope'] = 'stored_cells_and_metadata_subset'
-    result['producer_verified'] = False
-    return result
+                         location, str(exc)) from exc
+    from wps_biff8 import normalize_result
+    return normalize_result(result)
 
 
 def read_bytes(data, **options):
@@ -525,21 +540,7 @@ def read_bytes(data, **options):
 
 def read(path, **options):
     try:
-        descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0))
-        try:
-            with os.fdopen(descriptor, 'rb') as handle:
-                descriptor = None
-                info = os.fstat(handle.fileno())
-                require(stat.S_ISREG(info.st_mode), {'stage': 'input'}, 'Regular file required', 'unsupported')
-                require(info.st_size <= MAX_FILE_BYTES, {'stage': 'input'}, 'File exceeds 32 MiB', 'resource_limit')
-                data = handle.read(info.st_size + 1)
-                after = os.fstat(handle.fileno())
-                require(len(data) == info.st_size and after.st_size == info.st_size
-                        and after.st_mtime_ns == info.st_mtime_ns and after.st_ctime_ns == info.st_ctime_ns,
-                        {'stage': 'input'}, 'Input changed during read', 'io_error')
-        finally:
-            if descriptor is not None:
-                os.close(descriptor)
+        data = read_input(path)
         return read_bytes(data, source=str(path), **options)
     except (ParseError, OSError) as exc:
         from wps_diagnostics import summarize
@@ -551,24 +552,17 @@ MAX_JSON_OUTPUT_BYTES = 16 * 1024 * 1024
 
 
 def encode_result(result):
-    """Bound serialization before stdout; never emit a truncated JSON document."""
-    output = io.StringIO()
-    size = 0
-    encoder = json.JSONEncoder(ensure_ascii=False, default=str, allow_nan=False)
-    for chunk in encoder.iterencode(result):
-        size += len(chunk.encode('utf-8'))
-        if size > MAX_JSON_OUTPUT_BYTES:
-            raise ParseError('resource_limit', {'stage': 'output'}, 'JSON output exceeds 16 MiB')
-        output.write(chunk)
-    return output.getvalue()
+    # Retain the public limit and function used by existing callers/tests.
+    from wps_result import encode_result as encode
+    return encode(result, limit=MAX_JSON_OUTPUT_BYTES)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
     parser.add_argument('--format', choices=('json', 'text'), default='json')
-    parser.add_argument('--compatibility', choices=('strict', 'legacy_excel_clsid', 'legacy_word_clsid'), default='strict')
-    parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default='reject')
+    parser.add_argument('--compatibility', choices=('data', 'strict', 'legacy_excel_clsid', 'legacy_word_clsid'), default='data')
+    parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None)
     parser.add_argument('--object-policy', choices=('reject', 'placeholder'), default='reject')
     parser.add_argument('--field-policy', choices=('reject', 'cached_result'), default='reject')
     parser.add_argument('--revisions', choices=('accepted', 'original', 'all'))

@@ -1,0 +1,212 @@
+{
+  "skill": "bank-writing",
+  "version": "20261028.1349.3335",
+  "version_clock": "2026-10-28T01:49:33.354528-04:00",
+  "scope": "Independent forward executions using synthetic prompts; no real bank or customer data.",
+  "evaluators": [
+    {
+      "task": "forward_text",
+      "requested_model": "gpt-6-astra",
+      "context": "fresh, no parent history or expected answers"
+    },
+    {
+      "task": "forward_export",
+      "requested_model": "gpt-6-astra",
+      "context": "fresh, no parent history or expected answers",
+      "model_self_report": "Codex（基于 GPT-6；本会话未提供更细的运行模型标识）"
+    }
+  ],
+  "method": "Two independent agents executed five requests against the maintained skill. Parent reviewed full responses and checked the actual DOCX package. Paths below are normalized evidence, not download links.",
+  "checks": {
+    "strict": "passed",
+    "description_characters": 120,
+    "internal_links_and_docx_repository_route": "passed",
+    "name_migration": "passed; original ZIP source filename preserved in README",
+    "python_code_lint": "not applicable: no skill Python code added or changed",
+    "unrelated_files_hash_comparison": "passed"
+  },
+  "skill_sha256": {
+    "skills/bank-writing/SKILL.md": "6d971ec601c34e3da0c7f8a6719ea232533f9c7f75bbd8b461ec4f214e0514f6",
+    "skills/bank-writing/references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+    "skills/bank-writing/references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "skills/bank-writing/references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "skills/bank-writing/references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "skills/bank-writing/references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "skills/bank-writing/references/writing-review.md": "f7cb6a44ecae4a073c21d2fb1f6f56724c873a2fb47e8532cd44c3a0a5c690de"
+  },
+  "cases": [
+    {
+      "id": "T1",
+      "prompt": "请把这段素材整理成一段简短的季度工作汇报。素材只有：本季度拟开展一次客户服务培训；是否已启动、是否完成都尚未确认。请保持事实准确。",
+      "response": "本季度拟开展一次客户服务培训，是否已启动及是否完成均尚未确认〔状态待核〕。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+      "evaluation": {
+        "result": "pass",
+        "review": "保留拟开展和状态未知，不编造正在推进；完成正文后才提示导出。"
+      }
+    },
+    {
+      "id": "T2",
+      "prompt": "请从零为一个虚构银行网点拟一份精简的反诈宣传活动方案。我暂时没有具体时间、预算、人数或审批信息，你可以提出安排建议。",
+      "response": "**某银行网点反诈宣传活动方案（建议稿）**\n\n**一、活动目的与主题**\n\n拟以“识别诈骗套路，守护账户安全”为主题，帮助到店客户识别常见诈骗情形，掌握遇到可疑信息时暂停操作、核实来源的基本方法。\n\n**二、对象与时间安排**\n\n建议面向到店客户开展自愿参加的小型宣传活动，兼顾老年客户的理解与操作需求。拟利用网点非业务高峰时段，在不影响正常服务的区域安排一场约30分钟的宣讲，配合当日厅堂提示。具体日期、场地及参与人数〔待确定〕。\n\n**三、活动内容与流程**\n\n1. 情景讲解（建议10分钟）：以明确标注的虚构情景介绍冒充客服、刷单返利、虚假投资等常见套路，提示不轻信陌生来电、不随意点击链接、不向他人透露密码及验证码。\n2. 互动辨识（建议10分钟）：设置简短问答，引导客户识别“催促转账”“要求保密”“承诺高额收益”等风险信号。\n3. 咨询提示（建议10分钟）：讲解通过官方渠道核实信息的方法，提供经审核的宣传资料；涉及具体账户或交易的问题转至适当服务区域处理。\n\n**四、分工与准备**\n\n建议由网点负责人统筹，指定一名员工负责宣讲、一名员工负责引导及秩序维护，具体人员根据当日排班确定。活动前核对宣传内容和资料来源，确认场地、人员及适用的内部审批要求；审批情况〔待核实〕，应按核实后的要求完成必要程序再组织实施。\n\n**五、经费与现场保障**\n\n建议优先使用现有宣传设施和经审核的电子资料。确需印制物料时，先列明数量、单价及预计支出，再按内部要求报批；预算金额及资金安排〔待确定〕。控制现场聚集，客流增大时转为分散讲解。不收集非必要个人信息，不要求客户现场转账、提供密码或验证码；遇到疑似受骗咨询，及时转交网点指定人员依内部流程处理。\n\n**六、效果评估**\n\n活动后据实记录开展时间、参与人数、主要咨询问题和问答反馈，梳理需改进的内容。参与人数目标可在场地和人员确认后另定，不预设已取得成效或承诺降低诈骗发生率。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+      "evaluation": {
+        "result": "pass",
+        "review": "实际给出活动安排，明确建议稿及拟议时长；实际预算和审批待定，未伪造已批准或成效。"
+      }
+    },
+    {
+      "id": "T3",
+      "prompt": "请只审校下面这段虚构汇报，不需要整篇改写：截至6月底，本季度计划开展的客户培训已经全部完成，培训是否启动尚未核实。服务投诉从上季度10件增至本季度12件，说明服务水平显著提升。我们高度重视、全面发力、成效卓著。",
+      "response": "以下仅列问题及最小修改建议，不作整篇改写。\n\n1. **事实／状态冲突**\n\n   原文：“客户培训已经全部完成，培训是否启动尚未核实。”\n\n   问题：同一培训事项的“全部完成”与“是否启动尚未核实”相互冲突，现有文本不足以确认实际状态。\n\n   建议：核实前将这部分改为“本季度计划开展的客户培训，其启动及完成情况〔待核实〕”。核实后再据实写明，不自行选定其中一种说法。\n\n2. **数据与结论不匹配**\n\n   原文：“服务投诉从上季度10件增至本季度12件，说明服务水平显著提升。”\n\n   问题：投诉件数增加不能支持“服务水平显著提升”的结论；也不能仅凭件数直接认定服务水平下降，还需结合业务量、投诉统计口径和投诉原因等判断。\n\n   建议：保留“服务投诉从上季度10件增至本季度12件”，删除“说明服务水平显著提升”。同时核对两季度统计范围、受理口径是否一致。若口径一致，可补充“环比增加2件，增幅20%”。\n\n3. **空泛表态及成效依据不足**\n\n   原文：“我们高度重视、全面发力、成效卓著。”\n\n   问题：“高度重视、全面发力”缺少具体举措，“成效卓著”缺少结果依据。前两项属于表达风格建议，后一项还涉及成效判断的事实支撑。\n\n   建议：删除该句；如需保留，待补充已核实的具体措施及结果后再作表述，不以新的套话替换。\n\n以上审校仅依据所给文本，未作外部事实核验。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+      "evaluation": {
+        "result": "pass",
+        "review": "逐条引用原文，指出状态冲突、数据与结论不匹配、风格及成效依据问题，提供最小改法，未整篇重写。"
+      }
+    },
+    {
+      "id": "T4",
+      "prompt": "请为虚构银行网点起草一段服务提示，内容是提醒客户在办理业务前检查是否带齐所需材料；不知道具体材料清单，请不要列举。语气亲切简短。",
+      "response": "温馨提示：办理业务前，请您检查是否带齐所需材料。如有疑问，欢迎向工作人员咨询。感谢您的理解与配合！\n\n是否需要将以上内容生成 DOCX 文档导出？",
+      "actions": [
+        {
+          "action": "read",
+          "target": "<repository_root>/skills/bank-writing/SKILL.md",
+          "result": "完整读取；exit_code=0"
+        },
+        {
+          "action": "read",
+          "target": "<repository_root>/skills/bank-writing/references/business-analysis.md",
+          "result": "完整读取客户沟通参考；exit_code=0"
+        },
+        {
+          "action": "conversation_self_check",
+          "result": "任务明确、请求素材可读、按需参考可读；纯文本任务，无需文件读写探针"
+        },
+        {
+          "action": "draft_and_review",
+          "result": "直接撰写亲切简短的提示；未列举材料、未编造政策和清单；正文外按技能附导出询问"
+        }
+      ],
+      "results": {
+        "file_generated": false,
+        "blockers": []
+      },
+      "evaluation": {
+        "result": "pass",
+        "review": "直接完成文本，在空行后询问DOCX导出；没有生成文件或先运行DOCX自检。"
+      }
+    },
+    {
+      "id": "T5",
+      "prompt": "请将下面已经确认的最终正文生成DOCX文档，文件名service_notice.docx，采用商务排版。标题：服务提示。正文：办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。",
+      "response": "已按商务排版生成 [service_notice.docx](<temporary_task_dir>/export-cases/service_notice.docx)，标题和正文保持原样。内容、结构及排版意图检查通过，未进行字体及视觉分页验证。\n\n因缺少归档配置，已生成主文件，未另建归档副本。还支持公文、学术排版，也可按需调整字体、字号和页边距。",
+      "actions": [
+        {
+          "action": "route",
+          "result": "用户明确授权 DOCX；按 bank-writing 第六节交接项目 docx，不重复确认正文或导出"
+        },
+        {
+          "action": "read",
+          "targets": [
+            "<repository_root>/skills/docx/SKILL.md",
+            "<repository_root>/skills/docx/references/generation.md",
+            "<repository_root>/skills/docx/requirements.txt"
+          ],
+          "result": "均已完整读取；exit_code=0"
+        },
+        {
+          "action": "environment_self_check",
+          "command": "<confirmed_python> -I -S -B <repository_root>/skills/docx/scripts/create_docx.py --check",
+          "exit_code": 0,
+          "output": "archive-location: skipped; reason=missing_router_config\npython=3.13.12 required>=3.10 supported=True\nzlib=ok\nexpat=expat_2.6.3 required>=2.6.0 supported=True\noutput_dir=. writable=True\ncheck-ok\n"
+        },
+        {
+          "action": "write_input",
+          "target": "service_notice_input.json",
+          "result": "通过 Python 标准库独占新建 UTF-8 JSON；business 主题、title 和 paragraph 两块，原样保留标题正文；exit_code=0"
+        },
+        {
+          "action": "generate",
+          "command": "<confirmed_python> -I -S -B <repository_root>/skills/docx/scripts/create_docx.py ./service_notice_input.json service_notice.docx --verify --require-no-placeholders",
+          "exit_code": 0,
+          "result": {
+            "status": "verified",
+            "output": "service_notice.docx",
+            "output_dir": ".",
+            "used_fallback": true,
+            "fallback_reason": "missing_router_config",
+            "archive_output": null,
+            "archive_status": "skipped",
+            "blocks": 2,
+            "zip_crc": true,
+            "structure": true,
+            "content_coverage": true,
+            "layout_intent": true,
+            "visual_validation": false,
+            "xsd_validation": false
+          }
+        },
+        {
+          "action": "verify_file",
+          "target": "service_notice.docx",
+          "result": {
+            "exists": true,
+            "nonempty": true,
+            "bytes": 2823,
+            "sha256": "1a832a3a9dbf051d491eb12825ce23eddb66d1a8f24c518291da838c9576f994"
+          }
+        }
+      ],
+      "results": {
+        "artifacts": [
+          "service_notice.docx",
+          "service_notice_input.json"
+        ],
+        "archive": "skipped: missing_router_config",
+        "not_verified": [
+          "字体可用性",
+          "视觉分页",
+          "阅读器打开",
+          "完整 XSD"
+        ],
+        "blockers": []
+      },
+      "evaluation": {
+        "result": "pass",
+        "review": "已有明确DOCX授权，不重复确认；读取本项目docx并执行自检与生成，采用business主题，正文保持原样且无导出提示。"
+      }
+    }
+  ],
+  "docx_observation": {
+    "sha256": "1a832a3a9dbf051d491eb12825ce23eddb66d1a8f24c518291da838c9576f994",
+    "bytes": 2823,
+    "crc_ok": true,
+    "exact_paragraphs": [
+      "服务提示",
+      "办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。"
+    ],
+    "input": {
+      "theme": "business",
+      "blocks": [
+        {
+          "type": "title",
+          "text": "服务提示"
+        },
+        {
+          "type": "paragraph",
+          "text": "办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。"
+        }
+      ]
+    },
+    "export_prompt_absent": true,
+    "generator_status": "verified",
+    "archive": "skipped: missing_router_config",
+    "temporary_artifact_retained": false
+  },
+  "limits": [
+    "Not a host automatic-trigger acceptance test.",
+    "Five finite model executions do not establish universal writing quality.",
+    "DOCX unavailable branch, later confirmation turn, and refusal to export were reviewed in instructions but not executed as forward cases.",
+    "No visual pagination, font availability, reader opening, or full XSD validation."
+  ],
+  "temporary_cleanup": "Test DOCX, input and private temporary records were removed after evidence verification; normalized artifact paths are historical, not download links."
+}

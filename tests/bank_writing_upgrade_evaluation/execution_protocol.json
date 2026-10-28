@@ -1,0 +1,23 @@
+{
+  "method": "Fresh-context gpt-6-astra agents, high reasoning requested; same model/configuration for paired executions. Each case is fictional. Multi-turn feedback was withheld until preceding actual response completed.",
+  "generation_agents": [
+    "pair_a_edits",
+    "pair_b_edits",
+    "pair_a_audience",
+    "pair_b_audience",
+    "final_edits"
+  ],
+  "independent_reviewers": [
+    "anonymous_quality",
+    "fresh_reader",
+    "upgrade_rule_review"
+  ],
+  "quality_blinding": "Per-case X/Y order shuffled; reviewer received prompts/responses only, no skill, version mapping or expected answer.",
+  "reader_blinding": "Only four documents, target audiences and reader questions; no source packet, conversation, skill or expected answers.",
+  "docx_entry_versions_at_execution": {
+    "a": "20261028.1408.5173",
+    "b": "20261028.1408.5173"
+  },
+  "docx_version_evidence": "Both runners reported the same version from their original read result, without rereading current files. Per-command source hashes were not captured.",
+  "baseline_generator_input_note": "The a-run generator JSON intermediate was cleaned by its DOCX workflow. Exact user content survives in input.json and response.json; original JSON bytes are not claimed retained. The b-run JSON input and both actual DOCX outputs are retained."
+}

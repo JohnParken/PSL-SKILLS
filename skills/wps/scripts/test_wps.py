@@ -415,7 +415,7 @@ class WpsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / 'synthetic.wps'
             path.write_bytes(synthetic_cfb({key[0]: value for key, value in document().items()}))
-            with patch('read_wps.CompoundFile', side_effect=RuntimeError('sentinel programming defect')):
+            with patch('wps_access.CompoundFile', side_effect=RuntimeError('sentinel programming defect')):
                 with self.assertRaisesRegex(RuntimeError, 'sentinel programming defect'):
                     read(path)
 

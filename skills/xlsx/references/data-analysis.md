@@ -104,10 +104,21 @@ python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" profile result.json --sh
 python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" summarize result.json --sheet Data --query query.json
 ```
 
-Extraction diagnostics are included as `source_issues` and `source_status`. Formula cells
-still require explicit `--formulas cached`; missing/error caches fail. This is analysis of
-previously extracted JSON, not reopening WPS originals or validating caches. Other native loader
-APIs still require XLSX/XLSM. Dates, private streams and opaque charts retain the source limits.
+Extraction diagnostics are included as `source_issues` and `source_status`. When supplied,
+the original `cell_value_coverage`, `omissions_affect_cell_values` and `reading_assessment`
+are preserved as `source_cell_value_coverage`, `source_omissions_affect_cell_values` and
+`source_reading_assessment`. No replacement assessment schema is generated. These optional
+source assertions pass identity/type and consistency checks within the existing 16 MiB JSON
+and depth-64 limits; malformed or conflicting assertions fail. Older valid result JSON may
+omit them, in which case no completeness claim is inferred or added.
+
+Coverage describes the original extraction's declared scope, not completeness of the selected
+analysis region or freshness of formula caches. Missing caches outside the selected region
+remain disclosed in the source coverage; missing/error caches inside it fail when used.
+Formula cells still require explicit `--formulas cached`. Numeric strings retain exact
+`Decimal` values while text identifiers remain text. This analyzes previously extracted JSON,
+not WPS originals or independently validated caches. Other native loader APIs still require
+XLSX/XLSM. Dates, private streams and opaque charts retain source limits.
 
 ## Specialized task directory
 

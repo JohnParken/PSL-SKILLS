@@ -8,6 +8,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from wps_biff8 import read_file
+from read_wps import read_bytes, ParseError
 
 
 def check_fixed_values(result, expectation):
@@ -32,7 +33,9 @@ def check_fixed_values(result, expectation):
     return {'semantic_values_checked': checked, 'formula_caches_checked': formula_caches}
 
 
-def verify(directory, chart_policy="reject"):
+def verify(directory, chart_policy=None, compatibility="legacy_excel_clsid"):
+    if chart_policy is None:
+        chart_policy = "opaque" if compatibility == "data" else "reject"
     manifest = Path(__file__).resolve().parent.parent / 'references' / 'et-real-samples.json'
     entries = json.loads(manifest.read_text(encoding='utf-8'))['samples']
     expected_path = manifest.with_name('real-value-expectations.json')
@@ -49,10 +52,17 @@ def verify(directory, chart_policy="reject"):
             if len(data) != entry['bytes'] or hashlib.sha256(data).hexdigest() != entry['sha256']:
                 raise ValueError('Sample length/SHA-256 differs from the original download')
             try:
-                result = read_file(path, compatibility='legacy_excel_clsid', chart_policy=chart_policy)
+                result = read_file(path, compatibility=compatibility, chart_policy=chart_policy)
             except ValueError as exc:
                 if entry['expected_exit'] != 1 or entry['error_contains'] not in str(exc):
                     raise
+                try:
+                    read_bytes(data, compatibility=compatibility, chart_policy=chart_policy)
+                except ParseError as public_error:
+                    if entry['error_contains'] not in str(public_error):
+                        raise ValueError('Unified reader rejection differs from expected boundary') from public_error
+                else:
+                    raise ValueError('Unified reader unexpectedly accepted the unsupported sample')
                 report['observed'] = 'expected_unsupported'
                 report['message'] = str(exc)
             else:
@@ -79,7 +89,17 @@ def verify(directory, chart_policy="reject"):
                 if expectation['sha256'] != entry['sha256']:
                     raise ValueError('Frozen value expectations refer to different source bytes')
                 semantic = check_fixed_values(result, expectation)
-                report.update(observed='biff8_subset_extracted', **metrics, **semantic)
+                public_result = read_bytes(data, compatibility=compatibility, chart_policy=chart_policy)
+                if (public_result['status'] != 'partial' or public_result.get('format') != 'biff8_subset'
+                        or public_result['reading_assessment']['full_format_verified']
+                        or public_result['reading_assessment']['outcome'] != 'partial'):
+                    raise ValueError('Unified reader must preserve partial subset diagnostics')
+                if check_fixed_values(public_result, expectation) != semantic:
+                    raise ValueError('Unified reader stored values differ')
+                if public_result['cell_count'] != result['cell_count']:
+                    raise ValueError('Unified reader cell count differs')
+                report.update(observed='biff8_subset_extracted', **metrics, **semantic,
+                              unified_reader_status='partial', unified_reader_checked=True)
             with path.open('rb') as stream:
                 after = stream.read(32 * 1024 * 1024 + 1)
             if hashlib.sha256(after).hexdigest() != entry['sha256']:
@@ -94,9 +114,10 @@ def verify(directory, chart_policy="reject"):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path, help='Task-relative directory containing separately obtained original samples')
-    parser.add_argument("--chart-policy", choices=("reject", "opaque"), default="reject")
+    parser.add_argument("--chart-policy", choices=("reject", "opaque"), default=None)
+    parser.add_argument("--compatibility", choices=("legacy_excel_clsid", "data"), default="legacy_excel_clsid")
     args = parser.parse_args()
-    reports = verify(args.directory, args.chart_policy)
+    reports = verify(args.directory, args.chart_policy, args.compatibility)
     passed = all(report['passed'] for report in reports)
     print(json.dumps({'status': 'passed' if passed else 'failed', 'samples': reports}, ensure_ascii=False))
     return 0 if passed else 1

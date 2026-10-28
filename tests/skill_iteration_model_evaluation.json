@@ -1,0 +1,516 @@
+{
+  "method": "Two independent model evaluators; metadata-only selection, then actual tasks with loaded entries; no host automatic trigger claim",
+  "cases": [
+    {
+      "id": "01",
+      "request": "金山表格导出的本季度.et，提取保存金额，不更新公式。"
+    },
+    {
+      "id": "02",
+      "request": "我有一个.ett模板，想看看现存工作表和单元格。"
+    },
+    {
+      "id": "03",
+      "request": "WPS做的原生.xlsx，请统计销售额。"
+    },
+    {
+      "id": "04",
+      "request": "WPS做的原生.docx，只读正文和表格。"
+    },
+    {
+      "id": "05",
+      "request": "把.et里的单价改成20并保存原格式。"
+    },
+    {
+      "id": "06",
+      "request": "计算.et公式最新值，不接受旧缓存。"
+    },
+    {
+      "id": "07",
+      "request": "从.wps提取正文和脚注并说明没读到的部分。"
+    },
+    {
+      "id": "08",
+      "request": "从OFD提取页文字和原始坐标，不做OCR。"
+    },
+    {
+      "id": "09",
+      "request": "扫描OFD识别图片里的文字。"
+    },
+    {
+      "id": "10",
+      "request": "我需要新建Word公文DOCX。"
+    },
+    {
+      "id": "11",
+      "request": "把.et转换成.xlsx方便打开。"
+    },
+    {
+      "id": "12",
+      "request": "文件没告诉我扩展名，只说它由WPS保存；帮我选工具。"
+    }
+  ],
+  "variants": {
+    "before": {
+      "entries": [
+        {
+          "name": "wps",
+          "description": "用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。",
+          "version": "20261027.2227.1446",
+          "entry_sha256": "0e1c9f0902ad2a3203085796025774ded3403a16baa3eb484d5aeaf4aad6a6c6"
+        },
+        {
+          "name": "docx",
+          "description": "当用户需要制作 Word 公文、报告或信函，读取 DOCX/DOTX 的正文和表格，或填充模板、修改指定文字、表格、图片和批注时使用。帮助生成可交付的 DOCX 文档，按需调整字体、字号和页边距，并核对生成内容；不用于 WPS 专有格式读取或 PDF 导出。",
+          "version": "20261027.1850.2364",
+          "entry_sha256": "5535b4c7d9062a9d64f888c673181211258ea0b584028c99524c8a17c209b35b"
+        },
+        {
+          "name": "xlsx",
+          "description": "用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；.wps/.et/.ett 读取使用 wps 技能，不支持任意结构编辑或办公软件排版还原。",
+          "version": "20261026.2106.1644",
+          "entry_sha256": "dc7a9b6711ba6db90a0287c1378993cdc05e1de06bb7fcd495b36f3535666cd9"
+        },
+        {
+          "name": "ofd",
+          "description": "用于安全只读检查 OFD 文档并提取文本型页面中可解释的文字，保留页码、原始坐标属性、来源和存储顺序，列出图片、附件、注释与签名元数据并报告缺口。适合离线检索与内容核对；不恢复阅读顺序、表格或页面，不做 OCR、验签、解密、编辑、生成及转 PDF。",
+          "version": "20261026.2117.0168",
+          "entry_sha256": "734496e39d907cf21dfdfb88b1f6fd0208ad12d974aab9bfc1752b003457617f"
+        }
+      ],
+      "stage1_input": "test_workspace/skill_iteration_20261027/before_selection_input.json",
+      "stage1_input_sha256": "b5e321c4d5d1ac321635155e1285c39dcb3bb3164e367f948b3198af87f6f7e6",
+      "agent": "/root/model_eval_before",
+      "model": "inherited platform model; no explicit override or model API runner",
+      "raw": {
+        "stage1_predictions": [
+          {
+            "id": "01",
+            "choice": "wps",
+            "brief_reason": "支持读取.et单元格保存值，不更新公式。"
+          },
+          {
+            "id": "02",
+            "choice": "wps",
+            "brief_reason": "支持读取.ett现有工作表及单元格。"
+          },
+          {
+            "id": "03",
+            "choice": "xlsx",
+            "brief_reason": "文件是原生.xlsx，销售统计属于其能力范围。"
+          },
+          {
+            "id": "04",
+            "choice": "docx",
+            "brief_reason": "支持读取原生DOCX正文和表格，与保存软件无关。"
+          },
+          {
+            "id": "05",
+            "choice": "none",
+            "brief_reason": "没有候选支持修改.et并保存原格式。"
+          },
+          {
+            "id": "06",
+            "choice": "none",
+            "brief_reason": "wps仅读取公式缓存，不重算.et公式。"
+          },
+          {
+            "id": "07",
+            "choice": "wps",
+            "brief_reason": "支持.wps正文提取和缺口报告；描述未承诺脚注读取，应明确报告该限制。"
+          },
+          {
+            "id": "08",
+            "choice": "ofd",
+            "brief_reason": "支持提取文本型OFD页文字并保留原始坐标属性。"
+          },
+          {
+            "id": "09",
+            "choice": "none",
+            "brief_reason": "ofd明确不支持OCR，其他候选也不支持此任务。"
+          },
+          {
+            "id": "10",
+            "choice": "docx",
+            "brief_reason": "支持新建Word公文并交付DOCX。"
+          },
+          {
+            "id": "11",
+            "choice": "none",
+            "brief_reason": "wps明确不支持格式转换，xlsx未声明可转换.et。"
+          },
+          {
+            "id": "12",
+            "choice": "clarify",
+            "brief_reason": "仅凭WPS保存不能判断格式，需要扩展名或文件类型信息。"
+          }
+        ],
+        "stage2_response": "A 被技能自检要求阻塞；B、C 已完成。未写入任何探针、结果或缓存。\n\n所有实际业务命令均在 `/Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/fixtures` 执行。\n\n命令记录（以下 `PY`、`BASE` 仅为报告缩写，实际调用使用完整路径）：\n\n```text\nPY=/Users/yangxuezhen/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/bin/python3.12\nBASE=/Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/baseline\n\nPY -I -S -B BASE/wps/scripts/read_wps.py --check\n退出 0；environment-ok；ooxml-word=available\n\nPY -I -S -B BASE/xlsx/scripts/stdlib_xlsx.py check\n退出 0；{\"status\":\"ready\",\"python\":\"3.12.12\",\"dependencies\":\"standard_library_only\"}\n\nPY -I -S -B -c 'from pathlib import Path; import stat; print({n:stat.S_ISREG(Path(n).stat().st_mode) and bool(Path(n).open(\"rb\").read(1)) for n in (\"task_input.et\",\"wps_result.json\")})'\n退出 0；两个输入均为可读非空普通文件。\n\nPY -I -S -B BASE/wps/scripts/read_wps.py ./task_input.et\n退出 3；status=partial；schema_version=biff8_readonly_v1\n\nPY -I -S -B BASE/xlsx/scripts/xlsx_analysis.py profile ./wps_result.json --sheet 中文表1 --range A2:B2 --no-header\n退出 0；status=profiled\n```\n\nA：未执行 DOCX 读取，未观察标题或正文。`baseline/docx/SKILL.md` 的首步自检要求运行 `create_docx.py --check`，并要求其实际写入、读回和清理探针且确认 `writable=True`。本次明确禁止写探针，因此没有运行该自检，也没有绕过它直接读取文档。此操作是未执行的授权冲突，并非工具拒绝或结果不确定。\n\nB 的实际观察：\n\n- `中文表1!A2` 是文本标识符 `00012345678901234567890`，前导零保留。\n- `B2` 保存数值为 `0.1000000000000000055511151231257827021181583404541015625`；这是存储浮点数的精确表示，没有改写成 `0.1`。\n- `B4` 公式缓存为 `42`，`cache_status=unverified`，`needs_recalculation_flag=true`、`cache_may_be_stale=true`。\n- `C4` 缓存文本为 `缓存中文`，未验证；`D4` 为 `#DIV/0!`、`error_unverified`；`E4` 为空字符串缓存、`unverified_empty_string`；`F4` 为布尔缓存 `true`、未验证。未执行或重算公式。\n- `cell_value_coverage=complete_within_declared_sheets`，`omissions_affect_cell_values=false`。\n- 唯一 `issues` 是 `non_cell_metadata_not_decoded`：globals 偏移 178、记录 `0xe1`、`InterfaceHdr`，原始元数据保留但未解释。\n- `reading_assessment` 为 partial；单元格覆盖只限声明工作表中的受支持 BIFF 记录。`native_et_ett_parsed=false`、`wps_compatibility_verified=false`、`full_format_verified=false`，不能据此宣称完整 ET 兼容。\n- 数值格式解释报告 `style_inheritance_unresolved`，未恢复有效样式或日期显示。\n\nC 的实际观察：\n\n- `header=false`、`source_rows=1`，A2 被统计为文本，B2 为数值；均无缺失或空白，重复行数 0。\n- B 列数值 count=1，sum/min/max 均为上面的完整保存数值；mean=`0.1000000000000000055511151231257827`，`mean_rounded=true`。\n- `unverified_formula_caches=0` 仅表示所选 A2:B2 没有公式缓存。\n\n诊断保留情况：分析输出保留了 `input_schema=biff8_readonly_v1`、`source_status=partial`、完整 `source_issues` 和 `source_warning`。实际输出没有保留 `cell_value_coverage`、`omissions_affect_cell_values` 或完整 `reading_assessment`；因此仅凭该分析输出，无法还原来源中“声明工作表单元格覆盖完整、遗漏不影响单元格值”的详细覆盖证据。"
+      },
+      "raw_record_sha256": "f4540b160a86f2bab1f8fd8446b290344ab30a2f91d20349724ef3c68c81223a",
+      "selection_input": {
+        "candidates": [
+          {
+            "name": "wps",
+            "description": "用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。"
+          },
+          {
+            "name": "docx",
+            "description": "当用户需要制作 Word 公文、报告或信函，读取 DOCX/DOTX 的正文和表格，或填充模板、修改指定文字、表格、图片和批注时使用。帮助生成可交付的 DOCX 文档，按需调整字体、字号和页边距，并核对生成内容；不用于 WPS 专有格式读取或 PDF 导出。"
+          },
+          {
+            "name": "xlsx",
+            "description": "用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；.wps/.et/.ett 读取使用 wps 技能，不支持任意结构编辑或办公软件排版还原。"
+          },
+          {
+            "name": "ofd",
+            "description": "用于安全只读检查 OFD 文档并提取文本型页面中可解释的文字，保留页码、原始坐标属性、来源和存储顺序，列出图片、附件、注释与签名元数据并报告缺口。适合离线检索与内容核对；不恢复阅读顺序、表格或页面，不做 OCR、验签、解密、编辑、生成及转 PDF。"
+          }
+        ],
+        "requests": [
+          {
+            "id": "01",
+            "request": "金山表格导出的本季度.et，提取保存金额，不更新公式。"
+          },
+          {
+            "id": "02",
+            "request": "我有一个.ett模板，想看看现存工作表和单元格。"
+          },
+          {
+            "id": "03",
+            "request": "WPS做的原生.xlsx，请统计销售额。"
+          },
+          {
+            "id": "04",
+            "request": "WPS做的原生.docx，只读正文和表格。"
+          },
+          {
+            "id": "05",
+            "request": "把.et里的单价改成20并保存原格式。"
+          },
+          {
+            "id": "06",
+            "request": "计算.et公式最新值，不接受旧缓存。"
+          },
+          {
+            "id": "07",
+            "request": "从.wps提取正文和脚注并说明没读到的部分。"
+          },
+          {
+            "id": "08",
+            "request": "从OFD提取页文字和原始坐标，不做OCR。"
+          },
+          {
+            "id": "09",
+            "request": "扫描OFD识别图片里的文字。"
+          },
+          {
+            "id": "10",
+            "request": "我需要新建Word公文DOCX。"
+          },
+          {
+            "id": "11",
+            "request": "把.et转换成.xlsx方便打开。"
+          },
+          {
+            "id": "12",
+            "request": "文件没告诉我扩展名，只说它由WPS保存；帮我选工具。"
+          }
+        ]
+      },
+      "stage1_prompt": "You are an independent skill evaluator. Stage 1 only: read /Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/before_selection_input.json, which contains candidate names/descriptions and12 user requests. For each request choose exactly one candidate, none if unsupported, or clarify if insufficient information. Return JSON predictions with id,choice,brief_reason. Do not read other files or skill bodies, expected answers, tests or evaluation records. Do not infer support merely from brand name. No writes or external actions. Wait after returning; parent may provide Stage2 actual task later. Use only standard-library local reads; no installs/software/downloads.",
+      "stage2_prompt": "Stage 2 actual tasks. Candidate skill directory base is /Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/baseline (each candidate has SKILL.md). Harness-confirmed task directory is /Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/fixtures. Using the applicable skill instructions, complete three separate read-only user requests: A) Read ./task_input.docx and report its heading/body; B) Read ./task_input.et and report saved text identifier, amount, formula-cache confidence and reading gaps; C) Analyze ./wps_result.json with the XLSX skill: profile 中文表1 range A2:B2 without treating first row as header; explain which source coverage and partial diagnostics the analysis output retains. This task authorizes reading only; do not write probes, result files, caches or modify any source/input. Use available Python /Users/yangxuezhen/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/bin/python3.12 with -I -S -B, stdlib only. Do not read other task files or evaluation records, do not inspect alternate skill versions, expected answers or other agent outputs. No installs, external software/network/Library/actions. Execute where instructions and read-only authorization allow; if blocked state exact condition without weakening checks. Return raw commands and exit/status, observed text/values/diagnostics, any blocked operation; distinguish actual results from interpretation. This is local model forward testing, not host auto activation.",
+      "selection_correct": 12,
+      "selection_total": 12,
+      "final_entries": [
+        {
+          "name": "wps",
+          "version": "20261027.2227.1446",
+          "entry_sha256": "0e1c9f0902ad2a3203085796025774ded3403a16baa3eb484d5aeaf4aad6a6c6",
+          "body_sha256": "ecc338c63eb83dff0bdda096bf0803883053b4184a07fc0e62d67bc04285dd3e"
+        },
+        {
+          "name": "docx",
+          "version": "20261027.1850.2364",
+          "entry_sha256": "5535b4c7d9062a9d64f888c673181211258ea0b584028c99524c8a17c209b35b",
+          "body_sha256": "2af1d949642a814ffc5d0f79e1c5ca75c69ea841f0928102daccc62575a930f5"
+        },
+        {
+          "name": "xlsx",
+          "version": "20261026.2106.1644",
+          "entry_sha256": "dc7a9b6711ba6db90a0287c1378993cdc05e1de06bb7fcd495b36f3535666cd9",
+          "body_sha256": "80fe67706bd896000d0c2354681cd37227a91672faa8da2cbc927091bd8b7917"
+        },
+        {
+          "name": "ofd",
+          "version": "20261026.2117.0168",
+          "entry_sha256": "734496e39d907cf21dfdfb88b1f6fd0208ad12d974aab9bfc1752b003457617f",
+          "body_sha256": "5e3c5081aefdfd692c1d96d7db5a10ab65f43574f72e8abfdcd77a87a669f9e1"
+        }
+      ]
+    },
+    "after": {
+      "entries": [
+        {
+          "name": "wps",
+          "description": "用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。",
+          "version": "20261027.2227.1446",
+          "entry_sha256": "0e1c9f0902ad2a3203085796025774ded3403a16baa3eb484d5aeaf4aad6a6c6"
+        },
+        {
+          "name": "docx",
+          "description": "当用户需要制作 Word 公文、报告或信函，读取 DOCX/DOTX 的正文和表格，或填充模板、修改指定文字、表格、图片和批注时使用。帮助生成可交付的 DOCX 文档，按需调整字体、字号和页边距，并核对生成内容；不用于 WPS 专有格式读取或 PDF 导出。",
+          "version": "20261027.1850.2364",
+          "entry_sha256": "037c617b0d2f982b836f7f45a218abce58f17ebf10cd5d0e91f7ab1cf35ea0ec"
+        },
+        {
+          "name": "xlsx",
+          "description": "用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；.wps/.et/.ett 读取使用 wps 技能，不支持任意结构编辑或办公软件排版还原。",
+          "version": "20261026.2106.1644",
+          "entry_sha256": "dc7a9b6711ba6db90a0287c1378993cdc05e1de06bb7fcd495b36f3535666cd9"
+        },
+        {
+          "name": "ofd",
+          "description": "用于安全只读检查 OFD 文档并提取文本型页面中可解释的文字，保留页码、原始坐标属性、来源和存储顺序，列出图片、附件、注释与签名元数据并报告缺口。适合离线检索与内容核对；不恢复阅读顺序、表格或页面，不做 OCR、验签、解密、编辑、生成及转 PDF。",
+          "version": "20261026.2117.0168",
+          "entry_sha256": "734496e39d907cf21dfdfb88b1f6fd0208ad12d974aab9bfc1752b003457617f"
+        }
+      ],
+      "stage1_input": "test_workspace/skill_iteration_20261027/after_selection_input.json",
+      "stage1_input_sha256": "b5e321c4d5d1ac321635155e1285c39dcb3bb3164e367f948b3198af87f6f7e6",
+      "agent": "/root/model_eval_after",
+      "model": "inherited platform model; no explicit override or model API runner",
+      "raw": {
+        "stage1_predictions": [
+          {
+            "id": "01",
+            "choice": "wps",
+            "brief_reason": "支持读取 .et 单元格保存值，无需重算公式。"
+          },
+          {
+            "id": "02",
+            "choice": "wps",
+            "brief_reason": "支持读取 .ett 的现存工作表和单元格。"
+          },
+          {
+            "id": "03",
+            "choice": "xlsx",
+            "brief_reason": "原生 .xlsx 应按文件格式选择，支持配置统计分析。"
+          },
+          {
+            "id": "04",
+            "choice": "docx",
+            "brief_reason": "支持读取原生 DOCX 正文和表格。"
+          },
+          {
+            "id": "05",
+            "choice": "none",
+            "brief_reason": "候选均未支持修改 .et 并保存原格式。"
+          },
+          {
+            "id": "06",
+            "choice": "none",
+            "brief_reason": "未提供 .et 公式重新计算能力。"
+          },
+          {
+            "id": "07",
+            "choice": "wps",
+            "brief_reason": "支持 .wps 正文提取及缺口报告；脚注支持未声明，须报告限制。"
+          },
+          {
+            "id": "08",
+            "choice": "ofd",
+            "brief_reason": "支持提取文本型 OFD 页文字和原始坐标属性。"
+          },
+          {
+            "id": "09",
+            "choice": "none",
+            "brief_reason": "OFD 候选明确不支持 OCR，其他候选亦未声明该能力。"
+          },
+          {
+            "id": "10",
+            "choice": "docx",
+            "brief_reason": "支持制作 Word 公文并交付 DOCX。"
+          },
+          {
+            "id": "11",
+            "choice": "none",
+            "brief_reason": "未声明 .et 到 .xlsx 的转换支持。"
+          },
+          {
+            "id": "12",
+            "choice": "clarify",
+            "brief_reason": "需要确认实际文件格式，不能仅依据 WPS 品牌选择。"
+          }
+        ],
+        "stage2_response": "实际全程只读，未创建探针、输出文件或缓存。使用已指定解释器及 `-I -S -B`。任务命令均在 `/Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/fixtures` 执行。\n\n下列命令中 `PY` 表示完整解释器路径 `/Users/yangxuezhen/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/bin/python3.12`，`BASE` 表示 `/Users/yangxuezhen/git/PSL-SKILLS/skills`；实际执行时已展开为完整路径。\n\n自检实际命令及结果：\n\n```console\n\"PY\" -I -S -B \"BASE/docx/scripts/read_docx.py\" --check\n```\n\n退出 0；`python=3.12.12`、`zlib=ok`、`expat=expat_2.6.3`、`read-check-ok`。\n\n```console\n\"PY\" -I -S -B \"BASE/wps/scripts/read_wps.py\" --check\n```\n\n退出 0；`environment-ok`、`ooxml-word=available`。\n\n```console\n\"PY\" -I -S -B \"BASE/xlsx/scripts/stdlib_xlsx.py\" check\n```\n\n退出 0；`{\"status\":\"ready\",\"python\":\"3.12.12\",\"dependencies\":\"standard_library_only\"}`。\n\n使用标准库 `Path.is_file()` 及打开读取首字节确认三个输入均为可读文件；退出 0。\n\nA 实际命令：\n\n```console\n\"PY\" -I -S -B \"BASE/docx/scripts/read_docx.py\" ./task_input.docx\n```\n\n退出 0，stdout：\n\n```text\n季度核对\n只读样例：收入123.45元。\n```\n\n按文本内容解释，标题为“季度核对”，正文为“只读样例：收入123.45元。” 本次文本输出未验证标题样式级别。\n\nB 实际命令：\n\n```console\n\"PY\" -I -S -B \"BASE/wps/scripts/read_wps.py\" ./task_input.et\n```\n\n退出 3，返回完整 JSON，`status=partial`，`schema_version=biff8_readonly_v1`。\n\n观察到：\n\n- `中文表1!A2`：文本标识 `00012345678901234567890`，保留前导零。\n- `B2` 保存金额：`0.1000000000000000055511151231257827021181583404541015625`；这是存储 IEEE754 的精确十进制表示，未替换为显示值 `0.1`。\n- `B3` 保存数值：`123.45`。\n- `B4` 公式缓存为 `42`，`cache_status=unverified`，`needs_recalculation_flag=true`，`cache_may_be_stale=true`。\n- `C4` 缓存为“缓存中文”；`D4` 为 `#DIV/0!`、`error_unverified`；其他现存公式缓存同样未经验证，未执行公式。\n- `cell_value_coverage=complete_within_declared_sheets`；`omissions_affect_cell_values=false`。\n- 已知缺口：`non_cell_metadata_not_decoded`，globals 偏移 178，记录 `0xe1` / `InterfaceHdr`，保留 raw 元数据但未解码。\n- `reading_assessment.outcome=partial`，`full_format_verified=false`。范围仅支持的声明工作表 BIFF 单元格，不证明私有流、完整格式或真实 WPS 兼容性；数字格式继承未解析，不能据日期格式将保存数字解释为日期。\n\nC 实际命令：\n\n```console\n\"PY\" -I -S -B \"BASE/xlsx/scripts/xlsx_analysis.py\" profile ./wps_result.json --sheet 中文表1 --range A2:B2 --no-header\n```\n\n退出 1，实际完整输出：\n\n```json\n{\"status\":\"failed\",\"message\":\"Invalid WPS reading assessment coverage\"}\n```\n\n因此该分析操作被输入契约校验阻止，未生成区域统计或成功分析输出；没有降低校验或修改输入后重试。不是权限拒绝，也不存在待审批或不确定执行结果。\n\n随后仅用标准库读取 `./wps_result.json` 的相关字段，退出 0。原输入确实包含 `status=partial`、上述 `issues`、`cell_value_coverage`、`omissions_affect_cell_values`，以及带 `coverage` 数组和 `cell_values` 的 `reading_assessment`。\n\n关于“分析输出保留哪些诊断”：文档声明成功输出应保留 `source_status`、`source_issues` 及可选源覆盖/评估；本次实际失败 JSON 仅有 `status` 和 `message`，未保留这些源诊断。不能将文档声明报告为本次已实现的成功结果。"
+      },
+      "raw_record_sha256": "c7fb4c9e15959a31c6aae4acbff9f4a8c02fada7f9f750792d646309bd6afa0a",
+      "selection_input": {
+        "candidates": [
+          {
+            "name": "wps",
+            "description": "用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。"
+          },
+          {
+            "name": "docx",
+            "description": "当用户需要制作 Word 公文、报告或信函，读取 DOCX/DOTX 的正文和表格，或填充模板、修改指定文字、表格、图片和批注时使用。帮助生成可交付的 DOCX 文档，按需调整字体、字号和页边距，并核对生成内容；不用于 WPS 专有格式读取或 PDF 导出。"
+          },
+          {
+            "name": "xlsx",
+            "description": "用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；.wps/.et/.ett 读取使用 wps 技能，不支持任意结构编辑或办公软件排版还原。"
+          },
+          {
+            "name": "ofd",
+            "description": "用于安全只读检查 OFD 文档并提取文本型页面中可解释的文字，保留页码、原始坐标属性、来源和存储顺序，列出图片、附件、注释与签名元数据并报告缺口。适合离线检索与内容核对；不恢复阅读顺序、表格或页面，不做 OCR、验签、解密、编辑、生成及转 PDF。"
+          }
+        ],
+        "requests": [
+          {
+            "id": "01",
+            "request": "金山表格导出的本季度.et，提取保存金额，不更新公式。"
+          },
+          {
+            "id": "02",
+            "request": "我有一个.ett模板，想看看现存工作表和单元格。"
+          },
+          {
+            "id": "03",
+            "request": "WPS做的原生.xlsx，请统计销售额。"
+          },
+          {
+            "id": "04",
+            "request": "WPS做的原生.docx，只读正文和表格。"
+          },
+          {
+            "id": "05",
+            "request": "把.et里的单价改成20并保存原格式。"
+          },
+          {
+            "id": "06",
+            "request": "计算.et公式最新值，不接受旧缓存。"
+          },
+          {
+            "id": "07",
+            "request": "从.wps提取正文和脚注并说明没读到的部分。"
+          },
+          {
+            "id": "08",
+            "request": "从OFD提取页文字和原始坐标，不做OCR。"
+          },
+          {
+            "id": "09",
+            "request": "扫描OFD识别图片里的文字。"
+          },
+          {
+            "id": "10",
+            "request": "我需要新建Word公文DOCX。"
+          },
+          {
+            "id": "11",
+            "request": "把.et转换成.xlsx方便打开。"
+          },
+          {
+            "id": "12",
+            "request": "文件没告诉我扩展名，只说它由WPS保存；帮我选工具。"
+          }
+        ]
+      },
+      "stage1_prompt": "You are an independent skill evaluator. Stage 1 only: read /Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/after_selection_input.json, which contains candidate names/descriptions and12 user requests. For each request choose exactly one candidate, none if unsupported, or clarify if insufficient information. Return JSON predictions with id,choice,brief_reason. Do not read other files or skill bodies, expected answers, tests or evaluation records. Do not infer support merely from brand name. No writes or external actions. Wait after returning; parent may provide Stage2 actual task later. Use only standard-library local reads; no installs/software/downloads.",
+      "stage2_prompt": "Stage 2 actual tasks. Candidate skill directory base is /Users/yangxuezhen/git/PSL-SKILLS/skills (each candidate has SKILL.md). Harness-confirmed task directory is /Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/fixtures. Using the applicable skill instructions, complete three separate read-only user requests: A) Read ./task_input.docx and report its heading/body; B) Read ./task_input.et and report saved text identifier, amount, formula-cache confidence and reading gaps; C) Analyze ./wps_result.json with the XLSX skill: profile 中文表1 range A2:B2 without treating first row as header; explain which source coverage and partial diagnostics the analysis output retains. This task authorizes reading only; do not write probes, result files, caches or modify any source/input. Use available Python /Users/yangxuezhen/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/bin/python3.12 with -I -S -B, stdlib only. Do not read other task files or evaluation records, do not inspect alternate skill versions, expected answers or other agent outputs. No installs, external software/network/Library/actions. Execute where instructions and read-only authorization allow; if blocked state exact condition without weakening checks. Return raw commands and exit/status, observed text/values/diagnostics, any blocked operation; distinguish actual results from interpretation. This is local model forward testing, not host auto activation.",
+      "selection_correct": 12,
+      "selection_total": 12,
+      "final_entries": [
+        {
+          "name": "wps",
+          "version": "20261027.2320.5486",
+          "entry_sha256": "9e820ff6df78388bf67242435dd676078c21829ae17cb403b6dabbaca76a2eb6",
+          "body_sha256": "ecc338c63eb83dff0bdda096bf0803883053b4184a07fc0e62d67bc04285dd3e"
+        },
+        {
+          "name": "docx",
+          "version": "20261027.2320.5486",
+          "entry_sha256": "17c98659c74df44c3b84b5accbdd0957673ae24cefa645a35c17acdf274b3de5",
+          "body_sha256": "6ec4bdb71b47877bddcdda49466a6830172ca46ee025594e2c20bc41c2bb7c02"
+        },
+        {
+          "name": "xlsx",
+          "version": "20261027.2320.5486",
+          "entry_sha256": "bab0fb7fcc834ca7d2431b52657c942076154b7ea47cffaeda39b99a7bd6be51",
+          "body_sha256": "298d0eb612afac3085aaa2b133c176f9c3ab6472b211c5b3a0a147d63856c9ab"
+        },
+        {
+          "name": "ofd",
+          "version": "20261026.2117.0168",
+          "entry_sha256": "734496e39d907cf21dfdfb88b1f6fd0208ad12d974aab9bfc1752b003457617f",
+          "body_sha256": "5e3c5081aefdfd692c1d96d7db5a10ab65f43574f72e8abfdcd77a87a669f9e1"
+        }
+      ]
+    }
+  },
+  "golden": [
+    "wps",
+    "wps",
+    "xlsx",
+    "docx",
+    "none",
+    "none",
+    "wps",
+    "ofd",
+    "none",
+    "docx",
+    "none",
+    "clarify"
+  ],
+  "initial_forward_comparison": {
+    "before": {
+      "completed": [
+        "B",
+        "C"
+      ],
+      "blocked": [
+        "A"
+      ],
+      "reason": "Old DOCX entry requires write probe, incompatible with read-only authorization; no tool-denied operation"
+    },
+    "after_initial": {
+      "completed": [
+        "A",
+        "B"
+      ],
+      "failed": [
+        "C"
+      ],
+      "reason": "True WPS assessment.coverage is list; new adapter mistakenly expected dict"
+    },
+    "fix": "Adapter now accepts the actual list shape; rejects wrong dict, adds frozen production-shape and repository producer-to-consumer regression"
+  },
+  "final_stage2_prompt": "Independent actual read-only task evaluation. Candidate skill directory base is /Users/yangxuezhen/git/PSL-SKILLS/skills (each candidate has SKILL.md). Harness-confirmed task directory is /Users/yangxuezhen/git/PSL-SKILLS/test_workspace/skill_iteration_20261027/fixtures. Using applicable skill instructions, complete three separate user requests: A) Read ./task_input.docx and report heading/body; B) Read ./task_input.et and report saved text identifier, amount, formula-cache confidence and reading gaps; C) Analyze ./wps_result.json with XLSX: profile 中文表1 range A2:B2 with no header; explain which source coverage and partial diagnostics the analysis output retains. Only reading authorized; do not write probes/result files/caches or alter sources/inputs. Use Python /Users/yangxuezhen/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/bin/python3.12 -I -S -B and standardlibrary. Do not inspect other versions, evaluation records/answers or other agents. No installs/externalsoftware/network/Library. If blocked report exact condition without weakening checks. Return commands/exit/status, observed text/values/diagnostics and interpretation limits. This is local model task evaluation, not host auto activation.",
+  "final_forward_agent": "/root/model_eval_after_final",
+  "final_forward_raw": {
+    "stage2_response": "三个只读任务均完成，无写入、缓存或输入修改；无阻塞。\n\n实际解释器均为指定的 Python 3.12.12，带 `-I -S -B`，工作目录为已确认的 fixtures。以下脚本路径均以 `/Users/yangxuezhen/git/PSL-SKILLS/skills/` 为基准。\n\n自检：\n\n- `docx/scripts/read_docx.py --check`：退出 0，`read-check-ok`；Expat 2.6.3、zlib 正常。\n- `wps/scripts/read_wps.py --check`：退出 0，`environment-ok`，`ooxml-word=available`。\n- `xlsx/scripts/stdlib_xlsx.py check`：退出 0，`status=ready`。\n- 三个输入均实际打开读取成功。\n\nA）命令 `docx/scripts/read_docx.py ./task_input.docx`，退出 0。\n\n标题文字：`季度核对`  \n正文：`只读样例：收入123.45元。`\n\n这是文本读取结果；未进一步核验标题样式、布局或页面显示。\n\nB）命令 `wps/scripts/read_wps.py ./task_input.et`，退出 3，`status=partial`，schema 为 `biff8_readonly_v1`。\n\n- 中文表1 A2：文本编号 `00012345678901234567890`，前导零完整保留。\n- B2 保存数值：`0.1000000000000000055511151231257827021181583404541015625`；B3 为 `123.45`。B2 是保存的 IEEE754 精确展开，不能擅自替换成精确十进制 `0.1`。\n- B4 公式缓存 `42`，`unverified`，且 `needs_recalculation_flag=true`。\n- C4：`缓存中文`，缓存未验证；D4：`#DIV/0!`，`error_unverified`；E4：空字符串，`unverified_empty_string`；F4：布尔 true，缓存未验证。所有公式均未执行，缓存可能过时。\n- 缺口：全局偏移 178 的 `InterfaceHdr`（记录 `0xe1`）未解码，原始内容保留；诊断 `non_cell_metadata_not_decoded`。\n- `cell_value_coverage=complete_within_declared_sheets`，`omissions_affect_cell_values=false`。仅声明工作表内受支持单元格子集；不证明完整 ET、WPS 来源、样式继承或格式兼容。C2 的 `60.5` 保留数值，不能凭日期格式断言实际显示日期。\n\nC）命令 `xlsx/scripts/xlsx_analysis.py profile ./wps_result.json --sheet 中文表1 --range A2:B2 --no-header`，退出 0，`status=profiled`。\n\n- 一行、无表头；A 列一个文本值，无数值统计；B 列一个数字。\n- B 的 sum/min/max 均为上述完整 B2 保存值；mean 为 `0.1000000000000000055511151231257827`，`mean_rounded=true`。\n- 两列均无缺失、空文本、空白或重复；重复行 0。\n- 所选区域公式缓存数为 0。\n\n分析输出实际保留 `input_schema`、`source_status=partial`、完整 `source_issues`、`source_cell_value_coverage`、`source_omissions_affect_cell_values` 和 `source_reading_assessment`。后者保留 partial、未解码事件及位置 178、coverage、cell_values 和 `full_format_verified=false`，并附 source warning。来源覆盖声明不等于所选区域完整格式验收，也不证明区域外公式缓存最新。"
+  },
+  "final_forward_result": {
+    "completed": [
+      "A",
+      "B",
+      "C"
+    ],
+    "failed": [],
+    "blocked": [],
+    "source_coverage_preserved": true
+  },
+  "limitations": [
+    "Single independent model run per before/after metadata variant, not statistical activation rate",
+    "Inherited model identity/settings not exposed by this tool interface; not invented",
+    "All metadata descriptions remained semantically unchanged;12/12 on each side is no measured selection improvement",
+    "Actual host registration/discovery/activation not tested",
+    "Stage2 uses small explicitly synthetic fixtures; not real native WPS/OFD acceptance"
+  ],
+  "fixture_hashes": {
+    "task_input.et": "b1875d03c0de4556e92683fcfa29a68b78e9693ca9ab8e670621fac00f5c2fa8",
+    "task_input.docx": "cac21384d691be4d997aaa453146cccff33c86851b44c2c7295d6a9adb6409ef",
+    "wps_result.json": "d79040148b85b54d5fcfa14594b0675332cb11c3cbac4948621384d6088da109"
+  },
+  "after_final_metadata_matches_selection_input": true
+}

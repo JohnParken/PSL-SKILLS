@@ -1,4 +1,4 @@
-# Strict BIFF8 read-only record subset
+# Bounded BIFF8 stored-value reading
 
 Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
 before using this reference; internal resources and task data have different path bases.
@@ -7,7 +7,7 @@ The main `read_wps.py input.et` / `read_wps.py input.ett` entrypoint also calls 
 reader and preserves its `biff8_readonly_v1` schema and diagnostics. Both routes validate
 contents and retain all subset limits. For unified branch-specific `--compatibility`
 choices, use the [compatibility rules](format.md#兼容策略和来源): legacy_excel_clsid
-is the BIFF option; legacy_word_clsid is for MS-DOC, not this low-level reader.
+and data are BIFF options; legacy_word_clsid is for MS-DOC, not this low-level reader.
 Neither enables writing or formula execution.
 
 Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检), requiring exit 0 and
@@ -19,15 +19,19 @@ only; no macro/formula execution, network requests, Office tools or dependency i
 ## Contents
 
 - [Evidence and input](#evidence-and-input)
+- [Pure-table Unicode compatibility](#pure-table-unicode-compatibility)
+- [Default data policy](#default-data-policy)
 - [Observed legacy compatibility](#observed-legacy-compatibility)
 - [Real-template compatibility additions](#real-template-compatibility-additions)
 - [Supported records and retained values](#supported-records-and-retained-values)
+- [Inline text and passive metadata](#inline-text-and-passive-metadata)
 - [Dates and formula caches](#dates-and-formula-caches)
 - [Headers and output](#headers-and-output)
 - [Rejection rules and validation limits](#rejection-rules-and-validation-limits)
 - [Migration and continuation validation](#migration-and-continuation-validation-2026-10-25)
 - [Rich SST and formula-group subsets](#rich-sst-and-formula-group-subsets)
 - [Additive number and saved visibility interpretation](#additive-number-and-saved-visibility-interpretation)
+- [ET parser capacity and failure locations](#et-parser-capacity-and-failure-locations)
 
 ## Evidence and input
 
@@ -40,7 +44,7 @@ parser code or binary samples were incorporated. All tests are synthetic MS-XLS 
 fixtures, with manual typed expectations and container fixtures; they are not WPS files.
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/wps_biff8.py" input.xls
+python -I -S -B "<skill_dir>/scripts/read_wps.py" ./input.et
 ```
 
 The file must pass the [CFB container reader](et-ett-readonly.md), contain exactly one
@@ -51,9 +55,75 @@ macro/VBA and dialog sheets, recognized macro storages and encryption are refuse
 ET/ETT names may be inspected by content but native_et_ett_parsed and
 wps_compatibility_verified always remain false, even after successful BIFF extraction.
 
+## Default data policy
+
+File APIs `read_wps.read`, `read_bytes`, `wps_biff8.read_file` and both reading CLIs
+now default to `compatibility="data"`. This selects the existing bounded metadata
+allowlists and supported opaque chart framing before parsing; no failed parse is retried.
+Only the already evidenced exact Excel v3 header GUID selects the legacy container
+profile; zero headers use strict CFB checks. Unknown GUIDs and private formats still fail.
+All file modes share bounded regular-file loading and CFB header/safety prechecks;
+policy selection does not bypass these checks. The expert byte-stream parser
+`parse_stream` remains strict unless data is explicit.
+
+`--compatibility strict` preserves the old narrow record subset. Explicit legacy modes
+retain their previous rules and default chart rejection. In data mode only, omitted
+`chart_policy` selects opaque; explicit reject always wins. Data is not a recovery scan:
+no cell, worksheet, unknown record, invalid framing or resource error is skipped.
+No new record IDs or private-format interpretation were added by this default change.
+
+A successful data read returns ok/0 or partial/3 through both file CLIs. Known unread
+metadata is reported with ID, first offset and count, with every original location and
+payload retained in `uninterpreted_metadata`. Container deviations and other streams
+are visible diagnostics. Legacy/strict low-level APIs keep their historical reader
+status strings and CLI success exit 0; the unified entry always normalizes its status.
+
+`cell_value_coverage` is `complete_within_declared_sheets` only when no formula string
+cache is missing; otherwise `missing_formula_caches`, with
+`omissions_affect_cell_values=true`. All supported literal values and present caches
+are retained. No unverified cache is certified or recalculated, no private stream is
+applied, and no full-format equivalence is claimed. `reading_assessment.cell_values`
+exposes the same distinction. Existing analysis accepts partial and preserves source
+issues; it still requires explicit cached-formula opt-in and rejects missing caches.
+
+## Pure-table Unicode compatibility
+
+Data mode additionally accepts the explicit CodePage declarations 932, 936 and 1252
+alongside 1200. It preserves `code_page_raw` and reports non1200 declarations as
+partial; unknown IDs, wrong payload lengths and conflicting declarations still fail.
+This is not a byte-encoding fallback. Supported BIFF8 string fields carry their own
+Unicode fHighByte flag: compressed bytes are U+0000..U+00FF low bytes, never GBK,
+CP1252 or UTF-8 decoding. Numeric cells remain exact Decimal stored values.
+Strict and explicit legacy modes retain the previous 1200-only constraint.
+
+For plain XLUnicodeString in inline Label, formula String caches and Format, data
+uses only fHighByte and ignores the seven reserved bits as the field requires. Raw
+flags and source positions remain in `string_header_flags_raw`,
+`cache_string_header_flags_raw` or `format_string_header_flags`; a bounded diagnostic
+marks partial. Actual extra rich/phonetic payloads are not consumed as if they belonged
+to this plain structure: exact lengths/tails still have to agree. Legacy worksheet
+Label remains the existing bounded reader extension, not full modern Label grammar.
+
+This does not mask SST rich/phonetic flags, short-string flags or Continue encoding
+bytes. Existing supported Label and cached String character continuations keep their
+length, surrogate and EOF checks. Cached String after a shared/array definition keeps
+its original cell/group linkage and unverified status. No formula is executed.
+
+No BIFF5/older version, RString, arbitrary format-string grammar, missing Date1904
+inference or per-sheet recovery was added. Missing caches, sparse cells, merges,
+unknown records and all resource limits retain their existing handling. The current
+XLSX analysis consumes these partial results with their original source diagnostics;
+this does not change its native responsibilities or formula-cache policy.
+
+These new cases have fixed synthetic tests and old/new default comparisons. The four
+allowed original ET/ETT samples still match all 198 independent stored values, but
+contain none of these new non1200/reserved-flag cases. They are regression evidence,
+not producer acceptance of this extension. A real user file exercising it remains
+needed for such acceptance. See [validation](validation.md) and [sources](et-format-evidence.json).
+
 ## Observed legacy compatibility
 
-Default behavior remains strict. For a known legacy Excel header variant, opt in:
+For the previous explicit legacy policy (data is now the file default):
 
 ```console
 python3 -I -S -B "<skill_dir>/scripts/wps_biff8.py" input.et --compatibility legacy_excel_clsid
@@ -64,7 +134,7 @@ Workbook/Book stream and every existing allocation, chain and resource check. It
 not rewrite the header or establish the producer from the GUID. Unknown nonzero GUIDs
 and nonzero GUIDs in v4 still fail. See [container rules](et-ett-readonly.md).
 
-The same explicit mode additionally retains an allowlist of MS-XLS 2.3.2 metadata record
+Both data and this explicit mode retain an allowlist of MS-XLS 2.3.2 metadata record
 IDs as scope/offset/name/raw hex, within the existing metadata budgets. These include
 interface markers, workbook options, protection flags, style/theme extensions, printing
 and layout settings. They are not executed, semantically validated, rendered or applied;
@@ -73,7 +143,8 @@ known_metadata_retained_uninterpreted and diagnostic status. Unknown records, ex
 reference data, macros, encryption and unsupported continuations remain refused.
 Shared/array formula support has its own [authoritative subset rules](formula-groups.md);
 this compatibility mode does not relax them.
-The allowlist is explicit in LEGACY_GLOBAL_METADATA / LEGACY_SHEET_METADATA; it is not
+The allowlist is explicit in LEGACY_GLOBAL_METADATA / LEGACY_SHEET_METADATA and the
+bounded additions described under [inline text and passive metadata](#inline-text-and-passive-metadata); it is not
 an option to skip arbitrary record IDs. Other container streams, including ETExtData
 and ETSharedLinks, remain undecoded and are listed by path, size and digest. Do not
 assume these private extensions have no effect on a full WPS rendering or data model.
@@ -107,12 +178,12 @@ The explicit [opaque chart policy](embedded-charts.md) adds bounded framing/raw 
 for a supported embedded-chart subset without decoding or rendering charts. Record bytes are retained for diagnosis;
 metadata retention is not full semantic or layout validation. Strict mode is unchanged.
 See [real sample validation](et-real-validation.md) for original-file hashes, results,
-spot checks, default chart rejection, the explicit opaque policy and reproducible offline verification.
+spot checks, explicit legacy chart rejection, the data/opaque policy and reproducible offline verification.
 
 ## Supported records and retained values
 
-Read Number, RK, MulRk, BoolErr, Blank, MulBlank and LabelSst cells. Shared strings support
-plain compressed-Unicode or UTF-16 text, including bounded SST and formula-cache String Continue records. Encoding may change at a character-data continuation; fixed headers may not split. Rich SST text and its Continue segments are supported with raw FormatRun metadata; phonetic strings and unrelated Continue uses are refused. Text such as long leading-zero identifiers stays text. Number/RK values use
+Read Number, RK, MulRk, BoolErr, Blank, MulBlank, LabelSst and plain Label cells. Shared and inline strings support
+plain compressed-Unicode or UTF-16 text, including bounded SST, Label and formula-cache String Continue records. Encoding may change at a character-data continuation; fixed headers may not split. Rich SST text and its Continue segments are supported with raw FormatRun metadata; phonetic ExtRst bytes are now retained separately without decoding, with a partial diagnostic; unrelated Continue uses are refused. Text such as long leading-zero identifiers stays text. Number/RK values use
 an exact Decimal representation of the stored IEEE754 value (which may differ from the
 intended decimal); raw numeric bytes are retained. No numeric text coercion occurs.
 
@@ -122,16 +193,54 @@ bounds but never expanded; non-anchor data is retained, not silently erased. Bui
 format IDs remain IDs; fonts/styles/layout are not rendered or reconstructed.
 
 Known metadata records are explicitly retained as offset/type/raw payload hex: global
-CodePage (Unicode 1200 only), Window1, Font, Style; worksheet Dimensions, Row, Index,
+CodePage (strict/legacy 1200; data also 932/936/1252), Window1, Font, Style; worksheet Dimensions, Row, Index,
 DBCell and Window2. Their internal semantics are not validated or applied. Other records
 fail with ID and offset. This is a strict data-record subset, not full MS-XLS grammar or
 workbook validity certification; many genuine XLS/ET files will be outside this subset.
 
+## Inline text and passive metadata
+
+Both strict and explicit compatibility modes read worksheet `Label` (`0x0204`) as
+plain `XLUnicodeString` text after the six-byte row/column/XF prefix. This is a
+bounded legacy inline-cell layout, not support for older BIFF versions. The
+compressed form contains Unicode low bytes, not GBK or a CodePage-selected byte
+encoding. Empty text remains text; numeric-looking text is not converted. Character
+Continue segments use the existing encoding and UTF-16 boundary checks. Fixed string
+headers, trailing bytes, duplicate addresses, XF references and all text/cell budgets
+remain checked. Data ignores plain Unicode header reserved bits with diagnostics; actual rich/phonetic Label tail layouts and `RString` are not supported. Source
+record offsets/IDs and existing typed-cell fields are retained.
+
+Data or explicit `--compatibility legacy_excel_clsid` retains these
+records in `uninterpreted_metadata`, with scope, record offset, ID and raw payload:
+
+| Record | Structural checks before raw retention |
+|---|---|
+| Global Palette (`0x0092`) | Exactly 56 colors and 226 payload bytes; colors are not applied to styles. |
+| Worksheet Pane (`0x0041`) | Ten bytes, a valid active-pane byte and a BIFF8 column index; reserved byte is retained but ignored. Split positions and Window2-dependent display semantics are not interpreted. |
+| HorizontalPageBreaks (`0x001B`) | At most 1026 six-byte entries after the count; exact length, ordered nonoverlapping column intervals per row, valid column bounds. |
+| VerticalPageBreaks (`0x001A`) | At most 255 six-byte entries after the count; exact length, ordered nonoverlapping row intervals per column, valid column bounds. |
+
+Zero-entry page-break lists are allowed. These additions share the existing
+metadata byte/count limits and compatibility diagnostic; they do not apply print
+layout, hide/filter cells, render colors or claim complete metadata validation.
+Explicit strict mode still refuses these four metadata record kinds. Unknown records
+are not skipped. CFB CLSID/allocation checks, the unified entrypoint's minor version
+`0x003E` requirement, explicit Date1904, policy-specific CodePage validation and explicit chart rejection
+are unchanged. Missing date-system information is never silently replaced by 1900.
+
+Source references are recorded in [the format evidence](et-format-evidence.json).
+These additions have synthetic coverage; existing real ET/ETT regression samples
+do not establish real-world coverage of the newly added record layouts. BIFF Note,
+HLink and RString, arbitrary XML extensions and private WPS records remain outside
+this addition. Actual verification results are in [validation](validation.md).
+
 ## Dates and formula caches
 
 Require explicit Date1904, preserving the 1900/1904 system. A numeric date serial stays
-numeric with raw XF/number-format ID and any explicit custom format text. No date-format
-heuristic, locale resolution, effective-style inheritance or ISO conversion is performed.
+numeric with raw XF/number-format ID and any explicit custom format text. The separate
+`numeric_interpretation` field can explain supported formats under the bounded rules in
+[number interpretation](numeric-interpretation.md); it never replaces the saved numeric
+value or establishes general locale, effective-style or rendered-display equivalence.
 Serial 60 in the 1900 system is not invented as a real calendar date; fractional serials
 and the original bytes remain available for later, separately verified interpretation.
 
@@ -165,13 +274,13 @@ numeric serials in paths. No implicit spreadsheet-to-OOXML reconstruction is per
 JSON schema biff8_readonly_v1 contains typed sheet cells, merges, date/format metadata,
 source file/stream digest, unparsed metadata and diagnostics. biff_parsed true means this
 limited record subset passed; it is separate from the container-only report and native
-ET/ETT acceptance. Unsupported inputs exit 1 with no partial cell report; subset extraction
+ET/ETT acceptance. Unsupported inputs exit 1 with no partial cell report; failures now preserve known unsupported/encrypted/resource_limit classes and recorded locations (other ValueError failures retain invalid_or_unsupported); subset extraction
 exits 0, but read_biff8_subset_with_diagnostics requires review. Missing formula caches are
 explicit diagnostics, not evidence of complete calculated data. No file is written.
 Python APIs: parse_stream(bytes), read_file(path), reconstruct_headers(result,...).
 Native OOXML editing APIs do not accept this separate schema. If the xlsx skill is
 available, its typed-JSON region/profile adapter can analyze a saved report; it is
-optional and is not a dependency of this package.
+optional and is not a dependency of this package. Its current WPS JSON adapter still limits merges to 256 per sheet, so large-merge reports supported by this reader are not automatically accepted downstream.
 
 ## Rejection rules and validation limits
 
@@ -181,8 +290,8 @@ malformed strings/merges, orphan String records and trailing unbound data. No da
 record is silently skipped. Present but opaque formulas remain explicitly unverified.
 
 Limits: stream 8 MiB, records 100000, cells 200000, sheets 128, XFs 4096, SST strings
-10000, merges 256, uninterpreted metadata 1 MiB/4096 records, diagnostics 1000, JSON output
-16 MiB. Payloads over 8224 bytes and Continue uses outside SST characters/runs and plain cached String character data are outside the subset. Header
+200000, merges 65536 per workbook, uninterpreted metadata 1 MiB/4096 records, diagnostics 1000, JSON output
+16 MiB. Payloads over 8224 bytes and Continue uses outside SST characters/runs/opaque phonetic tails and plain Label/cached String character data are outside the subset. Header
 regions are capped at 200000 cells and BIFF8's 65536 rows/256 columns. Inherited CFB chain,
 allocation and memory budgets apply before record decoding. Trailing producer padding is
 not guessed or discarded, so some noncanonical streams are deliberately refused.
@@ -206,7 +315,7 @@ both standalone algorithms. No adjacent skill is imported at runtime.
 
 Plain SST and cached String continuation behavior follows MS-XLS
 XLUnicodeRichExtendedString: fixed fields stay in one record, character continuations
-start with fHighByte, and UTF-16 units do not split across records. Phonetic tails remain unsupported; rich SST character/run continuation is described below. Tests use independently specified A + Chinese + astral character,
+start with fHighByte, and UTF-16 units do not split across records. Phonetic tails are retained raw with a partial diagnostic; rich SST character/run continuation is described below. Tests use independently specified A + Chinese + astral character,
 5000 Chinese characters, empty strings and malformed split/flag/orphan cases. These are
 synthetic record samples, not evidence of real-producer coverage.
 
@@ -227,8 +336,7 @@ Rich SST character segments and raw FormatRun segments can cross Continue record
 The character phase consumes continuation encoding bytes; the run phase does not.
 Fixed headers stay in one record; per-string and remaining aggregate budgets are
 checked before collecting run data. Formatting is retained once by SST index and
-reported partial, never applied. Phonetic extensions and rich cached String records
-remain unsupported. See [continuation rules and evidence](biff-rich-continuation.md).
+reported partial, never applied. Phonetic extensions are retained as opaque ExtRst bytes, not applied or interpreted; rich/phonetic cached String records remain unsupported. See [continuation rules and evidence](biff-rich-continuation.md).
 
 For shared/array groups, use [formula-group rules and evidence](formula-groups.md)
 as the single detailed contract for supported records, member caches, ordering,
@@ -246,3 +354,7 @@ not four complete-format successes; hashes and existing text/metric expectations
 ## Additive number and saved visibility interpretation
 
 Raw values and cache provenance remain unchanged. See [number interpretation](numeric-interpretation.md) for the bounded explicit CellXF format subset and unknown inheritance/complex formats; this is not effective-style or Excel display rendering. See [saved visibility](saved-visibility.md) for Row/ColInfo flags and raw filter metadata. Default extraction includes all cells. Row selection keeps unknown states; filter conditions are not decoded or executed. These BIFF helpers do not parse OOXML; the unified entrypoint separately routes OOXML packages to the [OOXML spreadsheet reader](ooxml-spreadsheet.md).
+
+## ET parser capacity and failure locations
+
+See [current capacity and stability rules](et-parser-stability.md) for bounded phonetic SST retention, expanded shared-string/merge counts, sweep-based merge validation and precise record failure locations. These capacities apply to BIFF8 only; they do not change OOXML limits. The WPS-only header adapter accepts the increased merge-list budget while preserving region/anchor rules; the neighboring XLSX implementation is unchanged.

@@ -1,0 +1,127 @@
+{
+  "checked_utc": "2026-10-27T13:32:14.300733+00:00",
+  "head": "9d314ab06fb7220d0ab6eb307c5ce4fef9e6677b",
+  "initial_worktree": "existing user modifications preserved; WPS source snapshot and initial patch retained in task evidence",
+  "target": "wps ET/ETT bounded stored-value reading",
+  "version": "20261027.2126.5830",
+  "default_policy": "data",
+  "strict_option_retained": true,
+  "changes": [
+    "Default file/API data selects existing known passive-metadata allowlists and supported bounded opaque charts before one parse",
+    "Unknown records, encryption, malformed framing/cells/strings, macros/external references and budgets remain hard failures",
+    "No cell or worksheet skipping; missing formula caches lower completeness and remain missing",
+    "Container and auxiliary-stream omissions visible in partial diagnostics; existing analysis keeps source partial/issues"
+  ],
+  "description": {
+    "changed": false,
+    "unicode_characters": 144,
+    "manual_task_boundary_review": "passed; no real host activation test"
+  },
+  "regressions": [
+    {
+      "skill": "wps",
+      "exit": 0,
+      "summary": "............................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 375 tests in 2.648s\n\nOK\n"
+    },
+    {
+      "skill": "xlsx",
+      "exit": 0,
+      "summary": ".............................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 269 tests in 14.484s\n\nOK\n"
+    },
+    {
+      "skill": "docx",
+      "exit": 0,
+      "summary": ".................................................................................\n----------------------------------------------------------------------\nRan 81 tests in 2.644s\n\nOK\n"
+    },
+    {
+      "skill": "ofd",
+      "exit": 0,
+      "summary": "...................................\n----------------------------------------------------------------------\nRan 35 tests in 0.278s\n\nOK\n"
+    }
+  ],
+  "total_passed": 760,
+  "failed": 0,
+  "skipped": 0,
+  "wps_new_tests": 14,
+  "python_3_9_new_tests_passed": 14,
+  "selfcheck": "passed",
+  "strict": "passed",
+  "resource_links": 205,
+  "independent_source_review": "two findings fixed and tested; final review no further material defect; no sample/ZIP access by reviewer",
+  "real_et_ett": [
+    {
+      "filename": "newfile.et",
+      "sha256": "5f34a68ab8061be391836530be7a9b13436b404acd90aa3d8320aa7cca4e3ac6",
+      "before_default_exit": 1,
+      "before_status": "unsupported",
+      "after_default_exit": 3,
+      "after_status": "partial",
+      "strict_exit": 1,
+      "semantic_values_checked": 0,
+      "formula_caches_checked": 0,
+      "source_unchanged": true
+    },
+    {
+      "filename": "Balance_Sheet.ett",
+      "sha256": "1124b720ad792c52cf5a5e39cd99bbebd512b200523070dd3fd035ea37af427b",
+      "before_default_exit": 1,
+      "before_status": "unsupported",
+      "after_default_exit": 3,
+      "after_status": "partial",
+      "strict_exit": 1,
+      "semantic_values_checked": 122,
+      "formula_caches_checked": 21,
+      "source_unchanged": true
+    },
+    {
+      "filename": "Schedule.ett",
+      "sha256": "23d27b4e72eb4c83dd888593df2552d9d4134749762918baeffa57b97799a9eb",
+      "before_default_exit": 1,
+      "before_status": "unsupported",
+      "after_default_exit": 3,
+      "after_status": "partial",
+      "strict_exit": 1,
+      "semantic_values_checked": 66,
+      "formula_caches_checked": 12,
+      "source_unchanged": true
+    },
+    {
+      "filename": "Telephone_List.ett",
+      "sha256": "34c0dd4473cca5b16bd4719e7d7d05e5c88a7ed346d5e593964ae8217b7d1b07",
+      "before_default_exit": 1,
+      "before_status": "unsupported",
+      "after_default_exit": 3,
+      "after_status": "partial",
+      "strict_exit": 1,
+      "semantic_values_checked": 10,
+      "formula_caches_checked": 0,
+      "source_unchanged": true
+    }
+  ],
+  "analysis_chain": {
+    "real_partial_profile": "passed; source_status and issues preserved",
+    "missing_formula_cache_explicit_cached_analysis": "rejected as expected"
+  },
+  "package": {
+    "version": "20261027.2126.5830",
+    "package": "skills/wps-20261027.2126.5830.zip",
+    "sha256": "c70b7f6b8e244ef3354802b9d8da3ace50e19a7fce90fb138eb61a55d2bca8b5",
+    "file_count": 128,
+    "source_and_installation_unchanged": true
+  },
+  "installed_wps_tests_passed": 375,
+  "installed_wps_tests_skipped": 0,
+  "preserved_docx_worktree_hashes": true,
+  "other_skill_sources_changed": false,
+  "limitations": [
+    "No unknown/private ET record interpretation or broad compatibility-rate claim",
+    "Four-file acceptance only; empty ET has no populated-value evidence",
+    "Formula caches not recalculated; charts not decoded or rendered",
+    "No additional ET producer variants tested",
+    "Dedicated naming linter not available/not run; no installation",
+    "No real host automatic skill activation test"
+  ],
+  "restricted_data_access": false,
+  "network_sample_downloads": false,
+  "stage_commit_push_upload": false
+}

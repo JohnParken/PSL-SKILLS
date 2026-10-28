@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 
 
-_ID_RECORD_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,128}")
+_REQUEST_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _WINDOWS_DEVICE_NAMES = frozenset(
     {"CON", "PRN", "AUX", "NUL"}
     | {f"COM{number}" for number in range(1, 10)}
@@ -46,7 +46,7 @@ def _fallback(reason: str) -> OutputLocation:
     return OutputLocation(Path("."), True, reason)
 
 
-def _normalize_id_record(value: object) -> str | None:
+def _normalize_request_id(value: object) -> str | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, int):
@@ -58,7 +58,7 @@ def _normalize_id_record(value: object) -> str | None:
             return None
     if not isinstance(value, str):
         return None
-    if _ID_RECORD_PATTERN.fullmatch(value) is None:
+    if _REQUEST_ID_PATTERN.fullmatch(value) is None:
         return None
     if value.upper() in _WINDOWS_DEVICE_NAMES:
         return None
@@ -93,23 +93,23 @@ def resolve_output_location(router_config_str: str | None) -> OutputLocation:
     if not isinstance(common_param, list):
         return _fallback("invalid_common_param_shape")
 
-    id_record_values: list[object] = []
+    request_id_values: list[object] = []
     for entry in common_param:
         if not isinstance(entry, dict):
             return _fallback("invalid_common_param_entry")
         name = entry.get("name")
         if not isinstance(name, str) or not name or "value" not in entry:
             return _fallback("invalid_common_param_entry")
-        if name == "idRecord":
-            id_record_values.append(entry["value"])
+        if name == "requestId":
+            request_id_values.append(entry["value"])
 
-    if not id_record_values:
-        return _fallback("missing_id_record")
-    if len(id_record_values) != 1:
-        return _fallback("duplicate_id_record")
+    if not request_id_values:
+        return _fallback("missing_request_id")
+    if len(request_id_values) != 1:
+        return _fallback("duplicate_request_id")
 
-    id_record = _normalize_id_record(id_record_values[0])
-    if id_record is None:
-        return _fallback("invalid_id_record")
+    request_id = _normalize_request_id(request_id_values[0])
+    if request_id is None:
+        return _fallback("invalid_request_id")
 
-    return OutputLocation(Path(id_record) / "output", False, None)
+    return OutputLocation(Path("output") / request_id, False, None)

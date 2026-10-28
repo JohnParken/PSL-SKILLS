@@ -1,0 +1,26 @@
+{
+  "purpose": "Test-only snapshots and records; not installed or distributed business skills.",
+  "files": {
+    "inputs/skill_a/SKILL.md": "6d971ec601c34e3da0c7f8a6719ea232533f9c7f75bbd8b461ec4f214e0514f6",
+    "inputs/skill_a/references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+    "inputs/skill_a/references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "inputs/skill_a/references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "inputs/skill_a/references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "inputs/skill_a/references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "inputs/skill_a/references/writing-review.md": "f7cb6a44ecae4a073c21d2fb1f6f56724c873a2fb47e8532cd44c3a0a5c690de",
+    "inputs/skill_b/SKILL.md": "7493e7d3f6b55aee23b85a9a4c0fdea05c2d63939023df6067e3ebaf76eebfa3",
+    "inputs/skill_b/references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+    "inputs/skill_b/references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "inputs/skill_b/references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "inputs/skill_b/references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "inputs/skill_b/references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "inputs/skill_b/references/writing-review.md": "5d80160057268db9319a21e08bcb1122b9803b655b9040f9b93af8d57b353261",
+    "inputs/skill_c/SKILL.md": "3b8639e6d4a4f09cf30bf5287c22c8c28e1349276ee5d3c737a4ba2eff05e96f",
+    "inputs/skill_c/references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+    "inputs/skill_c/references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "inputs/skill_c/references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "inputs/skill_c/references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "inputs/skill_c/references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "inputs/skill_c/references/writing-review.md": "5560ebecdbfdf4e68add83bb88a85a07eacb6e6443f4337fbad237978fe7aed7"
+  }
+}

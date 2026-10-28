@@ -4,7 +4,8 @@ Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首
 before using this reference; internal resources and task data have different path bases.
 
 The main `read_wps.py input.et` / `read_wps.py input.ett` commands now dispatch to
-the separate BIFF8 subset reader, with optional explicit `--compatibility legacy_excel_clsid`.
+the separate BIFF8 subset reader, defaulting to data policy. Explicit strict and legacy
+policies remain available; see [current reading policy](biff8-readonly.md#default-data-policy).
 This does not change the CFB-only inspector or add WPS private-record semantics. Real-file BIFF8 subset checks now include original ET and ETT downloads;
 see [real sample validation](et-real-validation.md). Native WPS private-record semantics
 and general ET/ETT compatibility remain unverified.
@@ -70,8 +71,9 @@ A corrupt or outside-subset container returns invalid_or_unsupported, not a fake
 
 Use --compatibility legacy_excel_clsid explicitly on `<skill_dir>/scripts/read_wps.py`, `<skill_dir>/scripts/wps_cfb.py` or
 `<skill_dir>/scripts/wps_biff8.py` to accept the exact nonzero header CLSID
-`2008020000000000c000000000000046` (Excel WorksheetClass CLSID) in v3 only. The default
-still rejects it, as MS-CFB requires CLSID_NULL. This narrowly documented interoperability
+`2008020000000000c000000000000046` (Excel WorksheetClass CLSID) in v3 only. The CFB-only inspector and explicit strict mode
+still reject it, as MS-CFB requires CLSID_NULL; the unified reader and BIFF file API
+default data policy select this evidenced profile automatically before parsing. This narrowly documented interoperability
 exception applies to these exact raw header CLSID bytes and reports the
 `nonstandard_header_clsid` issue. Stream contents are represented by path, length and
 SHA-256 digest; the report does not preserve original stream bytes. This does not prove

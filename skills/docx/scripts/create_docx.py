@@ -9,6 +9,7 @@ import json
 import math
 import os
 import re
+import shutil
 import stat
 import struct
 import sys
@@ -18,13 +19,13 @@ import zipfile
 import zlib
 from pathlib import Path
 from typing import Any
-from xml.parsers import expat
 from xml.etree import ElementTree as ET
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from office import xmlio
+from office.runtime import check_runtime
 from output_location import OutputLocation, resolve_output_location
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -1506,8 +1507,14 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
         raise ValueError("output path must use the .docx extension")
     image_base = Path(base_dir) if base_dir is not None else Path.cwd()
     validated = _validate_spec(spec, image_base)
-    resolved_output = output_path.resolve()
-    if resolved_output in validated["image_paths"]:
+    return _create_validated_document(validated, output_path, verify=verify,
+                                      require_no_placeholders=require_no_placeholders)
+
+
+def _create_validated_document(validated: dict, output_path: Path, *, verify: bool,
+                               require_no_placeholders: bool) -> Path:
+    """Publish once from validated input, retaining image identities for CLI archival."""
+    if any(_paths_alias(output_path, path) for path in validated["image_paths"]):
         raise ValueError("output must not overwrite an image used by the document")
     parts = _package_parts(validated)
     _check_generated_budget(parts)
@@ -1558,7 +1565,7 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
 def _delivery_location() -> OutputLocation:
     location = resolve_output_location(os.environ.get("ROUTER_CONFIG_VARIABLES"))
     if location.used_fallback:
-        print("output-location: using default ./; reason=" + location.fallback_reason,
+        print("archive-location: skipped; reason=" + location.fallback_reason,
               file=sys.stderr)
     return location
 
@@ -1580,8 +1587,8 @@ def _check_delivery_path(task_dir: Path, relative_path: Path, *, directory: bool
                 raise ValueError("delivery output must be a regular file")
 
 
-def _delivery_output_path(task_dir: Path, location: OutputLocation, file_name: str) -> Path:
-    """Accept a filename only; the configuration owns its parent directory."""
+def _delivery_output_path(task_dir: Path, file_name: str) -> Path:
+    """Validate a filename-only output in the task directory."""
     if (not file_name or file_name in {".", ".."}
             or file_name.endswith((" ", "."))
             or any(character in '/\\<>:"|?*' or unicodedata.category(character).startswith("C")
@@ -1595,7 +1602,7 @@ def _delivery_output_path(task_dir: Path, location: OutputLocation, file_name: s
     if (device_name in {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
             or re.fullmatch(r"(?:COM|LPT)[1-9¹²³]", device_name)):
         raise ValueError("output filename must not use a reserved device name")
-    output_path = location.output_dir / file_name
+    output_path = Path(file_name)
     _check_delivery_path(task_dir, output_path)
     return output_path
 
@@ -1606,48 +1613,117 @@ def _prepare_delivery_directory(task_dir: Path, output_dir: Path) -> None:
     _check_delivery_path(task_dir, output_dir, directory=True)
 
 
-def _runtime_check(task_dir: Path, location: OutputLocation) -> bool:
-    checks_passed = True
-    version = ".".join(map(str, sys.version_info[:3]))
-    print(f"python={version} required>=3.10 supported={sys.version_info >= (3, 10)}")
-    if sys.version_info < (3, 10):
-        checks_passed = False
+def _paths_alias(left: Path, right: Path) -> bool:
+    """Detect both resolved path aliases and existing hard links."""
     try:
-        payload = b"docx-runtime-check"
-        if zlib.decompress(zlib.compress(payload)) != payload:
-            checks_passed = False
-            print("zlib=failed")
-        else:
-            print("zlib=ok")
-    except Exception:
-        checks_passed = False
-        print("zlib=failed")
-    try:
-        match = re.search(r"(\d+)\.(\d+)\.(\d+)", expat.EXPAT_VERSION)
-        expat_version = tuple(map(int, match.groups())) if match else (0, 0, 0)
-        if expat_version < (2, 6, 0):
-            checks_passed = False
-        print(f"expat={expat.EXPAT_VERSION} required>=2.6.0 supported={expat_version >= (2, 6, 0)}")
-        ET.fromstring(b"<runtime-check><ok/></runtime-check>")
-    except Exception:
-        checks_passed = False
+        if left.resolve() == right.resolve():
+            return True
+        return os.path.samefile(left, right)
+    except FileNotFoundError:
+        return False
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("could not safely compare output and input paths") from exc
 
-    writable = False
-    if checks_passed:
+
+def _archive_output_path(task_dir: Path, location: OutputLocation, file_name: str,
+                         input_path: Path, image_paths: list[Path]) -> Path:
+    """Validate the optional archive target after the main output is published."""
+    archive_path = location.output_dir / file_name
+    _check_delivery_path(task_dir, archive_path)
+    if _paths_alias(task_dir / archive_path, input_path):
+        raise ValueError("archive output must not refer to the input JSON file")
+    if any(_paths_alias(task_dir / archive_path, path) for path in image_paths):
+        raise ValueError("archive output must not overwrite an input image")
+    _prepare_delivery_directory(task_dir, location.output_dir)
+    _check_delivery_path(task_dir, archive_path)
+    if _paths_alias(task_dir / archive_path, input_path):
+        raise ValueError("archive output must not refer to the input JSON file")
+    return archive_path
+
+
+def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLocation,
+                          file_name: str, input_path: Path, image_paths: list[Path]) -> Path:
+    """Atomically copy a published main DOCX into the configured archive."""
+    archive_output = _archive_output_path(task_dir, location, file_name, input_path, image_paths)
+    main_path = task_dir / main_output
+    archive_path = task_dir / archive_output
+    if archive_path.exists():
+        archive_mode = stat.S_IMODE(archive_path.stat().st_mode)
+    else:
+        archive_mode = stat.S_IMODE(main_path.stat().st_mode)
+
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=".docx-", suffix=".tmp", dir=task_dir / location.output_dir,
+    )
+    try:
+        with os.fdopen(descriptor, "wb") as archive_file:
+            descriptor = -1
+            with main_path.open("rb") as main_file:
+                shutil.copyfileobj(main_file, archive_file)
+            archive_file.flush()
+            os.fsync(archive_file.fileno())
+        os.chmod(temporary_name, archive_mode)
+        os.replace(temporary_name, archive_path)
+    except BaseException as exc:
+        cleanup_errors = []
+        if descriptor >= 0:
+            try:
+                os.close(descriptor)
+            except OSError as close_error:
+                cleanup_errors.append(f"descriptor close failed: {close_error}")
         try:
-            _prepare_delivery_directory(task_dir, location.output_dir)
-            with tempfile.TemporaryFile(mode="w+b", dir=task_dir / location.output_dir) as probe:
-                probe.write(payload)
-                probe.seek(0)
-                writable = probe.read() == payload
-        except (OSError, ValueError) as exc:
-            print(f"output-check-failed: {exc}", file=sys.stderr)
-    print(f"output_dir={location.output_dir.as_posix()} writable={writable}")
-    if not checks_passed or not writable:
+            os.unlink(temporary_name)
+        except FileNotFoundError:
+            pass
+        except OSError as cleanup_error:
+            cleanup_errors.append(f"temporary cleanup failed: {cleanup_error}")
+        if cleanup_errors:
+            temporary_path = Path(temporary_name).relative_to(task_dir).as_posix()
+            raise RuntimeError(f"{exc}; archive cleanup at {temporary_path}: "
+                               + "; ".join(cleanup_errors)) from exc
+        raise
+    return archive_output
+
+
+def _runtime_check(task_dir: Path, location: OutputLocation) -> bool:
+    checks_passed = check_runtime()
+    payload = b"docx-runtime-check"
+    probe_directories = [(Path("."), "output_dir")]
+    if not location.used_fallback:
+        probe_directories.append((location.output_dir, "archive_dir"))
+    writable_by_name = {}
+    if checks_passed:
+        for output_dir, label in probe_directories:
+            writable = False
+            try:
+                _prepare_delivery_directory(task_dir, output_dir)
+                with tempfile.TemporaryFile(mode="w+b", dir=task_dir / output_dir) as probe:
+                    probe.write(payload)
+                    probe.seek(0)
+                    writable = probe.read() == payload
+            except Exception as exc:
+                writable = False
+                label_error = "archive-warning" if label == "archive_dir" else "output-check-failed"
+                print(f"{label_error}: {exc}", file=sys.stderr)
+            writable_by_name[label] = writable
+    for output_dir, label in probe_directories:
+        print(f"{label}={output_dir.as_posix()} writable={writable_by_name.get(label, False)}")
+    if checks_passed and "archive_dir" in writable_by_name and not writable_by_name["archive_dir"]:
+        print("archive-warning: archive directory is unavailable; main output may proceed", file=sys.stderr)
+    if not checks_passed or not writable_by_name.get("output_dir", False):
         print("check-failed: runtime environment check failed", file=sys.stderr)
         return False
     print("check-ok")
     return True
+
+
+def _check_cli_runtime() -> bool:
+    try:
+        location = _delivery_location()
+    except Exception as exc:
+        print(f"archive-warning: configuration check failed: {exc}", file=sys.stderr)
+        location = OutputLocation(Path("."), True, "archive_config_error")
+    return _runtime_check(Path.cwd(), location)
 
 
 def _json_object(pairs):
@@ -1663,8 +1739,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, nargs="?", help="JSON document specification")
     parser.add_argument("output", nargs="?", metavar="filename.docx",
-                        help="DOCX filename only; output directory comes from ROUTER_CONFIG_VARIABLES")
-    parser.add_argument("--check", action="store_true", help="check runtime support and resolved output-directory write access")
+                        help="DOCX filename only; save in the task directory and optionally archive it")
+    parser.add_argument("--check", action="store_true", help="check runtime support and task/archive-directory write access")
     parser.add_argument("--preflight", action="store_true", help="validate input and resource budgets without writing")
     parser.add_argument("--verify", action="store_true", help="check ZIP CRC, structure and input coverage before publishing")
     parser.add_argument("--require-no-placeholders", action="store_true", help="also verify and reject remaining {{...}} markers")
@@ -1672,7 +1748,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         if args.input is not None or args.output is not None or args.preflight or args.verify or args.require_no_placeholders:
             parser.error("--check does not accept positional arguments or generation options")
-        return 0 if _runtime_check(Path.cwd(), _delivery_location()) else 1
+        return 0 if _check_cli_runtime() else 1
     if args.preflight and (args.output is not None or args.verify or args.require_no_placeholders):
         parser.error("--preflight accepts input only, without output or verification options")
     if args.input is None or (args.output is None and not args.preflight):
@@ -1681,23 +1757,43 @@ def main(argv: list[str] | None = None) -> int:
         task_dir = Path.cwd()
         output_path = None
         if not args.preflight:
-            location = _delivery_location()
-            output_path = _delivery_output_path(task_dir, location, args.output)
-            if args.input.resolve() == (task_dir / output_path).resolve():
+            output_path = _delivery_output_path(task_dir, args.output)
+            input_path = args.input.resolve()
+            if _paths_alias(input_path, task_dir / output_path):
                 parser.error("output must not refer to the input JSON file")
         spec = json.loads(args.input.read_text(encoding="utf-8"), object_pairs_hook=_json_object)
         if args.preflight:
             print(json.dumps(preflight_document(spec, args.input.resolve().parent), ensure_ascii=False))
         else:
             verified = args.verify or args.require_no_placeholders
-            _prepare_delivery_directory(task_dir, location.output_dir)
-            create_document(spec, output_path, base_dir=args.input.resolve().parent,
-                            verify=verified, require_no_placeholders=args.require_no_placeholders)
-            summary = {"status": "verified" if verified else "created",
+            validated = _validate_spec(spec, args.input.resolve().parent)
+            _create_validated_document(validated, output_path, verify=verified,
+                                       require_no_placeholders=args.require_no_placeholders)
+            generation_status = "verified" if verified else "created"
+            archive_status = "skipped"
+            archive_output = None
+            warnings = []
+            location = OutputLocation(Path("."), True, "archive_config_error")
+            try:
+                location = _delivery_location()
+                if not location.used_fallback:
+                    archive_output = (location.output_dir / args.output).as_posix()
+                    _copy_main_to_archive(task_dir, output_path, location, args.output,
+                                          input_path, validated["image_paths"])
+                    archive_status = "copied"
+            except Exception as exc:
+                archive_status = "failed"
+                warnings.append(str(exc))
+                print("archive-warning: " + str(exc), file=sys.stderr)
+            summary = {"status": generation_status,
+                       "generation_status": generation_status,
                        "output": output_path.as_posix(),
-                       "output_dir": location.output_dir.as_posix(),
+                       "output_dir": ".",
                        "used_fallback": location.used_fallback,
-                       "fallback_reason": location.fallback_reason}
+                       "fallback_reason": location.fallback_reason,
+                       "archive_output": archive_output,
+                       "archive_status": archive_status,
+                       "warnings": warnings}
             if verified:
                 summary.update({"blocks": len(spec["blocks"]), "zip_crc": True,
                                 "structure": True, "content_coverage": True,

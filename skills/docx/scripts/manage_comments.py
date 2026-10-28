@@ -25,6 +25,7 @@ from office.helpers import XML_SPACE, opc_target
 from office.package import pack_document, unpack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
+from archive_deliverables import archive_outputs, validate_output_path
 
 W14 = "http://schemas.microsoft.com/office/word/2010/wordml"
 W15 = "http://schemas.microsoft.com/office/word/2012/wordml"
@@ -704,14 +705,29 @@ def main(argv=None):
     parser.add_argument("action", type=Path, help="JSON containing exactly one action")
     parser.add_argument("output", type=Path, nargs="?")
     args = parser.parse_args(argv)
+    protected_inputs = [args.input, args.action]
     try:
+        if args.output is not None:
+            args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         with args.action.open(encoding="utf-8") as stream:
             specification = json.load(stream)
         result = manage_comments(args.input, specification, args.output)
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    if result.get("action") == "list":
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+    archive_result = archive_outputs([args.output], protected_inputs)
+    payload = {
+        "result": result if isinstance(result, dict) else str(result),
+        "output": args.output.as_posix(),
+        **archive_result,
+        "status": "edited",
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    for warning in archive_result["warnings"]:
+        print("archive-warning: " + warning, file=sys.stderr)
     return 0
 
 

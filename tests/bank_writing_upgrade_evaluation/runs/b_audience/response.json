@@ -1,0 +1,291 @@
+[
+  {
+    "id": "E3L",
+    "prompt": "以下均为虚构测试素材：柳溪支行第三季度梳理18项服务提示，其中14项已更新，4项因涉及跨部门解释尚待确认；开展员工交流3次、共28人次参加，不能视为28名不同员工。客户咨询记录显示部分提示过长、个别材料清单表述不一致，没有满意度调查或投诉同比数据。拟试行统一服务提示模板，尚未获批。拟设“双清单”，指事项清单与责任清单。职责安排：综合岗维护内容，运营岗核对流程，网点负责人审定；这些职责已明确。后续4项的完成时间未确定。可提出下季度安排建议，但不能写成已批准或承诺。\n请据此写一份约700字的重要专题汇报，给不熟悉日常操作的分行领导阅读，便于决定是否同意试行统一模板。直接交付完整稿，不需要文件。",
+    "response": "柳溪支行关于试行统一服务提示模板的专题汇报\n\n为解决服务提示过长、材料清单表述不一致的问题，建议在柳溪支行试行统一服务提示模板。模板拟统一信息结构和表达方式，具体业务要求仍须核实确认。目前该建议尚未获批，提请分行审议是否同意试行。\n\n一、已有工作为试行提供基础\n第三季度，支行共梳理18项服务提示，已更新14项；另有4项涉及跨部门解释，尚待确认，完成时间未确定。同期开展员工交流3次，累计28人次参加，该数字为参加人次，不代表28名不同员工。综合岗维护内容、运营岗核对流程、网点负责人审定的职责已经明确，可作为后续协作的基础。\n\n二、当前问题及需要把握的边界\n客户咨询记录反映，部分提示篇幅过长，个别材料清单表述不一致，可能增加客户理解和员工解释的难度。现有记录可用于定位具体问题，但没有满意度调查或投诉同比数据，不能据此判断服务改善幅度。统一模板有助于清楚呈现办理信息，但不能代替跨部门解释确认；尚待确认的4项，也不能仅因套用模板即认定完成。\n\n三、建议的试行方式\n如获同意，建议下季度先从已更新的14项中选择适宜事项试行，模板围绕办理事项、材料要求、注意事项和咨询方式组织内容，删减重复表达，保留必要条件与限制。拟设置事项清单和责任清单，合称“双清单”：前者记录每项提示的问题、依据和处理状态，后者明确维护、核对、审定的责任及交接关系。综合岗形成文本，运营岗核对业务流程与材料要求，网点负责人审定后再使用。对4项待确认内容，建议逐项列明争议和所需解释，待口径明确后再安排更新，不预设完成日期。\n\n四、提请决策事项\n提请分行决定是否同意上述试行建议。如同意，建议进一步明确试行范围和观察周期，通过客户咨询中的理解障碍、员工使用反馈及表述差异记录评估效果，再决定是否扩大使用。具体实施安排仍需确认，本汇报不作为已批准部署或完成时限承诺。",
+    "actions": [
+      {
+        "action": "read_skill",
+        "target": "tests/bank_writing_upgrade_evaluation/inputs/skill_b/SKILL.md",
+        "result": "已完整读取；未修改技能。"
+      },
+      {
+        "action": "read_references",
+        "targets": [
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/speech-and-report.md",
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/writing-review.md"
+        ],
+        "result": "所列参考可读且已读取。"
+      },
+      {
+        "action": "writing_precheck",
+        "result": "任务类型与交付要求明确，所需素材可读，所用参考可读；文本案例无需本地写入探针。"
+      },
+      {
+        "action": "author_reader_review",
+        "result": "按目标读者检查简称释义、事实背景、决策或执行要求；仅作者视角检查，未进行独立盲读或委派。"
+      },
+      {
+        "action": "compose_and_review",
+        "result": "在对话推理中直接形成完整回答，核对素材中的数字、状态与责任；未使用脚本生成、改写或转换正文。无业务文件生成。"
+      }
+    ],
+    "result": {
+      "completed": true,
+      "blockers": [],
+      "limitations": []
+    }
+  },
+  {
+    "id": "E3O",
+    "prompt": "以下均为虚构测试素材：柳溪支行第三季度梳理18项服务提示，其中14项已更新，4项因涉及跨部门解释尚待确认；开展员工交流3次、共28人次参加，不能视为28名不同员工。客户咨询记录显示部分提示过长、个别材料清单表述不一致，没有满意度调查或投诉同比数据。拟试行统一服务提示模板，尚未获批。拟设“双清单”，指事项清单与责任清单。职责安排：综合岗维护内容，运营岗核对流程，网点负责人审定；这些职责已明确。后续4项的完成时间未确定。可提出下季度安排建议，但不能写成已批准或承诺。\n请据此写一份约700字工作汇报，给负责落实的网点综合岗与运营岗阅读，便于理解已完成工作、未解决问题和下一步如何协作。直接交付完整稿，不需要文件。",
+    "response": "柳溪支行第三季度服务提示梳理工作汇报\n\n本季度服务提示梳理已完成部分更新，仍有跨部门解释事项待确认。综合岗、运营岗下一步协作，应分别把握已更新、待确认和拟试行三类状态，避免将模板建议当作现行安排。\n\n一、已完成的工作\n第三季度共梳理18项服务提示，其中14项已更新。开展员工交流3次，累计28人次参加，记录和汇报时应使用“人次”，不能写成28名不同员工。职责已明确：综合岗负责维护内容，运营岗负责核对流程，网点负责人负责审定。上述分工可以作为后续交接依据，但不代表统一模板已获批准。\n\n二、尚未解决的问题\n其余4项涉及跨部门解释，尚待确认，完成时间未定。客户咨询记录还反映部分提示过长、个别材料清单表述不一致。现有素材没有满意度调查或投诉同比数据，暂不能用这些指标评价成效。已更新14项与待确认4项应分开记录，不能以已开展交流代替问题解决，也不能自行补写跨部门口径。\n\n三、建议的协作步骤\n建议下季度建立“双清单”，即事项清单与责任清单，目前尚属拟议安排。事项清单建议列明提示名称、现有表述、具体问题、确认依据和处理状态；责任清单建议列明综合岗维护、运营岗核对、负责人审定的交接环节。综合岗可先整理长句和重复内容，标出清单表述差异；运营岗对照实际流程核对材料要求，反馈修改意见；综合岗据此修订后，提交网点负责人审定。各环节建议保留版本与意见，便于核对改动来源。\n\n对4项待确认内容，建议综合岗汇总需解释的问题，运营岗说明涉及的流程环节，报负责人协调确认。未获得明确口径前，应保留待确认标记，不以推测补齐，不承诺完成日期。\n\n四、统一模板的使用前提\n统一服务提示模板拟试行，尚未获批。建议先形成样稿，列清办理事项、材料要求和咨询方式，提交审议；获批后再按确定范围使用。试行中可共同记录客户理解困难和员工使用意见，用于调整模板。以上下一步措施均为建议，具体安排以确认结果为准。",
+    "actions": [
+      {
+        "action": "read_skill",
+        "target": "tests/bank_writing_upgrade_evaluation/inputs/skill_b/SKILL.md",
+        "result": "已完整读取；未修改技能。"
+      },
+      {
+        "action": "read_references",
+        "targets": [
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/comprehensive-writing.md",
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/writing-review.md"
+        ],
+        "result": "所列参考可读且已读取。"
+      },
+      {
+        "action": "writing_precheck",
+        "result": "任务类型与交付要求明确，所需素材可读，所用参考可读；文本案例无需本地写入探针。"
+      },
+      {
+        "action": "author_reader_review",
+        "result": "按目标读者检查简称释义、事实背景、决策或执行要求；仅作者视角检查，未进行独立盲读或委派。"
+      },
+      {
+        "action": "compose_and_review",
+        "result": "在对话推理中直接形成完整回答，核对素材中的数字、状态与责任；未使用脚本生成、改写或转换正文。无业务文件生成。"
+      }
+    ],
+    "result": {
+      "completed": true,
+      "blockers": [],
+      "limitations": []
+    }
+  },
+  {
+    "id": "T1",
+    "prompt": "请把这段素材整理成一段简短的季度工作汇报。素材只有：本季度拟开展一次客户服务培训；是否已启动、是否完成都尚未确认。请保持事实准确。",
+    "response": "本季度拟开展一次客户服务培训。目前，培训是否已启动、是否已完成均尚未确认，实际实施进展和完成情况待核实。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+    "actions": [
+      {
+        "action": "read_skill",
+        "target": "tests/bank_writing_upgrade_evaluation/inputs/skill_b/SKILL.md",
+        "result": "已完整读取；未修改技能。"
+      },
+      {
+        "action": "read_references",
+        "targets": [
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/comprehensive-writing.md",
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/writing-review.md"
+        ],
+        "result": "所列参考可读且已读取。"
+      },
+      {
+        "action": "writing_precheck",
+        "result": "任务类型与交付要求明确，所需素材可读，所用参考可读；文本案例无需本地写入探针。"
+      },
+      {
+        "action": "compose_and_review",
+        "result": "在对话推理中直接形成完整回答，核对素材中的数字、状态与责任；未使用脚本生成、改写或转换正文。无业务文件生成。"
+      }
+    ],
+    "result": {
+      "completed": true,
+      "blockers": [],
+      "limitations": []
+    }
+  },
+  {
+    "id": "T2",
+    "prompt": "请从零为一个虚构银行网点拟一份精简的反诈宣传活动方案。我暂时没有具体时间、预算、人数或审批信息，你可以提出安排建议。",
+    "response": "虚构银行网点反诈宣传活动方案（建议稿）\n\n一、活动目的\n帮助客户识别常见诈骗话术，增强核实信息、保护个人资料和谨慎转账的意识。\n\n二、活动安排\n建议以“多一分核实，少一分风险”为主题，在网点设置简短宣讲与咨询环节，面向自愿参与的到店客户。单场可按约30分钟设计，具体日期、参与人数、场地条件和预算待确认；本方案尚无已获审批的信息，实施前应按内部要求完成确认。\n\n三、活动流程\n1. 活动前：建议工作人员准备简明提示卡和虚构情景题，核对宣传内容，确认现场动线与人员分工。\n2. 活动中：建议先作简短提醒，再用冒充熟人、虚假投资等情景说明核实方法，最后安排问答。提醒客户遇到可疑情况先暂停操作，通过可信渠道核实。\n3. 活动后：建议汇总实际参与人次、常见疑问与答题情况，记录需要改进的表达，不预先承诺宣传成效。\n\n四、建议分工与保障\n建议网点负责人统筹审核，综合岗准备物料和记录，运营岗核对业务提示并维持营业秩序；具体人员待落实。优先利用现有场地和宣传渠道，新增费用列出明细后另行确认。\n\n活动不采集与宣传无关的身份、账户或交易信息，不使用真实客户案例；客流较大时可改为分批讲解或个别提示，避免影响正常办理业务。具体安排经确认后执行。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+    "actions": [
+      {
+        "action": "read_skill",
+        "target": "tests/bank_writing_upgrade_evaluation/inputs/skill_b/SKILL.md",
+        "result": "已完整读取；未修改技能。"
+      },
+      {
+        "action": "read_references",
+        "targets": [
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/activity-planning.md"
+        ],
+        "result": "所列参考可读且已读取。"
+      },
+      {
+        "action": "writing_precheck",
+        "result": "任务类型与交付要求明确，所需素材可读，所用参考可读；文本案例无需本地写入探针。"
+      },
+      {
+        "action": "compose_and_review",
+        "result": "在对话推理中直接形成完整回答，核对素材中的数字、状态与责任；未使用脚本生成、改写或转换正文。无业务文件生成。"
+      }
+    ],
+    "result": {
+      "completed": true,
+      "blockers": [],
+      "limitations": []
+    }
+  },
+  {
+    "id": "T3",
+    "prompt": "请只审校下面这段虚构汇报，不需要整篇改写：截至6月底，本季度计划开展的客户培训已经全部完成，培训是否启动尚未核实。服务投诉从上季度10件增至本季度12件，说明服务水平显著提升。我们高度重视、全面发力、成效卓著。",
+    "response": "1. “本季度计划开展的客户培训已经全部完成，培训是否启动尚未核实。”\n问题：事实状态自相矛盾。是否启动尚未核实，无法同时确认全部完成。\n最小修改建议：“截至6月底，本季度计划开展的客户培训是否启动、是否完成尚待核实。”\n\n2. “服务投诉从上季度10件增至本季度12件，说明服务水平显著提升。”\n问题：结论缺乏依据。原文数字显示投诉增加2件，不能据此推出服务水平显著提升；比较前还应核对两季度的统计范围和投诉口径是否一致。\n最小修改建议：“服务投诉由上季度10件增至本季度12件，增加2件；统计口径及具体原因需进一步核实。”删除“说明服务水平显著提升”。\n\n3. “我们高度重视、全面发力、成效卓著。”\n问题：前两项属于空泛表态，“成效卓著”则是缺少事实支撑的效果判断。\n最小修改建议：删除本句；如需保留工作说明，应补入已核实的具体措施与结果，不能仅换成另一组套话。\n\n以上仅依据所给文本审校，未进行外部事实核验。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+    "actions": [
+      {
+        "action": "read_skill",
+        "target": "tests/bank_writing_upgrade_evaluation/inputs/skill_b/SKILL.md",
+        "result": "已完整读取；未修改技能。"
+      },
+      {
+        "action": "read_references",
+        "targets": [
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/writing-review.md",
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/business-analysis.md"
+        ],
+        "result": "所列参考可读且已读取。"
+      },
+      {
+        "action": "writing_precheck",
+        "result": "任务类型与交付要求明确，所需素材可读，所用参考可读；文本案例无需本地写入探针。"
+      },
+      {
+        "action": "compose_and_review",
+        "result": "在对话推理中直接形成完整回答，核对素材中的数字、状态与责任；未使用脚本生成、改写或转换正文。无业务文件生成。"
+      }
+    ],
+    "result": {
+      "completed": true,
+      "blockers": [],
+      "limitations": []
+    }
+  },
+  {
+    "id": "T4",
+    "prompt": "请为虚构银行网点起草一段服务提示，内容是提醒客户在办理业务前检查是否带齐所需材料；不知道具体材料清单，请不要列举。语气亲切简短。",
+    "response": "温馨提示：办理业务前，请确认已带齐所需材料。如不确定，请向工作人员咨询，我们很乐意为您解答。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+    "actions": [
+      {
+        "action": "read_skill",
+        "target": "tests/bank_writing_upgrade_evaluation/inputs/skill_b/SKILL.md",
+        "result": "已完整读取；未修改技能。"
+      },
+      {
+        "action": "read_references",
+        "targets": [
+          "tests/bank_writing_upgrade_evaluation/inputs/skill_b/references/business-analysis.md"
+        ],
+        "result": "所列参考可读且已读取。"
+      },
+      {
+        "action": "writing_precheck",
+        "result": "任务类型与交付要求明确，所需素材可读，所用参考可读；文本案例无需本地写入探针。"
+      },
+      {
+        "action": "compose_and_review",
+        "result": "在对话推理中直接形成完整回答，核对素材中的数字、状态与责任；未使用脚本生成、改写或转换正文。无业务文件生成。"
+      }
+    ],
+    "result": {
+      "completed": true,
+      "blockers": [],
+      "limitations": []
+    }
+  },
+  {
+    "id": "T5",
+    "prompt": "请将下面已经确认的最终正文生成DOCX文档，文件名service_notice.docx，采用商务排版。标题：服务提示。正文：办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。",
+    "response": "已生成：[service_notice.docx](/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_upgrade_evaluation/runs/b_audience/service_notice.docx)。\n\n已通过内容、结构、ZIP CRC 和排版意图检查；未进行阅读器视觉验证。因缺少归档配置，归档已跳过，主文件生成成功。\n\n本次采用商务排版，也可按需调整字体、字号和页边距，或改用公文、学术排版。",
+    "actions": [
+      {
+        "action": "read_skill",
+        "target": "tests/bank_writing_upgrade_evaluation/inputs/skill_b/SKILL.md",
+        "result": "已完整读取；未修改技能。"
+      },
+      {
+        "action": "read_references",
+        "targets": [],
+        "result": "此例为已确认正文导出，转入项目 docx 技能。"
+      },
+      {
+        "action": "writing_precheck",
+        "result": "任务类型与交付要求明确，所需素材可读，所用参考可读；文本案例无需本地写入探针。"
+      },
+      {
+        "action": "read_docx_skill",
+        "targets": [
+          "skills/docx/SKILL.md",
+          "skills/docx/references/generation.md"
+        ],
+        "result": "已完整读取，使用已授权最终正文及 business 主题。"
+      },
+      {
+        "action": "environment_check",
+        "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/create_docx.py --check",
+        "cwd": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_upgrade_evaluation/runs/b_audience",
+        "exit_code": 0,
+        "output": "archive-location: skipped; reason=missing_router_config\npython=3.13.12 required>=3.10 supported=True\nzlib=ok\nexpat=expat_2.6.3 required>=2.6.0 supported=True\noutput_dir=. writable=True\ncheck-ok\n"
+      },
+      {
+        "action": "write_docx_input",
+        "target": "service_notice_input.json",
+        "result": "以标准库 JSON 独占写入，title 块为服务提示，paragraph 块逐字保留已确认正文，theme=business。"
+      },
+      {
+        "action": "generate_docx",
+        "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/create_docx.py ./service_notice_input.json service_notice.docx --verify --require-no-placeholders",
+        "exit_code": 0,
+        "result": {
+          "status": "verified",
+          "generation_status": "verified",
+          "output": "service_notice.docx",
+          "output_dir": ".",
+          "used_fallback": true,
+          "fallback_reason": "missing_router_config",
+          "archive_output": null,
+          "archive_status": "skipped",
+          "warnings": [],
+          "blocks": 2,
+          "zip_crc": true,
+          "structure": true,
+          "content_coverage": true,
+          "layout_intent": true,
+          "visual_validation": false,
+          "xsd_validation": false
+        }
+      },
+      {
+        "action": "verify_actual_file",
+        "target": "service_notice.docx",
+        "result": {
+          "exists": true,
+          "bytes": 2823,
+          "nonempty": true
+        }
+      },
+      {
+        "action": "retain_input_for_evidence",
+        "target": "service_notice_input.json",
+        "result": "保留本次生成输入作为评测证据，未删除用户输入或其他文件。"
+      }
+    ],
+    "result": {
+      "completed": true,
+      "blockers": [],
+      "limitations": [
+        "归档因 missing_router_config 跳过；未进行视觉、字体可用性或完整 XSD 验证。"
+      ]
+    }
+  }
+]

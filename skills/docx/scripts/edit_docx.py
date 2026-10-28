@@ -20,6 +20,7 @@ from office.package import pack_document, unpack_document
 from office.helpers import XML_SPACE, reject_signed_package
 from office.xmlio import parse_dom, read_xml
 from office.validators.structure import StructureValidator, W
+from archive_deliverables import archive_outputs, validate_output_path
 
 XML_NS = "http://www.w3.org/XML/1998/namespace"
 XMLNS_NS = "http://www.w3.org/2000/xmlns/"
@@ -395,7 +396,9 @@ def main(argv=None):
     parser.add_argument("--parts", nargs="+", default=["word/document.xml"])
     parser.add_argument("--require-no-placeholders", action="store_true")
     args = parser.parse_args(argv)
+    protected_inputs = [args.input, args.replacements]
     try:
+        args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         with args.replacements.open(encoding="utf-8") as stream:
             specification = json.load(stream)
         result = replace_text(
@@ -405,7 +408,16 @@ def main(argv=None):
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
-    print(result)
+    archive_result = archive_outputs([args.output], protected_inputs)
+    payload = {
+        "result": result if isinstance(result, dict) else str(result),
+        "output": args.output.as_posix(),
+        **archive_result,
+        "status": "edited",
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    for warning in archive_result["warnings"]:
+        print("archive-warning: " + warning, file=sys.stderr)
     return 0
 
 

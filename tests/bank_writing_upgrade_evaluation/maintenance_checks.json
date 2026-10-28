@@ -1,0 +1,30 @@
+{
+  "checked_baseline_files": 343,
+  "observed_outside_scope_changes": [
+    "skills/docx/scripts/test_archive_deliverables.py",
+    "skills/docx/scripts/output_location.py",
+    "skills/docx/references/generation.md",
+    "skills/docx/scripts/edit_docx.py",
+    "skills/docx/references/delivery.md",
+    "skills/docx/references/security.md",
+    "skills/docx/scripts/test_docx_delivery.py",
+    "skills/docx/scripts/test_edit_delivery.py",
+    "skills/docx/scripts/edit_tables.py",
+    "skills/docx/scripts/archive_deliverables.py",
+    "skills/docx/scripts/test_output_location.py",
+    "skills/docx/scripts/create_docx.py",
+    "skills/docx/scripts/edit_structure.py",
+    "skills/docx/references/validation.md",
+    "skills/docx/scripts/manage_comments.py",
+    "skills/docx/scripts/replace_image.py",
+    "skills/docx/SKILL.md"
+  ],
+  "outside_scope_handling": "No writes or reverts to these files by this task; concurrent changes retained. Do not claim all unrelated files stayed byte-identical.",
+  "source_equals_final_snapshot": true,
+  "description_characters": 120,
+  "description_review": "Retained: accurately states writing/editing/integration/review and pure-text boundary. No new generation capability.",
+  "markdown_links_checked": 10,
+  "identical_paired_inputs": true,
+  "no_skill_python_changes": true,
+  "no_new_runtime_dependencies": true
+}

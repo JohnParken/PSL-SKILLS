@@ -21,6 +21,7 @@ if __package__ in (None, ""):
 from office.helpers import MAX_PART_BYTES
 from office.package import pack_document, unpack_document
 from office.validators.structure import R, W, StructureValidator
+from archive_deliverables import archive_outputs, validate_output_path
 
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 PIC = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -160,13 +161,24 @@ def main(argv=None):
     parser.add_argument("selection", type=Path)
     parser.add_argument("output", type=Path)
     args = parser.parse_args(argv)
+    protected_inputs = [args.input, args.replacement, args.selection]
     try:
+        args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         result = replace_image(args.input, args.replacement, args.output,
                                json.loads(args.selection.read_text(encoding="utf-8")))
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
-    print(result)
+    archive_result = archive_outputs([args.output], protected_inputs)
+    payload = {
+        "result": result if isinstance(result, dict) else str(result),
+        "output": args.output.as_posix(),
+        **archive_result,
+        "status": "edited",
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    for warning in archive_result["warnings"]:
+        print("archive-warning: " + warning, file=sys.stderr)
     return 0
 
 

@@ -1,0 +1,314 @@
+{
+  "schema_version": "wps_validation_evidence_v1",
+  "current": {
+    "version": "20261027.2320.5486",
+    "python": "3.12.12",
+    "expat": "2.6.3",
+    "stdlib_only": true,
+    "wps_tests": {
+      "passed": 400,
+      "failed": 0,
+      "skipped": 0
+    },
+    "related_current_tests": {
+      "docx": 86,
+      "xlsx": 274,
+      "ofd": 35,
+      "repository_et_pipeline": 2,
+      "total": 797,
+      "failed": 0,
+      "skipped": 0
+    },
+    "structure_and_links": "strict and independent local Markdown path/anchor checks passed",
+    "real_et_ett_baseline": {
+      "source_version": "20261027.2227.1446",
+      "samples": 4,
+      "independent_stored_values": 198,
+      "unverified_formula_caches": 33,
+      "rerun_this_document_only_batch": false
+    },
+    "description": {
+      "characters": 141,
+      "changed_this_batch": false,
+      "scope_manually_reviewed": true
+    },
+    "model_evaluation": {
+      "method": "metadata-only selection then actual local tasks; full prompts, hashes and raw model replies stored in repository maintenance records",
+      "before_selection": {
+        "correct": 12,
+        "total": 12
+      },
+      "after_selection": {
+        "correct": 12,
+        "total": 12
+      },
+      "final_forward_tasks": {
+        "completed": 3,
+        "blocked": 0,
+        "failed": 0
+      },
+      "initial_xlsx_shape_regression": "found by actual model forward task, fixed and independently retested",
+      "real_host_auto_activation": false
+    },
+    "independent_review": "No uncorrected blocking issue after coverage-list fix",
+    "package": "Built and verified separately against final source; SHA recorded outside package to avoid self-reference",
+    "limits": [
+      "No genuine user failed ET case supplied; no broad native WPS conformance acceptance",
+      "Real .wps body and government OFD acceptance incomplete; no restricted sample accessed",
+      "Naming linter unavailable/not installed; manual identifiers and syntax reviewed"
+    ]
+  },
+  "history": [
+    {
+      "version": "20261027.1946.3271",
+      "note": "Archived previous evidence object; nested stage records retain original versions, environments and limits",
+      "evidence": {
+        "python": "3.12.14",
+        "expat": "expat_2.8.3",
+        "python_source_unchanged": true,
+        "syntax_compilation": "passed",
+        "full_regression": {
+          "passed": 324,
+          "skipped": 0,
+          "failed": 0
+        },
+        "dedicated_naming_linter": "not_available_not_run",
+        "real_et_ett": {
+          "samples": 4,
+          "stored_values": 198,
+          "formula_caches_unverified": 33,
+          "default_and_opaque": "passed",
+          "independent_source_values": "198_match_frozen_expectations"
+        },
+        "real_wps_original_acceptance": "not_completed_missing_verifiable_original_and_independent_content",
+        "binary_table_evidence": "synthetic_only_partial_rows_not_full_grid",
+        "checked_on": "2026-10-27",
+        "skill_version": "20261027.1946.3271",
+        "legacy_environment": {
+          "python": "3.9.6",
+          "expat": "2.2.8",
+          "passed": 222,
+          "skipped": 102,
+          "failed": 0
+        },
+        "strict_structure": "passed",
+        "description_review": {
+          "characters": 144,
+          "manual_scope_review": "passed",
+          "real_host_activation": "not_tested"
+        },
+        "subagent_execution": [
+          {
+            "task": "luna__read_coverage",
+            "model": "gpt-6-luna",
+            "owned": "diagnostic summary and tests",
+            "focused_tests_passed": 11
+          },
+          {
+            "task": "luna__sample_acceptance",
+            "model": "gpt-6-luna",
+            "owned": "offline sample verifier and tests",
+            "focused_tests_passed": 9
+          }
+        ],
+        "limits": [
+          "No independently accepted genuine .wps body or binary table sample",
+          "No full grid, merges, nested tables, rendering or formula recalculation",
+          "Existing ZIP packages were not updated"
+        ],
+        "et_parser_strengthening": {
+          "python": "3.12.14",
+          "expat": "expat_2.8.3",
+          "checks": [
+            {
+              "name": "selfcheck",
+              "exit_code": 0,
+              "duration_seconds": 0.05
+            },
+            {
+              "name": "regression",
+              "exit_code": 0,
+              "duration_seconds": 2.587
+            },
+            {
+              "name": "legacy_regression",
+              "exit_code": 0,
+              "duration_seconds": 3.57
+            },
+            {
+              "name": "real_et_default",
+              "exit_code": 0,
+              "duration_seconds": 0.055
+            },
+            {
+              "name": "real_et_opaque",
+              "exit_code": 0,
+              "duration_seconds": 0.058
+            }
+          ],
+          "source_unchanged": true,
+          "syntax_compilation": "passed",
+          "regression_passed": 352,
+          "legacy_passed": 250,
+          "legacy_skipped": 102,
+          "real_samples": 4,
+          "stored_values_checked": 198,
+          "unverified_formula_caches": 33,
+          "new_features_real_producer_acceptance": false,
+          "naming_linter": "unavailable_not_run",
+          "skill_version": "20261027.1955.3157",
+          "checked_on": "2026-10-27",
+          "capacity_tests": {
+            "unique_strings": 200000,
+            "merge_ranges": 65536,
+            "independent_random_merge_cases": 200
+          },
+          "xlsx_header_regression_passed": 11,
+          "description_review": "unchanged_144_characters_scope_consistent_host_trigger_not_tested",
+          "strict_structure": "passed",
+          "subagent_execution": {
+            "task": "luna__et_strings",
+            "agent": "luna_worker",
+            "model": "gpt-6-luna",
+            "reasoning": "max",
+            "spawn_calls": 1,
+            "correction_calls": 1,
+            "message_calls": 3,
+            "focused_tests_passed": {
+              "phonetic": 9,
+              "rich_strings": 11,
+              "continue": 5
+            },
+            "main_review": "accepted_after_preallocation_entry_budget_correction"
+          },
+          "xlsx_wps_adapter_regression_passed": 7,
+          "downstream_limit": "Adjacent xlsx WPS JSON adapter remains limited to 256 merges per sheet; target WPS reader and its native header path support the new bounded capacity."
+        },
+        "record_scope": "Earlier fields retain earlier stages. current_pure_table_validation is authoritative for the latest pure-table maintenance; current_default_data_validation is the previous default-policy stage.",
+        "current_default_data_validation": {
+          "version": "20261027.2126.5830",
+          "python": "3.12.12",
+          "expat": "2.6.3",
+          "wps_tests": {
+            "passed": 375,
+            "skipped": 0,
+            "failed": 0
+          },
+          "legacy_python_3_9_new_tests": {
+            "passed": 14,
+            "skipped": 0
+          },
+          "related_regression": {
+            "xlsx": 269,
+            "docx": 81,
+            "ofd": 35,
+            "total_with_wps": 760,
+            "failed": 0,
+            "skipped": 0
+          },
+          "real_et_ett": {
+            "samples": 4,
+            "before_default_exit": 1,
+            "after_default_exit": 3,
+            "after_status": "partial",
+            "explicit_strict_exit": 1,
+            "stored_values_matched": 198,
+            "formula_caches_unverified": 33,
+            "input_hashes_unchanged": true
+          },
+          "analysis_chain": "existing xlsx profile accepts data partial, preserves source_status and source_issues; native responsibilities unchanged",
+          "independent_source_review": "two findings corrected: missing-cache completeness and container diagnostics; final source pass found no further material defect",
+          "not_verified": [
+            "real host automatic selection",
+            "additional ET producer versions/private formats",
+            "rendering or formula recalculation",
+            "dedicated naming linter unavailable; not installed"
+          ]
+        },
+        "current_pure_table_validation": {
+          "version": "20261027.2150.4672",
+          "python": "3.12.12",
+          "expat": "2.6.3",
+          "wps_tests": {
+            "passed": 388,
+            "skipped": 0,
+            "failed": 0
+          },
+          "new_fixed_tests": 13,
+          "python_3_9_new_tests": {
+            "passed": 13,
+            "skipped": 0
+          },
+          "related_regression": {
+            "xlsx_full": 269,
+            "docx_routing": 5,
+            "total_with_wps": 662,
+            "failed": 0,
+            "skipped": 0
+          },
+          "new_pure_table_scenarios": [
+            "CodePage declarations932/936/1252 with self-describing Unicode fields",
+            "Plain Label reserved header bits",
+            "Formula String cached text reserved header bits, including existing shared/array groups",
+            "Format XLUnicodeString reserved header bits"
+          ],
+          "synthetic_differential": "four representative table-only scenarios fail1 on2126.5830 snapshot and returnpartial3 after change; raw values/caches retained",
+          "real_regression": {
+            "samples": 4,
+            "stored_values_matched": 198,
+            "formula_caches_unverified": 33,
+            "new_non1200_occurrences": 0,
+            "new_reserved_flag_occurrences": 0,
+            "scope": "Existing corpus is regression only, not production acceptance of these new cases"
+          },
+          "analysis_chain": "synthetic CodePage936+Unicode table partial JSON accepted; source partial and original issues preserved",
+          "independent_review": "read-only source review found no blocking issue; output-text budget negative added",
+          "not_extended": [
+            "BIFF versions before8",
+            "RString",
+            "SST/short-string/Continue flag interpretation",
+            "missing Date1904 inference",
+            "per-sheet recovery",
+            "images or chart features"
+          ],
+          "not_verified": [
+            "real user ET exercising new cases",
+            "more CodePage IDs or non-Unicode byte text",
+            "dedicated naming linter unavailable/not installed",
+            "real host automatic trigger"
+          ]
+        }
+      }
+    },
+    {
+      "version": "20261027.2227.1446",
+      "evidence": {
+        "version": "20261027.2227.1446",
+        "python": "3.12.12",
+        "expat": "2.6.3",
+        "stdlib_only": true,
+        "wps_tests": 400,
+        "xlsx_tests": 269,
+        "docx_routing_tests": 5,
+        "repository_pipeline_tests": 2,
+        "failed": 0,
+        "skipped": 0,
+        "python39_new_file_tests": 12,
+        "description_characters": 141,
+        "independent_selection": {
+          "cases": 10,
+          "method": "simulated selection plus actual synthetic ET forward task; not host automatic trigger"
+        },
+        "real_et_ett": {
+          "sources": 4,
+          "independent_stored_values": 198,
+          "unverified_formula_caches": 33,
+          "new_real_failure_case_acceptance": false
+        },
+        "independent_code_review": "no blocking defect found",
+        "scope": "common bounded file/CFB input safety, preserved strict legacy return contract, task-oriented ET and Word entry, complete partial JSON consumption",
+        "naming_linter": "not available/not run; manual new identifiers and syntax reviewed"
+      }
+    }
+  ]
+}

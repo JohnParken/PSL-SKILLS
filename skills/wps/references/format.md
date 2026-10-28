@@ -14,8 +14,11 @@
 | MS-DOC附加故事 | 显式六类CP分区，正文保持独立 | 合成分区/脚尾注/批注作者CP映射和节页眉槽；真实六区为空未验；不能称有效编号或某页页眉恢复 |
 | Strict/Transitional OOXML Word | 正文、表格文字、修订视图、显式关系/引用ID关联文字 | 合成；未知namespace/MC/绘图/字段等partial，需Expat>=2.6 |
 | OOXML逻辑表格 | tables坐标/gridSpan/vMerge/空单元格/嵌套来源 | 仅合成；缺网格坐标unknown/partial，默认文字契约保持，不渲染页面 |
+| MS-DOC直接PAPX行/单元格 | 一级行、文字、CP来源与初始列定义，partial | 仅合成；不归组表格、不恢复合并/嵌套，未知操作保留未解析诊断 |
 | BIFF8 plain SST/String Continue | typed cells/长字符串/日期元数据/缓存 | 四个既有真实ET/ETT及合成；不重算缓存 |
-| BIFF8 rich SST及Continue | 文字+原始格式run信息，partial | 仅合成；字符编码与run续段分开，不应用字体布局，phonetic仍拒绝 |
+| BIFF8 plain Label及Continue | 内联单元格文字，保留来源与类型 | 新增布局仅合成；[data普通Unicode兼容](biff8-readonly.md#pure-table-unicode-compatibility)忽略保留位并报告partial；不支持RString或实际富格式/注音尾布局，不按GBK猜解码 |
+| BIFF8视图/分页元数据 | data默认或显式legacy_excel_clsid保留Palette/Pane/横纵分页原始字节 | 结构检查后保留，不应用布局；显式strict仍拒绝，新增布局仅合成 |
+| BIFF8 rich SST及Continue | 文字+原始格式run信息，partial | 仅合成；字符编码与run续段分开，不应用字体布局；phonetic ExtRst 另保留原始字节且未解码 |
 | BIFF8共享/数组公式 | 各单元格保存的缓存+组范围/锚点，partial | 仅合成；不恢复表达式、不重算，不将锚点缓存广播 |
 | OOXML电子表格及ISO日期类型d | Strict/Transitional保存值、缓存、合并、原始日期字符串 | 仅合成；日期不转serial，复杂样式unknown，关联部件仍有限 |
 | 其他FIB、私有WPS/Works | unsupported | 不猜测、不自动转换或软件回退 |
@@ -40,11 +43,11 @@ csw14、cslw22、Windows envr0，nFibBack允许BF/C1。由cswNew决定使用base
 
 CLX取fc/lcb索引33，按标志选0Table/1Table；Prc有界跳过，复杂Prm检查零基索引后不应用格式。唯一末尾Pcdt必须长度/边界正确。压缩片段按FcCompressed映射，UTF16按逻辑片段拼接，严格代理对解码。默认仅读CP[0,ccpText)，其他故事仅边界检查。显式include-related按公开FIB顺序输出六区及CP半开范围；最后额外CP不输出；每区独立代理对/字段闭合，不能借下一故事修复。有界脚注尾注引用表见[CP映射](binary-note-references.md)，批注见[作者/引用](binary-comments.md)，节与页眉存储槽见[分节](binary-headers.md)，其他引用未知partial，见[存储故事](ms-doc-stories.md)。
 
-CR划分逻辑段落，软换行转LF，单元格标记转TAB；不重建表格行列/页面布局。合法空片段表成功空正文。字段默认拒绝；cached_result只按13/14/15分隔符与有界嵌套保留存储结果，隐藏指令不输出；缺损字段为corrupt。无分隔字段省略并记录partial，不执行任何指令。U+0001仅在placeholder模式替换U+FFFC，保留CP/偏移诊断，不能推断是图片还是其他二进制数据；其他未支持控制符仍拒绝。
+CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见[二进制表格](binary-tables.md)。合法空片段表成功空正文。字段默认拒绝；cached_result只按13/14/15分隔符与有界嵌套保留存储结果，隐藏指令不输出；缺损字段为corrupt。无分隔字段省略并记录partial，不执行任何指令。U+0001仅在placeholder模式替换U+FFFC，保留CP/偏移诊断，不能推断是图片还是其他二进制数据；其他未支持控制符仍拒绝。
 
 ## 兼容策略和来源
 
-严格CFB头要求零CLSID，入口主动限定minor003E。legacy_word_clsid只允许v3精确头字节0609020000000000c000000000000046，根WordDocument必须A5EC，且无Workbook/Book；不改写输入头。异常头永远记录partial，GUID不证明生成软件或完整MS-DOC。legacy_excel_clsid只用于BIFF工作簿，允许v3精确头字节2008020000000000c000000000000046及对应受限元数据，具体范围见[BIFF兼容](biff8-readonly.md#observed-legacy-compatibility)。Word与Excel策略不可交叉使用；OOXML仅strict。链、分配、重叠、目录、预算检查均保持。
+严格CFB头要求零CLSID，入口主动限定minor003E。legacy_word_clsid只允许v3精确头字节0609020000000000c000000000000046，根WordDocument必须A5EC，且无Workbook/Book；不改写输入头。异常头永远记录partial，GUID不证明生成软件或完整MS-DOC。legacy_excel_clsid只用于BIFF工作簿，允许v3精确头字节2008020000000000c000000000000046及对应受限元数据，具体范围见[BIFF兼容](biff8-readonly.md#observed-legacy-compatibility)。Word与Excel专用策略不可交叉使用；默认data对OOXML沿用strict解析，显式legacy仍不适用。data对MS-DOC不新增头部例外；只对BIFF启用已知Excel头和元数据策略，见[默认数据策略](biff8-readonly.md#default-data-policy)。链、分配、重叠、目录、预算检查均保持。
 
 CFB/BIFF已迁至wps包内唯一实现；不依赖相邻xlsx。CFB迁移基线hash为00dcd269218d94737e9ebad48c06fafa62b1fae72c3807a037fe7f1cd0bfb42a，此后新增只读打开及精确Word策略，不再逐字节相同。OOXML必要读取守卫来自docx，纯表头helper来自xlsx；原生流程仍保留各自必需代码。不得自动复制覆盖形成漂移。
 
@@ -58,7 +61,7 @@ OOXML解压前检查目录/成员/命名冲突，部件32MiB、累计128MiB、�
 
 BIFF流/记录/单元格/字符串预算保持；重复单元格文字及格式文本累计8Mi UTF16单位，JSON在完整输出前以iterencode限制16MiB。日期保留原始数值及date_system/XF/format，另有直接格式白名单numeric_interpretation；复杂格式unknown，可验证的cellXfs/cellStyleXfs两层数字格式来源及单一行列来源可有限解释；不推断完整样式级联或显示。公式tokens及已有缓存分开保留，未重算且可能过时；共享/数组支持与拒绝条件统一见[公式组边界](formula-groups.md)，字符串续段见[富文本续段](biff-rich-continuation.md)。其他记录范围详见[BIFF参考](biff8-readonly.md)。
 
-CLI选项以 `read_wps.py --help` 为准；含 `--hidden-text include|exclude|annotate`，分支适用性见主入口任务路由。统一CLI、Python API、失败字典与输出阶段例外详见[结果与失败契约](reading-assessment.md#入口与失败行为)。低层历史BIFF CLI沿用其成功status/退出0，优先使用统一入口。CFB及部分BIFF诊断仍仅阶段/消息，并非每处都有精确偏移。
+CLI选项以 `read_wps.py --help` 为准；含 `--hidden-text include|exclude|annotate`，分支适用性见主入口任务路由。统一CLI、Python API、失败字典与输出阶段例外详见[结果与失败契约](reading-assessment.md#入口与失败行为)。BIFF文件CLI默认data，ok/partial分别退出0/3；显式strict/legacy的低层历史状态及成功退出0保留，优先使用统一入口。CFB及部分BIFF诊断仍仅阶段/消息，并非每处都有精确偏移。
 
 ## 数字解释与保存可见性
 
@@ -72,7 +75,7 @@ CLI选项以 `read_wps.py --help` 为准；含 `--hidden-text include|exclude|an
 
 ## OOXML结构化表格
 
-JSON的tables是独立逻辑结构，保留唯一ID、父表/父单元格、来源部件和路径、行与单元格、段落/run顺序以及合并锚点；嵌套表文字不复制入父cell.text。附加故事表格只在include-related时收集。缺失网格或无法可靠解释的网格扩展明确partial，保留文字且不猜列坐标；结构冲突拒绝。二进制MS-DOC仍仅文字/TAB，不恢复表格结构。新表格能力尚无真实WPS独立内容对照，见[精确范围](ooxml-tables.md)。
+JSON的tables是独立逻辑结构，保留唯一ID、父表/父单元格、来源部件和路径、行与单元格、段落/run顺序以及合并锚点；嵌套表文字不复制入父cell.text。附加故事表格只在include-related时收集。缺失网格或无法可靠解释的网格扩展明确partial，保留文字且不猜列坐标；结构冲突拒绝。二进制MS-DOC正文保持文字/TAB，另可读取有限一级行/单元格证据；不恢复合并和表格归组，见[二进制表格](binary-tables.md)。新表格能力尚无真实WPS独立内容对照，见[精确范围](ooxml-tables.md)。
 
 ## 隐藏文字与修订策略
 
@@ -93,3 +96,5 @@ OOXML hidden-text默认include，显式exclude/annotate共用XML预处理覆盖�
 ## 会计与条件数字格式
 
 [会计格式](accounting-formats.md)支持有限2–4位置段，保留Decimal原值与原格式；移除填充后的display_text不代表列宽或页面显示。[纯数值条件](conditional-number-formats.md)仅支持至多两个常量比较与后备段；区域指令仅元数据，颜色及复杂混合语法仍unknown。批注保留单元格、作者、文本与关系来源，不并入单元格值，布局未解码partial。所有新增能力只作标准库合成测试；真实Balance格式字节可检查，不等于独立显示对照。
+
+默认 MS-DOC 检测到非空未选附加故事时，返回 `omitted_regions` 的类型/CP范围并标为 partial，不读取或复制其文字。已知表格标记但结构不完整时同样 partial。统一范围摘要另提供有界 coverage；见[结果契约](reading-assessment.md)。

@@ -1,0 +1,240 @@
+{
+  "scope": "Repository tree including skills/dist and existing project output folders; no global home/Library scan",
+  "state": "completed",
+  "trash_directory": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653",
+  "retained": [
+    "skills/docx-20261027.2320.5486.zip",
+    "skills/ofd-20261026.2117.0168.zip",
+    "skills/wps-20261027.2320.5486.zip",
+    "skills/xlsx-20261027.2320.5486.zip"
+  ],
+  "moved": [
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/ofd-20261026.0822.1894.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/ofd-20261026.0822.1894.zip",
+      "bytes": 23922
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261023.1858.1847.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261023.1858.1847.zip",
+      "bytes": 363759
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1954.4064.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1954.4064.zip",
+      "bytes": 167945
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261025.2012.3111.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261025.2012.3111.zip",
+      "bytes": 324992
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1746.0836.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1746.0836.zip",
+      "bytes": 100409
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.2041.0675.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.2041.0675.zip",
+      "bytes": 234553
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261025.1814.1677.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261025.1814.1677.zip",
+      "bytes": 323593
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1817.2079.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1817.2079.zip",
+      "bytes": 112693
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261026.2106.1644.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261026.2106.1644.zip",
+      "bytes": 242662
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.2023.4287.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.2023.4287.zip",
+      "bytes": 195962
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261025.1814.1677.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/docx-20261025.1814.1677.zip",
+      "bytes": 140933
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1939.3183.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1939.3183.zip",
+      "bytes": 151239
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261026.2100.4983.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261026.2100.4983.zip",
+      "bytes": 242663
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261025.1702.3834.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261025.1702.3834.zip",
+      "bytes": 322000
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1559.0636.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1559.0636.zip",
+      "bytes": 25198
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261026.2104.5788.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261026.2104.5788.zip",
+      "bytes": 242663
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1927.0899.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1927.0899.zip",
+      "bytes": 135702
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261027.2150.4672.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261027.2150.4672.zip",
+      "bytes": 303022
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1705.2894.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1705.2894.zip",
+      "bytes": 91518
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.2240.5053.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.2240.5053.zip",
+      "bytes": 236640
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261025.1947.5041.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261025.1947.5041.zip",
+      "bytes": 324093
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1917.3616.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1917.3616.zip",
+      "bytes": 122938
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.2017.5901.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.2017.5901.zip",
+      "bytes": 181983
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261027.2126.5830.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261027.2126.5830.zip",
+      "bytes": 296389
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261026.2104.5788.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/docx-20261026.2104.5788.zip",
+      "bytes": 150189
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1947.5041.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1947.5041.zip",
+      "bytes": 165994
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261025.1704.3357.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/docx-20261025.1704.3357.zip",
+      "bytes": 139926
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261027.2227.1446.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261027.2227.1446.zip",
+      "bytes": 309768
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261023.1913.5483.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261023.1913.5483.zip",
+      "bytes": 370847
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1932.5412.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1932.5412.zip",
+      "bytes": 144415
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261026.2104.5788.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261026.2104.5788.zip",
+      "bytes": 325219
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/ofd-20261026.2104.5788.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/ofd-20261026.2104.5788.zip",
+      "bytes": 29394
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.1522.3858.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.1522.3858.zip",
+      "bytes": 16597
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/ofd-20261026.2100.4983.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/ofd-20261026.2100.4983.zip",
+      "bytes": 29285
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261026.2106.1644.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261026.2106.1644.zip",
+      "bytes": 325219
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.2031.5207.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.2031.5207.zip",
+      "bytes": 213806
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261026.2100.4983.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/xlsx-20261026.2100.4983.zip",
+      "bytes": 325220
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.2304.0172.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.2304.0172.zip",
+      "bytes": 236621
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/ofd-20261026.2106.1644.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/ofd-20261026.2106.1644.zip",
+      "bytes": 29392
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/ofd-20261026.0802.1832.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/ofd-20261026.0802.1832.zip",
+      "bytes": 20798
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261027.1715.1211.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/docx-20261027.1715.1211.zip",
+      "bytes": 161026
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261027.1839.5807.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/docx-20261027.1839.5807.zip",
+      "bytes": 162612
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261026.2100.4983.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/docx-20261026.2100.4983.zip",
+      "bytes": 150190
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261026.2106.1644.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/docx-20261026.2106.1644.zip",
+      "bytes": 150207
+    },
+    {
+      "source": "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps-20261025.2012.3111.zip",
+      "destination": "/Users/yangxuezhen/.Trash/PSL-SKILLS-releases-20261027T153156Z-e9b9d653/wps-20261025.2012.3111.zip",
+      "bytes": 176160
+    }
+  ],
+  "not_moved": [],
+  "note": "Historical ZIPs moved without opening or hashing them. No permanent deletion, overwrite, Library access or Trash emptying. Restore by moving each listed destination to its original source; do not overwrite existing files."
+}

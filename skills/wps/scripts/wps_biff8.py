@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Fail-closed MS-XLS BIFF8 record subset, independent of ET/ETT compatibility claims."""
+"""Bounded MS-XLS BIFF8 stored-value reader; data policy preserves known metadata gaps."""
 import argparse
 from decimal import Decimal
 import hashlib
@@ -17,10 +17,16 @@ from wps_visibility import SavedVisibility
 from wps_biff8_headers import column_name, address, reconstruct
 from wps_biff8_charts import CHART_POLICIES, drawing_frame, chart_end
 from wps_numeric import interpret_cell_number
+from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
+
+READING_MODES = COMPATIBILITY_MODES + ("data",)
+
+SUPPORTED_BIFF8_CODE_PAGES = {1200, 932, 936, 1252}
 
 MAX_RECORDS=100000
 MAX_CELLS=200000
-MAX_MERGES=256
+MAX_MERGES=65536
+MAX_SHARED_STRINGS=200000
 MAX_METADATA_BYTES=1024*1024
 MAX_OUTPUT_TEXT_UNITS=8*1024*1024
 ERRORS={0:'#NULL!',7:'#DIV/0!',15:'#VALUE!',23:'#REF!',29:'#NAME?',36:'#NUM!',42:'#N/A',43:'#GETTING_DATA'}
@@ -46,7 +52,13 @@ LEGACY_SHEET_METADATA={
     0x001D:'Selection',0x0099:'DxGCol',0x0867:'FeatHdr',
     0x0012:'Protect',0x0013:'Password',0x00DD:'ScenarioProtect',
     0x0063:'ObjProtect',0x00A0:'Scl',0x0862:'SheetExt'}
-
+# These records have bounded local framing checks before their original bytes
+# are retained. Their values are not applied to worksheet presentation.
+LEGACY_VALIDATED_GLOBAL_METADATA={0x0092:'Palette'}
+LEGACY_VALIDATED_SHEET_METADATA={0x0041:'Pane',0x001B:'HorizontalPageBreaks',0x001A:'VerticalPageBreaks'}
+PALETTE_COLOR_COUNT=56
+MAX_HORIZONTAL_PAGE_BREAKS=1026
+MAX_VERTICAL_PAGE_BREAKS=255
 
 
 class EncryptedError(ValueError):
@@ -80,27 +92,46 @@ class ContinuedStrings:
         self.position = 0
         require(bool(self.records[self.index][2]), 'Empty Continue record')
 
-    def string(self, allow_rich=False, metadata_budget=None):
+    def string(self, allow_rich=False, metadata_budget=None, allow_phonetic=False,
+               metadata_entries_remaining=None, ignore_reserved_flags=False):
         try:
-            return self._string(allow_rich, metadata_budget)
+            return self._string(allow_rich, metadata_budget, allow_phonetic,
+                                metadata_entries_remaining, ignore_reserved_flags)
         except ValueError as exc:
             # Add physical context without changing the expected failure class.
             # Programming errors (IndexError, TypeError, etc.) are not swallowed.
             index = min(self.index, len(self.records)-1)
-            offset = self.records[index][0]
-            raise type(exc)(f'{exc}; Workbook record_offset={offset} '
-                            f'payload_offset={self.position}') from exc
+            offset, kind, _ = self.records[index]
+            wrapped = type(exc)(f'{exc}; Workbook record_offset={offset} '
+                                f'payload_offset={self.position}')
+            wrapped.location = {'record_offset': offset,
+                                'payload_offset': self.position,
+                                'record_id': hex(kind)}
+            raise wrapped from exc
 
-    def _string(self, allow_rich=False, metadata_budget=None):
+    def _string(self, allow_rich=False, metadata_budget=None, allow_phonetic=False,
+                metadata_entries_remaining=None, ignore_reserved_flags=False):
         self.last_rich = None
+        self.last_phonetic = None
         payload = self.records[self.index][2]
         if self.position == len(payload):
             self.advance()
             payload = self.records[self.index][2]
         require(len(payload)-self.position >= 3, 'String fixed header crosses record boundary')
         count, flag = struct.unpack_from('<HB', payload, self.position)
+        self.last_flags_raw = flag
+        if ignore_reserved_flags:
+            require(not allow_rich and not allow_phonetic, 'Reserved masking applies only to plain XLUnicodeString')
+            flag &= 1
         require(count <= 32767, 'String count exceeds 32767')
-        if flag not in ((0, 1, 8, 9) if allow_rich else (0, 1)):
+        allowed_flags = {0, 1}
+        if allow_rich:
+            allowed_flags.update((8, 9))
+        if allow_phonetic:
+            allowed_flags.update((4, 5))
+        if allow_rich and allow_phonetic:
+            allowed_flags.update((12, 13))
+        if flag not in allowed_flags:
             raise UnsupportedError('Phonetic/rich-cache/unknown string flags unsupported')
         start = self.position
         record_offset = self.records[self.index][0]
@@ -111,10 +142,21 @@ class ContinuedStrings:
             run_count = struct.unpack_from('<H', payload, self.position)[0]
             self.position += 2
             require(run_count > 0, 'Rich string has no format runs')
-            budget = MAX_METADATA_BYTES if metadata_budget is None else metadata_budget
-            if run_count * 4 > min(MAX_METADATA_BYTES, budget):
-                raise ResourceLimitError('Rich string metadata budget exceeded before read')
-        flag &= 1
+        ext_length = 0
+        if flag & 4:
+            require(len(payload)-self.position >= 4, 'Phonetic string fixed header crosses record boundary')
+            ext_length = struct.unpack_from('<i', payload, self.position)[0]
+            self.position += 4
+            require(ext_length >= 0, 'Negative phonetic string cbExtRst')
+        metadata_entries = int(bool(flag & 8)) + int(bool(flag & 4))
+        if (metadata_entries_remaining is not None
+                and metadata_entries > metadata_entries_remaining):
+            raise ResourceLimitError('Rich/phonetic string metadata entry limit exceeded before read')
+        metadata_size = run_count * 4 + ext_length
+        budget = MAX_METADATA_BYTES if metadata_budget is None else metadata_budget
+        if metadata_size > min(MAX_METADATA_BYTES, budget):
+            raise ResourceLimitError('Rich/phonetic string metadata budget exceeded before read')
+        character_flag = flag & 1
         remaining = count
         units = bytearray()
         while remaining:
@@ -122,16 +164,16 @@ class ContinuedStrings:
             if self.position == len(payload):
                 self.advance()
                 payload = self.records[self.index][2]
-                flag = payload[0]
-                require(flag in (0, 1), 'Invalid Continue encoding flag')
+                character_flag = payload[0]
+                require(character_flag in (0, 1), 'Invalid Continue encoding flag')
                 self.position = 1
                 require(self.position < len(payload), 'Continue has no character data')
-            width = 2 if flag else 1
+            width = 2 if character_flag else 1
             available = len(payload)-self.position
             take = min(remaining, available//width)
             require(take > 0, 'UTF-16 character split within a Continue boundary')
             raw = payload[self.position:self.position+take*width]
-            if flag:
+            if character_flag:
                 units.extend(raw)
             else:
                 for byte in raw:
@@ -168,6 +210,23 @@ class ContinuedStrings:
             self.last_rich = {'record_offset': record_offset,
                               'payload_offset': start, 'utf16_units': count,
                               'run_count': run_count, 'runs_bytes': bytes(runs)}
+        if flag & 4:
+            # ExtRst is opaque metadata. Continue records here do not carry the
+            # character-encoding byte used while string characters remain.
+            needed = ext_length
+            ext_bytes = bytearray()
+            while needed:
+                payload = self.records[self.index][2]
+                if self.position == len(payload):
+                    self.advance()
+                    payload = self.records[self.index][2]
+                take = min(needed, len(payload)-self.position)
+                ext_bytes.extend(payload[self.position:self.position+take])
+                self.position += take
+                needed -= take
+            self.last_phonetic = {'record_offset': record_offset,
+                                  'payload_offset': start, 'utf16_units': count,
+                                  'ext_bytes': bytes(ext_bytes)}
         return value
 
     def finish(self):
@@ -179,11 +238,14 @@ def require(condition,message):
     if not condition: raise ValueError(message)
 
 
-def unicode_string(data,offset=0,short=False):
+def unicode_string(data,offset=0,short=False,ignore_reserved_flags=False):
     prefix=2 if short else 3
     require(len(data)>=offset+prefix,'Truncated Unicode string header')
     count=data[offset] if short else struct.unpack_from('<H',data,offset)[0]
     flag=data[offset+prefix-1]
+    if ignore_reserved_flags:
+        require(not short, 'Short string reserved flags have a separate contract')
+        flag &= 1
     require(count<=32767 and flag in (0,1),'Rich/phonetic/unknown string flags unsupported')
     start=offset+prefix; end=start+count*(2 if flag else 1)
     require(end<=len(data),'Truncated string; Continue records unsupported')
@@ -211,6 +273,14 @@ def rk_value(raw):
     return value
 
 
+def record_error(error_type, message, offset, kind=None):
+    error = error_type(message)
+    error.location = {'record_offset': offset}
+    if kind is not None:
+        error.location['record_id'] = hex(kind)
+    raise error
+
+
 def records(data):
     require(isinstance(data,bytes), 'BIFF stream must be bytes')
     if len(data) > MAX_STREAM_BYTES:
@@ -218,11 +288,14 @@ def records(data):
     output=[]; offset=0
     while offset<len(data):
         if len(output) >= MAX_RECORDS:
-            raise ResourceLimitError('BIFF record count limit exceeded')
-        require(len(data)-offset>=4,'Truncated BIFF record header')
+            record_error(ResourceLimitError, 'BIFF record count limit exceeded', offset)
+        if len(data) - offset < 4:
+            record_error(ValueError, 'Truncated BIFF record header', offset)
         kind,size=struct.unpack_from('<HH',data,offset)
-        require(size<=8224 and offset+4+size<=len(data),'Unsupported/oversized/truncated BIFF record payload')
-        if kind==0x002F: raise EncryptedError('Encrypted BIFF FILEPASS unsupported; no decryption attempted')
+        if size > 8224 or offset + 4 + size > len(data):
+            record_error(ValueError, 'Unsupported/oversized/truncated BIFF record payload', offset, kind)
+        if kind == 0x002F:
+            record_error(EncryptedError, 'Encrypted BIFF FILEPASS unsupported; no decryption attempted', offset, kind)
         output.append((offset,kind,data[offset+4:offset+4+size])); offset+=4+size
     require(output and output[0][1]==0x0809,'Stream must start with BIFF8 BOF, not a filename hint')
     return output
@@ -238,14 +311,19 @@ def bof(record,expected):
 
 class Reader:
     def __init__(self,data,*,compatibility="strict",chart_policy="reject"):
-        require(compatibility in COMPATIBILITY_MODES,"Unknown BIFF compatibility mode")
+        require(compatibility in READING_MODES,"Unknown BIFF compatibility mode")
         require(chart_policy in CHART_POLICIES,"Unknown chart policy")
-        require(chart_policy=="reject" or compatibility=="legacy_excel_clsid","Opaque chart retention requires explicit compatibility mode")
+        require(chart_policy=="reject" or compatibility in ("legacy_excel_clsid", "data"),"Opaque chart retention requires data or explicit compatibility mode")
         self.chart_policy=chart_policy; self.embedded_charts=[]; self.drawing_group_seen=False
         self.compatibility=compatibility
-        self.global_metadata={**GLOBAL_METADATA,**(LEGACY_GLOBAL_METADATA if compatibility=="legacy_excel_clsid" else {})}
-        self.sheet_metadata={**SHEET_METADATA,**(LEGACY_SHEET_METADATA if compatibility=="legacy_excel_clsid" else {})}
-        self.data=data; self.records=records(data); self.styles=[]; self.formats={}; self.strings=[]; self.rich_strings=[]; self.font_count=0
+        self.passive_issues = {}
+        self.global_metadata={**GLOBAL_METADATA,**(LEGACY_GLOBAL_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
+        self.sheet_metadata={**SHEET_METADATA,**(LEGACY_SHEET_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
+        self.code_page = None
+        self.format_string_flags = {}
+        self.string_flag_issues = {}
+        self.current_location = {'record_offset': 0, 'record_id': '0x809', 'scope': 'globals'}
+        self.data=data; self.records=records(data); self.styles=[]; self.formats={}; self.strings=[]; self.rich_strings=[]; self.phonetic_strings=[]; self.font_count=0
         self.metadata=[]; self.metadata_bytes=0; self.issues=[]; self.cell_count=0; self.merge_count=0; self.output_text_units=0
 
     def reserve_output_text(self, *values):
@@ -261,12 +339,40 @@ class Reader:
     def metadata_record(self,record,names,scope):
         offset,kind,payload=record
         self.metadata_bytes+=len(payload)
-        require(self.metadata_bytes<=MAX_METADATA_BYTES and len(self.metadata)<4096,'Uninterpreted metadata budget exceeded')
+        if self.metadata_bytes > MAX_METADATA_BYTES or len(self.metadata) >= 4096:
+            raise ResourceLimitError('Uninterpreted metadata budget exceeded')
         self.metadata.append({'scope':scope,'offset':offset,'record_id':hex(kind),'name':names[kind],'payload_hex':payload.hex()})
+        if self.compatibility == 'data' and kind not in GLOBAL_METADATA and kind not in SHEET_METADATA:
+            key = kind
+            if key not in self.passive_issues:
+                event = {'code': 'non_cell_metadata_not_decoded', 'scope': scope,
+                         'offset': offset, 'record_id': hex(kind), 'name': names[kind],
+                         'records': 0, 'message': 'Known bounded metadata retained raw; not applied to stored cell values.'}
+                self.issue(event)
+                self.passive_issues[key] = event
+            self.passive_issues[key]['records'] += 1
+
 
     def issue(self,issue):
-        require(len(self.issues)<1000,'Diagnostic count exceeds 1000')
+        if len(self.issues) >= 1000:
+            raise ResourceLimitError('Diagnostic count exceeds 1000')
         self.issues.append(issue)
+
+    def plain_string_flags(self, record, raw_flag, scope, cell=None):
+        """Record ignored XLUnicodeString reserved bits, never SST rich/phonetic bits."""
+        if not raw_flag & 0xFE:
+            return
+        key = record[1]
+        if key not in self.string_flag_issues:
+            event = {'code': 'plain_string_reserved_flags_ignored',
+                     'record_id': hex(record[1]), 'offset': record[0],
+                     'scope': scope, 'records': 0,
+                     'message': 'Plain XLUnicodeString reserved bits retained but ignored; only fHighByte selects Unicode storage.'}
+            if cell is not None:
+                event['cell'] = cell
+            self.issue(event)
+            self.string_flag_issues[key] = event
+        self.string_flag_issues[key]['records'] += 1
 
     def parse(self):
         bof(self.records[0],5)
@@ -279,6 +385,7 @@ class Reader:
             if index < consumed_until:
                 continue
             offset,kind,payload=record
+            self.current_location = {'record_offset': offset, 'record_id': hex(kind), 'scope': 'globals'}
             if kind==0x000A:
                 require(not payload,'EOF payload must be empty'); global_end=index+1; break
             if kind==0x0085:
@@ -297,34 +404,48 @@ class Reader:
                 self.styles.append({'xf_index':len(self.styles),'number_format_id_raw':struct.unpack_from('<H',payload,2)[0],'raw_hex':payload.hex()})
             elif kind==0x041E:
                 require(len(payload)>=5,'Truncated Format')
-                identity=struct.unpack_from('<H',payload)[0]; value,end=unicode_string(payload,2)
+                identity=struct.unpack_from('<H',payload)[0]; value,end=unicode_string(payload,2,ignore_reserved_flags=self.compatibility == 'data')
                 require(end==len(payload) and 1<=len(value)<=255 and identity not in self.formats,'Malformed/duplicate number format')
                 self.formats[identity]=value
+                if self.compatibility == 'data' and payload[4] & 0xFE:
+                    self.format_string_flags[str(identity)] = {'flags_raw': payload[4], 'record_offset': offset}
+                    self.plain_string_flags(record, payload[4], 'globals')
             elif kind==0x00FC:
                 require(not seen_sst and len(payload)>=8,'Duplicate/truncated SST'); seen_sst=True
                 total,unique=struct.unpack_from('<ii',payload)
-                require(0<=unique<=total and unique<=10000,'Invalid SST reference/unique counts')
+                require(0<=unique<=total,'Invalid SST reference/unique counts')
+                if unique > MAX_SHARED_STRINGS:
+                    raise ResourceLimitError('SST unique string count budget exceeded')
                 strings = ContinuedStrings(self.records, index, 8)
                 for _ in range(unique):
-                    self.strings.append(strings.string(allow_rich=True, metadata_budget=(MAX_METADATA_BYTES-self.metadata_bytes if len(self.rich_strings) < 4096 else 0)))
-                    if strings.last_rich is not None:
-                        rich = strings.last_rich
-                        size = len(rich['runs_bytes'])
-                        if size > MAX_METADATA_BYTES - self.metadata_bytes or len(self.rich_strings) >= 4096:
-                            raise ResourceLimitError('Rich string metadata budget exceeded')
-                        self.metadata_bytes += size
+                    self.strings.append(strings.string(allow_rich=True,
+                        metadata_budget=MAX_METADATA_BYTES-self.metadata_bytes,
+                        allow_phonetic=True,
+                        metadata_entries_remaining=(4096-len(self.rich_strings)-len(self.phonetic_strings))))
+                    rich = strings.last_rich
+                    phonetic = strings.last_phonetic
+                    metadata_entries = int(rich is not None) + int(phonetic is not None)
+                    if metadata_entries > 4096-len(self.rich_strings)-len(self.phonetic_strings):
+                        raise ResourceLimitError('Rich/phonetic string metadata entry limit exceeded')
+                    size = (len(rich['runs_bytes']) if rich is not None else 0) + (len(phonetic['ext_bytes']) if phonetic is not None else 0)
+                    if size > MAX_METADATA_BYTES-self.metadata_bytes:
+                        raise ResourceLimitError('Rich/phonetic string metadata budget exceeded')
+                    self.metadata_bytes += size
+                    if rich is not None:
                         self.rich_strings.append({**rich, 'sst_index': len(self.strings)-1})
+                    if phonetic is not None:
+                        self.phonetic_strings.append({**phonetic, 'sst_index': len(self.strings)-1})
                 consumed_until = strings.finish()
-            elif self.compatibility=="legacy_excel_clsid" and kind==0x0060:
+            elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0060:
                 require(not template_seen and not payload,'Duplicate/malformed Template marker')
                 template_seen=True
                 self.metadata_record(record,{kind:'Template'},'globals')
-            elif self.compatibility=="legacy_excel_clsid" and kind==0x01AE:
+            elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x01AE:
                 require(not self_link and len(payload)==4 and payload[2:]==b'\x01\x04',
                         'Only one self-referencing SupBook supported; external/add-in links refused')
                 self_link=True
                 self.metadata_record(record,{kind:'SupBookSelf'},'globals')
-            elif self.compatibility=="legacy_excel_clsid" and kind==0x0017:
+            elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0017:
                 require(self_link and not internal_refs and len(payload)>=2,'Missing self link or duplicate/truncated ExternSheet')
                 count=struct.unpack_from('<H',payload)[0]
                 require(1<=count<=128 and len(payload)==2+6*count,'Malformed/oversized ExternSheet')
@@ -333,7 +454,7 @@ class Reader:
                     require(link==0 and 0<=first<=last<128,'Only valid internal sheet references supported')
                     internal_refs.append((first,last))
                 self.metadata_record(record,{kind:'ExternSheetInternal'},'globals')
-            elif self.compatibility=="legacy_excel_clsid" and kind==0x0018:
+            elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0018:
                 # Retain only a static built-in Print_Area, never an executable name.
                 require(len(payload)==27 and payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00'
                         and payload[10:16]==b'\x00\x00\x00\x00\x00\x06' and payload[16]==0x3B,
@@ -345,6 +466,13 @@ class Reader:
                         'Invalid/duplicate/nonlocal Print_Area reference')
                 print_areas.add(sheet)
                 self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
+            elif self.compatibility in ("legacy_excel_clsid", "data") and kind in LEGACY_VALIDATED_GLOBAL_METADATA:
+                if kind==0x0092:
+                    require(len(payload)==2+4*PALETTE_COLOR_COUNT,
+                            'Palette must contain exactly 56 color entries')
+                    require(struct.unpack_from('<h',payload)[0]==PALETTE_COLOR_COUNT,
+                            'Palette ccv must be 56')
+                self.metadata_record(record,LEGACY_VALIDATED_GLOBAL_METADATA,'globals')
             elif kind==0x00EB and self.chart_policy=="opaque":
                 require(not self.drawing_group_seen,'Duplicate drawing group unsupported')
                 drawing_frame(payload,0xF000)
@@ -353,7 +481,19 @@ class Reader:
             elif kind in self.global_metadata:
                 if kind == 0x0031:
                     self.font_count += 1
-                if kind==0x0042: require(len(payload)==2 and struct.unpack('<H',payload)[0]==1200,'Only Unicode CodePage 1200 accepted')
+                if kind==0x0042:
+                    require(len(payload)==2, 'CodePage payload must be two bytes')
+                    code_page = struct.unpack('<H', payload)[0]
+                    if self.compatibility == 'data':
+                        require(code_page in SUPPORTED_BIFF8_CODE_PAGES, 'Unsupported BIFF8 code-page declaration')
+                        require(self.code_page is None or self.code_page == code_page, 'Conflicting CodePage declarations')
+                        if code_page != 1200 and self.code_page is None:
+                            self.issue({'code': 'codepage_metadata_not_applied', 'offset': offset,
+                                        'record_id': hex(kind), 'code_page': code_page,
+                                        'message': 'Supported BIFF8 text fields use their own Unicode flags; code page is retained, not used to guess byte encodings.'})
+                    else:
+                        require(code_page == 1200, 'Only Unicode CodePage 1200 accepted')
+                    self.code_page = code_page
                 self.metadata_record(record,self.global_metadata,'globals')
             else: raise UnsupportedError('Unsupported global record '+hex(kind)+' at '+str(offset))
         require(global_end is not None and bounds and self.styles and date_system is not None,'Require complete globals, at least one worksheet/XF and explicit Date1904')
@@ -368,6 +508,9 @@ class Reader:
                                 'Rich string FontIndex exceeds global font collection')
             self.issue({'code': 'rich_string_formatting_not_applied',
                         'message': 'SST text extracted; FormatRun bytes retained once by SST index. Font rendering and layout are not applied or verified.'})
+        if self.phonetic_strings:
+            self.issue({'code': 'phonetic_string_data_not_decoded',
+                        'message': 'SST text extracted; ExtRst bytes retained raw once by SST index. Phonetic annotations are not decoded or applied.'})
         offset_index={record[0]:index for index,record in enumerate(self.records)}
         require(len({item['offset'] for item in bounds})==len(bounds),'Aliased worksheet substreams')
         physical=sorted(bounds,key=lambda item:item['offset']); position=global_end; sheets={}
@@ -381,12 +524,16 @@ class Reader:
                 if cell['type'] == 'number':
                     cell['numeric_interpretation'] = interpret_cell_number(cell['value'], cell['number_format_id_raw'], cell['custom_format_raw'], date_system, self.styles[cell['xf_index']]['raw_hex'])
                     cell['numeric_interpretation']['cache_status'] = cell['cache_status']
-        return {'status':'read_biff8_subset_with_diagnostics' if self.issues else 'read_biff8_subset',
-                'schema_version':'biff8_readonly_v1','compatibility_mode':self.compatibility,'support_level':'biff8_strict_record_subset','biff_parsed':True,
+        return {'status':('partial' if self.issues else 'ok') if self.compatibility == 'data' else ('read_biff8_subset_with_diagnostics' if self.issues else 'read_biff8_subset'),
+                'schema_version':'biff8_readonly_v1','compatibility_mode':self.compatibility,'support_level':'biff8_stored_data_subset' if self.compatibility == 'data' else 'biff8_strict_record_subset',
+                'cell_value_coverage': 'missing_formula_caches' if any(i.get('code') == 'missing_formula_string_cache' for i in self.issues) else 'complete_within_declared_sheets',
+                'omissions_affect_cell_values': any(i.get('code') == 'missing_formula_string_cache' for i in self.issues),'biff_parsed':True,
                 'chart_policy':self.chart_policy,'charts_decoded':False,'embedded_charts':self.embedded_charts,
                 'native_et_ett_parsed':False,'wps_compatibility_verified':False,'formulas_executed':False,'external_links_followed':False,
-                'date_system':date_system,'sheets':[sheets[item['name']] for item in bounds],
+                'date_system':date_system,'code_page_raw':self.code_page,
+                'format_string_header_flags':self.format_string_flags,'sheets':[sheets[item['name']] for item in bounds],
                 'shared_string_formatting':[dict((key, value) for key, value in rich.items() if key != 'runs_bytes') | {'runs_raw_hex': rich['runs_bytes'].hex()} for rich in self.rich_strings],
+                'shared_string_phonetics':[dict((key, value) for key, value in phonetic.items() if key != 'ext_bytes') | {'raw_ext_hex': phonetic['ext_bytes'].hex()} for phonetic in self.phonetic_strings],
                 'styles':self.styles,'custom_number_formats':{str(key):value for key,value in self.formats.items()},
                 'uninterpreted_metadata':self.metadata,'issues':self.issues,'record_count':len(self.records),'cell_count':self.cell_count,
                 'policies':{'numbers':'Exact Decimal representation of stored IEEE754; raw bytes retained; no text coercion',
@@ -396,8 +543,12 @@ class Reader:
                             'scope':'Record-subset extraction, not full MS-XLS grammar conformance or real ET/ETT acceptance'}}
 
     def sheet(self,index,bound):
+        self.current_location = {'record_offset': self.records[index][0],
+                                 'record_id': hex(self.records[index][1]), 'sheet': bound['name']}
         bof_raw=bof(self.records[index],0x0010); index+=1; cells={}; merges=[]; ws_bool=False; pending=None
         drawing_pending=False; chart_pending=None; object_ids=set()
+        page_break_last_key={0x001B:None,0x001A:None}
+        page_break_end_by_axis={0x001B:{},0x001A:{}}
         formula_groups={}; formula_refs=[]; last_formula=None
         visibility = SavedVisibility()
         def put(row,col,xf,kind,value,record,**extra):
@@ -413,11 +564,15 @@ class Reader:
             self.cell_count+=1; return address
         while index<len(self.records):
             record=self.records[index]; offset,kind,payload=record; index+=1
+            self.current_location = {'record_offset': offset, 'record_id': hex(kind), 'sheet': bound['name']}
             if pending is not None and kind not in (0x04BC, 0x0221):
                 if kind==0x0207:
                     strings = ContinuedStrings(self.records, index-1)
-                    value = strings.string()
+                    value = strings.string(ignore_reserved_flags=self.compatibility == 'data')
                     index = strings.finish()
+                    if self.compatibility == 'data' and strings.last_flags_raw & 0xFE:
+                        cells[pending]['cache_string_header_flags_raw'] = strings.last_flags_raw
+                        self.plain_string_flags(record, strings.last_flags_raw, bound['name'], pending)
                     self.reserve_output_text(value)
                     cells[pending].update(type='text',value=value,cache_status='unverified',cache_record_offset=offset); pending=None; continue
                 cells[pending].update(type='blank',value=None,cache_status='missing')
@@ -449,6 +604,13 @@ class Reader:
                 continue
             if kind==0x000A:
                 require(not payload and ws_bool,'Require empty EOF and exactly one non-dialog WsBool')
+                try:
+                    validate_merge_ranges([item['bounds_zero_based'] for item in merges])
+                except MergeOverlapError as exc:
+                    exc.location = {'sheet': bound['name'], 'record_id': '0xe5',
+                                    'record_offset': merges[exc.merge_index]['record_offset'],
+                                    'merge_index': exc.merge_index}
+                    raise
                 counts = {anchor: 0 for anchor in formula_groups}
                 for row, col, anchor, shared, address in formula_refs:
                     require(anchor in formula_groups, 'Missing shared/array formula anchor at '+address)
@@ -469,7 +631,7 @@ class Reader:
             if kind==0x0081:
                 require(not ws_bool and len(payload)==2 and not struct.unpack('<H',payload)[0]&0x0010,'Duplicate/malformed/dialog WsBool unsupported')
                 ws_bool=True
-            elif kind in (0x0203,0x027E,0x0205,0x0201,0x00FD,0x0006):
+            elif kind in (0x0203,0x027E,0x0205,0x0201,0x00FD,0x0204,0x0006):
                 require(len(payload)>=6,'Truncated cell record'); row,col,xf=struct.unpack_from('<3H',payload)
                 if kind==0x0203:
                     require(len(payload)==14,'Number payload must be 14 bytes'); put(row,col,xf,'number',number(payload[6:]),record,raw_numeric_hex=payload[6:].hex())
@@ -480,6 +642,15 @@ class Reader:
                 elif kind==0x00FD:
                     require(len(payload)==10,'LabelSst payload must be 10 bytes'); string_index=struct.unpack_from('<I',payload,6)[0]
                     require(string_index<len(self.strings),'SST index outside table'); put(row,col,xf,'text',self.strings[string_index],record,sst_index=string_index)
+                elif kind==0x0204:
+                    require(len(payload)>=9,'Truncated Label fixed header')
+                    strings=ContinuedStrings(self.records,index-1,6)
+                    value=strings.string(ignore_reserved_flags=self.compatibility == 'data')
+                    index=strings.finish()
+                    address=put(row,col,xf,'text',value,record)
+                    if self.compatibility == 'data' and strings.last_flags_raw & 0xFE:
+                        cells[address]['string_header_flags_raw'] = strings.last_flags_raw
+                        self.plain_string_flags(record, strings.last_flags_raw, bound['name'], address)
                 elif kind==0x0205:
                     require(len(payload)==8 and payload[7] in (0,1),'Malformed BoolErr')
                     if payload[7]:
@@ -565,13 +736,12 @@ class Reader:
                     put(row,col,xf,'number' if raw is not None else 'blank',rk_value(raw) if raw is not None else None,record,raw_numeric_hex=None if raw is None else raw.hex())
             elif kind==0x00E5:
                 require(len(payload)>=2,'Truncated MergeCells'); count=struct.unpack_from('<H',payload)[0]
-                require(count<=1026 and len(payload)==2+8*count and self.merge_count+count<=MAX_MERGES,'Malformed/oversized merge record')
+                require(count<=1026 and len(payload)==2+8*count,'Malformed/oversized merge record')
+                if self.merge_count + count > MAX_MERGES:
+                    raise ResourceLimitError('Merge count budget exceeded')
                 for start in range(2,len(payload),8):
                     r1,r2,c1,c2=struct.unpack_from('<4H',payload,start)
                     require(r1<=r2 and c1<=c2<256 and (r1,c1)!=(r2,c2),'Invalid merge bounds')
-                    for other in merges:
-                        a,b,c,d=other['bounds_zero_based']
-                        require(r2<a or b<r1 or c2<c or d<c1,'Overlapping merges unsupported')
                     merges.append({'range':column_name(c1+1)+str(r1+1)+':'+column_name(c2+1)+str(r2+1),
                                    'bounds_zero_based':[r1,r2,c1,c2],'record_offset':offset})
                     self.merge_count+=1
@@ -580,30 +750,108 @@ class Reader:
                 self.metadata_record(record,{kind:'SavedVisibilityOrFilter'},bound['name'])
                 if kind in (0x009B,0x009D,0x009E):
                     self.issue({'sheet':bound['name'],'offset':offset,'code':'saved_filter_not_evaluated','message':'Saved filter metadata retained; conditions not decoded or applied, hidden cause unknown. Default includes every row.'})
+            elif self.compatibility in ("legacy_excel_clsid", "data") and kind in LEGACY_VALIDATED_SHEET_METADATA:
+                if kind==0x0041:
+                    require(len(payload)==10,'Pane payload must be 10 bytes')
+                    col_left=struct.unpack_from('<H',payload,6)[0]
+                    require(col_left<256 and payload[8] in (0,1,2,3),
+                            'Invalid Pane colLeft or active pane')
+                else:
+                    require(len(payload)>=2,'Truncated page-break record')
+                    count=struct.unpack_from('<H',payload)[0]
+                    limit=MAX_HORIZONTAL_PAGE_BREAKS if kind==0x001B else MAX_VERTICAL_PAGE_BREAKS
+                    require(count<=limit and len(payload)==2+6*count,
+                            'Malformed/oversized page-break record')
+                    for start in range(2,len(payload),6):
+                        first,second,third=struct.unpack_from('<3H',payload,start)
+                        if kind==0x001B:
+                            axis,interval_start,interval_end=first,second,third
+                            require(interval_start<=interval_end<256,
+                                    'Invalid horizontal page-break columns')
+                        else:
+                            axis,interval_start,interval_end=first,second,third
+                            require(axis<256 and interval_start<=interval_end,
+                                    'Invalid vertical page-break column or rows')
+                        key=(axis,interval_start)
+                        previous_key=page_break_last_key[kind]
+                        require(previous_key is None or previous_key<key,
+                                'Page-break entries are not sorted by axis and start')
+                        previous_end=page_break_end_by_axis[kind].get(axis)
+                        require(previous_end is None or interval_start>previous_end,
+                                'Overlapping page-break intervals on the same axis')
+                        page_break_last_key[kind]=key
+                        page_break_end_by_axis[kind][axis]=interval_end
+                self.metadata_record(record,LEGACY_VALIDATED_SHEET_METADATA,bound['name'])
             elif kind in self.sheet_metadata: self.metadata_record(record,self.sheet_metadata,bound['name'])
             else: raise UnsupportedError('Unsupported worksheet record '+hex(kind)+' at '+str(offset))
         raise ValueError('Truncated worksheet without EOF')
 
 
 def parse_stream(data,*,compatibility="strict",chart_policy="reject"):
-    return Reader(data,compatibility=compatibility,chart_policy=chart_policy).parse()
+    reader = Reader(data, compatibility=compatibility, chart_policy=chart_policy)
+    try:
+        return reader.parse()
+    except ValueError as exc:
+        # Preserve cursor-specific offsets when present; attach only known context.
+        exc.location = {**reader.current_location, **getattr(exc, 'location', {})}
+        raise
 
 
-def read_file(path,*,compatibility="strict",chart_policy="reject"):
-    container=CompoundFile.load(path,compatibility=compatibility)
-    return read_container(container, path, compatibility=compatibility, chart_policy=chart_policy)
+from wps_access import container_mode, read_input, load_compound, ParseError, resolve_chart_policy
 
 
-def read_container(container, path=None, *, compatibility='strict', chart_policy='reject'):
+def normalize_result(result):
+    """Unified JSON contract; historical strict file results stay unchanged."""
+    result['reader_status'] = result['status']
+    result['partial'] = bool(result.get('issues'))
+    result['status'] = 'partial' if result['partial'] else 'ok'
+    result['format'] = 'biff8_subset'
+    result['scope'] = 'stored_cells_and_metadata_subset'
+    result['producer_verified'] = False
+    return result
+
+
+def read_file(path, *, compatibility="data", chart_policy=None):
+    require(compatibility in READING_MODES, 'Unknown BIFF compatibility mode')
+    try:
+        container = load_compound(read_input(path), compatibility)
+    except ParseError as exc:
+        error_types = {'io_error': OSError, 'encrypted': EncryptedError, 'resource_limit': ResourceLimitError,
+                       'unsupported': UnsupportedError}
+        error = error_types.get(exc.status, ValueError)(str(exc))
+        error.status, error.location = exc.status, exc.location
+        raise error from exc
+    result = read_container(container, path, compatibility=compatibility, chart_policy=chart_policy)
+    if compatibility == 'data':
+        from wps_diagnostics import summarize
+        return summarize(normalize_result(result))
+    return result
+
+
+def read_container(container, path=None, *, compatibility='data', chart_policy=None):
+    chart_policy = resolve_chart_policy(chart_policy, compatibility)
     if container.encrypted:
         raise EncryptedError('Encrypted compound workbook unsupported')
     require(not any(part.casefold() in ('vba','_vba_project_cur','macros') for stream in container.paths for part in stream),'Macro storage unsupported')
     candidates=[stream for stream in container.streams if len(stream)==1 and stream[0].casefold() in ('workbook','book')]
     require(len(candidates)==1,'Require exactly one root Workbook/Book stream; name is only a candidate until BOF validation')
     content=container.read_stream(candidates[0]); result=parse_stream(content,compatibility=compatibility,chart_policy=chart_policy)
-    return {**result,'source':{'file':str(path) if path is not None else None,'extension':Path(path).suffix.lower() if path is not None else '','stream_path':list(candidates[0]),
+    output = {**result,'source':{'file':str(path) if path is not None else None,'extension':Path(path).suffix.lower() if path is not None else '','stream_path':list(candidates[0]),
                              'stream_sha256':hashlib.sha256(content).hexdigest(),'container_version':container.major,'container_compatibility':container.compatibility,'container_issues':container.issues},
             'other_container_streams_not_decoded':[item for item in container.report()['streams'] if item['path']!=list(candidates[0])]}
+    output['container_issues'] = container.issues
+    if compatibility == 'data':
+        output['issues'] = result['issues'] + container.issues
+        if output['other_container_streams_not_decoded']:
+            output['issues'].append({'code': 'other_container_streams_not_decoded',
+                                    'count': len(output['other_container_streams_not_decoded']),
+                                    'message': 'Only the validated BIFF Workbook stream is interpreted; other streams are listed, not applied.'})
+        if len(output['issues']) > 1000:
+            raise ResourceLimitError('Diagnostic count exceeds 1000')
+        output['partial'] = bool(output['issues'])
+        output['status'] = 'partial' if output['partial'] else 'ok'
+    return output
+
 
 
 
@@ -635,8 +883,8 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__); parser.add_argument('input')
     parser.add_argument('--sheet'); parser.add_argument('--range',dest='cell_range'); parser.add_argument('--header-rows')
     parser.add_argument('--header-formulas',choices=('reject','cached'),default='reject')
-    parser.add_argument('--compatibility',choices=COMPATIBILITY_MODES,default='strict')
-    parser.add_argument('--chart-policy',choices=CHART_POLICIES,default='reject'); args=parser.parse_args()
+    parser.add_argument('--compatibility',choices=READING_MODES,default='data')
+    parser.add_argument('--chart-policy',choices=CHART_POLICIES,default=None); args=parser.parse_args()
     try:
         result=read_file(args.input,compatibility=args.compatibility,chart_policy=args.chart_policy)
         if args.header_rows is not None:
@@ -644,11 +892,13 @@ def main():
             result['header_schema']=reconstruct_headers(result,args.sheet,args.cell_range,args.header_rows,args.header_formulas)
         elif args.sheet is not None or args.cell_range is not None or args.header_formulas!='reject':
             raise ValueError('Header options require explicit header-rows')
-        from read_wps import encode_result
+        from wps_result import encode_result
         encoded=encode_result(result)
-        print(encoded); return 0
+        print(encoded); return 3 if result.get("status") == "partial" else 0
     except (ValueError,OSError,struct.error,OverflowError) as exc:
-        print(json.dumps({'status':'invalid_or_unsupported','message':str(exc),'biff_parsed':False,'native_et_ett_parsed':False},ensure_ascii=False)); return 1
+        print(json.dumps({'status':getattr(exc, 'status', 'io_error' if isinstance(exc, OSError) else 'invalid_or_unsupported'),
+                          'location':getattr(exc, 'location', {}), 'message':str(exc),
+                          'biff_parsed':False,'native_et_ett_parsed':False},ensure_ascii=False)); return 1
 
 
 if __name__=='__main__': sys.exit(main())

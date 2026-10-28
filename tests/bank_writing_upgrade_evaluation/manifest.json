@@ -1,0 +1,15 @@
+{
+  "baseline": "20261028.1349.3335",
+  "candidate": "20261028.1418.3566",
+  "sample_new_york": "2026-10-28T02:07:01.218283-04:00",
+  "mapping": {
+    "a": "baseline",
+    "b": "candidate"
+  },
+  "requested_model": "gpt-6-astra",
+  "notes": "One execution per version/case; all task material fictional; blind reviewer receives anonymized outputs, not version mapping.",
+  "initial_candidate": "20261028.1407.0121",
+  "final_snapshot": "inputs/skill_c",
+  "final_sample_new_york": "2026-10-28T02:18:35.669809-04:00",
+  "targeted_repair": "Protected paragraphs conflicting with newly confirmed facts now require an external note before any alteration; initial A/B outputs are preserved."
+}

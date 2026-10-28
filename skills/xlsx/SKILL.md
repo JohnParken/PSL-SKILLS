@@ -1,197 +1,61 @@
 ---
 name: xlsx
-version: "20261026.2106.1644"
+version: "20261027.2320.5486"
 description: 用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；.wps/.et/.ett 读取使用 wps 技能，不支持任意结构编辑或办公软件排版还原。
 license: MIT
 ---
 
 # XLSX — Python Standard Library
 
-Category: productivity. Format reference: ECMA-376 Office Open XML File Formats.
+Read XLSX/XLSM, create XLSX reports, patch existing cells, or analyze typed data using Python 3.9+ and only its standard library. No package installation, Office/LibreOffice, external applications or network access. Keep the complete Skill directory: bundled modules are in `<skill_dir>/scripts/` and templates in `<skill_dir>/assets/minimal_xlsx/`.
 
-Use Python 3.9+ without installing packages, launching Office/LibreOffice, or using plugins.
-The maintained entrypoint is `<skill_dir>/scripts/stdlib_xlsx.py`. Keep the complete
-Skill directory structure intact: bundled modules (including optional appearance and
-analysis modules) live in `<skill_dir>/scripts/`, and templates in
-`<skill_dir>/assets/minimal_xlsx/`. Do not distribute only the entrypoint and its direct imports.
-
-不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill。后缀大小写不影响拒绝；本技能不自动调用 wps，也不转换文件。WPS 软件保存的原生 XLSX/XLSM 仍按原生格式读取，不能仅凭生成软件名称判为 WPS 家族格式。
+原生 XLSX/XLSM 按文件格式处理，包括 WPS 软件保存的文件；`.wps/.et/.ett`（不区分大小写）交由 wps 技能。本技能拒绝这些输入及伪装成 XLSX/XLSM 的 CFB，不自动调用其他技能或转换。可分析 wps 已提取的 JSON，不读取其原件。
 
 ## 执行环境约束与首步自检
 
-1. Run in the harness-confirmed task working directory. Inputs, outputs, JSON
-   configurations, redirected reports and task temporary files use paths relative to
-   that directory and stay within it or its children. Do not use parent paths,
-   absolute data paths or mount changes to bypass this boundary. If the current
-   directory is the Skill source, have the harness confirm a separate task directory
-   first; do not change to the Skill directory just to run an example.
-2. Determine `<skill_dir>` by removing the filename from the `file_path` actually
-   used to read this SKILL.md. For a relative `file_path`, resolve it against the
-   confirmed base directory used for that read. If the real accessible location
-   cannot be established, stop and report that it cannot be located; do not guess
-   from environment variables, working-directory output, another session or host masks.
-3. Locate scripts, references, assets and the dependency manifest under
-   `<skill_dir>/scripts/`, `<skill_dir>/references/`, `<skill_dir>/assets/` and
-   `<skill_dir>/requirements.txt`. These internal paths may be confirmed absolute
-   paths; the task-data relative-path rule does not apply to them. Never assume the
-   task directory contains `scripts/` or a fixed Skill installation directory.
-4. `<skill_dir>` is a documentation placeholder, not a Shell variable or executable
-   literal. Replace it with the confirmed directory before reading resources or
-   executing commands. Pass each complete path as one correctly quoted argument,
-   including paths containing spaces. Host path masks are not real directory values
-   and must not enter commands or delivery links.
-5. Use the harness-confirmed Python 3.9+ interpreter; `python3` below denotes that
-   available entrypoint. Read [requirements.txt](requirements.txt): the maintained
-   workflow requires only the standard library, with no installation. Preserve
-   `-I -S -B`; scripts load bundled modules from their own source directory.
-
-Markdown links remain relative to their containing Markdown file: `references/python-calculation.md`
-in this entrypoint resolves under `<skill_dir>/references/`; a sibling link in a reference
-resolves in that reference's directory, and `../SKILL.md` resolves to this entrypoint.
-Do not resolve internal links against the task directory. ZIP member names, XML relationship
-targets and namespace identifiers are format identifiers, not host resource paths; do not
-prefix them with `<skill_dir>`. Repository maintenance commands have their own explicitly
-stated base directory below.
-
-These are execution instructions for the assistant and harness, not a claim that the CLI
-rejects every out-of-bound filesystem path. This section takes precedence over later examples.
-
-Before the first operation, run:
+1. Run in the harness-confirmed task working directory. Inputs, outputs, JSON configurations, redirected reports and task temporary files use paths relative to that directory and stay within it or its children. Do not use parent paths, absolute data paths or mount changes to bypass the boundary. If currently in Skill source, have the harness confirm a task directory first; do not change to the installation directory to run examples.
+2. Determine `<skill_dir>` by removing the filename from the actual `file_path` used to read this SKILL.md; resolve a relative path against that read's confirmed base. If inaccessible or unknown, stop rather than guessing from environment variables, working-directory output, other sessions or host masks. Scripts, references, assets and [requirements.txt](requirements.txt) are under that directory; confirmed absolute internal resource paths are allowed. Never assume task-directory `scripts/` exists.
+3. `<skill_dir>` is a documentation placeholder, not a Shell variable. Replace it before use, passing each complete path as one quoted argument. Markdown links resolve relative to their containing file, not the task directory. ZIP members, XML targets and namespaces are format identifiers, not host paths. Do not put placeholders or host masks in delivery links. These are assistant/harness rules, not a claim that every CLI enforces all path boundaries.
+4. Use the harness-confirmed Python 3.9+ interpreter, denoted by `python3` below. Preserve `-I -S -B`; modules load bundled resources from their own source directory. Before the first operation run:
 
 ```console
 python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
 ```
 
-Require exit 0 and JSON `status: ready`. This verifies imports, the template and a
-limited calculation; it does not verify task data, directory permissions, or Excel
-compatibility. Check input readability and, for writes, output-directory writability
-with a uniquely named probe created exclusively in each intended output directory,
-read back and removed. This includes copied configurations and redirected JSON reports,
-even when the underlying command only reads a workbook. Do not use a default system
-temporary directory for a business-task probe. Never overwrite an existing probe. Stop dependent
-operations if a check fails or its result cannot be confirmed. Report the failed condition;
-retry only after the underlying environment issue is resolved, without weakening checks.
-Re-read this entrypoint if its constraints are lost after context compaction; retain the
-confirmed task directory and filenames. Before delivery, verify the actual output exists
-and is nonempty, and use only a harness-supported delivery mechanism for that file. Never
-construct delivery links from placeholders, host masks or unverified log output.
+5. Require exit 0 and JSON `status: ready`. This checks imports, the template and a limited calculation, not task data, permissions or Excel compatibility. Confirm input readability. For writes, create a unique exclusive probe in each intended task output directory, read it back and remove only that probe; this also applies to configuration copies and redirected reports. Pure reads to stdout need no write probe. Do not use system temporary directories for business-task probes or overwrite existing files.
+6. Stop dependent operations if self-check fails, its result is uncertain, or the required marker is absent. Retry only after the environment issue is resolved, without lowering checks. After context compaction re-read this file if constraints are missing; retain confirmed task paths.
+7. Before delivery verify the actual file exists and is nonempty; use only a supported harness delivery mechanism, never guessed URLs or unverified log output. Self-check is not result acceptance. For tasks that create intermediates, follow [cleanup and preservation](references/validate.md#task-intermediate-files).
 
 ## Route the task
 
-`read`, `create`, `edit` and `calculate` below are subcommands of
-`<skill_dir>/scripts/stdlib_xlsx.py`, not standalone executables. See the complete
-invocations in [python-calculation.md](references/python-calculation.md). In the table,
-script locations and subcommands are separate fields of an invocation; quote only the
-script path, not the path together with its arguments.
+Read only the selected reference. `read`, `create`, `edit` and `calculate` are subcommands of `<skill_dir>/scripts/stdlib_xlsx.py`, not standalone executables. Quote the script path separately from arguments.
 
-| Task | Action | Reference |
+| Task | Action | Read when needed |
 |---|---|---|
-| Profile a region, filter or group data | `<skill_dir>/scripts/xlsx_analysis.py`, subcommand `profile` / `summarize` | [data-analysis.md](references/data-analysis.md) |
-| Diagnose native file contents or route WPS candidates | `<skill_dir>/scripts/xlsx_identify.py` | [data-analysis.md](references/data-analysis.md) |
-| Import CSV/TSV or export a worksheet/range | `<skill_dir>/scripts/xlsx_tabular.py`, subcommand `import` / `export` | [tabular-interchange.md](references/tabular-interchange.md) |
-| Inspect XLSX/XLSM or CSV/TSV | `read` | [read-analyze.md](references/read-analyze.md) |
-| Style a newly created table for readability | `<skill_dir>/scripts/stdlib_xlsx.py`: `create --appearance`; `<skill_dir>/scripts/xlsx_tabular.py`: `import --appearance` | [readable-appearance.md](references/readable-appearance.md) |
-| Create a report | JSON specification → `create` | [create.md](references/create.md) |
-| Fill or correct existing cells | JSON patch → `edit` | [edit.md](references/edit.md) |
-| Compute supported formulas in an existing file | `calculate` to a new file | [python-calculation.md](references/python-calculation.md) |
-| Repair a known formula defect | Diagnose intent, then `edit` | [fix.md](references/fix.md) |
-| Validate output | Inspect calculation report and preserved content | [validate.md](references/validate.md) |
+| Read XLSX/XLSM or CSV/TSV | `stdlib_xlsx.py read` | [Read and inspect](references/read-analyze.md) |
+| Profile, filter or group a region; identify format | `xlsx_analysis.py profile` / `summarize`; `xlsx_identify.py` | [Analysis and identification](references/data-analysis.md) |
+| Analyze WPS extraction JSON | `xlsx_analysis.py profile` / `summarize` | [WPS result contract](references/data-analysis.md#analyze-a-wps-result-without-conversion) |
+| Import/export CSV/TSV | `xlsx_tabular.py import` / `export` | [Tabular interchange](references/tabular-interchange.md) |
+| Create a report | JSON specification → `stdlib_xlsx.py create` | [Create](references/create.md) |
+| Correct existing cells | JSON patch → `stdlib_xlsx.py edit` | [Edit and preservation](references/edit.md) |
+| Compute supported formulas | `stdlib_xlsx.py calculate` to a new file | [Calculation contract](references/python-calculation.md) |
+| Fix a known formula defect | Diagnose intent, then `edit` | [Fix](references/fix.md) |
+| Validate an output | Inspect stored data, calculation report and preserved content | [Validation](references/validate.md) |
 
-Specialized banking reports, matching, grouping and header reconstruction: use the [analysis task directory](references/data-analysis.md#specialized-task-directory) only when requested.
-
-Read [python-calculation.md](references/python-calculation.md) before any calculation
-or writing task. It defines the JSON contract, commands, formula subset and exit codes.
-Use [format.md](references/format.md) for optional financial conventions and supported formatting routes.
-In maintained tasks, use existing style indices for edits and the template's supported
-style indices or [new-workbook appearance presets](references/readable-appearance.md)
-for creation; the reference does not authorize direct XML style edits.
-
-## ET/ETT subset reading
-
-WPS family files (`.wps`, `.et`, `.ett`, case-insensitive) are routed to the separate
-`wps` skill. This skill does not parse those files, even when their contents are OOXML.
-CFB binary content under an XLSX/XLSM extension is refused with the same guidance.
-The standalone WPS result is JSON data, not an implicit XLSX conversion.
-
-## Calculation policy
-
-- For known business rules, calculate in Python using `Decimal` with an explicit
-  rounding policy. Write those results as `value` when a static report is intended.
-- For editable reports, use supported `formula` expressions. The engine evaluates
-  them and writes both formula and cache. Never accept caller-supplied formula caches.
-- `create --values-only` evaluates all formulas first, then writes static values. It
-  refuses partial results; explain that these values will not update when inputs change.
-- Existing formulas are recalculated only within the documented subset. Unsupported
-  formulas and their dependents keep their formulas and lose stale caches. Exit 2
-  means incomplete calculation, not a fully verified workbook.
-- A known calculation error or circular dependency blocks output. Do not hide errors
-  with default zeros or change business rules just to make calculation pass.
-- This is Decimal subset calculation, not Excel-equivalent recalculation. Report the
-  engine and limits. For unresolved formulas say `部分公式未计算` with affected cells.
-- The opened workbook's old caches are unverified; missing caches are not zero.
-
-## Editing and preservation
-
-Never reconstruct an existing workbook from extracted values. `edit` patches the
-original package and preserves unmodified ZIP member contents byte-for-byte. Modified
-worksheet XML is serialized again; full-file byte identity or arbitrary feature
-compatibility is not promised. Formula caches across sheets may change when an input
-changes. Calculation-chain metadata may be removed and recalculation requested.
-
-Only cell values, formulas and existing style indices are editable in existing files.
-New workbooks may opt into readable appearance presets; these are never applied to edits.
-Do not insert/delete/move rows, columns or sheets. Editing a sheet containing shared,
-array or other specially attributed formulas is refused. Macro parts can be retained
-in XLSM files, but macros are never run. Charts and pivots are retained, not refreshed.
-Dates are exposed as stored serials or ISO strings, without display-format conversion.
-Signed/encrypted files, chart sheets and strict OOXML are unsupported. The OOXML workflow
-rejects legacy XLS/XLSB; use the wps skill for its documented read-only
-record subset and does not enable generic XLS editing or native ET/ETT compatibility.
-
-## Legacy utilities
-
-The older scripts remain for compatibility and reference. They are not the standard
-library workflow: `<skill_dir>/scripts/xlsx_reader.py` needs pandas, `<skill_dir>/scripts/libreoffice_recalc.py` needs external
-software, and older helpers may require Python 3.10+. Do not invoke legacy utilities for
-the maintained workflow. The `<skill_dir>/scripts/xlsx_insert_row.py` and
-`<skill_dir>/scripts/xlsx_shift_rows.py` CLI entrypoints are disabled and exit 1 before any writes. A known
-formula-reference corruption in these legacy scripts remains unresolved; disabling the
-commands does not repair workbooks they may have changed previously. Do not invoke them
-for structural edits. `<skill_dir>/scripts/formula_check.py` is heuristic static inspection only; exit 0
-does not prove calculation. Legacy examples are historical interface documentation,
-not supported task instructions. In particular, `libreoffice_recalc.py` uses a system
-temporary directory and external software; it does not satisfy this workflow's task-directory
-and runtime contract. Do not invoke it or treat the main self-check as validating it.
-
-## Task intermediate files
-
-- Before creating auxiliary files, record the exact task-relative paths and purpose of
-  files/directories newly created by this task. Use a new independent subdirectory for
-  work copies or unpacked data; never reuse an existing directory as disposable storage.
-- After successful validation, remove only recorded intermediates no longer needed,
-  such as assistant-generated specifications, temporary scripts and inspection outputs.
-  Keep final deliverables, required calculation evidence, user-provided inputs and any
-  auxiliary outputs the user requested. Never infer ownership from a filename or extension.
-- While retrying, retain material still needed. On final failure, retain original inputs,
-  existing outputs and recovery backups; keep only necessary diagnostic intermediates
-  and report their locations. Do not deliver an old output as a new successful result.
-- Clean recorded paths individually with Python standard-library operations within the
-  task directory. Do not follow symlinks or use wildcard/recursive deletion; retain and
-  report paths whose ownership or type changed, including symlinks in any parent component. Remove directories only after known
-  contents are cleaned and the directory is empty. Do not touch the installed Skill.
-- Verify the final deliverables still exist and are nonempty after cleanup. Report any
-  cleanup failure without expanding the deletion scope. Cleanup records stay outside
-  the workbook. Existing validation can be reused only if the deliverable is unchanged.
-
-## Development verification
-
-Maintenance only: run from the confirmed repository root, not the business task
-directory. `skills/xlsx/scripts` below is repository-relative and is not an
-installation path to copy into task commands. Tests use isolated temporary directories;
-this does not authorize business workflows to choose a different temporary root.
+For a first read after self-check:
 
 ```console
-python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
+python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.xlsx
 ```
 
-WPS JSON分析适配明确接受 biff8_readonly_v1 与 ooxml_spreadsheet_readonly_v1，保留实际输入schema、原数字和缓存诊断；不重新读取WPS原件，不转换文件。
+Before any writing or calculation, read [the JSON/CLI contract](references/python-calculation.md). New-table appearance is optional and creation-only: [appearance presets](references/readable-appearance.md); existing-file edits use existing style indices. Use [financial formatting conventions](references/format.md) only when requested. Banking reports, matching, grouping and multi-level headers route through the [specialized analysis directory](references/data-analysis.md#specialized-task-directory).
+
+## Interpret results and keep boundaries
+
+- Inspect structure, cell types, missing values and user-selected ranges before analysis. Numeric strings with type tags are not text identifiers; use `Decimal` for known business rules and explicit rounding. Old formula caches are unverified; missing caches are never zero.
+- WPS JSON analysis accepts `biff8_readonly_v1` and `ooxml_spreadsheet_readonly_v1`, preserves exact values, source status/issues and optional source coverage/assessment. The source assessment describes extraction scope, not completeness of the selected analysis or cache freshness. See [the source-result contract](references/data-analysis.md#analyze-a-wps-result-without-conversion).
+- Calculation is a Decimal formula subset, not Excel-equivalent recalculation. Editable reports use supported formulas; never accept caller-supplied caches. `create --values-only` evaluates everything first and refuses partial output; disclose that static values will not update.
+- Existing-file calculations remove unresolved stale caches and report incomplete/exit 2 as `部分公式未计算`. Known errors or cycles block output. Do not hide errors with zeros or change business rules to force success; see [result codes](references/python-calculation.md#results-and-exit-codes).
+- Never rebuild an existing workbook from extracted values. Edit only values, formulas and existing style indices; no row/column/sheet insertion, deletion or movement. Shared/array/specially attributed formula sheets are refused for edits. Untouched ZIP member content is preserved; changed XML is reserialized, formula caches and calculation-chain metadata may change. No full-file identity or arbitrary compatibility guarantee.
+- XLSM macros are retained, never executed; chart/pivot caches are retained, never refreshed. Dates remain stored serials or ISO text. Signed/encrypted files, chart sheets, strict OOXML and native XLS/XLSB are unsupported. The wps skill's documented read-only record subset does not enable generic binary spreadsheet editing.
+- Do not run legacy utilities or install their dependencies as fallbacks. Legacy limitations and disabled row-edit commands are documented under [maintenance/legacy boundaries](references/validate.md#legacy-utilities). Development tests and intermediate-file cleanup are also conditional sections there, not extra steps for a simple read.

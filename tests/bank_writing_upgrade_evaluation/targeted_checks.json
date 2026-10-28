@@ -1,0 +1,66 @@
+{
+  "version": "20261028.1418.3566",
+  "snapshot": "inputs/skill_c",
+  "scope": "Targeted follow-up: E1/E2 only; initial A/B paired outputs and blind review retained unchanged.",
+  "checks": [
+    {
+      "check": "E1 round1 confirmed paragraph",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "check": "E1 round1 deletion absent",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "check": "E1 round2 confirmed paragraph",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "check": "E1 round2 deletion absent",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "check": "E1 round2 only phrase edit",
+      "passed": true,
+      "actual": "季度服务简报\n一、服务提示\n本季度已更新厅堂服务提示。具体材料仍以所办业务要求为准。\n二、沟通安排\n拟在厅堂开展服务说明。活动时间尚未确定。\n三、下一步\n拟在下月安排一次员工交流，汇总客户咨询中的共性问题。",
+      "expected": "季度服务简报\n一、服务提示\n本季度已更新厅堂服务提示。具体材料仍以所办业务要求为准。\n二、沟通安排\n拟在厅堂开展服务说明。活动时间尚未确定。\n三、下一步\n拟在下月安排一次员工交流，汇总客户咨询中的共性问题。"
+    },
+    {
+      "check": "E2 scope values updated",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "check": "E2 protected next-step preserved",
+      "passed": true,
+      "actual": "建议核对宣讲记录及覆盖人次统计依据，明确是否包含厅堂以外活动，统一范围后补齐季度数据；后续汇总注明统计范围与整理时间，便于复核。",
+      "expected": "建议核对宣讲记录及覆盖人次统计依据，明确是否包含厅堂以外活动，统一范围后补齐季度数据；后续汇总注明统计范围与整理时间，便于复核。"
+    },
+    {
+      "check": "E2 external note identifies remaining conflict",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "check": "E2 external note proposes minimal follow-up",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "total": 9
+  },
+  "manual_result": "Both turns preserve requested content; E2 now explicitly flags the protected paragraph conflict outside the body without undoing the completed edits. Not a full rerun of long-form and DOCX scenarios."
+}

@@ -1,5 +1,10 @@
 # 表格行与图片编辑
 
+写入前按 [交付文件命名](generation.md#交付文件命名) 确定实际名称；以下业务名称仅为示例，须按本次任务替换，用户指定名称优先。
+
+交付归档：编辑 CLI 的写操作成功后自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 [当轮统一归档](delivery.md) 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
+
+
 先执行技能入口的环境自检；使用原文件及同扩展名的新输出，失败时保留二者。输入必须通过已实现结构检查，数字签名包拒绝编辑，不删除签名来绕过限制。
 
 ## 规则表格数据行
@@ -7,7 +12,7 @@
 从文档工作目录执行，将 `<skill_dir>` 替换为主入口定义的真实目录：
 
 ```console
-python -I -S -B "<skill_dir>/scripts/edit_tables.py" ./input.docx ./row.json ./edited.docx
+python -I -S -B "<skill_dir>/scripts/edit_tables.py" ./采购管理办法.docx ./row.json ./采购管理办法_修订版.docx
 ```
 
 每次只接受一个 `operation`。索引从 0 开始，只计算正文 `w:body` 的直属表格；行索引按目标表格的原始直属行计算。
@@ -35,7 +40,7 @@ python -I -S -B "<skill_dir>/scripts/edit_tables.py" ./input.docx ./row.json ./e
 ## 同格式图片替换
 
 ```console
-python -I -S -B "<skill_dir>/scripts/replace_image.py" ./input.docx ./new.png ./selection.json ./edited.docx
+python -I -S -B "<skill_dir>/scripts/replace_image.py" ./采购管理办法.docx ./new.png ./selection.json ./采购管理办法_修订版.docx
 ```
 
 `selection.json` 必须提供：
@@ -54,7 +59,7 @@ python -I -S -B "<skill_dir>/scripts/replace_image.py" ./input.docx ./new.png ./
 import hashlib
 import zipfile
 
-with zipfile.ZipFile("./input.docx") as package:
+with zipfile.ZipFile("./采购管理办法.docx") as package:
     digest = hashlib.sha256(package.read("word/media/image1.png")).hexdigest()
 ```
 
@@ -67,8 +72,8 @@ with zipfile.ZipFile("./input.docx") as package:
 ## 验收
 
 ```console
-python -I -S -B "<skill_dir>/scripts/office/validate.py" ./edited.docx
-python -I -S -B "<skill_dir>/scripts/read_docx.py" ./edited.docx --format json -o ./edited-structure.json
+python -I -S -B "<skill_dir>/scripts/office/validate.py" ./采购管理办法_修订版.docx
+python -I -S -B "<skill_dir>/scripts/read_docx.py" ./采购管理办法_修订版.docx --format json -o ./采购管理办法_结构检查.json
 ```
 
 对照操作检查表格原行/表头顺序及新增文字，核对未修改部件字节。图片替换应仅目标 media 内容变化，所有其他成员逐字节相同。以上不替代 XSD、真实阅读器、图像解码或视觉验收。

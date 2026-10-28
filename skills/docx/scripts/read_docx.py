@@ -16,6 +16,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from office import xmlio as SafeET
+from office.runtime import check_runtime
 from office.archiveio import open_archive
 from office.helpers import atomic_write_bytes, check_archive, read_part
 
@@ -321,13 +322,24 @@ def read_docx_structure(path: str | Path, *, revisions: str = "accepted",
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", type=Path, help="input .docx or .dotx file")
+    parser.add_argument("input", type=Path, nargs="?", help="input .docx or .dotx file")
+    parser.add_argument("--check", action="store_true", help="check read-only runtime support without output probes")
     parser.add_argument("-o", "--output", type=Path)
     parser.add_argument("--revisions", choices=tuple(_REVISION_TAGS), default=None,
                         help="OOXML defaults to accepted")
     parser.add_argument("--include-related", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
+    if args.check:
+        if args.input is not None or args.output is not None or args.revisions is not None or args.include_related or args.format != "text":
+            parser.error("--check does not accept input, output or reading options")
+        if not check_runtime():
+            print("check-failed: runtime environment check failed", file=sys.stderr)
+            return 1
+        print("read-check-ok")
+        return 0
+    if args.input is None:
+        parser.error("input is required unless --check is used")
     if args.input.suffix.lower() not in WPS_SUFFIXES | {".docx", ".dotx"}:
         parser.error("input must have a .docx or .dotx extension")
     try:

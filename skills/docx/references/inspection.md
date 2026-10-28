@@ -1,12 +1,15 @@
 # 结构读取与进阶检查
 
+交付归档：编辑 CLI 的写操作成功后自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 [当轮统一归档](delivery.md) 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
+
+
 不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
 
 `.wps`、`.et`、`.ett` 统一交给 wps 技能；本技能文本及 JSON 读取均拒绝这些后缀。伪装为 DOCX/DOTX 的 CFB 内容同样明确引导 wps。
 
 ## 结构化 JSON
 
-先完成技能入口要求的环境自检。从已确认的文档工作目录执行；将示例 `<skill_dir>` 替换为主入口定义的真实目录：
+先用 `read_docx.py --check` 完成只读运行条件自检；仅写 stdout 不需输出目录写入探针。保存 `-o` 结果前另核对实际输出目录的写入能力。从已确认的文档工作目录执行；将示例 `<skill_dir>` 替换为主入口定义的真实目录：
 
 ```console
 python -I -S -B "<skill_dir>/scripts/read_docx.py" ./input.docx --format json --revisions all --include-related -o ./structure.json
