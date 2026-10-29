@@ -1,15 +1,17 @@
 # 统一结果、失败契约与读取范围
 
+路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
 ## 目录
 
-- [入口与失败行为](#入口与失败行为)
-- [结果字段与范围评估](#结果字段与范围评估)
-- [消费电子表格 JSON](#消费电子表格-json)
-- [可运行的契约示例](#可运行的契约示例)
+- 入口与失败行为 (`<skill-root>/references/reading-assessment.md#入口与失败行为`)
+- 结果字段与范围评估 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)
+- 消费电子表格 JSON (`<skill-root>/references/reading-assessment.md#消费电子表格-json`)
+- 可运行的契约示例 (`<skill-root>/references/reading-assessment.md#可运行的契约示例`)
 
 ## 入口与失败行为
 
-先完成 [环境自检](../SKILL.md#执行环境约束与首步自检)。下表针对 `scripts/read_wps.py` 统一入口，低层流解析器默认仍 strict；文件入口默认 data，区别见 [数据读取策略](biff8-readonly.md#default-data-policy)。
+先完成 环境自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。下表针对统一入口 `<skill-root>/scripts/read_wps.py`，低层流解析器默认仍 strict；文件入口默认 data，区别见 数据读取策略 (`<skill-root>/references/biff8-readonly.md#default-data-policy`)。
 
 | 入口 | 正常返回 | 读取失败与异常 |
 |---|---|---|
@@ -24,7 +26,7 @@ CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupport
 
 ## 结果字段与范围评估
 
-文档结果有 `format`、`text`、`paragraphs` 和范围/诊断；OOXML 文档可另有 `tables`，显式附加文字另有 `related_stories`。二进制段落和 TAB 不代表完整表格或页面还原；另有 `binary_table_structure` 的有限一级行/单元格证据，见 [二进制表格](binary-tables.md)。电子表格的 `schema_version` 分别为 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1`，字段见 [BIFF 输出](biff8-readonly.md#headers-and-output) 和 [OOXML 保存值](ooxml-spreadsheet.md)。不要把文档、失败字典或 OOXML 表格当成 BIFF schema；BIFF 统一结果另保留 `reader_status`；data 可为 ok/partial，显式 strict/legacy 保留历史字符串。新增 cell_value_coverage、omissions_affect_cell_values 及 reading_assessment.cell_values 区分元数据缺口与公式缓存缺失。
+文档结果有 `format`、`text`、`paragraphs` 和范围/诊断；OOXML 文档可另有 `tables`，显式附加文字另有 `related_stories`。二进制段落和 TAB 不代表完整表格或页面还原；另有 `binary_table_structure` 的有限一级行/单元格证据，见 二进制表格 (`<skill-root>/references/binary-tables.md`)。电子表格的 `schema_version` 分别为 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1`，字段见 BIFF 输出 (`<skill-root>/references/biff8-readonly.md#headers-and-output`) 和 OOXML 保存值 (`<skill-root>/references/ooxml-spreadsheet.md`)。不要把文档、失败字典或 OOXML 表格当成 BIFF schema；BIFF 统一结果另保留 `reader_status`；data 可为 ok/partial，显式 strict/legacy 保留历史字符串。新增 cell_value_coverage、omissions_affect_cell_values 及 reading_assessment.cell_values 区分元数据缺口与公式缓存缺失。
 
 `reading_assessment.schema_version` 为 `wps_reading_assessment_v1`，它是附加摘要，不替换正文、单元格或原始 `issues`、`diagnostics`：
 
@@ -42,10 +44,10 @@ CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupport
 
 ## 消费电子表格 JSON
 
-默认 data 读取从共同自检开始，不需要先了解 BIFF 记录或 legacy 参数。下例使用标准库调用统一 CLI：先将 `<skill_dir>` 替换为已确认的真实 Skill 目录，再在任务目录执行；`./input.et` 可换成允许读取的 `.ett`。它不创建文件，退出 0/3 均接收完整 JSON；退出 3 的数据和原诊断一起交给后续处理。退出 1/2、JSON 无效、状态/退出码不符或 schema 不符均停止，不能把文档或失败字典送入表格分析。
+默认 data 读取从共同自检开始，不需要先了解 BIFF 记录或 legacy 参数。下例使用标准库调用统一 CLI：先将 `<skill-root>` 替换为已确认的真实 Skill 目录，再在任务目录执行；`./input.et` 可换成允许读取的 `.ett`。它不创建文件，退出 0/3 均接收完整 JSON；退出 3 的数据和原诊断一起交给后续处理。退出 1/2、JSON 无效、状态/退出码不符或 schema 不符均停止，不能把文档或失败字典送入表格分析。
 
 ```sh
-python -I -S -B - "<skill_dir>" ./input.et <<'PY'
+python -I -S -B - "<skill-root>" ./input.et <<'PY'
 import json
 from pathlib import Path
 import subprocess
@@ -77,14 +79,14 @@ PY
 
 表格消费者按 `type` 解释 `value`：JSON 中的数字字符串保持保存值精度，不与文本长编号混为一类，不先转换成 float。`numeric_interpretation` 是有限数字格式/日期解释的附加字段，不替换 `value`。有 `formula` 的值属于保存缓存；`cache_status=missing` 不能当空值或零，`unverified` 等状态不能证明缓存最新。使用缓存分析须显式选择 cached 政策，所选区域的缺失或错误缓存仍拒绝，禁止重算。
 
-BIFF `cell_value_coverage=complete_within_declared_sheets` 只表示已声明工作表的受支持单元格/缓存范围；`missing_formula_caches` 和 `omissions_affect_cell_values=true` 指出缓存缺口。它们不取代 `issues`，不证明私有流、有效格式或完整 ET 支持；OOXML 按其自身 schema/诊断解释，不假定具有全部 BIFF 字段。保留顶层 `reading_assessment` 和原始诊断，分析接入另见 [表头与输出](biff8-readonly.md#headers-and-output)。
+BIFF `cell_value_coverage=complete_within_declared_sheets` 只表示已声明工作表的受支持单元格/缓存范围；`missing_formula_caches` 和 `omissions_affect_cell_values=true` 指出缓存缺口。它们不取代 `issues`，不证明私有流、有效格式或完整 ET 支持；OOXML 按其自身 schema/诊断解释，不假定具有全部 BIFF 字段。保留顶层 `reading_assessment` 和原始诊断，分析接入另见 表头与输出 (`<skill-root>/references/biff8-readonly.md#headers-and-output`)。
 
 ## 可运行的契约示例
 
-普通使用从任务目录执行 `python -I -S -B "<skill_dir>/scripts/read_wps.py" ./input.wps`，按上述退出码消费结果。以下自包含示例不需要真实文件：先替换 `<skill_dir>`，使用已自检且 Expat >=2.6 的解释器，在任务目录运行。它用标准库生成明确标注的合成 OOXML 字节，以独占临时子目录验证 API 和 CLI 成功、partial、读取失败与参数错误；结束时只清理自己创建的子目录。生成的 `.wps` 后缀仅测试内容路由，不是真实 WPS 来源证据。
+普通使用从任务目录执行 `python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps`，按上述退出码消费结果。以下自包含示例不需要真实文件：先替换 `<skill-root>`，使用已自检且 Expat >=2.6 的解释器，在任务目录运行。它用标准库生成明确标注的合成 OOXML 字节，以独占临时子目录验证 API 和 CLI 成功、partial、读取失败与参数错误；结束时只清理自己创建的子目录。生成的 `.wps` 后缀仅测试内容路由，不是真实 WPS 来源证据。
 
 ```sh
-python -I -S -B - "<skill_dir>" <<'PY'
+python -I -S -B - "<skill-root>" <<'PY'
 import io
 import json
 from pathlib import Path
@@ -136,7 +138,7 @@ with tempfile.TemporaryDirectory(prefix='wps-contract-', dir='.') as directory:
     failure = read(bad)
     assert failure['status'] == 'unsupported' and failure['text'] is None
     assert failure['reading_assessment']['completeness'] == 'no_content_delivered'
-    command = [sys.executable, '-I', '-S', '-B', str(skill_dir / 'scripts/read_wps.py')]
+    command = [sys.executable, '-I', '-S', '-B', str(skill_dir / 'scripts' / 'read_wps.py')]
     for path, code, status in ((good, 0, 'ok'), (partial, 3, 'partial'), (bad, 1, 'unsupported')):
         process = subprocess.run(command + [str(path)], capture_output=True, text=True)
         assert process.returncode == code, process.stderr

@@ -18,6 +18,7 @@ from wps_biff8_headers import column_name, address, reconstruct
 from wps_biff8_charts import CHART_POLICIES, drawing_frame, chart_end
 from wps_numeric import interpret_cell_number
 from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
+from wps_dxf import validate_dxf
 
 READING_MODES = COMPATIBILITY_MODES + ("data",)
 
@@ -28,6 +29,7 @@ MAX_CELLS=200000
 MAX_MERGES=65536
 MAX_SHARED_STRINGS=200000
 MAX_METADATA_BYTES=1024*1024
+MAX_DXF_PROPERTIES=4096
 MAX_OUTPUT_TEXT_UNITS=8*1024*1024
 ERRORS={0:'#NULL!',7:'#DIV/0!',15:'#VALUE!',23:'#REF!',29:'#NAME?',36:'#NUM!',42:'#N/A',43:'#GETTING_DATA'}
 GLOBAL_METADATA={0x0042:'CodePage',0x003D:'Window1',0x0031:'Font',0x0293:'Style'}
@@ -317,6 +319,7 @@ class Reader:
         self.chart_policy=chart_policy; self.embedded_charts=[]; self.drawing_group_seen=False
         self.compatibility=compatibility
         self.passive_issues = {}
+        self.dxf_property_count = 0
         self.global_metadata={**GLOBAL_METADATA,**(LEGACY_GLOBAL_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
         self.sheet_metadata={**SHEET_METADATA,**(LEGACY_SHEET_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
         self.code_page = None
@@ -439,6 +442,13 @@ class Reader:
                     if phonetic is not None:
                         self.phonetic_strings.append({**phonetic, 'sst_index': len(self.strings)-1})
                 consumed_until = strings.finish()
+            elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x088D:
+                structure = validate_dxf(payload)
+                self.dxf_property_count += structure['property_count']
+                if self.dxf_property_count > MAX_DXF_PROPERTIES:
+                    raise ResourceLimitError('DXF aggregate property count exceeds budget')
+                self.metadata_record(record, {kind: 'DXF'}, 'globals')
+                self.metadata[-1]['structure'] = structure
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0060:
                 require(not template_seen and not payload,'Duplicate/malformed Template marker')
                 template_seen=True

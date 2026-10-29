@@ -198,6 +198,12 @@ class WpsSampleAcceptanceTests(unittest.TestCase):
         self.assertEqual(report['failure_code'], 'input_changed')
         self.assertFalse(report['checks']['input_unchanged'])
 
+    def test_explicit_default_data_policy_is_accepted(self):
+        self.expectations['options'] = {'compatibility': 'data'}
+        self.write_manifest()
+        report = verify(self.sample_argument, self.manifest_argument)
+        self.assertTrue(report['passed'], report)
+
     def test_absolute_parent_and_symlink_escape_paths_are_rejected(self):
         report = verify(str(self.sample), self.manifest_argument)
         self.assertEqual(report['failure_code'], 'invalid_task_relative_path')

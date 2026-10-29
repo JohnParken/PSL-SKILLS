@@ -57,6 +57,27 @@ class FileAccessTests(unittest.TestCase):
         struct.pack_into('<H', data, 24, 0)
         self.rejected(bytes(data), 'unsupported', cli=True)
 
+    def test_legacy_minor_retains_cells_in_data_apis_and_clis(self):
+        for builder in (synthetic_cfb, legacy_container):
+            original = bytearray(builder({'Workbook': workbook()}))
+            struct.pack_into('<H', original, 24, 0x003B)
+            data = bytes(original)
+            with tempfile.TemporaryDirectory(dir='.') as directory:
+                path = Path(directory) / 'input.et'
+                path.write_bytes(data)
+                for result in (read(path), read_file(path), read_bytes(data)):
+                    self.assertEqual(result['status'], 'partial')
+                    self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+                    self.assertIn('legacy_cfb_minor_version',
+                                  [issue['code'] for issue in result['issues']])
+                for script in SCRIPTS:
+                    process = self.cli(script, path)
+                    self.assertEqual(process.returncode, 3, process.stderr)
+                    report = json.loads(process.stdout)
+                    self.assertEqual(report['sheets'][0]['cells']['A1']['value'], '部门')
+                self.assertEqual(read(path, compatibility='strict')['status'], 'unsupported')
+                self.assertEqual(path.read_bytes(), data)
+
     def test_truncated_reserved_and_bad_sector_headers_refused_everywhere(self):
         original = synthetic_cfb({'Workbook': workbook()})
         reserved = bytearray(original)

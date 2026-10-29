@@ -1,6 +1,8 @@
 # ET/ETT 读取容量与稳定性
 
-先完成 [执行环境自检](../SKILL.md#执行环境约束与首步自检)。本轮增强针对内容被识别为 CFB/BIFF8 的 ET/ETT；OOXML 仍走自身读取分支。未知私有结构不猜测，不执行公式、宏或外链，不应用注音显示，不写回输入文件。
+路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+先完成 执行环境自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。本轮增强针对内容被识别为 CFB/BIFF8 的 ET/ETT；OOXML 仍走自身读取分支。未知私有结构不猜测，不执行公式、宏或外链，不应用注音显示，不写回输入文件。
 
 ## 新增可读范围
 
@@ -18,15 +20,15 @@ BIFF 解析异常可附带已记录的工作表、记录 ID 和 Workbook 流偏�
 
 资源耗尽（包括合并数量、共享字符串数量、元数据及诊断条目）明确为 `resource_limit`；未知特性仍为 unsupported，其他结构不满足条件仍按原契约报告 invalid_or_unsupported。增强定位不把所有拒绝都归类为文件损坏，也不在失败后交付未经完整检查的部分工作表。
 
-文件入口默认 data，预先选择已有元数据白名单及有界 opaque 图表策略；显式 strict/legacy 和 chart-policy reject 保留。选择发生在一次解析前，不会在拒绝后重试或重同步；详见 [当前数据读取策略](biff8-readonly.md#default-data-policy)。
+文件入口默认 data，预先选择已有元数据白名单及有界 opaque 图表策略；显式 strict/legacy 和 chart-policy reject 保留。选择发生在一次解析前，不会在拒绝后重试或重同步；详见 当前数据读取策略 (`<skill-root>/references/biff8-readonly.md#default-data-policy`)。
 
 ## 验收边界
 
 新增注音、容量和位置行为以标准库合成样例验证；合并检测另与小范围独立单元格枚举结果比较。四份已有真实 ET/ETT 用于回归及保存值核对，不包含新增注音或极大容量特性的生产证据。不能把容量提高或合成通过写成完整原生 ET 兼容。
 
-规范定位见 [ET 格式依据](et-format-evidence.json)。现有来源不保证覆盖用户的每一种 WPS 版本；具体失败文件仍须核对实际容器、拒绝记录及独立内容预期。
+规范定位见 ET 格式依据 (`<skill-root>/references/et-format-evidence.json`)。现有来源不保证覆盖用户的每一种 WPS 版本；具体失败文件仍须核对实际容器、拒绝记录及独立内容预期。
 
-实际运行结果见[验证记录](validation.md#历史证据)及[本批证据摘要](reading-enhancement-evidence.json)。
+实际运行结果见验证记录 (`<skill-root>/references/validation.md#历史证据`)及本批证据摘要 (`<skill-root>/references/reading-enhancement-evidence.json`)。
 
 ## 默认数据读取与失败分类
 
@@ -38,4 +40,4 @@ data 只扩大已知非值语义的可读范围，不跳过单元格或工作表
 
 ## 纯表格 Unicode 声明与保留位
 
-data 在原有 BIFF8 范围内新增 CodePage 932/936/1252 声明接受，普通 Label、String 缓存与 Format 的 Unicode 头保留位按规范忽略，保留原始标志及位置并报告 partial。不是按代码页猜解码，不扩展 BIFF 版本、SST/Continue 标志或未知记录。完整范围与证据限制见 [纯表格兼容](biff8-readonly.md#pure-table-unicode-compatibility)。
+data 在原有 BIFF8 范围内新增 CodePage 932/936/1252 声明接受，普通 Label、String 缓存与 Format 的 Unicode 头保留位按规范忽略，保留原始标志及位置并报告 partial。不是按代码页猜解码，不扩展 BIFF 版本、SST/Continue 标志或未知记录。完整范围与证据限制见 纯表格兼容 (`<skill-root>/references/biff8-readonly.md#pure-table-unicode-compatibility`)。

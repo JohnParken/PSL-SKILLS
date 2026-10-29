@@ -61,7 +61,7 @@ class RoutingTests(unittest.TestCase):
     def test_nonzero_word_clsid_has_scope_diagnostic(self):
         data = bytearray(synthetic_cfb({path[0]: value for path, value in document().items()}))
         data[8:24] = bytes.fromhex('0609020000000000c000000000000046')
-        result = self.result(bytes(data))
+        result = self.result(bytes(data), compatibility='strict')
         self.assertEqual(result['status'], 'unsupported')
         self.assertEqual(result['location'], {'stream': 'CFB header', 'offset': 8})
 

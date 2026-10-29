@@ -1,13 +1,15 @@
 # 真实 WPS 文档的离线验收
 
-先完成 [入口自检](../SKILL.md#执行环境约束与首步自检)。本验收器只读样本及预期清单，不下载、不生成/修改办公文件，不导出正文到报告。
+路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+先完成 入口自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。本验收器只读样本及预期清单，不下载、不生成/修改办公文件，不导出正文到报告。
 
 ## 输入与命令
 
 在已确认的任务目录准备获准使用的原始 `.wps` 和独立内容预期 JSON。两个文件都必须使用任务目录内的相对路径；绝对路径、父目录、解析到任务目录外的符号链接会被拒绝。不要使用 DOC/DOCX 改后缀样例作为真实 WPS 来源证据。
 
 ```console
-python -I -S -B "<skill_dir>/scripts/verify_wps_sample.py" ./samples/original.wps ./expectations.json
+python -I -S -B "<skill-root>/scripts/verify_wps_sample.py" ./samples/original.wps ./expectations.json
 ```
 
 清单上限 1 MiB，样本上限 32 MiB，均必须是可读普通文件。报告 JSON 的 `status=passed`、`passed=true` 且退出 0 才是字节和预期匹配；失败报告退出 1。参数解析错误退出 2，不是验收结果。
@@ -37,4 +39,4 @@ python -I -S -B "<skill_dir>/scripts/verify_wps_sample.py" ./samples/original.wp
 
 `provenance_status=declared_requires_human_review` 始终提醒：脚本不能证明声明真实、确认生产软件或辨别一个文件是否曾被改后缀。`full_format_verified=false`，即使通过也不代表完整 WPS 兼容。附加故事不在当前预期字段中，不能因 `include_related=true` 就声称脚注/页眉等内容已逐项验收。
 
-验证器的合成测试只验收工具行为。当前真实 `.wps` 正文及二进制表格仍缺来源可核实原件与独立完整内容/结构预期，不能报告真实验收已补齐。既有四份 ET/ETT 的真实保存值验收另见 [记录](et-real-validation.md)，不可用它们替代 `.wps` 正文验收。
+验证器的合成测试只验收工具行为。当前真实 `.wps` 正文及二进制表格仍缺来源可核实原件与独立完整内容/结构预期，不能报告真实验收已补齐。既有四份 ET/ETT 的真实保存值验收另见 记录 (`<skill-root>/references/et-real-validation.md`)，不可用它们替代 `.wps` 正文验收。

@@ -1,33 +1,35 @@
 # ET/ETT investigation and bounded compound-container reading
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-The main `read_wps.py input.et` / `read_wps.py input.ett` commands now dispatch to
+The main `"<skill-root>/scripts/read_wps.py" input.et` / `"<skill-root>/scripts/read_wps.py" input.ett` commands now dispatch to
 the separate BIFF8 subset reader, defaulting to data policy. Explicit strict and legacy
-policies remain available; see [current reading policy](biff8-readonly.md#default-data-policy).
+policies remain available; see current reading policy (`<skill-root>/references/biff8-readonly.md#default-data-policy`).
 This does not change the CFB-only inspector or add WPS private-record semantics. Real-file BIFF8 subset checks now include original ET and ETT downloads;
-see [real sample validation](et-real-validation.md). Native WPS private-record semantics
+see real sample validation (`<skill-root>/references/et-real-validation.md`). Native WPS private-record semantics
 and general ET/ETT compatibility remain unverified.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) and require exit 0,
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) and require exit 0,
 environment-ok. Confirm the input is authorized and readable in the task directory. This
-reader writes no files; no write probe is needed for inspection. Resolve `<skill_dir>`
+reader writes no files; no write probe is needed for inspection. Resolve `<skill-root>`
 from the actual SKILL.md and replace it before running commands with task-relative input.
 Python 3.9+, standard library only; no Office launch, network calls or installations at runtime.
 
 ## Contents
 
-- [Evidence and provenance](#evidence-and-provenance)
-- [CLI and support levels](#cli-and-support-levels)
-- [Container subset and safety](#container-subset-and-safety)
-- [Tests and remaining work](#tests-and-remaining-work)
+- Evidence and provenance (`<skill-root>/references/et-ett-readonly.md#evidence-and-provenance`)
+- CLI and support levels (`<skill-root>/references/et-ett-readonly.md#cli-and-support-levels`)
+- Container subset and safety (`<skill-root>/references/et-ett-readonly.md#container-subset-and-safety`)
+- Tests and remaining work (`<skill-root>/references/et-ett-readonly.md#tests-and-remaining-work`)
 
 ## Evidence and provenance
 
 Initial research checked 2026-10-22; real-template follow-up checked 2026-10-23. Sources were read for specifications/support/licensing; no
 third-party parser code or test files were copied, installed or bundled. Exact source URLs
-are recorded in the [evidence manifest](et-format-evidence.json) as bibliographic provenance,
+are recorded in the evidence manifest (`<skill-root>/references/et-format-evidence.json`) as bibliographic provenance,
 not runtime resources or downloadable dependencies.
 
 | Source | Finding and implementation use |
@@ -52,8 +54,8 @@ Renamed XLS/XLSX or simulated containers are never counted as real ET/ETT accept
 ## CLI and support levels
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/read_wps.py" input.et
-python3 -I -S -B "<skill_dir>/scripts/wps_cfb.py" input.et
+python3 -I -S -B "<skill-root>/scripts/read_wps.py" input.et
+python3 -I -S -B "<skill-root>/scripts/wps_cfb.py" input.et
 ```
 
 Content, not extension, selects the container probe. Non-CFB data is rejected by wps_cfb;
@@ -69,8 +71,8 @@ and reads a supported document or BIFF subset, returning ok/partial or a specifi
 Known EncryptionInfo/EncryptedPackage streams are refused as encrypted; generic private encryption is not decoded.
 A corrupt or outside-subset container returns invalid_or_unsupported, not a fake empty sheet.
 
-Use --compatibility legacy_excel_clsid explicitly on `<skill_dir>/scripts/read_wps.py`, `<skill_dir>/scripts/wps_cfb.py` or
-`<skill_dir>/scripts/wps_biff8.py` to accept the exact nonzero header CLSID
+Use --compatibility legacy_excel_clsid explicitly on `<skill-root>/scripts/read_wps.py`, `<skill-root>/scripts/wps_cfb.py` or
+`<skill-root>/scripts/wps_biff8.py` to accept the exact nonzero header CLSID
 `2008020000000000c000000000000046` (Excel WorksheetClass CLSID) in v3 only. The CFB-only inspector and explicit strict mode
 still reject it, as MS-CFB requires CLSID_NULL; the unified reader and BIFF file API
 default data policy select this evidenced profile automatically before parsing. This narrowly documented interoperability
@@ -81,7 +83,7 @@ WPS authorship or change the input. A root Workbook/Book stream is required afte
 all regular allocation validation. Unknown GUIDs and the same nonzero GUID in v4 remain
 rejected. All length, chain, cross-link, orphan, name, encryption and quota checks remain.
 The BIFF entrypoint also uses an explicit raw-metadata allowlist in this mode, documented
-in [the BIFF reference](biff8-readonly.md#observed-legacy-compatibility).
+in the BIFF reference (`<skill-root>/references/biff8-readonly.md#observed-legacy-compatibility`).
 
 The standalone CFB CLI exits 0 after container diagnosis, including encrypted_unsupported;
 invalid/unsupported structure or I/O returns 1. The general inspector retains exit 0 for
@@ -102,7 +104,7 @@ Strict restrictions can reject otherwise readable noncanonical CFB files: exact 
 chain lengths, no orphan allocated sectors, empty streams must use ENDOFCHAIN, casefold
 name collision checks, and aligned root mini-stream sizes. Report outside-subset rather
 than silently dropping payload. The CFB entrypoint interprets no spreadsheet types, dates, merges, formulas or styles.
-A separate [strict BIFF8 record reader](biff8-readonly.md) now provides a bounded record
+A separate strict BIFF8 record reader (`<skill-root>/references/biff8-readonly.md`) now provides a bounded record
 subset and explicit header adapter, without changing CFB-only or ET compatibility claims.
 
 Limits: input 32 MiB (+ one limit-detection byte), individual user stream 8 MiB, aggregate

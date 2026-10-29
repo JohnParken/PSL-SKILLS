@@ -21,7 +21,7 @@ SCHEMA_VERSION = 'wps_sample_expectations_v1'
 PROVENANCE_FIELDS = ('source', 'original_filename', 'producer_evidence',
                      'independent_expectation_source')
 READ_OPTIONS = {
-    'compatibility': {'strict', 'legacy_excel_clsid', 'legacy_word_clsid'},
+    'compatibility': {'data', 'strict', 'legacy_excel_clsid', 'legacy_word_clsid'},
     'field_policy': {'reject', 'cached_result'},
     'object_policy': {'reject', 'placeholder'},
     'hidden_text': {'include', 'exclude', 'annotate'},

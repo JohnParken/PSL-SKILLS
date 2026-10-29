@@ -2,7 +2,8 @@
 import os
 import stat
 import struct
-from wps_cfb import CompoundFile, MAX_FILE_BYTES, SIGNATURE
+from wps_cfb import (CompoundFile, MAX_FILE_BYTES, SIGNATURE,
+                     LEGACY_EXCEL_CLSID, LEGACY_WORD_CLSID)
 
 class ParseError(ValueError):
     def __init__(self, status, location, message):
@@ -39,7 +40,8 @@ def read_input(path):
 def container_mode(data, compatibility):
     """Select one evidenced header profile, without parser retries."""
     if compatibility == 'data':
-        return 'legacy_excel_clsid' if data[8:24] == bytes.fromhex('2008020000000000c000000000000046') else 'strict'
+        return {LEGACY_EXCEL_CLSID: 'legacy_excel_clsid',
+                LEGACY_WORD_CLSID: 'legacy_word_clsid'}.get(data[8:24], 'strict')
     return compatibility
 
 
@@ -50,7 +52,11 @@ def load_compound(data, compatibility):
         raise ParseError('unsupported', {'stage': 'container'}, 'Require CFB container')
     if len(data) < 26:
         raise ParseError('corrupt', {'stream': 'CFB header', 'offset': 24}, 'Structure outside stream/region')
-    if struct.unpack_from('<H', data, 24)[0] != 0x003E:
+    minor_version = struct.unpack_from('<H', data, 24)[0]
+    # MS-CFB 2.2 recommends 3E (SHOULD, not MUST). Accept the observed
+    # legacy 3B only in compatibility modes; sector/allocation rules are identical.
+    legacy_minor = minor_version == 0x003B and compatibility != 'strict'
+    if minor_version != 0x003E and not legacy_minor:
         raise ParseError('unsupported', {'stream': 'CFB header', 'offset': 24}, 'Unsupported CFB minor version')
     clsid = data[8:24]
     allowed = bytes(16)
@@ -64,6 +70,11 @@ def load_compound(data, compatibility):
         compound = CompoundFile(data, compatibility=container_mode(data, compatibility))
     except ValueError as exc:
         raise ParseError('invalid_or_unsupported', {'stage': 'CFB'}, str(exc)) from exc
+    if legacy_minor:
+        compound.issues.append({'code': 'legacy_cfb_minor_version',
+                                'stream': 'CFB header', 'offset': 24,
+                                'minor_version': minor_version,
+                                'message': 'Legacy minor version 0x003B accepted with unchanged major-version, sector and allocation validation; not full format certification.'})
     encrypted = [path for path in compound.streams
                  if path[-1].casefold() in ('encryptedpackage', 'encryptioninfo', 'encryptedsummary', 'drmcontent')]
     if encrypted:

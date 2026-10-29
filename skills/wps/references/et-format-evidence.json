@@ -41,6 +41,31 @@
     {
       "title": "Microsoft WorksheetClass GUID (not proof of WPS producer)",
       "url": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.office.interop.excel.worksheetclass?view=excel-pia"
+    },
+    {
+      "title": "MS-XLS DXF",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/ea2a96e1-5ec3-43d0-8b97-9fa0b7e9fc27",
+      "used_for": "DXF global metadata structural framing and flags; property payload semantics not interpreted"
+    },
+    {
+      "title": "MS-XLS FrtHeader",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d56e99f8-a271-4db1-923c-222722d21a37",
+      "used_for": "DXF global metadata structural framing and flags; property payload semantics not interpreted"
+    },
+    {
+      "title": "MS-XLS XFProps",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/bf4f3634-ed2d-4207-b18b-a23dd6b3d565",
+      "used_for": "DXF global metadata structural framing and flags; property payload semantics not interpreted"
+    },
+    {
+      "title": "MS-XLS XFProp",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/ff15a3cd-f2fb-4fc6-aa52-55f93c5ba121",
+      "used_for": "DXF global metadata structural framing and flags; property payload semantics not interpreted"
+    },
+    {
+      "title": "MS-XLS FrtFlags",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/4ba52910-e74d-484d-9a6d-4588e054561e",
+      "used_for": "DXF global metadata structural framing and flags; property payload semantics not interpreted"
     }
   ],
   "format_basis": {
@@ -290,5 +315,6 @@
       "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/300280fd-e4fe-4675-a924-4d383af48d3b",
       "used_for": "stFormat is XLUnicodeString, length1..255; preserving text is not full format ABNF validation."
     }
-  ]
+  ],
+  "dxf_compatibility_checked_on": "2026-10-29"
 }

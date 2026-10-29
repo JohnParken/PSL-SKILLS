@@ -508,7 +508,8 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
         require(revisions in (None, 'all'), {'stage': 'options'},
                 'MS-DOC reads stored text; revision filtering unsupported', 'unsupported')
         result = parse_streams(compound.streams, field_policy=field_policy, object_policy=object_policy, include_related=include_related, hidden_text=hidden_text)
-        result['compatibility_mode'] = 'strict' if compatibility == 'data' else compatibility
+        result['compatibility_mode'] = compatibility
+        result['container_compatibility'] = compound.compatibility
         result['container_issues'] = compound.issues
         if compound.issues:
             result['issues'] = result.get('issues', []) + compound.issues
@@ -557,6 +558,25 @@ def encode_result(result):
     return encode(result, limit=MAX_JSON_OUTPUT_BYTES)
 
 
+def check_environment():
+    """Report import/runtime readiness; never read or accept a task document."""
+    try:
+        if sys.version_info < (3, 9):
+            raise RuntimeError('Python >=3.9 required')
+        import wps_biff8
+        import wps_ooxml
+        from xml.parsers import expat
+    except (ImportError, OSError, RuntimeError) as exc:
+        print('check_kind=environment artifact_validation=not_run', file=sys.stderr)
+        print('environment-failed: ' + str(exc), file=sys.stderr, flush=True)
+        return 2 if sys.version_info < (3, 9) else 1
+    print('check_kind=environment artifact_validation=not_run')
+    print('ooxml-word=' + ('available' if expat.version_info >= (2, 6, 0)
+                          else 'unavailable: Expat >=2.6 required'))
+    print('environment-ok', flush=True)
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
@@ -572,16 +592,10 @@ def main():
     args = parser.parse_args()
     if args.include_related and args.format == 'text':
         parser.error('--include-related requires --format json to preserve separate story regions')
+    if args.check:
+        return check_environment()
     if sys.version_info < (3, 9):
         parser.error('Python >=3.9 required')
-    if args.check:
-        # Import every local runtime branch; this does not validate a document.
-        import wps_biff8
-        import wps_ooxml
-        from xml.parsers import expat
-        print('environment-ok')
-        print('ooxml-word=' + ('available' if expat.version_info >= (2, 6, 0) else 'unavailable: Expat >=2.6 required'))
-        return 0
     if not args.input:
         parser.error('input required')
     result = read(args.input, compatibility=args.compatibility, chart_policy=args.chart_policy,

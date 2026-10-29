@@ -1,6 +1,8 @@
 # CLI 与 JSON 契约
 
-`python -I -S -B "<skill_dir>/scripts/read_ofd.py" --check` 检查解释器、Expat、zlib 压缩解压往返，以及受限输入必需的 dir_fd / O_NOFOLLOW / O_DIRECTORY 平台能力，成功输出固定前缀 `environment-ok` 并退出 0。缺少受限读取能力时 unsupported/4，不安装组件或自动降级。`--check` 不读取业务文件。
+路径占位符说明：`<skill-root>` 是 OFD Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 OFD 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+`python -I -S -B "<skill-root>/scripts/read_ofd.py" --check` 检查解释器、Expat、zlib 压缩解压往返，以及受限输入必需的 dir_fd / O_NOFOLLOW / O_DIRECTORY 平台能力，成功输出固定前缀 `environment-ok` 并退出 0。缺少受限读取能力时 unsupported/4，不安装组件或自动降级。`--check` 不读取业务文件。
 
 默认命令只有一个相对输入参数，输出一个 UTF-8 JSON 对象到 stdout，无磁盘产物。只接受任务目录内路径，拒绝绝对路径、父目录段和所有层级的符号链接（包括指向任务内的链接）。以可信任务根的目录描述符逐级打开，并在同一文件描述符上核对普通文件、大小和读取期间变化；不是针对特权并发写者的完整文件系统沙箱。无纯文本模式，避免丢失诊断和来源。`--help` 为 argparse 帮助。参数错误退出 2，帮助与参数错误采用 argparse 常规通道，不保证 JSON。
 

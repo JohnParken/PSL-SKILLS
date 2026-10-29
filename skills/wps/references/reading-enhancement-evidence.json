@@ -1,64 +1,115 @@
 {
   "schema_version": "wps_validation_evidence_v1",
   "current": {
-    "version": "20261027.2320.5486",
-    "python": "3.12.12",
-    "expat": "2.6.3",
+    "version": "20261029.1850.4782",
+    "platform": "Darwin arm64; Linux target not available (docker/podman absent)",
+    "python": "3.12.14",
+    "expat": "2.8.3",
     "stdlib_only": true,
+    "changes": [
+      "Default data selects exact existing legacy Word CFB header profile",
+      "Data and legacy file entrypoints accept observed CFB minor 0x003B with diagnostics",
+      "Global DXF 0x088D structurally parsed and retained without applying formatting",
+      "Explicit data policy accepted by WPS sample verifier"
+    ],
     "wps_tests": {
-      "passed": 400,
+      "passed": 424,
       "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p test_*.py"
     },
     "related_current_tests": {
-      "docx": 86,
-      "xlsx": 274,
-      "ofd": 35,
       "repository_et_pipeline": 2,
-      "total": 797,
       "failed": 0,
-      "skipped": 0
-    },
-    "structure_and_links": "strict and independent local Markdown path/anchor checks passed",
-    "real_et_ett_baseline": {
-      "source_version": "20261027.2227.1446",
-      "samples": 4,
-      "independent_stored_values": 198,
-      "unverified_formula_caches": 33,
-      "rerun_this_document_only_batch": false
+      "skipped": 0,
+      "command": "python -I -S -B -m unittest discover -s tests -p test_wps_et_pipeline.py -v"
     },
     "description": {
       "characters": 141,
       "changed_this_batch": false,
       "scope_manually_reviewed": true
     },
-    "model_evaluation": {
-      "method": "metadata-only selection then actual local tasks; full prompts, hashes and raw model replies stored in repository maintenance records",
-      "before_selection": {
-        "correct": 12,
-        "total": 12
-      },
-      "after_selection": {
-        "correct": 12,
-        "total": 12
-      },
-      "final_forward_tasks": {
-        "completed": 3,
-        "blocked": 0,
-        "failed": 0
-      },
-      "initial_xlsx_shape_regression": "found by actual model forward task, fixed and independently retested",
-      "real_host_auto_activation": false
-    },
-    "independent_review": "No uncorrected blocking issue after coverage-list fix",
-    "package": "Built and verified separately against final source; SHA recorded outside package to avoid self-reference",
+    "validation_kind": "Synthetic structural and behavior regressions; no real failed user file available",
+    "real_samples_rerun": false,
+    "dedicated_naming_linter": "Not installed; not run. Changed identifiers manually reviewed.",
+    "package": "Existing ZIP files unchanged; no release package generated in this batch",
     "limits": [
-      "No genuine user failed ET case supplied; no broad native WPS conformance acceptance",
-      "Real .wps body and government OFD acceptance incomplete; no restricted sample accessed",
-      "Naming linter unavailable/not installed; manual identifiers and syntax reviewed"
-    ]
+      "No Linux/Windows execution",
+      "No new real WPS/ET sample semantic acceptance",
+      "DXF property payload semantics and effective styles remain uninterpreted",
+      "Unknown private records and containers still refused; no complete native WPS conformance claim",
+      "No host attachment auto-selection end-to-end test"
+    ],
+    "structure_check": {
+      "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+      "exit_code": 0,
+      "result": "OK skills/wps"
+    },
+    "diff_whitespace_check": "git diff --check passed"
   },
   "history": [
+    {
+      "version": "20261027.2320.5486",
+      "note": "Prior current summary retained as history; not rerun in the CFB/DXF implementation batch.",
+      "evidence": {
+        "version": "20261027.2320.5486",
+        "python": "3.12.12",
+        "expat": "2.6.3",
+        "stdlib_only": true,
+        "wps_tests": {
+          "passed": 400,
+          "failed": 0,
+          "skipped": 0
+        },
+        "related_current_tests": {
+          "docx": 86,
+          "xlsx": 274,
+          "ofd": 35,
+          "repository_et_pipeline": 2,
+          "total": 797,
+          "failed": 0,
+          "skipped": 0
+        },
+        "structure_and_links": "strict and independent local Markdown path/anchor checks passed",
+        "real_et_ett_baseline": {
+          "source_version": "20261027.2227.1446",
+          "samples": 4,
+          "independent_stored_values": 198,
+          "unverified_formula_caches": 33,
+          "rerun_this_document_only_batch": false
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "model_evaluation": {
+          "method": "metadata-only selection then actual local tasks; full prompts, hashes and raw model replies stored in repository maintenance records",
+          "before_selection": {
+            "correct": 12,
+            "total": 12
+          },
+          "after_selection": {
+            "correct": 12,
+            "total": 12
+          },
+          "final_forward_tasks": {
+            "completed": 3,
+            "blocked": 0,
+            "failed": 0
+          },
+          "initial_xlsx_shape_regression": "found by actual model forward task, fixed and independently retested",
+          "real_host_auto_activation": false
+        },
+        "independent_review": "No uncorrected blocking issue after coverage-list fix",
+        "package": "Built and verified separately against final source; SHA recorded outside package to avoid self-reference",
+        "limits": [
+          "No genuine user failed ET case supplied; no broad native WPS conformance acceptance",
+          "Real .wps body and government OFD acceptance incomplete; no restricted sample accessed",
+          "Naming linter unavailable/not installed; manual identifiers and syntax reviewed"
+        ]
+      }
+    },
     {
       "version": "20261027.1946.3271",
       "note": "Archived previous evidence object; nested stage records retain original versions, environments and limits",

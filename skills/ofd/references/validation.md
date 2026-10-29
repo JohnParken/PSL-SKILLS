@@ -1,5 +1,7 @@
 # 来源与验证记录
 
+路径占位符说明：`<skill-root>` 是 OFD Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 OFD 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
 ## 规范身份与实现依据
 
 目标规范是 **GB/T 33190-2016《电子文件存储与交换格式 版式文档》正式版**，不以网上草案代替。以下是可追溯的公开来源：
@@ -12,7 +14,7 @@
 
 ## 真实样本
 
-2026-10-26 有效样本仅计一个公开生产工具来源的未修改原始 OFD；有效样本的来源、固定哈希、分类、预期及实际范围见 [真实样本记录](real-samples.json)。没有将其他格式改后缀充当真实原件，也未将原始二进制、字体或外部代码随技能分发。
+2026-10-26 有效样本仅计一个公开生产工具来源的未修改原始 OFD；有效样本的来源、固定哈希、分类、预期及实际范围见 真实样本记录 (`<skill-root>/references/real-samples.json`)。没有将其他格式改后缀充当真实原件，也未将原始二进制、字体或外部代码随技能分发。
 
 - **生产工具公开样例**：OFDRW 仓库固定源码树中的 `ofdrw-reader/src/test/resources/helloworld.ofd`，1652 字节，SHA-256 `edaf7b227ebff5d7621e05fefc251e572bffa6cb24e9ab1485988b39ba8d4429`。它声明 Version 1.0、Creator 为 OFD R&W 1.5.5。上游 `ContentExtractorTest.java` 的独立断言及 README 指定文字“你好呀，OFD Reader&Writer！”，在调用本解析器前冻结预期；未运行 Java 或其他外部软件。单页、文字、来源、对象 ID 与原始坐标属性核对通过，CLI complete/0。这是原始生产工具测试样例，不是政务或商业文档的广泛内容验收。
 政务真实样本尚未验收。
@@ -31,7 +33,7 @@ python -I -S -B -m unittest discover -s skills/ofd/scripts -p 'test_ofd.py' -v
 python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/ofd --strict
 ```
 
-独立分发包的测试命令为 `python -I -S -B -m unittest discover -s "<skill_dir>/scripts" -p 'test_ofd.py' -v`；这是合成维护验证，不必在每次业务读取时执行。结构检查器属于仓库维护资源，不在本独立包中。
+独立分发包的测试命令为 `python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_ofd.py' -v`；这是合成维护验证，不必在每次业务读取时执行。结构检查器属于仓库维护资源，不在本独立包中。
 
 35 个合成测试通过，覆盖：字面文字与坐标来源、存储顺序、模板去重与无效嵌套忽略、空白/扫描/未知对象、字体资源与签名元数据、附件/注释分离及不执行、规范点段归一化、越包根穿越及外部引用、重复 ZIP 与符号链接、UTF-8/UTF-16 DTD/实体拒绝、加密标志拒绝、畸形 XML、ZIP CRC、伪造大小与 CRC 的 DEFLATE/STORED 流、非支持压缩、各主要资源限额、CLI complete/partial/unsupported/failed、共享页大属性输出放大、异常 TextCode 父子结构、所有已解析 XML 的外来命名空间诊断与隔离、自检 zlib 可用与不可用。新增固定反例覆盖最终及中间路径替换竞态、已打开目录的描述符锚定、所有层级符号链接拒绝、缺平台能力时读取及自检拒绝、非普通输入与读取变化、重复 DocRoot/CommonData/Pages；后续 XML 引用即使不以 .xml 结尾也不能静默遗漏后 complete。
 

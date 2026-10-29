@@ -1,37 +1,39 @@
 # Bounded BIFF8 stored-value reading
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-The main `read_wps.py input.et` / `read_wps.py input.ett` entrypoint also calls this
+The main `"<skill-root>/scripts/read_wps.py" input.et` / `"<skill-root>/scripts/read_wps.py" input.ett` entrypoint also calls this
 reader and preserves its `biff8_readonly_v1` schema and diagnostics. Both routes validate
 contents and retain all subset limits. For unified branch-specific `--compatibility`
-choices, use the [compatibility rules](format.md#兼容策略和来源): legacy_excel_clsid
+choices, use the compatibility rules (`<skill-root>/references/format.md#兼容策略和来源`): legacy_excel_clsid
 and data are BIFF options; legacy_word_clsid is for MS-DOC, not this low-level reader.
 Neither enables writing or formula execution.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检), requiring exit 0 and
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`), requiring exit 0 and
 environment-ok. Confirm the authorized task input is readable. This reader writes no files;
-no write probe is required for inspection. Resolve `<skill_dir>` from the actual SKILL.md,
+no write probe is required for inspection. Resolve `<skill-root>` from the actual SKILL.md,
 replace it before commands, and use task-relative inputs. Python 3.9+, standard library
 only; no macro/formula execution, network requests, Office tools or dependency installs.
 
 ## Contents
 
-- [Evidence and input](#evidence-and-input)
-- [Pure-table Unicode compatibility](#pure-table-unicode-compatibility)
-- [Default data policy](#default-data-policy)
-- [Observed legacy compatibility](#observed-legacy-compatibility)
-- [Real-template compatibility additions](#real-template-compatibility-additions)
-- [Supported records and retained values](#supported-records-and-retained-values)
-- [Inline text and passive metadata](#inline-text-and-passive-metadata)
-- [Dates and formula caches](#dates-and-formula-caches)
-- [Headers and output](#headers-and-output)
-- [Rejection rules and validation limits](#rejection-rules-and-validation-limits)
-- [Migration and continuation validation](#migration-and-continuation-validation-2026-10-25)
-- [Rich SST and formula-group subsets](#rich-sst-and-formula-group-subsets)
-- [Additive number and saved visibility interpretation](#additive-number-and-saved-visibility-interpretation)
-- [ET parser capacity and failure locations](#et-parser-capacity-and-failure-locations)
+- Evidence and input (`<skill-root>/references/biff8-readonly.md#evidence-and-input`)
+- Pure-table Unicode compatibility (`<skill-root>/references/biff8-readonly.md#pure-table-unicode-compatibility`)
+- Default data policy (`<skill-root>/references/biff8-readonly.md#default-data-policy`)
+- Observed legacy compatibility (`<skill-root>/references/biff8-readonly.md#observed-legacy-compatibility`)
+- Real-template compatibility additions (`<skill-root>/references/biff8-readonly.md#real-template-compatibility-additions`)
+- Supported records and retained values (`<skill-root>/references/biff8-readonly.md#supported-records-and-retained-values`)
+- Inline text and passive metadata (`<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata`)
+- Dates and formula caches (`<skill-root>/references/biff8-readonly.md#dates-and-formula-caches`)
+- Headers and output (`<skill-root>/references/biff8-readonly.md#headers-and-output`)
+- Rejection rules and validation limits (`<skill-root>/references/biff8-readonly.md#rejection-rules-and-validation-limits`)
+- Migration and continuation validation (`<skill-root>/references/biff8-readonly.md#migration-and-continuation-validation-2026-10-25`)
+- Rich SST and formula-group subsets (`<skill-root>/references/biff8-readonly.md#rich-sst-and-formula-group-subsets`)
+- Additive number and saved visibility interpretation (`<skill-root>/references/biff8-readonly.md#additive-number-and-saved-visibility-interpretation`)
+- ET parser capacity and failure locations (`<skill-root>/references/biff8-readonly.md#et-parser-capacity-and-failure-locations`)
 
 ## Evidence and input
 
@@ -39,15 +41,15 @@ Implementation follows the Microsoft MS-XLS online record/structure sections che
 2026-10-22: Record, BOF, BoundSheet8, SST/Unicode strings, Number/RK/MulRk, Blank,
 LabelSst, BoolErr, MergeCells, Date1904, XF/Format, Formula/FormulaValue and String.
 Exact official source URLs are bibliographic entries in
-[et-format-evidence.json](et-format-evidence.json), not runtime dependencies. No third-party
+et-format-evidence.json (`<skill-root>/references/et-format-evidence.json`), not runtime dependencies. No third-party
 parser code or binary samples were incorporated. All tests are synthetic MS-XLS record
 fixtures, with manual typed expectations and container fixtures; they are not WPS files.
 
 ```console
-python -I -S -B "<skill_dir>/scripts/read_wps.py" ./input.et
+python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
 ```
 
-The file must pass the [CFB container reader](et-ett-readonly.md), contain exactly one
+The file must pass the CFB container reader (`<skill-root>/references/et-ett-readonly.md`), contain exactly one
 root Workbook/Book stream, and start with the 16-byte BOF payload identifying 0x0600
 BIFF8 globals. A stream name or .et/.ett suffix does not establish its encoding. Worksheet
 BOFs, BoundSheet8 offsets, EOF boundaries and the non-dialog WsBool must agree. Standalone chart,
@@ -119,20 +121,20 @@ These new cases have fixed synthetic tests and old/new default comparisons. The 
 allowed original ET/ETT samples still match all 198 independent stored values, but
 contain none of these new non1200/reserved-flag cases. They are regression evidence,
 not producer acceptance of this extension. A real user file exercising it remains
-needed for such acceptance. See [validation](validation.md) and [sources](et-format-evidence.json).
+needed for such acceptance. See validation (`<skill-root>/references/validation.md`) and sources (`<skill-root>/references/et-format-evidence.json`).
 
 ## Observed legacy compatibility
 
 For the previous explicit legacy policy (data is now the file default):
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/wps_biff8.py" input.et --compatibility legacy_excel_clsid
+python3 -I -S -B "<skill-root>/scripts/wps_biff8.py" input.et --compatibility legacy_excel_clsid
 ```
 
 This accepts only the exact observed WorksheetClass header GUID in CFB v3, with a root
 Workbook/Book stream and every existing allocation, chain and resource check. It does
 not rewrite the header or establish the producer from the GUID. Unknown nonzero GUIDs
-and nonzero GUIDs in v4 still fail. See [container rules](et-ett-readonly.md).
+and nonzero GUIDs in v4 still fail. See container rules (`<skill-root>/references/et-ett-readonly.md`).
 
 Both data and this explicit mode retain an allowlist of MS-XLS 2.3.2 metadata record
 IDs as scope/offset/name/raw hex, within the existing metadata budgets. These include
@@ -141,10 +143,10 @@ and layout settings. They are not executed, semantically validated, rendered or 
 raw XF/format values are not effective inherited display formats. The result includes
 known_metadata_retained_uninterpreted and diagnostic status. Unknown records, external
 reference data, macros, encryption and unsupported continuations remain refused.
-Shared/array formula support has its own [authoritative subset rules](formula-groups.md);
+Shared/array formula support has its own authoritative subset rules (`<skill-root>/references/formula-groups.md`);
 this compatibility mode does not relax them.
 The allowlist is explicit in LEGACY_GLOBAL_METADATA / LEGACY_SHEET_METADATA and the
-bounded additions described under [inline text and passive metadata](#inline-text-and-passive-metadata); it is not
+bounded additions described under inline text and passive metadata (`<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata`); it is not
 an option to skip arbitrary record IDs. Other container streams, including ETExtData
 and ETSharedLinks, remain undecoded and are listed by path, size and digest. Do not
 assume these private extensions have no effect on a full WPS rendering or data model.
@@ -154,7 +156,7 @@ One public government ET template was read without changing its bytes: three she
 merge sets matched an isolated LibreOffice XLSX conversion. Its Date1904=0 marker also
 matched; it contains no numeric date cells or formulas, so those capabilities still lack
 real-sample validation. Source/hash and limitations are in
-[the evidence manifest](et-format-evidence.json). The file is not redistributed and its
+the evidence manifest (`<skill-root>/references/et-format-evidence.json`). The file is not redistributed and its
 WPS version is unknown. This is observed BIFF8 cell-subset interoperability, not general
 native ET/ETT acceptance; native_et_ett_parsed and wps_compatibility_verified stay false.
 
@@ -174,10 +176,10 @@ found in original public ETT templates, even when their CFB header CLSID is alre
 
 These additions do not allow external workbook/add-in/DDE links, arbitrary names,
 private records or embedded chart substreams by default.
-The explicit [opaque chart policy](embedded-charts.md) adds bounded framing/raw retention
+The explicit opaque chart policy (`<skill-root>/references/embedded-charts.md`) adds bounded framing/raw retention
 for a supported embedded-chart subset without decoding or rendering charts. Record bytes are retained for diagnosis;
 metadata retention is not full semantic or layout validation. Strict mode is unchanged.
-See [real sample validation](et-real-validation.md) for original-file hashes, results,
+See real sample validation (`<skill-root>/references/et-real-validation.md`) for original-file hashes, results,
 spot checks, explicit legacy chart rejection, the data/opaque policy and reproducible offline verification.
 
 ## Supported records and retained values
@@ -215,6 +217,7 @@ records in `uninterpreted_metadata`, with scope, record offset, ID and raw paylo
 
 | Record | Structural checks before raw retention |
 |---|---|
+| Global DXF (`0x088D`) | Validate the matching FrtHeader, scope flags, XFProps count, property types and byte framing; retain raw payload plus structural property metadata. Differential formatting is not applied to cells. |
 | Global Palette (`0x0092`) | Exactly 56 colors and 226 payload bytes; colors are not applied to styles. |
 | Worksheet Pane (`0x0041`) | Ten bytes, a valid active-pane byte and a BIFF8 column index; reserved byte is retained but ignored. Split positions and Window2-dependent display semantics are not interpreted. |
 | HorizontalPageBreaks (`0x001B`) | At most 1026 six-byte entries after the count; exact length, ordered nonoverlapping column intervals per row, valid column bounds. |
@@ -223,30 +226,29 @@ records in `uninterpreted_metadata`, with scope, record offset, ID and raw paylo
 Zero-entry page-break lists are allowed. These additions share the existing
 metadata byte/count limits and compatibility diagnostic; they do not apply print
 layout, hide/filter cells, render colors or claim complete metadata validation.
-Explicit strict mode still refuses these four metadata record kinds. Unknown records
-are not skipped. CFB CLSID/allocation checks, the unified entrypoint's minor version
-`0x003E` requirement, explicit Date1904, policy-specific CodePage validation and explicit chart rejection
+Explicit strict mode still refuses these metadata record kinds. Unknown records
+are not skipped. CFB allocation checks, explicit strict minor `0x003E` (data/legacy also accept observed `0x003B` with diagnostics), explicit Date1904, policy-specific CodePage validation and explicit chart rejection
 are unchanged. Missing date-system information is never silently replaced by 1900.
 
-Source references are recorded in [the format evidence](et-format-evidence.json).
+Source references are recorded in the format evidence (`<skill-root>/references/et-format-evidence.json`).
 These additions have synthetic coverage; existing real ET/ETT regression samples
 do not establish real-world coverage of the newly added record layouts. BIFF Note,
 HLink and RString, arbitrary XML extensions and private WPS records remain outside
-this addition. Actual verification results are in [validation](validation.md).
+this addition. Actual verification results are in validation (`<skill-root>/references/validation.md`).
 
 ## Dates and formula caches
 
 Require explicit Date1904, preserving the 1900/1904 system. A numeric date serial stays
 numeric with raw XF/number-format ID and any explicit custom format text. The separate
 `numeric_interpretation` field can explain supported formats under the bounded rules in
-[number interpretation](numeric-interpretation.md); it never replaces the saved numeric
+number interpretation (`<skill-root>/references/numeric-interpretation.md`); it never replaces the saved numeric
 value or establishes general locale, effective-style or rendered-display equivalence.
 Serial 60 in the 1900 system is not invented as a real calendar date; fractional serials
 and the original bytes remain available for later, separately verified interpretation.
 
 Formula records retain opaque token bytes, ancillary bytes, raw flags and cache bytes.
 Tokens are not decompiled, semantically validated or executed; unknown token semantics do
-not trigger any formula evaluation. [Shared/array formula rules](formula-groups.md)
+not trigger any formula evaluation. Shared/array formula rules (`<skill-root>/references/formula-groups.md`)
 define the supported bounded group subset and its partial status; Table data-table
 formulas remain refused. Supported caches are numeric, boolean, text (String record
 with the group ordering described in that reference), error
@@ -262,10 +264,10 @@ within A1:F20. Select the actual sheet/range for the task; error cells cannot fo
 header paths, and formula headers require the explicit cache policy described below.
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/wps_biff8.py" input.xls --sheet Data --range A1:F20 --header-rows 1:3
+python3 -I -S -B "<skill-root>/scripts/wps_biff8.py" input.xls --sheet Data --range A1:F20 --header-rows 1:3
 ```
 
-Explicit header reconstruction reuses the explicit merge-only header rules in `wps_biff8_headers.py`,
+Explicit header reconstruction reuses the explicit merge-only header rules in `<skill-root>/scripts/wps_biff8_headers.py`,
 including merge-only propagation, stable column IDs, clipping/cross-boundary rejection and
 non-anchor-data checks. Formula headers default to rejection; --header-formulas cached
 is an explicit opt-in with a warning, and missing/error caches still fail. Dates remain
@@ -308,7 +310,7 @@ cache values. Do not rename XLS/XLSX fixtures and present them as genuine WPS va
 ## Migration and continuation validation (2026-10-25)
 
 The BIFF/CFB implementation, chart framing, original synthetic tests and source/sample
-manifests moved from xlsx to wps. `wps_biff8_headers.py` retains only the pure address and
+manifests moved from xlsx to wps. `<skill-root>/scripts/wps_biff8_headers.py` retains only the pure address and
 merge-header algorithm from xlsx_headers/stdlib_xlsx; it has no native OOXML dependency.
 The source is recorded in that module; future header-policy changes must regression-check
 both standalone algorithms. No adjacent skill is imported at runtime.
@@ -336,9 +338,9 @@ Rich SST character segments and raw FormatRun segments can cross Continue record
 The character phase consumes continuation encoding bytes; the run phase does not.
 Fixed headers stay in one record; per-string and remaining aggregate budgets are
 checked before collecting run data. Formatting is retained once by SST index and
-reported partial, never applied. Phonetic extensions are retained as opaque ExtRst bytes, not applied or interpreted; rich/phonetic cached String records remain unsupported. See [continuation rules and evidence](biff-rich-continuation.md).
+reported partial, never applied. Phonetic extensions are retained as opaque ExtRst bytes, not applied or interpreted; rich/phonetic cached String records remain unsupported. See continuation rules and evidence (`<skill-root>/references/biff-rich-continuation.md`).
 
-For shared/array groups, use [formula-group rules and evidence](formula-groups.md)
+For shared/array groups, use formula-group rules and evidence (`<skill-root>/references/formula-groups.md`)
 as the single detailed contract for supported records, member caches, ordering,
 partial diagnostics and rejection cases. Rich strings and groups have synthetic
 regression evidence, not independent real-file semantic acceptance.
@@ -353,8 +355,8 @@ not four complete-format successes; hashes and existing text/metric expectations
 
 ## Additive number and saved visibility interpretation
 
-Raw values and cache provenance remain unchanged. See [number interpretation](numeric-interpretation.md) for the bounded explicit CellXF format subset and unknown inheritance/complex formats; this is not effective-style or Excel display rendering. See [saved visibility](saved-visibility.md) for Row/ColInfo flags and raw filter metadata. Default extraction includes all cells. Row selection keeps unknown states; filter conditions are not decoded or executed. These BIFF helpers do not parse OOXML; the unified entrypoint separately routes OOXML packages to the [OOXML spreadsheet reader](ooxml-spreadsheet.md).
+Raw values and cache provenance remain unchanged. See number interpretation (`<skill-root>/references/numeric-interpretation.md`) for the bounded explicit CellXF format subset and unknown inheritance/complex formats; this is not effective-style or Excel display rendering. See saved visibility (`<skill-root>/references/saved-visibility.md`) for Row/ColInfo flags and raw filter metadata. Default extraction includes all cells. Row selection keeps unknown states; filter conditions are not decoded or executed. These BIFF helpers do not parse OOXML; the unified entrypoint separately routes OOXML packages to the OOXML spreadsheet reader (`<skill-root>/references/ooxml-spreadsheet.md`).
 
 ## ET parser capacity and failure locations
 
-See [current capacity and stability rules](et-parser-stability.md) for bounded phonetic SST retention, expanded shared-string/merge counts, sweep-based merge validation and precise record failure locations. These capacities apply to BIFF8 only; they do not change OOXML limits. The WPS-only header adapter accepts the increased merge-list budget while preserving region/anchor rules; the neighboring XLSX implementation is unchanged.
+See current capacity and stability rules (`<skill-root>/references/et-parser-stability.md`) for bounded phonetic SST retention, expanded shared-string/merge counts, sweep-based merge validation and precise record failure locations. These capacities apply to BIFF8 only; they do not change OOXML limits. The WPS-only header adapter accepts the increased merge-list budget while preserving region/anchor rules; the neighboring XLSX implementation is unchanged.

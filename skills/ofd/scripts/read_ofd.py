@@ -565,7 +565,8 @@ def main(argv=None):
         environment()
         confined_environment()
         if args.check:
-            print('environment-ok Python>=3.10 Expat>=2.6.0 stdlib-only')
+            print('check_kind=environment artifact_validation=not_run')
+            print('environment-ok Python>=3.10 Expat>=2.6.0 stdlib-only', flush=True)
             return 0
         if not args.input:
             parser.error('input required unless --check')
@@ -576,7 +577,11 @@ def main(argv=None):
     except (ReadError, OSError, zipfile.BadZipFile, expat.ExpatError, RuntimeError, ValueError, ZLIB_ERROR, struct.error) as exc:
         message = str(exc)
         status = 'unsupported' if message.startswith('unsupported:') else 'failed'
-        print(json.dumps(dict(schema_version='ofd-read-2', status=status, diagnostics=[dict(code='read_error', detail=message)]), ensure_ascii=False))
+        result = dict(schema_version='ofd-read-2', status=status,
+                      diagnostics=[dict(code='read_error', detail=message)])
+        if args.check:
+            result.update(check_kind='environment', artifact_validation='not_run')
+        print(json.dumps(result, ensure_ascii=False), flush=True)
         return 4 if status == 'unsupported' else 1
 
 
