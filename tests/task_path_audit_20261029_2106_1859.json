@@ -1,0 +1,144 @@
+{
+  "version": "20261029.2106.1859",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "scope": {
+    "skills": 7,
+    "markdown_files": 98
+  },
+  "findings": [
+    "Removed hypothetical inputs directory from DOCX example",
+    "Distinguished standard stdin image base from legacy JSON-parent image base",
+    "Clarified task ./ versus skill root and archive in three entrypoints"
+  ],
+  "checks": [
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/artifact-lifecycle",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/ofd",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/wps",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK /Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/artifact-lifecycle\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/ofd\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/wps\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/docx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts",
+        "-p",
+        "test_cli_task_paths.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.354s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts",
+        "-p",
+        "test_xlsx_cli_boundaries.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 2.480s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/create_docx.py",
+        "./document.json",
+        "兼容路径.docx",
+        "--verify",
+        "--require-no-placeholders"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/root-path-example-b775dwpa",
+      "exit_code": 0,
+      "stdout": "{\"status\": \"verified\", \"archive_status\": \"skipped\", \"used_fallback\": true, \"fallback_reason\": \"missing_router_config\", \"files\": [{\"output\": \"\\u517c\\u5bb9\\u8def\\u5f84.docx\", \"archive_output\": null, \"archive_status\": \"skipped\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u672a\\u6267\\u884c\", \"output\": \"\\u517c\\u5bb9\\u8def\\u5f84.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": null, \"blocks\": 2, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false}\n",
+      "stderr": "generation-deprecated: create_docx.py generation CLI is deprecated; use run_docx_task.py create for standard new-document tasks. Library APIs, --check and --preflight remain supported.\narchive-location: skipped; reason=missing_router_config\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-c",
+        "import sys,json;from pathlib import Path;sys.path.insert(0,sys.argv[1]);from create_docx import create_document_delivery;print(json.dumps(create_document_delivery(json.loads(Path(\"./document.json\").read_text()),\"字典路径.docx\",base_dir=\".\",protected_inputs=[\"./document.json\"])))",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/root-path-example-b775dwpa",
+      "exit_code": 0,
+      "stdout": "{\"status\": \"verified\", \"archive_status\": \"skipped\", \"used_fallback\": true, \"fallback_reason\": \"missing_router_config\", \"files\": [{\"output\": \"\\u5b57\\u5178\\u8def\\u5f84.docx\", \"archive_output\": null, \"archive_status\": \"skipped\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u672a\\u6267\\u884c\", \"output\": \"\\u5b57\\u5178\\u8def\\u5f84.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": null, \"blocks\": 2, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/run_docx_task.py",
+        "create",
+        "标准路径.docx"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/root-path-example-b775dwpa",
+      "exit_code": 0,
+      "stdout": "{\"status\": \"verified\", \"archive_status\": \"skipped\", \"used_fallback\": true, \"fallback_reason\": \"missing_router_config\", \"files\": [{\"output\": \"\\u6807\\u51c6\\u8def\\u5f84.docx\", \"archive_output\": null, \"archive_status\": \"skipped\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u672a\\u6267\\u884c\", \"output\": \"\\u6807\\u51c6\\u8def\\u5f84.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": null, \"blocks\": 2, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false, \"task_manifest\": null, \"task_status\": \"completed\", \"cleanup\": {\"status\": \"cleaned\", \"deleted\": [{\"path\": \"docx-task-197a231a610e4712b8bdc1562687064d.worker.py\", \"reason\": \"removed\"}, {\"path\": \"docx-task-197a231a610e4712b8bdc1562687064d.spec.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-197a231a610e4712b8bdc1562687064d.receipt.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-197a231a610e4712b8bdc1562687064d.task.lock\", \"reason\": \"removed\"}, {\"path\": \"docx-task-197a231a610e4712b8bdc1562687064d.retry-spec.json\", \"reason\": \"already_absent\"}, {\"path\": \"docx-task-197a231a610e4712b8bdc1562687064d.cleanup.json\", \"reason\": \"removed\"}], \"retained\": [], \"failed\": [], \"cleanup_scope\": \"registered_entries_only\", \"manifest_retained\": null, \"deliverables_unchanged\": true, \"cleanup_complete\": true, \"outcome\": \"success\", \"archive_status\": \"skipped\", \"manifest_removed\": true}, \"attempts\": 1, \"environment\": {\"status\": \"ready\", \"errors\": [], \"warnings\": [], \"diagnostics\": \"python=3.12.14 required>=3.10 supported=True\\nzlib=ok\\nexpat=expat_2.8.3 required>=2.6.0 supported=True\\n\"}}\n",
+      "stderr": ""
+    }
+  ],
+  "packages": [
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.2106.1859.zip",
+      "sha256": "b6176f80dc83c749f05b07b479c80c3cc0d19ea376441b70ef659d6ed7c95633",
+      "crc_and_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261029.2106.1859.zip",
+      "sha256": "d7adcb8f5ac72af249d66c060b1210c5370cf65d880fd787fd90c3b4e64c7e1a",
+      "crc_and_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261029.2106.1859.zip",
+      "sha256": "1fc4bce34d80569cb73567dbd5d08c3361de22ac2285182e9bb5ef89b6c95ba4",
+      "crc_and_source_bytes": "passed"
+    }
+  ],
+  "not_verified": [
+    "Real model path-selection behavior",
+    "Production Linux host and Windows",
+    "Office visual rendering"
+  ],
+  "root_examples": "legacy CLI, dictionary API and standard stdin: passed; inputs unchanged; no invented input directory or helper residuals"
+}

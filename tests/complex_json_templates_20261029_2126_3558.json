@@ -1,0 +1,172 @@
+{
+  "version": "20261029.2126.3558",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "checks": [
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "extra_env": null,
+      "exit_code": 0,
+      "stdout": "OK /Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/docx\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_complex_json_templates.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "extra_env": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".......\n----------------------------------------------------------------------\nRan 7 tests in 2.124s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts",
+        "-p",
+        "test_terminal_cleanup.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "extra_env": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.235s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts",
+        "-p",
+        "test_xlsx_delivery.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "extra_env": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".......................\n----------------------------------------------------------------------\nRan 23 tests in 1.688s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts",
+        "-p",
+        "test_xlsx_cli_boundaries.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "extra_env": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 2.433s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/tests",
+        "-p",
+        "test_complex_json_templates.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm",
+      "extra_env": {
+        "TEMPLATE_SKILLS_ROOT": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm/installed"
+      },
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".......\n----------------------------------------------------------------------\nRan 7 tests in 2.155s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/check_skill.py",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm/installed/bank-writing",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm/installed/docx",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm/installed/xlsx",
+        "--strict"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm",
+      "extra_env": null,
+      "exit_code": 0,
+      "stdout": "OK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm/installed/bank-writing\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm/installed/docx\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complex-json-release-fwypq_jm/installed/xlsx\n",
+      "stderr": ""
+    }
+  ],
+  "packages": [
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.2126.3558.zip",
+      "sha256": "be188f00fafab27c8dbc33baa2fc4d2c332f057c763f9a4755750384050c91a2",
+      "members": 8,
+      "crc_complete_members_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261029.2126.3558.zip",
+      "sha256": "dcdc9e91c6042cb7160ea63ac352bef2defadc89161be6796622ad9d373ec4c0",
+      "members": 77,
+      "crc_complete_members_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261029.2126.3558.zip",
+      "sha256": "7e144fc9099c81a40f7798585136799723f15358f6ba52296462f43670b60a1e",
+      "members": 140,
+      "crc_complete_members_source_bytes": "passed"
+    }
+  ],
+  "runtime_logic": "unchanged; templates are documented Python source invoking existing runners",
+  "not_verified": [
+    "Production execute/read_file integration and model selection behavior",
+    "Target Linux and Windows",
+    "Forced termination or host crash cleanup",
+    "Dedicated Python naming linter"
+  ],
+  "readonly_installed_source_unchanged": true
+}

@@ -1,0 +1,159 @@
+{
+  "work": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6",
+  "initial_packages": [
+    {
+      "name": "bank-writing",
+      "file_count": 8,
+      "sha256": "b6176f80dc83c749f05b07b479c80c3cc0d19ea376441b70ef659d6ed7c95633",
+      "members_crc_source": "passed"
+    },
+    {
+      "name": "docx",
+      "file_count": 76,
+      "sha256": "d7adcb8f5ac72af249d66c060b1210c5370cf65d880fd787fd90c3b4e64c7e1a",
+      "members_crc_source": "passed"
+    },
+    {
+      "name": "xlsx",
+      "file_count": 138,
+      "sha256": "1fc4bce34d80569cb73567dbd5d08c3361de22ac2285182e9bb5ef89b6c95ba4",
+      "members_crc_source": "passed"
+    }
+  ],
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "checks": [
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK /Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/docx\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/docx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 258 tests in 11.587s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/xlsx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..............................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 302 tests in 19.917s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "*lifecycle_parity.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/bank-writing",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/docx",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/xlsx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/bank-writing\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/docx\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/prelaunch-review-e87xwry6/final/xlsx\n",
+      "stderr": ""
+    }
+  ],
+  "final_packages": [
+    {
+      "name": "bank-writing",
+      "version": "20261029.2106.1859",
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.2106.1859.zip",
+      "file_count": 8,
+      "sha256": "b6176f80dc83c749f05b07b479c80c3cc0d19ea376441b70ef659d6ed7c95633",
+      "complete_member_set_crc_source_bytes": "passed"
+    },
+    {
+      "name": "docx",
+      "version": "20261029.2109.3562",
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261029.2109.3562.zip",
+      "file_count": 76,
+      "sha256": "e00552760caaa7584facbbcfa29b15bcc5e04cf865b62c1555c39f49ea0f807f",
+      "complete_member_set_crc_source_bytes": "passed"
+    },
+    {
+      "name": "xlsx",
+      "version": "20261029.2109.3562",
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261029.2109.3562.zip",
+      "file_count": 138,
+      "sha256": "f1cbeca755f4a7046e53000edf6b41e2b98fb137f70b7fab63ee8b54dfb82db3",
+      "complete_member_set_crc_source_bytes": "passed"
+    }
+  ],
+  "findings_fixed": [
+    "DOCX retry/cleanup and next_action documentation contradictions",
+    "DOCX archive staging directory wording",
+    "XLSX partial/no-config result must not report cleanup complete when archive temporary residuals exist"
+  ],
+  "installed_readonly_unchanged": true,
+  "scope": "Standard DOCX creation/edit runner and XLSX config runner; bank-writing is text-only and does not create intermediate files. Legacy direct CLI and caller-owned files require explicit lifecycle orchestration.",
+  "not_verified": [
+    "Target production Linux container and Windows",
+    "Production harness delivery and stdout/stderr/exit-code transport",
+    "Process kill and host crash recovery",
+    "Real model skill routing/path interpretation",
+    "Office visual rendering",
+    "Dedicated naming linter"
+  ]
+}

@@ -6,12 +6,12 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.0103.0751 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后由 docx 生成文件 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261029.0940.0902 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261029.1811.0069 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261029.0400.2169 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261029.0924.5633 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
-| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261029.1442.4400 | 本轮临时文件登记、最终交付物清单归档、封存与受控清理；不生成或验收业务内容、不清理历史发布ZIP |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.2126.3558 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后由 docx 生成文件 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261029.2132.0838 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261029.2132.0838 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261029.2012.5682 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261029.2012.5682 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261029.2101.4877 | 本轮临时文件登记、最终交付物清单归档、封存与受控清理；不生成或验收业务内容、不清理历史发布ZIP |
 
 ## 目录结构
 
@@ -60,7 +60,7 @@ PSL-SKILLS/
 
 将目标 skill 的**完整目录**交给支持 Agent Skills 的宿主加载；具体安装位置由宿主决定。也可以让代理先读取对应 `SKILL.md`，再根据任务读取其引用文档并调用脚本。只复制 `SKILL.md` 或单个脚本会丢失必要模块和模板。
 
-业务输入、输出和临时文件应放在宿主确认的任务工作目录中，不写入 skill 安装目录。脚本和资源以实际读取的 `SKILL.md` 所在目录定位；任务数据使用任务目录内的相对路径。下文的 `<skill_dir>` 必须替换为实际 skill 目录，`python3` 必须指向满足版本要求的解释器。
+业务输入、输出和临时文件应放在宿主确认的任务工作目录中，不写入 skill 安装目录。脚本和资源以实际读取的 `SKILL.md` 所在目录定位；任务数据使用任务目录内的相对路径。下文的 `<skill-root>` 是占位符，须从对应 Skill 主入口 `SKILL.md` 的真实 `file_path`（相对读取路径先按宿主确认的读取基准解析）去掉文件名确定并整体替换，不能取参考文档目录；无法定位时停止，完整路径须正确引用。`python3` 必须指向满足版本要求的解释器。
 
 ### 银行专业写作
 
@@ -75,15 +75,15 @@ PSL-SKILLS/
 首次操作前运行自检，要求退出码为 0 且 JSON 中 `status` 为 `ready`：
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
 ```
 
 按 [计算与文件契约](skills/xlsx/references/python-calculation.md) 准备输入，确认输入可读、输出目录可写后，在任务目录执行：
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read ./input.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create ./report.json ./report.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./report.json ./report.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
 ```
 
 输出路径必须尚不存在。创建示例见 [calculation_example.json](skills/xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
@@ -101,10 +101,10 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.
 按照[生成说明](skills/docx/references/generation.md)组织JSON，直接送入统一入口的stdin，不另建临时.py或document.json。未指定排版时显式使用official；用户指定格式优先。命令示例：
 
 ```python
-execute(command="python3 -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'JSON'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程，提升客户服务质量。\"}]}\nJSON\n")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'JSON'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程，提升客户服务质量。\"}]}\nJSON\n")
 ```
 
-自动入口创建前登记自己的worker.py/spec.json，强制验收及占位符检查，处理归档并等待worker退出后自动清理。最终DOCX和恢复manifest保留。回执独占写入且不创建暂存硬链接，持久化完整归属指纹后由父进程核对；证明已提交后的worker清理异常只提示，回执或主文件变化仍拒绝。失败待重试时材料保留，使用返回manifest的retry/resume，不重新创建同名任务；`task_status`和`cleanup.cleanup_complete`与归档状态分开核对。自检还需要标准库POSIX锁与描述符能力，当前只验证macOS。旧create_docx.py生成CLI已deprecated，仅stderr提示迁移、JSON stdout和退出码兼容；底层库与五类编辑等尚有用途的接口保留，不会自动清理调用方自建的Python/JSON；自定义或多步编辑流程继续显式登记清单，见[自动任务及清理边界](skills/docx/references/task-cleanup.md#自动新建任务入口)。
+自动入口创建前登记自己的worker.py/spec.json，强制验收及占位符检查，处理归档并等待worker退出后自动清理。最终DOCX保留；收尾完成后删除恢复manifest。回执独占写入且不创建暂存硬链接，持久化完整归属指纹后由父进程核对；证明已提交后的worker清理异常只提示，回执或主文件变化仍拒绝。失败待重试时材料保留，使用返回manifest的retry/resume，不重新创建同名任务；`task_status`和`cleanup.cleanup_complete`与归档状态分开核对。自检还需要标准库POSIX锁与描述符能力，当前只验证macOS。旧create_docx.py生成CLI已deprecated，仅stderr提示迁移、JSON stdout和退出码兼容；底层库与五类编辑等尚有用途的接口保留，不会自动清理调用方自建的Python/JSON；自定义或多步编辑流程继续显式登记清单，见[自动任务及清理边界](skills/docx/references/task-cleanup.md#自动新建任务入口)。
 
 文档输入、主输出、归档、图片及 Skill 内部资源采用不同且明确的基准，统一见 [文件定位与读取规则](skills/docx/SKILL.md#文件定位与读取规则)。所有命令从宿主确认的任务工作目录执行，不切换到输入子目录或 Skill 安装目录。
 
@@ -123,8 +123,8 @@ execute(command="python3 -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" creat
 独立入口见 [ofd](skills/ofd/SKILL.md)。先运行自检，再在任务目录读取相对输入路径；结果保留文字来源和诊断，不恢复页面或语义阅读顺序：
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/read_ofd.py" --check
-python3 -I -S -B "<skill_dir>/scripts/read_ofd.py" ./input.ofd
+python3 -I -S -B "<skill-root>/scripts/read_ofd.py" --check
+python3 -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
 ```
 
 OFD 离线分发包沿用仓库现有位置 `skills/ofd-<version>.zip`；完整目录独立安装，不依赖相邻 wps/docx/xlsx。版本化 ZIP 按现有 `.gitignore` 规则不纳入版本控制，源目录和 README 是维护入口。
@@ -209,3 +209,64 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 本批四技能任务选择的固定正反例见 `tests/skill_selection_cases.json`。20 项人工边界核对及未见标准答案的独立选择模拟均匹配预期；这是有限用例的选择评测，不是真实宿主自动触发验收。
 
 OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不计为有效授权验收。此前本批 OFD ZIP 含该项派生元数据和说明，不应使用，保留但停止交付；仅从清理后的源码重建新的本地 OFD 包，不读取旧 ZIP，不上传。其他合成回归与允许样本证据单独保留。
+
+
+## 自检与执行结果回传
+
+自检成功仅证明相应环境或结构检查通过，不等于文件已生成或产物已验收。各入口保留原文本/JSON契约，环境检查增加明确范围标记。宿主需要把stdout、stderr、真实退出码及调用标识实际送回模型，不能只保存日志或丢弃非零退出的stdout。
+
+仓库维护与接入可用 [run_skill_check.py](tools/run_skill_check.py) 执行固定自检入口并输出独立回传JSON；[入口清单、用法及边界](docs/check-execution.md)列出全部Skill和未验证范围。该适配器不随独立Skill发布，不安装或修改项目专属execute工具；原Skill命令仍可直接执行，宿主按原生接口回传。
+
+## 三技能上线修复（2026-10-29）
+
+本次版本为20261029.2043.2946。bank-writing明确素材指令边界及按需导出，保持纯文本交付；DOCX明确简单占位符和已支持的结构验证范围；XLSX明确公式子集与编辑边界。三个description均为100–150字符，人工核对适用/不适用场景；未声明已完成新版模型触发评测。
+
+XLSX十个受支持写文件CLI在业务处理前检查输入、配置和输出路径；DOCX读取/兼容生成与五类编辑CLI检查任务文件路径，公开生成交付及标准runner同时检查图片资源路径。拒绝绝对路径、父目录、符号链接组件及输出输入别名。低层库仍保留显式路径能力，调用方负责任务隔离；不是同权限恶意并发写者沙箱。
+
+路由配置诊断默认关闭，开启时只输出是否配置和脱敏标记。XLSX包装入口返回子进程状态、真实退出码及明确的通道省略记录，不回显任意stderr或无效JSON正文。清理仅覆盖登记项；DOCX新建、受控编辑和XLSX配置runner在业务验收后删除本轮中间文件及清单，归档失败/跳过也收尾。保留材料可能含业务数据，归属核实及宿主留存策略不可省略。
+
+归档继续按basename保存当前副本，同名会替换，不能作为版本历史库；保留多版须预先使用不同文件名，并发任务使用独立任务目录。发布包、测试命令和未验证范围以本轮仓库验证记录为准；旧ZIP保留，不因维护而删除。
+
+本轮验证记录：[上线修复与分发包验收](tests/production_readiness_20261029_20432946.json)。源码回归共579项通过；运行平台为macOS/Python3.12.14，不能替代目标Linux生产宿主验收。
+
+## 最终收尾规则（20261029.2053.4764）
+
+任务结束时必须清理本轮全部中间文件，包括脚本、配置、回读结果、日志、暂存、锁、回执和清单；仅将当前与历史交付物作为任务生成的留存文件。用户原件与其他任务文件仍受保护，不属于可删除中间文件。创建前完整登记，普通内部暂存由创建函数收尾；若删除失败、归属不明或强杀留下未确认残留，报告收尾未完成，不声称只剩交付物，也不扫描删除未知文件。待重试不是任务结束；最终停止后按原清单完成清理，不永久保留恢复材料。
+
+自动DOCX新建/编辑与XLSX在主文件验收后，即使归档失败/跳过也清理。公共CLI clean最后删除清单；底层cleanup_task只是内部阶段，最终API使用finalize_cleanup。清单删除后不能继续resume/clean；实际残留返回cleanup_incomplete，DOCX与XLSX自动入口退出3，不能把主文件成功当成收尾完成。
+
+本版验证记录：[最终清理与发布包验收](tests/terminal_cleanup_20261029_20534764.json)。macOS/Python3.12.14源码回归581项通过，4个Skill严格检查通过；只读解压目录56项回归通过，执行前后安装文件哈希一致，4个ZIP的CRC与源码逐字节核对通过。目标Linux生产容器、Windows、真实宿主回传/下载、强杀与宿主崩溃恢复、Office视觉验收、模型触发评测及专用命名检查器未验证。
+
+## 任务路径专项复核（20261029.2106.1859）
+
+扫描全部7个Skill的98份Markdown，并核对相关入口实现。修正DOCX虚设输入子目录的示例及图片基准的入口歧义；写作、DOCX、XLSX明确工作目录始终为宿主确认的`./`，仅按真实附件路径使用子目录，不为示例创建或切换输入目录。运行时代码未改动，三个description能力与触发范围未变。
+
+全部7个Skill严格检查通过，8项路径回归通过；从测试任务根目录实际验证兼容CLI、字典API与标准stdin入口均读取根目录图片并生成DOCX，输入未变，无虚设输入子目录或辅助文件残留。三份新ZIP的CRC及源码逐字节核对通过。详见[路径审查证据](tests/task_path_audit_20261029_2106_1859.json)。仅macOS验证，未做生产Linux/Windows或真实模型路径选择评测。
+
+## 失败立即清理（20261029.2101.4877）
+
+生成或编辑失败、子进程超时也自动清理本轮脚本、配置和清单，不再默认保留待重试材料；重试从原始输入重新建立任务。原失败退出码保留。用户原件及已有交付物不删除；锁占用、归属变化或删除失败明确报告清理未完成。旧版retry协议仅用于历史中断状态兼容，不是新任务失败策略。
+
+本版macOS源码回归575项通过；四包严格检查、CRC和源码逐字节比对通过；只读解包回归58项通过，安装内容哈希未变。验证证据：[failure_cleanup_20261029_2101_4877.json](tests/failure_cleanup_20261029_2101_4877.json)。Linux生产容器、Windows、真实宿主回传和强杀恢复、Office视觉验收、模型触发及专用命名检查仍未验证。
+
+## 最终发布包复核（20261029.2109.3562）
+
+原三个2106发布包均与当时源码完全一致。复核修正DOCX失败重试/清理的残留旧说明、归档暂存位置说明，以及XLSX部分计算或无配置调用时归档残留可能误报清理完成的问题；DOCX/XLSX更新为20261029.2109.3562，纯文本写作包保持20261029.2106.1859。描述能力与触发范围未扩大。
+
+最终三个包完整成员、CRC与源码逐字节一致；源码及解包严格检查通过。只读安装目录执行DOCX258项、XLSX302项回归全部通过，2项共享实现一致性检查通过；安装文件哈希未变。成功、失败、超时及清理拒绝分别核对，不将cleanup_incomplete视作完成。写作包不生成本地中间文件；旧CLI及调用方自建辅助文件仍需显式登记收尾。验证限macOS，生产Linux/Windows、真实宿主回传下载、强杀恢复、Office视觉验收、模型选择与路径理解、专用命名linter未验证。详见[最终复核证据](tests/prelaunch_final_20261029_2109_3562.json)。
+
+## 工具调用故障规避（20261029.2116.5828）
+
+针对用户提供的五类历史故障，更新三个Skill的调用与结果读取说明：阻止空参数调用、JSON改正后才重试、任务临时文件仅用./、退出3按完整摘要区分业务与清理、大结果引用使用指定读取工具。宿主侧需实现call_id去重、完成参数后再调度、非零退出完整回传及明确文件可见性；未声称这些宿主问题已由文档修复。运行时代码未修改，描述能力与触发范围不变。
+
+严格检查与34项相关回归通过；实际验证错误列表JSON在生成前拒绝且无残留，文档中的合法列表和解码后的heredoc命令生成通过，保留产物并清理辅助文件。三个ZIP完整成员、CRC及源码字节一致。仅macOS本地执行，不替代真实execute/read_file隔离、重复注入、模型调用成功率或生产Linux验收。[验证记录](tests/tool_stability_20261029_2116_5828.json)。
+
+大结果读取契约（20261029.2119.1860）：按用户确认，三个Skill统一明确`/large_tool_results/`必须由`read_file`读取；不可用时报告缺口，不回退到execute/Python/Shell。严格检查及三个ZIP完整成员、CRC、源码字节核对通过；仅文档变更，未执行真实宿主read_file调用。
+
+## 复杂JSON调用模板（20261029.2126.3558）
+
+简单JSON可直接写；复杂JSON使用Python dict/list与json.dumps序列化。DOCX/XLSX提供经过验证的源码和完整execute调用表示，默认Python源码及JSON均走stdin，复用既有runner，不新增运行时生成器。写作仍为纯文本，导出时交接DOCX模板。实际保存Python临时文件时创建前登记，由外层等待退出后在成功、业务失败、序列化失败及语法错误下seal/clean，不自删、不用成功条件链跳过清理。
+
+7项模板测试覆盖20个子场景，源码和只读解包均通过；另34项现有清理/边界回归通过。三个Skill源码及解包严格检查通过，ZIP完整成员/CRC/源码字节一致，安装内容哈希未变；运行时Python与上版逐字节一致，描述触发范围保持不变。验证为macOS，生产Linux/Windows、真实宿主与模型效果、强杀清理及专用命名linter未验证。[验证记录](tests/complex_json_templates_20261029_2126_3558.json)。
+
+上线前复核（20261029.2132.0838）：修正DOCX复杂JSON模板缺失official主题、旧失败收尾retain/retry示例、旧JSON非独占落盘示例，并移除XLSX模板中误带的DOCX专用说明。复杂输入统一引用已验证的Python序列化模板；临时文件成功和失败均收尾，清理受阻仍如实报告。DOCX/XLSX更新包，写作保持20261029.2126.3558；原有修改及历史包保留，三个最终包完整成员、CRC和源码字节一致。三个源码及只读解包严格检查通过；模板7项/20子场景在源码与最终解包均通过，两项生命周期副本一致性检查通过；本轮只读解包完整回归DOCX 258项、XLSX 302项通过，随后仅补充文档，运行时Python字节未变。description适用范围人工复核无须调整。macOS结果不替代云端Linux验收；真实宿主execute/read_file、模型路由、强杀或宿主崩溃清理、Windows及命名linter未验证。详见[复核记录](tests/prelaunch_review_20261029_2132_0838.json)。

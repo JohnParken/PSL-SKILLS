@@ -1,0 +1,473 @@
+{
+  "version": "20261029.2043.2946",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.14",
+  "packages": [
+    {
+      "skill": "bank-writing",
+      "path": "skills/bank-writing-20261029.2043.2946.zip",
+      "version": "20261029.2043.2946",
+      "sha256": "ce9ee42b2e47a849f6908651c4619a3d8df40ef6e60678de91f1edaa8862f6ba",
+      "members": 8,
+      "crc": "passed",
+      "source_member_bytes": "identical",
+      "readonly_installation_unchanged": true
+    },
+    {
+      "skill": "docx",
+      "path": "skills/docx-20261029.2043.2946.zip",
+      "version": "20261029.2043.2946",
+      "sha256": "d743e6ba7e482dd66fd092675c92f0e147ff131826a8591a8404be47ff5ab0e7",
+      "members": 75,
+      "crc": "passed",
+      "source_member_bytes": "identical",
+      "readonly_installation_unchanged": true
+    },
+    {
+      "skill": "xlsx",
+      "path": "skills/xlsx-20261029.2043.2946.zip",
+      "version": "20261029.2043.2946",
+      "sha256": "789d2d52baf47481cabdee59016d3b0192c8410df069df0d236110d3f4be26b3",
+      "members": 138,
+      "crc": "passed",
+      "source_member_bytes": "identical",
+      "readonly_installation_unchanged": true
+    },
+    {
+      "skill": "artifact-lifecycle",
+      "path": "skills/artifact-lifecycle-20261029.2043.2946.zip",
+      "version": "20261029.2043.2946",
+      "sha256": "42cb961c0662406294ddada8aece2ce8f2e8798118c32974fc92103e7ece1610",
+      "members": 13,
+      "crc": "passed",
+      "source_member_bytes": "identical",
+      "readonly_installation_unchanged": true
+    }
+  ],
+  "installed_checks": [
+    {
+      "name": "bank-writing strict installed",
+      "arguments": [
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/check_skill.py",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/bank-writing",
+        "--strict"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/bank-writing-task",
+      "exit_code": 0,
+      "stdout": "OK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/bank-writing\n",
+      "stderr": ""
+    },
+    {
+      "name": "docx strict installed",
+      "arguments": [
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/check_skill.py",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx",
+        "--strict"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/docx-task",
+      "exit_code": 0,
+      "stdout": "OK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx\n",
+      "stderr": ""
+    },
+    {
+      "name": "docx read selfcheck",
+      "arguments": [
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx/scripts/read_docx.py",
+        "--check"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/docx-task",
+      "exit_code": 0,
+      "stdout": "python=3.12.14 required>=3.10 supported=True\nzlib=ok\nexpat=expat_2.8.3 required>=2.6.0 supported=True\ncheck_kind=environment artifact_validation=not_run\nread-check-ok\n",
+      "stderr": ""
+    },
+    {
+      "name": "docx installed create",
+      "arguments": [
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx/scripts/run_docx_task.py",
+        "create",
+        "release.docx"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/docx-task",
+      "exit_code": 0,
+      "stdout": "{\"status\": \"verified\", \"archive_status\": \"copied\", \"used_fallback\": false, \"fallback_reason\": null, \"files\": [{\"output\": \"release.docx\", \"archive_output\": \"output/release_case/release.docx\", \"archive_status\": \"copied\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u5b8c\\u6210\", \"output\": \"release.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": \"output/release_case/release.docx\", \"blocks\": 1, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false, \"task_manifest\": \"docx-task-538b4ca73c87434b8f645ce474a392f1.cleanup.json\", \"task_status\": \"completed\", \"cleanup\": {\"status\": \"cleaned\", \"deleted\": [{\"path\": \"docx-task-538b4ca73c87434b8f645ce474a392f1.worker.py\", \"reason\": \"removed\"}, {\"path\": \"docx-task-538b4ca73c87434b8f645ce474a392f1.spec.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-538b4ca73c87434b8f645ce474a392f1.receipt.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-538b4ca73c87434b8f645ce474a392f1.task.lock\", \"reason\": \"removed\"}, {\"path\": \"docx-task-538b4ca73c87434b8f645ce474a392f1.retry-spec.json\", \"reason\": \"already_absent\"}], \"retained\": [], \"failed\": [], \"cleanup_scope\": \"registered_entries_only\", \"manifest_retained\": \"docx-task-538b4ca73c87434b8f645ce474a392f1.cleanup.json\", \"deliverables_unchanged\": true, \"cleanup_complete\": true, \"outcome\": \"success\", \"archive_status\": \"copied\"}, \"environment\": {\"status\": \"ready\", \"errors\": [], \"warnings\": [], \"diagnostics\": \"python=3.12.14 required>=3.10 supported=True\\nzlib=ok\\nexpat=expat_2.8.3 required>=2.6.0 supported=True\\n\"}}\n",
+      "stderr": "router-config-debug: {\"configured\": true, \"values_redacted\": true}\n"
+    },
+    {
+      "name": "docx installed read",
+      "arguments": [
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx/scripts/read_docx.py",
+        "release.docx"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/docx-task",
+      "exit_code": 0,
+      "stdout": "上线验证：原始文字与42。",
+      "stderr": ""
+    },
+    {
+      "name": "installed test_cli_task_paths.py",
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx/scripts",
+        "-p",
+        "test_cli_task_paths.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/docx-task",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.344s\n\nOK\n"
+    },
+    {
+      "name": "installed test_output_location.py",
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx/scripts",
+        "-p",
+        "test_output_location.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/docx-task",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".........................\n----------------------------------------------------------------------\nRan 25 tests in 0.003s\n\nOK\n"
+    },
+    {
+      "name": "installed test_cleanup_task.py",
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/docx/scripts",
+        "-p",
+        "test_cleanup_task.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/docx-task",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..................\n----------------------------------------------------------------------\nRan 18 tests in 0.222s\n\nOK\n"
+    },
+    {
+      "name": "xlsx strict installed",
+      "arguments": [
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/check_skill.py",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/xlsx",
+        "--strict"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/xlsx-task",
+      "exit_code": 0,
+      "stdout": "OK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/xlsx\n",
+      "stderr": ""
+    },
+    {
+      "name": "xlsx installed check",
+      "arguments": [
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/xlsx/scripts/stdlib_xlsx.py",
+        "check"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/xlsx-task",
+      "exit_code": 0,
+      "stdout": "{\n  \"status\": \"ready\",\n  \"python\": \"3.12.14\",\n  \"dependencies\": \"standard_library_only\",\n  \"check_kind\": \"environment\",\n  \"artifact_validation\": \"not_run\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "xlsx installed create",
+      "arguments": [
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/xlsx/scripts/run_xlsx_task.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/xlsx-task",
+      "exit_code": 0,
+      "stdout": "{\"status\": \"calculated_subset\", \"engine\": \"python_decimal_subset\", \"formula_count\": 1, \"calculated_count\": 1, \"issues\": [], \"output_written\": true, \"excel_equivalence_verified\": false, \"retained_not_refreshed\": [], \"changed_parts\": [\"xl/workbook.xml\", \"xl/worksheets/sheet1.xml\"], \"output\": \"release.xlsx\", \"delivery\": {\"status\": \"completed\", \"archive_status\": \"copied\", \"used_fallback\": false, \"fallback_reason\": null, \"files\": [{\"output\": \"release.xlsx\", \"archive_output\": \"output/release_case/release.xlsx\", \"archive_status\": \"copied\"}], \"warnings\": [], \"archive_message\": \"归档完成\"}, \"child_execution\": {\"invocation_id\": \"f02d900d7aea46a891e1a2d7a20c285c\", \"state\": \"exited\", \"exit_code\": 0, \"signal\": null, \"stdout\": {\"text\": null, \"original_characters\": 697, \"omitted\": true, \"truncated\": false, \"reason\": \"structured_result_returned\"}, \"stderr\": {\"text\": null, \"original_characters\": 67, \"omitted\": true, \"truncated\": false, \"reason\": \"sensitive_child_output\"}}, \"task_status\": \"completed\", \"manifest\": null, \"cleanup\": {\"status\": \"cleaned\", \"deleted\": [{\"path\": \"xlsx-task-8785f6002042460784fd2f42f2f1e0b7.spec.json\", \"reason\": \"removed\"}, {\"path\": \"xlsx-task-8785f6002042460784fd2f42f2f1e0b7.cleanup.json\", \"reason\": \"removed\"}], \"retained\": [], \"failed\": [], \"cleanup_scope\": \"registered_entries_only\", \"manifest_retained\": null, \"deliverables_unchanged\": true, \"cleanup_complete\": true, \"outcome\": \"success\", \"archive_status\": \"copied\", \"manifest_removed\": true}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "xlsx installed read",
+      "arguments": [
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/xlsx/scripts/stdlib_xlsx.py",
+        "read",
+        "release.xlsx"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/xlsx-task",
+      "exit_code": 0,
+      "stdout": "{\n  \"date_system\": \"1900\",\n  \"dates\": \"numeric serials are not converted\",\n  \"sheets\": [\n    {\n      \"name\": \"Data\",\n      \"cells\": {\n        \"A1\": {\n          \"value\": \"原始值\",\n          \"type\": \"inlineStr\",\n          \"style\": \"0\",\n          \"formula\": null,\n          \"formula_attributes\": {},\n          \"cache_status\": \"not_applicable\"\n        },\n        \"B1\": {\n          \"value\": \"42\",\n          \"type\": \"n\",\n          \"style\": \"0\",\n          \"formula\": \"21*2\",\n          \"formula_attributes\": {},\n          \"cache_status\": \"unverified\"\n        }\n      }\n    }\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "installed test_xlsx_cli_boundaries.py",
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/xlsx/scripts",
+        "-p",
+        "test_xlsx_cli_boundaries.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/xlsx-task",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 2.526s\n\nOK\n"
+    },
+    {
+      "name": "installed test_xlsx_delivery.py",
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/xlsx/scripts",
+        "-p",
+        "test_xlsx_delivery.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/xlsx-task",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".....................\n----------------------------------------------------------------------\nRan 21 tests in 1.688s\n\nOK\n"
+    },
+    {
+      "name": "artifact-lifecycle strict installed",
+      "arguments": [
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/check_skill.py",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/artifact-lifecycle",
+        "--strict"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/artifact-lifecycle-task",
+      "exit_code": 0,
+      "stdout": "OK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/artifact-lifecycle\n",
+      "stderr": ""
+    },
+    {
+      "name": "lifecycle installed check",
+      "arguments": [
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/artifact-lifecycle/scripts/lifecycle.py",
+        "check"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/artifact-lifecycle-task",
+      "exit_code": 0,
+      "stdout": "{\"status\": \"environment-ok\", \"task_writable\": true, \"check_kind\": \"environment\", \"artifact_validation\": \"not_run\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "lifecycle installed tests",
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/installed/artifact-lifecycle/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/skill-release-audit-uq3lbzww/artifact-lifecycle-task",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...............\n----------------------------------------------------------------------\nRan 15 tests in 0.055s\n\nOK\n"
+    }
+  ],
+  "source_checks": [
+    {
+      "suite": "docx test_*.py",
+      "tests": 252,
+      "exit_code": 0,
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/docx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "status": "passed",
+      "evidence": "Observed terminal tool result; source-suite raw streams were not saved to disk"
+    },
+    {
+      "suite": "xlsx test_*.py",
+      "tests": 300,
+      "exit_code": 0,
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/xlsx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "status": "passed",
+      "evidence": "Observed terminal tool result; source-suite raw streams were not saved to disk"
+    },
+    {
+      "suite": "artifact-lifecycle test_*.py",
+      "tests": 15,
+      "exit_code": 0,
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/artifact-lifecycle/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "status": "passed",
+      "evidence": "Observed terminal tool result; source-suite raw streams were not saved to disk"
+    },
+    {
+      "suite": "test_*lifecycle_parity.py",
+      "tests": 2,
+      "exit_code": 0,
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_*lifecycle_parity.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "status": "passed",
+      "evidence": "Observed terminal tool result; source-suite raw streams were not saved to disk"
+    },
+    {
+      "suite": "test_self_check_contracts.py",
+      "tests": 8,
+      "exit_code": 0,
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_self_check_contracts.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "status": "passed",
+      "evidence": "Observed terminal tool result; source-suite raw streams were not saved to disk"
+    },
+    {
+      "suite": "test_wps_et_pipeline.py",
+      "tests": 2,
+      "exit_code": 0,
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_et_pipeline.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "status": "passed",
+      "evidence": "Observed terminal tool result; source-suite raw streams were not saved to disk"
+    }
+  ],
+  "limits": [
+    "macOS only; target Linux and Windows not run",
+    "Synthetic files only; no production documents or Office visual acceptance",
+    "No production harness stdout/stderr transport or cloud-space mapping validation",
+    "No model skill-trigger evaluation for new descriptions",
+    "No dedicated Python naming linter available; AST, strict skill checks, manual identifier/reference review and runtime tests performed",
+    "Generic skill-creator validator excludes project-required version; project strict validator used without weakening rules",
+    "No malicious same-user concurrent filesystem writer or power-loss guarantee",
+    "Archive retains documented same-basename replacement compatibility; not version history"
+  ],
+  "subagents": [],
+  "strict_structure": {
+    "command": [
+      "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/bank-writing",
+      "skills/docx",
+      "skills/xlsx",
+      "skills/artifact-lifecycle",
+      "--strict"
+    ],
+    "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+    "exit_code": 0
+  },
+  "description_review": {
+    "bank-writing": {
+      "characters": 128,
+      "review": "Manual scope and capability review; no model-trigger execution"
+    },
+    "docx": {
+      "characters": 135,
+      "review": "Manual scope and capability review; no model-trigger execution"
+    },
+    "xlsx": {
+      "characters": 134,
+      "review": "Manual scope and capability review; no model-trigger execution"
+    }
+  },
+  "manual_scope_cases": [
+    {
+      "request": "银行年度总结、素材摘要或范文仿写",
+      "route": "bank-writing; text-only unless DOCX explicitly requested"
+    },
+    {
+      "request": "Word简单占位符和指定文字修改",
+      "route": "docx controlled editing; no complex template guarantee"
+    },
+    {
+      "request": "PDF导出或精确Word分页",
+      "route": "outside docx supported scope"
+    },
+    {
+      "request": "指定单元格修改、CSV交换、公式子集统计",
+      "route": "xlsx supported subset"
+    },
+    {
+      "request": "任意行列移动、宏执行或透视缓存刷新",
+      "route": "outside xlsx supported scope"
+    }
+  ],
+  "changed_python_ast_checks": {
+    "files": 52,
+    "status": "passed",
+    "naming_linter": "unavailable; manual review performed"
+  },
+  "source_test_total": 579,
+  "installed_test_total": 87,
+  "maintenance_temporary_cleanup": {
+    "status": "completed",
+    "scope": "Only the exclusive root created during this maintenance; previous ZIPs and task data retained"
+  }
+}

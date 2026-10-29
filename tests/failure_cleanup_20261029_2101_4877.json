@@ -1,0 +1,247 @@
+{
+  "version": "20261029.2101.4877",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "checks": [
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/bank-writing",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/bank-writing\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/docx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/docx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/xlsx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/xlsx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/artifact-lifecycle",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/artifact-lifecycle\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/docx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "combined_output": "..................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 258 tests in 12.054s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/xlsx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "combined_output": "............................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 300 tests in 19.855s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "*lifecycle_parity.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/artifact-lifecycle/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...............\n----------------------------------------------------------------------\nRan 15 tests in 0.062s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4/installed/docx/scripts",
+        "-p",
+        "test_terminal_cleanup.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.244s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4/installed/docx/scripts",
+        "-p",
+        "test_docx_controlled_flow.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "................\n----------------------------------------------------------------------\nRan 16 tests in 0.391s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4/installed/xlsx/scripts",
+        "-p",
+        "test_xlsx_delivery.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".....................\n----------------------------------------------------------------------\nRan 21 tests in 1.762s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4/installed/artifact-lifecycle/scripts",
+        "-p",
+        "test_lifecycle.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/failure-cleanup-release-xkrumhn4",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...............\n----------------------------------------------------------------------\nRan 15 tests in 0.062s\n\nOK\n"
+    }
+  ],
+  "packages": [
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.2101.4877.zip",
+      "sha256": "5488b9865d5830e46297b53f040670dea3b5c2eac8e80b56c8f822db3b582168",
+      "crc_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261029.2101.4877.zip",
+      "sha256": "9d572809b2441c288ac257e0692a5567c2bc4b136b7f1a5823808ebedba0a54b",
+      "crc_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261029.2101.4877.zip",
+      "sha256": "9109facb3bb0c4b8fd4230e713e3076ca1b820a35cf245ab8216fe79e8fc3481",
+      "crc_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/artifact-lifecycle-20261029.2101.4877.zip",
+      "sha256": "85597f1d799f3b4b862510c68007463e84aa65260061481c289d9b50d4b7cc13",
+      "crc_source_bytes": "passed"
+    }
+  ],
+  "not_verified": [
+    "Production Linux and Windows",
+    "Real production executor transport and download",
+    "Host kill/crash recovery",
+    "Office visual rendering and model trigger evaluation",
+    "Dedicated naming linter"
+  ],
+  "readonly_install_unchanged": true
+}

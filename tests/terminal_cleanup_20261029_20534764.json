@@ -1,0 +1,182 @@
+{
+  "version": "20261029.2053.4764",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "checks": [
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/bank-writing",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/bank-writing\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/docx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/docx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/xlsx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/xlsx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/artifact-lifecycle",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "stdout": "OK skills/artifact-lifecycle\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl/installed/docx/scripts",
+        "-p",
+        "test_terminal_cleanup.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.163s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl/installed/docx/scripts",
+        "-p",
+        "test_docx_controlled_flow.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "................\n----------------------------------------------------------------------\nRan 16 tests in 0.396s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl/installed/xlsx/scripts",
+        "-p",
+        "test_xlsx_delivery.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".....................\n----------------------------------------------------------------------\nRan 21 tests in 1.746s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl/installed/artifact-lifecycle/scripts",
+        "-p",
+        "test_lifecycle.py"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/complete-cleanup-maint-n1ix1zgl",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...............\n----------------------------------------------------------------------\nRan 15 tests in 0.061s\n\nOK\n"
+    }
+  ],
+  "packages": [
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.2053.4764.zip",
+      "sha256": "84cfbe59d79114d258dbc71fb1774e3e20d54cfbebd9d7ac7b6bc9d74293e617",
+      "crc_and_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261029.2053.4764.zip",
+      "sha256": "b77608e2a637e60d30f1419cfcf9707ea5305de30e427a0aa8e6d46a6bb08771",
+      "crc_and_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261029.2053.4764.zip",
+      "sha256": "96063f86bd060a0a8e37e153a703475b18a783d7c3efe4584250efc59de11825",
+      "crc_and_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/artifact-lifecycle-20261029.2053.4764.zip",
+      "sha256": "b69972962cc1664d4541c426107a623c8a74f2b8cf3d81f1856a34c015cc8b57",
+      "crc_and_source_bytes": "passed"
+    }
+  ],
+  "source_tests": {
+    "docx": 256,
+    "xlsx": 300,
+    "artifact-lifecycle": 15,
+    "docx_public_parity": 1,
+    "xlsx_parity": 1,
+    "self_check_contracts": 8
+  },
+  "not_verified": [
+    "Target Linux container and Windows",
+    "Production harness stdout/stderr/exit-code transport and downloads",
+    "Process kill, host crash and production permission failure recovery",
+    "Real Office visual rendering",
+    "Model skill-trigger evaluation",
+    "Dedicated naming linter"
+  ],
+  "readonly_install_source_unchanged": true
+}

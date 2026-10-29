@@ -1,0 +1,151 @@
+{
+  "version": "20261029.2116.5828",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "changes": "Documentation and examples only; runtime scripts unchanged",
+  "checks": [
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx",
+        "--strict"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "OK /Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/docx\nOK /Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts",
+        "-p",
+        "test_terminal_cleanup.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.233s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts",
+        "-p",
+        "test_xlsx_delivery.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ".......................\n----------------------------------------------------------------------\nRan 23 tests in 1.715s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts",
+        "-p",
+        "test_xlsx_cli_boundaries.py"
+      ],
+      "cwd": "/Users/yangxuezhen/git/PSL-SKILLS",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 2.503s\n\nOK\n"
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/run_docx_task.py",
+        "create",
+        "bad.docx"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/tool-stability-zfdqlzqu",
+      "exit_code": 1,
+      "expected_exit": 1,
+      "stdout": "{\"status\": \"failed\", \"error_code\": \"request_rejected\", \"next_action\": \"inspect_request\", \"message\": \"Expecting ',' delimiter: line 1 column 26 (char 25)\", \"task_status\": \"not_started\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/yangxuezhen/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/run_docx_task.py",
+        "create",
+        "corrected.docx"
+      ],
+      "cwd": "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/tool-stability-zfdqlzqu",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "{\"status\": \"verified\", \"archive_status\": \"skipped\", \"used_fallback\": true, \"fallback_reason\": \"missing_router_config\", \"files\": [{\"output\": \"corrected.docx\", \"archive_output\": null, \"archive_status\": \"skipped\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u672a\\u6267\\u884c\", \"output\": \"corrected.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": null, \"blocks\": 1, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false, \"task_manifest\": null, \"task_status\": \"completed\", \"cleanup\": {\"status\": \"cleaned\", \"deleted\": [{\"path\": \"docx-task-fc982afcbf1746b1a841ea3a508b852e.worker.py\", \"reason\": \"removed\"}, {\"path\": \"docx-task-fc982afcbf1746b1a841ea3a508b852e.spec.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-fc982afcbf1746b1a841ea3a508b852e.receipt.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-fc982afcbf1746b1a841ea3a508b852e.task.lock\", \"reason\": \"removed\"}, {\"path\": \"docx-task-fc982afcbf1746b1a841ea3a508b852e.retry-spec.json\", \"reason\": \"already_absent\"}, {\"path\": \"docx-task-fc982afcbf1746b1a841ea3a508b852e.cleanup.json\", \"reason\": \"removed\"}], \"retained\": [], \"failed\": [], \"cleanup_scope\": \"registered_entries_only\", \"manifest_retained\": null, \"deliverables_unchanged\": true, \"cleanup_complete\": true, \"outcome\": \"success\", \"archive_status\": \"skipped\", \"manifest_removed\": true}, \"attempts\": 1, \"environment\": {\"status\": \"ready\", \"errors\": [], \"warnings\": [], \"diagnostics\": \"python=3.12.14 required>=3.10 supported=True\\nzlib=ok\\nexpat=expat_2.8.3 required>=2.6.0 supported=True\\n\"}}\n",
+      "stderr": ""
+    },
+    {
+      "kind": "documented execute expression parsed; decoded command executed by local POSIX shell, not production execute",
+      "exit_code": 0,
+      "stdout": "{\"status\": \"verified\", \"archive_status\": \"skipped\", \"used_fallback\": true, \"fallback_reason\": \"missing_router_config\", \"files\": [{\"output\": \"\\u5ba2\\u6237\\u670d\\u52a1\\u6539\\u8fdb\\u65b9\\u6848.docx\", \"archive_output\": null, \"archive_status\": \"skipped\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u672a\\u6267\\u884c\", \"output\": \"\\u5ba2\\u6237\\u670d\\u52a1\\u6539\\u8fdb\\u65b9\\u6848.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": null, \"blocks\": 2, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false, \"task_manifest\": null, \"task_status\": \"completed\", \"cleanup\": {\"status\": \"cleaned\", \"deleted\": [{\"path\": \"docx-task-ee43ccb515104fa582551bc67031008b.worker.py\", \"reason\": \"removed\"}, {\"path\": \"docx-task-ee43ccb515104fa582551bc67031008b.spec.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-ee43ccb515104fa582551bc67031008b.receipt.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-ee43ccb515104fa582551bc67031008b.task.lock\", \"reason\": \"removed\"}, {\"path\": \"docx-task-ee43ccb515104fa582551bc67031008b.retry-spec.json\", \"reason\": \"already_absent\"}, {\"path\": \"docx-task-ee43ccb515104fa582551bc67031008b.cleanup.json\", \"reason\": \"removed\"}], \"retained\": [], \"failed\": [], \"cleanup_scope\": \"registered_entries_only\", \"manifest_retained\": null, \"deliverables_unchanged\": true, \"cleanup_complete\": true, \"outcome\": \"success\", \"archive_status\": \"skipped\", \"manifest_removed\": true}, \"attempts\": 1, \"environment\": {\"status\": \"ready\", \"errors\": [], \"warnings\": [], \"diagnostics\": \"python=3.12.14 required>=3.10 supported=True\\nzlib=ok\\nexpat=expat_2.8.3 required>=2.6.0 supported=True\\n\"}}\n",
+      "stderr": ""
+    }
+  ],
+  "packages": [
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.2116.5828.zip",
+      "sha256": "c2859e708d4c69d6d367752e3abfc5b1f29134e3db6d2e41a3a005748ee72c55",
+      "member_count": 8,
+      "crc_complete_members_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/docx-20261029.2116.5828.zip",
+      "sha256": "daf20efed86b60c238e16d34e5b77c9e3771ffb82057ad793d9502677726e62f",
+      "member_count": 76,
+      "crc_complete_members_source_bytes": "passed"
+    },
+    {
+      "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx-20261029.2116.5828.zip",
+      "sha256": "3151693f466f798f7b6b623abad8f4220891cf023c84326b1cc330f4e52f4911",
+      "member_count": 139,
+      "crc_complete_members_source_bytes": "passed"
+    }
+  ],
+  "not_verified": [
+    "Production execute schema/stream aggregation and Pydantic transport",
+    "Duplicate call_id injection and scheduling deduplication",
+    "Host read_file versus execute filesystem isolation and bridge",
+    "Real model error-rate improvement",
+    "Production Linux/Windows and forced termination recovery"
+  ],
+  "local_example_environment_note": "Initial local POSIX example attempt could not find python (exit 127); the documented interpreter placeholder was replaced with the confirmed Python runtime path and the same command body passed. Production execute was not invoked."
+}
