@@ -329,7 +329,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="OOXML defaults to accepted")
     parser.add_argument("--include-related", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--delivery", action="store_true", help="explicitly archive a saved result and return JSON summary")
     args = parser.parse_args(argv)
+    if args.delivery and (args.check or args.output is None):
+        parser.error("--delivery requires -o and cannot be used with --check")
     if args.check:
         if args.input is not None or args.output is not None or args.revisions is not None or args.include_related or args.format != "text":
             parser.error("--check does not accept input, output or reading options")
@@ -343,6 +346,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.input.suffix.lower() not in WPS_SUFFIXES | {".docx", ".dotx"}:
         parser.error("input must have a .docx or .dotx extension")
     try:
+        if args.delivery:
+            from archive_deliverables import validate_output_path
+            validate_output_path(args.output, protected_inputs=[args.input])
+            if args.output.exists():
+                raise ValueError('Delivery output already exists; choose a new filename')
         if args.output and args.output.exists():
             try:
                 same_file = args.input.samefile(args.output)
@@ -357,6 +365,11 @@ def main(argv: list[str] | None = None) -> int:
             text = read_docx(args.input, revisions=args.revisions, include_related=args.include_related)
         if args.output:
             atomic_write_bytes(args.output, text.encode("utf-8"))
+            if args.delivery:
+                from archive_deliverables import finalize_delivery
+                result = finalize_delivery(args.output, [args.input], status='read_exported')
+                result.update(format=args.format, output_written=True)
+                print(json.dumps(result, ensure_ascii=False))
         else:
             sys.stdout.write(text)
     except UnsupportedInputError as exc:

@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.0103.0751 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后由 docx 生成文件 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261029.0940.0902 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261029.1442.4400 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261029.1746.5085 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261029.0400.2169 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261029.0924.5633 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261029.1442.4400 | 本轮临时文件登记、最终交付物清单归档、封存与受控清理；不生成或验收业务内容、不清理历史发布ZIP |
@@ -89,6 +89,10 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.
 输出路径必须尚不存在。创建示例见 [calculation_example.json](skills/xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
 
 ### DOCX
+
+普通生成按[主入口四步流程](skills/docx/SKILL.md#新建与受控编辑)执行。先核对宿主实际工具schema：执行工具的参数与传给Python stdin的文档JSON分开；要求`command`时传完整非空命令。缺参且确认尚未执行才修正一次，断流或状态不明不盲目重发。工具接入、流式拼接和Qwen/DeepSeek排查按需见[工具调用故障](skills/docx/references/tool-calling.md)；Skill不自动配置宿主门禁或模型参数，未验证真实模型成功率改善。
+
+依赖、只读、工具间文件不可见、版本/长会话、断流及下载问题按需查[环境与交付故障表](skills/docx/references/troubleshooting.md)。表中按当前标准库实现修正平台经验；不强制固定虚拟环境、不把check当下载验证、不在执行状态未知时直接重发。
 
 标准新建直接调用 `run_docx_task.py create`；代码自动检查Python/Expat、实际文件锁、安全文件操作及任务根目录写入，必要条件失败在生成前返回退出1和具体原因。模型无需单独调用check或判断自检日志。缺少归档配置、归档不可用、复制或收尾清理失败只提示；已验收且指纹未变的主文件仍成功返回退出0。`check`仅保留为可选诊断命令。
 

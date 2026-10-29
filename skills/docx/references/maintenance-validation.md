@@ -18,6 +18,9 @@
 - [自动环境判断维护（2026-10-28）](#自动环境判断维护2026-10-28)
 - [回执清理异常修复（2026-10-29）](#回执清理异常修复2026-10-29)
 - [参数两端空白裁剪（2026-10-29）](#参数两端空白裁剪2026-10-29)
+- [工具调用提示与按需排查（2026-10-29）](#工具调用提示与按需排查2026-10-29)
+- [execute调用形式补充（2026-10-29）](#execute调用形式补充2026-10-29)
+- [常见环境与交付故障说明（2026-10-29）](#常见环境与交付故障说明2026-10-29)
 
 ## 运行条件与命令
 
@@ -263,3 +266,51 @@ Subagent execution record：仅luna__receipt_tests（luna_worker / gpt-6-luna / 
 macOS / Python3.12.14，使用已确认的宿主bundled解释器，保留-I -S -B；仓库根运行。解释器/检查器入口自检退出0。test_output_location.py的25项、test_runtime_modules.py的7项通过；公共test_lifecycle.py的15项通过（包括带首尾空格/制表符/换行的questionId实际归档到裁剪后目录且字节相同）；tests/test_artifact_lifecycle_parity.py的1项通过；两个Skill严格检查及git diff --check通过。各命令均退出0。原来把leading/trailing空格当作非法ID的两项示例移到正向边界测试；补充内部空格、裁剪后路径和设备名仍拒绝的独立预期，未删除安全校验。通用参数测试覆盖两种外层和两种内层表示、Unicode空白、中间空格、全空白、非字符串值、嵌套容器与原始环境值不变。
 
 本轮为小范围参数规范化，未重复DOCX全量回归；未运行专用Python命名linter、目标云端Linux/Windows、真实宿主模型触发或真实用户文档验收。相关命名及引用由主代理人工审阅。Main-agent work：需求解释、实现、规则同步、测试、差异审查和最终接受均由主代理完成。Subagent execution record：未调用子代理。
+
+## 工具调用提示与按需排查（2026-10-29）
+
+版本`20261029.1629.2399`。用户报告Qwen/DeepSeek调用execute时kwargs为空。主入口提前普通新建四步，区分执行工具参数与文档stdin规格，明确schema优先、完整非空参数、一次修正和未知状态不盲目重发；增加双层JSON示例及宿主流式聚合/参数门禁排查指南，仅在故障或接入维护时读取。保留文件定位锚点，将完整路径表移至controlled-flow.md并修正相对链接；编辑路由与已有统一入口对齐。原有受控流程、脚本、测试及其他未提交修改保留，本轮没有改运行时代码、依赖、权限或清理实现，没有宿主execute实现可供修改。
+
+description人工核对仍准确，任务范围未变化，保留原文；未作真实模型触发测试。README版本及入口说明同步。版本采样为宿主确认的America/New_York时间2026-10-29 04:29:23.993902，整体加12小时后截断到百分之一秒。入口由本轮维护前22407字节缩减，未把字节减少等同于模型token或成功率改善。
+
+实际平台macOS（darwin）、Python3.12.14、Expat2.8.3；使用宿主依赖工具确认的解释器，所有Python命令保留`-I -S -B`。维护解释器/检查器入口自检、read_docx.py --check通过；写入在仓库已确认可写范围。结构检查从仓库根运行，以下python指该已确认解释器：
+
+- `python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict`：最终通过，退出0；初检的外部资料资源链接提示已通过收敛指南为接入核对原则解决，迁移路径表的一处相对链接修正后复验通过。检查器规则未修改。
+- 独占维护任务目录内运行`python -I -S -B -m unittest discover -s "<skill_dir>/scripts" -p 'test_run_docx_task.py' -q`：26项通过，0失败/跳过，退出0；`test_docx_controlled_flow.py`同命令模式：9项通过，0失败/跳过，退出0。执行时已替换真实skill目录，测试根目录与源码分离。
+- stdin辅助验证脚本解析tool-calling.md中的真实外层JSON，替换已确认解释器/skill路径后执行；合成短文verified、标题与正文XML文字逐项符合独立预期、归档副本字节相同、自动清理完成。另以双引号、反斜杠、多个段落、多行JSON及字面量`$()`/反引号验证双层编码与quoted here-document，原文未被展开，生成、归档与清理通过。有效合成questionId配置仅用于本次验证，未读取用户配置。
+- 辅助验证脚本初次有语法笔误，未启动生成，修正后执行。单个text包含换行的试例被原校验拒绝为spec_validation_failed，未生成主文件；按原manifest的retry将原文拆为paragraph块后成功，未放宽断言或运行时校验。同步补充主入口与指南的分段要求。
+- 差异空白检查、主入口与新/迁移资源链接和锚点人工核对；本轮前后文件哈希对照确认运行时Python和原测试文件未变。仅清理创建前登记并确认不存在的本轮独占维护任务目录，保留仓库原文件。
+
+仅说明维护，未新增运行逻辑或永久测试；未重复全量DOCX回归、专用Python命名linter、云端Linux/Windows、真实Qwen/DeepSeek宿主A/B、真实用户文档或视觉验收。以上本机合成结果不能证明空工具参数已修复或跨平台可用。未更新发布ZIP、提交或推送。
+
+Main-agent work：需求、提示设计、说明维护、示例执行、测试解释与最终审查均由主代理完成。Subagent execution record：未调用子代理，任务较小且无需独立执行流。
+
+## execute调用形式补充（2026-10-29）
+
+版本`20261029.1721.1473`。用户补充当前调用形态为execute(command=命令字符串)，主入口增加该形态的定点说明，tool-calling.md增加完整函数式表示及其与既有外层JSON的等价关系，区分工具原生调用、日志展示、Shell命令与内层文档JSON；不把函数表示再塞入command。明确需闭合JSON、here-document及外层字符串；用户给出的正文中止片段若只是省略，不能当作真实截断证据。继续以真实schema与宿主stdin能力为前提，不新增execute工具或替宿主实现解析器。
+
+从当前工作树继续维护，保留此前输出通道维护及所有已有修改；description人工核对仍准确，依赖和运行逻辑不变，README版本同步。宿主确认America/New_York时间2026-10-29 05:21:14.734623，整体加12小时并截断到百分之一秒。
+
+macOS/Python3.12.14、已确认的bundled解释器，保留-I -S -B。仓库根运行解释器/检查器入口自检，均退出0；stdin辅助检查以ast.parse/literal_eval读取文档中的execute表示，检查唯一command关键字、非空字符串、外层JSON解码等价、完整here-document边界及独立预期规格，输出call-form-and-json-equivalent与complete-command-and-spec-ok，退出0；未执行任意表达式或用户片段。本轮仅补充说明且等价命令不变，未重复生成或回归测试，未创建临时文件。
+
+从仓库根运行`python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict`及git diff --check，最终均退出0；本轮前后哈希对照核对运行时脚本、测试、AGENTS及开发规范未由本轮改动。未验证真实execute宿主是否支持该命令、框架实际返回载荷、模型接收结果、Qwen/DeepSeek空参数率、云端Linux/Windows或视觉效果；本地字符串检查不证明这些范围通过。未更新发布ZIP、提交或推送。
+
+Main-agent work：接口信息解释、示例补充、静态验证、差异审查及接受由主代理完成。Subagent execution record：未调用子代理，属于小范围说明维护。
+
+
+补充维护版本`20261029.1733.3742`：按用户要求移除tool-calling.md中独立的command参数JSON执行示例，统一保留一份完整execute(command=...)调用表示，同步主入口链接说明和README版本。区分展示形式与宿主底层参数序列化，传输对象不得再次作为command内容；实际宿主schema优先，不修改运行接口。description人工核对仍准确，依赖不变，保留全部已有修改。版本采样为America/New_York 2026-10-29 05:33:37.426841，整体加12小时后截断到百分之一秒。
+
+macOS/Python3.12.14，仓库根执行，使用已确认的bundled解释器及-I -S -B。解释器与检查器入口自检通过；stdin静态示例检查确认唯一execute调用、唯一command关键字、完整字符串/here-document及独立预期文档规格，输出single-execute-example-ok和command-and-spec-ok，退出0。严格Skill检查和git diff --check通过，退出0。本轮为说明统一，不修改Python脚本、不新增测试或临时文件，未重复生成/全量回归；未验证真实宿主、Qwen/DeepSeek成功率、云端Linux/Windows或视觉效果。Main-agent work：修改、检查和审查均由主代理完成。Subagent execution record：未调用子代理。
+
+
+## 常见环境与交付故障说明（2026-10-29）
+
+版本`20261029.1746.5085`。按用户提供的常见故障表新增troubleshooting.md，涵盖模块缺失、只读目录、write_file/execute文件不可见、pip/403、掩码路径、版本刷新、长会话、流式中断与下载失败，并链接原空工具参数排查。主入口补充环境铁律与压缩后状态恢复，工具指南和README按需引用，避免常规生成加载全部故障资料。description人工核对仍准确，依赖及运行接口不变；保留所有已有修改，不改开发规范或运行时脚本。
+
+人工核对已校正：本Skill无python-docx等第三方依赖，不固定猜测虚拟环境；标准create使用位置输出文件名而非--output；绝对路径、403和相对路径均不能单独证明只读、离线或跨工具共享；check不证明可下载；刷新按钮、完整历史与下载入口须有真实宿主证据；断流不代表未执行，状态不明先核实，不能盲目重发create。用户经验作为诊断线索保留，不写成已复现原因。正文新增自检和长会话恢复步骤与已有脚本/保护规则人工核对。
+
+版本采样为宿主America/New_York 2026-10-29 05:46:50.853661，整体加12小时并截断到百分之一秒。实际验证macOS/Python3.12.14，使用已确认bundled解释器及-I -S -B；仓库根执行维护解释器与检查器入口自检，退出0。创建前显式登记并确认不存在的独占临时诊断目录内，以真实skill路径运行`python -I -S -B "<skill_dir>/scripts/read_docx.py" --check`与`python -I -S -B "<skill_dir>/scripts/run_docx_task.py" check`，均退出0；分别核对read-check-ok及auto-cleanup=available、output_dir=. writable=True、check-ok，每次后目录无残留；诊断结束移除本轮空目录。使用本轮合成/禁用调试环境，不读取或打印用户原始归档配置。
+
+仓库根执行`python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict`与git diff --check通过；本轮新增资源及锚点检查、差异和文件哈希核对确认未修改Python脚本、测试、依赖、AGENTS或开发规范。本轮仅维护说明和验证已有自检，不重复业务生成、全量回归或专用Python命名检查；未验证真实宿主的虚拟环境、工具共享挂载、网络/403、刷新按钮、下载入口、原始故障、Qwen/DeepSeek调用率、云端Linux/Windows或视觉输出。未把本机诊断通过当作这些场景的验收，也未更新ZIP、提交或推送。
+
+Main-agent work：经验适用性核对、说明维护、诊断执行与最终审查由主代理完成。Subagent execution record：未调用子代理，范围为小型文档维护且评审由主代理负责。

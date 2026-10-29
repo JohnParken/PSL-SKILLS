@@ -1,0 +1,16 @@
+{
+  "version": "20261029.1507.0291",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "package": "skills/docx-20261029.1507.0291.zip",
+  "sha256": "7091e108959a95d6f97024b908c39bb654b77b80be947bfad3c7fa59dffa1a7e",
+  "members": 71,
+  "installed_tests": "----------------------------------------------------------------------\nRan 239 tests in 9.705s\n\nOK",
+  "source_tests": 239,
+  "limits": [
+    "macOS only; Linux and Windows not run",
+    "No real user residual cleanup",
+    "No automatic semantic correction or edit regeneration",
+    "Unknown error states remain inspect_task; no message-based guessing"
+  ]
+}

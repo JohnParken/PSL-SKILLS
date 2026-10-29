@@ -18,6 +18,7 @@ import uuid
 if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from docx_outcome import failure, spec_identity
 from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, _unique_object
 from create_docx import _delivery_output_path
 from archive_deliverables import validate_output_path
@@ -94,7 +95,8 @@ def task_environment():
 
 def _environment_failure(report):
     reason = '; '.join(item['check'] + ': ' + item['reason'] for item in report['errors'])
-    return {**_retained(None, reason, state='environment_failed'), 'environment': report}
+    return {**_retained(None, reason, state='environment_failed'), 'environment': report,
+            'error_code': 'environment_failed', 'next_action': 'fix_environment'}
 
 
 def _with_environment(result, report):
@@ -268,7 +270,7 @@ def _update_spec(manifest, data, spec):
 
 
 def _retained(manifest, message, *, state='retry_pending'):
-    return {'status': 'failed', 'task_status': state, 'message': message,
+    return {**failure('task_state_unconfirmed', message, action='inspect_task'), 'task_status': state,
             'task_manifest': manifest, 'cleanup': {'status': 'retained', 'cleanup_complete': False}}
 
 
@@ -367,8 +369,43 @@ def _after_worker_failure(manifest, worker_error):
                              state='recovery_pending')
         return result
     runner['state'] = 'recovery_pending' if os.path.lexists(runner['output']) else 'retry_pending'
+    try:
+        detail = json.loads(worker_error)
+    except (ValueError, TypeError):
+        detail = None
+    if (runner['state'] == 'retry_pending' and isinstance(detail, dict)
+            and detail.get('error_code') == 'spec_validation_failed'):
+        runner['last_spec_failure'] = detail.get('spec_identity')
+    else:
+        runner.pop('last_spec_failure', None)
     _save(manifest, data)
-    return _retained(manifest, worker_error, state=runner['state'])
+    result = _retained(manifest, detail.get('message', worker_error) if isinstance(detail, dict) else worker_error, state=runner['state'])
+    result['attempts_remaining'] = max(0, MAX_ATTEMPTS - runner['attempts'])
+    if runner.get('last_spec_failure'):
+        result.update(error_code='spec_validation_failed', next_action='correct_spec')
+    return result
+
+
+def _print_worker_diagnostics(data):
+    """Print textual diagnostics without adding a newline or changing valid bytes.
+
+    Undecodable bytes and encoding-mismatched streams retain their original raw
+    transport; they are not safely replaceable textual prompts.
+    """
+    if not data:
+        return
+    encoding = getattr(sys.stderr, 'encoding', None) or 'utf-8'
+    try:
+        text = data.decode(encoding, 'strict')
+        if text.encode(encoding, 'strict') != data:
+            raise UnicodeError('diagnostic roundtrip mismatch')
+    except (UnicodeError, LookupError):
+        if hasattr(sys.stderr, 'buffer'):
+            sys.stderr.buffer.write(data)  # Exact non-text transport, not a prompt.
+        else:
+            print(data.decode('utf-8', 'replace'), end='', file=sys.stderr)
+        return
+    print(text, end='', file=sys.stderr)
 
 
 def _execute(manifest, data, lock_fd):
@@ -393,7 +430,7 @@ def _execute(manifest, data, lock_fd):
     except subprocess.TimeoutExpired:
         return _after_worker_failure(manifest, 'Generation timed out; worker terminated and waited for')
     if process.stderr:
-        sys.stderr.buffer.write(process.stderr) if hasattr(sys.stderr, 'buffer') else sys.stderr.write(process.stderr.decode('utf-8', 'replace'))
+        _print_worker_diagnostics(process.stderr)
     # The child may have committed its receipt proof before a late housekeeping
     # error. Reload only under the controller lock; never overwrite that proof
     # with the controller's pre-worker snapshot.
@@ -477,6 +514,10 @@ def retry_task(manifest, spec):
                     if ('receipt_fingerprint' in runner or receipt is not None
                             or os.path.lexists(runner['output'])):
                         raise ValueError('Delivery may already exist; resume instead of regenerating')
+                if runner.get('last_spec_failure') == spec_identity(spec):
+                    return {**_retained(manifest, 'Unchanged specification after deterministic validation failure'),
+                            'error_code': 'unchanged_invalid_spec', 'next_action': 'correct_spec',
+                            'attempts_remaining': max(0, MAX_ATTEMPTS - runner['attempts'])}
                 _update_spec(manifest, data, spec)
                 return _with_environment(_execute(manifest, data, (control_fd, descriptor)), environment)
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
@@ -524,7 +565,19 @@ def worker_main(manifest):
         with TaskFiles() as task:
             config = validate_config(task.load(helper_path(runner, 'spec.json')), runner,
                                      [p['path'] for p in data['protected']])
-        from create_docx import create_document_delivery
+        from create_docx import create_document_delivery, _validate_spec
+        try:
+            _validate_spec(config['spec'], Path.cwd())
+        except (ValueError, TypeError) as exc:
+            def has_resource(value):
+                if isinstance(value, dict):
+                    return 'path' in value or any(has_resource(v) for v in value.values())
+                return isinstance(value, list) and any(has_resource(v) for v in value)
+            deterministic = not has_resource(config['spec'])
+            print(json.dumps(failure('spec_validation_failed' if deterministic else 'resource_validation_failed', exc,
+                                     action='correct_spec' if deterministic else 'inspect_inputs',
+                                     spec_identity=spec_identity(config['spec']) if deterministic else None), ensure_ascii=True))
+            return 1
         result = create_document_delivery(config['spec'], config['output'], verify=True,
                                           require_no_placeholders=True, protected_inputs=config['protected_inputs'])
         with TaskFiles() as task:
@@ -534,7 +587,7 @@ def worker_main(manifest):
             'result': result, 'output_fingerprint': fingerprint})
         return 0
     except Exception as exc:
-        print(json.dumps({'status': 'failed', 'message': str(exc)}, ensure_ascii=True))
+        print(json.dumps(failure('worker_failed', exc), ensure_ascii=True))
         return 1
 
 
@@ -562,7 +615,7 @@ def main(argv=None):
         print(json.dumps(result, ensure_ascii=True))
         return 1 if result['status'] == 'failed' else 0
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
-        print(json.dumps({'status': 'failed', 'task_status': 'not_started', 'message': str(exc)}, ensure_ascii=True))
+        print(json.dumps(failure('request_rejected', exc, action='inspect_request', task_status='not_started'), ensure_ascii=True))
         return 1
 
 

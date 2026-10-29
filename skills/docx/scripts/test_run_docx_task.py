@@ -447,8 +447,9 @@ runner.create_task(json.loads(sys.argv[2]), 'interrupted.docx', workspace='inter
     def test_failed_generation_has_at_most_three_attempts_and_retains_original_plan(self):
         manifest = self.failed_task()
         with redirect_stderr(io.StringIO()):
-            for _ in range(2):
-                result = runner.retry_task(manifest, BAD_SPEC)
+            for index in range(2):
+                changed = {'blocks': [{'type': 'invalid_' + str(index)}]}
+                result = runner.retry_task(manifest, changed)
                 self.assertEqual(result['status'], 'failed')
             exhausted = runner.retry_task(manifest, SPEC)
         self.assertEqual(exhausted['status'], 'failed')

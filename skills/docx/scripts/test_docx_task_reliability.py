@@ -213,11 +213,11 @@ fcntl.flock=barrier
 print(json.dumps(runner.retry_task(sys.argv[2],json.loads(sys.argv[3]))),flush=True)
 '''
         process = subprocess.Popen([sys.executable, '-I', '-S', '-B', '-c', code,
-                                    str(Path(runner.__file__).resolve().parent), manifest, json.dumps(BAD_SPEC)],
+                                    str(Path(runner.__file__).resolve().parent), manifest, json.dumps({'blocks': [{'type': 'invalid_child'}]})],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
             self.assertEqual(process.stdout.readline().strip(), 'before-lock')
-            self.assertEqual(runner.retry_task(manifest, BAD_SPEC)['status'], 'failed')
+            self.assertEqual(runner.retry_task(manifest, {'blocks': [{'type': 'invalid_parent'}]})['status'], 'failed')
             stdout, stderr = process.communicate('\n', timeout=20)
             self.assertEqual(process.returncode, 0, stdout + stderr)
             self.assertEqual(json.loads(Path(manifest).read_text())['runner']['attempts'], 3)
