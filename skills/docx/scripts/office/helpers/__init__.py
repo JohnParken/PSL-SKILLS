@@ -149,15 +149,18 @@ def rendered_text(text: str, preserve: bool) -> str:
     return text if preserve else text.strip(XML_SPACE)
 
 
-def atomic_write_bytes(destination: Path, data: bytes) -> None:
+def atomic_write_bytes(destination: Path, data: bytes, *, new_file_mode=None, verify=None) -> None:
     """Replace a regular output only after its complete data is safely staged."""
+    if getattr(destination, "is_memory_path", False):
+        destination.write_bytes(data)
+        return
     destination = Path(destination)
     if destination.is_dir():
         raise IsADirectoryError(f"Is a directory: {destination}")
     if destination.is_symlink() or destination.exists() and not destination.is_file():
         raise ValueError("Output must be a regular file, not a symbolic link")
     descriptor, temporary_name = tempfile.mkstemp(
-        prefix="." + destination.name + ".", suffix=".tmp", dir=destination.parent,
+        prefix="." + destination.name + ".", suffix=".tmp", dir=".",
     )
     temporary = Path(temporary_name)
     try:
@@ -167,6 +170,10 @@ def atomic_write_bytes(destination: Path, data: bytes) -> None:
             os.fsync(stream.fileno())
         if destination.exists():
             os.chmod(temporary, stat.S_IMODE(destination.stat().st_mode))
+        elif new_file_mode is not None:
+            os.chmod(temporary, new_file_mode)
+        if verify is not None:
+            verify(temporary)
         os.replace(temporary, destination)
     finally:
         if temporary.exists():
@@ -213,7 +220,7 @@ def rezip(src_dir: Path, out_path: Path) -> None:
     _check_entries(entries)
     ct = src_dir / "[Content_Types].xml"
     fd, tmp_name = tempfile.mkstemp(
-        prefix=out_path.name + ".", suffix=".tmp", dir=out_path.parent
+        prefix=out_path.name + ".", suffix=".tmp", dir="."
     )
     tmp_out = Path(tmp_name)
     try:

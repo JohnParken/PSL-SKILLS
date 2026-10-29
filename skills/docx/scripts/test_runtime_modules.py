@@ -27,6 +27,21 @@ class RuntimeModuleTests(unittest.TestCase):
             for outer in ({'commonParam': inner}, [{'name': 'commonParam', 'value': json.dumps(inner)}]):
                 self.assertEqual(get_common_parameter(json.dumps(outer), 'business'), value)
 
+    def test_named_string_parameter_strips_edges_only_without_mutating_environment(self):
+        for value, expected in (('  abc123  ', 'abc123'), ('\t\u3000中 间\n', '中 间'), (' \t\n', '')):
+            inner = [{'name': 'business', 'value': value}]
+            for common in (inner, json.dumps(inner)):
+                for outer in ({'commonParam': common}, [{'name': 'commonParam', 'value': common}]):
+                    raw = json.dumps(outer)
+                    environment = {'ROUTER_CONFIG_VARIABLES': raw}
+                    actual = get_common_parameter(read_environment_parameter(
+                        'ROUTER_CONFIG_VARIABLES', environ=environment), 'business')
+                    self.assertEqual(actual, expected)
+                    self.assertEqual(environment['ROUTER_CONFIG_VARIABLES'], raw)
+        nested = ['  unchanged  ']
+        self.assertEqual(get_common_parameter(json.dumps({'commonParam': [
+            {'name': 'business', 'value': nested}]}), 'business'), nested)
+
     def test_named_lookup_rejects_duplicates_and_invalid_json(self):
         for raw, reason in (( '{"commonParam":[{"name":"x","value":1},{"name":"x","value":2}]}', 'duplicate_parameter'),
                             ('{"commonParam":[],"commonParam":[]}', 'invalid_router_config_json'),

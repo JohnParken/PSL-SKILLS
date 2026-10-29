@@ -163,7 +163,7 @@ def _checked(data, *, budget=None):
 
 
 def read_xml(path):
-    with Path(path).open("rb") as stream:
+    with (path if getattr(path, "is_memory_path", False) else Path(path)).open("rb") as stream:
         data = stream.read(MAX_XML_BYTES + 1)
     if len(data) > MAX_XML_BYTES:
         raise ValueError("XML exceeds the 16 MiB limit")

@@ -18,7 +18,7 @@
 
 新建 `create_docx.py` 及五个编辑 CLI（`edit_docx.py`、`edit_structure.py`、`edit_tables.py`、`replace_image.py`、`manage_comments.py` 的写操作）成功发布主文件后自动归档各自本次输出。编辑命令保留现有相对输出路径参数，按 [交付文件命名](generation.md#交付文件命名) 确定有业务含义的名称，例如 `./采购管理办法_修订版.docx`，不覆盖输入。公开交付 API 同样在主文件成功后自动归档，接口见下节；低层 Python API 保持不自动归档，仅用于中间处理。多步编辑中的中间文件使用低层 API 处理，最后一步调用公开交付 API，或在最终验收后只将已完成的最终文件交给显式清单入口；不要把会自动归档的 CLI 输出当作无需归档的临时步骤。读取保存结果和低层 API 等其他方式产生的最终文件，使用下方显式清单入口完成归档；它只复制文件，不代替格式或内容验收。
 
-归档处理必须执行；“附加步骤”只表示失败不影响主文件，不表示可以省略。CLI 和公开交付 API 共用 `archive_outputs()`；`--check` 只执行自检，不能代替归档。每轮交付前核对本轮清单，确认每个交付物的归档结果；跳过或失败仅作为警告报告，不阻止已完成主文件的交付。多轮不维护全目录累计清单，不扫描目录，不自动搬迁旧布局文件。按 [命名规则](generation.md#交付文件命名) 在写入前处理已知同名冲突；脚本不判断业务归属，相同归档文件名表示更新该副本；需要保留多个版本时，给当轮交付物使用不同文件名。
+归档处理必须执行；“附加步骤”只表示失败不影响主文件，不表示可以省略。CLI 和公开交付 API 共用 `archive_outputs()`；`--check` 只执行自检，不能代替归档。探针和归档复制暂存文件均直接位于任务根目录 `./`；归档目录自检仅核对路径及访问权限（`access-only`），真实写入以复制结果为准。跨文件系统替换失败时保留主文件和已有副本并报告，不改用归档目录暂存。每轮交付前核对本轮清单，确认每个交付物的归档结果；跳过或失败仅作为警告报告，不阻止已完成主文件的交付。多轮不维护全目录累计清单，不扫描目录，不自动搬迁旧布局文件。按 [命名规则](generation.md#交付文件命名) 在写入前处理已知同名冲突；脚本不判断业务归属，相同归档文件名表示更新该副本；需要保留多个版本时，给当轮交付物使用不同文件名。
 
 ## 用户展示与机器元信息
 
@@ -79,7 +79,7 @@ result = replace_text_delivery(
 
 以下必要操作不受上述默认读取限制影响，但只针对本次已知目标路径及其父目录：
 
-- 创建目录、自检探针的独占写入/读回/清理，以及文件存在性、类型、权限、符号链接和硬链接同源检查。
+- 创建归档目录、任务根目录自检探针的独占写入/读回/清理及归档目录访问权限检查，以及文件存在性、类型、权限、符号链接和硬链接同源检查。
 - 按候选文件名定点检查主输出与归档同名目标，不通过遍历目录或阅读旧文档判断业务归属；无法确认属于同一交付物时保留旧文件，按命名规则处理冲突。
 - 复制当轮显式清单中的已验收主文件，并核对返回的归档路径、状态与警告。需要验证副本时，仅检查本次新复制的确切目标，或已确认属于本轮交付清单且返回 `already_archived` 的文件，可核对大小或字节/摘要一致性；不提取正文或加载历史文件作为模型上下文。`already_archived` 只表示源路径已是目标路径，不证明内容正确或允许读取其他归档。常规内容验收和交付读取优先使用本轮主文件。
 
@@ -93,7 +93,7 @@ result = replace_text_delivery(
 python -I -S -B "<skill_dir>/scripts/archive_deliverables.py" --check
 ```
 
-要求退出 0、`check-ok`、`output_dir=. writable=True`，有效配置会报告 `archive_dir=output/实际ID writable=True/False`；归档不可写或探针失败只警告，不阻止主流程自检通过。仍须按实际编辑输出目录确认写入能力；运行环境或主输出目录自检失败时停止，不换目录或降低保护。
+要求退出 0、`check-ok`、`output_dir=. writable=True`，有效配置会报告 `archive_dir=output/实际ID writable=True/False`；归档目录路径或访问权限检查失败只警告（探针只在 `./` 创建），不阻止主流程自检通过。仍须按实际编辑输出目录确认写入能力；运行环境或主输出目录自检失败时停止，不换目录或降低保护。
 
 本轮生成多个已验收交付文件后，显式列出文件和所有需要保护的输入原件/操作文件/图片：
 
@@ -119,7 +119,7 @@ python -I -S -B "<skill_dir>/scripts/archive_deliverables.py" ./采购管理办�
 
 ## 维护与复用模块边界
 
-- `router_config.py`：`read_environment_parameter(name, environ=...)` 只读取变量，不记录内容；`get_common_parameter(raw, name)` 严格解析宿主外层列表或兼容字典、内层列表或 JSON 字符串，返回唯一参数的原始 JSON 类型，错误抛出 `RouterConfigError`。不决定输出路径或创建目录。`read_router_config_from_environment()` 保留原 DOCX 调试日志开关和 stderr 行为，日志属于内部诊断，不转贴用户。
+- `router_config.py`：`read_environment_parameter(name, environ=...)` 只读取变量，不记录内容；`get_common_parameter(raw, name)` 严格解析宿主外层列表或兼容字典、内层列表或 JSON 字符串，返回唯一参数并保留其JSON类型；字符串值返回前strip两端空白，中间内容及非字符串值不变，错误抛出 `RouterConfigError`。不决定输出路径或创建目录。`read_router_config_from_environment()` 保留原 DOCX 调试日志开关和 stderr 行为，日志属于内部诊断，不转贴用户。
 - `output_location.py`：保留 `OutputLocation`、questionId 文件名安全规则与跳过归档的原因码；旧环境读取导入仍兼容。其他技能可复用配置解析，但需明确自己的业务参数与路径策略，不能把任意参数直接作为路径。
 - `artifact_files.py`：集中既有路径组件检查、输入别名保护和原子归档复制。`archive_deliverables.py` 的 `archive_outputs(outputs, protected_inputs)`、`finalize_delivery(...)`、`archive_user_message(...)` 是调用方使用的复用接口；不要求 DOCX 格式，也不导入生成器。仅旧 CLI 的 `--check` 按需加载 DOCX 自检。原生成器私有辅助名称保留兼容导出，调用方优先使用公开归档接口。
 - `controlled_cleanup.py`：独立提供 `TaskFiles`、`plan_cleanup`、`seal_cleanup`、`cleanup_task`，不依赖生成器或归档执行器；详见[清理契约](task-cleanup.md#可复用核心与兼容入口)。`run_docx_task.py` 与 `docx_task_state.py` 仍负责 DOCX 验收、worker、重试事务和锁，不属于通用文件清理模块。

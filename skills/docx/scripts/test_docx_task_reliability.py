@@ -13,11 +13,135 @@ from test_run_docx_task import BAD_SPEC, SPEC
 import run_docx_task as runner
 
 
+HELPER_NAMES = ('worker.py', 'spec.json', 'receipt.json', 'task.lock', 'retry-spec.json')
+
+
+def task_state(manifest):
+    return json.loads(Path(manifest).read_text())['runner']
+
+
+def task_file(manifest, name):
+    return Path(runner.helper_path(task_state(manifest), name))
+
+
+def task_files(manifest):
+    state = task_state(manifest)
+    return [Path(runner.helper_path(state, name)) for name in HELPER_NAMES]
+
+
 class ReliabilityTests(unittest.TestCase):
     setUp = baseline.AutomaticTaskTests.setUp
     tearDown = baseline.AutomaticTaskTests.tearDown
     create = baseline.AutomaticTaskTests.create
     failed_task = baseline.AutomaticTaskTests.failed_task
+
+    def test_retry_runs_environment_gate_before_mutating_task(self):
+        manifest = self.failed_task()
+        original_manifest = Path(manifest).read_bytes()
+        original_helpers = {str(path): path.read_bytes() for path in task_files(manifest) if path.exists()}
+        environment = {'status': 'failed', 'errors': [
+            {'check': 'task_root_write_or_probe_lock', 'reason': 'probe unavailable'}], 'diagnostics': ''}
+        with patch.object(runner, 'task_environment', return_value=environment) as check, \
+                patch.object(runner.subprocess, 'run', side_effect=AssertionError('retry must not execute')):
+            result = runner.retry_task(manifest, SPEC)
+        check.assert_called_once_with()
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['task_status'], 'environment_failed')
+        self.assertEqual(result['environment']['errors'][0]['check'], 'task_root_write_or_probe_lock')
+        self.assertEqual(Path(manifest).read_bytes(), original_manifest)
+        for name, content in original_helpers.items():
+            self.assertEqual(Path(name).read_bytes(), content)
+        self.assertFalse(Path('本轮报告.docx').exists())
+
+    def test_recorded_receipt_proof_prevents_regeneration_when_files_go_missing(self):
+        with patch.object(runner, 'seal_cleanup', side_effect=OSError('retain original proof')):
+            result = self.create(output='lost-delivery.docx', workspace='lost-delivery')
+        self.assertEqual(result['status'], 'verified')
+        manifest = result['task_manifest']
+        original_manifest = Path(manifest).read_bytes()
+        self.assertIn('receipt_fingerprint', task_state(manifest))
+        Path(result['output']).unlink()
+        task_file(manifest, 'receipt.json').unlink()
+        with patch.object(runner.subprocess, 'run', side_effect=AssertionError('Never regenerate a recorded delivery')):
+            rejected = runner.retry_task(manifest, SPEC)
+        self.assertEqual(rejected['status'], 'failed')
+        self.assertEqual(Path(manifest).read_bytes(), original_manifest)
+        self.assertFalse(Path(result['output']).exists())
+
+    def test_delivery_save_exception_after_receipt_is_warning_and_resumable(self):
+        original_save = runner._save
+
+        def fail_delivery_save(manifest, data):
+            if data['runner'].get('state') == 'delivered':
+                raise OSError('injected delivery save outage')
+            return original_save(manifest, data)
+
+        with patch.object(runner, '_save', side_effect=fail_delivery_save):
+            result = self.create(output='save-outage.docx', workspace='save-outage')
+        self.assertEqual(result['status'], 'verified')
+        self.assertEqual(result['task_status'], 'cleanup_incomplete')
+        self.assertIn('injected delivery save outage', ' '.join(result['warnings']))
+        output = Path(result['output'])
+        final_before = output.read_bytes()
+        self.assertTrue(task_file(result['task_manifest'], 'receipt.json').is_file())
+
+        resumed = runner.resume_task(result['task_manifest'])
+
+        self.assertEqual(resumed['status'], 'verified')
+        self.assertTrue(resumed['cleanup']['cleanup_complete'])
+        self.assertEqual(output.read_bytes(), final_before)
+
+    def test_output_tampered_during_cleanup_remains_hard_failure(self):
+        output = Path('tamper-during-cleanup.docx')
+
+        def tamper_then_fail(manifest):
+            output.write_bytes(b'tampered during cleanup')
+            raise OSError('injected cleanup outage after tampering')
+
+        with patch.object(runner, 'cleanup_task', side_effect=tamper_then_fail):
+            result = self.create(output=output.name, workspace='tamper-during-cleanup')
+        self.assertEqual(result['status'], 'failed')
+        self.assertIn('changed or is missing after cleanup', result['message'])
+        self.assertEqual(output.read_bytes(), b'tampered during cleanup')
+        self.assertTrue(task_file(result['task_manifest'], 'worker.py').exists())
+        self.assertTrue(task_file(result['task_manifest'], 'spec.json').exists())
+
+    def test_create_and_resume_cli_exit_zero_for_cleanup_incomplete(self):
+        script_dir = str(Path(runner.__file__).resolve().parent)
+        cleanup_stub = """lambda manifest: {
+    'status': 'retained', 'deleted': [], 'retained': [{'path': 'helper', 'reason': 'injected'}],
+    'failed': [], 'manifest_retained': manifest, 'deliverables_unchanged': False,
+    'cleanup_complete': False
+}"""
+        create_code = (
+            'import sys; sys.path.insert(0, sys.argv[1]); import run_docx_task as runner; '
+            f'runner.cleanup_task = {cleanup_stub}; '
+            "raise SystemExit(runner.main(['create', 'cleanup-cli.docx']))"
+        )
+        created = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', create_code, script_dir],
+                                  input=json.dumps(SPEC), capture_output=True, text=True, timeout=30)
+        self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+        create_report = json.loads(created.stdout)
+        self.assertEqual(create_report['status'], 'verified')
+        self.assertEqual(create_report['task_status'], 'cleanup_incomplete')
+        self.assertTrue(create_report['warnings'])
+
+        with patch.object(runner, 'cleanup_task', side_effect=OSError('retain for resume CLI')):
+            pending = self.create(output='resume-cli.docx', workspace='resume-cli')
+        self.assertEqual(pending['status'], 'verified')
+        resume_code = (
+            'import sys; sys.path.insert(0, sys.argv[1]); import run_docx_task as runner; '
+            f'runner.cleanup_task = {cleanup_stub}; '
+            "raise SystemExit(runner.main(['resume', sys.argv[2]]))"
+        )
+        resumed = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', resume_code,
+                                  script_dir, pending['task_manifest']],
+                                 capture_output=True, text=True, timeout=30)
+        self.assertEqual(resumed.returncode, 0, resumed.stdout + resumed.stderr)
+        resume_report = json.loads(resumed.stdout)
+        self.assertEqual(resume_report['status'], 'verified')
+        self.assertEqual(resume_report['task_status'], 'cleanup_incomplete')
+        self.assertTrue(resume_report['warnings'])
     def test_manifest_shapes_fail_without_execution_or_deletion(self):
         manifest = self.failed_task()
         original = json.loads(Path(manifest).read_text())
@@ -27,7 +151,7 @@ class ReliabilityTests(unittest.TestCase):
                 data = copy.deepcopy(original)
                 data[key] = value
                 corruptions.append(data)
-        for key in ('created', 'attempts', 'workspace_identity'):
+        for key in ('created', 'attempts', 'workspace', 'schema'):
             for value in (None, [], 'bad', True):
                 data = copy.deepcopy(original)
                 data['runner'][key] = value
@@ -35,7 +159,7 @@ class ReliabilityTests(unittest.TestCase):
         Path('original.py').write_bytes(b'user source')
         Path('input.json').write_bytes(b'user input')
         Path('final.docx').write_bytes(b'user final')
-        helpers = {str(p): p.read_bytes() for p in Path('owned').iterdir()}
+        helpers = {str(p): p.read_bytes() for p in task_files(manifest) if p.exists()}
         for data in corruptions:
             for name, content in helpers.items():
                 Path(name).write_bytes(content)
@@ -59,7 +183,7 @@ class ReliabilityTests(unittest.TestCase):
         fired = False
         def fail_manifest(task, path, data, **kwargs):
             nonlocal fired
-            if path == manifest and not fired and json.loads(Path('owned/spec.json').read_text())['spec'] == SPEC:
+            if path == manifest and not fired and json.loads(task_file(manifest, 'spec.json').read_text())['spec'] == SPEC:
                 fired = True
                 raise OSError('injected manifest commit refusal')
             return save(task, path, data, **kwargs)
@@ -109,6 +233,9 @@ print(json.dumps(runner.retry_task(sys.argv[2],json.loads(sys.argv[3]))),flush=T
 sys.path.insert(0,sys.argv[1])
 import run_docx_task as runner
 boundary=sys.argv[3]
+state=json.load(open(sys.argv[2]))['runner']
+stage=runner.helper_path(state,'retry-spec.json')
+spec=runner.helper_path(state,'spec.json')
 original_save=runner.TaskFiles.save
 original_replace=os.replace
 def save(task,path,data,**kwargs):
@@ -118,7 +245,7 @@ def save(task,path,data,**kwargs):
     return result
 def replace(source,target,*args,**kwargs):
     result=original_replace(source,target,*args,**kwargs)
-    if boundary=='replaced' and source=='retry-spec.json' and target=='spec.json':
+    if boundary=='replaced' and source==stage and target==spec:
         os._exit(23)
     return result
 runner.TaskFiles.save=save
@@ -152,9 +279,9 @@ runner.retry_task(sys.argv[2],json.loads(sys.argv[4]))
                 workspace = 'tamper-' + boundary + '-' + leaf.replace('.', '-')
                 manifest = self.failed_task(workspace)
                 self.interrupt_retry(manifest, boundary)
-                target = Path(workspace, leaf)
+                target = task_file(manifest, leaf)
                 target.write_bytes(b'unknown user edit')
-                before = {str(p): p.read_bytes() for p in Path(workspace).iterdir()}
+                before = {str(p): p.read_bytes() for p in task_files(manifest) if p.exists()}
                 with patch.object(runner.subprocess, 'run', side_effect=AssertionError('unknown file execution')):
                     for operation in (lambda: runner.resume_task(manifest),
                                       lambda: runner.retry_task(manifest, SPEC)):
@@ -169,14 +296,14 @@ runner.retry_task(sys.argv[2],json.loads(sys.argv[4]))
         with patch.object(runner, 'seal_cleanup', side_effect=OSError('retain receipt')):
             first = self.create(workspace='receipt')
         manifest = first['task_manifest']
-        receipt_path = Path('receipt/receipt.json')
+        receipt_path = task_file(manifest, 'receipt.json')
         original = json.loads(receipt_path.read_text())
         delivery = Path('本轮报告.docx').read_bytes()
         for value in (None, [], 1, 'bad', {'result': None}, {'result': []},
                       {**original, 'result': 7}, {**original, 'result': 'bad'}):
             with self.subTest(value=value):
                 receipt_path.write_text(json.dumps(value))
-                before = {str(p): p.read_bytes() for p in Path('receipt').iterdir()}
+                before = {str(p): p.read_bytes() for p in task_files(manifest) if p.exists()}
                 with patch.object(runner.subprocess, 'run', side_effect=AssertionError('receipt cannot run')):
                     result = runner.resume_task(manifest)
                 self.assertEqual(result['status'], 'failed')
@@ -185,30 +312,93 @@ runner.retry_task(sys.argv[2],json.loads(sys.argv[4]))
                 for name, contents in before.items():
                     self.assertEqual(Path(name).read_bytes(), contents)
 
-    def legacy_manifest(self, workspace):
-        manifest = self.failed_task(workspace)
+    def convert_to_legacy_v1(self, manifest, *, omit_retry_stage=False):
         data = json.loads(Path(manifest).read_text())
-        stage = data['runner'].pop('retry_stage')
-        data['entries'] = [entry for entry in data['entries'] if entry['path'] != stage]
-        Path(manifest).write_text(json.dumps(data))
-        return manifest, stage
+        state = data['runner']
+        self.assertEqual(state['schema'], runner.RUNNER_SCHEMA)
+        workspace = state['workspace']
+        self.assertFalse(Path(workspace).exists())
+        Path(workspace).mkdir()
+        legacy_state = copy.deepcopy(state)
+        legacy_state['schema'] = runner.LEGACY_RUNNER_SCHEMA
+        # Actual v1 records predate exclusive receipt ownership metadata.
+        legacy_state.pop('receipt_mode', None)
+        legacy_state.pop('receipt_fingerprint', None)
+        legacy_created = {}
+        for name in HELPER_NAMES:
+            current = Path(runner.helper_path(state, name))
+            legacy = Path(runner.helper_path(legacy_state, name))
+            if current.exists():
+                current.rename(legacy)
+            if current.as_posix() in state['created']:
+                legacy_created[legacy.as_posix()] = state['created'][current.as_posix()]
+        legacy_state['created'] = legacy_created
+        if omit_retry_stage:
+            legacy_state.pop('retry_stage', None)
+        else:
+            legacy_state['retry_stage'] = runner.helper_path(legacy_state, 'retry-spec.json')
+        with runner.TaskFiles() as task:
+            legacy_state['workspace_identity'] = task.inspect(workspace)
 
-    def test_legacy_manifest_registers_only_absent_stage(self):
-        manifest, stage = self.legacy_manifest('legacy-blocked')
-        Path(stage).write_bytes(b'user staging filename')
-        before = Path(manifest).read_bytes()
-        with patch.object(runner.subprocess, 'run', side_effect=AssertionError('must not execute')):
+        entries = [{'path': workspace, 'kind': 'directory', 'absent_at_plan': True}]
+        retry_path = runner.helper_path(state, 'retry-spec.json')
+        for entry in data['entries']:
+            if omit_retry_stage and entry['path'] == retry_path:
+                continue
+            updated = dict(entry)
+            if entry['kind'] == 'file':
+                name = entry['path'].removeprefix(workspace + '.')
+                updated['path'] = runner.helper_path(legacy_state, name)
+            entries.append(updated)
+        data['entries'] = entries
+        data['runner'] = legacy_state
+
+        receipt_path = Path(runner.helper_path(legacy_state, 'receipt.json'))
+        if receipt_path.exists():
+            receipt = json.loads(receipt_path.read_text())
+            receipt['created'] = legacy_created
+            receipt_path.write_text(json.dumps(receipt, ensure_ascii=False))
+            if data['phase'] == 'sealed':
+                with runner.TaskFiles() as task:
+                    for entry in entries:
+                        if entry['path'] == receipt_path.as_posix():
+                            entry['fingerprint'] = task.inspect(entry['path'], contents=True)
+        if data['phase'] == 'sealed':
+            with runner.TaskFiles() as task:
+                entries[0]['fingerprint'] = task.inspect(workspace)
+        Path(manifest).write_text(json.dumps(data))
+        return manifest
+
+    def test_legacy_v1_rejects_retry_without_adding_files(self):
+        result = self.create(BAD_SPEC, output='legacy-retry.docx', workspace='legacy-retry')
+        self.assertEqual(result['status'], 'failed')
+        manifest = self.convert_to_legacy_v1(result['task_manifest'], omit_retry_stage=True)
+        stage = task_file(manifest, 'retry-spec.json')
+        self.assertFalse(stage.exists())
+        before_manifest = Path(manifest).read_bytes()
+        before_helpers = {str(path): path.read_bytes() for path in task_files(manifest) if path.exists()}
+        with patch.object(runner.subprocess, 'run', side_effect=AssertionError('legacy retry cannot execute')):
             rejected = runner.retry_task(manifest, SPEC)
         self.assertEqual(rejected['status'], 'failed')
-        self.assertEqual(Path(stage).read_bytes(), b'user staging filename')
-        self.assertEqual(Path(manifest).read_bytes(), before)
-        manifest, stage = self.legacy_manifest('legacy-valid')
-        result = runner.retry_task(manifest, SPEC)
-        self.assertEqual(result['status'], 'verified', result)
-        persisted = json.loads(Path(manifest).read_text())
-        self.assertEqual(persisted['runner']['retry_stage'], stage)
-        self.assertIn(stage, [entry['path'] for entry in persisted['entries']])
-        self.assertTrue(result['cleanup']['cleanup_complete'])
+        self.assertIn('Legacy v1 task retry is unsupported', rejected['message'])
+        self.assertFalse(stage.exists())
+        self.assertEqual(Path(manifest).read_bytes(), before_manifest)
+        for name, content in before_helpers.items():
+            self.assertEqual(Path(name).read_bytes(), content)
+
+    def test_legacy_v1_sealed_task_resumes_cleanup(self):
+        with patch.object(runner, 'cleanup_task', side_effect=OSError('retain legacy helpers')):
+            result = self.create(output='legacy-resume.docx', workspace='legacy-resume')
+        self.assertEqual(result['status'], 'verified')
+        self.assertEqual(result['task_status'], 'cleanup_incomplete')
+        self.assertIn('retain legacy helpers', ' '.join(result['warnings']))
+        manifest = self.convert_to_legacy_v1(result['task_manifest'])
+        output = Path('legacy-resume.docx').read_bytes()
+        resumed = runner.resume_task(manifest)
+        self.assertEqual(resumed['status'], 'verified', resumed)
+        self.assertTrue(resumed['cleanup']['cleanup_complete'])
+        self.assertEqual(Path('legacy-resume.docx').read_bytes(), output)
+        self.assertFalse(Path('legacy-resume').exists())
 
     def test_prepared_commit_then_error_remains_recoverable(self):
         manifest = self.failed_task()
@@ -225,7 +415,7 @@ runner.retry_task(sys.argv[2],json.loads(sys.argv[4]))
             failed = runner.retry_task(manifest, SPEC)
         self.assertTrue(fired)
         self.assertEqual(failed['status'], 'failed')
-        self.assertTrue(Path('owned/retry-spec.json').is_file())
+        self.assertTrue(task_file(manifest, 'retry-spec.json').is_file())
         with patch.object(runner.subprocess, 'run', side_effect=AssertionError('resume must not generate')):
             resumed = runner.resume_task(manifest)
         self.assertEqual(resumed['status'], 'failed')
@@ -233,12 +423,12 @@ runner.retry_task(sys.argv[2],json.loads(sys.argv[4]))
         self.assertEqual(result['status'], 'verified', result)
         self.assertTrue(result['cleanup']['cleanup_complete'])
 
-    def test_sealed_resume_obeys_controller_directory_lock(self):
+    def test_sealed_resume_obeys_controller_root_lock(self):
         with patch.object(runner, 'cleanup_task', side_effect=OSError('retain sealed helpers')):
             first = self.create(workspace='sealed')
         manifest = first['task_manifest']
         self.assertEqual(json.loads(Path(manifest).read_text())['phase'], 'sealed')
-        before = {str(p): p.read_bytes() for p in Path('sealed').iterdir()}
+        before = {str(p): p.read_bytes() for p in task_files(manifest) if p.exists()}
         delivery = Path('本轮报告.docx').read_bytes()
         code = ('import os,fcntl,sys; fd=os.open(".",os.O_RDONLY); '
                 'fcntl.flock(fd,fcntl.LOCK_EX); print("locked",flush=True); sys.stdin.readline()')

@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261029.0758.3419"
+version: "20261029.1442.4400"
 description: 当用户需要制作 Word 公文、报告或信函，读取 DOCX/DOTX 的正文和表格，或填充模板、修改指定文字、表格、图片和批注时使用。帮助生成可交付的 DOCX 文档，按需调整字体、字号和页边距，并核对生成内容；不用于 WPS 专有格式读取或 PDF 导出。
 ---
 
@@ -14,7 +14,7 @@ description: 当用户需要制作 Word 公文、报告或信函，读取 DOCX/D
 
 ## 执行环境约束与首步自检
 
-1. 在宿主确认的任务工作目录运行，输入、输出和任务临时文件仅用其目录及子目录中的相对路径。禁止绝对数据路径、父目录、换挂载或另选临时根目录绕过边界；当前目录若是 Skill 源码目录，先由宿主明确任务目录，不生成业务文件，不为调用脚本切换目录。
+1. 在宿主确认的任务工作目录运行，输入、输出仅用其目录及子目录中的相对路径。所有新建任务临时文件（含脚本、规格、回执、锁、清单、探针、发布暂存和恢复备份）必须直接位于任务目录 `./`，用本轮独占文件名区分；禁止创建临时工作子目录或在输入、输出及归档子目录存放临时文件。包内容在内存处理；用户明确要求的解包目录是输出，不能用作临时工作区。禁止绝对数据路径、父目录、换挂载或另选临时根目录绕过边界；当前目录若是 Skill 源码目录，先由宿主明确任务目录，不生成业务文件，不为调用脚本切换目录。
 2. 由实际读取本 `SKILL.md` 的 `file_path` 去掉文件名确定 `<skill_dir>`；相对路径按当次已确认基准解析。脚本、依赖及资源以它为基准，可用已确认绝对路径；Markdown 链接相对所在文件解析，不以任务目录解析。先替换占位符并正确引用完整路径；不猜测环境变量、其他会话路径或宿主掩码。无法定位时停止。
 3. 使用宿主已确认的 Python >=3.10、自带 zlib 和 Expat >=2.6.0；仅标准库，见 [requirements.txt](requirements.txt)。保留 `-I -S -B`，不安装第三方包、不调用办公软件、转换器、Shell 命令、Git或编译器。首次操作按任务执行以下自检。
 
@@ -26,17 +26,15 @@ python -I -S -B "<skill_dir>/scripts/read_docx.py" --check
 
 要求退出0且输出 `read-check-ok`；它检查 Python、zlib往返和Expat/XML，不读取输出配置、不创建目录或写入探针。另确认输入为可读文件，读取输出到stdout无需写权限。
 
-**新建DOCX：**
+**新建DOCX：**直接执行下文 `run_docx_task.py create`，由代码在同一调用中自动自检并继续生成，不要求模型先运行 `check` 或逐项判断成功标记。`create`/`retry` 的 `task_environment()` 只检查必要条件：Python >=3.10及其自带zlib/XML运行能力、Expat >=2.6.0、标准库POSIX文件锁及实际加解锁、目录描述符与不跟随链接的安全文件操作能力、任务根目录独占探针的写入/同步/读回。任一必要条件失败时，在登记辅助文件或启动生成前返回退出1、`status=failed`、`task_status=environment_failed`，`environment.errors` 给出具体检查项和原因。写入及锁检查已通过后的探针清理异常只提示，不阻断生成。探针及其他临时文件均直接位于 `./`。
 
-```console
-python -I -S -B "<skill_dir>/scripts/run_docx_task.py" check
-```
+`run_docx_task.py check` 仅为可选诊断命令，使用相同必要条件判定；成功退出0并输出 `auto-cleanup=available`、`output_dir=. writable=True`、`check-ok`。正常新建不另行调用它。标准入口不提前读取归档配置或检查归档目录；生成并验收后由归档代码自动处理。缺少/无效 `ROUTER_CONFIG_VARIABLES`、归档目录不可用或副本复制失败均只提示，保留主文件，不阻断生成或交付；成功文档即使收尾清理未完成仍退出0，状态与原因分别保存在 `archive_status`、`archive_message`、`cleanup`、`warnings` 中。模型只按实际结果说明，不自行忽略错误或重复运行生成。
 
-要求退出0、`auto-cleanup=available`、`check-ok`及 `output_dir=. writable=True`；有效配置会另行报告归档目录的 `writable` 状态；`archive_dir` 不可写仅警告，不影响 `check-ok` 或后续生成。该入口还核对自动收尾需要的标准库POSIX文件锁、目录描述符和不跟随链接能力，并在任务根目录独占探针验证锁；缺失时停止，不改用无保护删除。它检查任务根目录和有效配置的归档目录，必要时创建归档目录，并分别独占写入、读回和清理探针；配置与目录约定见 [输出目录与文件名](references/generation.md#输出目录与文件名)。助手只提供输出文件名，不自行读取或转贴配置、不重新拼接目录；代码默认启用原始配置日志，可按 [配置调试](references/generation.md#配置调试) 设置 `DOCX_DEBUG_ROUTER_CONFIG=0` 关闭；自检与生成保持同一任务目录及环境配置。配置按宿主外层参数列表 → `commonParam.value` 内层 JSON 列表 → `questionId.value` 解析；兼容原字典外层。配置解析失败时仅跳过归档并报告原因，主文件仍生成到 `./`；目录或写入失败不得换位置。
+助手只提供输出文件名，不自行读取或转贴归档配置、不重新拼接目录；字符串参数值取出后自动strip两端空白，保留内部内容及非字符串类型；questionId仍须通过原有安全校验。配置、路径及调试开关见[输出目录与文件名](references/generation.md#输出目录与文件名)。主文件仍生成到 `./`；必需写入失败不换位置。输入/输出保护、内容校验和验收失败继续按对应拒绝契约返回错误，不能将没有生成或无法确认完整的文档报告为成功。
 
-**编辑、解包或保存读取/检查结果：**先完成只读运行条件自检，再在实际输出目录独占创建、写入、读回和清理本次探针，避免覆盖已有文件。编辑交付还须执行 `archive_deliverables.py --check`，检查归档可用性；归档不可写仅报告警告，不阻止编辑，命令与成功标记见 [统一归档](references/delivery.md)。
+**编辑、解包或保存读取/检查结果：**先完成只读运行条件自检，再在 `./` 独占创建、写入、读回和清理本次探针，并核对实际输出目录访问权限，避免覆盖已有文件。编辑交付还须执行 `archive_deliverables.py --check`，检查归档可用性；归档不可写仅报告警告，不阻止编辑，命令与成功标记见 [统一归档](references/delivery.md)。
 
-运行环境或主输出目录自检失败、缺成功标记或结果不明时停止依赖操作（归档警告不属于主流程自检失败），报告具体项；仅在环境修复后重验，不降低要求。自检不证明内容正确或宿主支持下载；交付仍核对实际产物与链接。长会话压缩后重读真实入口，保留已确认目录与文件名。
+标准新建的环境阻断与后续执行均由代码决定；返回 environment_failed 时停止并报告具体原因，修复环境后再运行。其他入口的只读/写入自检仍按其明确契约核对，不用归档或清理警告阻断已验收文档的交付。自检不证明内容正确或宿主支持下载；交付仍核对实际产物与链接。长会话压缩后重读真实入口，保留已确认目录与文件名。
 
 ## 文件定位与读取规则
 
@@ -49,7 +47,8 @@ python -I -S -B "<skill_dir>/scripts/run_docx_task.py" check
 | 编辑主文件及读取结果文件 | 编辑交付入口的 `destination`、读取命令的 `-o` 按任务目录解析相对路径，可位于明确指定的子目录；按自检要求准备该目录。编辑不会自动输出到源文档所在目录。 |
 | 生成或编辑后的读取 | 读取本次成功摘要的实际 `output`，相对任务目录解析，不拼接输入目录或归档目录；低层 API 使用调用方记录的确切目标路径。主文件缺失时报告，不静默改读归档。 |
 | 归档副本 | `./output/{questionId}/` 相对任务目录，代码按主文件名归档，不保留编辑输出的子目录层级。默认不扫描或读取文档内容；用户明确授权的指定归档可作为受保护输入。必要定点检查及本轮副本验证见 [归档边界](references/delivery.md#归档目录使用边界)。 |
-| 生成 CLI 的图片 | 正文和表格内的相对图片 `path` 均以输入 JSON 实际所在目录为基准；与输出目录和脚本位置无关。 |
+| 标准自动入口的图片 | `run_docx_task.py create` 从 stdin 接收规格，正文和表格内的相对图片 `path` 均以任务目录为基准。 |
+| 兼容文件输入 CLI 的图片 | 仅 `create_docx.py 文件.json 文件名.docx` 的相对图片以输入 JSON 实际所在目录为基准；与输出目录和脚本位置无关。 |
 | 字典 API 的图片 | `create_document_delivery()`、`create_document()`、`preflight_document()` 使用 `base_dir`；相对 `base_dir` 以任务目录解析，省略或为 `None` 时使用任务目录。API 不知道字典来自哪个 JSON 文件，不自动推断其目录。 |
 | 替换图片输入 | `replace_image.py` 的替换图片参数及对应 API 的 `replacement` 相对任务目录解析，不相对选择 JSON 或源 DOCX 所在目录。文档内 `word/media/...` 等标识是 ZIP 成员名，不是文件系统路径。 |
 | Skill 内部资源 | 脚本、模板和依赖以已确认的 `<skill_dir>` 为基准，可用真实绝对路径；Markdown 引用相对所在 Markdown 文件解析。不得把任务数据写入安装目录，也不把 `<skill_dir>` 用作业务输入的路径基准。 |
@@ -61,12 +60,12 @@ python -I -S -B "<skill_dir>/scripts/run_docx_task.py" check
 | 任务 | 默认入口与按需参考 |
 |---|---|
 | 读取正文、表格、修订及相关内容 | `read_docx.py`；见下节及 [读取与检查](references/inspection.md)。 |
-| 新建公文、报告或信函 | `run_docx_task.py create` 自动创建/运行/收尾；先读 [生成器输入约定](references/generation.md)。 |
+| 新建公文、报告或信函 | `run_docx_task.py create` 自动创建/运行/收尾；普通文字文档按下节直接执行；表格、图片或格式覆盖按需读 [生成器输入约定](references/generation.md) 对应章节。 |
 | 替换文字、填充占位符 | `edit_docx.py`；先读 [受控替换契约](references/ooxml-editing.md#受控编辑与占位符填充)，明确匹配原文与预期次数。 |
 | 插入段落、修改run格式 | `edit_structure.py`；先读 [结构编辑](references/structure-editing.md)，按原文索引及文字核验。 |
 | 增删表格行、替换图片 | `edit_tables.py` / `replace_image.py`；先读 [表格与图片编辑](references/table-media-editing.md)。 |
 | 查询、添加或维护批注 | `manage_comments.py`；先读 [批注事务](references/comments-management.md)，不猜未知线程语义。 |
-| 已有文件结构验收、低层XML或安全维护 | 按需读 [验收与收尾](references/validation.md)、[OOXML编辑](references/ooxml-editing.md)、[安全边界](references/security.md)。 |
+| 已有文件结构验收、低层XML检查或安全边界 | 按需读 [验收与收尾](references/validation.md)、[OOXML编辑](references/ooxml-editing.md)、[安全边界](references/security.md)。 |
 
 表中脚本均位于 `<skill_dir>/scripts/`，须先替换为真实目录。不要把结构JSON当生成器输入或无损导入格式，也不要将低层工具当任意文档编辑器。
 
@@ -83,7 +82,9 @@ python -I -S -B "<skill_dir>/scripts/read_docx.py" ./input.docx --format json --
 
 ## 新建与受控编辑
 
-标准新建使用下方统一任务入口，不另写临时Python或配置JSON：入口从stdin接收生成规格，在创建前登记自己的worker.py/spec.json，待子进程验收、归档返回并退出后自动收尾。失败待重试保留两文件。自定义脚本、多步编辑等其它辅助产物仍先按[任务清单清理工具](references/task-cleanup.md)登记尚不存在路径；不能补登历史文件。纯读取stdout不建立无用清单。
+**普通文字文档的最短流程：**直接调用一次 `run_docx_task.py create`，代码自动完成必要环境自检、生成、集成验收、归档尝试和自动清理，再按返回的真实主文件与状态交付。仅标题、正文和章节时，规格使用 `theme` 及 `blocks`：标题为 `{"type":"title","text":"标题"}`，正文为 `{"type":"paragraph","text":"正文"}`，章节为 `{"type":"heading","level":1,"text":"章节"}`（level 为1–4）。按已知任务确定文件名；只有名称不合法、冲突或业务主题无法确定时才读详细命名规则。只按所需功能读取生成参考的对应章节，不默认加载归档实现、清理恢复流程和维护验证历史。自检已集成到create/retry，不增加独立的check调用；必要条件失败由代码返回原因。成功结果不再串行补跑 `--preflight`、独立结构/全文回读、归档命令或 seal/clean；内容语义核对与用户另行要求的检查仍执行。自动入口返回失败、残留或需恢复时才读对应详细说明。
+
+标准新建使用下方统一任务入口，不另写临时Python或配置JSON：入口从stdin接收生成规格，在创建前登记 `./docx-task-<随机值>.worker.py`、同前缀 `.spec.json` 等平铺文件，不创建 `docx-task-*` 目录，待子进程验收、归档返回并退出后自动收尾。失败待重试保留两文件。自定义脚本、多步编辑等其它辅助产物仍先按[任务清单清理工具](references/task-cleanup.md)登记尚不存在路径；不能补登历史文件。纯读取stdout不建立无用清单。
 
 调用写入命令前先确定交付文件名：优先采用用户明确指定且合法的名称；未指定时，从文档标题或任务主题提炼“主题＋文种”，如 `客户服务改进方案.docx`。不要默认使用 `output.docx`、`document.docx`、`result.docx` 或 `edited.docx`，也不要照抄示例名称。未指定输出名称的编辑任务保留原文件的业务主题，按需要添加“修订版”等区分；原名泛化时重新提炼主题。不得覆盖输入；已有无关或归属不明的同名文件须保留，按下述冲突规则处理。命名依据、冲突和示例见 [交付文件命名](references/generation.md#交付文件命名)。
 
@@ -95,7 +96,7 @@ python -I -S -B "<skill_dir>/scripts/run_docx_task.py" create 客户服务改进
 JSON
 ```
 
-统一入口的stdin直接传生成规格，图片路径以任务目录为基准；不先创建外部document.json或临时.py。固定worker强制verify及占位符检查，临时Python执行退出后由外层删除登记项，manifest保留作恢复回执。核对`task_status`和`cleanup.cleanup_complete`，归档完成与清理完成分开报告。失败只用返回manifest执行retry，恢复只用resume，不通过新任务认领旧文件；命令与边界见[自动任务流程](references/task-cleanup.md#自动新建任务入口)。
+统一入口的stdin直接传生成规格，图片路径以任务目录为基准；不先创建外部document.json或临时.py。固定worker强制verify及占位符检查，临时Python执行退出后由外层删除登记项，manifest保留作恢复回执。验收回执在预登记路径上独占写入并同步，写完后将文件身份、大小、时间、单链接数和SHA-256持久化到原清单；不创建回执暂存文件或硬链接，父进程等待worker退出后核对回执与主文件指纹。回执证明已提交后发生的worker晚期清理异常只记警告，核验通过仍退出0；无持久化证明、回执变化或额外硬链接不得作为成功交付。核对`task_status`和`cleanup.cleanup_complete`，归档完成与清理完成分开报告。失败只用返回manifest执行retry，恢复只用resume，不通过新任务认领旧文件；命令与边界见[自动任务流程](references/task-cleanup.md#自动新建任务入口)。
 
 输入JSON、图片/表格/页眉页脚等支持范围见 [生成约定](references/generation.md)；不支持复杂合并/嵌套表格、多节、任意编号、图表、浮动图片或目录。输出参数仅文件名，不带 `./` 或目录；使用本次成功摘要的实际 `output` 继续读取和交付，新建主文件固定生成到 `./`，成功后复制一份到有效的 `./output/{questionId}/`；归档失败保留主文件和主流程成功状态，仅报告归档警告；清理失败时内部记录残留临时文件位置并如实提示未完成，不自动重跑生成。省略 `--verify` 仍为兼容接口，不可视为已验收交付；公开交付 API `create_document_delivery()` 默认 `verify=True`，交付时不得关闭。旧create_docx.py生成CLI已标deprecated，仅stderr提示迁移，JSON stdout与退出码兼容；底层库、编辑、读取、自检及预检仍保留。旧CLI/API不会自动清理调用方另建的脚本和JSON，不用它们代替标准自动任务入口。普通生成无需先重复 `--preflight`。
 
@@ -112,13 +113,13 @@ JSON
 - 成功 `--verify` 已在原子发布前完成CRC、已实现结构、输入内容和排版意图检查，无需重复同类回读；仍核实本次文件存在、非空、标题输入语义与用户要求一致、交付链接真实可用。它不证明完整XSD、阅读器打开、像素解码、字体或视觉分页。
 - 已有文档及编辑结果按 [验收步骤](references/validation.md#基础结构检查与验收) 检查实际目标、未改部件和诊断；不跳过失败、不将旧文件当新成果，不虚构页码或标准认证。资源、安全限额不放宽，具体边界见 [安全说明](references/security.md)。
 - 新建输入存在可核实错误时，按 [有限重试](references/validation.md#生成失败修正与有限重试) 修正，首次之外最多2次；不能原样重试、关闭校验或删除用户内容。环境、安全、超限、不支持或信息不足时停止。
-- 标准自动入口已执行seal/clean，只核对它返回的cleanup结果，不再次seal或清理；自定义或编辑等未由自动入口管理的任务，在最终文档验收完成且本轮归档步骤返回后，按[任务清单清理工具](references/task-cleanup.md)显式seal/clean；归档失败仍收尾，不因警告跳过。重试使用 retry 保留材料；最终失败或停止时只清理无用中间项，必要恢复备份显式保留并说明原因。工具不自动接管生成器输入，不扫描或递归删除归属不明目录。
+- 标准自动入口自动尝试seal/clean；主文件已验收且末次指纹确认不变时，清单保存、封存或清理异常均返回退出0及cleanup_incomplete警告，保留恢复材料，不重新生成。仅按返回cleanup结果说明，不将未完成说成已清理；自定义或编辑等未由自动入口管理的任务，在最终文档验收完成且本轮归档步骤返回后，按[任务清单清理工具](references/task-cleanup.md)显式seal/clean；归档失败仍收尾，不因警告跳过。重试使用 retry 保留材料；最终失败或停止时只清理无用中间项，必要恢复备份显式保留并说明原因。工具不自动接管生成器输入，不扫描或递归删除归属不明目录。
 - 核对清理返回的 deleted/retained/failed、cleanup_complete 和 deliverables_unchanged，清理后确认实际交付文件仍存在、非空且未变化。只有检查通过才报告登记的临时项已清理；说明保留清单和其他残留的路径及用途，失败不扩大删除范围。强制终止后按原清单确认归属再恢复，详见[中间文件清理](references/validation.md#任务中间文件清理)。
 - 返回已核实的文件链接和实际检查，无法验证的范围明确说明。仅新建成功时按 [生成后格式引导](references/generation.md#生成后格式引导) 附简短说明；用户只要文件时省略，绝不写入文档。
 
 ## 维护资源
 
-维护时读 [固定预期验证](references/validation.md#固定预期与失败保护) 和安全说明；不用结构检查替代语义、命名或真实格式验收。保留comments四部件模板，不在安装目录写回、改名或创建任务产物。
+仅在维护、审查、测试或发布 Skill，或用户明确要求追溯时，读 [维护测试与历史验证](references/maintenance-validation.md) 和安全说明。普通业务任务不读取该维护记录，不执行其中的回归命令；不用结构检查替代语义、命名或真实格式验收。保留comments四部件模板，不在安装目录写回、改名或创建任务产物。
 
 禁止在普通文档任务中改写本Skill定义。
 <!-- SKILL_DEFINITION_END -->

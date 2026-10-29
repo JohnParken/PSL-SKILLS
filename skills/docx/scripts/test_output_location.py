@@ -252,8 +252,9 @@ class OutputLocationTests(unittest.TestCase):
         values = [
             "",
             " ",
-            " leading",
-            "trailing ",
+            "inner space",
+            " ../record ",
+            " CON ",
             "../record",
             "record/child",
             r"record\child",
@@ -269,6 +270,13 @@ class OutputLocationTests(unittest.TestCase):
         for value in values:
             with self.subTest(value=value):
                 self.assert_fallback(encode_config([{"name": "questionId", "value": value}]))
+
+    def test_question_id_edges_are_stripped_before_validation(self) -> None:
+        for value, expected in (("  abc123  ", "abc123"), (" leading", "leading"),
+                                ("trailing ", "trailing"), ("\t\u3000rec_A-19\n", "rec_A-19"),
+                                (" " + "x" * 128 + " ", "x" * 128)):
+            with self.subTest(value=value):
+                self.assert_valid(encode_config([{"name": "questionId", "value": value}]), expected)
 
     def test_windows_device_identifiers_are_rejected_case_insensitively(self) -> None:
         device_names = ["CON", "PRN", "AUX", "NUL"]

@@ -19,9 +19,9 @@ def check_runtime() -> bool:
             print("zlib=failed")
         else:
             print("zlib=ok")
-    except Exception:
+    except Exception as exc:
         checks_passed = False
-        print("zlib=failed")
+        print(f"zlib=failed reason={exc}")
     try:
         match = re.search(r"(\d+)\.(\d+)\.(\d+)", expat.EXPAT_VERSION)
         expat_version = tuple(map(int, match.groups())) if match else (0, 0, 0)
@@ -29,7 +29,8 @@ def check_runtime() -> bool:
             checks_passed = False
         print(f"expat={expat.EXPAT_VERSION} required>=2.6.0 supported={expat_version >= (2, 6, 0)}")
         ET.fromstring(b"<runtime-check><ok/></runtime-check>")
-    except Exception:
+    except Exception as exc:
         checks_passed = False
+        print(f"expat-xml=failed reason={exc}")
 
     return checks_passed

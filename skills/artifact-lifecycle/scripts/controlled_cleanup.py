@@ -123,7 +123,7 @@ class TaskFiles:
         with self.parent(path) as (parent, name):
             temporary = ".docx-cleanup-" + uuid.uuid4().hex + ".tmp"
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                                 0o600, dir_fd=parent)
+                                 0o600, dir_fd=self.root)
             try:
                 with os.fdopen(descriptor, "wb") as stream:
                     stream.write(raw)
@@ -131,14 +131,14 @@ class TaskFiles:
                     os.fsync(stream.fileno())
                 if new:
                     # Exclusive destination creation: never replace an existing plan.
-                    os.link(temporary, name, src_dir_fd=parent, dst_dir_fd=parent,
+                    os.link(temporary, name, src_dir_fd=self.root, dst_dir_fd=parent,
                             follow_symlinks=False)
                 else:
                     self.inspect(path, contents=True, limit=MAX_MANIFEST_BYTES)
-                    os.replace(temporary, name, src_dir_fd=parent, dst_dir_fd=parent)
+                    os.replace(temporary, name, src_dir_fd=self.root, dst_dir_fd=parent)
             finally:
                 try:
-                    os.unlink(temporary, dir_fd=parent)
+                    os.unlink(temporary, dir_fd=self.root)
                 except FileNotFoundError:
                     pass
 
@@ -221,7 +221,9 @@ def _validate(data, manifest, task):
 
 def plan_cleanup(manifest, *, files=(), directories=(), protected=(), deliverables=()):
     """Register absent targets BEFORE the caller creates its intermediate files."""
-    _parts(manifest)
+    files, directories = tuple(files), tuple(directories)
+    if len(_parts(manifest)) != 1 or directories or any(len(_parts(path)) != 1 for path in files):
+        raise ValueError("New temporary files and cleanup manifest must be directly in task ./; temporary directories are forbidden")
     with TaskFiles() as task:
         entries = [{"path": path, "kind": kind, "absent_at_plan": True}
                    for kind, paths in (("file", files), ("directory", directories)) for path in paths]

@@ -11,7 +11,6 @@ import json
 import re
 import secrets
 import sys
-import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,7 +21,8 @@ if __package__ in (None, ""):
 from edit_docx import XML_NS, XMLNS_NS, _preserves_space, _serialize_checked, _text
 from edit_structure import _blocked_anchors, _elements, _plain_paragraph, _prepare_run, _single_line
 from office.helpers import XML_SPACE, opc_target
-from office.package import pack_document, unpack_document
+from office.memory_package import package_workspace
+from office.package import pack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
 from archive_deliverables import finalize_delivery, validate_output_path
@@ -627,8 +627,7 @@ def manage_comments(source, specification, destination=None):
             raise ValueError("Output must not refer to the input")
         if destination.is_symlink():
             raise ValueError("Symbolic link outputs are unsupported")
-    with tempfile.TemporaryDirectory(prefix="docx-comment-manage-", dir=".") as temporary:
-        directory = unpack_document(source, Path(temporary) / "package")
+    with package_workspace(source) as directory:
         state = _state(directory)
         if action == "list":
             try:

@@ -1,8 +1,8 @@
 """Add comments to a DOCX document.
 
 Accepts either an unpacked directory OR a .docx/.dotx file directly.
-Directory edits are staged and published using a recoverable two-rename swap,
-not one atomic multi-file operation; use a stable trusted task directory.
+Directory edits stage in memory and keep a root-level ZIP recovery backup;
+publication is not one atomic multi-file operation. Use a stable trusted task directory.
 
 Usage:
     # Against an unpacked directory (writes satellite files in place)
@@ -27,7 +27,6 @@ After running, add markers to word/document.xml so the comment is visible:
 import argparse
 import os
 import random
-import shutil
 import stat
 import sys
 import tempfile
@@ -38,15 +37,16 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from office.memory_package import MemoryPath, package_workspace, directory_package, package_bytes
+from office.package import pack_document
+from office.helpers import atomic_write_bytes
 from office.xmlio import parse_dom, read_xml
-from office.archiveio import open_archive
 from edit_docx import XMLNS_NS, _serialize_checked
 from xml.parsers.expat import ExpatError
 from xml.sax.saxutils import escape as xml_escape
 
 from office.helpers import (
     MAX_MEMBERS, MAX_PACKAGE_BYTES, MAX_PART_BYTES, opc_target, reject_signed_package,
-    rezip as _rezip, safe_extract as _safe_extract,
 )
 
 TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "assets" / "comments"
@@ -341,7 +341,7 @@ def _add_comment_inplace(
     parent_id: int | None = None,
     raw: bool = False,
 ) -> tuple[int, str, str]:
-    unpacked_dir = Path(unpacked_dir)
+    unpacked_dir = unpacked_dir if isinstance(unpacked_dir, MemoryPath) else Path(unpacked_dir)
     para_ids, durable_ids = _preflight(unpacked_dir, text, author, initials, comment_id, parent_id, raw)
     if not raw:
         text = xml_escape(text)
@@ -373,7 +373,7 @@ def _add_comment_inplace(
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     if not comments.exists():
-        shutil.copy(TEMPLATE_DIR / "comments.xml", comments)
+        comments.write_bytes((TEMPLATE_DIR / "comments.xml").read_bytes())
     _ensure_comment_relationships(unpacked_dir)
     _ensure_comment_content_types(unpacked_dir)
     _append_xml(
@@ -387,7 +387,7 @@ def _add_comment_inplace(
 
     ext = word / "commentsExtended.xml"
     if not ext.exists():
-        shutil.copy(TEMPLATE_DIR / "commentsExtended.xml", ext)
+        ext.write_bytes((TEMPLATE_DIR / "commentsExtended.xml").read_bytes())
     if parent_para is not None:
         _append_xml(
             ext, "w15:commentsEx",
@@ -401,7 +401,7 @@ def _add_comment_inplace(
 
     ids = word / "commentsIds.xml"
     if not ids.exists():
-        shutil.copy(TEMPLATE_DIR / "commentsIds.xml", ids)
+        ids.write_bytes((TEMPLATE_DIR / "commentsIds.xml").read_bytes())
     _append_xml(
         ids, "w16cid:commentsIds",
         f'<w16cid:commentId w16cid:paraId="{para_id}" w16cid:durableId="{durable_id}"/>',
@@ -409,7 +409,7 @@ def _add_comment_inplace(
 
     extensible = word / "commentsExtensible.xml"
     if not extensible.exists():
-        shutil.copy(TEMPLATE_DIR / "commentsExtensible.xml", extensible)
+        extensible.write_bytes((TEMPLATE_DIR / "commentsExtensible.xml").read_bytes())
     _append_xml(
         extensible, "w16cex:commentsExtensible",
         f'<w16cex:commentExtensible w16cex:durableId="{durable_id}" w16cex:dateUtc="{ts}"/>',
@@ -428,65 +428,65 @@ def add_comment(
     parent_id: int | None = None,
     raw: bool = False,
 ) -> tuple[int, str, str]:
-    """Stage all parts before publishing a recoverable directory replacement.
+    """Stage in memory and retain a root-level ZIP backup for uncertain rollback.
 
-    This is two directory renames, not a single atomic multi-file transaction.
-    Catchable install failures restore the backup; an interrupted process or a
-    failed restoration may leave the original under the reported backup path.
-    Use a trusted, stable task directory without concurrent writers/readers.
+    Directory edits publish several files, not one atomic operation. Callers must
+    keep this trusted input stable and free from concurrent writers/readers.
     """
     source = Path(unpacked_dir)
     _preflight(source, text, author, initials, comment_id, parent_id, raw)
     source = source.resolve()
     if Path.cwd().resolve().is_relative_to(source):
-        raise ValueError("Comment input must not contain the current working directory; use a separate unpacked directory")
-    transaction = Path(tempfile.mkdtemp(prefix=f".{source.name}.comment-", dir=source.parent))
-    planned, backup = transaction / "planned", transaction / "backup"
-    installed = keep_transaction = False
-    retained = None
+        raise ValueError("Comment input must not contain the current working directory")
+    original = directory_package(source)
+    planned = MemoryPath(dict(original.files))
+    result = _add_comment_inplace(planned, text, comment_id, author, initials, parent_id, raw)
+    _preflight(planned, text, author, initials, comment_id, parent_id, raw)
+    changed = [name for name, data in planned.files.items() if original.files.get(name) != data]
+    descriptor, backup_name = tempfile.mkstemp(prefix="docx-comment-backup-", suffix=".zip", dir=".")
+    backup = Path(backup_name)
+    keep_backup = False
+    published, directories = [], []
     try:
-        shutil.copytree(source, planned)
-        result = _add_comment_inplace(planned, text, comment_id, author, initials, parent_id, raw)
-        _preflight(planned, text, author, initials, comment_id, parent_id, raw)
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(package_bytes(original))
+            stream.flush()
+            os.fsync(stream.fileno())
+        # The backup is durable before the first input member is replaced.
+        for name in changed:
+            target = source / name
+            if target.is_symlink() or (target.exists() and target.read_bytes() != original.files.get(name)):
+                raise ValueError("Comment input changed while staging")
+            missing = []
+            parent = target.parent
+            while not parent.exists():
+                missing.append(parent)
+                parent = parent.parent
+            for parent in reversed(missing):
+                parent.mkdir()
+                directories.append(parent)
+            published.append(name)
+            atomic_write_bytes(target, planned.files[name])
+    except BaseException as exc:
         try:
-            os.replace(source, backup)
-            os.replace(planned, source)
-            installed = True
-        except BaseException as exc:
-            if backup.exists():
-                if source.exists():
-                    raise RuntimeError(f"Comment install outcome requires inspection; original backup retained at {backup}") from exc
-                try:
-                    os.replace(backup, source)
-                except BaseException as restore_error:
-                    if backup.exists():
-                        raise RuntimeError(f"Comment rollback failed; restore the original directory from {backup}") from restore_error
-                    if source.is_dir():
-                        # The restore completed before the late error. Do not
-                        # invent a missing recovery path or hide the install failure.
-                        raise exc from restore_error
-                    keep_transaction = True
-                    raise RuntimeError(f"Comment rollback outcome requires inspection at {source} and {transaction}") from restore_error
-            raise
-        try:
-            shutil.rmtree(backup)
-        except OSError:
-            if backup.exists():
-                retained = backup
+            for name in reversed(published):
+                target = source / name
+                if name in original.files:
+                    atomic_write_bytes(target, original.files[name])
+                elif target.exists():
+                    target.unlink()
+            for directory in reversed(directories):
+                directory.rmdir()
+        except BaseException as restore_error:
+            keep_backup = True
+            raise RuntimeError(f"Comment rollback failed; original package backup retained at {backup}") from restore_error
+        raise exc
     finally:
-        # Never automatically delete the original after an uncertain outcome or
-        # failed rollback. Its location is included in the error/result above.
-        if not keep_transaction and not backup.exists():
+        if not keep_backup:
             try:
-                shutil.rmtree(transaction)
+                backup.unlink()
             except OSError:
-                if transaction.exists():
-                    retained = transaction
-                    if not installed:
-                        print(f"Warning: comment cleanup retained at {transaction}", file=sys.stderr)
-    if retained is not None:
-        kind = "backup " if retained == backup else ""
-        return result[0], result[1], result[2] + f"; installed, cleanup {kind}retained at {retained}"
+                print(f"Warning: comment backup retained at {backup}", file=sys.stderr)
     return result
 
 
@@ -527,16 +527,13 @@ def main() -> None:
                 raise ValueError("Comment output must be distinct from input")
             if out.is_symlink() or out.suffix.lower() != src.suffix.lower():
                 raise ValueError("Comment output must have the same DOCX/DOTX extension and not be a symbolic link")
-            with tempfile.TemporaryDirectory(dir=".") as tmp:
-                tmp_path = Path(tmp)
-                with open_archive(src) as zf:
-                    _safe_extract(zf, tmp_path)
-                cid, _, msg = add_comment(
+            with package_workspace(src) as tmp_path:
+                cid, _, msg = _add_comment_inplace(
                     tmp_path, args.text, comment_id=args.comment_id,
                     author=args.author, initials=args.initials,
                     parent_id=args.parent, raw=args.raw,
                 )
-                _rezip(tmp_path, out)
+                pack_document(tmp_path, out)
             print(msg)
             print(f"Wrote {out} (comment defined; add markers to word/document.xml to make it visible)")
         else:

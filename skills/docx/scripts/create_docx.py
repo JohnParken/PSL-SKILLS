@@ -1552,7 +1552,7 @@ def _create_validated_document(validated: dict, output_path: Path, *, verify: bo
 
     parent = output_path.parent
     parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary_name = tempfile.mkstemp(prefix=".docx-", suffix=".tmp", dir=parent)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=".docx-", suffix=".tmp", dir=".")
     try:
         with os.fdopen(descriptor, "w+b") as file:
             with zipfile.ZipFile(file, "w", compression=zipfile.ZIP_DEFLATED) as package:
@@ -1638,15 +1638,17 @@ def _runtime_check(task_dir: Path, location: OutputLocation) -> bool:
             writable = False
             try:
                 _prepare_delivery_directory(task_dir, output_dir)
-                with tempfile.TemporaryFile(mode="w+b", dir=task_dir / output_dir) as probe:
+                with tempfile.TemporaryFile(mode="w+b", dir=task_dir) as probe:
                     probe.write(payload)
                     probe.seek(0)
-                    writable = probe.read() == payload
+                    writable = probe.read() == payload and os.access(task_dir / output_dir, os.W_OK)
             except Exception as exc:
                 writable = False
                 label_error = "archive-warning" if label == "archive_dir" else "output-check-failed"
                 print(f"{label_error}: {exc}", file=sys.stderr)
             writable_by_name[label] = writable
+    if "archive_dir" in writable_by_name:
+        print("archive_dir_check=access-only; actual archive write is checked during copy")
     for output_dir, label in probe_directories:
         print(f"{label}={output_dir.as_posix()} writable={writable_by_name.get(label, False)}")
     if checks_passed and "archive_dir" in writable_by_name and not writable_by_name["archive_dir"]:

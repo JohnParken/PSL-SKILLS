@@ -11,7 +11,6 @@ import hashlib
 import json
 import re
 import sys
-import tempfile
 import zipfile
 from pathlib import Path
 
@@ -19,7 +18,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from office.helpers import MAX_PART_BYTES
-from office.package import pack_document, unpack_document
+from office.memory_package import package_workspace
+from office.package import pack_document
 from office.validators.structure import R, W, StructureValidator
 from archive_deliverables import finalize_delivery, validate_output_path
 
@@ -124,8 +124,7 @@ def replace_image(source, replacement, destination, specification):
     if len(replacement_bytes) > MAX_PART_BYTES:
         raise ValueError("Replacement image exceeds the 32 MiB member limit")
     replacement_type = _image_kind(replacement, replacement_bytes)
-    with tempfile.TemporaryDirectory(prefix="docx-image-replace-", dir=".") as temporary:
-        unpacked = unpack_document(source, Path(temporary) / "package")
+    with package_workspace(source) as unpacked:
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():
             raise ValueError("Input failed implemented structure checks")

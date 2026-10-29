@@ -19,7 +19,7 @@ Python集成可从本独立包的scripts导入：
 
 ## 与DOCX的关系
 
-本批经用户授权从已验证DOCX提取分发副本，文件来源及哈希见[来源清单](upstream.json)。DOCX保持现有代码、标准runner和CLI。router_config、output_location、artifact_files、controlled_cleanup、cleanup_task与DOCX逐字节一致；archive_deliverables只保留main之前的共享实现，移除DOCX专属CLI自检依赖。旧docx_cleanup_v1 schema及内部docx临时前缀保留兼容，不意味着公共技能只处理DOCX。
+本批经用户授权从已验证DOCX提取分发副本，文件来源及哈希见[来源清单](upstream.json)。DOCX保留标准runner和CLI；已同步任务根目录暂存及新plan禁止临时目录的规则；本次同步字符串参数取值时strip两端空白，来源与哈希按当前副本记录。router_config、output_location、artifact_files、controlled_cleanup、cleanup_task与DOCX逐字节一致；archive_deliverables只保留main之前的共享实现，移除DOCX专属CLI自检依赖。旧docx_cleanup_v1 schema及内部docx临时前缀保留兼容，不意味着公共技能只处理DOCX。
 
 仓库维护回归 `tests/test_artifact_lifecycle_parity.py` 同时比较DOCX来源、公共副本和来源清单哈希。任一边改变时必须先审阅语义差异、同步适用副本与清单、重跑双方回归再更新对应版本包；不能仅更新哈希把未知差异视为通过。该仓库测试不随公共技能包发布；独立包用自身合成测试，不要求DOCX存在。此机制可检测分叉，不自动同步代码，也不宣称已经完成共享源码迁移。未来可评估单一构建源生成各独立包，本轮不改变DOCX行为。
 
@@ -32,3 +32,6 @@ python -I -S -B -m unittest discover -s "<skill_dir>/scripts" -p 'test_*.py' -v
 ```
 
 测试使用独占临时目录与标准库合成文件，验证配置、归档、输入保护、显式登记、失败重试及幂等清理。不是对真实用户残留文件的清理授权，不证明业务格式正确、真实模型选技能、云端Linux或Windows兼容、断电恢复或恶意并发隔离。发布时核对CRC、逐成员哈希和独立解包测试，保留旧包；本技能不处理技能开发发布ZIP的历史清理，也不上传/分享交付物。
+
+
+本次参数裁剪维护（2026-10-29，版本20261029.1442.4400）：router_config返回命名字符串值前strip两端空白，原始环境值、内部内容与非字符串类型保持。公共15项合成测试、来源一致性1项及严格结构检查在macOS/Python3.12.14通过；包含CLI实际归档到裁剪后目录、输入及主文件保持的验证。未更新ZIP，未在目标Linux/Windows验证；未运行专用命名linter，命名人工复核。主代理完成全部工作，未调用子代理。

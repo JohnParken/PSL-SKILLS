@@ -17,7 +17,6 @@ import contextlib
 import io
 import os
 import sys
-import tempfile
 import zipfile
 from pathlib import Path
 
@@ -26,10 +25,11 @@ if __package__ in (None, ""):
 
 from edit_docx import XML_NS, XMLNS_NS, _eligible, _preserves_space, _serialize_checked, _text
 from edit_structure import _blocked_anchors
-from office.archiveio import open_archive
+from office.memory_package import package_workspace
+from office.package import pack_document
 from office.helpers import (
     MAX_MEMBERS, MAX_PACKAGE_BYTES, MAX_PART_BYTES, atomic_write_bytes, rendered_text,
-    reject_signed_package, rezip, safe_extract,
+    reject_signed_package,
 )
 from office.validators.structure import StructureValidator
 from office.xmlio import parse_dom, read_xml
@@ -199,7 +199,7 @@ def _check_directory(directory, extension):
 def merge_runs(input_dir: str, *, extension=None) -> tuple[int, str]:
     """Merge supported runs; return controlled errors without modifying the input."""
     try:
-        directory = Path(input_dir)
+        directory = input_dir if getattr(input_dir, "is_memory_path", False) else Path(input_dir)
         if extension not in (None, ".docx", ".dotx"):
             raise ValueError("Unsupported document extension")
         _check_directory(directory, extension)
@@ -235,7 +235,7 @@ def merge_runs(input_dir: str, *, extension=None) -> tuple[int, str]:
 
 
 def _merge_or_die(path, *, extension=None):
-    _, message = merge_runs(str(path), extension=extension)
+    _, message = merge_runs(path, extension=extension)
     if message.startswith("Error"):
         raise ValueError(message)
     return message
@@ -267,13 +267,10 @@ def main(argv=None):
                 raise ValueError("Input and output must have the same DOCX/DOTX extension")
             if output.is_symlink():
                 raise ValueError("Symbolic link outputs are unsupported")
-            with tempfile.TemporaryDirectory(prefix="docx-merge-", dir=".") as temporary:
-                directory = Path(temporary)
-                with open_archive(source) as package:
-                    safe_extract(package, directory)
+            with package_workspace(source) as directory:
                 message = _merge_or_die(directory, extension=source.suffix.lower())
                 output.parent.mkdir(parents=True, exist_ok=True)
-                rezip(directory, output)
+                pack_document(directory, output)
             print(f"{message}; wrote {output}")
         else:
             raise ValueError("Input must be an unpacked directory or DOCX/DOTX file")

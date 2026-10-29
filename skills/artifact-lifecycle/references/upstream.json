@@ -1,11 +1,11 @@
 {
-  "origin": "DOCX 20261029.0758.3419; current working tree extraction",
+  "origin": "DOCX 20261029.1442.4400; trim named string parameter edges",
   "policy": "Explicit vendored distribution; repository parity test must pass for changes to either copy. No runtime cross-skill imports.",
   "files": [
     {
       "file": "router_config.py",
       "mode": "exact",
-      "sha256": "616cc456d4c02ed720fcdc0c1f92ec15891880a50b23274eca2961da435d471e"
+      "sha256": "7c4e463bfea18be01942fce43a7d93c77caa2b23f41054cd772d456ed950c442"
     },
     {
       "file": "output_location.py",
@@ -15,12 +15,12 @@
     {
       "file": "artifact_files.py",
       "mode": "exact",
-      "sha256": "7135315d11fd9a5295aa2972656972ae0adbe6a0b709f633adcabbf20afa7d6a"
+      "sha256": "8c2e28ec5d8c4ecf510f282b61a375824e030582775f2df59b3d3f5201a0affb"
     },
     {
       "file": "controlled_cleanup.py",
       "mode": "exact",
-      "sha256": "1ec16128a77c495f0c07c7c7e0f6cd9f271c8081daaefac247acc7cc758082b4"
+      "sha256": "f76d89fa3fafe2c9eb8db7a98fa66c2c21f462f2d99e8eb9ad52b1d761c403b1"
     },
     {
       "file": "cleanup_task.py",

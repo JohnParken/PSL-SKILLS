@@ -9,7 +9,6 @@ import json
 import math
 import re
 import sys
-import tempfile
 import zipfile
 from pathlib import Path
 
@@ -17,7 +16,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from edit_docx import XML_NS, XMLNS_NS, _eligible, _range_text_nodes, _serialize_checked, _text
-from office.package import pack_document, unpack_document
+from office.memory_package import package_workspace
+from office.package import pack_document
 from office.helpers import reject_signed_package
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
@@ -217,8 +217,7 @@ def edit_structure(source, destination, specification, *, require_no_placeholder
     operations = specification["operations"]
     if not isinstance(operations, list) or not operations:
         raise ValueError("operations must be a nonempty list")
-    with tempfile.TemporaryDirectory(prefix="docx-structure-edit-", dir=".") as temporary:
-        unpacked = unpack_document(source, Path(temporary) / "package")
+    with package_workspace(source) as unpacked:
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():
             raise ValueError("Input failed implemented structure checks")

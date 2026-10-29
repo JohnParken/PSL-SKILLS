@@ -10,7 +10,6 @@ protected. Insertion clones the selected data row's plain cell/run formatting.
 import argparse
 import json
 import sys
-import tempfile
 import zipfile
 from pathlib import Path
 
@@ -19,7 +18,8 @@ if __package__ in (None, ""):
 
 from edit_docx import XML_NS, XMLNS_NS, _eligible, _serialize_checked, _text
 from edit_structure import RUN_PROPERTY_ORDER, _blocked_anchors, _elements, _index, _single_line
-from office.package import pack_document, unpack_document
+from office.memory_package import package_workspace
+from office.package import pack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
 from archive_deliverables import finalize_delivery, validate_output_path
@@ -175,8 +175,7 @@ def edit_tables(source, destination, specification, *, require_no_placeholders=F
     required = common | ({"position", "cells"} if kind == "insert_row" else set())
     if set(operation) != required or type(operation["expected_rows"]) is not int:
         raise ValueError("Missing, unknown or invalid operation fields")
-    with tempfile.TemporaryDirectory(prefix="docx-table-edit-", dir=".") as temporary:
-        unpacked = unpack_document(source, Path(temporary) / "package")
+    with package_workspace(source) as unpacked:
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():
             raise ValueError("Input failed implemented structure checks")

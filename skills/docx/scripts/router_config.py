@@ -47,7 +47,7 @@ class RouterConfigError(ValueError):
 
 
 def get_common_parameter(router_config_str: str | None, parameter_name: str) -> object:
-    """Return exactly one named common parameter, preserving its JSON type.
+    """Return one named common parameter; strip string edges, preserve JSON type.
 
     Existing question-id reason codes remain stable for output_location callers.
     No path validation, environment mutation or filesystem access occurs here.
@@ -112,4 +112,5 @@ def get_common_parameter(router_config_str: str | None, parameter_name: str) -> 
     if len(parameter_values) != 1:
         raise RouterConfigError("duplicate_question_id" if parameter_name == "questionId" else "duplicate_parameter")
 
-    return parameter_values[0]
+    value = parameter_values[0]
+    return value.strip() if isinstance(value, str) else value

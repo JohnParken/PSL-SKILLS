@@ -63,6 +63,17 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(Path('user.json').read_text(), 'original')
         self.assertEqual(Path('report.txt').read_bytes(), Path('output/case/report.txt').read_bytes())
 
+    def test_archive_trims_string_parameter_edges_before_selecting_destination(self):
+        self.prepare()
+        raw = json.dumps([{'name': 'commonParam', 'value': json.dumps([
+            {'name': 'questionId', 'value': ' \tcase\n '}])}])
+        with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': raw}):
+            code, archived = self.call('archive', 'report.txt', '--protect-input', 'user.json')
+            self.assertEqual(os.environ['ROUTER_CONFIG_VARIABLES'], raw)
+        self.assertEqual(code, 0)
+        self.assertEqual(archived['archive_status'], 'copied')
+        self.assertEqual(Path('output/case/report.txt').read_bytes(), Path('report.txt').read_bytes())
+
     def test_retry_preserves_then_success_cleans(self):
         self.prepare()
         cleanup.seal_cleanup('manifest.json', outcome='retry')

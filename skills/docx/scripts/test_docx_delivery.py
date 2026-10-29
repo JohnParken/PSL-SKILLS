@@ -542,7 +542,7 @@ class DeliveryTests(unittest.TestCase):
             raise OSError('original copy failure')
 
         def fail_archive_unlink(path, *args, **kwargs):
-            if Path(path).parent == archive_output.parent:
+            if Path(path).parent == self.work and Path(path).name.startswith(".docx-"):
                 raise PermissionError('cleanup denied')
             return real_unlink(path, *args, **kwargs)
 
@@ -558,7 +558,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertIn('archive-warning:', stderr)
         self.assertIn('original copy failure', stderr)
         self.assertIn('cleanup denied', stderr)
-        residuals = [p for p in archive_output.parent.iterdir() if p != archive_output]
+        residuals = list(self.work.glob(".docx-*.tmp"))
         self.assertEqual(len(residuals), 1)
         self.assertIn(residuals[0].relative_to(self.work).as_posix(), stderr)
         self.assertEqual(residuals[0].read_bytes(), b'partial-copy')
@@ -643,29 +643,20 @@ class DeliveryTests(unittest.TestCase):
     def test_probe_close_failure_only_fails_for_task_root(self):
         real_temporary_file = tempfile.TemporaryFile
         location = create_docx.resolve_output_location(self.config())
-        for failed_dir, failed_label in ((self.work, 'output_dir=.'),
-                                         (self.archive_path().parent, 'archive_dir=output/record-123')):
-            with self.subTest(failed_label=failed_label):
-                @contextmanager
-                def fail_probe_close(*args, **kwargs):
-                    with real_temporary_file(*args, **kwargs) as probe:
-                        yield probe
-                    if Path(kwargs['dir']) == failed_dir:
-                        raise OSError('probe close/cleanup failed')
-
-                output, error = io.StringIO(), io.StringIO()
-                with patch.object(create_docx.tempfile, 'TemporaryFile', side_effect=fail_probe_close), \
-                        redirect_stdout(output), redirect_stderr(error):
-                    result = create_docx._runtime_check(self.work, location)
-                self.assertIn(f'{failed_label} writable=False', output.getvalue())
-                self.assertIn('probe close/cleanup failed', error.getvalue())
-                if failed_label == 'output_dir=.':
-                    self.assertFalse(result)
-                    self.assertNotIn('check-ok', output.getvalue())
-                else:
-                    self.assertTrue(result)
-                    self.assertIn('check-ok', output.getvalue())
-                    self.assertIn('archive-warning:', error.getvalue())
+        @contextmanager
+        def fail_probe_close(*args, **kwargs):
+            self.assertEqual(Path(kwargs["dir"]), self.work)
+            with real_temporary_file(*args, **kwargs) as probe:
+                yield probe
+            raise OSError("probe close/cleanup failed")
+        output, error = io.StringIO(), io.StringIO()
+        with patch.object(create_docx.tempfile, "TemporaryFile", side_effect=fail_probe_close), \
+                redirect_stdout(output), redirect_stderr(error):
+            result = create_docx._runtime_check(self.work, location)
+        self.assertFalse(result)
+        self.assertIn("output_dir=. writable=False", output.getvalue())
+        self.assertIn("probe close/cleanup failed", error.getvalue())
+        self.assertNotIn("check-ok", output.getvalue())
 
     def test_root_probe_failure_does_not_report_check_ok(self):
         original_directory = Path.cwd()
@@ -716,13 +707,12 @@ class DeliveryTests(unittest.TestCase):
         real_temporary_file = tempfile.TemporaryFile
         diagnostic = io.StringIO()
 
-        def reject_archive_probe(*args, **kwargs):
-            if Path(kwargs['dir']) == self.work / location.output_dir:
-                raise PermissionError('archive probe denied')
-            return real_temporary_file(*args, **kwargs)
-
-        with patch.object(create_docx.tempfile, 'TemporaryFile',
-                          side_effect=reject_archive_probe), \
+        real_access = os.access
+        def reject_archive_access(path, mode):
+            if Path(path) == self.work / location.output_dir:
+                return False
+            return real_access(path, mode)
+        with patch.object(create_docx.os, "access", side_effect=reject_archive_access), \
                 redirect_stdout(diagnostic), redirect_stderr(io.StringIO()) as error:
             self.assertTrue(create_docx._runtime_check(self.work, location))
         self.assertIn('output_dir=. writable=True', diagnostic.getvalue())

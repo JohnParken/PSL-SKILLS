@@ -12,24 +12,23 @@ are separate parts and are not checked.
 """
 
 import difflib
-import tempfile
 import zipfile
 from pathlib import Path
 
 try:
-    from ..archiveio import open_archive
+    from ..memory_package import package_workspace
     from .. import xmlio as ET
-    from ..helpers import rendered_text, safe_extract
+    from ..helpers import rendered_text
 except ImportError:
-    from archiveio import open_archive
+    from office.memory_package import package_workspace
     import xmlio as ET
-    from helpers import rendered_text, safe_extract
+    from helpers import rendered_text
 
 
 class RedliningValidator:
 
     def __init__(self, unpacked_dir, original_docx, verbose=False):
-        self.unpacked_dir = Path(unpacked_dir)
+        self.unpacked_dir = unpacked_dir if getattr(unpacked_dir, "is_memory_path", False) else Path(unpacked_dir)
         self.original_docx = Path(original_docx)
         self.verbose = verbose
         self.namespaces = {
@@ -45,16 +44,14 @@ class RedliningValidator:
             print(f"FAILED - Modified document.xml not found at {modified_file}")
             return False
 
-        with tempfile.TemporaryDirectory(dir=".") as temp_dir:
-            temp_path = Path(temp_dir)
+        try:
+            return self._validate_original(modified_file)
+        except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
+            print(f"FAILED - Error reading original docx: {exc}")
+            return False
 
-            try:
-                with open_archive(self.original_docx) as zip_ref:
-                    safe_extract(zip_ref, temp_path)
-            except Exception as e:
-                print(f"FAILED - Error unpacking original docx: {e}")
-                return False
-
+    def _validate_original(self, modified_file):
+        with package_workspace(self.original_docx) as temp_path:
             original_file = temp_path / "word" / "document.xml"
             if not original_file.exists():
                 print(

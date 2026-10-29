@@ -56,7 +56,22 @@ class RuntimeTests(unittest.TestCase):
                 redirect_stdout(io.StringIO()) as output, redirect_stderr(io.StringIO()):
             self.assertEqual(read_docx.main(['--check']), 1)
         self.assertIn('zlib=failed', output.getvalue())
+        self.assertIn('unavailable', output.getvalue())
         self.assertNotIn('read-check-ok', output.getvalue())
+
+    def test_automatic_gate_reports_runtime_reason_before_probing(self):
+        import run_docx_task
+        cases = (
+            (patch.object(runtime.expat, 'EXPAT_VERSION', 'expat_2.2.8'), 'expat_2.2.8'),
+            (patch.object(runtime.ET, 'fromstring', side_effect=RuntimeError('XML runtime unavailable')),
+             'XML runtime unavailable'),
+        )
+        for injected, reason in cases:
+            with self.subTest(reason=reason), injected, \
+                    patch('tempfile.TemporaryFile', side_effect=AssertionError('No probe after runtime failure')):
+                report = run_docx_task.task_environment()
+            self.assertEqual(report['status'], 'failed')
+            self.assertIn(reason, report['errors'][0]['reason'])
 
     @unittest.skipUnless(expat.version_info >= (2, 6, 0), 'DOCX requires Expat >=2.6')
     def test_read_cli_in_nonwritable_task_directory_does_not_create_outputs(self):

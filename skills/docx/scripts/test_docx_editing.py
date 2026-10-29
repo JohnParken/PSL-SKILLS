@@ -286,17 +286,18 @@ class EditingTests(unittest.TestCase):
 
     def test_successful_edit_uses_and_cleans_task_local_staging(self):
         source = self.source()
-        original = tempfile.TemporaryDirectory
+        original = tempfile.mkstemp
         created = []
-        def recorded_directory(*args, **kwargs):
-            directory = original(*args, **kwargs)
-            created.append(Path(directory.name).resolve())
-            return directory
-        with patch("edit_docx.tempfile.TemporaryDirectory", recorded_directory):
+        def recorded_file(*args, **kwargs):
+            descriptor, name = original(*args, **kwargs)
+            created.append(Path(name).resolve())
+            return descriptor, name
+        with patch("tempfile.TemporaryDirectory", side_effect=AssertionError("No temporary directories")), \
+                patch("tempfile.mkstemp", recorded_file):
             self.replace_text(source, self.root / "edited.docx", {"replacements": [
                 {"old": "ABC", "new": "XYZ", "count": 1}]})
         self.assertTrue(created)
-        self.assertTrue(all(path.is_relative_to(self.root) for path in created), created)
+        self.assertTrue(all(path.parent == self.root for path in created), created)
         self.assertTrue(all(not path.exists() for path in created))
         self.assertEqual(self.read_docx(self.root / "edited.docx"), "合同 XYZ")
 

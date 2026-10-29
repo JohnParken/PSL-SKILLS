@@ -9,14 +9,14 @@ from bisect import bisect_left, bisect_right
 import json
 import re
 import sys
-import tempfile
 import zipfile
 from pathlib import Path
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from office.package import pack_document, unpack_document
+from office.memory_package import package_workspace
+from office.package import pack_document
 from office.helpers import XML_SPACE, reject_signed_package
 from office.xmlio import parse_dom, read_xml
 from office.validators.structure import StructureValidator, W
@@ -308,8 +308,7 @@ def replace_text(source, destination, specification, *, parts=None, require_no_p
         for part in parts
     ):
         raise ValueError("Only document.xml and numbered header/footer parts are supported")
-    with tempfile.TemporaryDirectory(prefix="docx-edit-", dir=".") as tmp:
-        unpacked = unpack_document(source, Path(tmp) / "package")
+    with package_workspace(source) as unpacked:
         validator = StructureValidator(unpacked, extension=source.suffix.lower())
         if not validator.validate():
             raise ValueError("Input failed basic structure checks")

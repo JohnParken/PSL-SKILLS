@@ -2,21 +2,23 @@
 
 import argparse
 import sys
-import tempfile
+from contextlib import nullcontext
 import zipfile
 from pathlib import Path
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
+    from .memory_package import package_workspace
     from .archiveio import open_archive
-    from .helpers import OOXML_FAMILY, safe_extract
+    from .helpers import OOXML_FAMILY
     from .validators import StructureValidator, RedliningValidator
 except ImportError:
-    from archiveio import open_archive
-    from helpers import OOXML_FAMILY, safe_extract
-    from validators import StructureValidator, RedliningValidator
+    from office.memory_package import package_workspace
+    from office.archiveio import open_archive
+    from office.helpers import OOXML_FAMILY
+    from office.validators import StructureValidator, RedliningValidator
 
 
 def main(argv=None):
@@ -54,14 +56,8 @@ def main(argv=None):
                     return 1
             print("Basic structure checks PASSED. XSD and visual validation were not performed.")
             return 0
-        with tempfile.TemporaryDirectory(prefix="docx-check-", dir=".") as tmp:
-            unpacked = args.path
-            extension = None
-            if args.path.is_file():
-                extension = args.path.suffix.lower()
-                unpacked = Path(tmp)
-                with open_archive(args.path) as archive:
-                    safe_extract(archive, unpacked)
+        with (package_workspace(args.path) if args.path.is_file() else nullcontext(args.path)) as unpacked:
+            extension = args.path.suffix.lower() if args.path.is_file() else None
             validator = StructureValidator(
                 unpacked, extension=extension,
                 require_no_placeholders=args.require_no_placeholders,

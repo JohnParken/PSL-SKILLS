@@ -29,7 +29,7 @@ def w(name):
 
 class StructureValidator:
     def __init__(self, directory, *, extension=None, require_no_placeholders=False):
-        self.directory = Path(directory)
+        self.directory = directory if getattr(directory, "is_memory_path", False) else Path(directory)
         self.extension = extension
         self.require_no_placeholders = require_no_placeholders
         self.errors = []

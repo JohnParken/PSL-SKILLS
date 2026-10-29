@@ -35,13 +35,11 @@ class CleanupTests(unittest.TestCase):
 
     def test_verified_generation_archive_failure_still_cleans_and_preserves_document(self):
         Path("source.txt").write_text("用户输入", encoding="utf-8")
-        self.plan(files=["work/spec.json", "work/helper.py", "work/intermediate.docx"],
-                  directories=["work"], protected=["source.txt"], deliverables=["报告.docx"])
-        Path("work").mkdir()
+        self.plan(files=["spec.json", "helper.py", "intermediate.docx"], protected=["source.txt"], deliverables=["报告.docx"])
         spec = {"theme": "official", "blocks": [{"type": "paragraph", "text": "最终内容"}]}
-        Path("work/spec.json").write_text(json.dumps(spec), encoding="utf-8")
-        Path("work/helper.py").write_text("# temporary")
-        Path("work/intermediate.docx").write_bytes(b"unused intermediate")
+        Path("spec.json").write_text(json.dumps(spec), encoding="utf-8")
+        Path("helper.py").write_text("# temporary")
+        Path("intermediate.docx").write_bytes(b"unused intermediate")
         with patch("archive_deliverables.archive_outputs", side_effect=PermissionError("archive denied")):
             result = create_document_delivery(spec, "报告.docx", protected_inputs=["source.txt"])
         self.assertEqual(result["generation_status"], "verified")
@@ -52,7 +50,9 @@ class CleanupTests(unittest.TestCase):
         self.assertEqual(report["status"], "cleaned")
         self.assertTrue(report["cleanup_complete"])
         self.assertTrue(report["deliverables_unchanged"])
-        self.assertFalse(Path("work").exists())
+        self.assertFalse(Path("spec.json").exists())
+        self.assertFalse(Path("helper.py").exists())
+        self.assertFalse(Path("intermediate.docx").exists())
         self.assertEqual(Path("报告.docx").read_bytes(), before)
         self.assertEqual(read_docx("报告.docx"), "最终内容")
         self.assertEqual(Path("source.txt").read_text(encoding="utf-8"), "用户输入")
@@ -105,8 +105,28 @@ class CleanupTests(unittest.TestCase):
         self.assertTrue(Path("helper.py").exists())
         self.assertEqual(cleanup.cleanup_task("cleanup.json")["status"], "cleaned")
 
+    def legacy_plan(self, *, files=(), directories=(), protected=()):
+        """Fixture for a preexisting v1 plan; production plan now refuses this layout."""
+        with cleanup.TaskFiles() as task:
+            data = {"schema": cleanup.SCHEMA, "manifest": "cleanup.json", "task_identity": task.identity,
+                    "phase": "planned", "entries": [
+                        {"path": path, "kind": kind, "absent_at_plan": True}
+                        for kind, paths in (("file", files), ("directory", directories)) for path in paths],
+                    "protected": [{"path": p, "initial": task.optional(p)} for p in protected],
+                    "deliverables": []}
+            cleanup._validate(data, "cleanup.json", task)
+            task.save("cleanup.json", data, new=True)
+
+    def test_new_plans_reject_nested_files_directories_and_manifest(self):
+        for options in ({"files": ["nested/file"]}, {"directories": ["nested"]}):
+            with self.subTest(options=options), self.assertRaisesRegex(ValueError, "directly in task"):
+                self.plan(**options)
+        with self.assertRaisesRegex(ValueError, "directly in task"):
+            cleanup.plan_cleanup("nested/cleanup.json", files=["file"])
+        self.assertEqual(list(Path(".").iterdir()), [])
+
     def test_unknown_directory_content_is_not_scanned_or_deleted(self):
-        self.plan(files=["work/owned.py"], directories=["work"])
+        self.legacy_plan(files=["work/owned.py"], directories=["work"])
         Path("work").mkdir()
         Path("work/owned.py").write_text("owned")
         Path("work/other-task.txt").write_text("not owned")
@@ -132,7 +152,7 @@ class CleanupTests(unittest.TestCase):
 
     def test_file_symlink_parent_symlink_type_change_and_hardlink_are_retained(self):
         Path("input.txt").write_text("keep")
-        self.plan(files=["alias", "hard", "typed", "work/file"], directories=["work"],
+        self.legacy_plan(files=["alias", "hard", "typed", "work/file"], directories=["work"],
                   protected=["input.txt"])
         Path("alias").symlink_to("input.txt")
         os.link("input.txt", "hard")
@@ -186,7 +206,7 @@ class CleanupTests(unittest.TestCase):
         self.assertTrue(Path("helper.py").exists())
 
     def test_replaced_parent_after_seal_does_not_follow_link(self):
-        self.plan(files=["work/file"], directories=["work"])
+        self.legacy_plan(files=["work/file"], directories=["work"])
         Path("work").mkdir()
         Path("work/file").write_text("owned")
         self.seal(outcome="failed")

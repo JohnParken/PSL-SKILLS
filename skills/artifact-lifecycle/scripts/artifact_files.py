@@ -65,7 +65,7 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
         archive_mode = stat.S_IMODE(main_path.stat().st_mode)
 
     descriptor, temporary_name = tempfile.mkstemp(
-        prefix=".docx-", suffix=".tmp", dir=task_dir / location.output_dir,
+        prefix=".docx-", suffix=".tmp", dir=task_dir,
     )
     try:
         with os.fdopen(descriptor, "wb") as archive_file:

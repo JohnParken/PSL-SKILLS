@@ -8,20 +8,18 @@ This checks ZIP integrity and required parts, not XML schemas or page layout.
 """
 
 import argparse
+import os
 import sys
-import tempfile
 import zipfile
 from pathlib import Path
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
-    from .archiveio import open_archive
-    from .helpers import check_archive, rezip, safe_extract
+    from .helpers import rezip
 except ImportError:
-    from archiveio import open_archive
-    from helpers import check_archive, rezip, safe_extract
+    from office.helpers import rezip
 
 
 REQUIRED_PARTS = ("[Content_Types].xml", "_rels/.rels", "word/document.xml")
@@ -47,24 +45,63 @@ def unpack_document(source: str | Path, destination: str | Path) -> Path:
         and (not destination.is_dir() or any(destination.iterdir()))
     ):
         raise ValueError("Unpack destination must be a new or empty directory")
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="docx-unpack-", dir=destination.parent) as tmp:
-        staging = Path(tmp) / "package"
-        staging.mkdir()
-        with open_archive(source) as archive:
-            check_archive(archive)
-            # Bounded extraction reads every member to its declared end and
-            # checks CRC without testzip's larger decompression read budget.
-            safe_extract(archive, staging)
-        _check_parts(staging)
-        if destination.exists():
-            destination.rmdir()
-        staging.replace(destination)
+    # This directory is the requested output, never a scratch workspace.
+    from office.memory_package import read_package
+    root = read_package(source)
+    _check_parts(root)
+    created_files, created_directories = [], []
+    try:
+        for member in root.rglob("*"):
+            target = destination / member.member
+            missing = []
+            parent = target.parent
+            while not parent.exists():
+                missing.append(parent)
+                parent = parent.parent
+            for parent in reversed(missing):
+                parent.mkdir()
+                created_directories.append((parent, parent.stat()))
+            with target.open("xb") as stream:
+                created_files.append((target, os.fstat(stream.fileno())))
+                stream.write(member.read_bytes())
+    except BaseException:
+        for target, expected in reversed(created_files):
+            current = target.lstat()
+            if (current.st_dev, current.st_ino) != (expected.st_dev, expected.st_ino):
+                raise RuntimeError("Unpack rollback retained a changed output: " + str(target))
+            target.unlink()
+        for parent, expected in reversed(created_directories):
+            current = parent.lstat()
+            if (current.st_dev, current.st_ino) != (expected.st_dev, expected.st_ino):
+                raise RuntimeError("Unpack rollback retained a changed directory: " + str(parent))
+            parent.rmdir()
+        raise
     return destination
+
+
+def _verify_written_package(path):
+    from office.archiveio import open_archive
+    from office.helpers import read_part
+    with open_archive(path) as archive:
+        for member in archive.infolist():
+            if not member.is_dir():
+                read_part(archive, member.filename)
 
 
 def pack_document(source: str | Path, destination: str | Path) -> Path:
     """Repack XML and media without launching an archiver or following links."""
+    if getattr(source, "is_memory_path", False):
+        from office.memory_package import package_bytes
+        from office.helpers import atomic_write_bytes
+        destination = Path(destination)
+        _check_extension(destination)
+        _check_parts(source)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        mask = os.umask(0)
+        os.umask(mask)
+        atomic_write_bytes(destination, package_bytes(source), new_file_mode=0o666 & ~mask,
+                           verify=_verify_written_package)
+        return destination
     source, destination = Path(source), Path(destination)
     _check_extension(destination)
     if destination.is_symlink():
