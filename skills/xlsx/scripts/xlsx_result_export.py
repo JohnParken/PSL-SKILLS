@@ -346,8 +346,9 @@ def main():
     parser.add_argument('output')
     parser.add_argument('--plain',action='store_true')
     args=parser.parse_args()
-    from xlsx_delivery import finish_delivery
+    from xlsx_delivery import finish_delivery, validate_cli_paths
     try:
+        validate_cli_paths(args)
         result = export_result(read_spec(args.input,max_bytes=MAX_INPUT_BYTES),args.output,not args.plain)
         finish_delivery(result, args.output, [args.input])
         print(json.dumps(result,ensure_ascii=False))

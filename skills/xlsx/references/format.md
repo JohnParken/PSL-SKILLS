@@ -1,28 +1,30 @@
 # Financial Formatting & Output Standards
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
 ## Contents
 
-- [1. Scope of This Reference](#1-scope-of-this-reference)
-- [2. Financial Format Semantic System](#2-financial-format-semantic-system)
-- [3. styles.xml Background (Legacy Reference)](#3-stylesxml-background-legacy-reference)
-- [4. Pre-defined Style Index Complete Reference Table (13 Slots)](#4-pre-defined-style-index-complete-reference-table-13-slots)
-- [5. Assumption Separation Principle](#5-assumption-separation-principle)
-- [6. Maintained Formatting Workflow](#6-maintained-formatting-workflow)
-- [7. Formatting Completeness Checklist](#7-formatting-completeness-checklist)
-- [8. Maintained Workflow Constraints](#8-maintained-workflow-constraints)
-- [9. Common Formatting Pitfalls](#9-common-formatting-pitfalls)
-- [10. Financial Model Structure Conventions](#10-financial-model-structure-conventions)
-- [11. Assumption Categories](#11-assumption-categories)
-- [12. Audit Trail Best Practices](#12-audit-trail-best-practices)
-- [13. Pre-Delivery Checklist (Common Financial Model Checklist)](#13-pre-delivery-checklist-common-financial-model-checklist)
+- 1. Scope of This Reference (`<skill-root>/references/format.md#1-scope-of-this-reference`)
+- 2. Financial Format Semantic System (`<skill-root>/references/format.md#2-financial-format-semantic-system`)
+- 3. styles.xml Background (Legacy Reference) (`<skill-root>/references/format.md#3-stylesxml-background-legacy-reference`)
+- 4. Pre-defined Style Index Complete Reference Table (13 Slots) (`<skill-root>/references/format.md#4-pre-defined-style-index-complete-reference-table-13-slots`)
+- 5. Assumption Separation Principle (`<skill-root>/references/format.md#5-assumption-separation-principle`)
+- 6. Maintained Formatting Workflow (`<skill-root>/references/format.md#6-maintained-formatting-workflow`)
+- 7. Formatting Completeness Checklist (`<skill-root>/references/format.md#7-formatting-completeness-checklist`)
+- 8. Maintained Workflow Constraints (`<skill-root>/references/format.md#8-maintained-workflow-constraints`)
+- 9. Common Formatting Pitfalls (`<skill-root>/references/format.md#9-common-formatting-pitfalls`)
+- 10. Financial Model Structure Conventions (`<skill-root>/references/format.md#10-financial-model-structure-conventions`)
+- 11. Assumption Categories (`<skill-root>/references/format.md#11-assumption-categories`)
+- 12. Audit Trail Best Practices (`<skill-root>/references/format.md#12-audit-trail-best-practices`)
+- 13. Pre-Delivery Checklist (Common Financial Model Checklist) (`<skill-root>/references/format.md#13-pre-delivery-checklist-common-financial-model-checklist`)
 
 > Financial conventions and format-file background. Section 6 describes the maintained
 > workflow; XML examples elsewhere are explanatory only. For existing workbooks, use only style indices that
 > already exist in that workbook. For new workbooks, use the template's supported style
-> indices or the [appearance presets](readable-appearance.md). Do not unpack, edit XML,
+> indices or the appearance presets (`<skill-root>/references/readable-appearance.md`). Do not unpack, edit XML,
 > or repack a workbook for formatting tasks.
 
 ---
@@ -40,7 +42,7 @@ verified calculated values without formulas or separate assumption sheets. Apply
 styles supported by the selected workflow; report unsupported formatting requests.
 
 For package structure and cell encoding during implementation or diagnosis, see the
-[OOXML cheat sheet](ooxml-cheatsheet.md). It is background documentation, not permission
+OOXML cheat sheet (`<skill-root>/references/ooxml-cheatsheet.md`). It is background documentation, not permission
 to bypass the maintained editor.
 
 ---
@@ -259,12 +261,12 @@ combination for a cross-sheet reference.
 
 ## 6. Maintained Formatting Workflow
 
-For an existing workbook, follow [edit.md](edit.md) and the JSON contract in
-[python-calculation.md](python-calculation.md):
+For an existing workbook, follow Edit existing cells (`<skill-root>/references/edit.md`) and the JSON contract in
+Standard-library calculation and file contract (`<skill-root>/references/python-calculation.md`):
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read input.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit input.xlsx patch.json output.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read input.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit input.xlsx patch.json output.xlsx
 ```
 
 Inspect the target cell's value or formula and the workbook's existing style indices.
@@ -288,12 +290,12 @@ instead of rewriting them through a plain string. Verify types and formulas afte
 
 For a new workbook, choose supported template indices in the creation specification or
 use `create --appearance` / tabular `import --appearance` as documented in
-[readable-appearance.md](readable-appearance.md). Appearance presets apply only to new
+Readable appearance for newly created workbooks (`<skill-root>/references/readable-appearance.md`). Appearance presets apply only to new
 files. Never recreate an existing workbook from extracted values to apply a preset.
 
 The maintained skill does not support unpacking, editing style XML, appending custom
 styles to existing files, or repacking workbooks. Use a new output path and verify the
-result following [validate.md](validate.md).
+result following Validate a standard-library output (`<skill-root>/references/validate.md`).
 
 ## 7. Formatting Completeness Checklist
 

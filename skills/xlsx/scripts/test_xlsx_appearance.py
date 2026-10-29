@@ -183,13 +183,13 @@ class AppearanceTests(unittest.TestCase):
         scripts=Path(__file__).resolve().parent
         base=[sys.executable,'-I','-S','-B']
         output=self.root/'result.xlsx'
-        run=subprocess.run(base+[str(scripts/'stdlib_xlsx.py'),'create',str(spec),str(output),'--appearance',str(config)],capture_output=True,text=True)
+        run=subprocess.run(base+[str(scripts/'stdlib_xlsx.py'),'create',str((spec).relative_to(self.root)),str((output).relative_to(self.root)),'--appearance',str((config).relative_to(self.root))],cwd=self.root, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         self.assertEqual(json.loads(run.stdout)['appearance']['preset'],'readable')
         self.assertEqual(Workbook.load(output).cells['Data']['A2']['value'],3)
         source=self.root/'source.csv'; source.write_text('K,V\n001,2\n')
         config.write_text(json.dumps({'preset':'readable','sheets':{'Sheet1':{}}}))
-        run=subprocess.run(base+[str(scripts/'xlsx_tabular.py'),'import',str(source),str(self.root/'import.xlsx'),'--appearance',str(config)],capture_output=True,text=True)
+        run=subprocess.run(base+[str(scripts/'xlsx_tabular.py'),'import',str((source).relative_to(self.root)),str((self.root/'import.xlsx').relative_to(self.root)),'--appearance',str((config).relative_to(self.root))],cwd=self.root, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         self.assertTrue(json.loads(run.stdout)['output_written'])
 

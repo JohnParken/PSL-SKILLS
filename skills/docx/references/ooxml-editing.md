@@ -1,17 +1,19 @@
 # 受控替换、批注与修订的 OOXML 编辑规则
 
-文件位置统一遵循 [文件定位与读取规则](../SKILL.md#文件定位与读取规则)：文档及操作文件参数相对任务目录；后续读取使用本次实际输出路径，不按输入目录推导。
-写入前按 [交付文件命名](generation.md#交付文件命名) 确定实际名称；以下业务名称仅为示例，须按本次任务替换，用户指定名称优先。
+路径占位符说明：`<skill-root>` 是 DOCX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 DOCX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-交付归档：编辑 CLI 和 [公开交付 API](delivery.md#公开交付-api) 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 [当轮统一归档](delivery.md) 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
+文件位置统一遵循 文件定位与读取规则（`<skill-root>/SKILL.md#文件定位与读取规则`）：文档及操作文件参数相对任务目录；后续读取使用本次实际输出路径，不按输入目录推导。
+写入前按 交付文件命名（`<skill-root>/references/generation.md#交付文件命名`） 确定实际名称；以下业务名称仅为示例，须按本次任务替换，用户指定名称优先。
+
+交付归档：编辑 CLI 和 公开交付 API（`<skill-root>/references/delivery.md#公开交付-api`） 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 当轮统一归档（`<skill-root>/references/delivery.md`） 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
 
 
 ## 目录
 
-- [受控编辑与占位符填充](#受控编辑与占位符填充)
-- [放置批注锚点](#放置批注锚点)
-- [标记插入和删除](#标记插入和删除)
-- [使用低层辅助工具](#使用低层辅助工具)
+- 受控编辑与占位符填充（`<skill-root>/references/ooxml-editing.md#受控编辑与占位符填充`）
+- 放置批注锚点（`<skill-root>/references/ooxml-editing.md#放置批注锚点`）
+- 标记插入和删除（`<skill-root>/references/ooxml-editing.md#标记插入和删除`）
+- 使用低层辅助工具（`<skill-root>/references/ooxml-editing.md#使用低层辅助工具`）
 
 ## 受控编辑与占位符填充
 
@@ -30,7 +32,7 @@
 ```
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/edit_docx.py\" ./采购申请模板.docx ./replacements.json ./采购申请.docx --require-no-placeholders")
+execute(command="python -I -S -B \"<skill-root>/scripts/edit_docx.py\" ./采购申请模板.docx ./replacements.json ./采购申请.docx --require-no-placeholders")
 ```
 
 - 使用输出新文件；禁止输入输出指向同一文件或通过链接指向同一文件。
@@ -48,13 +50,13 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/edit_docx.py\" ./采购�
 
 ## 放置批注锚点
 
-自动流程优先使用 [批注事务管理](comments-management.md)，在其严格范围内自动生成锚点并核验元数据。下述 `comment.py` 保留为低层定义工具，仍需手工补正文锚点；不用于自动生命周期管理。
+自动流程优先使用 批注事务管理（`<skill-root>/references/comments-management.md`），在其严格范围内自动生成锚点并核验元数据。下述 `<skill-root>/scripts/comment.py` 保留为低层定义工具，仍需手工补正文锚点；不用于自动生命周期管理。
 
-`comment.py` 目录入口在内存中暂存包内容，完成批注修改和检查后，先将原部件内容保存为任务根目录 `./docx-comment-backup-*.zip` 并flush/fsync，再逐个原子替换受影响部件。可捕获失败尝试恢复原部件；恢复失败保留ZIP备份并报告准确路径。输入目录不能包含当前工作目录，必须是可信且无并发读写者的任务数据。非目标部件内容字节保留；多文件发布不是单一原子事务。
+`<skill-root>/scripts/comment.py` 目录入口在内存中暂存包内容，完成批注修改和检查后，先将原部件内容保存为任务根目录 `./docx-comment-backup-*.zip` 并flush/fsync，再逐个原子替换受影响部件。可捕获失败尝试恢复原部件；恢复失败保留ZIP备份并报告准确路径。输入目录不能包含当前工作目录，必须是可信且无并发读写者的任务数据。非目标部件内容字节保留；多文件发布不是单一原子事务。
 
 强制终止或恢复失败可能留下部分安装的内容和根目录ZIP备份；先核对输入与备份，再人工恢复，不自动删除未知残留或覆盖已安装内容。安装成功后备份清理失败会报告实际残留位置。压缩文件入口在内存中修改，再用 `./` 的独占暂存文件原子发布目标包；不创建工作目录，输出必须同扩展名且不能是符号链接。
 
-使用 `<skill_dir>/scripts/comment.py` 维护 `comments.xml`、`commentsExtended.xml`、`commentsIds.xml`、`commentsExtensible.xml`、关系和内容类型。不要只生成批注部件而遗漏正文锚点。
+使用 `<skill-root>/scripts/comment.py` 维护 `comments.xml`、`commentsExtended.xml`、`commentsIds.xml`、`commentsExtensible.xml`、关系和内容类型。不要只生成批注部件而遗漏正文锚点。
 
 按脚本分配的 ID，在目标段落中添加以下标记；将其放在 `w:p` 的直接子节点中，禁止放入 `w:r`。
 
@@ -85,7 +87,7 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/edit_docx.py\" ./采购�
 
 不要自动处理删除的段落标记、移动修订或格式修订；保留已有结构并报告超出支持范围。禁止仅清空文字而声称段落已被删除。
 
-使用文末修订对比命令检查遗漏的未追踪正文文字修改。以主入口定义的 `<skill_dir>` 定位脚本，将文件放在宿主确认的任务工作目录，使用相对文件参数；不要声称该检查覆盖全部部件、格式变更或段落合并语义。
+使用文末修订对比命令检查遗漏的未追踪正文文字修改。以主入口定义的 `<skill-root>` 定位脚本，将文件放在宿主确认的任务工作目录，使用相对文件参数；不要声称该检查覆盖全部部件、格式变更或段落合并语义。
 
 保留原作者的修订内容和元数据；对其他作者的插入做删除时，在其 `w:ins` 内嵌套自己的 `w:del`。恢复其删除时，在原 `w:del` 后添加自己的 `w:ins`；不要直接重写其他作者的修订历史。
 
@@ -93,21 +95,21 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/edit_docx.py\" ./采购�
 
 ## 使用低层辅助工具
 
-先按 [执行环境约束](../SKILL.md#执行环境约束与首步自检) 完成定位及自检，再从宿主确认的任务工作目录调用脚本。下文 `<skill_dir>` 须替换为已确认的真实目录；修改前保留源文件，完成后执行基础检查，禁止为照抄示例切换目录：
+先按 执行环境约束（`<skill-root>/SKILL.md#执行环境约束与首步自检`） 完成定位及自检，再从宿主确认的任务工作目录调用脚本。下文 `<skill-root>` 须替换为已确认的真实目录；修改前保留源文件，完成后执行基础检查，禁止为照抄示例切换目录：
 
-压缩文档输入必须显式指定 `-o` 输出新文件；禁止与输入同路径或通过符号链接、硬链接指向输入。目录入口仍就地修改工作副本，且不接受 `-o`；先保留原目录再操作。`comment.py` 默认作者为 `Editor`、缩写为 `E`，按需用 `--author` 和 `--initials` 指定真实作者。
+压缩文档输入必须显式指定 `-o` 输出新文件；禁止与输入同路径或通过符号链接、硬链接指向输入。目录入口仍就地修改工作副本，且不接受 `-o`；先保留原目录再操作。`<skill-root>/scripts/comment.py` 默认作者为 `Editor`、缩写为 `E`，按需用 `--author` 和 `--initials` 指定真实作者。
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/comment.py\" ./采购管理办法.docx \"核对费用上限\" -o ./annotated.docx")
-execute(command="python -I -S -B \"<skill_dir>/scripts/merge_runs.py\" ./采购管理办法.docx -o ./merged.docx")
-execute(command="python -I -S -B \"<skill_dir>/scripts/office/validate.py\" ./采购管理办法_修订版.docx --original ./采购管理办法.docx")
+execute(command="python -I -S -B \"<skill-root>/scripts/comment.py\" ./采购管理办法.docx \"核对费用上限\" -o ./annotated.docx")
+execute(command="python -I -S -B \"<skill-root>/scripts/merge_runs.py\" ./采购管理办法.docx -o ./merged.docx")
+execute(command="python -I -S -B \"<skill-root>/scripts/office/validate.py\" ./采购管理办法_修订版.docx --original ./采购管理办法.docx")
 ```
 
 添加批注定义后，先补正文锚点再验收。当前基础检查仅支持有起点、终点和引用的范围批注，不支持无范围的点批注，也不验证完整线程回复语义；不要把生成批注部件声称为已验证阅读器中的显示效果。
 
 仅在明确理解原结构时合并相邻且格式相同的普通 run；该脚本只在受支持段落中清理已识别的 Word 校对标记及合并目标的 Word rsid，不删除同名未知扩展。字段、修订、范围、复杂容器或未知格式保持原样；未知内容未被合并不表示已理解其语义。使用继承的 `xml:space`，写出前检查 XML 值保真；目录入口原子替换正文单文件，压缩入口原子打包，拒绝符号链接及数字签名。不要为了让受控替换通过而盲目合并复杂结构。
 
-保留命名空间声明、元素顺序、关系引用和 `xml:space`；禁止重新排版整个 XML 或删除未知扩展。使用 `<skill_dir>/scripts/office/xmlio.py` 中的受限解析入口，不要直接用默认解析器处理外来 XML。
+保留命名空间声明、元素顺序、关系引用和 `xml:space`；禁止重新排版整个 XML 或删除未知扩展。使用 `<skill-root>/scripts/office/xmlio.py` 中的受限解析入口，不要直接用默认解析器处理外来 XML。
 
 修订对比仅比较正文文字及有限的插入/删除标记，不检查所有格式、段落合并、移动、页眉页脚、字段、制表符或换行语义。指定 `--original` 不会豁免结构错误，校验器不提供自动修复或 XSD 检查。
 

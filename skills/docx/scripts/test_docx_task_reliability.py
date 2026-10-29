@@ -106,7 +106,7 @@ class ReliabilityTests(unittest.TestCase):
         self.assertTrue(task_file(result['task_manifest'], 'worker.py').exists())
         self.assertTrue(task_file(result['task_manifest'], 'spec.json').exists())
 
-    def test_create_and_resume_cli_exit_zero_for_cleanup_incomplete(self):
+    def test_create_and_resume_cli_exit_three_for_cleanup_incomplete(self):
         script_dir = str(Path(runner.__file__).resolve().parent)
         cleanup_stub = """lambda manifest: {
     'status': 'retained', 'deleted': [], 'retained': [{'path': 'helper', 'reason': 'injected'}],
@@ -120,7 +120,7 @@ class ReliabilityTests(unittest.TestCase):
         )
         created = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', create_code, script_dir],
                                   input=json.dumps(SPEC), capture_output=True, text=True, timeout=30)
-        self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+        self.assertEqual(created.returncode, 3, created.stdout + created.stderr)
         create_report = json.loads(created.stdout)
         self.assertEqual(create_report['status'], 'verified')
         self.assertEqual(create_report['task_status'], 'cleanup_incomplete')
@@ -137,7 +137,7 @@ class ReliabilityTests(unittest.TestCase):
         resumed = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', resume_code,
                                   script_dir, pending['task_manifest']],
                                  capture_output=True, text=True, timeout=30)
-        self.assertEqual(resumed.returncode, 0, resumed.stdout + resumed.stderr)
+        self.assertEqual(resumed.returncode, 3, resumed.stdout + resumed.stderr)
         resume_report = json.loads(resumed.stdout)
         self.assertEqual(resume_report['status'], 'verified')
         self.assertEqual(resume_report['task_status'], 'cleanup_incomplete')
@@ -370,7 +370,8 @@ runner.retry_task(sys.argv[2],json.loads(sys.argv[4]))
         return manifest
 
     def test_legacy_v1_rejects_retry_without_adding_files(self):
-        result = self.create(BAD_SPEC, output='legacy-retry.docx', workspace='legacy-retry')
+        # Legacy fixture intentionally stops before the public terminal closeout.
+        result = runner._create_task(BAD_SPEC, 'legacy-retry.docx', workspace='legacy-retry')
         self.assertEqual(result['status'], 'failed')
         manifest = self.convert_to_legacy_v1(result['task_manifest'], omit_retry_stage=True)
         stage = task_file(manifest, 'retry-spec.json')

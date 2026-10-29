@@ -51,7 +51,8 @@ class AutomaticTaskTests(unittest.TestCase):
             return runner.create_task(spec, output, **options)
 
     def failed_task(self, workspace='owned'):
-        result = self.create(BAD_SPEC, workspace=workspace)
+        # Build an interrupted pre-closeout fixture for legacy recovery safety tests.
+        result = runner._create_task(BAD_SPEC, '本轮报告.docx', workspace=workspace)
         self.assertEqual(result['status'], 'failed')
         self.assertFalse(result['cleanup']['cleanup_complete'])
         self.assertTrue(task_file(workspace, 'worker.py').is_file())
@@ -140,14 +141,13 @@ class AutomaticTaskTests(unittest.TestCase):
         self.assertFalse(any(task_file('owned', name).exists()
                              for name in ('worker.py', 'spec.json', 'receipt.json', 'task.lock', 'retry-spec.json')))
         self.assertIn('中文正文123.45。', read_docx(Path(result['output'])))
-        self.assertTrue(Path(result['task_manifest']).is_file())
-        receipt = json.loads(Path(result['task_manifest']).read_text())
-        self.assertEqual(receipt['phase'], 'sealed')
-        self.assertEqual(receipt['outcome'], 'success')
+        self.assertIsNone(result['task_manifest'])
+        self.assertTrue(result['cleanup']['manifest_removed'])
+        self.assertFalse(Path('owned.cleanup.json').exists())
         removed = {entry['path'] for entry in result['cleanup']['deleted']}
         self.assertIn(task_file('owned', 'worker.py').as_posix(), removed)
         self.assertIn(task_file('owned', 'spec.json').as_posix(), removed)
-        self.assertEqual(receipt['runner']['attempts'], 1)
+        self.assertEqual(result['attempts'], 1)
 
     def test_invalid_spec_retains_helpers_then_corrected_retry_finishes(self):
         manifest = self.failed_task()
@@ -158,8 +158,8 @@ class AutomaticTaskTests(unittest.TestCase):
         self.assertTrue(result['cleanup']['cleanup_complete'])
         self.assertFalse(task_file('owned', 'spec.json').exists())
         self.assertFalse(task_file('owned', 'worker.py').exists())
-        data = json.loads(Path(manifest).read_text())
-        self.assertEqual(data['runner']['attempts'], 2)
+        self.assertFalse(Path(manifest).exists())
+        self.assertEqual(result['attempts'], 2)
         self.assertTrue(before)
         self.assertIn('本轮报告', read_docx(Path(result['output'])))
 
@@ -237,10 +237,9 @@ class AutomaticTaskTests(unittest.TestCase):
         original = Path(first['output']).read_bytes()
         with patch.object(runner.subprocess, 'run', side_effect=AssertionError('must not rerun')):
             for _ in range(2):
-                result = runner.resume_task(first['task_manifest'])
-                self.assertEqual(result['status'], 'verified')
-                self.assertTrue(result['cleanup']['cleanup_complete'])
-                self.assertTrue(result['cleanup']['deliverables_unchanged'])
+                result = runner.resume_task('owned.cleanup.json')
+                self.assertEqual(result['status'], 'failed')
+                self.assertFalse(Path('owned.cleanup.json').exists())
         self.assertEqual(Path(first['output']).read_bytes(), original)
 
     def test_archive_failure_and_cleanup_success_remain_separate(self):
@@ -472,10 +471,10 @@ runner.create_task(json.loads(sys.argv[2]), 'interrupted.docx', workspace='inter
         self.assertEqual(failure.returncode, 1)
         report = json.loads(failure.stdout)
         self.assertEqual(report['status'], 'failed')
-        self.assertTrue(Path(report['task_manifest']).exists())
-        state = json.loads(Path(report['task_manifest']).read_text())
-        self.assertTrue(task_file(state['runner']['workspace'], 'worker.py').exists())
-        self.assertTrue(task_file(state['runner']['workspace'], 'spec.json').exists())
+        self.assertIsNone(report['task_manifest'])
+        self.assertTrue(report['cleanup']['cleanup_complete'])
+        self.assertFalse(list(Path('.').glob('docx-task-*')))
+        self.assertFalse(Path('失败.docx').exists())
 
 
 if __name__ == '__main__':

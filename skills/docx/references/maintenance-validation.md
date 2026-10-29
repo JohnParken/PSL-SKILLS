@@ -1,51 +1,57 @@
 # DOCX 维护测试与历史验证记录
 
+路径占位符说明：`<skill-root>` 是 DOCX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 DOCX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
 本页仅在修改、审查、测试或发布 Skill，或用户明确要求追溯历史时读取。普通新建、编辑、读取、归档和清理任务不读取本页，也不执行这里的维护测试。
 
-现行归档参数仅为 `questionId`。历史记录中的 `requestId`、`idRecord`、旧路径及旧退出码只描述当时行为，均不能用作现行参数或命令依据；现行规则以主入口及业务参考为准。
+现行归档参数仅为 `questionId`。历史记录中的 `requestId`、`idRecord`、旧路径及旧退出码只描述当时行为，均不能用作现行参数或命令依据；现行规则以主入口及业务参考为准。历史验证命令中的 `skills/docx/`、其他 `skills/` 及 `tests/` 路径以当时已确认的仓库根目录为基准，保留为执行证据，不是安装后调用资源的路径；测试筛选参数中的文件名也不代表资源定位路径。
 
 ## 目录
 
-- [运行条件与命令](#运行条件与命令)
-- [固定预期与失败保护](#固定预期与失败保护)
-- [已执行与未验证](#已执行与未验证)
-- [任务清理工具验证](#任务清理工具验证)
-- [归档用户提示验证（2026-10-28）](#归档用户提示验证2026-10-28)
-- [自动新建收尾验证（2026-10-28）](#自动新建收尾验证2026-10-28)
-- [重试事务与控制器可靠性验证（2026-10-28）](#重试事务与控制器可靠性验证2026-10-28)
-- [安全维护验收](#安全维护验收)
-- [临时文件平铺维护（2026-10-28）](#临时文件平铺维护2026-10-28)
-- [自动环境判断维护（2026-10-28）](#自动环境判断维护2026-10-28)
-- [回执清理异常修复（2026-10-29）](#回执清理异常修复2026-10-29)
-- [参数两端空白裁剪（2026-10-29）](#参数两端空白裁剪2026-10-29)
-- [工具调用提示与按需排查（2026-10-29）](#工具调用提示与按需排查2026-10-29)
-- [execute调用形式补充（2026-10-29）](#execute调用形式补充2026-10-29)
-- [常见环境与交付故障说明（2026-10-29）](#常见环境与交付故障说明2026-10-29)
-- [Bash执行示例统一（2026-10-29）](#bash执行示例统一2026-10-29)
+- DOCX路径统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#docx路径统一2026-10-29`）
+
+- 受控编辑清单收尾（2026-10-29）（`<skill-root>/references/maintenance-validation.md#受控编辑清单收尾2026-10-29`）
+
+- 运行条件与命令（`<skill-root>/references/maintenance-validation.md#运行条件与命令`）
+- 固定预期与失败保护（`<skill-root>/references/maintenance-validation.md#固定预期与失败保护`）
+- 已执行与未验证（`<skill-root>/references/maintenance-validation.md#已执行与未验证`）
+- 任务清理工具验证（`<skill-root>/references/maintenance-validation.md#任务清理工具验证`）
+- 归档用户提示验证（2026-10-28）（`<skill-root>/references/maintenance-validation.md#归档用户提示验证2026-10-28`）
+- 自动新建收尾验证（2026-10-28）（`<skill-root>/references/maintenance-validation.md#自动新建收尾验证2026-10-28`）
+- 重试事务与控制器可靠性验证（2026-10-28）（`<skill-root>/references/maintenance-validation.md#重试事务与控制器可靠性验证2026-10-28`）
+- 安全维护验收（`<skill-root>/references/maintenance-validation.md#安全维护验收`）
+- 临时文件平铺维护（2026-10-28）（`<skill-root>/references/maintenance-validation.md#临时文件平铺维护2026-10-28`）
+- 自动环境判断维护（2026-10-28）（`<skill-root>/references/maintenance-validation.md#自动环境判断维护2026-10-28`）
+- 回执清理异常修复（2026-10-29）（`<skill-root>/references/maintenance-validation.md#回执清理异常修复2026-10-29`）
+- 参数两端空白裁剪（2026-10-29）（`<skill-root>/references/maintenance-validation.md#参数两端空白裁剪2026-10-29`）
+- 工具调用提示与按需排查（2026-10-29）（`<skill-root>/references/maintenance-validation.md#工具调用提示与按需排查2026-10-29`）
+- execute调用形式补充（2026-10-29）（`<skill-root>/references/maintenance-validation.md#execute调用形式补充2026-10-29`）
+- 常见环境与交付故障说明（2026-10-29）（`<skill-root>/references/maintenance-validation.md#常见环境与交付故障说明2026-10-29`）
+- Bash执行示例统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#bash执行示例统一2026-10-29`）
 
 ## 运行条件与命令
 
-先按 [首步自检](../SKILL.md#执行环境约束与首步自检) 确认 Python >=3.10、自带 zlib 和 Expat >=2.6.0。维护测试仅用标准库，测试产物置于独占任务目录；不安装包、调用办公软件、转换器或 OCR。
+先按 首步自检（`<skill-root>/SKILL.md#执行环境约束与首步自检`） 确认 Python >=3.10、自带 zlib 和 Expat >=2.6.0。维护测试仅用标准库，测试产物置于独占任务目录；不安装包、调用办公软件、转换器或 OCR。
 
-在宿主确认的任务目录执行，先替换 `<skill_dir>`：
+在宿主确认的任务目录执行，先替换 `<skill-root>`：
 
 ```console
-python -I -S -B -m unittest discover -s "<skill_dir>/scripts" -p 'test_*.py' -v
+python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_*.py' -v
 ```
 
 ## 固定预期与失败保护
 
 | 模块 | 实际覆盖 |
 |---|---|
-| test_docx_generation.py | 中文和 XML 字面文字、表格、关联文字、默认样式及页面意图的固定值；占位符拒绝、预检不写文件、验证故障保留旧输出并清理暂存、UTF-8 CLI 输入、重复 JSON 键与同源拒绝 |
-| test_docx_runtime.py | 只读自检不解析输出配置、不创建目录或探针；旧Expat/zlib故障失败，参数冲突退出2；不可写任务目录中自检和真实中文读取不产生输出文件 |
-| test_docx_delivery.py | 实际 CLI 根目录主文件和配置归档副本、字节一致与回读、中文及最长文件名、摘要及配置跳过原因、双目录自检与探针清理、只读预检、非法文件名及符号链接拒绝、生成失败保护、归档复制/同步/权限设置/替换失败保留主文件和旧副本、清理失败诊断及残留定位、探针关闭失败、JSON 与正文/表格图片同源拒绝、权限保留及成功替换 |
-| test_archive_deliverables.py | 当轮显式多文件清单、跨轮更新与 ID 变化、不扫描历史、无配置跳过、同名冲突、输入硬链接及输出符号链接保护、已归档路径及部分失败 |
-| test_edit_delivery.py | 五个编辑 CLI 的实际归档、失败保护和只读批注不归档（本批执行结果见下） |
-| test_output_location.py | 两种 commonParam 表示、整数 ID、配置和字段异常、重复键/ID、非标准 JSON 常量、深层 JSON、非法 ID、固定且不泄露原文的原因码；调用独立性及无环境/文件访问 |
-| test_docx_editing.py | 替换次数、同时应用、重叠与跨 run/字段保护、同源拒绝、旧输出及非目标成员保留；结构、表格行、批注和同格式图片的成功与拒绝；实际任务目录内暂存和清理 |
-| test_docx_io.py | stored/deflate、小型有效 ZIP64 的明确拒绝；重复/别名/穿越/特殊成员/CRC 与中央目录异常；UTF-8/UTF-16、DTD/实体、深度和共享 XML 预算 |
-| test_docx_routing.py | .wps/.et/.ett 及伪装 CFB 的明确路由拒绝；原生生成→编辑→读取链路 |
+| `<skill-root>/scripts/test_docx_generation.py` | 中文和 XML 字面文字、表格、关联文字、默认样式及页面意图的固定值；占位符拒绝、预检不写文件、验证故障保留旧输出并清理暂存、UTF-8 CLI 输入、重复 JSON 键与同源拒绝 |
+| `<skill-root>/scripts/test_docx_runtime.py` | 只读自检不解析输出配置、不创建目录或探针；旧Expat/zlib故障失败，参数冲突退出2；不可写任务目录中自检和真实中文读取不产生输出文件 |
+| `<skill-root>/scripts/test_docx_delivery.py` | 实际 CLI 根目录主文件和配置归档副本、字节一致与回读、中文及最长文件名、摘要及配置跳过原因、双目录自检与探针清理、只读预检、非法文件名及符号链接拒绝、生成失败保护、归档复制/同步/权限设置/替换失败保留主文件和旧副本、清理失败诊断及残留定位、探针关闭失败、JSON 与正文/表格图片同源拒绝、权限保留及成功替换 |
+| `<skill-root>/scripts/test_archive_deliverables.py` | 当轮显式多文件清单、跨轮更新与 ID 变化、不扫描历史、无配置跳过、同名冲突、输入硬链接及输出符号链接保护、已归档路径及部分失败 |
+| `<skill-root>/scripts/test_edit_delivery.py` | 五个编辑 CLI 的实际归档、失败保护和只读批注不归档（本批执行结果见下） |
+| `<skill-root>/scripts/test_output_location.py` | 两种 commonParam 表示、整数 ID、配置和字段异常、重复键/ID、非标准 JSON 常量、深层 JSON、非法 ID、固定且不泄露原文的原因码；调用独立性及无环境/文件访问 |
+| `<skill-root>/scripts/test_docx_editing.py` | 替换次数、同时应用、重叠与跨 run/字段保护、同源拒绝、旧输出及非目标成员保留；结构、表格行、批注和同格式图片的成功与拒绝；实际任务目录内暂存和清理 |
+| `<skill-root>/scripts/test_docx_io.py` | stored/deflate、小型有效 ZIP64 的明确拒绝；重复/别名/穿越/特殊成员/CRC 与中央目录异常；UTF-8/UTF-16、DTD/实体、深度和共享 XML 预算 |
+| `<skill-root>/scripts/test_docx_routing.py` | .wps/.et/.ett 及伪装 CFB 的明确路由拒绝；原生生成→编辑→读取链路 |
 
 ZIP64 fixture 先由标准库 ZipFile 正确读取，再验证本技能按已声明范围拒绝，不能将拒绝写成支持 ZIP64。预算测试通过缩小限额覆盖边界，不制造大资源负载。暂存目录测试检查实际创建路径和调用结束后的清理，不只匹配源码参数。
 
@@ -69,10 +75,10 @@ ZIP64 fixture 先由标准库 ZipFile 正确读取，再验证本技能按已声
 
 较旧 Python/Expat 的跳过只说明环境不满足要求，不能计为对应行为通过。未安装或运行专用 Python 命名 linter；仓库结构检查和 AST 检查不能替代它。
 
-这些是小型合成输入的固定语义预期；环境配置通过测试进程注入，尚未与实际路由宿主联调，也未测试 Windows 文件系统或恶意并发目录修改。不证明完整 OOXML/XSD、Word 打开兼容、字体可用、像素解码或实际分页。`--verify` 核对的是支持范围内的内容与排版意图，不是视觉验收。详细威胁模型和资源边界见 [安全说明](security.md)。
+这些是小型合成输入的固定语义预期；环境配置通过测试进程注入，尚未与实际路由宿主联调，也未测试 Windows 文件系统或恶意并发目录修改。不证明完整 OOXML/XSD、Word 打开兼容、字体可用、像素解码或实际分页。`--verify` 核对的是支持范围内的内容与排版意图，不是视觉验收。详细威胁模型和资源边界见 安全说明（`<skill-root>/references/security.md`）。
 
 
-2026-10-27，任务自检与渐进披露维护：增加 `read_docx.py --check`，共享Python、zlib往返和Expat/XML检查，不读取新建输出配置、不创建目录或写探针；退出0及 `read-check-ok` 是只读运行条件通过标记。原生成器 `--check` 继续检查已配置输出目录的实际写入能力及 `check-ok`，旧调用不变。读取保存结果、编辑和解包仍按实际输出目录检查写入。Python3.12.12 / Expat2.6.3、标准库隔离运行DOCX全量86项通过，0失败、0跳过；新增5项固定行为覆盖只读不写、参数冲突、旧Expat/zlib失败和不可写任务目录中的实际中文回读，旧生成交付回归保持通过。入口由259行缩到89行，条件性受控替换、验收/有限重试/清理、生成后引导分别移入已有参考；不改其规则或扩大能力。description保持129字符，仍准确区分生成、读取、受控修改和WPS/PDF边界。结构及资源链接检查通过，专用命名linter未运行；不将上述检查视为真实宿主自动触发或视觉验收。
+2026-10-27，任务自检与渐进披露维护：增加 `"<skill-root>/scripts/read_docx.py" --check`，共享Python、zlib往返和Expat/XML检查，不读取新建输出配置、不创建目录或写探针；退出0及 `read-check-ok` 是只读运行条件通过标记。原生成器 `--check` 继续检查已配置输出目录的实际写入能力及 `check-ok`，旧调用不变。读取保存结果、编辑和解包仍按实际输出目录检查写入。Python3.12.12 / Expat2.6.3、标准库隔离运行DOCX全量86项通过，0失败、0跳过；新增5项固定行为覆盖只读不写、参数冲突、旧Expat/zlib失败和不可写任务目录中的实际中文回读，旧生成交付回归保持通过。入口由259行缩到89行，条件性受控替换、验收/有限重试/清理、生成后引导分别移入已有参考；不改其规则或扩大能力。description保持129字符，仍准确区分生成、读取、受控修改和WPS/PDF边界。结构及资源链接检查通过，专用命名linter未运行；不将上述检查视为真实宿主自动触发或视觉验收。
 
 
 2026-10-27，主文件与归档分离维护：CLI 主文件固定在任务工作目录，成功后复制到有效 `{idRecord}/output/`；无有效配置跳过归档。归档失败保留已发布主文件和旧副本，返回退出码 2 及 `archive_failed` 摘要。原配置解析 API 和低层生成 API 保持不变；description 仍为 129 字符，人工核对新建、读取、受控编辑与 WPS/PDF 边界后保留，依赖无变化。
@@ -94,7 +100,7 @@ ZIP64 fixture 先由标准库 ZipFile 正确读取，再验证本技能按已声
 Python 3.12.14 / Expat 2.8.3、`-I -S -B`：仓库根目录 DOCX 全量 101 项测试通过，0 失败、0 跳过。新布局覆盖配置解析、双目录自检、中文及整数 ID、归档失败保护、路径别名/符号链接和权限检查；新增测试确认新归档与主文件字节一致且旧布局文件不变。独立任务目录实际自检返回 0，包含 `output_dir=. writable=True`、`archive_dir=output/12345 writable=True` 和 `check-ok`，探针清理完成。严格结构、AST 语法和变更空白检查通过；新增及修改标识符人工核对，未执行专用命名 linter、真实宿主联调、Windows 或视觉验收。未更新分发 ZIP。
 
 
-2026-10-28，当轮统一归档维护：五个编辑 CLI 写操作成功后自动归档本次输出，保留相对输出路径和低层 API；批注只读 list 不解析归档配置或调用归档函数。新增 `archive_deliverables.py` 对当轮其他交付物使用显式文件清单归档，支持多文件和不同扩展名，不扫描历史/中间文件；目标为 `output/{idRecord}/文件名`，每次调用重新读取配置。编辑前保护所有源文档、操作 JSON、选择文件和替换图片；归档前保护输入及其他交付物，拒绝扁平化同名冲突，已在目标路径的文件标为 `already_archived`。复制复用现有原子发布与失败清理，批量部分失败逐项报告，整体退出 2，不回滚已完成的文件。编辑 CLI 的成功输出改为包含原 `result` 的归档 JSON，主入口和各任务参考已同步。description 的新建/读取/受控编辑选择范围仍准确，129 字符，保留原文；依赖保持标准库。
+2026-10-28，当轮统一归档维护：五个编辑 CLI 写操作成功后自动归档本次输出，保留相对输出路径和低层 API；批注只读 list 不解析归档配置或调用归档函数。新增 `<skill-root>/scripts/archive_deliverables.py` 对当轮其他交付物使用显式文件清单归档，支持多文件和不同扩展名，不扫描历史/中间文件；目标为 `output/{idRecord}/文件名`，每次调用重新读取配置。编辑前保护所有源文档、操作 JSON、选择文件和替换图片；归档前保护输入及其他交付物，拒绝扁平化同名冲突，已在目标路径的文件标为 `already_archived`。复制复用现有原子发布与失败清理，批量部分失败逐项报告，整体退出 2，不回滚已完成的文件。编辑 CLI 的成功输出改为包含原 `result` 的归档 JSON，主入口和各任务参考已同步。description 的新建/读取/受控编辑选择范围仍准确，129 字符，保留原文；依赖保持标准库。
 
 Python 3.12.14 / Expat 2.8.3、`-I -S -B`，在仓库根目录执行 `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：115 项通过，0 失败、0 跳过。新增通用归档 6 项与编辑交付 8 项测试覆盖五个真实 CLI 的语义与归档字节一致、跨轮 ID 更新、编辑失败不归档旧结果、复制失败保留新主文件/旧归档/输入且清理暂存、缺配置跳过、只读批注不归档、输入别名与同名冲突、显式多文件部分成功。测试初次调用曾因 unittest 模块路径错误失败，改用 discovery；故障注入曾误覆盖编辑打包复制，收窄到本次主文件的归档复制后验证，未降低断言。
 
@@ -110,12 +116,12 @@ Python 3.12.14 / Expat 2.8.3、`-I -S -B`，在仓库根目录执行 `python -I 
 
 主代理审阅配置校验、目录自动创建、原子复制、失败清理、输入同源/符号链接及旧归档保护，未发现需要额外改动的归档发布逻辑。新增测试覆盖未自检且目录不存在时自动创建并复制、注入真实 mkdir 权限异常时自检和主文件生成仍成功（无旧归档及有旧归档两种情况），强化复制测试为写入部分字节后失败，核对主文件可读、输入字节与旧归档不变、暂存已清理。既有五个编辑 CLI、显式多文件、图片保护与失败返回语义继续通过。
 
-Python 3.12.14 / Expat 2.8.3，仓库根目录执行 `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：122 项通过，0失败、0跳过。解释器及检查器入口自检通过；独立任务目录实际 `create_docx.py --check` 返回0、`check-ok` 和 `archive_dir=output/req-123 writable=True`，确认按 requestId 创建目录并清理探针。相关 AST、严格结构和变更空白检查通过。主代理完成所有实现、审查和验证，本批未调用子代理。未执行专用命名 linter、真实宿主联调、Windows 或视觉验收；未更新打包文件。
+Python 3.12.14 / Expat 2.8.3，仓库根目录执行 `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：122 项通过，0失败、0跳过。解释器及检查器入口自检通过；独立任务目录实际 `"<skill-root>/scripts/create_docx.py" --check` 返回0、`check-ok` 和 `archive_dir=output/req-123 writable=True`，确认按 requestId 创建目录并清理探针。相关 AST、严格结构和变更空白检查通过。主代理完成所有实现、审查和验证，本批未调用子代理。未执行专用命名 linter、真实宿主联调、Windows 或视觉验收；未更新打包文件。
 
 
 2026-10-28，统一代码交付入口：新建及五种编辑 CLI 改为调用对应公开 `*_delivery()` API，主操作成功后统一通过 `finalize_delivery()` 调用 `archive_outputs()`；归档异常独立返回警告，保留主文件成功状态。低层函数保持原签名及不自动归档行为，供中间处理使用；只读批注查询不触发归档。新建 CLI 保留单文件字段并增加 `files` 明细；归档预检查失败时顶层 `archive_output` 为 null。归档保护错误使用统一输入冲突诊断，既有故障注入同步定位到共享入口，保留实际输入/旧归档字节保护断言。说明、API 示例和 README 同步；description 人工核对仍准确，129 字符，依赖不变。
 
-主代理负责实现、文档、审查及集成验收；`luna__delivery_api_tests`（luna_worker）仅新增 `test_delivery_api.py`，11 项测试通过，主代理已审阅。新增覆盖新建和五种编辑真实调用自动归档且只调用一次、可读取内容与副本字节一致、输入/JSON/图片别名保护、复制与 mkdir 失败保留主文件和旧归档、主操作失败不归档、统一归档入口意外异常隔离、底层函数不归档及只读查询。初次回归暴露诊断和模拟注入位置变更，以及文字编辑 CLI 未传入操作文件保护清单，已修正；无效配置测试按已有 skipped 契约核对，未降低失败保护断言。
+主代理负责实现、文档、审查及集成验收；`luna__delivery_api_tests`（luna_worker）仅新增 `<skill-root>/scripts/test_delivery_api.py`，11 项测试通过，主代理已审阅。新增覆盖新建和五种编辑真实调用自动归档且只调用一次、可读取内容与副本字节一致、输入/JSON/图片别名保护、复制与 mkdir 失败保留主文件和旧归档、主操作失败不归档、统一归档入口意外异常隔离、底层函数不归档及只读查询。初次回归暴露诊断和模拟注入位置变更，以及文字编辑 CLI 未传入操作文件保护清单，已修正；无效配置测试按已有 skipped 契约核对，未降低失败保护断言。
 
 Python 3.12.14 / Expat 2.8.3，仓库根目录执行 `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：133 项通过，0 失败、0 跳过。独立任务目录的新建、只读及归档自检均退出 0 且含必需成功标记；AST、严格 Skill 结构检查和变更空白检查通过。人工检查新增 Python 命名与调用引用，未执行专用命名 linter、真实宿主交付钩子/模型路由评测、Windows 或视觉验收。没有新增宿主拦截能力，不自动归档任意外部代码写出的文件；未更新 ZIP。
 
@@ -131,9 +137,9 @@ Python 3.12.14 / Expat 2.8.3，仓库根目录执行 `python -I -S -B -m unittes
 
 ## 任务清理工具验证
 
-2026-10-28，新增标准库 `cleanup_task.py`：创建辅助文件前显式登记，任务结束时记录身份与指纹，再逐项清理。成功任务先完成文档验收及归档步骤；归档失败仍执行收尾，最终失败/停止可保留必要恢复材料，retry 不删除候选。用户输入、最终文件、清单及其重叠路径受保护；不扫描目录，目录只用 rmdir 移除。清理前后核对最终文件，返回 deleted/retained/failed 与原因，保留原指纹和清单供中断后恢复。主入口、收尾说明、归档说明、工具指南及 README 已同步，版本更新；description 人工核对仍准确，129 字符，未修改，无新增依赖。
+2026-10-28，新增标准库 `<skill-root>/scripts/cleanup_task.py`：创建辅助文件前显式登记，任务结束时记录身份与指纹，再逐项清理。成功任务先完成文档验收及归档步骤；归档失败仍执行收尾，最终失败/停止可保留必要恢复材料，retry 不删除候选。用户输入、最终文件、清单及其重叠路径受保护；不扫描目录，目录只用 rmdir 移除。清理前后核对最终文件，返回 deleted/retained/failed 与原因，保留原指纹和清单供中断后恢复。主入口、收尾说明、归档说明、工具指南及 README 已同步，版本更新；description 人工核对仍准确，129 字符，未修改，无新增依赖。
 
-使用 macOS、Python 3.12.14 / Expat 2.8.3，在仓库根目录运行 `env PATH='' python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`（python 使用宿主已确认的绝对解释器路径）：151 项通过，0 失败、0 跳过。新增 `test_cleanup_task.py` 共17项，覆盖真实生成后归档失败仍清理、最终失败/停止、重试保留、删除权限异常、目录混入其他文件、用户输入/最终文档保护、硬链接/符号链接/父目录替换、候选变化、最终文件前后变化、清单错误/独占创建、平台能力缺失、回执写入失败及 CLI 状态码。子进程在首项删除后 os._exit(17)，验证原 sealed 清单保留且再次清理可恢复；这是进程中断模拟，不代表断电耐久性验证。
+使用 macOS、Python 3.12.14 / Expat 2.8.3，在仓库根目录运行 `env PATH='' python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`（python 使用宿主已确认的绝对解释器路径）：151 项通过，0 失败、0 跳过。新增 `<skill-root>/scripts/test_cleanup_task.py` 共17项，覆盖真实生成后归档失败仍清理、最终失败/停止、重试保留、删除权限异常、目录混入其他文件、用户输入/最终文档保护、硬链接/符号链接/父目录替换、候选变化、最终文件前后变化、清单错误/独占创建、平台能力缺失、回执写入失败及 CLI 状态码。子进程在首项删除后 os._exit(17)，验证原 sealed 清单保留且再次清理可恢复；这是进程中断模拟，不代表断电耐久性验证。
 
 主代理另在独立任务目录执行新建、只读及归档自检，均返回0及必需成功标记；实际生成中文 DOCX、成功归档、清理辅助脚本并回读，确认主文件及副本字节不变、输入不变、清单保留。首次验收脚本误把归档自检标记写为 archive-check-ok，实际入口返回 check-ok；修正验收脚本后通过，未修改运行入口或降低要求。此次测试和烟测创建的临时目录均已清理。
 
@@ -152,14 +158,16 @@ Python 3.12.14 / Expat 2.8.3，仓库根目录执行 `python -I -S -B -m unittes
 
 ## 归档用户提示验证（2026-10-28）
 
-当前版本 `20261028.2205.5362` 将用户展示与内部机器契约分开：原有归档路径、files、warnings、CLI JSON/stderr均保留；新增archive_message及纯函数archive_user_message，完整成功仅返回“归档完成”，跳过/失败/不确定不误报成功。主文件路径和正常交付链接不移除。入口和相关引用明确不将内部归档路径、ID和原始日志展示给用户。
+本节仅保留历史实现与测试证据，不作为当前回复模板；现行成功和失败话术统一见用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）。
+
+历史版本 `20261028.2205.5362` 当时将用户展示与内部机器契约分开：原有归档路径、files、warnings、CLI JSON/stderr均保留；新增archive_message及纯函数archive_user_message，机器字段在完整成功时返回“归档完成”，跳过/失败/不确定不误报成功。主文件路径和正常交付链接不移除。入口和相关引用明确不将内部归档路径、ID和原始日志展示给用户。
 
 Python3.12.12/Expat2.6.3、标准库 -I -S -B 下DOCX全量163项通过，无失败或跳过；新增4项实际清单/交付行为覆盖成功和already_archived提示、保留机器路径、部分失败、无配置跳过、不完整状态及意外归档异常。新增成功提示不含路径，失败不冒充成功，故障仍保留主文件及内部详细诊断。结构与语法检查另行执行，不宣称真实宿主回复端已联调。专用命名linter未安装或运行；未更新分发ZIP。
 
 
 ## 自动新建收尾验证（2026-10-28）
 
-当前版本 `20261028.2224.4840` 标准新建使用run_docx_task.py的check/create、按需retry/resume；创建前登记独占worker.py/spec.json，创建后保存身份和指纹，固定子进程强制文档验收及占位符检查，归档结果返回且worker退出后自动seal/clean。保留旧CLI/API和手动清单接口，不接管用户已有或未登记文件，不扩展跨技能公共模块。
+当前版本 `20261028.2224.4840` 标准新建使用`<skill-root>/scripts/run_docx_task.py`的check/create、按需retry/resume；创建前登记独占worker.py/spec.json，创建后保存身份和指纹，固定子进程强制文档验收及占位符检查，归档结果返回且worker退出后自动seal/clean。保留旧CLI/API和手动清单接口，不接管用户已有或未登记文件，不扩展跨技能公共模块。
 
 Python3.12.12/Expat2.6.3、-I -S -B下DOCX全量181项通过，0失败、0跳过；新增18项覆盖真实中文DOCX、两个helper移除、失败保留/修正重试、既存同名/输入/未登记保护、指纹及软硬链接、最多3次生成、活动子进程继承锁、重复恢复、seal/部分清理故障、父进程在seal后os._exit(17)的实际中断恢复，以及缺平台能力/真实锁操作失败的自检拒绝。所有删除探测只操作测试创建的独占临时数据，不清理用户实际残留。
 
@@ -174,7 +182,7 @@ Python3.12.12/Expat2.6.3、-I -S -B下DOCX全量181项通过，0失败、0跳过
 
 Python3.12.12/Expat2.6.3、标准库 -I -S -B：DOCX全量192项通过，0失败、0跳过。本轮新增9项可靠性测试及2项旧入口兼容测试，覆盖清单保存失败、prepared已提交后异常、preparing/prepared/spec替换后进程退出恢复、两个独立控制器屏障交错、损坏清单/回执、未知修改拒绝、旧四文件清单登记stage或拒绝已占用stage，以及sealed恢复锁。原18项自动任务测试继续通过。独立审阅实际复跑9+18项并检查新实现，无未修阻断。
 
-旧create_docx.py仅生成CLI标记deprecated，以stderr提示迁移到run_docx_task.py；JSON stdout、结果、退出码与旧调用兼容。库create_document/create_document_delivery仍被新runner或定制/多步调用使用，不弃用；五类编辑、读取、自检、预检及显式清理尚无完整替代，均保留。只读仓库调用盘点不能证明外部调用者已迁移；未来移除旧生成CLI须先确认外部迁移、等价定制流程与明确版本公告，不能据本次提示直接删除。
+旧`<skill-root>/scripts/create_docx.py`仅生成CLI标记deprecated，以stderr提示迁移到`<skill-root>/scripts/run_docx_task.py`；JSON stdout、结果、退出码与旧调用兼容。库create_document/create_document_delivery仍被新runner或定制/多步调用使用，不弃用；五类编辑、读取、自检、预检及显式清理尚无完整替代，均保留。只读仓库调用盘点不能证明外部调用者已迁移；未来移除旧生成CLI须先确认外部迁移、等价定制流程与明确版本公告，不能据本次提示直接删除。
 
 strict、122条本地资源/锚点和Python AST通过，新增标识符及调用人工复核；专用命名linter未安装或执行。仅在独占合成临时目录验证，不清理实际残留或历史ZIP。新分发包另核对CRC、源码逐成员SHA及只读安装副本，新标准入口check/失败retry/重复resume/中文回读与完整回归独立执行；包SHA保存在仓库维护验收记录，不写入包内造成自引用。运行平台为macOS；未验证Windows、敌对并发、真实断电或宿主自动激活。准备期强杀在身份记录前等不确定状态仍保留材料，不猜测认领。
 
@@ -189,7 +197,7 @@ strict、122条本地资源/锚点和Python AST通过，新增标识符及调用
 ## 安全维护验收
 
 
-维护时先补小规模失败回归，再修复；在 `-I -S -B`、第三方不可见且 `PATH` 为空的环境中运行仓库测试。固定预期覆盖及命令见 [固定预期覆盖](#固定预期与失败保护)，包括生成、编辑、ZIP/XML 和路由；不要假定旧的仓库 `skills/tests/` 目录存在。需要解包的维护流程把暂存目录放在任务 cwd 下，不能沿用系统临时目录。同步正式包，验证成员逐字节一致，解包后重新运行测试和中文生成/编辑/读取冒烟。恶意样本及输出只放在任务临时目录，不访问无关文件，不使用大负载攻击证明限额。
+维护时先补小规模失败回归，再修复；在 `-I -S -B`、第三方不可见且 `PATH` 为空的环境中运行仓库测试。固定预期覆盖及命令见 固定预期覆盖（`<skill-root>/references/maintenance-validation.md#固定预期与失败保护`），包括生成、编辑、ZIP/XML 和路由；不要假定旧的仓库 `skills/tests/` 目录存在。需要解包的维护流程把暂存目录放在任务 cwd 下，不能沿用系统临时目录。同步正式包，验证成员逐字节一致，解包后重新运行测试和中文生成/编辑/读取冒烟。恶意样本及输出只放在任务临时目录，不访问无关文件，不使用大负载攻击证明限额。
 
 
 本批参考范围拆分：业务validation.md仅保留现行验收、有限重试和清理收尾；维护回归命令、固定预期覆盖和历史验证记录逐字迁移至本页，安全维护验收一并迁入。业务路由只链接现行规则，主入口维护区和README维护测试区指向本页；清理业务说明移除历史证据链接。业务使用questionId，旧requestId/idRecord仅保留弃用说明，拒绝测试不变；不改运行代码、依赖或description。
@@ -274,10 +282,10 @@ macOS / Python3.12.14，使用已确认的宿主bundled解释器，保留-I -S -
 
 description人工核对仍准确，任务范围未变化，保留原文；未作真实模型触发测试。README版本及入口说明同步。版本采样为宿主确认的America/New_York时间2026-10-29 04:29:23.993902，整体加12小时后截断到百分之一秒。入口由本轮维护前22407字节缩减，未把字节减少等同于模型token或成功率改善。
 
-实际平台macOS（darwin）、Python3.12.14、Expat2.8.3；使用宿主依赖工具确认的解释器，所有Python命令保留`-I -S -B`。维护解释器/检查器入口自检、read_docx.py --check通过；写入在仓库已确认可写范围。结构检查从仓库根运行，以下python指该已确认解释器：
+实际平台macOS（darwin）、Python3.12.14、Expat2.8.3；使用宿主依赖工具确认的解释器，所有Python命令保留`-I -S -B`。维护解释器/检查器入口自检、`"<skill-root>/scripts/read_docx.py" --check`通过；写入在仓库已确认可写范围。结构检查从仓库根运行，以下python指该已确认解释器：
 
 - `python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict`：最终通过，退出0；初检的外部资料资源链接提示已通过收敛指南为接入核对原则解决，迁移路径表的一处相对链接修正后复验通过。检查器规则未修改。
-- 独占维护任务目录内运行`python -I -S -B -m unittest discover -s "<skill_dir>/scripts" -p 'test_run_docx_task.py' -q`：26项通过，0失败/跳过，退出0；`test_docx_controlled_flow.py`同命令模式：9项通过，0失败/跳过，退出0。执行时已替换真实skill目录，测试根目录与源码分离。
+- 独占维护任务目录内运行`python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_run_docx_task.py' -q`：26项通过，0失败/跳过，退出0；`<skill-root>/scripts/test_docx_controlled_flow.py`同命令模式：9项通过，0失败/跳过，退出0。执行时已替换真实skill目录，测试根目录与源码分离。
 - stdin辅助验证脚本解析tool-calling.md中的真实外层JSON，替换已确认解释器/skill路径后执行；合成短文verified、标题与正文XML文字逐项符合独立预期、归档副本字节相同、自动清理完成。另以双引号、反斜杠、多个段落、多行JSON及字面量`$()`/反引号验证双层编码与quoted here-document，原文未被展开，生成、归档与清理通过。有效合成questionId配置仅用于本次验证，未读取用户配置。
 - 辅助验证脚本初次有语法笔误，未启动生成，修正后执行。单个text包含换行的试例被原校验拒绝为spec_validation_failed，未生成主文件；按原manifest的retry将原文拆为paragraph块后成功，未放宽断言或运行时校验。同步补充主入口与指南的分段要求。
 - 差异空白检查、主入口与新/迁移资源链接和锚点人工核对；本轮前后文件哈希对照确认运行时Python和原测试文件未变。仅清理创建前登记并确认不存在的本轮独占维护任务目录，保留仓库原文件。
@@ -310,7 +318,7 @@ macOS/Python3.12.14，仓库根执行，使用已确认的bundled解释器及-I 
 
 人工核对已校正：本Skill无python-docx等第三方依赖，不固定猜测虚拟环境；标准create使用位置输出文件名而非--output；绝对路径、403和相对路径均不能单独证明只读、离线或跨工具共享；check不证明可下载；刷新按钮、完整历史与下载入口须有真实宿主证据；断流不代表未执行，状态不明先核实，不能盲目重发create。用户经验作为诊断线索保留，不写成已复现原因。正文新增自检和长会话恢复步骤与已有脚本/保护规则人工核对。
 
-版本采样为宿主America/New_York 2026-10-29 05:46:50.853661，整体加12小时并截断到百分之一秒。实际验证macOS/Python3.12.14，使用已确认bundled解释器及-I -S -B；仓库根执行维护解释器与检查器入口自检，退出0。创建前显式登记并确认不存在的独占临时诊断目录内，以真实skill路径运行`python -I -S -B "<skill_dir>/scripts/read_docx.py" --check`与`python -I -S -B "<skill_dir>/scripts/run_docx_task.py" check`，均退出0；分别核对read-check-ok及auto-cleanup=available、output_dir=. writable=True、check-ok，每次后目录无残留；诊断结束移除本轮空目录。使用本轮合成/禁用调试环境，不读取或打印用户原始归档配置。
+版本采样为宿主America/New_York 2026-10-29 05:46:50.853661，整体加12小时并截断到百分之一秒。实际验证macOS/Python3.12.14，使用已确认bundled解释器及-I -S -B；仓库根执行维护解释器与检查器入口自检，退出0。创建前显式登记并确认不存在的独占临时诊断目录内，以真实skill路径运行`python -I -S -B "<skill-root>/scripts/read_docx.py" --check`与`python -I -S -B "<skill-root>/scripts/run_docx_task.py" check`，均退出0；分别核对read-check-ok及auto-cleanup=available、output_dir=. writable=True、check-ok，每次后目录无残留；诊断结束移除本轮空目录。使用本轮合成/禁用调试环境，不读取或打印用户原始归档配置。
 
 仓库根执行`python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict`与git diff --check通过；本轮新增资源及锚点检查、差异和文件哈希核对确认未修改Python脚本、测试、依赖、AGENTS或开发规范。本轮仅维护说明和验证已有自检，不重复业务生成、全量回归或专用Python命名检查；未验证真实宿主的虚拟环境、工具共享挂载、网络/403、刷新按钮、下载入口、原始故障、Qwen/DeepSeek调用率、云端Linux/Windows或视觉输出。未把本机诊断通过当作这些场景的验收，也未更新ZIP、提交或推送。
 
@@ -332,3 +340,44 @@ Main-agent work：经验适用性核对、说明维护、诊断执行与最终�
 未重复全量DOCX回归或专用Python命名检查；未验证真实execute平台的解析/返回载荷、模型实际调用、Qwen/DeepSeek空参数率、云端Linux/Windows或视觉输出。本地反解执行验证命令和文档行为，不证明真实平台已接受函数调用文本或成功率改善；仍由宿主原生工具接口调度。未更新ZIP、提交或推送。
 
 Main-agent work：规则决策、批量转换、等价性验证、实际文档验证、差异审查及最终接受均由主代理完成。Subagent execution record：未调用子代理，转换可由确定性脚本直接完成，无需独立执行流。
+
+
+## 受控编辑清单收尾（2026-10-29）
+
+仅修改 `<skill-root>/scripts/run_docx_edit.py` 的本次调用收尾：编辑验收、归档成功、登记项清理成功及最终主文件指纹复核通过后，在原目录锁内核对清单指纹和单链接条件再删除清单。task_manifest 与 manifest_retained 返回 null，manifest_removed 为 true；删除失败仍保留主文件成功，返回 cleanup_incomplete 和诊断。归档 failed/skipped 保留配置和清单；编辑失败、锁忙及未知状态不删除恢复材料。没有扫描或迁移历史文件，通用清理、新建 runner 和公共副本均未修改；手动 clean 恢复仍保留清单。
+
+独立预期为成功后没有本轮 docx-edit JSON，输入/主文件保持正确，旧文件字节不变；失败时保留可用恢复材料，不把清单删除失败报为完成。合成 DOCX 测试覆盖重复成功、前次失败待重试、未知历史清单、归档失败/跳过、清理异常、删除权限异常、清单内容变化/软硬链接替换及最终输出变化。真实 CLI 子进程测试核对 stdout JSON、空 stderr、退出0、清单字段与实际文件一致；此为本地工具集成，不代表云端执行器通道联调。测试临时目录由各测试独占创建并自行清理，未删除历史残留。
+
+实际平台 macOS，宿主提供 Python 3.12.14 / Expat 2.8.3，使用 -I -S -B，无第三方依赖。系统默认 Python 未通过 >=3.10 自检，改用宿主明确提供的兼容解释器后自检通过。以下命令均从仓库根运行，python 指本轮已确认的兼容解释器：
+
+- `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：248项通过，退出0，无跳过；随后仅新增CLI测试。
+- `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_docx_controlled_flow.py' -q`：含新增CLI测试的最终16项通过，退出0，无跳过。
+- `python -I -S -B -m unittest discover -s tests -p 'test_artifact_lifecycle_parity.py' -v`：1项通过，退出0，共享源码与公共副本/来源哈希未变化。
+- `python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict`：通过；`git diff --check`：通过。
+
+主代理完成实现与审查，未调用子代理。新增 Python 标识符和引用人工核对为 snake_case；未运行专用命名 linter。description 选择范围未变化，保留原文；主入口、受控流程、验收说明和 README 版本同步，依赖不变。未执行真实样本、Linux容器、Windows、恶意并发写者/强杀恢复、视觉验收或真实宿主 Skill 自动触发测试；未更新分发 ZIP。本机通过不代替 Linux 目标环境验收。
+
+
+## DOCX路径统一（2026-10-29）
+
+本次按用户最终范围仅迁移DOCX：17份Markdown各自明确根占位符定位、相对读取基准、使用前替换、完整参数引用及无法定位时停止。155个原本地Markdown链接（含页内章节）改成带标题的根路径代码引用，保留实际目标及锚点；69个旧根占位符替换，3个裸资源路径及54处脚本名/命令缩写补齐脚本根路径。原文件名术语、任务数据、ZIP成员、外部URL和明确标注的仓库维护命令保留原语义；虚拟环境路径猜测的负例改为文字说明。普通Markdown不再直接点击跳转，必须先定位真实根目录。
+
+全局AGENTS、开发规范和其检查器未在本轮改变；其他Skill此前已有修改保留。DOCX本包的当前路径约定见主入口（`<skill-root>/SKILL.md#维护资源`）。按用户进一步确认，本次路径统一仅保留Markdown说明，撤去本次新增的Python路径检查器及其测试，不改变已有Python脚本。此前清理逻辑和自检输出任务的代码修改保留。
+
+路径迁移期间曾执行10项临时路径测试及259项全量测试并通过；其中10项属于现已撤去的路径检查器测试，该结果仅为过程记录，不代表最终保留这些入口。最终文档使用现有严格结构检查和变更空白检查，并复核17份Markdown的占位符说明及旧路径写法；不新增运行步骤或Python依赖。
+
+description人工核对仍为原129字符，功能选择、运行依赖及业务处理代码均未因路径迁移改变，版本和README中的DOCX版本同步。验证平台为macOS、Python3.12.14；未在Linux/Windows、真实模型资源加载、下载或视觉验收环境测试，未更新ZIP。
+
+Subagent execution record：此前一次spawn调用luna__path_docs（luna_worker / gpt-6-luna / max），范围收窄后interrupt并一次followup，仅写入DOCX的17份Markdown；本次撤去检查代码未调用子代理。Main-agent work：规则与范围决定、补齐路径引用、撤去本次新增检查器及测试、同步版本与说明、最终审查。
+
+文档复核（2026-10-29）：再次遍历全部17份Markdown，补全维护记录中的14处裸脚本资源引用；逐文件明确以DOCX主入口的真实file_path解析根目录、替换整个占位符、保留后缀及引用/转义方法，禁止误用参考文档目录。历史仓库命令和任务数据保留原语义。本轮仅调整文档，未新增或修改Python脚本和测试；未运行业务生成或跨平台验收。
+
+归档回复话术维护（2026-10-29）：按用户确认，将当前宿主归档成功/失败的最终回复映射为云空间表情话术，统一主入口、生成、受控流程、收尾及交付说明。原archive_message、JSON、stderr、退出码及Python代码不变；保留跳过、未知、部分成功和主文件失败的区分，下载提示须有真实交付方式支持。description选择范围及依赖不变；仅文档检查，不重复业务回归或声称真实宿主云存储已联调。Main-agent work：文案与状态边界同步及审查；Subagent execution record：本轮未调用子代理。
+
+归档话术复核（2026-10-29）：遍历全部17份Markdown，修正收尾表格直接按archive_message报告的歧义，明确失败提示引用统一话术；历史记录及机器字段中的旧文案标记为非当前用户回复要求。仅改文档，现有Python及测试内容未变；Main-agent work：复核与文档修正；Subagent execution record：未调用子代理。
+
+## 上线审查修复验证（2026-10-29）
+
+版本20261029.2043.2946：任务CLI输入/输出和公开生成图片资源边界前置检查；路由配置默认静默、开启也仅报告脱敏状态；清理返回登记项范围，受控编辑归档受阻给出恢复下一步。保留新建与编辑的不同清单策略，明确强杀暂存残留和同名归档替换边界。未改变业务格式或引入依赖。
+
+macOS/Python3.12.14：DOCX全量252项、公共生命周期15项、两个副本一致性回归通过。XLSX关联全量300项、自检契约8项及WPS提取结果交接2项通过。专用Python命名linter不可用，进行了本轮代码命名及引用人工核对、AST检查和业务回归；不将结构检查作为命名linter。目标Linux、Windows、真实Office视觉效果、生产宿主云空间映射及新description模型触发未验证。发布包及只读安装验证见仓库维护记录tests/production_readiness_20261029_20432946.json（相对于仓库根，不随本技能发布）。本轮主代理完成实现、验证与审查，未调用子代理。

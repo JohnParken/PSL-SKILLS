@@ -22,8 +22,8 @@ def encode_config(parameters: object) -> str:
 
 
 class OutputLocationTests(unittest.TestCase):
-    def test_raw_config_debug_defaults_on_is_stderr_only_and_preserves_value(self):
-        value = '{"other":"test-secret",\n"commonParam":[]}'
+    def test_config_debug_is_opt_in_and_never_discloses_values(self):
+        value = '{"other":"test-secret", "commonParam":[]}'
         for setting in (None, "", "0", "true", "1"):
             with self.subTest(setting=setting), mock.patch.dict(os.environ, {}, clear=True):
                 os.environ["ROUTER_CONFIG_VARIABLES"] = value
@@ -33,17 +33,18 @@ class OutputLocationTests(unittest.TestCase):
                 with redirect_stdout(stdout), redirect_stderr(stderr):
                     self.assertEqual(read_router_config_from_environment(), value)
                 self.assertEqual(stdout.getvalue(), "")
-                if setting in (None, "1"):
-                    logged = stderr.getvalue().removeprefix(
-                        "router-config-debug: ROUTER_CONFIG_VARIABLES=")
-                    self.assertEqual(json.loads(logged), value)
+                if setting == "1":
+                    logged = stderr.getvalue().removeprefix("router-config-debug: ")
+                    self.assertEqual(json.loads(logged), {"configured": True, "values_redacted": True})
                 else:
                     self.assertEqual(stderr.getvalue(), "")
+                self.assertNotIn("test-secret", stderr.getvalue())
+                self.assertNotIn("commonParam", stderr.getvalue())
         with mock.patch.dict(os.environ, {"DOCX_DEBUG_ROUTER_CONFIG":"1"}, clear=True):
             stderr = io.StringIO()
             with redirect_stderr(stderr):
                 self.assertIsNone(read_router_config_from_environment())
-            self.assertTrue(stderr.getvalue().endswith("=null\n"))
+            self.assertFalse(json.loads(stderr.getvalue().removeprefix("router-config-debug: "))["configured"])
         with mock.patch.dict(os.environ, {"DOCX_DEBUG_ROUTER_CONFIG":"1",
                                           "ROUTER_CONFIG_VARIABLES":value}, clear=True):
             with mock.patch("sys.stderr.write", side_effect=OSError("closed log")):

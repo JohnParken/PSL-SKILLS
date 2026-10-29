@@ -22,7 +22,7 @@ from office.memory_package import package_workspace
 from office.package import pack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import finalize_delivery, validate_output_path
+from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
 
 TABLE_PROPERTIES = {
     "tblStyle", "tblpPr", "tblOverlap", "bidiVisual", "tblStyleRowBandSize", "tblStyleColBandSize",
@@ -246,6 +246,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.operation]
     try:
+        for input_path in protected_inputs:
+            validate_input_path(input_path)
         args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         payload = edit_tables_delivery(args.input, args.output, json.loads(args.operation.read_text(encoding="utf-8")),
                              require_no_placeholders=args.require_no_placeholders,

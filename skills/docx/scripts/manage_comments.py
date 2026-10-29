@@ -25,7 +25,7 @@ from office.memory_package import package_workspace
 from office.package import pack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import finalize_delivery, validate_output_path
+from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
 
 W14 = "http://schemas.microsoft.com/office/word/2010/wordml"
 W15 = "http://schemas.microsoft.com/office/word/2012/wordml"
@@ -717,6 +717,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.action]
     try:
+        for input_path in protected_inputs:
+            validate_input_path(input_path)
         if args.output is not None:
             args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         with args.action.open(encoding="utf-8") as stream:

@@ -15,7 +15,7 @@ class FamilyRoutingTests(unittest.TestCase):
             for suffix in ('.et', '.ET', '.ett', '.ETT', '.wps', '.WPS', '.xlsx'):
                 path = root / ('input'+suffix)
                 path.write_bytes(bytes.fromhex('d0cf11e0a1b11ae1'))
-                result = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name('stdlib_xlsx.py')), 'read', str(path)], capture_output=True, text=True)
+                result = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name('stdlib_xlsx.py')), 'read', path.name], cwd=root, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 1)
                 report = json.loads(result.stdout)
                 self.assertEqual(report['status'], 'unsupported')

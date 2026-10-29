@@ -1,18 +1,20 @@
 # Export analysis results to a readable XLSX
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检), requiring exit 0 and
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`), requiring exit 0 and
 `status: ready`. Confirm task directory, readable result input and output write probe.
-Resolve `<skill_dir>` from the actual SKILL.md path; replace it in commands and use
+Resolve `<skill-root>` from the actual SKILL.md path; replace it in commands and use
 relative task data paths. Python 3.9+, standard library only; no upload or application use.
 
 ```console
 (
 set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill_dir>/scripts/xlsx_rows.py" source.xlsx --sheet Sales --query rows.json > selected.json
-python3 -I -S -B "<skill_dir>/scripts/xlsx_result_export.py" selected.json readable.xlsx
+python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" source.xlsx --sheet Sales --query rows.json > selected.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_result_export.py" selected.json readable.xlsx
 )
 ```
 
@@ -33,7 +35,7 @@ recompute its business calculations. Keep the original analysis run and source f
 
 Ordinary reports have Results, Columns, Metadata and Warnings sheets. Management reports
 use Wide and additionally include Definitions, Validation and Lineage; see
-[management-wide.md](management-wide.md). Results is a data-only
+Configured bank management long-to-wide reports (first release) (`<skill-root>/references/management-wide.md`). Results is a data-only
 report, not a reconstruction preserving source-file layout. Joined path labels are for
 human display; original column IDs, complete structured paths/merge levels and complete
 source JSON remain in Columns/Metadata. Generated columns have explicit calc: IDs.
@@ -62,11 +64,11 @@ Embedded metadata/query text is also literal. Invalid XML text/overlong cell tex
 with no silent truncation. Native caches remain unverified and are not recalculated.
 
 Readable appearance is on by default: pale-blue headers, dark text, alternating rows and
-frozen headers. --plain disables it. See [readable-appearance.md](readable-appearance.md).
+frozen headers. --plain disables it. See Readable appearance for newly created workbooks (`<skill-root>/references/readable-appearance.md`).
 The input JSON is bounded to 16 MiB; all sheets together are limited to 200,000 cells,
 including lineage/warnings and sparse blanks. Existing outputs are never overwritten.
 Exit 0/status exported means a new file was written; exit 1/status failed means rejected
-schema/data/I/O. Reopen with the `read` subcommand of `<skill_dir>/scripts/stdlib_xlsx.py` to check
+schema/data/I/O. Reopen with the `read` subcommand of `<skill-root>/scripts/stdlib_xlsx.py` to check
 values and representative paths. Use the full invocation in
-[python-calculation.md](python-calculation.md#commands).
+Commands (`<skill-root>/references/python-calculation.md#commands`).
 This XML/read-back verification is not real Excel/WPS visual/application acceptance.

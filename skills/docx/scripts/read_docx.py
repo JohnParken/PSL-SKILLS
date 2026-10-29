@@ -337,18 +337,24 @@ def main(argv: list[str] | None = None) -> int:
         if args.input is not None or args.output is not None or args.revisions is not None or args.include_related or args.format != "text":
             parser.error("--check does not accept input, output or reading options")
         if not check_runtime():
-            print("check-failed: runtime environment check failed", file=sys.stderr)
+            print("check_kind=environment artifact_validation=not_run", file=sys.stderr, flush=True)
+            print("check-failed: runtime environment check failed", file=sys.stderr, flush=True)
             return 1
-        print("read-check-ok")
+        print("check_kind=environment artifact_validation=not_run")
+        print("read-check-ok", flush=True)
         return 0
     if args.input is None:
         parser.error("input is required unless --check is used")
     if args.input.suffix.lower() not in WPS_SUFFIXES | {".docx", ".dotx"}:
         parser.error("input must have a .docx or .dotx extension")
     try:
-        if args.delivery:
-            from archive_deliverables import validate_output_path
+        if args.input.suffix.lower() in WPS_SUFFIXES:
+            raise UnsupportedInputError(WPS_UNSUPPORTED_MESSAGE)
+        from archive_deliverables import validate_input_path, validate_output_path
+        validate_input_path(args.input)
+        if args.output is not None:
             validate_output_path(args.output, protected_inputs=[args.input])
+        if args.delivery:
             if args.output.exists():
                 raise ValueError('Delivery output already exists; choose a new filename')
         if args.output and args.output.exists():

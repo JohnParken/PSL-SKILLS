@@ -1,18 +1,32 @@
 # 工具调用故障与宿主接入
 
-仅在工具参数报错、接入维护或调用异常时读取。正常文档任务按[主入口](../SKILL.md#工具调用约定)调用，不把本页全部加载进每次生成上下文。所有命令仍遵守[环境自检](../SKILL.md#执行环境约束与首步自检)与任务目录边界。
+路径占位符说明：`<skill-root>` 是 DOCX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 DOCX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-依赖缺失、只读目录、write_file/execute文件不可见、掩码路径、版本刷新、长会话、断流或下载问题，按需见[常见环境与交付故障](troubleshooting.md)；不因这些现象直接安装依赖或重复生成。
+仅在工具参数报错、接入维护或调用异常时读取。正常文档任务按主入口（`<skill-root>/SKILL.md#工具调用约定`）调用，不把本页全部加载进每次生成上下文。所有命令仍遵守环境自检（`<skill-root>/SKILL.md#执行环境约束与首步自检`）与任务目录边界。
+
+依赖缺失、只读目录、write_file/execute文件不可见、掩码路径、版本刷新、长会话、断流或下载问题，按需见常见环境与交付故障（`<skill-root>/references/troubleshooting.md`）；不因这些现象直接安装依赖或重复生成。
+
+## 目录
+
+- 当前宿主的完整调用表示（`<skill-root>/references/tool-calling.md#当前宿主的完整调用表示`）
+- 参数与文档规格（`<skill-root>/references/tool-calling.md#参数与文档规格`）
+- 缺参、截断与执行状态（`<skill-root>/references/tool-calling.md#缺参截断与执行状态`）
+- 宿主需要实现的门禁（`<skill-root>/references/tool-calling.md#宿主需要实现的门禁`）
+- Qwen与DeepSeek接入核对（`<skill-root>/references/tool-calling.md#qwen与deepseek接入核对`）
+- 效果验收（`<skill-root>/references/tool-calling.md#效果验收`）
+- 自检结果与宿主回传（`<skill-root>/references/tool-calling.md#自检结果与宿主回传`）
+- 五类历史故障的执行规则（`<skill-root>/references/tool-calling.md#五类历史故障的执行规则`）
+- 宿主去重与结果引用契约（`<skill-root>/references/tool-calling.md#宿主去重与结果引用契约`）
 
 ## 当前宿主的完整调用表示
 
-用户确认当前平台推荐`execute(command=命令字符串)`；本技能主入口与业务参考中的Bash执行示例统一采用这一形态。参数名command不加引号，每次传一个完整非空字符串；原生工具接口按真实schema提交参数。下例包含POSIX here-document，字符串解码后由命令入口处理；不把整个execute表示式再放进command，不改用三引号、字符串拼接或自定义包装。JSON数据与明确的Python API源码示例不属于Bash调用，保留原格式。
+用户确认当前平台推荐`execute(command=命令字符串)`；本技能主入口与业务参考中的Bash执行示例统一采用这一形态。参数名command不加引号，每次传一个完整非空字符串；原生工具接口按真实schema提交参数。下例包含POSIX here-document，字符串解码后由命令入口处理；不把整个execute表示式再放进command，不自行发明多层包装或手工拼接JSON；复杂规格使用Python调用模板（`<skill-root>/references/complex-json.md`），仍只提交一个完整command。JSON数据与明确的Python API源码示例不属于Bash调用，保留原格式。
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'DOCX_SPEC'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程。\"}]}\nDOCX_SPEC\n")
+execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'DOCX_SPEC'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程。\"}]}\nDOCX_SPEC\n")
 ```
 
-执行前替换真实`<skill_dir>`、本次文件名与完整正文。检查正文字符串、各块对象、blocks数组、顶层JSON、独立的`DOCX_SPEC`结束行及外层command字符串均已闭合。多层嵌套引号须按调用接口编码；不要混用日志转义后的文本与已经解码的真实换行。当前宿主的执行示例统一使用上面的`execute(command=...)`形态，不另列独立的command参数对象作为执行步骤，不额外执行第二次。
+执行前替换真实`<skill-root>`、本次文件名与完整正文。检查正文字符串、各块对象、blocks数组、顶层JSON、独立的`DOCX_SPEC`结束行及外层command字符串均已闭合。多层嵌套引号须按调用接口编码；不要混用日志转义后的文本与已经解码的真实换行。当前宿主的执行示例统一使用上面的`execute(command=...)`形态，不另列独立的command参数对象作为执行步骤，不额外执行第二次。
 
 用户提供的调用片段在正文中结束，缺少文档JSON尾部和here-document结束行；若仅为举例省略，不能据此判定真实日志也被截断。若完整原始调用确实如此，应报告不完整参数；适配层能否把这种解析失败转为kwargs空对象仍须查证，不能直接归因模型。
 
@@ -22,7 +36,7 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create
 
 `command`是字符串，调用表示中的`\n`解码后成为真实命令换行。文档规格包含`theme`和`blocks`，传给Python进程stdin，不能直接作为工具kwargs。不要把命令换行双重转义为字面量`\\n`；正文中的双引号和反斜杠先按文档JSON编码，再按宿主的字符串参数编码。宿主若在底层使用JSON传输，由其正常序列化处理，不把传输对象再作为command内容。正文分段使用多个paragraph块，不能把换行或制表符直接塞进单个text。quoted here-document不会展开正文中的`$()`或反引号；选用不与正文完整行冲突的结束标记。
 
-以下参数均不能调用要求非空`command`的工具：`{}`、`{"command":""}`、`{"theme":"official","blocks":[]}`。未知参数名、只有Markdown代码块或`<skill_dir>`未替换也不是有效调用。示例之外的宿主按实际schema接入，不猜测`cmd`、`code`或`stdin`字段，不新增未授权的文件和工具。
+以下参数均不能调用要求非空`command`的工具：`{}`、`{"command":""}`、`{"theme":"official","blocks":[]}`。未知参数名、只有Markdown代码块或`<skill-root>`未替换也不是有效调用。示例之外的宿主按实际schema接入，不猜测`cmd`、`code`或`stdin`字段，不新增未授权的文件和工具。
 
 ## 缺参、截断与执行状态
 
@@ -34,9 +48,9 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create
 | 原始arguments非空，解析后变成`{}` | 检查适配层字段映射、异常吞并与默认空对象；保留原始解析错误。 |
 | 后续流片段有参数，调度器提前执行 | 修复流式累积与完成判定；不要用提示词掩盖适配层问题。 |
 | 输出上限、断流、取消或超时 | 不执行未完成参数；先确认工具是否已经启动及本轮结果，不盲目重发create。 |
-| 脚本返回结构化失败或原manifest | 按实际`error_code`/`next_action`及[受控流程](controlled-flow.md)处理，不套用工具缺参重试。 |
+| 脚本返回结构化失败或原manifest | 按实际`error_code`/`next_action`及受控流程（`<skill-root>/references/controlled-flow.md`）处理，不套用工具缺参重试。 |
 
-工具未执行前的参数修复与脚本生成重试分别计数；后者沿用原任务最多3次及相同无效规格拦截，不能换新任务重置。参数错误修正一次后仍失败就报告宿主问题；正文不完整、规格过大或必要能力缺失时停止，不截断用户内容、不关闭验收、不切换旧CLI规避。
+工具未执行前的参数修复与脚本生成重试分别计数；后者按同一用户请求累计最多3次；失败清理完成后修正内容并重新create，不对已删除清单retry，也不因新清单重置累计次数。参数错误修正一次后仍失败就报告宿主问题；正文不完整、规格过大或必要能力缺失时停止，不截断用户内容、不关闭验收、不切换旧CLI规避。
 
 ## 宿主需要实现的门禁
 
@@ -63,3 +77,39 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create
 分别记录调用次数、原始空参数、JSON/字段校验失败、首次有效调用、参数修复次数、截断、重复执行、最终文档验收及归档/清理状态。以预先确定的标题、全文、表格内容和编辑保护范围核对结果，不能只看工具退出0。提示缩短或结构检查通过不等于模型调用成功率提高。
 
 本次说明维护未接入真实Qwen/DeepSeek宿主；效果须由上述实测确认。没有原始响应和宿主实现时，不能宣称已修复空工具调用。
+
+
+## 自检结果与宿主回传
+
+环境自检的成功或失败均带 `check_kind=environment artifact_validation=not_run`，并保留原入口的成功标记/退出码。不要将check-ok当成文档生成或验收通过；文档生成/编辑仍消费原单个JSON结果，产物校验使用真实文件及对应验收入口。
+
+宿主必须实际返回同一次调用的stdout、stderr、exit_code及调用标识，不能只记录日志，也不能因非零退出丢掉stdout。工具参数校验失败或进程未启动没有脚本退出码；超时/强杀不能伪造正常退出码。输出截断时须注明通道、截断状态和已知长度，截断JSON不能当成完整结果。输出中的内部诊断仅供模型判断，不直接向最终用户转贴敏感原文或内部归档位置。
+
+本仓库没有项目专属execute实现；维护时直接运行command内的Python命令，不执行execute表示式。仓库级接入适配器可把子进程两个通道及退出状态作为单个JSON送到现有工具输出，但仍需宿主把完整工具结果送回模型。它不是Skill安装包依赖，不猜测相邻安装位置；专属宿主未接入时如实标记未验证，不宣称print已修复整个链路。
+
+## 五类历史故障的执行规则
+
+以下针对用户提供的历史故障摘要；没有原始调用及宿主日志时，不将其原因或修复效果表述为已复现。
+
+1. **空参数先阻止调度。** 提交前核对真实工具schema，确认command存在、为非空字符串、已替换Skill路径且命令完整。Pydantic缺参属于工具参数校验，不能算脚本已经运行。只有明确未调度时修正一次；重复收到同一调用的错误不自动再次调用。不得用空对象试探工具。
+2. **JSON先完整构造，修改后再试。** quoted heredoc只阻止Shell展开，不验证JSON。简单规格可直接构造合法JSON；复杂规格必须先用Python dict/list与json.dumps序列化，模板见`<skill-root>/references/complex-json.md`，再进行工具字符串层编码；核对逗号、冒号、数组/对象闭合、字符串转义及独立结束行。遇到JSONDecodeError，依据行列修正语法，确认内容实际有变化后再发送；同一错误未改正不得重发。未知业务结构先查生成规格，不猜字段。若需用已有工具验证，只在内存中解析完整数据，不为校验写入系统临时目录；语法通过不等于业务结构通过。
+3. **临时路径只用任务根。** 本轮可清理文件直接创建在宿主确认的`./`，创建前登记并使用独占名称；标准runner自行管理其辅助文件。禁止将任务临时文件写入`/tmp`，不通过TMPDIR、切换挂载或安装目录规避只读错误。任务目录写入自检失败时停止依赖操作；纯stdin输入不另建JSON文件。
+4. **退出3先读结果。** `Command failed`只是工具外层提示；标准runner退出3时读取完整stdout JSON及stderr，分别核对主文件、归档、清理状态。主文件已验收但cleanup_incomplete时保留主文件，处理本次确切残留，不重跑生成、不吞掉退出码。Directory not empty不能成为递归删除目录的依据；新标准流程已使用平铺临时文件，仍出现目录删除错误时核对实际加载版本、入口及原清单。旧任务只能按原清单逐项恢复，不能扫描认领目录里的未知文件。
+5. **大结果按所属工具读取。** `/large_tool_results/` 等宿主结果引用不是execute沙箱内的任务路径。该目录下的文件必须使用`read_file`工具读取，按其真实schema提交完整结果路径，需要时分段读取；不要把该路径交给Python open、Path.read_text、cat或cp，也不要猜挂载映射。需要Shell计算时，仅使用宿主明确支持的桥接能力将授权数据映射到`./`后验证可读；没有桥接时在读取工具侧继续或说明缺口。截断结果必须保留截断状态，不把分段或缺失JSON当完整输入；不擅自重跑生成获取日志。
+
+合法DOCX列表块示例（完整规格；不是执行工具的参数）：
+
+```json
+{"blocks":[{"type":"list","ordered":false,"items":["完成复核","安排交付"]}]}
+```
+
+`type`的值`"list"`后接逗号，再写同级字段；不能写成`"type":"list":{...}`。不要为修复语法把不支持的业务字段改成猜测值。标准入口已在创建任务辅助文件前解析stdin JSON，语法失败返回结构化错误；这不证明外层execute参数一定正确。
+
+## 宿主去重与结果引用契约
+
+- 以会话/响应范围加call_id和执行尝试标识关联事件，分别记录未调度、运行中、完成及状态未知。同一调用的同一校验错误仅向模型注入一次；保留重复事件的内部计数，不重复触发修复或生成。修正后真实发起的新调用使用宿主合法的新调用标识，不伪造或复用旧call_id。不同尝试不能仅按错误文本去重。
+- 校验错误、进程退出码与传输错误分别回传。退出3也须回传完整stdout、stderr及真实状态；不能把脚本退出3改写为0，也不能只留下Command failed。校验未通过时标记not_started，不能伪造脚本退出码。
+- 大结果引用应注明来源工具、允许的读取工具、是否Shell可见、是否截断、可知的长度及编码。未声明共享挂载就按不可跨工具访问处理；桥接应保持权限边界与数据完整性，不把宿主内部路径作为可下载交付物。
+- 上述去重、调度状态、结果引用和跨文件系统桥接均须由真实宿主实现。本Skill只提供调用及处置规则；没有宿主代码与真实日志时，不声称已消除重复注入、空参数或文件隔离问题。
+
+若`read_file`不可用或读取失败，报告具体缺口并停止依赖该结果的操作；不得改用execute、Python或Shell读取`/large_tool_results/`，也不得猜测替代路径。工具参数遵循实际schema，不虚构参数名。

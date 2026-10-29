@@ -1,11 +1,13 @@
 # Filter, deduplicate and sort typed rows
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) first; require exit 0
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) first; require exit 0
 and `status: ready`. Confirm the task directory and input readability. Resolve
-`<skill_dir>` from the actual SKILL.md path and replace it before execution. Use task-relative
+`<skill-root>` from the actual SKILL.md path and replace it before execution. Use task-relative
 input paths from the task directory, Python 3.9+ and `-I -S -B`. No packages, application,
 network or workbook-write permission is required. The command emits JSON to stdout.
 
@@ -20,12 +22,12 @@ Create task-local `rows.json`:
 ```
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_rows.py" input.xlsx --sheet Sales --query rows.json
-python3 -I -S -B "<skill_dir>/scripts/xlsx_rows.py" input.xlsx --sheet Sales --query rows.json --range A3:C100 --no-header
+python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" input.xlsx --sheet Sales --query rows.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" input.xlsx --sheet Sales --query rows.json --range A3:C100 --no-header
 ```
 
 Use absolute column letters or explicit IDs. Multi-level path selectors require
-[explicit header rows](multi-level-headers.md); duplicate paths are rejected.
+explicit header rows (`<skill-root>/references/multi-level-headers.md`); duplicate paths are rejected.
 The first selected row is a header unless `--no-header` is supplied. Processing order
 is filter, deduplicate, then sort. Each stage is optional; `{}` returns all data rows.
 Output contains typed cells, column/header metadata, original worksheet row numbers,
@@ -55,7 +57,7 @@ order. Nonblank ascending type order is boolean, number, ISO date text, ordinary
 descending reverses that order and values. Numbers compare as Decimal, strings by Unicode
 code points, not locale collation. ISO dates sort as stored text, not calendar instants.
 
-Filters use the same typed AND semantics as [data-analysis.md](data-analysis.md).
+Filters use the same typed AND semantics as Read-only data analysis and file identification (`<skill-root>/references/data-analysis.md`).
 eq/ne distinguish types; gt/ge/lt/le require a JSON numeric threshold and select numeric
 cells only. No Python expressions are evaluated. Unknown keys, duplicate JSON keys,
 unknown/out-of-range columns and invalid options fail rather than being ignored.

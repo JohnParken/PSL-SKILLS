@@ -21,7 +21,7 @@ from office.package import pack_document
 from office.helpers import reject_signed_package
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import finalize_delivery, validate_output_path
+from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
 
 RUN_PROPERTY_ORDER = (
     "rStyle", "rFonts", "b", "bCs", "i", "iCs", "caps", "smallCaps", "strike", "dstrike",
@@ -318,6 +318,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.operations]
     try:
+        for input_path in protected_inputs:
+            validate_input_path(input_path)
         args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         specification = json.loads(args.operations.read_text(encoding="utf-8"))
         payload = edit_structure_delivery(args.input, args.output, specification,

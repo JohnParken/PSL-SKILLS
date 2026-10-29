@@ -15,6 +15,15 @@ from .artifact_files import _check_delivery_path, _copy_main_to_archive, _paths_
 from .output_location import resolve_output_location, read_router_config_from_environment
 
 
+def validate_input_path(path: Path) -> Path:
+    """Check CLI input boundaries before opening task data; preserve legal user names."""
+    path = Path(path)
+    _check_delivery_path(Path.cwd(), path)
+    if not path.name or not path.is_file():
+        raise ValueError("input must name a regular task file")
+    return path
+
+
 def validate_output_path(path: Path, protected_inputs=()) -> Path:
     """Enforce task-relative paths before an editing CLI writes its output."""
     path = Path(path)
@@ -101,6 +110,8 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
         except Exception as exc:
             item['archive_status'] = 'failed'
             item['error'] = str(exc)
+            if getattr(exc, 'temporary_residuals', None):
+                summary.setdefault('temporary_residuals', []).extend(exc.temporary_residuals)
             summary['archive_status'] = 'failed'
             summary['warnings'].append(f'{source}: {exc}')
     return _archive_summary(summary)

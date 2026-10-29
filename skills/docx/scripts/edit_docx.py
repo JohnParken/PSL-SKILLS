@@ -20,7 +20,7 @@ from office.package import pack_document
 from office.helpers import XML_SPACE, reject_signed_package
 from office.xmlio import parse_dom, read_xml
 from office.validators.structure import StructureValidator, W
-from archive_deliverables import finalize_delivery, validate_output_path
+from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
 
 XML_NS = "http://www.w3.org/XML/1998/namespace"
 XMLNS_NS = "http://www.w3.org/2000/xmlns/"
@@ -407,6 +407,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.replacements]
     try:
+        for input_path in protected_inputs:
+            validate_input_path(input_path)
         args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         with args.replacements.open(encoding="utf-8") as stream:
             specification = json.load(stream)

@@ -158,13 +158,13 @@ class ManagementPolicyTests(unittest.TestCase):
     def test_cli_safe_export_dictionary_lineage_and_no_overwrite(self):
         source=self.folder/'wide.json'; source.write_text(json.dumps(self.source,default=str))
         query=self.folder/'policy.json'; query.write_text(json.dumps(self.config)); output=self.folder/'policy.xlsx'
-        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_management_policy.py')),str(source),'--query',str(query),'--xlsx',str(output)]
-        run=subprocess.run(command,capture_output=True,text=True)
+        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_management_policy.py')),str((source).relative_to(self.folder)),'--query',str((query).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))]
+        run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stdout+run.stderr)
         book=Workbook.load(output); self.assertEqual(len(book.sheets),8)
         self.assertEqual(book.cells['Progress']['A2']['value'],FIRST)
         self.assertTrue(all(not cell.get('formula') for cells in book.cells.values() for cell in cells.values()))
-        original=output.read_bytes(); run=subprocess.run(command,capture_output=True,text=True)
+        original=output.read_bytes(); run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,1); self.assertEqual(output.read_bytes(),original)
 
 

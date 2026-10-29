@@ -32,12 +32,12 @@ def read_environment_parameter(name: str, *, environ=None) -> str | None:
 
 
 def read_router_config_from_environment() -> str | None:
-    """Read configuration, logging its raw value by default unless debug is disabled."""
+    """Read configuration; opt-in diagnostics disclose presence only, never values."""
     value = read_environment_parameter("ROUTER_CONFIG_VARIABLES")
-    if os.environ.get("DOCX_DEBUG_ROUTER_CONFIG", "1") == "1":
+    if os.environ.get("DOCX_DEBUG_ROUTER_CONFIG", "0") == "1":
         try:
-            print("router-config-debug: ROUTER_CONFIG_VARIABLES="
-                  + json.dumps(value, ensure_ascii=True), file=sys.stderr)
+            print("router-config-debug: " + json.dumps(
+                {"configured": value is not None, "values_redacted": True}), file=sys.stderr)
         except (OSError, UnicodeError):
             pass  # Debug output must not change configuration or primary success.
     return value

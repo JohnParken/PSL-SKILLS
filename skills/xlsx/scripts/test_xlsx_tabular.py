@@ -126,12 +126,12 @@ class TabularTests(unittest.TestCase):
     def test_cli_import_export_and_failure_diagnostics(self):
         self.write([['name', 'value'], ['中文', '2']])
         base = [sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'xlsx_tabular.py')]
-        for arguments in (['import', str(self.source), str(self.book), '--numeric-columns', 'B'],
-                          ['export', str(self.book), str(self.output), '--sheet', 'Sheet1']):
-            result = subprocess.run(base + arguments, capture_output=True, text=True)
+        for arguments in (['import', str((self.source).relative_to(self.root)), str((self.book).relative_to(self.root)), '--numeric-columns', 'B'],
+                          ['export', str((self.book).relative_to(self.root)), str((self.output).relative_to(self.root)), '--sheet', 'Sheet1']):
+            result = subprocess.run(base + arguments, cwd=self.root, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             self.assertTrue(json.loads(result.stdout)['output_written'])
-        result = subprocess.run(base + ['import', str(self.source), str(self.book), '--encoding', 'bad-encoding'], capture_output=True, text=True)
+        result = subprocess.run(base + ['import', str((self.source).relative_to(self.root)), str((self.book).relative_to(self.root)), '--encoding', 'bad-encoding'], cwd=self.root, capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)
         self.assertFalse(json.loads(result.stdout)['output_written'])
         self.assertNotIn('Traceback', result.stderr)

@@ -1,25 +1,27 @@
 # Explicit multi-level headers
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) first; require exit 0
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) first; require exit 0
 and `status: ready`. Confirm the task directory and input readability. Resolve
-`<skill_dir>` from the actual SKILL.md path, replace it before execution, and use relative
+`<skill-root>` from the actual SKILL.md path, replace it before execution, and use relative
 task input paths. Python 3.9+, standard library only; no external application is used.
 The commands read workbook contents and emit JSON; they do not write or alter the input.
 
 ## Contents
 
-- [Declare the header rows](#declare-the-header-rows)
-- [Select columns in data operations](#select-columns-in-data-operations)
-- [Safety boundaries](#safety-boundaries)
+- Declare the header rows (`<skill-root>/references/multi-level-headers.md#declare-the-header-rows`)
+- Select columns in data operations (`<skill-root>/references/multi-level-headers.md#select-columns-in-data-operations`)
+- Safety boundaries (`<skill-root>/references/multi-level-headers.md#safety-boundaries`)
 
 ## Declare the header rows
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_headers.py" report.xlsx --sheet 经营表 --header-rows 3:5
-python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" profile report.xlsx --sheet 经营表 --header-rows 3:5
+python3 -I -S -B "<skill-root>/scripts/xlsx_headers.py" report.xlsx --sheet 经营表 --header-rows 3:5
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile report.xlsx --sheet 经营表 --header-rows 3:5
 ```
 
 `--header-rows 3:5` is an inclusive worksheet row range, not a count. It must lie fully
@@ -28,7 +30,7 @@ ignored. Choose an explicit range when stored cells do not cover the intended ta
 `--header-exclude 4` removes an internal note/header row from column paths. Exclusions
 must lie inside the declared header rows, and at least one header row must remain.
 `--no-header` conflicts with `--header-rows`. Existing single-row behavior is preserved
-when no explicit header range is supplied. [Candidate suggestions](header-candidates.md)
+when no explicit header range is supplied. Candidate suggestions (`<skill-root>/references/header-candidates.md`)
 are available separately and are never applied automatically.
 
 Each column returns `id` (absolute coordinate ID such as `col:B`, scoped to this sheet),
@@ -76,13 +78,13 @@ Example task-local `groups.json`:
 ```
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" summarize report.xlsx --sheet 经营表 --header-rows 3:5 --query groups.json
-python3 -I -S -B "<skill_dir>/scripts/xlsx_rows.py" report.xlsx --sheet 经营表 --header-rows 3:5 --query rows.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize report.xlsx --sheet 经营表 --header-rows 3:5 --query groups.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" report.xlsx --sheet 经营表 --header-rows 3:5 --query rows.json
 ```
 
 For `rows.json`, use e.g. `{"deduplicate":{"columns":[{"path":["部门"]}]},
 "sort":[{"column":{"id":"col:D"},"descending":true}]}`.
-See [data-analysis.md](data-analysis.md) and [row-processing.md](row-processing.md) for
+See Read-only data analysis and file identification (`<skill-root>/references/data-analysis.md`) and Filter, deduplicate and sort typed rows (`<skill-root>/references/row-processing.md`) for
 unchanged numeric, filter, deduplication and sort semantics. Outputs include the header
 schema alongside results; row outputs retain original worksheet row numbers.
 

@@ -102,8 +102,8 @@ class DashboardTests(unittest.TestCase):
         source=Path(self.temp.name)/'wide.json'; source.write_text(json.dumps(self.report,default=str))
         config=source.with_name('query.json'); config.write_text(json.dumps(query()))
         output=source.with_name('dashboard.xlsx')
-        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_dashboard.py')),str(source),'--query',str(config),'--xlsx',str(output)]
-        run=subprocess.run(command,capture_output=True,text=True)
+        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_dashboard.py')),str((source).relative_to(source.parent)),'--query',str((config).relative_to(source.parent)),'--xlsx',str((output).relative_to(source.parent))]
+        run=subprocess.run(command,cwd=source.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stdout+run.stderr)
         book=Workbook.load(output)
         self.assertEqual(len(book.sheets),6)
@@ -112,7 +112,7 @@ class DashboardTests(unittest.TestCase):
         with zipfile.ZipFile(output) as package:
             self.assertFalse(any('/charts/' in name for name in package.namelist()))
             self.assertIn(b'pane',package.read('xl/worksheets/sheet1.xml'))
-        original=output.read_bytes(); run=subprocess.run(command,capture_output=True,text=True)
+        original=output.read_bytes(); run=subprocess.run(command,cwd=source.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,1); self.assertEqual(output.read_bytes(),original)
 
     def test_unverified_caches_block_clean_ranks_and_alerts(self):

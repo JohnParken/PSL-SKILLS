@@ -54,18 +54,48 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assert_archived(result, 'report.xlsx')
         self.assertTrue(result['cleanup']['cleanup_complete'])
-        manifest = json.loads(Path(result['manifest']).read_text())
-        for entry in manifest['entries']: self.assertFalse(Path(entry['path']).exists())
+        self.assertIsNone(result['manifest'])
+        self.assertTrue(result['cleanup']['manifest_removed'])
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
         self.assertEqual(Workbook.load('report.xlsx').cells['Data']['A1']['value'], '中文')
-        self.assertTrue(cleanup_task(result['manifest'])['cleanup_complete'])
 
-    def test_failure_preserves_spec_and_original(self):
+    def test_partial_result_archive_residual_never_reports_cleaned(self):
+        def partial_child(script, arguments):
+            Path('report.xlsx').write_bytes(b'partial output')
+            Path('archive-owned.tmp').write_bytes(b'archive residual')
+            return 2, {'status': 'incomplete', 'delivery': {
+                'archive_status': 'failed', 'temporary_residuals': ['archive-owned.tmp']}}
+        with patch('run_xlsx_task._run_child', side_effect=partial_child):
+            code, result = self.task()
+        self.assertEqual(code, 2)
+        self.assertEqual(result['status'], 'incomplete')
+        self.assertEqual(result['task_status'], 'cleanup_incomplete')
+        self.assertFalse(result['cleanup']['cleanup_complete'])
+        self.assertTrue(Path(result['manifest']).exists())
+        self.assertEqual(Path('report.xlsx').read_bytes(), b'partial output')
+        self.assertEqual(Path('archive-owned.tmp').read_bytes(), b'archive residual')
+
+    def test_no_config_archive_residual_never_reports_successful_cleanup(self):
+        Path('user-spec.json').write_text(json.dumps(SPEC))
+        result = {'status': 'created', 'delivery': {
+            'archive_status': 'failed', 'temporary_residuals': ['archive-owned.tmp']}}
+        with patch('run_xlsx_task._run_child', return_value=(0, result)):
+            code, report = run_task({'script': 'stdlib_xlsx.py',
+                'arguments': ['create', 'user-spec.json', 'report.xlsx'],
+                'output': 'report.xlsx', 'configs': {}})
+        self.assertEqual(code, 3)
+        self.assertFalse(report['cleanup']['cleanup_complete'])
+        self.assertEqual(report['task_status'], 'cleanup_incomplete')
+        self.assertEqual(json.loads(Path('user-spec.json').read_text()), SPEC)
+
+    def test_failure_cleans_spec_and_preserves_original(self):
         Path('user.json').write_text('original')
         code, result = self.task(spec={'invalid': True})
         self.assertEqual(code, 1)
-        self.assertEqual(result['task_status'], 'retained_for_review')
-        manifest = json.loads(Path(result['manifest']).read_text())
-        self.assertTrue(Path(manifest['entries'][0]['path']).exists())
+        self.assertEqual(result['task_status'], 'failed_cleaned')
+        self.assertIsNone(result['manifest'])
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
+        self.assertTrue(result['cleanup']['cleanup_complete'])
         self.assertEqual(Path('user.json').read_text(), 'original')
         self.assertFalse(Path('report.xlsx').exists())
 
@@ -75,21 +105,25 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(Path('report.xlsx').read_bytes(), b'original')
         self.assertEqual(len(list(Path('.').iterdir())), 1)
 
-    def test_archive_failure_keeps_primary_and_cleans_owned_helpers(self):
+    def test_archive_failure_keeps_primary_and_removes_helpers(self):
         Path('output').write_text('blocked')
         code, result = self.task()
         self.assertEqual(code, 0)
         self.assertEqual(result['delivery']['archive_status'], 'failed')
         self.assertNotEqual(result['delivery']['archive_message'], '归档完成')
         self.assertTrue(result['cleanup']['cleanup_complete'])
+        self.assertIsNone(result['manifest'])
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
         self.assertTrue(Path('report.xlsx').exists())
 
-    def test_missing_config_skips_archive_but_cleans(self):
+    def test_missing_config_skips_archive_and_cleans(self):
         os.environ.pop('ROUTER_CONFIG_VARIABLES')
         code, result = self.task()
         self.assertEqual(code, 0)
         self.assertEqual(result['delivery']['archive_status'], 'skipped')
         self.assertTrue(result['cleanup']['cleanup_complete'])
+        self.assertIsNone(result['manifest'])
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
         self.assertFalse(Path('output').exists())
 
     def test_read_stdout_does_not_create_lifecycle_files(self):
@@ -192,15 +226,16 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(result['status'], 'incomplete')
         self.assert_archived(result, 'partial.xlsx')
 
-    def test_partial_task_retains_configs_even_when_file_was_archived(self):
+    def test_partial_task_cleans_configs_and_preserves_partial_output(self):
         spec = {'sheets': [{'name': 'Data', 'cells': {'A1': {'formula': 'UNKNOWN(1)'}}}]}
         code, result = self.task(spec=spec)
         self.assertEqual(code, 2)
         self.assertEqual(result['status'], 'incomplete')
-        self.assertEqual(result['task_status'], 'retained_for_review')
+        self.assertEqual(result['task_status'], 'failed_cleaned')
         self.assert_archived(result, 'report.xlsx')
-        manifest = json.loads(Path(result['manifest']).read_text())
-        self.assertTrue(Path(manifest['entries'][0]['path']).exists())
+        self.assertIsNone(result['manifest'])
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
+        self.assertTrue(result['cleanup']['cleanup_complete'])
 
     def test_symlink_output_and_parent_traversal_rejected(self):
         Path('user.txt').write_text('original')
@@ -255,3 +290,25 @@ class DeliveryTests(unittest.TestCase):
                 code, result = self.cli(script, *arguments, '--xlsx', output)
                 self.assertEqual(code, 0, result)
                 self.assert_archived(result, output)
+
+    def test_timeout_cleans_all_config_and_manifest_files(self):
+        with patch('run_xlsx_task.subprocess.run',side_effect=subprocess.TimeoutExpired('synthetic',120)):
+            code,result=self.task()
+        self.assertEqual(code,1)
+        self.assertEqual(result['task_status'],'failed_cleaned')
+        self.assertIsNone(result['manifest'])
+        self.assertEqual(list(Path('.').iterdir()), [])
+
+    def test_manifest_delete_failure_keeps_primary_and_receipt(self):
+        original=os.unlink
+        def refuse(path,*args,**kwargs):
+            if str(path).endswith('.cleanup.json'):
+                raise PermissionError('injected retirement denial')
+            return original(path,*args,**kwargs)
+        with patch('run_xlsx_task.os.unlink',side_effect=refuse) as mocked:
+            with patch('run_xlsx_task.os.supports_dir_fd',os.supports_dir_fd | {mocked}):
+                code,result=self.task()
+        self.assertEqual(code,3)
+        self.assertTrue(Path('report.xlsx').exists())
+        self.assertTrue(Path(result['manifest']).exists())
+        self.assertFalse(result['cleanup']['cleanup_complete'])

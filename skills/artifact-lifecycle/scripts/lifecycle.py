@@ -22,7 +22,8 @@ def environment_check():
             probe.seek(0)
             if probe.read() != b'lifecycle-check':
                 raise RuntimeError('task probe roundtrip failed')
-    return {'status': 'environment-ok', 'task_writable': True}
+    return {'status': 'environment-ok', 'task_writable': True,
+            'check_kind': 'environment', 'artifact_validation': 'not_run'}
 
 
 def main(argv=None):
@@ -43,10 +44,13 @@ def main(argv=None):
         else:
             result = archive_outputs(args.outputs, args.protect_input)
             code = {'copied': 0, 'skipped': 3, 'failed': 1}.get(result['archive_status'], 1)
-        print(json.dumps(result, ensure_ascii=True))
+        print(json.dumps(result, ensure_ascii=True), flush=True)
         return code
     except (OSError, ValueError, TypeError, KeyError, RuntimeError) as exc:
-        print(json.dumps({'status': 'error', 'message': str(exc)}, ensure_ascii=True))
+        result = {'status': 'error', 'message': str(exc)}
+        if args.command == 'check':
+            result.update(check_kind='environment', artifact_validation='not_run')
+        print(json.dumps(result, ensure_ascii=True), flush=True)
         return 1
 
 

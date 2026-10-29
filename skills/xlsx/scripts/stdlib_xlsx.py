@@ -640,14 +640,17 @@ def main():
             sub.add_argument("--appearance", help="Readable appearance JSON; new workbooks only")
             sub.add_argument("--values-only", action="store_true", help="Replace all successfully evaluated formulas with static results")
     args = parser.parse_args()
-    from xlsx_delivery import finish_delivery
+    from xlsx_delivery import finish_delivery, validate_cli_paths
     try:
+        validate_cli_paths(args)
         if args.command == "check":
             book = Workbook.create({"sheets": [{"name": "Check", "cells": {"A1": {"formula": "ROUND(1.005,2)"}}}]})
             result = book.calculate()
             if result["calculated_count"] != 1 or result["issues"]:
                 raise ValueError("Calculation self-check failed")
-            result = {"status": "ready", "python": sys.version.split()[0], "dependencies": "standard_library_only"}
+            result = {"status": "ready", "python": sys.version.split()[0],
+                      "dependencies": "standard_library_only", "check_kind": "environment",
+                      "artifact_validation": "not_run"}
         elif args.command == "read":
             suffix = Path(args.input).suffix.lower()
             if suffix in (".wps", ".et", ".ett"):
@@ -670,13 +673,19 @@ def main():
                 result["output"] = args.output
         if args.command in ('create', 'edit', 'calculate') and result.get('output_written'):
             finish_delivery(result, args.output, [getattr(args, field, None) for field in ('input', 'spec', 'appearance')])
-        print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+        print(json.dumps(result, ensure_ascii=False, indent=2, default=str), flush=True)
         return 1 if result.get("status") == "failed" else 2 if result.get("status") == "incomplete" else 0
     except UnsupportedInputError as exc:
-        print(json.dumps({"status": "unsupported", "output_written": False, "message": str(exc)}, ensure_ascii=False))
+        result = {"status": "unsupported", "output_written": False, "message": str(exc)}
+        if args.command == "check":
+            result.update(check_kind="environment", artifact_validation="not_run")
+        print(json.dumps(result, ensure_ascii=False), flush=True)
         return 1
     except (ValueError, csv.Error, LookupError, OSError, struct.error, OverflowError, InvalidOperation, zipfile.BadZipFile, ET.ParseError) as exc:
-        print(json.dumps({"status": "failed", "output_written": False, "message": str(exc)}, ensure_ascii=False))
+        result = {"status": "failed", "output_written": False, "message": str(exc)}
+        if args.command == "check":
+            result.update(check_kind="environment", artifact_validation="not_run")
+        print(json.dumps(result, ensure_ascii=False), flush=True)
         return 1
 
 

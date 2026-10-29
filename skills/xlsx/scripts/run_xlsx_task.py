@@ -9,13 +9,58 @@ import sys
 import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, _unique_object
+from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, finalize_failed_cleanup, _unique_object
 from _artifact_runtime.archive_deliverables import validate_output_path
 
 SCRIPTS = {'stdlib_xlsx.py', 'xlsx_tabular.py', 'xlsx_result_export.py', 'xlsx_management.py',
            'xlsx_dashboard.py', 'xlsx_deposits.py', 'xlsx_deposit_structure.py',
            'xlsx_customers.py', 'xlsx_reconcile.py', 'xlsx_management_policy.py'}
 MAX_SPEC_BYTES = 2 * 1024 * 1024
+
+
+def _stream_evidence(value, *, structured=False):
+    """Do not echo arbitrary child diagnostics, which may contain task data or secrets."""
+    if isinstance(value, bytes):
+        value = value.decode('utf-8', errors='replace')
+    value = value or ''
+    return {'text': '' if not value else None, 'original_characters': len(value),
+            'omitted': bool(value), 'truncated': False,
+            'reason': 'structured_result_returned' if structured else 'sensitive_child_output'}
+
+
+def _run_child(script, arguments):
+    """Preserve process outcome and explicit stream evidence without raw log leakage."""
+    invocation = uuid.uuid4().hex
+    try:
+        child = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name(script)), *arguments],
+                               capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired as exc:
+        return 1, {'status': 'failed', 'task_status': 'recovery_pending',
+                   'error_code': 'child_timeout', 'child_execution': {
+                       'invocation_id': invocation, 'state': 'timeout', 'exit_code': None,
+                       'stdout': _stream_evidence(exc.stdout), 'stderr': _stream_evidence(exc.stderr)}}
+    except OSError:
+        return 1, {'status': 'failed', 'task_status': 'recovery_pending',
+                   'error_code': 'child_not_started', 'child_execution': {
+                       'invocation_id': invocation, 'state': 'not_started', 'exit_code': None,
+                       'stdout': _stream_evidence(None), 'stderr': _stream_evidence(None)}}
+    valid = False
+    try:
+        result = json.loads(child.stdout)
+        valid = isinstance(result, dict)
+    except (ValueError, RecursionError):
+        result = None
+    if not valid:
+        result = {'status': 'failed', 'task_status': 'recovery_pending',
+                  'error_code': 'child_argument_error' if child.returncode == 2 and 'usage:' in child.stderr
+                  else 'child_invalid_result'}
+    result['child_execution'] = {
+        'invocation_id': invocation, 'state': 'signaled' if child.returncode < 0 else 'exited',
+        'exit_code': child.returncode if child.returncode >= 0 else None,
+        'signal': -child.returncode if child.returncode < 0 else None,
+        'stdout': _stream_evidence(child.stdout, structured=valid),
+        'stderr': _stream_evidence(child.stderr)}
+    return (child.returncode if child.returncode > 0 else 0 if valid and child.returncode == 0 else 1), result
 
 
 def final_argument(script, arguments):
@@ -35,7 +80,7 @@ def final_argument(script, arguments):
     return arguments[arguments.index('--xlsx') + 1]
 
 
-def run_task(specification):
+def _run_task(specification):
     if (not isinstance(specification, dict) or set(specification) - {'script', 'arguments', 'configs', 'output', 'inputs'}
             or not {'script', 'arguments', 'output'} <= set(specification)):
         raise ValueError('Expected script, arguments, output and optional configs/inputs')
@@ -65,7 +110,7 @@ def run_task(specification):
         validate_output_path(Path(item))
     workspace = 'xlsx-task-' + uuid.uuid4().hex
     manifest = workspace + '.cleanup.json'
-    paths = {key: workspace + '/' + key + '.json' for key in configs}
+    paths = {key: workspace + '.' + key + '.json' for key in configs}
     resolved = []
     for item in arguments:
         if item.startswith('@'):
@@ -77,20 +122,15 @@ def run_task(specification):
     if set(paths) - {item[1:] for item in arguments if item.startswith('@')}:
         raise ValueError('Unused task config')
     if not paths:
-        child = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name(script)), *resolved],
-                               capture_output=True, text=True, timeout=120)
-        result = json.loads(child.stdout)
-        if not isinstance(result, dict):
-            raise ValueError('Child result must be JSON object')
-        result['task_status'] = 'no_intermediates'
-        return child.returncode, result
-    plan_cleanup(manifest, files=list(paths.values()), directories=[workspace] if paths else [],
+        code, result = _run_child(script, resolved)
+        result.setdefault('task_status', 'no_intermediates')
+        result['output_may_exist'] = output.exists()
+        return code, result
+    plan_cleanup(manifest, files=list(paths.values()), directories=(),
                  protected=list(dict.fromkeys(protected)), deliverables=[output.as_posix()])
     result = None
     primary_complete = False
     try:
-        if paths:
-            os.mkdir(workspace, 0o700)
         with TaskFiles() as task:
             for key, path in paths.items():
                 payload = json.dumps(configs[key], ensure_ascii=False, allow_nan=False).encode('utf-8')
@@ -98,23 +138,43 @@ def run_task(specification):
                     descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
                     with os.fdopen(descriptor, 'wb') as handle:
                         handle.write(payload)
-        child = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name(script)), *resolved],
-                               capture_output=True, text=True, timeout=120)
-        result = json.loads(child.stdout)
-        if not isinstance(result, dict):
-            raise ValueError('Child result must be JSON object')
+                        handle.flush()
+                        os.fsync(handle.fileno())
+        code, result = _run_child(script, resolved)
+        if result.get('task_status') == 'recovery_pending':
+            result.update(manifest=manifest, output_may_exist=output.exists())
+            return code, result
         delivery = result.get('delivery')
-        if child.returncode == 0 and output.is_file() and isinstance(delivery, dict):
+        if code == 0 and output.is_file() and isinstance(delivery, dict):
             primary_complete = True
-            seal_cleanup(manifest, outcome='success', verified=True, archive_status=delivery['archive_status'])
-            cleanup = cleanup_task(manifest)
-            result.update(task_status='completed' if cleanup['cleanup_complete'] else 'cleanup_incomplete',
-                          manifest=manifest, cleanup=cleanup)
-            return (0 if cleanup['cleanup_complete'] else 3), result
+            with TaskFiles() as task:
+                expected = task.inspect(output.as_posix(), contents=True)
+                if delivery.get('temporary_residuals'):
+                    raise ValueError('Archive temporary cleanup is incomplete; inspect exact residual paths')
+                seal_cleanup(manifest, outcome='success', verified=True, archive_status=delivery['archive_status'])
+                cleanup = cleanup_task(manifest)
+                if task.inspect(output.as_posix(), contents=True) != expected:
+                    primary_complete = False
+                    raise ValueError('Final output changed during cleanup; inspect before delivery')
+                result.update(task_status='completed' if cleanup['cleanup_complete'] else 'cleanup_incomplete',
+                              manifest=manifest, cleanup=cleanup)
+                if cleanup['cleanup_complete']:
+                    fingerprint = task.inspect(manifest, contents=True)
+                    if fingerprint['links'] != 1:
+                        raise ValueError('Manifest is not a single owned file')
+                    with task.parent(manifest) as (parent, name):
+                        if task.inspect(manifest, contents=True) != fingerprint:
+                            raise ValueError('Manifest changed before retirement')
+                        os.unlink(name, dir_fd=parent)
+                    cleanup.update(manifest_retained=None, manifest_removed=True)
+                    cleanup['deleted'].append({'path':manifest,'reason':'removed'})
+                    result['manifest'] = None
+                return (0 if cleanup['cleanup_complete'] else 3), result
         seal_cleanup(manifest, outcome='retry')
         result.update(task_status='retained_for_review', manifest=manifest,
+                      next_action='inspect_original_task',
                       cleanup=cleanup_task(manifest))
-        return child.returncode or 1, result
+        return code or 1, result
     except (OSError, ValueError, KeyError, RuntimeError, subprocess.TimeoutExpired) as exc:
         if primary_complete:
             result.update(task_status='cleanup_incomplete', manifest=manifest,
@@ -123,6 +183,30 @@ def run_task(specification):
         # Do not regenerate or infer success after interruption. Retain helpers for review.
         return 1, {'status': 'failed', 'task_status': 'recovery_pending', 'manifest': manifest,
                    'message': str(exc), 'output_may_exist': output.exists()}
+
+
+def run_task(spec):
+    code, result = _run_task(spec)
+    manifest = result.get('manifest')
+    delivery = result.get('delivery')
+    if isinstance(delivery, dict) and delivery.get('temporary_residuals'):
+        # A failed archive unlink is still unfinished even for partial results
+        # or direct commands without runner-owned JSON configuration files.
+        result.update(task_status='cleanup_incomplete', cleanup={
+            'cleanup_complete': False, 'status': 'failed',
+            'message': 'Archive temporary cleanup is incomplete',
+            'temporary_residuals': delivery['temporary_residuals']})
+        return code or 3, result
+    if code and manifest and result.get('task_status') != 'cleanup_incomplete':
+        try:
+            report = finalize_failed_cleanup(manifest)
+            result.update(cleanup=report, manifest=None if report.get('manifest_removed') else manifest,
+                          task_status='failed_cleaned' if report['cleanup_complete'] else 'cleanup_incomplete',
+                          next_action='correct_request_and_start_new_task')
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
+            result.update(task_status='cleanup_incomplete', cleanup={
+                'cleanup_complete': False, 'status': 'failed', 'message': str(exc)})
+    return code, result
 
 
 def main():

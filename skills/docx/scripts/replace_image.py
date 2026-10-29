@@ -21,7 +21,7 @@ from office.helpers import MAX_PART_BYTES
 from office.memory_package import package_workspace
 from office.package import pack_document
 from office.validators.structure import R, W, StructureValidator
-from archive_deliverables import finalize_delivery, validate_output_path
+from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
 
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 PIC = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -170,6 +170,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.replacement, args.selection]
     try:
+        for input_path in protected_inputs:
+            validate_input_path(input_path)
         args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
         payload = replace_image_delivery(args.input, args.replacement, args.output,
                                json.loads(args.selection.read_text(encoding="utf-8")),

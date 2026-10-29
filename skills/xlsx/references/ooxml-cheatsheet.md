@@ -1,22 +1,24 @@
 # OOXML SpreadsheetML Cheat Sheet
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
 ## Contents
 
-- [Package Structure](#package-structure)
-- [Cell Reference Format](#cell-reference-format)
-- [Cell XML Reference](#cell-xml-reference)
-- [styles.xml Reference](#stylesxml-reference)
-- [sharedStrings.xml Reference](#sharedstringsxml-reference)
-- [workbook.xml / .rels Sync](#workbookxml--rels-sync)
-- [Column / Row Dimensions](#column--row-dimensions)
-- [Freeze Panes](#freeze-panes)
-- [Common Excel Error Types](#common-excel-error-types)
+- Package Structure (`<skill-root>/references/ooxml-cheatsheet.md#package-structure`)
+- Cell Reference Format (`<skill-root>/references/ooxml-cheatsheet.md#cell-reference-format`)
+- Cell XML Reference (`<skill-root>/references/ooxml-cheatsheet.md#cell-xml-reference`)
+- styles.xml Reference (`<skill-root>/references/ooxml-cheatsheet.md#stylesxml-reference`)
+- sharedStrings.xml Reference (`<skill-root>/references/ooxml-cheatsheet.md#sharedstringsxml-reference`)
+- workbook.xml / .rels Sync (`<skill-root>/references/ooxml-cheatsheet.md#workbookxml--rels-sync`)
+- Column / Row Dimensions (`<skill-root>/references/ooxml-cheatsheet.md#column--row-dimensions`)
+- Freeze Panes (`<skill-root>/references/ooxml-cheatsheet.md#freeze-panes`)
+- Common Excel Error Types (`<skill-root>/references/ooxml-cheatsheet.md#common-excel-error-types`)
 
 Background reference for package structure and cell encoding during implementation or
-diagnosis. For user workbook changes, follow [edit.md](edit.md); this reference does not
+diagnosis. For user workbook changes, follow Edit existing cells (`<skill-root>/references/edit.md`); this reference does not
 authorize direct XML edits or manual unpacking/repacking.
 
 ---
@@ -122,14 +124,14 @@ blue color    no fill      no border    "0.0%"
 
 Existing-file edits may reference an existing `cellXfs` index; they cannot append styles.
 New-file appearance presets can create shared styles and custom number formats through
-[readable-appearance.md](readable-appearance.md). IDs in the diagram above are illustrative
+Readable appearance for newly created workbooks (`<skill-root>/references/readable-appearance.md`). IDs in the diagram above are illustrative
 and do not describe the bundled template. Do not add styles by editing XML manually.
 
 ### Color Format
 
 `AARRGGBB` — Alpha + Red + Green + Blue. The template uses `00` prefixes and
 appearance presets use `FF`; neither is a reason to infer invisible cell text. See
-[format.md](format.md#33-aarrggbb-color-format-explanation) for the color caveat.
+3.3 AARRGGBB Color Format Explanation (`<skill-root>/references/format.md#33-aarrggbb-color-format-explanation`) for the color caveat.
 
 ```
 000000FF → Blue
@@ -238,7 +240,7 @@ Inside `<sheetView>`:
 
 ## Common Excel Error Types
 
-Report observed errors and follow [python-calculation.md](python-calculation.md).
+Report observed errors and follow Standard-library calculation and file contract (`<skill-root>/references/python-calculation.md`).
 Do not erase source errors merely to make a checklist pass. Missing caches do not prove
 error-free calculation; unsupported formulas remain unresolved.
 

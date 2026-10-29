@@ -245,8 +245,9 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input'); parser.add_argument('--query',required=True); parser.add_argument('--xlsx')
     args=parser.parse_args()
-    from xlsx_delivery import finish_delivery
+    from xlsx_delivery import finish_delivery, validate_cli_paths
     try:
+        validate_cli_paths(args)
         result=analyze(read_spec(args.input,max_bytes=MAX_INPUT_BYTES),read_spec(args.query,max_bytes=65536))
         if args.xlsx: result['export']=export_policy(result,args.xlsx)
         if args.xlsx:

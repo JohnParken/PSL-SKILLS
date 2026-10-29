@@ -121,7 +121,7 @@ class ExportTests(unittest.TestCase):
         source=self.input.with_suffix('.json')
         source.write_text(json.dumps(result,default=str))
         run=subprocess.run([sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_result_export.py')),
-                            str(source),str(self.output)],capture_output=True,text=True)
+                            str((source).relative_to(self.input.parent)),str((self.output).relative_to(self.input.parent))],cwd=self.input.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         self.assertEqual(json.loads(run.stdout)['formulas_created'],0)
         self.assertEqual(Workbook.load(self.output).cells['Results']['A2']['value'],6)

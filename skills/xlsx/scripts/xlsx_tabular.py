@@ -167,8 +167,9 @@ def main():
     export.add_argument('--formulas', choices=('reject', 'cached'), default='reject')
     export.add_argument('--text', choices=('safe', 'raw'), default='safe')
     args = parser.parse_args()
-    from xlsx_delivery import finish_delivery
+    from xlsx_delivery import finish_delivery, validate_cli_paths
     try:
+        validate_cli_paths(args)
         if args.command == 'import':
             result = import_table(args.input, args.output, args.sheet, args.encoding,
                                   args.numeric_columns, args.header_rows,

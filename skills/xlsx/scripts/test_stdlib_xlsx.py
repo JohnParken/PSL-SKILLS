@@ -183,17 +183,17 @@ class WorkbookTests(unittest.TestCase):
             output = directory / 'result.xlsx'
             source.write_text(json.dumps(spec({'A1': {'formula': 'ROUND(1.005,2)'}})), encoding='utf-8')
             run = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'stdlib_xlsx.py'),
-                                  'create', str(source), str(output)], capture_output=True, text=True)
+                                  'create', str((source).relative_to(directory)), str((output).relative_to(directory))], cwd=directory, capture_output=True, text=True)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             self.assertTrue(json.loads(run.stdout)['output_written'])
             run = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'stdlib_xlsx.py'),
-                                  'read', str(output)], capture_output=True, text=True)
+                                  'read', str((output).relative_to(directory))], cwd=directory, capture_output=True, text=True)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             self.assertEqual(json.loads(run.stdout)['sheets'][0]['cells']['A1']['value'], '1.01')
             bad = directory / 'bad.xlsx'
             source.write_text(json.dumps(spec({'A1': {'formula': '1/0'}})), encoding='utf-8')
             run = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'stdlib_xlsx.py'),
-                                  'create', str(source), str(bad)], capture_output=True, text=True)
+                                  'create', str((source).relative_to(directory)), str((bad).relative_to(directory))], cwd=directory, capture_output=True, text=True)
             self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
             self.assertFalse(bad.exists())
 
@@ -244,14 +244,14 @@ class WorkbookTests(unittest.TestCase):
             output = directory / 'incomplete.xlsx'
             source.write_text(json.dumps(spec({'A1': {'formula': 'UNKNOWN(1)'}})), encoding='utf-8')
             run = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'stdlib_xlsx.py'),
-                                  'create', str(source), str(output)], capture_output=True, text=True)
+                                  'create', str((source).relative_to(directory)), str((output).relative_to(directory))], cwd=directory, capture_output=True, text=True)
             self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
             self.assertTrue(json.loads(run.stdout)['output_written'])
             self.assertIsNone(Workbook.load(output).cells['Sales']['A1']['value'])
             csv_path = directory / 'text.csv'
             csv_path.write_text('name,id\n"a,b",001\n', encoding='utf-8-sig')
             run = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'stdlib_xlsx.py'),
-                                  'read', str(csv_path)], capture_output=True, text=True)
+                                  'read', str((csv_path).relative_to(directory))], cwd=directory, capture_output=True, text=True)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             self.assertEqual(json.loads(run.stdout)['rows'][1], ['a,b', '001'])
 

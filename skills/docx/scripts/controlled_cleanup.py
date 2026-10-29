@@ -293,6 +293,7 @@ def cleanup_task(manifest):
         if data["phase"] != "sealed":
             raise ValueError("Seal the plan after the task outcome is known; no deletion attempted")
         report = {"status": "retained", "deleted": [], "retained": [], "failed": [],
+                  "cleanup_scope": "registered_entries_only",
                   "manifest_retained": manifest, "deliverables_unchanged": False,
                   "cleanup_complete": False, "outcome": data["outcome"],
                   "archive_status": data["archive_status"]}
@@ -366,3 +367,47 @@ def cleanup_task(manifest):
         return report
 
 
+def retire_cleanup_manifest(manifest, report, expected=None):
+    """Remove the final recovery receipt only after all owned entries are gone."""
+    if not report.get('cleanup_complete'):
+        return report
+    try:
+        with TaskFiles() as task:
+            fingerprint = task.inspect(manifest, contents=True)
+            if fingerprint['links'] != 1 or (expected is not None and fingerprint != expected):
+                raise ValueError('Manifest ownership changed before retirement')
+            data = _validate(task.load(manifest), manifest, task)
+            if data['phase'] != 'sealed' or data['outcome'] == 'retry':
+                raise ValueError('Task is not terminal')
+            recorded = data.get('last_cleanup', {})
+            if not recorded.get('cleanup_complete'):
+                raise ValueError('Completed cleanup receipt is missing')
+            _check_outputs(task, data)
+            if any(task.optional(entry['path']) is not None for entry in data['entries']):
+                raise ValueError('Registered intermediate still exists')
+            with task.parent(manifest) as (parent, name):
+                if task.inspect(manifest, contents=True) != fingerprint:
+                    raise ValueError('Manifest changed before retirement')
+                os.unlink(name, dir_fd=parent)
+        report.update(manifest_retained=None, manifest_removed=True)
+        report['deleted'].append({'path': manifest, 'reason': 'removed'})
+    except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
+        report.update(status='failed', cleanup_complete=False, manifest_retained=manifest,
+                      manifest_removed=False)
+        report['failed'].append({'path': manifest, 'reason': 'manifest_retirement_failed: ' + str(exc)})
+    return report
+
+
+def finalize_cleanup(manifest):
+    """Terminal public cleanup: delete intermediates and then their owned manifest."""
+    return retire_cleanup_manifest(manifest, cleanup_task(manifest))
+
+
+
+def finalize_failed_cleanup(manifest):
+    """Close a stopped producer's registered helpers; never delete its output paths."""
+    with TaskFiles() as task:
+        data = _validate(task.load(manifest), manifest, task)
+    if data['phase'] != 'sealed' or data['outcome'] == 'retry':
+        seal_cleanup(manifest, outcome='failed')
+    return finalize_cleanup(manifest)

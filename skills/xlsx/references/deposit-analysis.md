@@ -1,34 +1,36 @@
 # Deposit observations, daily means and concentration
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
 ## Contents
 
-- [Fictional example and inputs](#fictional-example-and-inputs)
-- [Change decomposition and targets](#change-decomposition-and-targets)
-- [Structure and concentration](#structure-and-concentration)
-- [Output and limits](#output-and-limits)
+- Fictional example and inputs (`<skill-root>/references/deposit-analysis.md#fictional-example-and-inputs`)
+- Change decomposition and targets (`<skill-root>/references/deposit-analysis.md#change-decomposition-and-targets`)
+- Structure and concentration (`<skill-root>/references/deposit-analysis.md#structure-and-concentration`)
+- Output and limits (`<skill-root>/references/deposit-analysis.md#output-and-limits`)
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检), requiring exit 0 and
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`), requiring exit 0 and
 status ready. Confirm task input readability and output write/read/cleanup probe. Resolve
-`<skill_dir>` from the actual SKILL.md and replace it before executing commands from the
+`<skill-root>` from the actual SKILL.md and replace it before executing commands from the
 task directory. Python 3.9+, standard library only. No private files are discovered.
 
 ## Fictional example and inputs
 
-Copy these invented assets to the task directory: [left](../assets/fictional_deposit_left.json)
-as left.json, [right](../assets/fictional_deposit_right.json) as right.json,
-[change config](../assets/fictional_deposit_config.json) as deposits.json, and
-[structure config](../assets/fictional_deposit_structure_config.json) as structure.json.
+Copy these invented assets to the task directory: left (`<skill-root>/assets/fictional_deposit_left.json`)
+as left.json, right (`<skill-root>/assets/fictional_deposit_right.json`) as right.json,
+change config (`<skill-root>/assets/fictional_deposit_config.json`) as deposits.json, and
+structure config (`<skill-root>/assets/fictional_deposit_structure_config.json`) as structure.json.
 
 ```console
 (
 set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create left.json left.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create right.json right.xlsx
-python3 -I -S -B "<skill_dir>/scripts/xlsx_deposits.py" left.xlsx right.xlsx --query deposits.json --xlsx deposits.xlsx > deposits-result.json
-python3 -I -S -B "<skill_dir>/scripts/xlsx_deposit_structure.py" right.xlsx --query structure.json --xlsx structure.xlsx > structure-result.json
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create left.json left.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create right.json right.xlsx
+python3 -I -S -B "<skill-root>/scripts/xlsx_deposits.py" left.xlsx right.xlsx --query deposits.json --xlsx deposits.xlsx > deposits-result.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_deposit_structure.py" right.xlsx --query structure.json --xlsx structure.xlsx > structure-result.json
 )
 ```
 
@@ -59,7 +61,7 @@ provided observation universe and must not be treated as audited bank totals wit
 source completeness checks.
 
 Optional `daily` config requires sheet, query, metric_id and matching grain; pass --daily
-daily.xlsx. Its query is the existing [daily mean query](daily-analysis.md), with one
+daily.xlsx. Its query is the existing daily mean query (`<skill-root>/references/daily-analysis.md`), with one
 stable entity selector, matching version, selected metric/unit/currency, coverage complete
 and end equal to right_date. It computes sum(daily balances)/inclusive calendar days only
 with full numeric coverage, preserving missing dates and observed-only mean separately.

@@ -116,15 +116,15 @@ class ReconciliationTests(unittest.TestCase):
         left=self.folder/'left.json'; right=self.folder/'right.json'; config=self.folder/'query.json'
         left.write_text(json.dumps(self.left,default=str)); right.write_text(json.dumps(self.right,default=str))
         config.write_text(json.dumps(query(),default=float)); output=self.folder/'report.xlsx'
-        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_reconcile.py')),str(left),str(right),'--query',str(config),'--xlsx',str(output)]
-        run=subprocess.run(command,capture_output=True,text=True)
+        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_reconcile.py')),str((left).relative_to(self.folder)),str((right).relative_to(self.folder)),'--query',str((config).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))]
+        run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stdout+run.stderr)
         result=json.loads(run.stdout); self.assertEqual(result['status'],'reconciled')
         book=Workbook.load(output); self.assertEqual(len(book.sheets),5)
         self.assertTrue(any(cell['value']=='00012345678901234567890' for cell in book.cells['Records'].values()))
         self.assertTrue(all(not cell.get('formula') for cells in book.cells.values() for cell in cells.values()))
         self.assertIn('lineage', ''.join(str(cell['value']) for cell in book.cells['Metadata'].values()))
-        original=output.read_bytes(); run=subprocess.run(command,capture_output=True,text=True)
+        original=output.read_bytes(); run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,1); self.assertEqual(output.read_bytes(),original)
 
 

@@ -124,7 +124,7 @@ class TaskFiles:
         with self.parent(path) as (parent, name):
             temporary = ".docx-cleanup-" + uuid.uuid4().hex + ".tmp"
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                                 0o600, dir_fd=parent)
+                                 0o600, dir_fd=self.root)
             try:
                 with os.fdopen(descriptor, "wb") as stream:
                     stream.write(raw)
@@ -132,14 +132,14 @@ class TaskFiles:
                     os.fsync(stream.fileno())
                 if new:
                     # Exclusive destination creation: never replace an existing plan.
-                    os.link(temporary, name, src_dir_fd=parent, dst_dir_fd=parent,
+                    os.link(temporary, name, src_dir_fd=self.root, dst_dir_fd=parent,
                             follow_symlinks=False)
                 else:
                     self.inspect(path, contents=True, limit=MAX_MANIFEST_BYTES)
-                    os.replace(temporary, name, src_dir_fd=parent, dst_dir_fd=parent)
+                    os.replace(temporary, name, src_dir_fd=self.root, dst_dir_fd=parent)
             finally:
                 try:
-                    os.unlink(temporary, dir_fd=parent)
+                    os.unlink(temporary, dir_fd=self.root)
                 except FileNotFoundError:
                     pass
 
@@ -222,7 +222,9 @@ def _validate(data, manifest, task):
 
 def plan_cleanup(manifest, *, files=(), directories=(), protected=(), deliverables=()):
     """Register absent targets BEFORE the caller creates its intermediate files."""
-    _parts(manifest)
+    files, directories = tuple(files), tuple(directories)
+    if len(_parts(manifest)) != 1 or directories or any(len(_parts(path)) != 1 for path in files):
+        raise ValueError("New temporary files and cleanup manifest must be directly in task ./; temporary directories are forbidden")
     with TaskFiles() as task:
         entries = [{"path": path, "kind": kind, "absent_at_plan": True}
                    for kind, paths in (("file", files), ("directory", directories)) for path in paths]
@@ -292,6 +294,7 @@ def cleanup_task(manifest):
         if data["phase"] != "sealed":
             raise ValueError("Seal the plan after the task outcome is known; no deletion attempted")
         report = {"status": "retained", "deleted": [], "retained": [], "failed": [],
+                  "cleanup_scope": "registered_entries_only",
                   "manifest_retained": manifest, "deliverables_unchanged": False,
                   "cleanup_complete": False, "outcome": data["outcome"],
                   "archive_status": data["archive_status"]}
@@ -365,3 +368,47 @@ def cleanup_task(manifest):
         return report
 
 
+def retire_cleanup_manifest(manifest, report, expected=None):
+    """Remove the final recovery receipt only after all owned entries are gone."""
+    if not report.get('cleanup_complete'):
+        return report
+    try:
+        with TaskFiles() as task:
+            fingerprint = task.inspect(manifest, contents=True)
+            if fingerprint['links'] != 1 or (expected is not None and fingerprint != expected):
+                raise ValueError('Manifest ownership changed before retirement')
+            data = _validate(task.load(manifest), manifest, task)
+            if data['phase'] != 'sealed' or data['outcome'] == 'retry':
+                raise ValueError('Task is not terminal')
+            recorded = data.get('last_cleanup', {})
+            if not recorded.get('cleanup_complete'):
+                raise ValueError('Completed cleanup receipt is missing')
+            _check_outputs(task, data)
+            if any(task.optional(entry['path']) is not None for entry in data['entries']):
+                raise ValueError('Registered intermediate still exists')
+            with task.parent(manifest) as (parent, name):
+                if task.inspect(manifest, contents=True) != fingerprint:
+                    raise ValueError('Manifest changed before retirement')
+                os.unlink(name, dir_fd=parent)
+        report.update(manifest_retained=None, manifest_removed=True)
+        report['deleted'].append({'path': manifest, 'reason': 'removed'})
+    except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
+        report.update(status='failed', cleanup_complete=False, manifest_retained=manifest,
+                      manifest_removed=False)
+        report['failed'].append({'path': manifest, 'reason': 'manifest_retirement_failed: ' + str(exc)})
+    return report
+
+
+def finalize_cleanup(manifest):
+    """Terminal public cleanup: delete intermediates and then their owned manifest."""
+    return retire_cleanup_manifest(manifest, cleanup_task(manifest))
+
+
+
+def finalize_failed_cleanup(manifest):
+    """Close a stopped producer's registered helpers; never delete its output paths."""
+    with TaskFiles() as task:
+        data = _validate(task.load(manifest), manifest, task)
+    if data['phase'] != 'sealed' or data['outcome'] == 'retry':
+        seal_cleanup(manifest, outcome='failed')
+    return finalize_cleanup(manifest)

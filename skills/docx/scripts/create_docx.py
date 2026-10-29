@@ -1514,6 +1514,34 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
                                       require_no_placeholders=require_no_placeholders)
 
 
+def validate_task_resources(spec, base_dir=None):
+    """Check public task image paths before validation opens any resource bytes."""
+    from artifact_files import _check_delivery_path
+    from archive_deliverables import validate_input_path
+    root = Path.cwd()
+    base = Path(base_dir) if base_dir is not None else root
+    if base.is_absolute():
+        try:
+            base = base.relative_to(root)
+        except ValueError as exc:
+            raise ValueError('resource base must stay within the task directory') from exc
+    _check_delivery_path(root, base, directory=True)
+    pending, seen = [spec], set()
+    while pending:
+        value = pending.pop()
+        if isinstance(value, (dict, list)):
+            if id(value) in seen:
+                continue
+            seen.add(id(value))
+            if isinstance(value, dict):
+                if 'path' in value:
+                    path = Path(_text(value['path'], 'resource.path', allow_empty=False))
+                    validate_input_path(base / path)
+                pending.extend(value.values())
+            else:
+                pending.extend(value)
+
+
 def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
                              verify: bool = True, require_no_placeholders: bool = False,
                              protected_inputs=()) -> dict:
@@ -1525,6 +1553,7 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
     output_path = _delivery_output_path(Path.cwd(), str(output))
     protected = [Path(path) for path in protected_inputs]
     validate_output_path(output_path, protected_inputs=protected)
+    validate_task_resources(spec, base_dir)
     validated = _validate_spec(spec, Path(base_dir) if base_dir is not None else Path.cwd())
     protected.extend(validated["image_paths"])
     verified = verify or require_no_placeholders
@@ -1654,9 +1683,11 @@ def _runtime_check(task_dir: Path, location: OutputLocation) -> bool:
     if checks_passed and "archive_dir" in writable_by_name and not writable_by_name["archive_dir"]:
         print("archive-warning: archive directory is unavailable; main output may proceed", file=sys.stderr)
     if not checks_passed or not writable_by_name.get("output_dir", False):
-        print("check-failed: runtime environment check failed", file=sys.stderr)
+        print("check_kind=environment artifact_validation=not_run", file=sys.stderr, flush=True)
+        print("check-failed: runtime environment check failed", file=sys.stderr, flush=True)
         return False
-    print("check-ok")
+    print("check_kind=environment artifact_validation=not_run")
+    print("check-ok", flush=True)
     return True
 
 
@@ -1698,6 +1729,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("input is required; output is required unless --check or --preflight is used")
     try:
         task_dir = Path.cwd()
+        from archive_deliverables import validate_input_path
+        validate_input_path(args.input)
         output_path = None
         if not args.preflight:
             print("generation-deprecated: create_docx.py generation CLI is deprecated; "
@@ -1708,6 +1741,7 @@ def main(argv: list[str] | None = None) -> int:
             if _paths_alias(input_path, task_dir / output_path):
                 parser.error("output must not refer to the input JSON file")
         spec = json.loads(args.input.read_text(encoding="utf-8"), object_pairs_hook=_json_object)
+        validate_task_resources(spec, args.input.parent)
         if args.preflight:
             print(json.dumps(preflight_document(spec, args.input.resolve().parent), ensure_ascii=False))
         else:

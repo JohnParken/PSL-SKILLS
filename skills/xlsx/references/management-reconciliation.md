@@ -1,27 +1,29 @@
 # Management reconciliation and arithmetic change allocation
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) and require exit 0,
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) and require exit 0,
 status ready. Confirm the task directory, readable inputs and output write/read/cleanup
-probe. Replace `<skill_dir>` from the actual SKILL.md location. Python 3.9+, standard
+probe. Replace `<skill-root>` from the actual SKILL.md location. Python 3.9+, standard
 library only; no installation, network or private data discovery.
 
 ## Inputs and CLI
 
 Accept two native management_wide_v1 reports, produced by
-[management-wide.md](management-wide.md), including validated
-[institution hierarchy](institution-hierarchy.md) results. Select one explicit period per
+Configured bank management long-to-wide reports (first release) (`<skill-root>/references/management-wide.md`), including validated
+institution hierarchy (`<skill-root>/references/institution-hierarchy.md`) results. Select one explicit period per
 side; they may be equal for two-table reconciliation. Select one currency/version/level
 scope per run. Other periods and scopes are explicitly excluded, not aggregated.
-Copy the [fictional configuration](../assets/fictional_reconciliation_config.json) to the
+Copy the fictional configuration (`<skill-root>/assets/fictional_reconciliation_config.json`) to the
 task directory as reconcile.json. Provide left.json and right.json for January/February:
 
 ```console
 (
 set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill_dir>/scripts/xlsx_reconcile.py" left.json right.json --query reconcile.json --xlsx reconciliation.xlsx > reconciliation.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_reconcile.py" left.json right.json --query reconcile.json --xlsx reconciliation.xlsx > reconciliation.json
 )
 ```
 
@@ -64,7 +66,7 @@ right wide row IDs. XLSX contains Records, Checks, Contributions, Metadata and W
 Metadata stores the complete structured result in ordered JSON chunks. It uses shared
 readable styles, pale-blue frozen headers and alternating rows. All values are literal;
 Excel-unsafe precise numbers become exact text with warnings, using the existing
-[safe exporter](result-export.md) policy. Existing outputs are refused.
+safe exporter (`<skill-root>/references/result-export.md`) policy. Existing outputs are refused.
 
 Input/snapshot limit is 16 MiB each, query 64 KiB, inherited 5000 rows per report and
 20000 metric records; output has at most 20000 matched-union records and 200000 cells

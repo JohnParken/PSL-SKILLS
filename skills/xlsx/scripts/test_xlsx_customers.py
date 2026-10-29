@@ -130,8 +130,8 @@ class CustomerTests(unittest.TestCase):
     def test_cli_aggregate_privacy_readback_and_source_preservation(self):
         config=self.folder/'query.json'; config.write_text(json.dumps(self.config)); output=self.folder/'aggregate.xlsx'
         before=self.left.read_bytes(); after=self.right.read_bytes()
-        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_customers.py')),str(self.left),str(self.right),'--query',str(config),'--xlsx',str(output)]
-        run=subprocess.run(command,capture_output=True,text=True)
+        command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_customers.py')),str((self.left).relative_to(self.folder)),str((self.right).relative_to(self.folder)),'--query',str((config).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))]
+        run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stdout+run.stderr)
         for identifier in ('customer-00012345678901234567890','customer-002','account-001'):
             self.assertNotIn(identifier,run.stdout)
@@ -141,7 +141,7 @@ class CustomerTests(unittest.TestCase):
         text=' '.join(str(cell['value']) for cell in cells)
         self.assertNotIn('customer-00012345678901234567890',text); self.assertNotIn('account-001',text)
         self.assertEqual(self.left.read_bytes(),before); self.assertEqual(self.right.read_bytes(),after)
-        original=output.read_bytes(); run=subprocess.run(command,capture_output=True,text=True)
+        original=output.read_bytes(); run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,1); self.assertEqual(output.read_bytes(),original)
 
 

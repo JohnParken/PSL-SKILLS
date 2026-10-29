@@ -102,11 +102,12 @@ class DeliveryTests(unittest.TestCase):
         result = json.loads(stdout)
         self.assertEqual(result['archive_status'], 'copied')
         self.assertEqual(result['archive_output'], 'output/abc123/report.docx')
-        prefix = 'router-config-debug: ROUTER_CONFIG_VARIABLES='
+        prefix = 'router-config-debug: '
         lines = [line for line in stderr.splitlines() if line.startswith(prefix)]
         self.assertEqual(len(lines), 1)
-        self.assertEqual(json.loads(lines[0][len(prefix):]), config)
-        self.assertIn('questionId', json.loads(lines[0][len(prefix):]))
+        self.assertEqual(json.loads(lines[0][len(prefix):]), {'configured': True, 'values_redacted': True})
+        self.assertNotIn('questionId', lines[0])
+        self.assertNotIn('abc123', lines[0])
 
     def test_old_request_id_logs_new_missing_question_id_reason_and_keeps_main(self):
         config = json.dumps([{"name":"commonParam", "value":json.dumps([
@@ -519,11 +520,17 @@ class DeliveryTests(unittest.TestCase):
                              else {'type': 'image', **image})
                     (self.work / 'input.json').write_text(json.dumps({'blocks': [block]}),
                                                          encoding='utf-8')
+                    primary_before = (self.work / 'report.docx').read_bytes() if (self.work / 'report.docx').exists() else None
                     process = self.run_cli('input.json', 'report.docx', '--verify',
                                            config=self.config())
-                    result = self.assert_archive_warning(process)
-                    self.assertTrue(any('archive target conflicts with an input or another deliverable' in warning
-                                        for warning in result['warnings']))
+                    if alias == 'symlink':
+                        self.assertNotEqual(process.returncode, 0)
+                        self.assertIn('symbolic links', process.stderr)
+                        self.assertEqual((self.work / 'report.docx').read_bytes(), primary_before)
+                    else:
+                        result = self.assert_archive_warning(process)
+                        self.assertTrue(any('archive target conflicts with an input or another deliverable' in warning
+                                            for warning in result['warnings']))
                     self.assertEqual(archive_output.read_bytes(), image_bytes)
                     self.assertEqual(image_path.read_bytes(), image_bytes)
                     self.assertTrue((self.work / 'report.docx').read_bytes().startswith(b'PK'))

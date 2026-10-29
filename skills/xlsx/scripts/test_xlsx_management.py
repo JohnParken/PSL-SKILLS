@@ -279,7 +279,7 @@ class ManagementTests(unittest.TestCase):
         query=self.source.with_suffix('.json'); query.write_text(json.dumps(self.config))
         output=self.source.with_name('management.xlsx')
         run=subprocess.run([sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_management.py')),
-                            str(self.source),'--sheet','Facts','--query',str(query),'--xlsx',str(output)],capture_output=True,text=True)
+                            str((self.source).relative_to(self.source.parent)),'--sheet','Facts','--query',str((query).relative_to(self.source.parent)),'--xlsx',str((output).relative_to(self.source.parent))],cwd=self.source.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         self.assertTrue(json.loads(run.stdout)['export']['output_written'])
         self.assertEqual(Workbook.load(output).cells['Wide']['B2']['value'],'00012345678901234567890')

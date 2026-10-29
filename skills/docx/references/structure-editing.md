@@ -1,16 +1,18 @@
 # 受控结构编辑输入约定
 
-文件位置统一遵循 [文件定位与读取规则](../SKILL.md#文件定位与读取规则)：文档及操作文件参数相对任务目录；后续读取使用本次实际输出路径，不按输入目录推导。
-写入前按 [交付文件命名](generation.md#交付文件命名) 确定实际名称；以下业务名称仅为示例，须按本次任务替换，用户指定名称优先。
+路径占位符说明：`<skill-root>` 是 DOCX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 DOCX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-交付归档：编辑 CLI 和 [公开交付 API](delivery.md#公开交付-api) 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 [当轮统一归档](delivery.md) 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
+文件位置统一遵循 文件定位与读取规则（`<skill-root>/SKILL.md#文件定位与读取规则`）：文档及操作文件参数相对任务目录；后续读取使用本次实际输出路径，不按输入目录推导。
+写入前按 交付文件命名（`<skill-root>/references/generation.md#交付文件命名`） 确定实际名称；以下业务名称仅为示例，须按本次任务替换，用户指定名称优先。
+
+交付归档：编辑 CLI 和 公开交付 API（`<skill-root>/references/delivery.md#公开交付-api`） 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 当轮统一归档（`<skill-root>/references/delivery.md`） 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
 
 
-先执行技能入口要求的自检，保留输入文件，从宿主确认的任务工作目录执行；将 `<skill_dir>` 替换为主入口定义的真实目录：
+先执行技能入口要求的自检，保留输入文件，从宿主确认的任务工作目录执行；将 `<skill-root>` 替换为主入口定义的真实目录：
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/edit_structure.py\" ./采购管理办法.docx ./operations.json ./采购管理办法_修订版.docx")
-execute(command="python -I -S -B \"<skill_dir>/scripts/office/validate.py\" ./采购管理办法_修订版.docx")
+execute(command="python -I -S -B \"<skill-root>/scripts/edit_structure.py\" ./采购管理办法.docx ./operations.json ./采购管理办法_修订版.docx")
+execute(command="python -I -S -B \"<skill-root>/scripts/office/validate.py\" ./采购管理办法_修订版.docx")
 ```
 
 顶层只接受非空 `operations` 列表。各操作按原始 XML 定位，全部验证通过后才应用。`paragraph_index` 从 0 开始，只计算 `w:body` 的直属 `w:p`，不计表格或容器内段落；`run_index` 从 0 开始，计算锚点段落的直属 `w:r`。同时提供完全一致的 `expected_text`，run 格式修改另提供 `expected_run_text`，避免索引漂移时改错内容。

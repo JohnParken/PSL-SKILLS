@@ -1,66 +1,68 @@
 # 生成器输入约定
 
-标准新建直接使用已集成环境判断的[自动任务入口](task-cleanup.md#自动新建任务入口)：规格JSON直接传stdin，内部创建的worker.py和spec.json在验收及归档处理后自动清理。旧 `create_docx.py` 生成 CLI 已弃用但暂时保留，仅在已有集成或明确需要定制调用且自行管理辅助文件时使用；生成时只向 stderr 提示，stdout JSON、返回值和退出码保持兼容。`--check`、`--preflight` 与库函数未弃用，不以自动入口替代这些专用能力。下文旧生成 CLI 示例均受此前提约束。下文JSON字段不变；create_docx.py的文件输入示例为兼容/定制调用，调用方辅助文件不会因此自动删除。
+路径占位符说明：`<skill-root>` 是 DOCX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 DOCX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-普通文字文档可直接按 [主入口最短流程](../SKILL.md#新建与受控编辑) 执行；本页按需查阅字段和格式，不作为每次任务必须全文读取的清单。
+标准新建直接使用已集成环境判断的自动任务入口（`<skill-root>/references/task-cleanup.md#自动新建任务入口`）：规格JSON直接传stdin，内部创建的worker.py和spec.json在成功与失败时均按自动入口收尾。旧 `<skill-root>/scripts/create_docx.py` 生成 CLI 已弃用但暂时保留，仅在已有集成或明确需要定制调用且自行管理辅助文件时使用；生成时只向 stderr 提示，stdout JSON、返回值和退出码保持兼容。`--check`、`--preflight` 与库函数未弃用，不以自动入口替代这些专用能力。下文旧生成 CLI 示例均受此前提约束。下文JSON字段不变；create_docx.py的文件输入示例为兼容/定制调用，调用方辅助文件不会因此自动删除。
+
+普通文字文档可直接按 主入口最短流程（`<skill-root>/SKILL.md#新建与受控编辑`） 执行；本页按需查阅字段和格式，不作为每次任务必须全文读取的清单。
 
 ## 目录
 
-- [路径解析示例](#路径解析示例)
-- [预检与集成验收](#预检与集成验收)
-- [交付文件命名](#交付文件命名)
-- [输出目录与文件名](#输出目录与文件名)
-- [配置调试](#配置调试)
-- [主题与文档标题](#主题与文档标题)
-- [顶层字段](#顶层字段)
-- [默认格式与页面](#默认格式与页面)
-- [样式字段与覆盖顺序](#样式字段与覆盖顺序)
-- [内容块](#内容块)
-- [表格配置与示例](#表格配置与示例)
-- [显式覆盖示例](#显式覆盖示例)
-- [中文 JSON 与引号](#中文-json-与引号)
-- [生成后格式引导](#生成后格式引导)
+- 路径解析示例（`<skill-root>/references/generation.md#路径解析示例`）
+- 预检与集成验收（`<skill-root>/references/generation.md#预检与集成验收`）
+- 交付文件命名（`<skill-root>/references/generation.md#交付文件命名`）
+- 输出目录与文件名（`<skill-root>/references/generation.md#输出目录与文件名`）
+- 配置调试（`<skill-root>/references/generation.md#配置调试`）
+- 主题与文档标题（`<skill-root>/references/generation.md#主题与文档标题`）
+- 顶层字段（`<skill-root>/references/generation.md#顶层字段`）
+- 默认格式与页面（`<skill-root>/references/generation.md#默认格式与页面`）
+- 样式字段与覆盖顺序（`<skill-root>/references/generation.md#样式字段与覆盖顺序`）
+- 内容块（`<skill-root>/references/generation.md#内容块`）
+- 表格配置与示例（`<skill-root>/references/generation.md#表格配置与示例`）
+- 显式覆盖示例（`<skill-root>/references/generation.md#显式覆盖示例`）
+- 中文 JSON 与引号（`<skill-root>/references/generation.md#中文-json-与引号`）
+- 生成后格式引导（`<skill-root>/references/generation.md#生成后格式引导`）
 
-先按 [执行环境约束](../SKILL.md#执行环境约束与首步自检) 定位脚本并完成自检。在宿主确认的任务工作目录调用生成器，输入使用 `./document.json` 等相对路径，输出参数只填写文件名；不要切换到 skill 源码目录。脚本和内部资源均基于入口定义的 `<skill_dir>` 定位，执行前替换为真实目录。路径基准统一见 [文件定位与读取规则](../SKILL.md#文件定位与读取规则)：标准自动入口的 stdin 图片相对任务目录；仅下文兼容文件输入 CLI 的图片相对输入 JSON 所在目录；字典 API 图片相对 `base_dir`（省略为任务目录），均与主文件输出目录无关。API 模块从 `<skill_dir>/scripts/` 加载；路径接口区别见下节。禁止传入未声明的字段，生成器会拒绝未知字段、错误类型和不支持的块。
+先按 执行环境约束（`<skill-root>/SKILL.md#执行环境约束与首步自检`） 定位脚本并完成自检。在宿主确认的任务工作目录调用生成器，输入使用 `./document.json` 等相对路径，输出参数只填写文件名；不要切换到 skill 源码目录。脚本和内部资源均基于入口定义的 `<skill-root>` 定位，执行前替换为真实目录。路径基准统一见 文件定位与读取规则（`<skill-root>/SKILL.md#文件定位与读取规则`）：标准自动入口的 stdin 图片相对任务目录；仅下文兼容文件输入 CLI 的图片相对输入 JSON 所在目录；字典 API 图片相对 `base_dir`（省略为任务目录），均与主文件输出目录无关。API 模块从 `<skill-root>/scripts/` 加载；路径接口区别见下节。禁止传入未声明的字段，生成器会拒绝未知字段、错误类型和不支持的块。
 
 ## 路径解析示例
 
-假设任务目录已有 `./inputs/document.json` 和 `./inputs/images/logo.png`，JSON 内图片字段使用 `"path": "images/logo.png"`。完成自检后仍从任务目录调用：
+本例工作目录固定为宿主已确认的 `./`。先确认本次实际输入为 `./document.json`、图片为 `./logo.png`，JSON 内图片字段为 `"path": "logo.png"`；这些是示例文件名，使用时替换为宿主确认的真实名称，不据此创建输入子目录。完成自检后，从同一 `./` 调用兼容入口：
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./inputs/document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
+execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
 ```
 
-读取的是 `./inputs/images/logo.png`，主文件为 `./客户服务改进方案.docx`；有效 `questionId` 下副本为 `./output/{questionId}/客户服务改进方案.docx`。不把主文件写入 `inputs/`，不切换到该目录。如果在 Python 中自行读取这个 JSON 再调用字典 API，须明确保留图片基准并保护输入：
+读取 `./logo.png`，主文件为 `./客户服务改进方案.docx`。有效配置下归档副本由程序写入 `./output/{questionId}/客户服务改进方案.docx`；该归档目录不是工作目录，不进入其中执行命令。若自行读取同一 JSON 后调用字典 API，仍从 `./` 执行并保护原始输入：
 
 ```python
 import json
 from pathlib import Path
 from create_docx import create_document_delivery
 
-spec = json.loads(Path("inputs/document.json").read_text(encoding="utf-8"))
+spec = json.loads(Path("./document.json").read_text(encoding="utf-8"))
 result = create_document_delivery(
-    spec, "客户服务改进方案.docx", base_dir="inputs",
-    protected_inputs=["inputs/document.json"],
+    spec, "客户服务改进方案.docx", base_dir=".",
+    protected_inputs=["./document.json"],
 )
 ```
 
-模块从已确认的 `<skill_dir>/scripts/` 加载；`base_dir="inputs"` 只影响图片读取，不改变输出和归档位置。省略 `base_dir` 时，`images/logo.png` 将按任务目录下的 `./images/logo.png` 读取，不会自动沿用 JSON 的目录。
+模块从已确认的 `<skill-root>/scripts/` 加载；`base_dir="."` 只将图片基准指定为任务目录，不改变工作目录或输出位置。标准stdin入口的图片也相对 `./`。仅当实际输入 JSON 确实位于宿主确认的子目录时，旧兼容文件 CLI 才按该 JSON 的父目录解析图片；字典 API 不自动继承 JSON 位置，需要调用方显式传入正确的 `base_dir`。这是既有兼容接口差异，不是要求创建或切换到输入子目录。
 
 ## 预检与集成验收
 
-先按主入口执行环境自检。以下命令中的 `<skill_dir>` 替换为已确认的真实目录；输入输出位于任务工作目录：
+先按主入口执行环境自检。以下命令中的 `<skill-root>` 替换为已确认的真实目录；输入输出位于任务工作目录：
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./document.json --preflight")
-execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
+execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json --preflight")
+execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
 ```
 
-`--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条仅用于前述兼容/定制调用，按需选择，不串行执行预检与生成；标准新建直接用 `run_docx_task.py create`（已集成必要环境自检，不另调用check），不再执行这里的第二条生成命令。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。验收遇到未验证警告同样拒绝发布。成功摘要增加 `layout_intent: true`；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。
+`--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条仅用于前述兼容/定制调用，按需选择，不串行执行预检与生成；标准新建直接用 `"<skill-root>/scripts/run_docx_task.py" create`（已集成必要环境自检，不另调用check），不再执行这里的第二条生成命令。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。验收遇到未验证警告同样拒绝发布。成功摘要增加 `layout_intent: true`；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。
 
 低层 `create_document()` 的 `verify=False` 保持兼容；最终交付使用默认 `verify=True` 的 `create_document_delivery()`，由代码自动归档。所有生成调用在写出前检查共享 XML 预算，避免输出自身校验器拒绝的超限文件。调用 `preflight_document(spec, base_dir=None)` 获取预检摘要，返回块数、部件数和未压缩大小。使用 Python 字典可直接调用 API，无需先写 JSON。CLI 拒绝重复 JSON 键，未知字段在可确定时提示相近字段名；非法字符诊断包含字段路径、从 1 起的字符位置和 Unicode 码位，不静默清洗内容。
 
-生成失败时执行 [生成失败修正与有限重试](validation.md#生成失败修正与有限重试)：由助手按诊断修正可确定的输入或调用错误，首次之外最多重试 2 次，每次重新完整验收；脚本本身仍为单次执行。安全、资源、环境或能力边界受阻时停止，不绕过校验，也不将旧输出交付为本次结果。
+生成失败时执行 生成失败修正与有限重试（`<skill-root>/references/validation.md#生成失败修正与有限重试`）：由助手按诊断修正可确定的输入或调用错误，首次之外最多重试 2 次，每次重新完整验收；脚本本身仍为单次执行。安全、资源、环境或能力边界受阻时停止，不绕过校验，也不将旧输出交付为本次结果。
 
 ## 交付文件命名
 
@@ -83,7 +85,7 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./docume
 
 ## 输出目录与文件名
 
-归档目录默认只保存副本，不作为输入来源或主动检索范围；必要的同名、输入同源及本次副本检查按 [归档目录使用边界](delivery.md#归档目录使用边界) 执行，默认不读取历史文档内容；用户明确授权的指定归档输入按该边界处理。
+归档目录默认只保存副本，不作为输入来源或主动检索范围；必要的同名、输入同源及本次副本检查按 归档目录使用边界（`<skill-root>/references/delivery.md#归档目录使用边界`） 执行，默认不读取历史文档内容；用户明确授权的指定归档输入按该边界处理。
 
 命令行第二个参数是单个 DOCX 文件名，不接受 `./output.docx`、目录或完整路径。新建主文件始终生成到宿主确认的任务工作目录 `./`，不是脚本安装目录。生成器在每次写入自检或生成时读取 `ROUTER_CONFIG_VARIABLES`，不在导入时缓存；自检与生成须使用同一任务目录和配置。
 
@@ -105,29 +107,27 @@ execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./docume
 
 外层缺少 `commonParam` 返回 `missing_common_param`，重复返回 `duplicate_common_param`，外层参数项不合法返回 `invalid_router_config_entry`；外层既非列表也非兼容字典返回 `invalid_router_config_shape`。内层 JSON、列表结构和参数项错误分别沿用 `invalid_common_param_json`、`invalid_common_param_shape`、`invalid_common_param_entry`。内层缺少或重复 `questionId` 分别返回 `missing_question_id`、`duplicate_question_id`。两层 JSON 均拒绝重复对象键及非标准常量；所有配置错误仅跳过归档，不阻止主文件生成。
 
-ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受非负整数并转成十进制字符串；字符串参数值在通用取值函数中先调用 `.strip()` 去掉两端空白（含空格、制表符、换行等），保留中间内容及非字符串类型；例如 `"  abc123  "` 作为 `abc123` 校验。裁剪后不接受布尔值、浮点数、空串、内部空白、路径或 Windows 保留设备名，无效返回 `invalid_question_id`。仅识别 `questionId`，不将旧参数 `requestId`、`idRecord` 当作别名；仅提供旧参数时跳过归档。两者同时提供时只使用新参数，重复或无效的新参数不回退到旧参数。默认开启原始配置调试日志，可显式关闭，见 [配置调试](#配置调试)。
+ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受非负整数并转成十进制字符串；字符串参数值在通用取值函数中先调用 `.strip()` 去掉两端空白（含空格、制表符、换行等），保留中间内容及非字符串类型；例如 `"  abc123  "` 作为 `abc123` 校验。裁剪后不接受布尔值、浮点数、空串、内部空白、路径或 Windows 保留设备名，无效返回 `invalid_question_id`。仅识别 `questionId`，不将旧参数 `requestId`、`idRecord` 当作别名；仅提供旧参数时跳过归档。两者同时提供时只使用新参数，重复或无效的新参数不回退到旧参数。配置调试默认关闭，开启时仅输出脱敏状态，见 配置调试（`<skill-root>/references/generation.md#配置调试`）。
 
 文件名支持中文和空格，须以 `.docx` 结尾，UTF-8 长度不超过 255 字节；禁止附带目录、路径分隔符、控制字符、Windows 非法字符或保留设备名、尾点及尾空格。主文件和归档路径均拒绝符号链接，包括悬空链接；归档目录不存在时自动创建。拒绝主文件或归档目标与输入 JSON、正文图片或表格内图片同源，包括经符号链接解析的路径及硬链接。图片校验与生成复用同一份已验证输入，不为归档重复读取图片。路径检查依赖宿主隔离同一任务目录中的并发修改，不提供针对恶意并发改写目录的隔离。
 
 先在任务根目录生成临时 ZIP，生成及所请求的验证成功后原子替换主文件；失败保留旧主文件和旧归档。随后将主文件字节复制到任务根目录 `./` 的独占短名称临时文件，再原子替换同名普通归档文件。不会重新生成第二份文档。归档检查、创建目录、复制、同步、权限设置或替换失败时，尝试清理本次归档临时文件，保留已生成主文件及旧归档，主流程仍成功并返回退出码 0，仅报告归档警告；不改用归档目录暂存、不自动重试、不回滚主文件，也不将失败的副本报告为已归档。若清理也失败，stderr 同时报告原始错误、清理错误及任务内临时路径，保留残留供定位处理，不声称清理完成。两个文件的发布是顺序执行，不构成跨文件事务；归档失败不会恢复旧主文件。已有主文件和归档分别保留各自权限，新归档使用本次主文件的权限。
 
-每次生成成功后向标准输出返回 JSON：`output` 是主文件名，`output_dir` 固定为 `.`；`archive_output` 是副本相对于任务目录的路径，无有效配置时为 `null`；`archive_status` 为 `copied`、`skipped` 或 `failed`。兼容字段 `used_fallback` 和 `fallback_reason` 现在说明配置是否无法提供归档目录及原因，不代表主文件改变位置。正常完成时，未验证的 `status` 为 `created`，验证通过为 `verified` 并附验证字段。无论归档是否成功，`status` 和 `generation_status` 均保留主文件的 `created` 或 `verified` 状态，主文件成功时退出码为 0。归档失败仅设置 `archive_status=failed`、非空 `warnings`，stderr 输出 `archive-warning`；配置解析的异常也隔离在主文件发布后的归档步骤中。摘要使用标准 JSON 转义。后续读取及交付内部核对本次 `output` 和归档状态，可交付成功主文件的正常链接；用户归档提示只用 `archive_message`，成功仅“归档完成”，跳过或失败不得误报完成，不展示内部归档路径和原始日志。
+每次生成成功后向标准输出返回 JSON：`output` 是主文件名，`output_dir` 固定为 `.`；`archive_output` 是副本相对于任务目录的路径，无有效配置时为 `null`；`archive_status` 为 `copied`、`skipped` 或 `failed`。兼容字段 `used_fallback` 和 `fallback_reason` 现在说明配置是否无法提供归档目录及原因，不代表主文件改变位置。正常完成时，未验证的 `status` 为 `created`，验证通过为 `verified` 并附验证字段。无论归档是否成功，`status` 和 `generation_status` 均保留主文件的 `created` 或 `verified` 状态，主文件成功时退出码为 0。归档失败仅设置 `archive_status=failed`、非空 `warnings`，stderr 输出 `archive-warning`；配置解析的异常也隔离在主文件发布后的归档步骤中。摘要使用标准 JSON 转义。后续读取及交付内部核对本次 `output` 和归档状态，可交付成功主文件的正常链接；用户归档提示根据实际状态及用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）映射，`archive_message` 保留原机器文案；跳过或失败不得误报完成，不展示内部归档路径和原始日志。
 
-标准自动入口 `run_docx_task.py create/retry` 内置必要环境自检，失败时返回environment_failed和具体原因；不需要模型先运行check或判断标记。runner的check只提供相同必要条件的诊断，不读取归档配置。此处旧 `create_docx.py --check` 仍保留兼容诊断行为：检查主目录和归档目录，探针只在 `./` 创建，归档路径/访问权限检查失败只提示。旧入口的诊断不作为标准runner生成前的附加门禁。`--preflight` 保持只读，不解析输出配置、不创建目录或复制文件。
+标准自动入口 `"<skill-root>/scripts/run_docx_task.py" create/retry` 内置必要环境自检，失败时返回environment_failed和具体原因；不需要模型先运行check或判断标记。runner的check只提供相同必要条件的诊断，不读取归档配置。此处旧 `"<skill-root>/scripts/create_docx.py" --check` 仍保留兼容诊断行为：检查主目录和归档目录，探针只在 `./` 创建，归档路径/访问权限检查失败只提示。旧入口的诊断不作为标准runner生成前的附加门禁。`--preflight` 保持只读，不解析输出配置、不创建目录或复制文件。
 
-配置解析保留在 `<skill_dir>/scripts/output_location.py`：`resolve_output_location(router_config_str)` 不读环境、不操作文件、不打印日志，返回不可变 `OutputLocation(output_dir, used_fallback, fallback_reason)`。保留返回字段名，其 `output_dir` 改为有效配置的 `output/{questionId}` 或失败时的 `.`；命令入口仅在 `used_fallback=False` 时将其作为归档目录，不用它选择主文件位置。模块随 DOCX 完整目录分发，仅依赖标准库。
+配置解析保留在 `<skill-root>/scripts/output_location.py`：`resolve_output_location(router_config_str)` 不读环境、不操作文件、不打印日志，返回不可变 `OutputLocation(output_dir, used_fallback, fallback_reason)`。保留返回字段名，其 `output_dir` 改为有效配置的 `output/{questionId}` 或失败时的 `.`；命令入口仅在 `used_fallback=False` 时将其作为归档目录，不用它选择主文件位置。模块随 DOCX 完整目录分发，仅依赖标准库。
 
-公开 `create_document_delivery(spec, output, base_dir=None, *, verify=True, require_no_placeholders=False, protected_inputs=())` 与新建 CLI 共用发布流程；主文件成功后自动调用统一归档入口，返回主状态和归档摘要。新建 CLI 保留原验证选项和单文件字段，并增加统一入口的 `files` 明细；归档预检查失败、无文件明细时 `archive_output` 为 `null`，以 `warnings` 解释失败，不猜测副本路径。API 默认开启验证；输入字典来自磁盘时将源 JSON 路径加入 `protected_inputs`。`base_dir` 仅用于图片路径解析，图片只验证读取一次，并自动加入保护清单。完整接口和示例见 [公开交付 API](delivery.md#公开交付-api)。
+公开 `create_document_delivery(spec, output, base_dir=None, *, verify=True, require_no_placeholders=False, protected_inputs=())` 与新建 CLI 共用发布流程；主文件成功后自动调用统一归档入口，返回主状态和归档摘要。新建 CLI 保留原验证选项和单文件字段，并增加统一入口的 `files` 明细；归档预检查失败、无文件明细时 `archive_output` 为 `null`，以 `warnings` 解释失败，不猜测副本路径。API 默认开启验证；输入字典来自磁盘时将源 JSON 路径加入 `protected_inputs`。`base_dir` 仅用于图片路径解析，图片只验证读取一次，并自动加入保护清单。完整接口和示例见 公开交付 API（`<skill-root>/references/delivery.md#公开交付-api`）。
 
-低层 `create_document(spec, output, base_dir=None, verify=False, require_no_placeholders=False)` 保持显式路径接口及返回 Path，不读取环境、不自动归档，仅用于中间处理或由调用方显式收尾的场景。五种编辑也提供自动归档的公开交付 API；不要将底层函数的成功误当成归档完成。
+低层 `create_document(spec, output, base_dir=None, verify=False, require_no_placeholders=False)` 保持显式路径接口及返回 Path，不读取环境、不自动归档，仅用于中间处理或由调用方显式收尾的场景。五种编辑也提供自动归档的公开交付 API；不要将底层函数的成功误当成归档成功。
 
 ## 配置调试
 
-`DOCX_DEBUG_ROUTER_CONFIG` 未设置时默认按 `1` 处理，自动启用配置日志；显式设置 `DOCX_DEBUG_ROUTER_CONFIG=0` 可关闭，设置 `1` 可开启。新建/归档自检及实际归档读取配置时，代码在 stderr 输出 `router-config-debug: ROUTER_CONFIG_VARIABLES=...`；新建、五种编辑 CLI 和公开交付 API 共用该读取入口。stdout 的结果 JSON 不受影响。只读检查、只读批注、预检及不归档的底层 API 不读取配置，也不会输出该日志。
+`DOCX_DEBUG_ROUTER_CONFIG` 默认关闭，仅精确值1开启。读取配置时，stderr输出 `router-config-debug: {"configured": true, "values_redacted": true}`；configured表示环境变量是否存在，不证明配置有效。日志绝不包含原始配置、参数值、ID或目录，开启诊断也不恢复原文。stdout业务JSON、原配置解析和错误原因码保持不变；诊断写入失败不改变业务结果。只读检查和不归档的底层API不读取配置。
 
-日志中的值是完整原始环境字符串的 JSON 编码表示：换行和引号会转义，可用 JSON 解码还原；未设置为 `null`，空字符串为 `""`。不自动脱敏或截断，因此可能包含其他公共参数或凭据，当前按调试需要默认开启，不在回复中再次转贴完整配置；不需要日志时显式设置 `0`。除未设置或精确值 `1` 外，其他值（包括空字符串）均关闭日志。调试日志写入失败不改变配置解析或主文件成功状态。
-
-直接执行正常生成命令或 `create_docx.py --check`，查看该进程的 stderr 即可。需要关闭时，从现有调用程序为该次命令设置环境变量 `DOCX_DEBUG_ROUTER_CONFIG=0`；仅在提示词中写此值不会修改进程环境变量。`resolve_output_location(router_config_str)` 保持纯解析函数；日志在读取环境变量的 `read_router_config_from_environment()` 中输出，不改变原有原因码或失败策略。
+必要时仅在当前调用环境设置该开关，不修改全局环境，不回显环境变量。归档错误按实际archive_status与固定原因码定位，禁止为了排错将凭据写入提示或日志。
 
 ## 主题与文档标题
 
@@ -135,7 +135,7 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 
 使用 `theme` 选择公文 `official`、商务 `business` 或学术 `academic`；显式样式覆盖优先于主题。这些选项均为 DOCX 内的排版预设，不代表公文或学术标准认证，也不代表其他文件格式的导出能力。编辑已有文档不应用新建默认主题。
 
-成功生成、验收并核实文件后，按 [生成后格式引导](#生成后格式引导) 组织交付回复。
+成功生成、验收并核实文件后，按 生成后格式引导（`<skill-root>/references/generation.md#生成后格式引导`） 组织交付回复。
 
 | 主题 | 正文与西文字体 | 正文排版 | 标题 |
 |---|---|---|---|
@@ -290,7 +290,7 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 
 在同一对象中仅提供 `line_spacing_pt` 或 `line_spacing_multiple` 之一；不要同时传入。后续层显式指定一种行距时替换前一层的行距模式，例如从固定 24pt 改为 1.5 倍。普通段落、标题和表格文字样式均接受颜色及倍数行距。
 
-按“内置表格文字默认值 → `styles.table_body` / `styles.table_header` → 当前表格的 `body_format` / `header_format`”逐字段覆盖。正文和表头分别计算，不要将 `body_format` 当作整张表格的通用文字覆盖；需要统一字体时分别设置两者。单元格默认用字符串，或按 [列表与表格细节](generation-details.md) 使用严格的 text/image/borders 对象；不接受任意 run、段落或合并布局。
+按“内置表格文字默认值 → `styles.table_body` / `styles.table_header` → 当前表格的 `body_format` / `header_format`”逐字段覆盖。正文和表头分别计算，不要将 `body_format` 当作整张表格的通用文字覆盖；需要统一字体时分别设置两者。单元格默认用字符串，或按 列表与表格细节（`<skill-root>/references/generation-details.md`） 使用严格的 text/image/borders 对象；不接受任意 run、段落或合并布局。
 
 将公共文字格式保存在 `TableBody` / `TableHeader`，各单元格仅引用样式；仅写出单表显式 `body_format` / `header_format` 的直接属性。显式覆盖即使与全局样式相同也保留，`false` 及固定/倍数行距切换仍有效。后续在 Word 中修改公共样式可影响未局部覆盖的属性；不要仅检查单元格直接属性来判断最终格式。
 
@@ -315,7 +315,7 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 - `header: true` 将第一行作为表头，`header_rows` 可明确指定连续前置表头数量；关闭 `repeat_header` 仅关闭重复，不取消表头格式。未声明表头时，不自动识别第一行。
 - 使用 `border_style: "none"` 关闭边框，使用 `cell_fill: "none"` 清除全局底色；不要使用 `null` 表示关闭。所有提供的字段均须有效，即使之后被覆盖或当前不生效；拒绝未知字段、错误类型和非有限数值。
 
-使用 `format.borders` 逐边设置表格边框，使用单元格对象的 `borders` 覆盖其 top/left/bottom/right；按 [列表与表格细节](generation-details.md) 核对继承、共享边冲突、层级续号、`header_rows` 和单元格图片规则。
+使用 `format.borders` 逐边设置表格边框，使用单元格对象的 `borders` 覆盖其 top/left/bottom/right；按 列表与表格细节（`<skill-root>/references/generation-details.md`） 核对继承、共享边冲突、层级续号、`header_rows` 和单元格图片规则。
 
 保留上文原有中英文示例的内容。需要覆盖表格样式时，使用下面的完整中英混排示例；其中的 14pt 是显式覆盖，默认仍为 16pt：
 
@@ -341,7 +341,7 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 
 ## 显式覆盖示例
 
-保留默认字体，分别覆盖正文、一级标题、单个段落和局部文字。将下面的完整 JSON 保存为独立输入；不要与其他完整输入直接拼接：
+保留默认字体，分别覆盖正文、一级标题、单个段落和局部文字。下面的JSON仅展示完整字段结构；实际复杂输入使用Python构造并序列化后传stdin，见复杂JSON模板（`<skill-root>/references/complex-json.md`），不要手写拼接或直接落盘：
 
 ```json
 {
@@ -393,25 +393,9 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 
 第一例使用了中文语法引号；第二例没有转义正文中的英文双引号。不要把正文中合法的中文引号全部替换掉。出现 `JSONDecodeError` 时，根据报错的行号、列号检查该位置及其前面的引号、冒号和逗号；仅凭“有中文引号”无法确定原始输入的具体错误。
 
-以下文件写入示例只用于兼容/定制流程；标准自动任务把序列化JSON送stdin，不另建document.json。需要避免手工转义时，在宿主确认的任务工作目录执行以下 Python 示例，使用字典构造输入后序列化；不要手工拼接 JSON 字符串：
+复杂输入统一使用Python调用模板（`<skill-root>/references/complex-json.md`）：构造dict/list后通过json.dumps(..., ensure_ascii=False, allow_nan=False)序列化，传给标准runner的stdin，不另建document.json。ensure_ascii=False保留可读中文，序列化器负责必要转义，但不会修复已写错的JSON或Python源码，也不代替业务校验。
 
-```python
-import json
-from pathlib import Path
-
-spec = {"blocks": [
-    {"type": "heading", "level": 1, "text": "项目进展报告"},
-    {"type": "paragraph", "text": '负责人说：“请完成复核。” 文档状态为 "已确认"。'}
-]}
-work = Path(".")
-(work / "document.json").write_text(
-    json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8"
-)
-```
-
-使用 `ensure_ascii=False` 使中文在 JSON 文件中直接可读；它不负责修复已有非法 JSON，英文双引号等必要字符仍会由序列化器正确转义。生成器使用标准 JSON 解析器，不会自动修复错误引号。
-
-输入 JSON 可放在任务工作目录及其子目录；新建 CLI 和公开交付 API 的主文件位于任务目录根部，编辑输出可使用明确的相对子目录，按主入口的文件定位规则执行。不要在 skill 中保存用户数据、生成产物或临时图片；主文件生成失败时保留已有目标；主文件发布后的归档失败按上文附加步骤警告契约处理，不回滚主文件。
+仅在已确认的兼容/定制流程确需配置文件时，先按任务清单（`<skill-root>/references/task-cleanup.md`）登记尚不存在的任务根目录文件名，再独占创建；成功、失败或停止都由外层在子进程退出后seal/clean并核对清单删除，不能用write_text覆盖既存输入。用户提供的既存JSON属于受保护输入，可位于任务目录及其子目录；本轮新增的临时JSON只能平铺于`./`。新建主文件位于任务根目录，编辑输出遵循主入口的相对路径规则；不得将任务数据写入Skill安装目录。
 
 ## 生成后格式引导
 
@@ -421,4 +405,4 @@ work = Path(".")
 
 用户选择其他主题时，如实说明实际采用的排版，并介绍其余可选主题；存在样式覆盖时说明已按其格式要求生成，不将其描述为未经修改的默认公文格式。上述选项都是 DOCX 内的排版方式，不代表新增 PDF 等文件格式导出能力。用户明确要求只返回文件或不再提示时省略引导。
 
-引导仅出现在交付回复，不写入文档正文、页眉页脚或输入内容，不为展示选项自动生成多份文件，也不要求用户先确认才能拿到已完成的文件。预检、环境自检、生成失败、等待修正或已有文档的读取/受控编辑不触发该新建引导。主题选择及样式范围见 [主题与文档标题](generation.md#主题与文档标题)。
+引导仅出现在交付回复，不写入文档正文、页眉页脚或输入内容，不为展示选项自动生成多份文件，也不要求用户先确认才能拿到已完成的文件。预检、环境自检、生成失败、等待修正或已有文档的读取/受控编辑不触发该新建引导。主题选择及样式范围见 主题与文档标题（`<skill-root>/references/generation.md#主题与文档标题`）。

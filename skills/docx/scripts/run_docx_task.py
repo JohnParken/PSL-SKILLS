@@ -19,7 +19,8 @@ if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from docx_outcome import failure, spec_identity
-from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, _unique_object
+from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, retire_cleanup_manifest, _unique_object
+from controlled_cleanup import finalize_failed_cleanup
 from create_docx import _delivery_output_path
 from archive_deliverables import validate_output_path
 from office.runtime import check_runtime
@@ -109,14 +110,16 @@ def check_task_runtime():
     """Optional diagnostic command; create/retry already enforce the same mandatory gate."""
     report = task_environment()
     if report['status'] != 'ready':
-        print('auto-cleanup-check-failed: ' + _environment_failure(report)['message'], file=sys.stderr)
+        print('check_kind=environment artifact_validation=not_run', file=sys.stderr, flush=True)
+        print('auto-cleanup-check-failed: ' + _environment_failure(report)['message'], file=sys.stderr, flush=True)
         return False
     print(report['diagnostics'], end='')
     for warning in report.get('warnings', []):
         print(warning, file=sys.stderr)
     print('auto-cleanup=available')
     print('output_dir=. writable=True')
-    print('check-ok')
+    print('check_kind=environment artifact_validation=not_run')
+    print('check-ok', flush=True)
     return True
 
 
@@ -277,6 +280,8 @@ def _retained(manifest, message, *, state='retry_pending'):
 def _finish_delivery(manifest, result, expected, operation):
     """Keep a verified delivery successful when ancillary cleanup cannot finish."""
     try:
+        if result.get('temporary_residuals'):
+            raise ValueError('Archive temporary cleanup is incomplete; inspect exact residual paths')
         report = operation()
         if not isinstance(report, dict) or type(report.get('cleanup_complete')) is not bool:
             raise ValueError('Cleanup did not return a valid completion report')
@@ -329,7 +334,19 @@ def _finish_locked(manifest, data, *, worker_warning=None):
         _save(manifest, data)
         seal_cleanup(manifest, outcome='success', verified=True, archive_status=result['archive_status'])
         return cleanup_task(manifest)
-    return _finish_delivery(manifest, result, receipt['output_fingerprint'], finish)
+    payload = _finish_delivery(manifest, result, receipt['output_fingerprint'], finish)
+    payload['attempts'] = runner['attempts']
+    return _retire_delivery(manifest, payload)
+
+
+def _retire_delivery(manifest, payload):
+    report = retire_cleanup_manifest(manifest, payload['cleanup'])
+    if report.get('manifest_removed'):
+        payload['task_manifest'] = None
+    if not report['cleanup_complete']:
+        payload['task_status'] = 'cleanup_incomplete'
+        payload['warnings'].append('cleanup-warning: task intermediates remain; finish cleanup before closing')
+    return payload
 
 
 def resume_task(manifest):
@@ -348,7 +365,7 @@ def resume_task(manifest):
                         receipt = task.optional(helper_path(data['runner'], 'receipt.json'), contents=True)
                         if receipt is not None and receipt != data['runner'].get('receipt_fingerprint'):
                             raise ValueError('Receipt ownership fingerprint changed; no cleanup')
-                return _finish_delivery(manifest, result, expected, lambda: cleanup_task(manifest))
+                return _retire_delivery(manifest, _finish_delivery(manifest, result, expected, lambda: cleanup_task(manifest)))
             with _locked(data):
                 _recover_spec(manifest, data)
                 return _finish_locked(manifest, data)
@@ -440,7 +457,7 @@ def _execute(manifest, data, lock_fd):
     return _finish_locked(manifest, _load(manifest))
 
 
-def create_task(spec, output, *, protected_inputs=(), workspace=None):
+def _create_task(spec, output, *, protected_inputs=(), workspace=None):
     """Create both helper files exclusively, run fixed code, then finish outside its process."""
     environment = task_environment()
     if environment['status'] != 'ready':
@@ -490,6 +507,46 @@ def create_task(spec, output, *, protected_inputs=(), workspace=None):
                 return _with_environment(_execute(manifest, data, (control_fd, descriptor)), environment)
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
         return _retained(manifest, str(exc), state='recovery_pending')
+
+
+def finish_failed_task(result):
+    """Failure is terminal: discard owned execution inputs after the worker stops."""
+    manifest = result.get('task_manifest')
+    if result.get('status') != 'failed' or not manifest:
+        return result
+    try:
+        with TaskFiles() as task:
+            fcntl.flock(task.root, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            data = task.load(manifest)
+            # Never recapture a helper that changed after its owned creation.
+            for path, expected in data.get('runner', {}).get('created', {}).items():
+                current = task.optional(path, contents=True)
+                if current is not None and current != expected:
+                    raise ValueError('Owned helper changed before failure cleanup')
+            runner = data.get('runner')
+            if runner:
+                receipt_path = helper_path(runner, 'receipt.json')
+                receipt_fingerprint = task.optional(receipt_path, contents=True)
+                if receipt_fingerprint is not None:
+                    if receipt_fingerprint != runner.get('receipt_fingerprint') or receipt_fingerprint['links'] != 1:
+                        raise ValueError('Receipt ownership is unconfirmed; no failure cleanup')
+                    receipt = task.load(receipt_path)
+                    validate_receipt(receipt, manifest, runner)
+                    if task.optional(runner['output'], contents=True) != receipt['output_fingerprint']:
+                        raise ValueError('Published output changed; no failure cleanup')
+            report = finalize_failed_cleanup(manifest)
+        result.update(cleanup=report, task_manifest=None if report.get('manifest_removed') else manifest,
+                      task_status='failed_cleaned' if report['cleanup_complete'] else 'cleanup_incomplete',
+                      next_action='correct_request_and_start_new_task')
+        result.pop('attempts_remaining', None)
+    except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
+        result.update(task_status='cleanup_incomplete', cleanup={
+            'cleanup_complete': False, 'status': 'failed', 'message': str(exc)})
+    return result
+
+
+def create_task(spec, output, *, protected_inputs=(), workspace=None):
+    return finish_failed_task(_create_task(spec, output, protected_inputs=protected_inputs, workspace=workspace))
 
 
 def retry_task(manifest, spec):
@@ -565,8 +622,9 @@ def worker_main(manifest):
         with TaskFiles() as task:
             config = validate_config(task.load(helper_path(runner, 'spec.json')), runner,
                                      [p['path'] for p in data['protected']])
-        from create_docx import create_document_delivery, _validate_spec
+        from create_docx import create_document_delivery, _validate_spec, validate_task_resources
         try:
+            validate_task_resources(config['spec'])
             _validate_spec(config['spec'], Path.cwd())
         except (ValueError, TypeError) as exc:
             def has_resource(value):
@@ -613,7 +671,7 @@ def main(argv=None):
         else:
             result = resume_task(args.manifest)
         print(json.dumps(result, ensure_ascii=True))
-        return 1 if result['status'] == 'failed' else 0
+        return 1 if result['status'] == 'failed' else 3 if result.get('task_status') == 'cleanup_incomplete' else 0
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
         print(json.dumps(failure('request_rejected', exc, action='inspect_request', task_status='not_started'), ensure_ascii=True))
         return 1

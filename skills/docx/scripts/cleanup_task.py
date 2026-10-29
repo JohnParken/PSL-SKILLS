@@ -24,7 +24,9 @@ from controlled_cleanup import (
     plan_cleanup,
     seal_cleanup,
     _check_outputs,
-    cleanup_task)
+    cleanup_task,
+    retire_cleanup_manifest,
+    finalize_cleanup)
 
 
 def main(argv=None):
@@ -51,7 +53,7 @@ def main(argv=None):
             result = seal_cleanup(args.manifest, outcome=args.outcome, verified=args.verified,
                                   archive_status=args.archive_status, retain=dict(args.retain))
         else:
-            result = cleanup_task(args.manifest)
+            result = finalize_cleanup(args.manifest)
         print(json.dumps(result, ensure_ascii=False))
         return 1 if result["status"] in ("failed", "blocked") else 3 if result["status"] == "retained" else 0
     except (OSError, ValueError, TypeError, KeyError, RuntimeError) as exc:

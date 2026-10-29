@@ -1,34 +1,36 @@
 # Standard-library calculation and file contract
 
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
 不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
 WPS family files are read by the separate `wps` skill. Native spreadsheet commands
 refuse `.wps`, `.et`, `.ett` and CFB data; no automatic conversion is performed.
 
-All commands run from the task directory. Replace `<skill_dir>` with the confirmed
+All commands run from the task directory. Replace `<skill-root>` with the confirmed
 skill directory. Python 3.9+; no pip packages, external applications or network access.
 
 ## Contents
 
-- [Commands](#commands)
-- [Input JSON](#input-json)
-- [Formula subset](#formula-subset)
-- [Results and exit codes](#results-and-exit-codes)
-- [Known business computations without Excel formulas](#known-business-computations-without-excel-formulas)
+- Commands (`<skill-root>/references/python-calculation.md#commands`)
+- Input JSON (`<skill-root>/references/python-calculation.md#input-json`)
+- Formula subset (`<skill-root>/references/python-calculation.md#formula-subset`)
+- Results and exit codes (`<skill-root>/references/python-calculation.md#results-and-exit-codes`)
+- Known business computations without Excel formulas (`<skill-root>/references/python-calculation.md#known-business-computations-without-excel-formulas`)
 
 ## Commands
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read input.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" read input.csv --encoding utf-8-sig
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create report.json report.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create report.json static.xlsx --values-only
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit original.xlsx patch.json edited.xlsx
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" calculate original.xlsx calculated.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read input.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read input.csv --encoding utf-8-sig
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create report.json report.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create report.json static.xlsx --values-only
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit original.xlsx patch.json edited.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" calculate original.xlsx calculated.xlsx
 ```
 
 Output files must not exist; original inputs are never overwritten. Preserve the
@@ -44,7 +46,7 @@ new destinations: read the internal asset, then write the task copy exclusively.
 
 ## Input JSON
 
-A runnable example is bundled at [calculation_example.json](../assets/calculation_example.json).
+A runnable example is bundled at calculation_example.json (`<skill-root>/assets/calculation_example.json`).
 Create and edit JSON specifications use UTF-8 encoding; an optional UTF-8 BOM is accepted.
 
 Both create and edit use this shape. Edit accepts only existing sheet names and patches
@@ -91,7 +93,7 @@ For new files, template style indices are: 0 default, 1 input, 2 formula, 3 cros
 4 header, 5 currency input, 6 currency result, 7 percentage input, 8 percentage result,
 9 integer input, 10 integer result, 11 year, 12 highlighted assumption. Currency styles
 5/6 display whole dollars. For existing files, indices refer to that file's own styles.
-Omitting style preserves an existing cell's style. New-workbook [appearance presets](readable-appearance.md) can append shared readable
+Omitting style preserves an existing cell's style. New-workbook appearance presets (`<skill-root>/references/readable-appearance.md`) can append shared readable
 styles and formats; existing-file edits cannot create arbitrary custom styles.
 
 ## Formula subset
@@ -159,9 +161,9 @@ computed static results through `value`, and explain their non-updating nature.
 Do not wrap an arbitrary formula string in Python eval/exec.
 
 The Python API is `Workbook.create(spec, appearance=None)`, `Workbook.load(path)`, `patch(spec)`,
-`calculate(values_only=False)`, `save(path)`, `inspect()`. Import `stdlib_xlsx` from the confirmed `<skill_dir>/scripts/` directory: in a
+`calculate(values_only=False)`, `save(path)`, `inspect()`. Import `stdlib_xlsx` from the confirmed `<skill-root>/scripts/` directory: in a
 task-local helper run with `-I -S -B`, add only that resolved directory to `sys.path`
-before importing. Do not import from a guessed task-local `scripts/` or set PYTHONPATH.
+before importing. Do not import from a guessed task-local directory named `scripts` or set PYTHONPATH.
 API data paths use the same task-directory base as CLI data paths. `calculate` returns a report; do not call save if status is failed. It rewrites
 formula caches but does not refresh the in-memory inspection index; reopen the saved
 file to inspect results. Caller-supplied caches are never accepted through the JSON API.

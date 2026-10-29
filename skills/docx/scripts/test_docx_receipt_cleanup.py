@@ -90,6 +90,7 @@ class ReceiptCleanupTests(unittest.TestCase):
                     patch.object(runner.os, 'supports_dir_fd', os.supports_dir_fd | {mocked_unlink}):
                 with redirect_stdout(worker_stdout), redirect_stderr(worker_stderr):
                     status = runner.worker_main(manifest)
+                evidence['manifest_data'] = task_data(manifest)
                 evidence['worker_status'] = status
                 evidence['worker_stdout'] = worker_stdout.getvalue()
                 evidence['worker_stderr'] = worker_stderr.getvalue()
@@ -113,8 +114,9 @@ class ReceiptCleanupTests(unittest.TestCase):
         self.assertEqual(evidence.get('denied_aliases', []), [])
         self.assertEqual(evidence['receipt_fingerprint']['links'], 1)
         self.assertEqual(evidence['staging_residuals'], [])
-        self.assertEqual(evidence['receipt']['manifest'], result['task_manifest'])
-        manifest_data = task_data(result['task_manifest'])
+        self.assertIsNone(result['task_manifest'])
+        self.assertFalse(Path(evidence['receipt']['manifest']).exists())
+        manifest_data = evidence['manifest_data']
         self.assertEqual(manifest_data['runner']['receipt_mode'], 'exclusive_v1')
         self.assertEqual(manifest_data['runner']['receipt_fingerprint'],
                          evidence['receipt_fingerprint'])

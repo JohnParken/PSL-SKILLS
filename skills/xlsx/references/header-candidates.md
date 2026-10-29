@@ -1,16 +1,18 @@
 # Suggest header ranges for review
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检) first, require exit 0
-and `status: ready`, and confirm task directory/input readability. Resolve `<skill_dir>`
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) first, require exit 0
+and `status: ready`, and confirm task directory/input readability. Resolve `<skill-root>`
 from the actual SKILL.md path, replace it in commands and use task-relative input paths.
 Python 3.9+, standard library only. Inputs are not changed; JSON is written to stdout.
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_header_candidates.py" report.xlsx --sheet Sales
-python3 -I -S -B "<skill_dir>/scripts/xlsx_header_candidates.py" report.xlsx --sheet Sales --scan-rows 64 --scan-columns 32 --max-depth 4
+python3 -I -S -B "<skill-root>/scripts/xlsx_header_candidates.py" report.xlsx --sheet Sales
+python3 -I -S -B "<skill-root>/scripts/xlsx_header_candidates.py" report.xlsx --sheet Sales --scan-rows 64 --scan-columns 32 --max-depth 4
 ```
 
 The default scan is A1 through at most row 32/column 32. Allowed bounds are 2..64 rows,
@@ -40,7 +42,7 @@ additional ambiguity. `status: ambiguous` means review is needed or evidence is 
 Both always set `requires_confirmation: true` and `automatic_boundary_applied: false`.
 The command never sends a suggestion into profile, grouping or row processing. After
 review, explicitly pass `--header-rows first:last` to the normal workflow; manual ranges
-remain available regardless of candidate ranking. See [multi-level-headers.md](multi-level-headers.md).
+remain available regardless of candidate ranking. See Explicit multi-level headers (`<skill-root>/references/multi-level-headers.md`).
 
 Exit 0 means diagnosis completed, including ambiguous/empty results. Exit 1 returns JSON
 `status: failed` for input/runtime errors. No real Excel/WPS application testing or

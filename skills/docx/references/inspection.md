@@ -1,9 +1,11 @@
 # 结构读取与进阶检查
 
-文件位置统一遵循 [文件定位与读取规则](../SKILL.md#文件定位与读取规则)：文档及操作文件参数相对任务目录；后续读取使用本次实际输出路径，不按输入目录推导。
-读取本轮明确输入或主输出；不主动扫描或读取 `./output/{questionId}/` 中的文档内容，也不因多轮对话自动使用历史归档。用户明确要求读取指定归档文件时才将其作为输入；必要的归档定点检查与副本验证见 [使用边界](delivery.md#归档目录使用边界)。
+路径占位符说明：`<skill-root>` 是 DOCX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 DOCX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-交付归档：编辑 CLI 和 [公开交付 API](delivery.md#公开交付-api) 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 [当轮统一归档](delivery.md) 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
+文件位置统一遵循 文件定位与读取规则（`<skill-root>/SKILL.md#文件定位与读取规则`）：文档及操作文件参数相对任务目录；后续读取使用本次实际输出路径，不按输入目录推导。
+读取本轮明确输入或主输出；不主动扫描或读取 `./output/{questionId}/` 中的文档内容，也不因多轮对话自动使用历史归档。用户明确要求读取指定归档文件时才将其作为输入；必要的归档定点检查与副本验证见 使用边界（`<skill-root>/references/delivery.md#归档目录使用边界`）。
+
+交付归档：编辑 CLI 和 公开交付 API（`<skill-root>/references/delivery.md#公开交付-api`） 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 当轮统一归档（`<skill-root>/references/delivery.md`） 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
 
 
 不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
@@ -12,10 +14,10 @@
 
 ## 结构化 JSON
 
-先用 `read_docx.py --check` 完成只读运行条件自检；仅写 stdout 不需输出目录写入探针。保存 `-o` 结果前另核对实际输出目录的写入能力。从宿主确认的任务工作目录执行；将示例 `<skill_dir>` 替换为主入口定义的真实目录：
+先用 `"<skill-root>/scripts/read_docx.py" --check` 完成只读运行条件自检；仅写 stdout 不需输出目录写入探针。保存 `-o` 结果前另核对实际输出目录的写入能力。从宿主确认的任务工作目录执行；将示例 `<skill-root>` 替换为主入口定义的真实目录：
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/read_docx.py\" ./input.docx --format json --revisions all --include-related -o ./structure.json")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --format json --revisions all --include-related -o ./structure.json")
 ```
 
 使用 Python API `read_docx_structure(path, revisions="accepted", include_related=False)` 获取字典。默认 CLI 和 `read_docx()` 仍返回纯文本。
@@ -46,7 +48,7 @@ JSON 顶层契约为 `schema_version: 1`、`format: "docx-structure"`：
 ## 进阶检查范围
 
 ```python
-execute(command="python -I -S -B \"<skill_dir>/scripts/office/validate.py\" ./input.docx")
+execute(command="python -I -S -B \"<skill-root>/scripts/office/validate.py\" ./input.docx")
 ```
 
 同一校验入口执行基础规则和以下显式结构约束；错误报告部件、表格/行/单元格或编号 ID/层级位置：

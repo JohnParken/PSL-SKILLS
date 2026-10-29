@@ -1,11 +1,13 @@
 # Configured bank management long-to-wide reports (first release)
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-Run the [entrypoint self-check](../SKILL.md#执行环境约束与首步自检); require exit 0 and
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`); require exit 0 and
 `status: ready`. Confirm task directory/input readability and a write probe for XLSX output.
-Resolve `<skill_dir>` from the actual SKILL.md path before executing task-relative inputs.
+Resolve `<skill-root>` from the actual SKILL.md path before executing task-relative inputs.
 Python 3.9+, standard library only; no installation, upload or spreadsheet application.
 
 This module targets institution/product management aggregates, not individual credit,
@@ -15,18 +17,18 @@ is entirely fictional and its ratio/targets illustrate arithmetic, not bank poli
 
 ## Reproducible fictional example
 
-Copy the reusable [fact specification](../assets/fictional_management_facts.json) and
-[configuration](../assets/fictional_management_config.json) into new files `./facts.json` and `./management.json` in the confirmed task directory.
+Copy the reusable fact specification (`<skill-root>/assets/fictional_management_facts.json`) and
+configuration (`<skill-root>/assets/fictional_management_config.json`) into new files `./facts.json` and `./management.json` in the confirmed task directory.
 Read each linked asset and write its task copy with exclusive creation; preserve any
 existing file and choose a distinct task filename instead of overwriting it:
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" create facts.json fictional_facts.xlsx
-python3 -I -S -B "<skill_dir>/scripts/xlsx_management.py" fictional_facts.xlsx --sheet Facts --query management.json --xlsx fictional_management.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create facts.json fictional_facts.xlsx
+python3 -I -S -B "<skill-root>/scripts/xlsx_management.py" fictional_facts.xlsx --sheet Facts --query management.json --xlsx fictional_management.xlsx
 ```
 
 Without --xlsx the command emits native management_wide_v1 JSON only. That saved JSON
-can also be passed to `<skill_dir>/scripts/xlsx_result_export.py`. --range, --header-rows, header exclusions,
+can also be passed to `<skill-root>/scripts/xlsx_result_export.py`. --range, --header-rows, header exclusions,
 --no-header and explicit --formulas cached reuse existing semantics. Formula caches
 remain unverified; defaults reject formulas/errors before filtering. Existing sources
 and output files are never overwritten. No native pivot tables/caches are generated.
@@ -50,7 +52,7 @@ Only the configured definition_version is accepted, and it remains a dimension.
 A mandatory source record_scope column must equal one explicitly configured marker
 (e.g. leaf) on every selected row. Mixed summary/detail markers fail. Apply an explicit
 filter if the input deliberately contains multiple scopes. Marker truth is an upstream
-data contract. Optional [validated institution rollup](institution-hierarchy.md) adds an
+data contract. Optional validated institution rollup (`<skill-root>/references/institution-hierarchy.md`) adds an
 explicit static tree, deepest-leaf checks and ancestor aggregation; no ancestry is inferred.
 Only flat, declared leaf-management data may be grouped. A report_level label is required
 and retained; it does not manufacture a hierarchy or prove leaf exclusivity.
@@ -60,7 +62,7 @@ excluded row counts plus the exact requested query are retained. Fact values mus
 stored numbers; no text-number conversion occurs. missing=propagate (default) returns
 null for an incomplete or absent metric with quality flags; reject fails instead. No
 zero fill or silent omission is provided. SUM across dropped dimensions requires explicit
-additive permissions and upstream non-overlapping partitions. See [dictionary rules](management-dictionary.md).
+additive permissions and upstream non-overlapping partitions. See dictionary rules (`<skill-root>/references/management-dictionary.md`).
 
 ## Wide output and audit
 
@@ -83,7 +85,7 @@ Lineage maps report row IDs and Wide worksheet rows to source filename/sheet/row
 Dictionary, filters, target definitions, units, version and arithmetic policy are retained.
 Validation pass means configured input checks passed, not regulatory/business certification.
 Readable headers, fixed widths, banding and visible textual quality flags are used.
-Precision-limited numeric values become exact text with warnings; [export rules](result-export.md)
+Precision-limited numeric values become exact text with warnings; export rules (`<skill-root>/references/result-export.md`)
 apply. Entire source JSON is retained, but source-file original formatting is not recreated.
 
 Queries are bounded to 64 KiB; at most 50 metrics, 2,000 targets and 10,000 report groups.

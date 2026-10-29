@@ -1,15 +1,24 @@
 from __future__ import annotations
 """Format-independent task paths and atomic archive copies; no DOCX imports."""
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import shutil
 import stat
 import tempfile
 from .output_location import OutputLocation
 
+class ArchiveCleanupError(RuntimeError):
+    """The archive failed and its exact task-owned temporary path remains unresolved."""
+    def __init__(self, message, path):
+        super().__init__(message)
+        self.temporary_residuals = [path]
+
 def _check_delivery_path(task_dir: Path, relative_path: Path, *, directory: bool = False) -> None:
     """Check existing components without following delivery-path symlinks."""
-    if relative_path.is_absolute() or ".." in relative_path.parts:
+    raw = str(relative_path)
+    if (relative_path.is_absolute() or ".." in relative_path.parts
+            or PureWindowsPath(raw).drive or "\\" in raw
+            or any(ord(char) < 32 or ord(char) == 127 for char in raw)):
         raise ValueError("delivery paths must stay within the task directory")
     current = task_dir
     for index, part in enumerate(relative_path.parts):
@@ -66,7 +75,7 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
         archive_mode = stat.S_IMODE(main_path.stat().st_mode)
 
     descriptor, temporary_name = tempfile.mkstemp(
-        prefix=".docx-", suffix=".tmp", dir=task_dir / location.output_dir,
+        prefix=".docx-", suffix=".tmp", dir=task_dir,
     )
     try:
         with os.fdopen(descriptor, "wb") as archive_file:
@@ -92,7 +101,7 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
             cleanup_errors.append(f"temporary cleanup failed: {cleanup_error}")
         if cleanup_errors:
             temporary_path = Path(temporary_name).relative_to(task_dir).as_posix()
-            raise RuntimeError(f"{exc}; archive cleanup at {temporary_path}: "
-                               + "; ".join(cleanup_errors)) from exc
+            raise ArchiveCleanupError(f"{exc}; archive cleanup at {temporary_path}: "
+                                      + "; ".join(cleanup_errors), temporary_path) from exc
         raise
     return archive_output

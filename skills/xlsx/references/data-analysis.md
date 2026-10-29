@@ -1,20 +1,22 @@
 # Read-only data analysis and file identification
 
+路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
 不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
 
-Follow the [path and first-operation rules](../SKILL.md#执行环境约束与首步自检)
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
 ## Contents
 
-- [Specialized task directory](#specialized-task-directory)
-- [Profile a sheet or region](#profile-a-sheet-or-region)
-- [Filter and summarize](#filter-and-summarize)
-- [Identify contents, including ET/ETT candidates](#identify-contents-including-etett-candidates)
-- [Analyze a WPS result without conversion](#analyze-a-wps-result-without-conversion)
+- Specialized task directory (`<skill-root>/references/data-analysis.md#specialized-task-directory`)
+- Profile a sheet or region (`<skill-root>/references/data-analysis.md#profile-a-sheet-or-region`)
+- Filter and summarize (`<skill-root>/references/data-analysis.md#filter-and-summarize`)
+- Identify contents, including ET/ETT candidates (`<skill-root>/references/data-analysis.md#identify-contents-including-etett-candidates`)
+- Analyze a WPS result without conversion (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`)
 
-Resolve `<skill_dir>` from the actual SKILL.md path before running commands. Run the
-[entrypoint self-check](../SKILL.md#执行环境约束与首步自检) first, require exit 0 and
+Resolve `<skill-root>` from the actual SKILL.md path before running commands. Run the
+entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) first, require exit 0 and
 `status: ready`, then confirm input readability. Use Python 3.9+ with `-I -S -B`;
 no third-party packages, Office application, network or output-file permission is needed.
 Run from the confirmed task directory with task-relative inputs. Commands emit JSON to
@@ -23,13 +25,13 @@ stdout and never modify inputs. Redirect stdout only to a new task report if nee
 ## Profile a sheet or region
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" profile input.xlsx --sheet Sales
-python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" profile input.xlsx --sheet Sales --range B3:F100 --no-header
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile input.xlsx --sheet Sales
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile input.xlsx --sheet Sales --range B3:F100 --no-header
 ```
 
 By default the first selected row supplies headers and is excluded from statistics.
 Column letters remain absolute coordinates. For explicit multi-level rows and path/ID
-selectors, use [multi-level-headers.md](multi-level-headers.md).
+selectors, use Explicit multi-level headers (`<skill-root>/references/multi-level-headers.md`).
 Duplicate/empty header labels do not affect selection. Without a range, use A1 through
 the maximum stored row/column. Explicit regions include sparse blank cells.
 
@@ -58,7 +60,7 @@ Create task-local `query.json`:
 ```
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" summarize input.xlsx --sheet Sales --query query.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize input.xlsx --sheet Sales --query query.json
 ```
 
 `group_by` is a list of unique column selectors inside the selected range; omit it for
@@ -86,7 +88,7 @@ Exit 0 indicates completed analysis; exit 1 returns JSON `status: failed`.
 
 ## Identify contents, including ET/ETT candidates
 
-`xlsx_identify.py` inspects native OOXML inputs. WPS family suffixes and CFB signatures
+`<skill-root>/scripts/xlsx_identify.py` inspects native OOXML inputs. WPS family suffixes and CFB signatures
 return `unsupported` with `recommended_skill: wps`; this does not validate the binary container or extract cells.
 Use the separately installed wps skill for those inputs. Never rename input to bypass routing.
 
@@ -100,8 +102,8 @@ This validates schema/budgets and restores explicitly tagged numeric values as D
 text remains text, date serials remain numbers, and no XLSX file is created.
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" profile result.json --sheet Data
-python3 -I -S -B "<skill_dir>/scripts/xlsx_analysis.py" summarize result.json --sheet Data --query query.json
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile result.json --sheet Data
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize result.json --sheet Data --query query.json
 ```
 
 Extraction diagnostics are included as `source_issues` and `source_status`. When supplied,
@@ -122,25 +124,25 @@ XLSX/XLSM. Dates, private streams and opaque charts retain source limits.
 
 ## Specialized task directory
 
-Read the selected reference before invoking its script. Paths use the confirmed `<skill_dir>`; inputs and outputs remain in the task directory.
+Read the selected reference before invoking its script. Paths use the confirmed `<skill-root>`; inputs and outputs remain in the task directory.
 
 | Task | Action | Reference |
 |---|---|---|
-| Summarize explicit deposit maturity buckets and cumulative windows | `<skill_dir>/scripts/xlsx_maturity.py` | [maturity-distribution.md](maturity-distribution.md) |
-| Aggregate observed customers, product coverage and two-period sets | `<skill_dir>/scripts/xlsx_customers.py` | [customer-structure.md](customer-structure.md) |
-| Validate management policy, explicit plan deviation and comparable peers | `<skill_dir>/scripts/xlsx_management_policy.py` | [management-policy.md](management-policy.md) |
-| Analyze deposit snapshot changes, daily/end differences and explicit targets | `<skill_dir>/scripts/xlsx_deposits.py` | [deposit-analysis.md](deposit-analysis.md) |
-| Calculate explicit deposit category shares and Top N concentration | `<skill_dir>/scripts/xlsx_deposit_structure.py` | [deposit-analysis.md](deposit-analysis.md) |
-| Reconcile two comparable management reports and allocate arithmetic changes | `<skill_dir>/scripts/xlsx_reconcile.py`; optional `--xlsx` | [management-reconciliation.md](management-reconciliation.md) |
-| Build a static management dashboard from a native wide report | `<skill_dir>/scripts/xlsx_dashboard.py`; optional `--xlsx` | [management-dashboard.md](management-dashboard.md) |
-| Roll leaf institutions up a validated static hierarchy | `<skill_dir>/scripts/xlsx_management.py` with hierarchy config | [institution-hierarchy.md](institution-hierarchy.md) |
-| Compute explicit daily means or month/YTD daily-flow sums | `<skill_dir>/scripts/xlsx_daily.py`, subcommand `average` / `accumulate` | [daily-analysis.md](daily-analysis.md) |
-| Build configured management wide reports | `<skill_dir>/scripts/xlsx_management.py`; optional `--xlsx` | [management-wide.md](management-wide.md) |
-| Export known analysis JSON to readable XLSX | `<skill_dir>/scripts/xlsx_result_export.py` | [result-export.md](result-export.md) |
-| Rank observations and calculate group shares | `<skill_dir>/scripts/xlsx_rank_share.py` | [rank-share.md](rank-share.md) |
-| Compute median, quantiles and variance/stddev | `<skill_dir>/scripts/xlsx_advanced.py`, subcommand `describe` | [advanced-statistics.md](advanced-statistics.md) |
-| Compare explicit monthly periods | `<skill_dir>/scripts/xlsx_advanced.py`, subcommand `compare` | [period-comparison.md](period-comparison.md) |
-| Match tables by typed composite keys | `<skill_dir>/scripts/xlsx_match.py` | [table-matching.md](table-matching.md) |
-| Deduplicate and stably sort typed rows | `<skill_dir>/scripts/xlsx_rows.py` | [row-processing.md](row-processing.md) |
-| Suggest possible header ranges for review | `<skill_dir>/scripts/xlsx_header_candidates.py` | [header-candidates.md](header-candidates.md) |
-| Reconstruct or select multi-level headers | `<skill_dir>/scripts/xlsx_headers.py`; `--header-rows` in data operations | [multi-level-headers.md](multi-level-headers.md) |
+| Summarize explicit deposit maturity buckets and cumulative windows | `<skill-root>/scripts/xlsx_maturity.py` | Explicit deposit maturity distribution (`<skill-root>/references/maturity-distribution.md`) |
+| Aggregate observed customers, product coverage and two-period sets | `<skill-root>/scripts/xlsx_customers.py` | Observed customer aggregation and product structure (`<skill-root>/references/customer-structure.md`) |
+| Validate management policy, explicit plan deviation and comparable peers | `<skill-root>/scripts/xlsx_management_policy.py` | Explicit management statistics policy (`<skill-root>/references/management-policy.md`) |
+| Analyze deposit snapshot changes, daily/end differences and explicit targets | `<skill-root>/scripts/xlsx_deposits.py` | Deposit observations, daily means and concentration (`<skill-root>/references/deposit-analysis.md`) |
+| Calculate explicit deposit category shares and Top N concentration | `<skill-root>/scripts/xlsx_deposit_structure.py` | Deposit observations, daily means and concentration (`<skill-root>/references/deposit-analysis.md`) |
+| Reconcile two comparable management reports and allocate arithmetic changes | `<skill-root>/scripts/xlsx_reconcile.py`; optional `--xlsx` | Management reconciliation and arithmetic change allocation (`<skill-root>/references/management-reconciliation.md`) |
+| Build a static management dashboard from a native wide report | `<skill-root>/scripts/xlsx_dashboard.py`; optional `--xlsx` | Static management dashboard (`<skill-root>/references/management-dashboard.md`) |
+| Roll leaf institutions up a validated static hierarchy | `<skill-root>/scripts/xlsx_management.py` with hierarchy config | Static institution hierarchy rollup (`<skill-root>/references/institution-hierarchy.md`) |
+| Compute explicit daily means or month/YTD daily-flow sums | `<skill-root>/scripts/xlsx_daily.py`, subcommand `average` / `accumulate` | Daily snapshots and controlled flow accumulation (`<skill-root>/references/daily-analysis.md`) |
+| Build configured management wide reports | `<skill-root>/scripts/xlsx_management.py`; optional `--xlsx` | Configured bank management long-to-wide reports (first release) (`<skill-root>/references/management-wide.md`) |
+| Export known analysis JSON to readable XLSX | `<skill-root>/scripts/xlsx_result_export.py` | Export analysis results to a readable XLSX (`<skill-root>/references/result-export.md`) |
+| Rank observations and calculate group shares | `<skill-root>/scripts/xlsx_rank_share.py` | Controlled ranking and within-group shares (`<skill-root>/references/rank-share.md`) |
+| Compute median, quantiles and variance/stddev | `<skill-root>/scripts/xlsx_advanced.py`, subcommand `describe` | Descriptive statistics with explicit Decimal semantics (`<skill-root>/references/advanced-statistics.md`) |
+| Compare explicit monthly periods | `<skill-root>/scripts/xlsx_advanced.py`, subcommand `compare` | Explicit monthly period comparisons (`<skill-root>/references/period-comparison.md`) |
+| Match tables by typed composite keys | `<skill-root>/scripts/xlsx_match.py` | Match two tables by typed composite keys (`<skill-root>/references/table-matching.md`) |
+| Deduplicate and stably sort typed rows | `<skill-root>/scripts/xlsx_rows.py` | Filter, deduplicate and sort typed rows (`<skill-root>/references/row-processing.md`) |
+| Suggest possible header ranges for review | `<skill-root>/scripts/xlsx_header_candidates.py` | Suggest header ranges for review (`<skill-root>/references/header-candidates.md`) |
+| Reconstruct or select multi-level headers | `<skill-root>/scripts/xlsx_headers.py`; `--header-rows` in data operations | Explicit multi-level headers (`<skill-root>/references/multi-level-headers.md`) |

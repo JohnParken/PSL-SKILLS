@@ -110,12 +110,12 @@ class RankShareTests(unittest.TestCase):
         self.save([10,30])
         query=self.source.with_suffix('.json'); query.write_text('{"group_by":["A"],"measure":"B"}')
         scripts=Path(__file__).resolve().parent
-        run=subprocess.run([sys.executable,'-I','-S','-B',str(scripts/'xlsx_rank_share.py'),str(self.source),
-                            '--sheet','报表','--query',str(query)],capture_output=True,text=True)
+        run=subprocess.run([sys.executable,'-I','-S','-B',str(scripts/'xlsx_rank_share.py'),str((self.source).relative_to(self.source.parent)),
+                            '--sheet','报表','--query',str((query).relative_to(self.source.parent))],cwd=self.source.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         result=self.source.with_name('result.json'); result.write_text(run.stdout)
         output=self.source.with_name('result.xlsx')
-        run=subprocess.run([sys.executable,'-I','-S','-B',str(scripts/'xlsx_result_export.py'),str(result),str(output)],capture_output=True,text=True)
+        run=subprocess.run([sys.executable,'-I','-S','-B',str(scripts/'xlsx_result_export.py'),str((result).relative_to(self.source.parent)),str((output).relative_to(self.source.parent))],cwd=self.source.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         book=Workbook.load(output)
         self.assertEqual(book.cells['Results']['D2']['value'],2)

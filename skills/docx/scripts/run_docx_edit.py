@@ -7,14 +7,40 @@ import sys
 import uuid
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, _unique_object
-from run_docx_task import task_environment, _finish_delivery, MAX_TASK_BYTES
+from run_docx_task import task_environment, _finish_delivery, finish_failed_task, MAX_TASK_BYTES
 from archive_deliverables import validate_output_path
 from docx_outcome import failure
 
 OPERATIONS = ('text', 'structure', 'tables', 'image', 'comments')
 
 
-def edit_task(kind, source, output, specification, *, replacement=None):
+def _retire_manifest(task, manifest, expected, payload):
+    """Retire only this call's completed receipt, after final output verification."""
+    report = payload['cleanup']
+    if not report['cleanup_complete']:
+        return payload
+    try:
+        if expected is None or expected['links'] != 1:
+            raise ValueError('Manifest ownership is unconfirmed')
+        with task.parent(manifest) as (parent, name):
+            if task.inspect(manifest, contents=True) != expected:
+                raise ValueError('Manifest changed before retirement')
+            os.unlink(name, dir_fd=parent)
+    except (OSError, ValueError, RuntimeError) as exc:
+        report['cleanup_complete'] = False
+        report['status'] = 'failed'
+        report['failed'].append({'path': manifest, 'reason': str(exc)})
+        payload['task_status'] = 'cleanup_incomplete'
+        payload['warnings'].append('cleanup-warning: ' + str(exc))
+        return payload
+    report['manifest_retained'] = None
+    report['manifest_removed'] = True
+    report['deleted'].append({'path': manifest, 'reason': 'removed'})
+    payload['task_manifest'] = None
+    return payload
+
+
+def _edit_task(kind, source, output, specification, *, replacement=None):
     environment = task_environment()
     if environment['status'] != 'ready':
         return failure('environment_failed', 'Required edit environment is unavailable', action='fix_environment', environment=environment)
@@ -70,10 +96,16 @@ def edit_task(kind, source, output, specification, *, replacement=None):
                     from manage_comments import manage_comments_delivery
                     result = manage_comments_delivery(source, specification, output, protected_inputs=[config])
                 expected = task.inspect(output.as_posix(), contents=True)
+                manifest_fingerprint = None
                 def finish():
+                    nonlocal manifest_fingerprint
                     seal_cleanup(manifest, outcome='success', verified=True, archive_status=result['archive_status'])
-                    return cleanup_task(manifest)
-                return _finish_delivery(manifest, result, expected, finish)
+                    report = cleanup_task(manifest)
+                    if report['cleanup_complete']:
+                        manifest_fingerprint = task.inspect(manifest, contents=True)
+                    return report
+                payload = _finish_delivery(manifest, result, expected, finish)
+                return _retire_manifest(task, manifest, manifest_fingerprint, payload)
             finally:
                 fcntl.flock(task.root, fcntl.LOCK_UN)
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
@@ -81,6 +113,10 @@ def edit_task(kind, source, output, specification, *, replacement=None):
         return failure('edit_state_unconfirmed' if output.exists() else 'edit_rejected', exc,
                        action='inspect_task', task_manifest=manifest, output_may_exist=output.exists(),
                        cleanup={'cleanup_complete': False, 'status': 'retained'})
+
+
+def edit_task(kind, source, output, specification, *, replacement=None):
+    return finish_failed_task(_edit_task(kind, source, output, specification, replacement=replacement))
 
 
 def main(argv=None):
@@ -99,7 +135,7 @@ def main(argv=None):
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
         result = failure('edit_request_rejected', exc, action='inspect_request')
     print(json.dumps(result, ensure_ascii=True))
-    return 1 if result['status'] == 'failed' else 0
+    return 1 if result['status'] == 'failed' else 3 if result.get('task_status') == 'cleanup_incomplete' else 0
 
 
 if __name__ == '__main__':

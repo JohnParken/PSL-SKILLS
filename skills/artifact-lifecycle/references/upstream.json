@@ -1,11 +1,11 @@
 {
-  "origin": "DOCX 20261029.1442.4400; trim named string parameter edges",
+  "origin": "DOCX 20261029.2101.4877; failure and success terminal cleanup",
   "policy": "Explicit vendored distribution; repository parity test must pass for changes to either copy. No runtime cross-skill imports.",
   "files": [
     {
       "file": "router_config.py",
       "mode": "exact",
-      "sha256": "7c4e463bfea18be01942fce43a7d93c77caa2b23f41054cd772d456ed950c442"
+      "sha256": "60074b4eeb4a8e105f0c77b614dbdd89ed94c6fc3afc05d511620bc75b47cfdf"
     },
     {
       "file": "output_location.py",
@@ -15,22 +15,22 @@
     {
       "file": "artifact_files.py",
       "mode": "exact",
-      "sha256": "8c2e28ec5d8c4ecf510f282b61a375824e030582775f2df59b3d3f5201a0affb"
+      "sha256": "a5ad0e65c056103c936f8e679edf362751650908f5236906a4adfe893f97c18a"
     },
     {
       "file": "controlled_cleanup.py",
       "mode": "exact",
-      "sha256": "f76d89fa3fafe2c9eb8db7a98fa66c2c21f462f2d99e8eb9ad52b1d761c403b1"
+      "sha256": "4fa9e5308cc1e1b64d788a23798561a8bd742f22dbadb1a10fa3bd31743f3dec"
     },
     {
       "file": "cleanup_task.py",
       "mode": "exact",
-      "sha256": "4007a9821c30b6e08ee7528a5a0073d67dcede31e2ef241323985f65e4dba94a"
+      "sha256": "26e2d633dbbf21822bb4b51dbbff4049a0e08934f9c02422d68f39c4eee4cc89"
     },
     {
       "file": "archive_deliverables.py",
       "mode": "before-main",
-      "sha256": "d7e9431910ce4aa2ef93ec7edde7ea73ff67f3cd302d71ff76d630fbc5e495df"
+      "sha256": "ae35884c36f10e4fa7bab172b5b7b5bdef5a239b805916e91178439ec546dae3"
     }
   ]
 }

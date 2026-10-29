@@ -201,8 +201,9 @@ def main():
     parser.add_argument('left'); parser.add_argument('right'); parser.add_argument('--query',required=True)
     parser.add_argument('--daily'); parser.add_argument('--xlsx'); parser.add_argument('--plain',action='store_true')
     args=parser.parse_args()
-    from xlsx_delivery import finish_delivery
+    from xlsx_delivery import finish_delivery, validate_cli_paths
     try:
+        validate_cli_paths(args)
         result=analyze(args.left,args.right,read_spec(args.query,max_bytes=65536),args.daily)
         if args.xlsx: result['export']=export_deposits(result,args.xlsx,not args.plain)
         if args.xlsx:

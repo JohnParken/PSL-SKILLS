@@ -82,7 +82,7 @@ class DepositStructureTests(unittest.TestCase):
         self.rows[0][3]=Decimal('12345678901234567890.01'); self.save()
         query=self.folder/'config.json'; query.write_text(json.dumps(self.config)); output=self.folder/'structure.xlsx'
         original=self.source.read_bytes()
-        run=subprocess.run([sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_deposit_structure.py')),str(self.source),'--query',str(query),'--xlsx',str(output)],capture_output=True,text=True)
+        run=subprocess.run([sys.executable,'-I','-S','-B',str(Path(__file__).with_name('xlsx_deposit_structure.py')),str((self.source).relative_to(self.folder)),'--query',str((query).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))],cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stdout+run.stderr)
         book=Workbook.load(output); self.assertEqual(len(book.sheets),6)
         self.assertTrue(any(cell['value']=='12345678901234567890.01' for cell in book.cells['Entities'].values()))

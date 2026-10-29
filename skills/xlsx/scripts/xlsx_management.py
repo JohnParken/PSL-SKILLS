@@ -368,8 +368,9 @@ def main():
     parser.add_argument('--no-header',action='store_true'); parser.add_argument('--header-exclude',nargs='*',type=int,default=[])
     parser.add_argument('--include-spanning-headings',action='store_true'); parser.add_argument('--formulas',choices=('reject','cached'),default='reject')
     args=parser.parse_args()
-    from xlsx_delivery import finish_delivery
+    from xlsx_delivery import finish_delivery, validate_cli_paths
     try:
+        validate_cli_paths(args)
         result=build(args.input,args.sheet,read_query(args.query),cell_range=args.cell_range,header=not args.no_header,
                      header_rows=args.header_rows,header_exclude=args.header_exclude,
                      include_spanning_headings=args.include_spanning_headings,formulas=args.formulas)
