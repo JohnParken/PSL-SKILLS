@@ -1,0 +1,39 @@
+{
+  "version": "20261029.0940.0902",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "package": "skills/xlsx-20261029.0940.0902.zip",
+  "sha256": "388422d8a4cfd7dbeb709ab2a13620b0d83debdb0aa6171e051e3d7a7d2f72e4",
+  "members": 137,
+  "installed_regression": "----------------------------------------------------------------------\nRan 293 tests in 16.351s\n\nOK",
+  "installed_selfcheck": {
+    "status": "ready",
+    "python": "3.12.12",
+    "dependencies": "standard_library_only"
+  },
+  "installed_task": {
+    "exit": 0,
+    "cleanup_complete": true,
+    "archive": "copied",
+    "primary_and_archive_equal": true
+  },
+  "limits": [
+    "Synthetic inputs only; no real user residual cleanup",
+    "macOS only; Linux and Windows not run",
+    "Python 3.9 focused tests separate; no 3.9 full-suite claim",
+    "No malicious concurrent writer or power-loss guarantee",
+    "No automatic generation retry/resume; review retained original manifest"
+  ],
+  "source_regression": "----------------------------------------------------------------------\nRan 293 tests in 16.331s\n\nOK",
+  "python_3_9_focused_tests": {
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0
+  },
+  "related_tests": {
+    "public_lifecycle": 14,
+    "parity": 2,
+    "wps_et_pipeline": 2
+  },
+  "description_review": "Unchanged: read/create/controlled-edit task scope remains accurate; archive/cleanup are internal delivery lifecycle, not new file-format capabilities."
+}

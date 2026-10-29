@@ -368,6 +368,7 @@ def main():
     parser.add_argument('--no-header',action='store_true'); parser.add_argument('--header-exclude',nargs='*',type=int,default=[])
     parser.add_argument('--include-spanning-headings',action='store_true'); parser.add_argument('--formulas',choices=('reject','cached'),default='reject')
     args=parser.parse_args()
+    from xlsx_delivery import finish_delivery
     try:
         result=build(args.input,args.sheet,read_query(args.query),cell_range=args.cell_range,header=not args.no_header,
                      header_rows=args.header_rows,header_exclude=args.header_exclude,
@@ -375,6 +376,8 @@ def main():
         if args.xlsx:
             from xlsx_result_export import export_result
             result['export']=export_result(result,args.xlsx)
+        if args.xlsx:
+            finish_delivery(result, args.xlsx, [getattr(args, field, None) for field in ('input', 'left', 'right', 'query', 'daily')])
         print(json.dumps(result,ensure_ascii=False,default=str))
         return 0
     except (ValueError,OSError,LookupError,DecimalException,ET.ParseError,zipfile.BadZipFile) as exc:

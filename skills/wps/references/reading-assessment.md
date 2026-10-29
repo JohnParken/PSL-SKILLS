@@ -148,3 +148,5 @@ PY
 ```
 
 要求示例退出 0 且输出 `contract-examples-ok`；这验证调用和失败契约，不是文档生产、转换能力或真实 WPS 兼容验收。
+
+默认 data 的 `non_cell_metadata_not_decoded` 聚合事件保留首次 `scope`，并以 `scopes` 列出全部受影响的工作表或 globals；`records` 是这些范围的总记录数。具体记录偏移与原始字节仍在 `uninterpreted_metadata` 中。此附加诊断不改变原始单元格值或 strict 策略。

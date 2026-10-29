@@ -10,8 +10,7 @@ import unicodedata
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from create_docx import (_check_delivery_path, _copy_main_to_archive,
-                         _paths_alias, _check_cli_runtime)
+from artifact_files import _check_delivery_path, _copy_main_to_archive, _paths_alias
 from output_location import resolve_output_location, read_router_config_from_environment
 
 
@@ -31,6 +30,26 @@ def validate_output_path(path: Path, protected_inputs=()) -> Path:
     if any(_paths_alias(path, Path(item)) for item in protected_inputs):
         raise ValueError('output must not overwrite an input file')
     return path
+
+
+def archive_user_message(result: dict) -> str:
+    """Render archive state for users without exposing internal paths or errors."""
+    status = result.get('archive_status')
+    files = result.get('files')
+    if (status == 'copied' and isinstance(files, list) and files
+            and all(isinstance(item, dict) and item.get('archive_status') in
+                    ('copied', 'already_archived') for item in files)):
+        return '归档完成'
+    if status == 'skipped':
+        return '归档未执行'
+    if status == 'failed':
+        return '归档未完成'
+    return '归档状态未确认'
+
+
+def _archive_summary(summary: dict) -> dict:
+    summary['archive_message'] = archive_user_message(summary)
+    return summary
 
 
 def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
@@ -62,7 +81,7 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
                     raise ValueError(f'archive target conflicts with an input or another deliverable: {target}')
     except Exception as exc:
         summary.update(archive_status='failed', warnings=[str(exc)])
-        return summary
+        return _archive_summary(summary)
     for source in sources:
         target = location.output_dir / source.name
         item = {'output': source.as_posix(),
@@ -83,7 +102,7 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
             item['error'] = str(exc)
             summary['archive_status'] = 'failed'
             summary['warnings'].append(f'{source}: {exc}')
-    return summary
+    return _archive_summary(summary)
 
 
 def finalize_delivery(output, protected_inputs, *, status, result=None) -> dict:
@@ -96,6 +115,7 @@ def finalize_delivery(output, protected_inputs, *, status, result=None) -> dict:
                           'fallback_reason': 'archive_error', 'files': [],
                           'warnings': [str(exc)]}
     payload = {**archive_result, 'status': status, 'output': output.as_posix()}
+    payload['archive_message'] = archive_user_message(payload)
     if result is not None:
         payload['result'] = result if isinstance(result, dict) else str(result)
     return payload
@@ -108,6 +128,7 @@ def main(argv=None) -> int:
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args(argv)
     if args.check:
+        from create_docx import _check_cli_runtime  # DOCX CLI self-check only.
         if args.outputs or args.protect_input:
             parser.error('--check takes no file arguments')
         return 0 if _check_cli_runtime() else 1

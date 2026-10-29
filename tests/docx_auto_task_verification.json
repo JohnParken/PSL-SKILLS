@@ -1,0 +1,48 @@
+{
+  "version": "20261028.2224.4840",
+  "scope": "DOCX standard new-document runtime helpers, not historical residual cleanup",
+  "new_tests": 18,
+  "docx_full_tests": {
+    "passed": 181,
+    "failed": 0,
+    "skipped": 0
+  },
+  "isolated_readonly_install": [
+    {
+      "name": "check",
+      "exit": 0
+    },
+    {
+      "name": "create",
+      "exit": 0
+    },
+    {
+      "name": "repeat_resume",
+      "exit": 0
+    },
+    {
+      "name": "readback",
+      "exit": 0
+    }
+  ],
+  "empty_path": true,
+  "source_and_install_unchanged": true,
+  "unregistered_and_user_inputs_preserved": true,
+  "independent_review": "Missing cleanup platform gate found and fixed; success, failure retry, archive failure, changed helper, unknown file and inherited child lock independently verified",
+  "limits": [
+    "Only fixed worker/config created by automatic entry are managed",
+    "No unknown existing residuals adopted or removed",
+    "macOS/POSIX lock and descriptor APIs required; Windows not verified",
+    "Initialization/receipt interruption may require manual confirmation; recovery never blindly regenerates",
+    "Manifest retained as minimal recovery receipt; no real host automatic activation test",
+    "No packages updated or historical ZIP cleanup"
+  ],
+  "strict": "passed",
+  "local_markdown_links_and_anchors": {
+    "checked": 122,
+    "failed": 0
+  },
+  "syntax": "all DOCX Python AST parsed",
+  "naming": "manual changed identifier and call review; dedicated linter unavailable/not run",
+  "independent_document_review": "automatic path no longer repeats seal; default README and SKILL use stdin task runner; legacy file recipe explicitly conditional"
+}

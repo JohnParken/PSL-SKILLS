@@ -1,0 +1,20 @@
+--- readme_at_turn_start
++++ readme_current
+@@ -6,7 +6,7 @@
+ 
+ | Skill | 来源 | 版本 | 主要能力 |
+ | --- | --- | --- | --- |
+-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.0035.4979 | 银行材料写作与审校；摘要、范文仿写及先摘要再仿写，保留事实口径与编辑范围；获授权后交给 docx 导出 |
++| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.0103.0751 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后由 docx 生成文件 |
+ | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261027.2320.5486 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
+ | [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261028.2341.0954 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+ | [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261027.2320.5486 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
+@@ -67,6 +67,8 @@
+ 
+ 前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；本次在 macOS 实测，云端 Linux 与 Windows 未验证。
+ 
++当前版本仅修订能力描述，正文与参考资料沿用上述已评测版本；名称与描述的独立选择模拟见[描述评测记录](tests/bank_writing_description_evaluation/summary.json)，不代表宿主自动注册或触发验收。
++
+ ### XLSX
+ 
+ 首次操作前运行自检，要求退出码为 0 且 JSON 中 `status` 为 `ready`：

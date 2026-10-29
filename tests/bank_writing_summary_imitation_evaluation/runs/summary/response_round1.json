@@ -1,0 +1,137 @@
+[
+  {
+    "id": "S1",
+    "prompt": "以下是虚构的青禾支行材料，请为分行领导做一段摘要，恰好140个Unicode字符，含标点、数字与字母，不含空白；“摘要：”标签和计数说明不计。必留：期间、咨询总量与两类数量、件不等于人数、待回复的时点数量、不可比较的限制、满意度证据不足、话术修改的审批状态。只给“摘要：”及正文，再空行给“计数：”及实际字符数，不需要文件。\n第一节：统计期间为2026年第二季度，即4至6月。共登记业务咨询80件，材料清单咨询50件、办理流程咨询30件。记录按咨询件数统计，同一客户可能多次咨询，不能换算为80名客户。\n第二节：截至6月末，尚有5件待回复。上季度没有同口径的分类资料，因此不能比较季度增减。咨询记录主要用于梳理问题类型。\n第三节：本季度回访20件已结咨询，未覆盖全部咨询，也没有满意度评分。不能据此形成总体满意度提升的结论。\n第四节：运营岗建议修改服务话术，尚未获得负责人审批。现阶段只是建议，没有确定实施时间。",
+    "response": "摘要：青禾支行2026年第二季度登记咨询80件，其中材料清单50件、办理流程30件，件数不等于人数；截至6月末尚有5件待回复。上季度无同口径分类，季度增减不可比。仅回访20件已结咨询，未覆盖全部且无满意度评分，不能认定总体满意度提升。运营岗建议修改话术，尚未获负责人审批，实施时间未定。\n\n计数：140",
+    "actions": [
+      {
+        "action": "共享首步自检与素材读取",
+        "tool": "exec_command",
+        "task_directory": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/summary",
+        "skill_directory": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate",
+        "skill_version": "20261029.0035.4979",
+        "reads": [
+          {"target": "pwd（仓库根目录）", "exit_code": 0},
+          {"target": "candidate/SKILL.md（全文）", "exit_code": 0},
+          {"target": "runs/summary/input_round1.json（全文，S1-S4）", "exit_code": 0},
+          {"target": "candidate/references/summary-and-imitation.md（全文）", "exit_code": 0},
+          {"target": "candidate/references/writing-review.md（全文）", "exit_code": 0},
+          {"target": "candidate/references/comprehensive-writing.md（全文）", "exit_code": 0}
+        ],
+        "runtime_check": {
+          "interpreter": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3",
+          "flags": "-I -S -B",
+          "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+          "python_version": "3.13.12",
+          "input_readable": true,
+          "exit_code": 0
+        },
+        "model_identity": "无法确认实际后端模型精确标识；会话说明将代理描述为基于GPT-6的Codex，未获得运行时模型ID。",
+        "preflight": "任务类型、文本交付要求、输入和所需参考均已确认可读；未执行Linux验证。"
+      },
+      {
+        "action": "模型直接撰写并人工修订摘要",
+        "detail": "未使用代码生成或改写正文。首次草稿只读计数为135；模型将‘截至6月末5件’改为‘截至6月末尚有5件’，将‘无评分’改为‘无满意度评分’。"
+      },
+      {
+        "action": "正文字符数实际核验",
+        "tool": "exec_command",
+        "interpreter_flags": "python3 -I -S -B",
+        "method": "对模型撰写的字符串按sum(not char.isspace() for char in text)计数，不计‘摘要：’及计数说明。",
+        "counts": [
+          {"stage": "首次草稿", "unicode_nonwhitespace_characters": 135, "exit_code": 0},
+          {"stage": "最终正文", "unicode_nonwhitespace_characters": 140, "exit_code": 0}
+        ]
+      },
+      {
+        "action": "评测记录目录写入能力检查",
+        "tool": "exec_command",
+        "detail": "使用标准库tempfile在任务目录新建独占探针，实际写入、读回并在finally中删除；无覆盖。",
+        "readback_matches": true,
+        "probe_removed": true,
+        "exit_code": 0
+      },
+      {
+        "action": "保存并回读本轮四项评测记录",
+        "write_tool": "apply_patch",
+        "target": "response_round1.json",
+        "write_result": "成功保存模型直接撰写的完整提示、回答及动作记录。apply_patch未提供进程退出码。",
+        "verification_tool": "exec_command",
+        "verification_interpreter_flags": "python3 -I -S -B",
+        "verification_result": {"record_count": 4, "ids_match_input": true, "full_prompts_match_input": true, "required_keys_exact": true, "saved_S1_body_count": 140, "saved_S1_count_statement": "计数：140"},
+        "verification_exit_code": 0,
+        "scope": "本轮S1-S4；未读取其他评测输出或before快照，未联网、安装组件或修改技能。"
+      }
+    ]
+  },
+  {
+    "id": "S2",
+    "prompt": "以下材料均为虚构。请把三个来源归纳成简短服务活动摘要，保留需核实的差异，不制作文件。\n来源甲《线下活动登记》：2026年二季度，事件编号L01至L12，共12场线下活动、240人次；员工培训2次。\n来源乙《网点汇总》：转录同一批L01至L12，12场、240人次；员工培训同为上述2次。\n来源丙《季度报送稿》：二季度活动15场、300人次，未说明线上线下范围；员工培训2次。丙稿日期比甲乙晚两天。",
+    "response": "2026年二季度，《线下活动登记》及《网点汇总》所载L01至L12为同一批线下活动，去重后为12场、240人次；两份材料中的员工培训为同一批2次，不重复累计。\n\n待核差异：《季度报送稿》记载活动15场、300人次，未说明线上线下范围，与前述线下统计是否同口径尚待确认，暂不能确定季度活动总场次及总人次。该稿虽晚两天，不能仅据日期优先采用；其员工培训亦记2次，是否仍指上述同一批培训待核。",
+    "actions": [
+      {
+        "action": "复用本轮已完成的共享首步自检与读取",
+        "detail": "完整读取input_round1.json的S2及候选SKILL.md、summary-and-imitation.md、writing-review.md、comprehensive-writing.md；实际读取及环境检查见S1.actions[0]，相关命令退出码均为0。",
+        "skill_version": "20261029.0035.4979",
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O"
+      },
+      {
+        "action": "模型直接撰写摘要并人工核对来源",
+        "detail": "按L01至L12识别甲乙活动重复记录，按明确的‘同为上述2次’识别甲乙培训重复；保留丙的15场、300人次及范围不明，未因日期较新优先采用。未做外部核实、未生成业务文件、未使用代码生成或改写正文。"
+      },
+      {
+        "action": "长度核验",
+        "detail": "用户未设精确长度或硬上限，未调用字符计数工具。",
+        "exit_code": null
+      }
+    ]
+  },
+  {
+    "id": "S3",
+    "prompt": "请把以下虚构会议记录整理为简短会议摘要，用“讨论、决定、建议、待办”四栏，不要添内容，不需要文件。\n陈经理提出可考虑延长服务时间，但会议未表决此项。主持人明确决定：由运营岗核对现有值班表，下周三前提交核对结果，不要求立即调整值班。王主管建议试行预约提醒，须另行报批，会议未批准试行。综合岗负责汇总待确认事项，提交时间未定。不要将任何建议当作决定。",
+    "response": "| 讨论 | 决定 | 建议 | 待办 |\n| --- | --- | --- | --- |\n| 陈经理提出可考虑延长服务时间，会议未表决。 | 主持人决定：由运营岗核对现有值班表，下周三前提交核对结果；不要求立即调整值班。 | 王主管建议试行预约提醒，须另行报批，会议未批准试行。 | 运营岗：核对现有值班表，下周三前提交核对结果。综合岗：汇总待确认事项，提交时间未定。 |",
+    "actions": [
+      {
+        "action": "复用本轮已完成的共享首步自检与读取",
+        "detail": "完整读取input_round1.json的S3及候选SKILL.md、summary-and-imitation.md、writing-review.md、comprehensive-writing.md；实际读取及环境检查见S1.actions[0]，相关命令退出码均为0。",
+        "skill_version": "20261029.0035.4979",
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O"
+      },
+      {
+        "action": "模型直接撰写四栏会议摘要并人工核对状态",
+        "detail": "将未表决的延长时间意见列为讨论，将主持人明确决定列入决定，将另行报批且未批准的预约提醒列为建议；待办仅使用原文责任人及期限，综合岗期限保留未定。未使用代码生成或改写正文。"
+      },
+      {
+        "action": "长度核验",
+        "detail": "用户未设精确长度或硬上限，未调用字符计数工具。",
+        "exit_code": null
+      }
+    ]
+  },
+  {
+    "id": "S4",
+    "prompt": "请只依据下面可见节选写整份报告的摘要，并用恰好10个字符同时原样保留“2026年第二季度”“80件”“6月末仍有5件待回复”。不需要文件。报告共4节，目前只提供第1节：2026年第二季度收到咨询80件，6月末仍有5件待回复。第2至4节尚未提供。",
+    "response": "目前仅见第1节，不能据此概括整份4节报告。三处须原样保留的文字分别为9、3、10个字符，合计22个字符，已超过10个字符限制。\n\n仅就可见第1节，可摘要为：2026年第二季度收到咨询80件，6月末仍有5件待回复。\n\n请补充第2至4节，并确认放宽字数限制，或减少必须原样保留的内容。",
+    "actions": [
+      {
+        "action": "复用本轮已完成的共享首步自检与读取",
+        "detail": "完整读取input_round1.json的S4及候选SKILL.md、summary-and-imitation.md、writing-review.md、comprehensive-writing.md；实际读取及环境检查见S1.actions[0]，相关命令退出码均为0。",
+        "skill_version": "20261029.0035.4979",
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O"
+      },
+      {
+        "action": "必留原文片段实际只读计数",
+        "tool": "exec_command",
+        "interpreter_flags": "python3 -I -S -B",
+        "method": "标准库len逐项计算Unicode字符数，再sum求和；与S1首次草稿计数在同一命令中执行。三片段无可拼接共用的重叠部分。",
+        "counts": {"2026年第二季度": 9, "80件": 3, "6月末仍有5件待回复": 10},
+        "total_without_overlap": 22,
+        "exit_code": 0
+      },
+      {
+        "action": "模型直接撰写范围和长度冲突说明及节选摘要",
+        "detail": "没有读取未提供的第2至4节，没有声称完成整份报告摘要或满足10字符要求；先交付仅针对可见节选的摘要，再请求补充章节并调整冲突要求。未使用代码生成或改写正文。"
+      }
+    ]
+  }
+]

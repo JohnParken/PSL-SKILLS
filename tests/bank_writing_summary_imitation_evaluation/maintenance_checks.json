@@ -1,0 +1,113 @@
+{
+  "internal_references": [
+    {
+      "source": "SKILL.md",
+      "target": "#六docx-导出交接"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/summary-and-imitation.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md#多份素材整合"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md#多轮编辑纪律"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md#重要复杂文稿的读者检查"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/comprehensive-writing.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/official-documents.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/speech-and-report.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/business-analysis.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/activity-planning.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/summary-and-imitation.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/summary-and-imitation.md#长度核验"
+    },
+    {
+      "source": "references/summary-and-imitation.md",
+      "target": "writing-review.md#多份素材整合"
+    },
+    {
+      "source": "references/summary-and-imitation.md",
+      "target": "writing-review.md#多轮编辑纪律"
+    },
+    {
+      "source": "references/summary-and-imitation.md",
+      "target": "../SKILL.md#六docx-导出交接"
+    },
+    {
+      "source": "references/writing-review.md",
+      "target": "summary-and-imitation.md"
+    }
+  ],
+  "references_passed": true,
+  "skill_files": 8,
+  "description_characters": 120,
+  "description_manual_review": {
+    "positive": [
+      "银行材料摘要",
+      "银行范文风格或结构仿写",
+      "多来源先摘要再仿写",
+      "原有银行起草改写审校"
+    ],
+    "negative": [
+      "独立制作DOCX/PDF文件",
+      "未经读取的附件完整摘要",
+      "把范文业绩当新主体事实",
+      "非银行通用风格工具"
+    ],
+    "host_automatic_selection_tested": false
+  },
+  "linux_validation": {
+    "status": "not_run",
+    "reason": "Current host is macOS; no docker/podman/nerdctl/colima/limactl executables or separate Linux execution tool available. No software installed."
+  },
+  "skill_creator_quick_validate": {
+    "status": "not_run",
+    "reason": "Imports yaml/PyYAML; repository standard-library-only checker used instead; no dependency installed."
+  },
+  "final_strict": {
+    "exit_code": 0,
+    "output": "OK skills/bank-writing"
+  },
+  "final_diff_whitespace_check": {
+    "exit_code": 0
+  },
+  "readonly_candidate_strict": {
+    "exit_code": 0,
+    "output": "OK tests/bank_writing_summary_imitation_evaluation/inputs/candidate"
+  },
+  "unrelated_existing_hashes_changed": [],
+  "new_outside_scope_status_entries": [],
+  "final_source_matches_evaluated_snapshot": true,
+  "cache_in_evaluation_directory": []
+}

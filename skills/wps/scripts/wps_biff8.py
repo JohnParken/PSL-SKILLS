@@ -347,10 +347,13 @@ class Reader:
             if key not in self.passive_issues:
                 event = {'code': 'non_cell_metadata_not_decoded', 'scope': scope,
                          'offset': offset, 'record_id': hex(kind), 'name': names[kind],
-                         'records': 0, 'message': 'Known bounded metadata retained raw; not applied to stored cell values.'}
+                         'scopes': [], 'records': 0, 'message': 'Known bounded metadata retained raw; not applied to stored cell values.'}
                 self.issue(event)
                 self.passive_issues[key] = event
-            self.passive_issues[key]['records'] += 1
+            event = self.passive_issues[key]
+            if scope not in event['scopes']:
+                event['scopes'].append(scope)
+            event['records'] += 1
 
 
     def issue(self,issue):

@@ -1,0 +1,45 @@
+{
+  "data": "All inputs and numeric values are synthetic. No real bank or customer material was read, changed or sent to external services.",
+  "execution": "Three independent fresh-context model agents executed user requests using the read-only candidate skill. Normal host model calls were used; no separate external API or network transfer was invoked.",
+  "task_groups": {
+    "summary": [
+      "S1",
+      "S2",
+      "S3",
+      "S4"
+    ],
+    "imitation": [
+      "I1",
+      "C1",
+      "I2"
+    ],
+    "regression": [
+      "R1",
+      "R2",
+      "R3"
+    ]
+  },
+  "sequential_inputs": "S2 second turn was created only after actual first response. I1 second and third turns were each created after the preceding actual response; prior prompts and responses are included in the corresponding input files.",
+  "preserved": [
+    "inputs/before",
+    "inputs/candidate",
+    "fixtures_round1.json",
+    "runs/*/input_round*.json",
+    "runs/*/response_round*.json",
+    "runs/regression/service_notice.docx",
+    "runs/regression/execution_evidence.json",
+    "runs/regression/docx_receipt.json"
+  ],
+  "context_limits": "Execution agents were not given acceptance_plan.json, other groups outputs, expected prose or evaluation scores. Full user prompts, relevant skill snapshots and model-authored responses/actions are preserved; framework/system internals and private reasoning are not exported.",
+  "model_identity": "No explicit backend model override was set. Runtime labels describe Codex based on GPT-6; exact backend model/snapshot IDs are not independently exposed. Do not claim verified Astra execution.",
+  "platforms": {
+    "execution": "macOS 27.2 arm64",
+    "maintenance_and_summary_docx": "Python 3.13.12 standard library with -I -S -B",
+    "imitation_optional_counts": "Python 3.9.6 standard library; no target skill interpreter dependency",
+    "Linux": "not run; no available container runtime/execution tool",
+    "Windows": "not run"
+  },
+  "comparison": "No previous-version model execution was run for this feature batch. Baseline is retained for source inspection only; no comparative quality improvement is claimed.",
+  "independent_review": "Single-candidate de-identified review packet; reader receives real user request and actual response but no version/skill/rules/expected answers. Not an A/B blind comparison.",
+  "host_automatic_selection_tested": false
+}

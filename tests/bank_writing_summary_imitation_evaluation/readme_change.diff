@@ -1,0 +1,42 @@
+--- README_at_task_start
++++ README_current
+@@ -6,7 +6,7 @@
+ 
+ | Skill | 来源 | 版本 | 主要能力 |
+ | --- | --- | --- | --- |
+-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261028.1418.3566 | 银行材料写作与审校；按需处理多轮修改、来源差异和重要稿件读者检查；获授权后交给 docx 导出 |
++| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.0035.4979 | 银行材料写作与审校；摘要、范文仿写及先摘要再仿写，保留事实口径与编辑范围；获授权后交给 docx 导出 |
+ | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261027.2320.5486 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
+ | [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261028.2341.0954 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+ | [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261027.2320.5486 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
+@@ -23,7 +23,7 @@
+ │   └── minimax-skills-MIT.txt
+ └── skills/
+     ├── skill-development-standards/  # 开发规范、检查器及其测试
+-    ├── bank-writing/  # 纯文本写作与六份分类参考
++    ├── bank-writing/  # 纯文本写作与七份分类参考
+     ├── xlsx/
+     │   ├── SKILL.md
+     │   ├── requirements.txt
+@@ -46,7 +46,7 @@
+ 
+ ## 环境要求
+ 
+-- **bank-writing**：对话式文本写作，无脚本、第三方包或办公软件依赖；按任务读取附带参考资料。
++- **bank-writing**：主要面向云端 Linux 容器的对话式文本写作，开发可用 macOS、Windows 或 Linux；包内无脚本、第三方包或办公软件依赖。按任务读取参考，精确长度用宿主已有能力只读计数，不能核验时如实说明。
+ 
+ - **xlsx**：Python 3.9 及以上；维护中的主流程仅依赖标准库。
+ - **docx**：Python 3.10 及以上，标准库包含 zlib，Expat 至少为 2.6.0。
+@@ -63,9 +63,9 @@
+ 
+ ### 银行专业写作
+ 
+-读取 [bank-writing](skills/bank-writing/SKILL.md) 完成构思、起草、改写、整合或审校，直接交付文本。内容末尾的 DOCX 导出询问放在正文外；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
+-
+-本轮升级的旧版快照、同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)。结果包含持平与退步，仅代表有限虚构场景，不等同于宿主自动触发验收。
++读取 [bank-writing](skills/bank-writing/SKILL.md) 完成构思、起草、改写、整合或审校；摘要、参考范文仿写和先摘要再仿写按需读取专项参考，普通写作不增加额外流程。范文与目标事实分开，摘要保留关键限定，严格篇幅实际计数，直接交付文本。内容末尾的 DOCX 导出询问放在正文外；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
++
++前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；本次在 macOS 实测，云端 Linux 与 Windows 未验证。
+ 
+ ### XLSX
+ 

@@ -640,6 +640,7 @@ def main():
             sub.add_argument("--appearance", help="Readable appearance JSON; new workbooks only")
             sub.add_argument("--values-only", action="store_true", help="Replace all successfully evaluated formulas with static results")
     args = parser.parse_args()
+    from xlsx_delivery import finish_delivery
     try:
         if args.command == "check":
             book = Workbook.create({"sheets": [{"name": "Check", "cells": {"A1": {"formula": "ROUND(1.005,2)"}}}]})
@@ -667,6 +668,8 @@ def main():
                 book.save(args.output)
                 result["output_written"] = True
                 result["output"] = args.output
+        if args.command in ('create', 'edit', 'calculate') and result.get('output_written'):
+            finish_delivery(result, args.output, [getattr(args, field, None) for field in ('input', 'spec', 'appearance')])
         print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
         return 1 if result.get("status") == "failed" else 2 if result.get("status") == "incomplete" else 0
     except UnsupportedInputError as exc:

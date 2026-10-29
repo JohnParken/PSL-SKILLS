@@ -1,0 +1,2 @@
+# Python >=3.10; standard library only; no third-party dependencies.
+# Controlled cleanup requires dir_fd, O_NOFOLLOW, O_DIRECTORY; unsupported platforms stop.

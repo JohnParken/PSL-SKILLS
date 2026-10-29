@@ -1,0 +1,94 @@
+{
+  "skill": "bank-writing",
+  "old_version": "20261029.0035.4979",
+  "version": "20261029.0103.0751",
+  "new_york_clock": "2026-10-28T13:03:07.514120-04:00",
+  "old_description": "为银行从业者起草、改写、整合与审校中文材料，适用于总结汇报、讲话公文、经营分析、活动方案和客户沟通。支持提炼摘要、参考范文的文风与结构写作，以及先摘要再仿写；以目标素材为事实依据，保留关键数字、口径与待核事项，直接交付文本，不承担文件制作。",
+  "old_characters": 120,
+  "new_description": "为银行工作起草、改写、整合与审校中文综合材料，适用于总结汇报、讲话公文、经营分析、活动方案和客户沟通。支持长文、会议记录及多份素材摘要，参照范文结构与文风仿写，或先摘要再仿写；以目标素材为事实依据，保留关键数字、口径与待核信息。仅交付文本，DOCX文件生成交由docx技能。",
+  "new_characters": 137,
+  "changes": "Only frontmatter description/version and corresponding README index/evidence link. Skill body and all seven references unchanged.",
+  "validation": {
+    "strict": "passed",
+    "internal_links": 17,
+    "version_consistency": "passed",
+    "name_description_selection": {
+      "passed": 10,
+      "total": 10,
+      "kind": "independent model choice simulation",
+      "host_automatic_selection_tested": false
+    },
+    "unrelated_existing_hashes_changed": [],
+    "old_archives": "preserved unchanged"
+  },
+  "package": {
+    "status": "created",
+    "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.0103.0751.zip",
+    "file_count": 8,
+    "bytes": 14740,
+    "uncompressed_bytes": 24764,
+    "sha256": "d89f8fc7e03560e0d8f8a24c409f899e0c0ad31b0bb5c8eb501a1e330ead6904",
+    "crc_pass": true,
+    "source_match": true,
+    "old_archives_unchanged": true,
+    "members": [
+      {
+        "name": "bank-writing/SKILL.md",
+        "bytes": 9619,
+        "sha256": "8de2fba33edbc018cfb40850cdb9029654ced55fff0a691d23e0247e5bc65b8d"
+      },
+      {
+        "name": "bank-writing/references/activity-planning.md",
+        "bytes": 983,
+        "sha256": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8"
+      },
+      {
+        "name": "bank-writing/references/business-analysis.md",
+        "bytes": 1016,
+        "sha256": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6"
+      },
+      {
+        "name": "bank-writing/references/comprehensive-writing.md",
+        "bytes": 1233,
+        "sha256": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2"
+      },
+      {
+        "name": "bank-writing/references/official-documents.md",
+        "bytes": 931,
+        "sha256": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc"
+      },
+      {
+        "name": "bank-writing/references/speech-and-report.md",
+        "bytes": 1071,
+        "sha256": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a"
+      },
+      {
+        "name": "bank-writing/references/summary-and-imitation.md",
+        "bytes": 5946,
+        "sha256": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737"
+      },
+      {
+        "name": "bank-writing/references/writing-review.md",
+        "bytes": 3965,
+        "sha256": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+      }
+    ]
+  },
+  "prior_writing_evaluation": "Writing instructions unchanged; previous summary/imitation and DOCX behavioral evaluations were not rerun. Their version and scope remain in ../bank_writing_summary_imitation_evaluation/summary.json.",
+  "limits": [
+    "Ten finite requests, one independent selector; no statistical accuracy or automatic host registration/trigger claim.",
+    "Only names/descriptions of bank-writing and docx plus neither option were provided; a larger real skill catalog may behave differently.",
+    "Exact runtime model ID unavailable.",
+    "Validation performed on macOS; Linux and Windows not run.",
+    "No dependency added, upload, commit or push."
+  ],
+  "evidence": [
+    "selection_input.json",
+    "selection_output.json",
+    "selection_expectations.json",
+    "selection_checks.json",
+    "checks.json",
+    "package_verification.json",
+    "manifest.json"
+  ]
+}

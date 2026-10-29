@@ -1,0 +1,53 @@
+{
+  "status": "created",
+  "path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.0103.0751.zip",
+  "file_count": 8,
+  "bytes": 14740,
+  "uncompressed_bytes": 24764,
+  "sha256": "d89f8fc7e03560e0d8f8a24c409f899e0c0ad31b0bb5c8eb501a1e330ead6904",
+  "crc_pass": true,
+  "source_match": true,
+  "old_archives_unchanged": true,
+  "members": [
+    {
+      "name": "bank-writing/SKILL.md",
+      "bytes": 9619,
+      "sha256": "8de2fba33edbc018cfb40850cdb9029654ced55fff0a691d23e0247e5bc65b8d"
+    },
+    {
+      "name": "bank-writing/references/activity-planning.md",
+      "bytes": 983,
+      "sha256": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8"
+    },
+    {
+      "name": "bank-writing/references/business-analysis.md",
+      "bytes": 1016,
+      "sha256": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6"
+    },
+    {
+      "name": "bank-writing/references/comprehensive-writing.md",
+      "bytes": 1233,
+      "sha256": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2"
+    },
+    {
+      "name": "bank-writing/references/official-documents.md",
+      "bytes": 931,
+      "sha256": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc"
+    },
+    {
+      "name": "bank-writing/references/speech-and-report.md",
+      "bytes": 1071,
+      "sha256": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a"
+    },
+    {
+      "name": "bank-writing/references/summary-and-imitation.md",
+      "bytes": 5946,
+      "sha256": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737"
+    },
+    {
+      "name": "bank-writing/references/writing-review.md",
+      "bytes": 3965,
+      "sha256": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+    }
+  ]
+}

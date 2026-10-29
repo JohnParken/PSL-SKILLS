@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261027.2320.5486"
+version: "20261029.0940.0902"
 description: 用于读取 XLSX/XLSM、创建表格报告、受控修改单元格及交换 CSV/TSV，使用纯 Python 标准库。支持公式子集计算、合并表头重建和显式配置的数据统计分析；.wps/.et/.ett 读取使用 wps 技能，不支持任意结构编辑或办公软件排版还原。
 license: MIT
 ---
@@ -24,7 +24,7 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" check
 
 5. Require exit 0 and JSON `status: ready`. This checks imports, the template and a limited calculation, not task data, permissions or Excel compatibility. Confirm input readability. For writes, create a unique exclusive probe in each intended task output directory, read it back and remove only that probe; this also applies to configuration copies and redirected reports. Pure reads to stdout need no write probe. Do not use system temporary directories for business-task probes or overwrite existing files.
 6. Stop dependent operations if self-check fails, its result is uncertain, or the required marker is absent. Retry only after the environment issue is resolved, without lowering checks. After context compaction re-read this file if constraints are missing; retain confirmed task paths.
-7. Before delivery verify the actual file exists and is nonempty; use only a supported harness delivery mechanism, never guessed URLs or unverified log output. Self-check is not result acceptance. For tasks that create intermediates, follow [cleanup and preservation](references/validate.md#task-intermediate-files).
+7. Before delivery verify the actual file exists and is nonempty; use only a supported harness delivery mechanism, never guessed URLs or unverified log output. Self-check is not result acceptance. File-producing CLIs now append `delivery` archive results; stdout-only reads do not. For owned JSON task configs and cleanup, follow [delivery lifecycle](references/delivery-lifecycle.md).
 
 ## Route the task
 
@@ -36,7 +36,7 @@ Read only the selected reference. `read`, `create`, `edit` and `calculate` are s
 | Profile, filter or group a region; identify format | `xlsx_analysis.py profile` / `summarize`; `xlsx_identify.py` | [Analysis and identification](references/data-analysis.md) |
 | Analyze WPS extraction JSON | `xlsx_analysis.py profile` / `summarize` | [WPS result contract](references/data-analysis.md#analyze-a-wps-result-without-conversion) |
 | Import/export CSV/TSV | `xlsx_tabular.py import` / `export` | [Tabular interchange](references/tabular-interchange.md) |
-| Create a report | JSON specification → `stdlib_xlsx.py create` | [Create](references/create.md) |
+| Create a report | stdin task specification → `run_xlsx_task.py`; existing `stdlib_xlsx.py create` remains supported | [Create](references/create.md) |
 | Correct existing cells | JSON patch → `stdlib_xlsx.py edit` | [Edit and preservation](references/edit.md) |
 | Compute supported formulas | `stdlib_xlsx.py calculate` to a new file | [Calculation contract](references/python-calculation.md) |
 | Fix a known formula defect | Diagnose intent, then `edit` | [Fix](references/fix.md) |
@@ -59,3 +59,11 @@ Before any writing or calculation, read [the JSON/CLI contract](references/pytho
 - Never rebuild an existing workbook from extracted values. Edit only values, formulas and existing style indices; no row/column/sheet insertion, deletion or movement. Shared/array/specially attributed formula sheets are refused for edits. Untouched ZIP member content is preserved; changed XML is reserialized, formula caches and calculation-chain metadata may change. No full-file identity or arbitrary compatibility guarantee.
 - XLSM macros are retained, never executed; chart/pivot caches are retained, never refreshed. Dates remain stored serials or ISO text. Signed/encrypted files, chart sheets, strict OOXML and native XLS/XLSB are unsupported. The wps skill's documented read-only record subset does not enable generic binary spreadsheet editing.
 - Do not run legacy utilities or install their dependencies as fallbacks. Legacy limitations and disabled row-edit commands are documented under [maintenance/legacy boundaries](references/validate.md#legacy-utilities). Development tests and intermediate-file cleanup are also conditional sections there, not extra steps for a simple read.
+
+## 文件交付与中间文件收尾
+
+所有受支持的写文件CLI在主产物写入后自动归档，新增 `delivery` 字段，原status、output、退出码和已有输出保护不变。先按原状态验收业务结果；部分计算仍为incomplete/退出2，归档完成不代表公式完整。只读stdout不创建归档或清理清单。
+
+推荐对需要临时JSON配置的任务使用 `run_xlsx_task.py`：stdin提供原CLI参数和具名配置，创建前登记本轮专属JSON；子进程成功返回、归档处理后自动seal/clean。失败或部分计算保留配置供核查，不自动覆盖已有输出重跑。无临时配置时不建立无用清单。它不运行用户Python脚本，不认领旧CLI传入的既存JSON；其他自定义辅助文件仍须创建前通过 `xlsx_lifecycle.py plan` 显式登记。完整命令、入口覆盖、恢复及限制见[交付生命周期](references/delivery-lifecycle.md)。
+
+用户归档成功提示只使用 `delivery.archive_message` 的“归档完成”，不展示内部路径、目录、ID或原始配置日志；正常主文件链接保留。归档失败保留主产物，不为此重跑计算；归档、业务计算与清理状态分别报告。

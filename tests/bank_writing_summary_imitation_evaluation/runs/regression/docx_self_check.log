@@ -1,0 +1,7 @@
+archive-location: skipped; reason=missing_router_config
+auto-cleanup=available
+python=3.13.12 required>=3.10 supported=True
+zlib=ok
+expat=expat_2.6.3 required>=2.6.0 supported=True
+output_dir=. writable=True
+check-ok

@@ -167,6 +167,7 @@ def main():
     export.add_argument('--formulas', choices=('reject', 'cached'), default='reject')
     export.add_argument('--text', choices=('safe', 'raw'), default='safe')
     args = parser.parse_args()
+    from xlsx_delivery import finish_delivery
     try:
         if args.command == 'import':
             result = import_table(args.input, args.output, args.sheet, args.encoding,
@@ -175,6 +176,7 @@ def main():
         else:
             result = export_table(args.input, args.output, args.sheet, args.cell_range,
                                   args.formulas, args.text)
+        finish_delivery(result, args.output, [args.input, getattr(args, 'appearance', None)])
         print(json.dumps(result, ensure_ascii=False))
         return 0
     except (ValueError, OSError, LookupError, csv.Error, InvalidOperation, zipfile.BadZipFile, ET.ParseError) as exc:

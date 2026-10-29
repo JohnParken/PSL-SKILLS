@@ -1,0 +1,36 @@
+{
+  "source": "artifact-lifecycle 20261029.0812.3841",
+  "transform": "Prepend future annotations; replace listed sibling imports with package-relative imports. No runtime cross-skill dependency.",
+  "files": [
+    {
+      "file": "router_config.py",
+      "source_sha256": "616cc456d4c02ed720fcdc0c1f92ec15891880a50b23274eca2961da435d471e",
+      "installed_sha256": "a697cc3781ddf07c5efb718f3902e38625b3e6e827e3c38a05ba7dba34b807aa"
+    },
+    {
+      "file": "output_location.py",
+      "source_sha256": "6f85dfd2cbf5ced0bf15215853d97bc2659f32797bb986589ca36e32d7fec9d4",
+      "installed_sha256": "2ba4d789730651648c0c8d06e9683618f51b6be79004ec712890fcda54f3ba4c"
+    },
+    {
+      "file": "artifact_files.py",
+      "source_sha256": "7135315d11fd9a5295aa2972656972ae0adbe6a0b709f633adcabbf20afa7d6a",
+      "installed_sha256": "20802232a491a7a5db3df0b3baa15ece1a7b534c2fca40ddc7f557346b0dd508"
+    },
+    {
+      "file": "controlled_cleanup.py",
+      "source_sha256": "1ec16128a77c495f0c07c7c7e0f6cd9f271c8081daaefac247acc7cc758082b4",
+      "installed_sha256": "12e51bbe01873469e33721a6813cdfc9fb3ed4cc33a6bf1790c34373c18aed26"
+    },
+    {
+      "file": "cleanup_task.py",
+      "source_sha256": "4007a9821c30b6e08ee7528a5a0073d67dcede31e2ef241323985f65e4dba94a",
+      "installed_sha256": "86d5c7f09d5f7417d9591c521af4e51de66fd482a697127882e3c18b42bc7790"
+    },
+    {
+      "file": "archive_deliverables.py",
+      "source_sha256": "d7e9431910ce4aa2ef93ec7edde7ea73ff67f3cd302d71ff76d630fbc5e495df",
+      "installed_sha256": "474ed5eca21d83e9e69a7f51f4a4977aa4c032a10c5b829d666dff8fb10a7cf6"
+    }
+  ]
+}

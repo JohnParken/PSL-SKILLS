@@ -1,0 +1,64 @@
+{
+  "status": "verified",
+  "archive_status": "skipped",
+  "used_fallback": true,
+  "fallback_reason": "missing_router_config",
+  "files": [
+    {
+      "output": "service_notice.docx",
+      "archive_output": null,
+      "archive_status": "skipped"
+    }
+  ],
+  "warnings": [],
+  "archive_message": "归档未执行",
+  "output": "service_notice.docx",
+  "generation_status": "verified",
+  "output_dir": ".",
+  "archive_output": null,
+  "blocks": 2,
+  "zip_crc": true,
+  "structure": true,
+  "content_coverage": true,
+  "layout_intent": true,
+  "visual_validation": false,
+  "xsd_validation": false,
+  "task_manifest": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+  "task_status": "completed",
+  "cleanup": {
+    "status": "cleaned",
+    "deleted": [
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+        "reason": "already_absent"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+        "reason": "removed"
+      }
+    ],
+    "retained": [],
+    "failed": [],
+    "manifest_retained": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+    "deliverables_unchanged": true,
+    "cleanup_complete": true,
+    "outcome": "success",
+    "archive_status": "skipped"
+  }
+}

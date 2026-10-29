@@ -1,0 +1,245 @@
+{
+  "schema": "docx_cleanup_v1",
+  "manifest": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+  "task_identity": [
+    16777234,
+    45707796
+  ],
+  "phase": "sealed",
+  "entries": [
+    {
+      "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py",
+      "kind": "file",
+      "absent_at_plan": true,
+      "retain_reason": null,
+      "fingerprint": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707975
+        ],
+        "size": 124,
+        "mtime_ns": 1793205887645863843,
+        "links": 1,
+        "sha256": "42cd400eb3dccb05c9b6b288b0ba00be4b086fe3d2887aaccb6af6fc62f6ad37"
+      }
+    },
+    {
+      "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json",
+      "kind": "file",
+      "absent_at_plan": true,
+      "retain_reason": null,
+      "fingerprint": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707977
+        ],
+        "size": 324,
+        "mtime_ns": 1793205887646196426,
+        "links": 1,
+        "sha256": "38e2d9db707d57273c90af53c579a5a5353c504419760619ecbd68fe47cfa188"
+      }
+    },
+    {
+      "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json",
+      "kind": "file",
+      "absent_at_plan": true,
+      "retain_reason": null,
+      "fingerprint": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707984
+        ],
+        "size": 1995,
+        "mtime_ns": 1793205887700857968,
+        "links": 1,
+        "sha256": "ab44026c8f555ccc262ae9b49362328e11a930a4d5882f4e468f653f4ccf21b5"
+      }
+    },
+    {
+      "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock",
+      "kind": "file",
+      "absent_at_plan": true,
+      "retain_reason": null,
+      "fingerprint": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707979
+        ],
+        "size": 0,
+        "mtime_ns": 1793205887646489926,
+        "links": 1,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+      "kind": "file",
+      "absent_at_plan": true,
+      "retain_reason": null,
+      "fingerprint": null
+    },
+    {
+      "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+      "kind": "directory",
+      "absent_at_plan": true,
+      "retain_reason": null,
+      "fingerprint": {
+        "kind": "directory",
+        "identity": [
+          16777234,
+          45707974
+        ]
+      }
+    }
+  ],
+  "protected": [
+    {
+      "path": "input_round1.json",
+      "initial": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707797
+        ],
+        "size": 852,
+        "mtime_ns": 1793205676230559926,
+        "links": 1
+      }
+    }
+  ],
+  "deliverables": [
+    "service_notice.docx"
+  ],
+  "runner": {
+    "schema": "docx_auto_task_v1",
+    "workspace": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+    "output": "service_notice.docx",
+    "created": {
+      "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707975
+        ],
+        "size": 124,
+        "mtime_ns": 1793205887645863843,
+        "links": 1,
+        "sha256": "42cd400eb3dccb05c9b6b288b0ba00be4b086fe3d2887aaccb6af6fc62f6ad37"
+      },
+      "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707977
+        ],
+        "size": 324,
+        "mtime_ns": 1793205887646196426,
+        "links": 1,
+        "sha256": "38e2d9db707d57273c90af53c579a5a5353c504419760619ecbd68fe47cfa188"
+      },
+      "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock": {
+        "kind": "file",
+        "identity": [
+          16777234,
+          45707979
+        ],
+        "size": 0,
+        "mtime_ns": 1793205887646489926,
+        "links": 1,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "attempts": 1,
+    "state": "delivered",
+    "retry_stage": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+    "workspace_identity": {
+      "kind": "directory",
+      "identity": [
+        16777234,
+        45707974
+      ]
+    },
+    "delivery": {
+      "status": "verified",
+      "archive_status": "skipped",
+      "used_fallback": true,
+      "fallback_reason": "missing_router_config",
+      "files": [
+        {
+          "output": "service_notice.docx",
+          "archive_output": null,
+          "archive_status": "skipped"
+        }
+      ],
+      "warnings": [],
+      "archive_message": "归档未执行",
+      "output": "service_notice.docx",
+      "generation_status": "verified",
+      "output_dir": ".",
+      "archive_output": null,
+      "blocks": 2,
+      "zip_crc": true,
+      "structure": true,
+      "content_coverage": true,
+      "layout_intent": true,
+      "visual_validation": false,
+      "xsd_validation": false
+    }
+  },
+  "outcome": "success",
+  "verified": true,
+  "archive_status": "skipped",
+  "output_fingerprints": {
+    "service_notice.docx": {
+      "kind": "file",
+      "identity": [
+        16777234,
+        45707983
+      ],
+      "size": 2823,
+      "mtime_ns": 1793205887690822468,
+      "links": 1,
+      "sha256": "03687fd01d8b843f2e112fe03fe2934a2dadaae1f1725be676c6262da42ff69b"
+    }
+  },
+  "last_cleanup": {
+    "status": "cleaned",
+    "deleted": [
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock",
+        "reason": "removed"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+        "reason": "already_absent"
+      },
+      {
+        "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+        "reason": "removed"
+      }
+    ],
+    "retained": [],
+    "failed": [],
+    "manifest_retained": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+    "deliverables_unchanged": true,
+    "cleanup_complete": true,
+    "outcome": "success",
+    "archive_status": "skipped"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "skill": "bank-writing",
+  "final_version": "20261029.0035.4979",
+  "version_clock": {
+    "new_york_time": "2026-10-28T12:35:49.799034-04:00",
+    "rule": "Add 12 hours to New York calendar time, carrying over the date; truncate fractional seconds to hundredths."
+  },
+  "source_changes": [
+    "SKILL.md: discovery description, precise route, optional read-only counting boundary and Linux target context",
+    "references/summary-and-imitation.md: summary, imitation and summary-then-imitation task rules",
+    "references/writing-review.md: one link to special paths",
+    "README.md: version, capability, resource count and evaluation links"
+  ],
+  "boundary": "Pure text writing retained; no skill scripts or dependencies added. DOCX creation remains in independent docx skill after authorization. No third-party licensed content copied.",
+  "tests": {
+    "unique_scenarios": 10,
+    "actual_model_responses": 13,
+    "hard_checks": {
+      "passed": 27,
+      "total": 27,
+      "actual_responses": 13
+    },
+    "normal_scenarios": 9,
+    "deliberately_infeasible_scenario": {
+      "id": "S4",
+      "result": "Correctly disclosed missing sections and 22-character minimum versus 10-character requirement; delivered only an explicitly scoped excerpt summary, requested missing information. Original complete-report goal NOT achieved."
+    },
+    "multi_turn": "S2 confirmation followed actual first response. I1 deletion followed by separate local edit retained deletion and unmodified content exactly.",
+    "strict_length": "S1 final body measured independently at exactly 140 Unicode non-whitespace characters; factual period, units and limits retained.",
+    "style": "Independent single-candidate review of six outputs found no clear factual error or violation of satisfiable hard constraints. I1 and C1 still contain repetitive explanations and generalized endings; suggestions retained, no claim of uniform quality improvement.",
+    "regression": "Short writing and unknown-state responses remained direct; DOCX explicitly authorized task produced a real verified file with exactly approved text and no redundant export question.",
+    "prior_suites": "Previous bank_writing_upgrade_evaluation records retained; no full rerun or old/new quality comparison for this batch.",
+    "host_automatic_selection_tested": false,
+    "exact_backend_model_verified": false
+  },
+  "validation": {
+    "strict": "passed",
+    "internal_reference_links": 17,
+    "references": "passed",
+    "description_characters": 120,
+    "independent_rule_review": "no material conflict",
+    "readonly_installation": "Actual model executions read candidate snapshot with directory mode 0555 and files 0444; write probe denied, final contents and permissions unchanged; archive members have identical hashes.",
+    "actual_platform": "macOS 27.2 arm64",
+    "linux": "not run: no available container runtime or Linux execution tool; no software installed",
+    "windows": "not run",
+    "unrelated_existing_hashes_changed": [],
+    "new_outside_scope_status_entries": []
+  },
+  "package": {
+    "status": "created",
+    "path": "skills/bank-writing-20261029.0035.4979.zip",
+    "absolute_path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.0035.4979.zip",
+    "version": "20261029.0035.4979",
+    "file_count": 8,
+    "bytes": 14720,
+    "uncompressed_bytes": 24729,
+    "sha256": "7896828e123ff702ce02c96718d27bf08e4560ec2e07b5b2af77ccd25286a071",
+    "crc_pass": true,
+    "member_hashes_match_current_source": true,
+    "source_matches_evaluated_readonly_installation": true,
+    "readonly_installation_permissions_and_hashes_unchanged": true,
+    "source_unchanged_during_packaging": true,
+    "members": [
+      {
+        "name": "bank-writing/SKILL.md",
+        "bytes": 9584,
+        "sha256": "eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b"
+      },
+      {
+        "name": "bank-writing/references/activity-planning.md",
+        "bytes": 983,
+        "sha256": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8"
+      },
+      {
+        "name": "bank-writing/references/business-analysis.md",
+        "bytes": 1016,
+        "sha256": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6"
+      },
+      {
+        "name": "bank-writing/references/comprehensive-writing.md",
+        "bytes": 1233,
+        "sha256": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2"
+      },
+      {
+        "name": "bank-writing/references/official-documents.md",
+        "bytes": 931,
+        "sha256": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc"
+      },
+      {
+        "name": "bank-writing/references/speech-and-report.md",
+        "bytes": 1071,
+        "sha256": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a"
+      },
+      {
+        "name": "bank-writing/references/summary-and-imitation.md",
+        "bytes": 5946,
+        "sha256": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737"
+      },
+      {
+        "name": "bank-writing/references/writing-review.md",
+        "bytes": 3965,
+        "sha256": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+      }
+    ],
+    "excluded": "No evaluation snapshots, test records, cache, temporary files, dependencies or other skills.",
+    "old_archives": "No prior archive changed or removed."
+  },
+  "evidence": {
+    "complete_inputs_outputs": "runs/",
+    "raw_fixtures": "fixtures_round1.json",
+    "before_snapshot": "inputs/before",
+    "evaluated_readonly_snapshot": "inputs/candidate",
+    "hard_checks": "hard_checks.json",
+    "semantic_review": "manual_semantic_review.json",
+    "independent_quality": "independent_quality_review.json",
+    "independent_rule_review": "rule_review.json",
+    "protocol": "execution_protocol.json",
+    "scope_and_structure": "maintenance_checks.json",
+    "docx_execution": "runs/regression/execution_evidence.json",
+    "docx_receipt": "runs/regression/docx_receipt.json"
+  },
+  "limits": [
+    "Finite fictional cases, not statistical or real-bank acceptance.",
+    "No verified backend model identifier; do not label this as verified Astra execution.",
+    "No cloud Linux or Windows runtime acceptance; local checks do not replace those targets.",
+    "No automatic host skill-selection test.",
+    "No long-context/multi-file unreadable-format stress test, editor-specific word-count check, or ambiguous dual-role sample clarification forward test.",
+    "DOCX unavailable/later-authorization branches, visual pagination/font availability/full XSD not retested.",
+    "Style has remaining redundancy in two samples; no previous-version quality comparison in this batch."
+  ],
+  "git_and_delivery": "Local source, evaluation records and ZIP only. No upload, commit, push, deletion of older packages or changes to other skills by this task."
+}

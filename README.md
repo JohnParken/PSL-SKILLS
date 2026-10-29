@@ -6,11 +6,12 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261028.1418.3566 | 银行材料写作与审校；按需处理多轮修改、来源差异和重要稿件读者检查；获授权后交给 docx 导出 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261027.2320.5486 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261028.2122.1257 | DOCX 生成、DOCX/DOTX 读取与受控编辑；显式清单清理任务中间文件；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261027.2320.5486 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261026.2117.0168 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.0103.0751 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后由 docx 生成文件 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261029.0940.0902 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261029.0758.3419 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261029.0400.2169 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261029.0924.5633 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261029.0812.3841 | 本轮临时文件登记、最终交付物清单归档、封存与受控清理；不生成或验收业务内容、不清理历史发布ZIP |
 
 ## 目录结构
 
@@ -23,7 +24,7 @@ PSL-SKILLS/
 │   └── minimax-skills-MIT.txt
 └── skills/
     ├── skill-development-standards/  # 开发规范、检查器及其测试
-    ├── bank-writing/  # 纯文本写作与六份分类参考
+    ├── bank-writing/  # 纯文本写作与七份分类参考
     ├── xlsx/
     │   ├── SKILL.md
     │   ├── requirements.txt
@@ -46,7 +47,7 @@ PSL-SKILLS/
 
 ## 环境要求
 
-- **bank-writing**：对话式文本写作，无脚本、第三方包或办公软件依赖；按任务读取附带参考资料。
+- **bank-writing**：主要面向云端 Linux 容器的对话式文本写作，开发可用 macOS、Windows 或 Linux；包内无脚本、第三方包或办公软件依赖。按任务读取参考，精确长度用宿主已有能力只读计数，不能核验时如实说明。
 
 - **xlsx**：Python 3.9 及以上；维护中的主流程仅依赖标准库。
 - **docx**：Python 3.10 及以上，标准库包含 zlib，Expat 至少为 2.6.0。
@@ -63,9 +64,11 @@ PSL-SKILLS/
 
 ### 银行专业写作
 
-读取 [bank-writing](skills/bank-writing/SKILL.md) 完成构思、起草、改写、整合或审校，直接交付文本。内容末尾的 DOCX 导出询问放在正文外；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
+读取 [bank-writing](skills/bank-writing/SKILL.md) 完成构思、起草、改写、整合或审校；摘要、参考范文仿写和先摘要再仿写按需读取专项参考，普通写作不增加额外流程。范文与目标事实分开，摘要保留关键限定，严格篇幅实际计数，直接交付文本。内容末尾的 DOCX 导出询问放在正文外；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
 
-本轮升级的旧版快照、同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)。结果包含持平与退步，仅代表有限虚构场景，不等同于宿主自动触发验收。
+前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；本次在 macOS 实测，云端 Linux 与 Windows 未验证。
+
+当前版本仅修订能力描述，正文与参考资料沿用上述已评测版本；名称与描述的独立选择模拟见[描述评测记录](tests/bank_writing_description_evaluation/summary.json)，不代表宿主自动注册或触发验收。
 
 ### XLSX
 
@@ -87,27 +90,21 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.
 
 ### DOCX
 
-首次操作前在任务目录运行自检，要求退出码为 0、输出包含 `check-ok`，且 `output_dir=...` 行中 `writable=True`。自检检查任务根目录及有效配置的归档目录；后者不可写只报告 `archive-warning` 和 `writable=False`，不影响主流程自检通过。必要时创建归档目录，分别写入、读回并清理探针：
+标准新建前在任务目录运行自检，要求退出码为0、输出包含 `auto-cleanup=available` 与 `check-ok`，且 `output_dir=...` 行中 `writable=True`。自检检查任务根目录及有效配置的归档目录；后者不可写只报告 `archive-warning` 和 `writable=False`，不影响主流程自检通过。必要时创建归档目录，分别写入、读回并清理探针：
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/create_docx.py" --check
+python3 -I -S -B "<skill_dir>/scripts/run_docx_task.py" check
 ```
 
-按照 [生成说明](skills/docx/references/generation.md) 准备 `document.json`。用户未指定排版要求时，每次新建显式使用公文主题 `official`，无需先询问格式；用户明确指定的主题或字体、字号、页边距等要求优先。例如：
-
-```json
-{
-  "theme": "official",
-  "blocks": [
-    {"type": "title", "text": "客户服务改进方案"},
-    {"type": "paragraph", "text": "完善服务流程，提升客户服务质量。"}
-  ]
-}
-```
+按照[生成说明](skills/docx/references/generation.md)组织JSON，直接送入统一入口的stdin，不另建临时.py或document.json。未指定排版时显式使用official；用户指定格式优先。命令示例：
 
 ```console
-python3 -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json "客户服务改进方案.docx" --verify --require-no-placeholders
+python3 -I -S -B "<skill_dir>/scripts/run_docx_task.py" create "客户服务改进方案.docx" <<'JSON'
+{"theme":"official","blocks":[{"type":"title","text":"客户服务改进方案"},{"type":"paragraph","text":"完善服务流程，提升客户服务质量。"}]}
+JSON
 ```
+
+自动入口创建前登记自己的worker.py/spec.json，强制验收及占位符检查，处理归档并等待worker退出后自动清理。最终DOCX和恢复manifest保留。失败待重试时材料保留，使用返回manifest的retry/resume，不重新创建同名任务；`task_status`和`cleanup.cleanup_complete`与归档状态分开核对。自检还需要标准库POSIX锁与描述符能力，当前只验证macOS。旧create_docx.py生成CLI已deprecated，仅stderr提示迁移、JSON stdout和退出码兼容；底层库与五类编辑等尚有用途的接口保留，不会自动清理调用方自建的Python/JSON；自定义或多步编辑流程继续显式登记清单，见[自动任务及清理边界](skills/docx/references/task-cleanup.md#自动新建任务入口)。
 
 文档输入、主输出、归档、图片及 Skill 内部资源采用不同且明确的基准，统一见 [文件定位与读取规则](skills/docx/SKILL.md#文件定位与读取规则)。所有命令从宿主确认的任务工作目录执行，不切换到输入子目录或 Skill 安装目录。
 
@@ -115,11 +112,11 @@ python3 -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json "客户服
 
 示例文件名须按实际任务替换：优先采用用户指定名称，否则按文档标题或主题命名，避免默认使用 `output.docx`；详见 [交付文件命名](skills/docx/references/generation.md#交付文件命名)。
 
-新建命令只接收输出文件名，不带 `./` 或目录。新建主文件固定生成到任务工作目录 `./`，生成及所要求的验证成功后，Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得有效 `questionId`，复制一份到 `./output/{questionId}/`。配置缺失或无效时跳过归档并记录固定原因码；归档失败保留主文件、主流程成功状态和退出码 0，仅通过 `archive_status=failed` 与 `warnings` 报告归档警告。JSON 的 `output` 指向主文件，`archive_output` 和 `archive_status` 说明副本路径和归档结果。宿主配置为外层参数列表：提取 `name="commonParam"` 项的 `value`，解析内层列表后提取 `questionId`；兼容原字典外层配置，内层支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation.md#输出目录与文件名)。新建与五个编辑 CLI 均调用公开交付 API，再由同一个 `archive_outputs()` 自动归档。Python 最终交付使用 `create_document_delivery()` 或对应编辑 `*_delivery()`，接口见 [公开交付 API](skills/docx/references/delivery.md#公开交付-api)；底层 API 仅用于中间处理。归档处理必须执行，失败只警告；`--check` 不能代替归档。编辑命令仍接收相对输出路径；当轮其他最终交付物用显式清单归档，不扫描历史或临时文件，见 [统一归档](skills/docx/references/delivery.md)。
+新建命令只接收输出文件名，不带 `./` 或目录。新建主文件固定生成到任务工作目录 `./`，生成及所要求的验证成功后，Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得有效 `questionId`，复制一份到 `./output/{questionId}/`。配置缺失或无效时跳过归档并记录固定原因码；归档失败保留主文件、主流程成功状态和退出码 0，仅通过 `archive_status=failed` 与 `warnings` 报告归档警告。JSON 的 `output` 指向主文件，`archive_output` 和 `archive_status` 说明副本路径和归档结果。宿主配置为外层参数列表：提取 `name="commonParam"` 项的 `value`，解析内层列表后提取 `questionId`；兼容原字典外层配置，内层支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation.md#输出目录与文件名)。新建与五个编辑 CLI 均调用公开交付 API，再由同一个 `archive_outputs()` 自动归档。标准新建由run_docx_task.py包裹 `create_document_delivery()`，自定义交付或编辑使用对应 `*_delivery()`，接口见 [公开交付 API](skills/docx/references/delivery.md#公开交付-api)；底层 API 仅用于中间处理。归档处理必须执行，失败只警告；`--check` 不能代替归档。编辑命令仍接收相对输出路径；当轮其他最终交付物用显式清单归档，不扫描历史或临时文件，见 [统一归档](skills/docx/references/delivery.md)。
 
 `--verify` 核对生成子集的内容与 XML 排版意图，不等同于页面视觉验收；字体显示、实际分页和页码仍需在文档阅读器中检查。
 
-成功验收并核实文件后，在交付文件链接后简短提示“本次已按公文格式生成。还支持商务、学术排版，也可按需调整字体、字号和页边距。”用户指定主题或覆盖样式时按实际结果描述；提示不写入文档，用户要求只返回文件或不再提示时省略。完整规则见 [生成后格式引导](skills/docx/SKILL.md#生成后格式引导)。
+成功验收并核实文件后，在交付文件链接后简短提示“本次已按公文格式生成。还支持商务、学术排版，也可按需调整字体、字号和页边距。”用户指定主题或覆盖样式时按实际结果描述；提示不写入文档，用户要求只返回文件或不再提示时省略。完整规则见 [生成后格式引导](skills/docx/references/generation.md#生成后格式引导)。
 
 ### OFD
 

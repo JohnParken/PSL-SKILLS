@@ -1,0 +1,59 @@
+{
+  "status": "created",
+  "path": "skills/bank-writing-20261029.0035.4979.zip",
+  "absolute_path": "/Users/yangxuezhen/git/PSL-SKILLS/skills/bank-writing-20261029.0035.4979.zip",
+  "version": "20261029.0035.4979",
+  "file_count": 8,
+  "bytes": 14720,
+  "uncompressed_bytes": 24729,
+  "sha256": "7896828e123ff702ce02c96718d27bf08e4560ec2e07b5b2af77ccd25286a071",
+  "crc_pass": true,
+  "member_hashes_match_current_source": true,
+  "source_matches_evaluated_readonly_installation": true,
+  "readonly_installation_permissions_and_hashes_unchanged": true,
+  "source_unchanged_during_packaging": true,
+  "members": [
+    {
+      "name": "bank-writing/SKILL.md",
+      "bytes": 9584,
+      "sha256": "eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b"
+    },
+    {
+      "name": "bank-writing/references/activity-planning.md",
+      "bytes": 983,
+      "sha256": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8"
+    },
+    {
+      "name": "bank-writing/references/business-analysis.md",
+      "bytes": 1016,
+      "sha256": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6"
+    },
+    {
+      "name": "bank-writing/references/comprehensive-writing.md",
+      "bytes": 1233,
+      "sha256": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2"
+    },
+    {
+      "name": "bank-writing/references/official-documents.md",
+      "bytes": 931,
+      "sha256": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc"
+    },
+    {
+      "name": "bank-writing/references/speech-and-report.md",
+      "bytes": 1071,
+      "sha256": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a"
+    },
+    {
+      "name": "bank-writing/references/summary-and-imitation.md",
+      "bytes": 5946,
+      "sha256": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737"
+    },
+    {
+      "name": "bank-writing/references/writing-review.md",
+      "bytes": 3965,
+      "sha256": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+    }
+  ],
+  "excluded": "No evaluation snapshots, test records, cache, temporary files, dependencies or other skills.",
+  "old_archives": "No prior archive changed or removed."
+}

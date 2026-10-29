@@ -1,0 +1,19 @@
+{
+  "version": "20261029.0812.3841",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "package": "skills/artifact-lifecycle-20261029.0812.3841.zip",
+  "sha256": "1e24d18b29f96816b3668aac0e77f3f29dbf0c475c054550fce5dc75e51c2bd2",
+  "members": 13,
+  "standalone_check": {
+    "status": "environment-ok",
+    "task_writable": true
+  },
+  "standalone_tests": "----------------------------------------------------------------------\nRan 14 tests in 0.048s\n\nOK",
+  "validation_limits": [
+    "Linux container and Windows not run; no container executable entry found",
+    "No real task residual deletion",
+    "No host model automatic skill trigger test",
+    "No hostile concurrent writer or power-loss assurance"
+  ]
+}

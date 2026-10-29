@@ -1,0 +1,480 @@
+{
+  "purpose": "bank-writing R1-R3 actual execution record; no evaluation score prefilled",
+  "task_directory": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+  "model_identity": {
+    "visible_description": "Codex, an agent based on GPT-6",
+    "exact_runtime_model_identifier_confirmed": false,
+    "reason": "No authoritative runtime model ID exposed in this subagent context; no guessed model suffix or version."
+  },
+  "read_versions": {
+    "bank_writing": "20261029.0035.4979",
+    "docx": "20261028.2341.0954"
+  },
+  "before": {
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python": "3.13.12 (main, Feb  4 2026, 00:05:32) [Clang 21.1.4 ]",
+    "python_executable": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3",
+    "expat": "expat_2.6.3",
+    "working_directory": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+    "model_identifier": "not independently exposed by runtime; developer identifies Codex based on GPT-6",
+    "input_sha256": "4427b8a3c481763dc801d80dafbddd75c79c0d166390ed30ac533c519141f195",
+    "candidate_hashes": {
+      "SKILL.md": "eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b",
+      "references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+      "references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+      "references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+      "references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+      "references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+      "references/summary-and-imitation.md": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737",
+      "references/writing-review.md": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+    },
+    "docx_hashes_before": {
+      "SKILL.md": "58e44a7aa06c366a6a170317f1932d472c5de8ccbe82edf11088bb66c1504d5e",
+      "assets/comments/comments.xml": "a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d",
+      "assets/comments/commentsExtended.xml": "544eeecfeceed4b468fff163cd9c366d33641c8b8ab691ce002576197846afe8",
+      "assets/comments/commentsExtensible.xml": "bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631",
+      "assets/comments/commentsIds.xml": "db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420",
+      "references/binary-reading.md": "411e5cdb16618184b84c450ca1d6dbf53b1a680acbcfeeb0cb2c54897c46a0c8",
+      "references/comments-management.md": "cb6c369ba174b9707a4dc739e8ff0b89abbf4369c3f87bd7aa4d0ed143d1f4f3",
+      "references/delivery.md": "58d841e8b84a8cd1033106369251065cd314e91216993eb02c79687f82f7324d",
+      "references/generation-details.md": "573696eb7f03ab25cbd16bfe17cc696d81170d09fbb1a3963aeeb8e081dcafbe",
+      "references/generation.md": "59d924f7f74198f8f0e1a0f4e44af7551112c4367659ac74a28f787cf232546b",
+      "references/inspection.md": "17a5efbfa547f0cc7af3587ce79259b60153516b2b70b7797dd7b0d5254495bc",
+      "references/ooxml-editing.md": "522c0abfeea01d0f1f0070886a95b030845a45d2f67a2ccb680dd783f4db9b34",
+      "references/security.md": "5ed555f6ba5ad3cc2b06fa1f2d0b4d8cd2052f2c3d98bdddd95445e5c0488db2",
+      "references/structure-editing.md": "2202fe2cd7337609fb8d167fee8000e2b6771435ddc842aa4c53ae52ba7e7c57",
+      "references/table-media-editing.md": "4a64b139cce7f9499fe4762a3819e25a3a0bb159c50d90547440a69fea25ea7e",
+      "references/task-cleanup.md": "f99ba82f2b84bf71562f199c46ec19cc4710604643be3b1a30260f7ac0a02c89",
+      "references/validation.md": "b9133db51c4ff3a2993aca6501454fbbf7f3521bcb88373cd2a32c8a82f2e3a4",
+      "requirements.txt": "e8be4dfc1ea841ee45f6b75c60b4a7577286240b928232ea9b42527249f4b952",
+      "scripts/__init__.py": "530303bfb28a74538aa91aa58238823d350d2206a34212ec0579e80cd135ac09",
+      "scripts/archive_deliverables.py": "70fb201c848e8b27135e63bd049714917e4ad8946dff45f07f3ea9768b008fcc",
+      "scripts/cleanup_task.py": "a024bacbab22ae0719ee3502e10aa15056b0c0a536892145f20271862ab2660a",
+      "scripts/comment.py": "4a62a8d9a72f68af143d5f39c0b5d8a15e736ea13b523a0f25ed7cc27f14c345",
+      "scripts/create_docx.py": "940e7d2cf47b75de33340bfeb9a58b6074ac86e8428a14463dfe23b0cd696447",
+      "scripts/docx_task_state.py": "550a78c9c86e7763846e82c9c66e8fda5ecbee54388d7ae6df4a24326282fce6",
+      "scripts/edit_docx.py": "8d1e0ec1f713072d6d11f2e0470e11d98063956d0141d3d28c00cc124ae4cdd1",
+      "scripts/edit_structure.py": "29c2ea21692f0b4bf178bb25161a537ea2b045615d3590e180b91c2dc96a83e6",
+      "scripts/edit_tables.py": "5726e0897955f7a6177420a454f3d59ca28287bda3b8bed125eac7ecdf254f12",
+      "scripts/manage_comments.py": "e1f97dcc340ecb3d1fc2f8d3d029ecf6f660164b866abcf82b2346385db92130",
+      "scripts/merge_runs.py": "14a9070053669af1bfeab627d51705801f3e52d05d84fe4d86cea2c2b525e0f1",
+      "scripts/office/archiveio.py": "832de2e5f37387fa0a7ec86fc4ccad7914e898e2d0aff33bc616e8c8a67e7e6e",
+      "scripts/office/binary_doc.py": "e648b378fc45a3da5bce2a233fdeffebd5ea89e36cf1c005daf3f2a4f4506a38",
+      "scripts/office/helpers/__init__.py": "b4b670db095ff6d180b036cb3a5faaa064cf0c2dcebf8aa51b4686fc1e7ab25e",
+      "scripts/office/package.py": "32338d7b32750cb23b28ddd07f5355eacfbff280b40664a273738efc5f170f4f",
+      "scripts/office/runtime.py": "9d4a131c38e43b83dac6e0868f85003b1f4b5e6f2ff1ae17c4942da0e9c5f0c9",
+      "scripts/office/validate.py": "381aad193e39e1df416fdd8f3744d9099323aae47801beb3c80d91d64af7675b",
+      "scripts/office/validators/__init__.py": "e451211d10bd74a44a0ec311b93e1dd4f55cf0796b3249848000f5437846a2e5",
+      "scripts/office/validators/advanced.py": "9e9332a59743ba2df51787c964837c85fd79be4b0c999ec8cea9f8cf7c3d88c3",
+      "scripts/office/validators/generation.py": "f65d757c9a916a3d26e6305671beed05346180d55a4cb4b56791606057137756",
+      "scripts/office/validators/redlining.py": "08e2ce5d27e2f7b6caad3a1c62c698b9b4fad8c9beb9fc8c6312c8b5a92ba63e",
+      "scripts/office/validators/structure.py": "b0c80b8c022a27f00b94c239ac1a83f387f057f992a25d76b4b75cc03415f4bc",
+      "scripts/office/xmlio.py": "e88b37b5e71638d258a681fef0445d74eae24e63fa9ae3fe9f466a2f9d293b63",
+      "scripts/output_location.py": "924cbf03bd1f67e31ab54ac5bbf46af26ea6c9ac819af8fe1e38bc21eb1b61c4",
+      "scripts/read_docx.py": "b6bbd077827bd644cefa550392191eb671c2c534369995a78143f3e0ed370360",
+      "scripts/replace_image.py": "ca1b6576ca9b6700d7edb4ffa4b3616583dd0dca9f46ed3fb2afcfe9bbee93b0",
+      "scripts/run_docx_task.py": "df0bacc33ac41b3279da0708a405aedf4baab9f0fca814954eecef77e784e198",
+      "scripts/test_archive_deliverables.py": "d5f4bbebeb83cc89d3b14b16bcfa650e1a2d200dc6e1281af92accbfae0edacc",
+      "scripts/test_cleanup_task.py": "f9cfbe6341f7f0af7a6e77fb4beb9bbc493b1d010376c6181222bb9c04d911c9",
+      "scripts/test_delivery_api.py": "8bbd2ba369186f5ff1010f08c9d9a52a22c4f4552126feceae106e0b9d5d97f9",
+      "scripts/test_docx_delivery.py": "cd8e765e292b2ea95da79f0ee808b7454963a62bf51f877b04df65acc7b14a9f",
+      "scripts/test_docx_editing.py": "c40dadde89bcc1029c6a2645a6d65f4d55d2fa70d6943c1469c599b856756ec1",
+      "scripts/test_docx_generation.py": "8a1f56d982ca81e0a68f3c01e2762f4adf90660ca93cf7ba303211a220520dc8",
+      "scripts/test_docx_io.py": "31ad03e77bf247eeceb02af56c84e9a0d4987ebc79eca574ac45702bad3e2b93",
+      "scripts/test_docx_legacy_entry.py": "5a90aed9a0842d3e3af07211f56a228cf3fca11c09a6432e0d85ba4daa5bb65d",
+      "scripts/test_docx_routing.py": "2b35a7914ba51865e86ca78a78c20ef581216671679206af3dae6b647dda41b7",
+      "scripts/test_docx_runtime.py": "d14247ffab67ad1d062430b8b3d8177b289a5b9e99487477cc4a36f9d76c81d5",
+      "scripts/test_docx_task_reliability.py": "e57e9a47ba36c15ce22da63333aa0d189eb544462192f9ef14d791d1d0dd305a",
+      "scripts/test_edit_delivery.py": "8dfd6c0df0452c929fd97f54e4a371372ccae7fa4af2e872963d9b405aea2717",
+      "scripts/test_output_location.py": "41a95aef289779a60c4235706652001ce7df58a5be9d98d79a38bd0e28a66e86",
+      "scripts/test_run_docx_task.py": "468f3476a77686bc7391c175c392a7190d1e37fc45e26f93df041b4496b6a49f"
+    },
+    "output_collision": false,
+    "record_collision": false
+  },
+  "after": {
+    "recorded_utc": "2026-10-28T16:45:29.642470+00:00",
+    "candidate_version_line": "version: \"20261029.0035.4979\"",
+    "docx_version_line": "version: \"20261028.2341.0954\"",
+    "candidate_hashes_after": {
+      "SKILL.md": "eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b",
+      "references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+      "references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+      "references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+      "references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+      "references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+      "references/summary-and-imitation.md": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737",
+      "references/writing-review.md": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+    },
+    "docx_hashes_after": {
+      "SKILL.md": "58e44a7aa06c366a6a170317f1932d472c5de8ccbe82edf11088bb66c1504d5e",
+      "assets/comments/comments.xml": "a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d",
+      "assets/comments/commentsExtended.xml": "544eeecfeceed4b468fff163cd9c366d33641c8b8ab691ce002576197846afe8",
+      "assets/comments/commentsExtensible.xml": "bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631",
+      "assets/comments/commentsIds.xml": "db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420",
+      "references/binary-reading.md": "411e5cdb16618184b84c450ca1d6dbf53b1a680acbcfeeb0cb2c54897c46a0c8",
+      "references/comments-management.md": "cb6c369ba174b9707a4dc739e8ff0b89abbf4369c3f87bd7aa4d0ed143d1f4f3",
+      "references/delivery.md": "58d841e8b84a8cd1033106369251065cd314e91216993eb02c79687f82f7324d",
+      "references/generation-details.md": "573696eb7f03ab25cbd16bfe17cc696d81170d09fbb1a3963aeeb8e081dcafbe",
+      "references/generation.md": "59d924f7f74198f8f0e1a0f4e44af7551112c4367659ac74a28f787cf232546b",
+      "references/inspection.md": "17a5efbfa547f0cc7af3587ce79259b60153516b2b70b7797dd7b0d5254495bc",
+      "references/ooxml-editing.md": "522c0abfeea01d0f1f0070886a95b030845a45d2f67a2ccb680dd783f4db9b34",
+      "references/security.md": "5ed555f6ba5ad3cc2b06fa1f2d0b4d8cd2052f2c3d98bdddd95445e5c0488db2",
+      "references/structure-editing.md": "2202fe2cd7337609fb8d167fee8000e2b6771435ddc842aa4c53ae52ba7e7c57",
+      "references/table-media-editing.md": "4a64b139cce7f9499fe4762a3819e25a3a0bb159c50d90547440a69fea25ea7e",
+      "references/task-cleanup.md": "f99ba82f2b84bf71562f199c46ec19cc4710604643be3b1a30260f7ac0a02c89",
+      "references/validation.md": "b9133db51c4ff3a2993aca6501454fbbf7f3521bcb88373cd2a32c8a82f2e3a4",
+      "requirements.txt": "e8be4dfc1ea841ee45f6b75c60b4a7577286240b928232ea9b42527249f4b952",
+      "scripts/__init__.py": "530303bfb28a74538aa91aa58238823d350d2206a34212ec0579e80cd135ac09",
+      "scripts/archive_deliverables.py": "70fb201c848e8b27135e63bd049714917e4ad8946dff45f07f3ea9768b008fcc",
+      "scripts/cleanup_task.py": "a024bacbab22ae0719ee3502e10aa15056b0c0a536892145f20271862ab2660a",
+      "scripts/comment.py": "4a62a8d9a72f68af143d5f39c0b5d8a15e736ea13b523a0f25ed7cc27f14c345",
+      "scripts/create_docx.py": "940e7d2cf47b75de33340bfeb9a58b6074ac86e8428a14463dfe23b0cd696447",
+      "scripts/docx_task_state.py": "550a78c9c86e7763846e82c9c66e8fda5ecbee54388d7ae6df4a24326282fce6",
+      "scripts/edit_docx.py": "8d1e0ec1f713072d6d11f2e0470e11d98063956d0141d3d28c00cc124ae4cdd1",
+      "scripts/edit_structure.py": "29c2ea21692f0b4bf178bb25161a537ea2b045615d3590e180b91c2dc96a83e6",
+      "scripts/edit_tables.py": "5726e0897955f7a6177420a454f3d59ca28287bda3b8bed125eac7ecdf254f12",
+      "scripts/manage_comments.py": "e1f97dcc340ecb3d1fc2f8d3d029ecf6f660164b866abcf82b2346385db92130",
+      "scripts/merge_runs.py": "14a9070053669af1bfeab627d51705801f3e52d05d84fe4d86cea2c2b525e0f1",
+      "scripts/office/archiveio.py": "832de2e5f37387fa0a7ec86fc4ccad7914e898e2d0aff33bc616e8c8a67e7e6e",
+      "scripts/office/binary_doc.py": "e648b378fc45a3da5bce2a233fdeffebd5ea89e36cf1c005daf3f2a4f4506a38",
+      "scripts/office/helpers/__init__.py": "b4b670db095ff6d180b036cb3a5faaa064cf0c2dcebf8aa51b4686fc1e7ab25e",
+      "scripts/office/package.py": "32338d7b32750cb23b28ddd07f5355eacfbff280b40664a273738efc5f170f4f",
+      "scripts/office/runtime.py": "9d4a131c38e43b83dac6e0868f85003b1f4b5e6f2ff1ae17c4942da0e9c5f0c9",
+      "scripts/office/validate.py": "381aad193e39e1df416fdd8f3744d9099323aae47801beb3c80d91d64af7675b",
+      "scripts/office/validators/__init__.py": "e451211d10bd74a44a0ec311b93e1dd4f55cf0796b3249848000f5437846a2e5",
+      "scripts/office/validators/advanced.py": "9e9332a59743ba2df51787c964837c85fd79be4b0c999ec8cea9f8cf7c3d88c3",
+      "scripts/office/validators/generation.py": "f65d757c9a916a3d26e6305671beed05346180d55a4cb4b56791606057137756",
+      "scripts/office/validators/redlining.py": "08e2ce5d27e2f7b6caad3a1c62c698b9b4fad8c9beb9fc8c6312c8b5a92ba63e",
+      "scripts/office/validators/structure.py": "b0c80b8c022a27f00b94c239ac1a83f387f057f992a25d76b4b75cc03415f4bc",
+      "scripts/office/xmlio.py": "e88b37b5e71638d258a681fef0445d74eae24e63fa9ae3fe9f466a2f9d293b63",
+      "scripts/output_location.py": "924cbf03bd1f67e31ab54ac5bbf46af26ea6c9ac819af8fe1e38bc21eb1b61c4",
+      "scripts/read_docx.py": "b6bbd077827bd644cefa550392191eb671c2c534369995a78143f3e0ed370360",
+      "scripts/replace_image.py": "ca1b6576ca9b6700d7edb4ffa4b3616583dd0dca9f46ed3fb2afcfe9bbee93b0",
+      "scripts/run_docx_task.py": "df0bacc33ac41b3279da0708a405aedf4baab9f0fca814954eecef77e784e198",
+      "scripts/test_archive_deliverables.py": "d5f4bbebeb83cc89d3b14b16bcfa650e1a2d200dc6e1281af92accbfae0edacc",
+      "scripts/test_cleanup_task.py": "f9cfbe6341f7f0af7a6e77fb4beb9bbc493b1d010376c6181222bb9c04d911c9",
+      "scripts/test_delivery_api.py": "8bbd2ba369186f5ff1010f08c9d9a52a22c4f4552126feceae106e0b9d5d97f9",
+      "scripts/test_docx_delivery.py": "cd8e765e292b2ea95da79f0ee808b7454963a62bf51f877b04df65acc7b14a9f",
+      "scripts/test_docx_editing.py": "c40dadde89bcc1029c6a2645a6d65f4d55d2fa70d6943c1469c599b856756ec1",
+      "scripts/test_docx_generation.py": "8a1f56d982ca81e0a68f3c01e2762f4adf90660ca93cf7ba303211a220520dc8",
+      "scripts/test_docx_io.py": "31ad03e77bf247eeceb02af56c84e9a0d4987ebc79eca574ac45702bad3e2b93",
+      "scripts/test_docx_legacy_entry.py": "5a90aed9a0842d3e3af07211f56a228cf3fca11c09a6432e0d85ba4daa5bb65d",
+      "scripts/test_docx_routing.py": "2b35a7914ba51865e86ca78a78c20ef581216671679206af3dae6b647dda41b7",
+      "scripts/test_docx_runtime.py": "d14247ffab67ad1d062430b8b3d8177b289a5b9e99487477cc4a36f9d76c81d5",
+      "scripts/test_docx_task_reliability.py": "e57e9a47ba36c15ce22da63333aa0d189eb544462192f9ef14d791d1d0dd305a",
+      "scripts/test_edit_delivery.py": "8dfd6c0df0452c929fd97f54e4a371372ccae7fa4af2e872963d9b405aea2717",
+      "scripts/test_output_location.py": "41a95aef289779a60c4235706652001ce7df58a5be9d98d79a38bd0e28a66e86",
+      "scripts/test_run_docx_task.py": "468f3476a77686bc7391c175c392a7190d1e37fc45e26f93df041b4496b6a49f"
+    },
+    "input_sha256_after": "4427b8a3c481763dc801d80dafbddd75c79c0d166390ed30ac533c519141f195",
+    "output": "service_notice.docx",
+    "output_exists": true,
+    "output_size": 2823,
+    "output_sha256": "03687fd01d8b843f2e112fe03fe2934a2dadaae1f1725be676c6262da42ff69b",
+    "manifest": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+    "manifest_sha256": "6a59e1e48c2f4a9557e23acebf3e8e92ccfbf336ae0852775e52acb63fcc6bd8",
+    "manifest_content": {
+      "schema": "docx_cleanup_v1",
+      "manifest": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+      "task_identity": [
+        16777234,
+        45707796
+      ],
+      "phase": "sealed",
+      "entries": [
+        {
+          "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py",
+          "kind": "file",
+          "absent_at_plan": true,
+          "retain_reason": null,
+          "fingerprint": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707975
+            ],
+            "size": 124,
+            "mtime_ns": 1793205887645864000,
+            "links": 1,
+            "sha256": "42cd400eb3dccb05c9b6b288b0ba00be4b086fe3d2887aaccb6af6fc62f6ad37"
+          }
+        },
+        {
+          "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json",
+          "kind": "file",
+          "absent_at_plan": true,
+          "retain_reason": null,
+          "fingerprint": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707977
+            ],
+            "size": 324,
+            "mtime_ns": 1793205887646196500,
+            "links": 1,
+            "sha256": "38e2d9db707d57273c90af53c579a5a5353c504419760619ecbd68fe47cfa188"
+          }
+        },
+        {
+          "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json",
+          "kind": "file",
+          "absent_at_plan": true,
+          "retain_reason": null,
+          "fingerprint": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707984
+            ],
+            "size": 1995,
+            "mtime_ns": 1793205887700857900,
+            "links": 1,
+            "sha256": "ab44026c8f555ccc262ae9b49362328e11a930a4d5882f4e468f653f4ccf21b5"
+          }
+        },
+        {
+          "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock",
+          "kind": "file",
+          "absent_at_plan": true,
+          "retain_reason": null,
+          "fingerprint": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707979
+            ],
+            "size": 0,
+            "mtime_ns": 1793205887646489900,
+            "links": 1,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+          "kind": "file",
+          "absent_at_plan": true,
+          "retain_reason": null,
+          "fingerprint": null
+        },
+        {
+          "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+          "kind": "directory",
+          "absent_at_plan": true,
+          "retain_reason": null,
+          "fingerprint": {
+            "kind": "directory",
+            "identity": [
+              16777234,
+              45707974
+            ]
+          }
+        }
+      ],
+      "protected": [
+        {
+          "path": "input_round1.json",
+          "initial": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707797
+            ],
+            "size": 852,
+            "mtime_ns": 1793205676230560000,
+            "links": 1
+          }
+        }
+      ],
+      "deliverables": [
+        "service_notice.docx"
+      ],
+      "runner": {
+        "schema": "docx_auto_task_v1",
+        "workspace": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+        "output": "service_notice.docx",
+        "created": {
+          "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707975
+            ],
+            "size": 124,
+            "mtime_ns": 1793205887645864000,
+            "links": 1,
+            "sha256": "42cd400eb3dccb05c9b6b288b0ba00be4b086fe3d2887aaccb6af6fc62f6ad37"
+          },
+          "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707977
+            ],
+            "size": 324,
+            "mtime_ns": 1793205887646196500,
+            "links": 1,
+            "sha256": "38e2d9db707d57273c90af53c579a5a5353c504419760619ecbd68fe47cfa188"
+          },
+          "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock": {
+            "kind": "file",
+            "identity": [
+              16777234,
+              45707979
+            ],
+            "size": 0,
+            "mtime_ns": 1793205887646489900,
+            "links": 1,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "attempts": 1,
+        "state": "delivered",
+        "retry_stage": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+        "workspace_identity": {
+          "kind": "directory",
+          "identity": [
+            16777234,
+            45707974
+          ]
+        },
+        "delivery": {
+          "status": "verified",
+          "archive_status": "skipped",
+          "used_fallback": true,
+          "fallback_reason": "missing_router_config",
+          "files": [
+            {
+              "output": "service_notice.docx",
+              "archive_output": null,
+              "archive_status": "skipped"
+            }
+          ],
+          "warnings": [],
+          "archive_message": "归档未执行",
+          "output": "service_notice.docx",
+          "generation_status": "verified",
+          "output_dir": ".",
+          "archive_output": null,
+          "blocks": 2,
+          "zip_crc": true,
+          "structure": true,
+          "content_coverage": true,
+          "layout_intent": true,
+          "visual_validation": false,
+          "xsd_validation": false
+        }
+      },
+      "outcome": "success",
+      "verified": true,
+      "archive_status": "skipped",
+      "output_fingerprints": {
+        "service_notice.docx": {
+          "kind": "file",
+          "identity": [
+            16777234,
+            45707983
+          ],
+          "size": 2823,
+          "mtime_ns": 1793205887690822400,
+          "links": 1,
+          "sha256": "03687fd01d8b843f2e112fe03fe2934a2dadaae1f1725be676c6262da42ff69b"
+        }
+      },
+      "last_cleanup": {
+        "status": "cleaned",
+        "deleted": [
+          {
+            "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py",
+            "reason": "removed"
+          },
+          {
+            "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json",
+            "reason": "removed"
+          },
+          {
+            "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json",
+            "reason": "removed"
+          },
+          {
+            "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock",
+            "reason": "removed"
+          },
+          {
+            "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+            "reason": "already_absent"
+          },
+          {
+            "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+            "reason": "removed"
+          }
+        ],
+        "retained": [],
+        "failed": [],
+        "manifest_retained": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+        "deliverables_unchanged": true,
+        "cleanup_complete": true,
+        "outcome": "success",
+        "archive_status": "skipped"
+      }
+    }
+  },
+  "commands": {
+    "source_hash_before": {
+      "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B - <<'PY'\nimport hashlib, json, platform, sys\nfrom pathlib import Path\nfrom xml.parsers import expat\nroot = Path('/Users/yangxuezhen/git/PSL-SKILLS')\ndef hashes(directory):\n    return {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(directory.rglob('*')) if path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'}\nprint(json.dumps({'platform': platform.platform(), 'machine': platform.machine(), 'python': sys.version, 'python_executable': sys.executable, 'expat': expat.EXPAT_VERSION, 'working_directory': str(Path.cwd()), 'model_identifier': 'not independently exposed by runtime; developer identifies Codex based on GPT-6', 'input_sha256': hashlib.sha256(Path('input_round1.json').read_bytes()).hexdigest(), 'candidate_hashes': hashes(root / 'tests/bank_writing_summary_imitation_evaluation/inputs/candidate'), 'docx_hashes_before': hashes(root / 'skills/docx'), 'output_collision': Path('service_notice.docx').exists(), 'record_collision': Path('response_round1.json').exists()}, ensure_ascii=False, indent=2))\nPY",
+      "result": {
+        "chunk_id": "0b36ba",
+        "wall_time_seconds": 0.418038007,
+        "exit_code": 0,
+        "original_token_count": 1917,
+        "output": "{\n  \"platform\": \"macOS-27.2-arm64-arm-64bit-Mach-O\",\n  \"machine\": \"arm64\",\n  \"python\": \"3.13.12 (main, Feb  4 2026, 00:05:32) [Clang 21.1.4 ]\",\n  \"python_executable\": \"/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3\",\n  \"expat\": \"expat_2.6.3\",\n  \"working_directory\": \"/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression\",\n  \"model_identifier\": \"not independently exposed by runtime; developer identifies Codex based on GPT-6\",\n  \"input_sha256\": \"4427b8a3c481763dc801d80dafbddd75c79c0d166390ed30ac533c519141f195\",\n  \"candidate_hashes\": {\n    \"SKILL.md\": \"eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b\",\n    \"references/activity-planning.md\": \"0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8\",\n    \"references/business-analysis.md\": \"c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6\",\n    \"references/comprehensive-writing.md\": \"e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2\",\n    \"references/official-documents.md\": \"a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc\",\n    \"references/speech-and-report.md\": \"b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a\",\n    \"references/summary-and-imitation.md\": \"cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737\",\n    \"references/writing-review.md\": \"49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320\"\n  },\n  \"docx_hashes_before\": {\n    \"SKILL.md\": \"58e44a7aa06c366a6a170317f1932d472c5de8ccbe82edf11088bb66c1504d5e\",\n    \"assets/comments/comments.xml\": \"a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d\",\n    \"assets/comments/commentsExtended.xml\": \"544eeecfeceed4b468fff163cd9c366d33641c8b8ab691ce002576197846afe8\",\n    \"assets/comments/commentsExtensible.xml\": \"bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631\",\n    \"assets/comments/commentsIds.xml\": \"db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420\",\n    \"references/binary-reading.md\": \"411e5cdb16618184b84c450ca1d6dbf53b1a680acbcfeeb0cb2c54897c46a0c8\",\n    \"references/comments-management.md\": \"cb6c369ba174b9707a4dc739e8ff0b89abbf4369c3f87bd7aa4d0ed143d1f4f3\",\n    \"references/delivery.md\": \"58d841e8b84a8cd1033106369251065cd314e91216993eb02c79687f82f7324d\",\n    \"references/generation-details.md\": \"573696eb7f03ab25cbd16bfe17cc696d81170d09fbb1a3963aeeb8e081dcafbe\",\n    \"references/generation.md\": \"59d924f7f74198f8f0e1a0f4e44af7551112c4367659ac74a28f787cf232546b\",\n    \"references/inspection.md\": \"17a5efbfa547f0cc7af3587ce79259b60153516b2b70b7797dd7b0d5254495bc\",\n    \"references/ooxml-editing.md\": \"522c0abfeea01d0f1f0070886a95b030845a45d2f67a2ccb680dd783f4db9b34\",\n    \"references/security.md\": \"5ed555f6ba5ad3cc2b06fa1f2d0b4d8cd2052f2c3d98bdddd95445e5c0488db2\",\n    \"references/structure-editing.md\": \"2202fe2cd7337609fb8d167fee8000e2b6771435ddc842aa4c53ae52ba7e7c57\",\n    \"references/table-media-editing.md\": \"4a64b139cce7f9499fe4762a3819e25a3a0bb159c50d90547440a69fea25ea7e\",\n    \"references/task-cleanup.md\": \"f99ba82f2b84bf71562f199c46ec19cc4710604643be3b1a30260f7ac0a02c89\",\n    \"references/validation.md\": \"b9133db51c4ff3a2993aca6501454fbbf7f3521bcb88373cd2a32c8a82f2e3a4\",\n    \"requirements.txt\": \"e8be4dfc1ea841ee45f6b75c60b4a7577286240b928232ea9b42527249f4b952\",\n    \"scripts/__init__.py\": \"530303bfb28a74538aa91aa58238823d350d2206a34212ec0579e80cd135ac09\",\n    \"scripts/archive_deliverables.py\": \"70fb201c848e8b27135e63bd049714917e4ad8946dff45f07f3ea9768b008fcc\",\n    \"scripts/cleanup_task.py\": \"a024bacbab22ae0719ee3502e10aa15056b0c0a536892145f20271862ab2660a\",\n    \"scripts/comment.py\": \"4a62a8d9a72f68af143d5f39c0b5d8a15e736ea13b523a0f25ed7cc27f14c345\",\n    \"scripts/create_docx.py\": \"940e7d2cf47b75de33340bfeb9a58b6074ac86e8428a14463dfe23b0cd696447\",\n    \"scripts/docx_task_state.py\": \"550a78c9c86e7763846e82c9c66e8fda5ecbee54388d7ae6df4a24326282fce6\",\n    \"scripts/edit_docx.py\": \"8d1e0ec1f713072d6d11f2e0470e11d98063956d0141d3d28c00cc124ae4cdd1\",\n    \"scripts/edit_structure.py\": \"29c2ea21692f0b4bf178bb25161a537ea2b045615d3590e180b91c2dc96a83e6\",\n    \"scripts/edit_tables.py\": \"5726e0897955f7a6177420a454f3d59ca28287bda3b8bed125eac7ecdf254f12\",\n    \"scripts/manage_comments.py\": \"e1f97dcc340ecb3d1fc2f8d3d029ecf6f660164b866abcf82b2346385db92130\",\n    \"scripts/merge_runs.py\": \"14a9070053669af1bfeab627d51705801f3e52d05d84fe4d86cea2c2b525e0f1\",\n    \"scripts/office/archiveio.py\": \"832de2e5f37387fa0a7ec86fc4ccad7914e898e2d0aff33bc616e8c8a67e7e6e\",\n    \"scripts/office/binary_doc.py\": \"e648b378fc45a3da5bce2a233fdeffebd5ea89e36cf1c005daf3f2a4f4506a38\",\n    \"scripts/office/helpers/__init__.py\": \"b4b670db095ff6d180b036cb3a5faaa064cf0c2dcebf8aa51b4686fc1e7ab25e\",\n    \"scripts/office/package.py\": \"32338d7b32750cb23b28ddd07f5355eacfbff280b40664a273738efc5f170f4f\",\n    \"scripts/office/runtime.py\": \"9d4a131c38e43b83dac6e0868f85003b1f4b5e6f2ff1ae17c4942da0e9c5f0c9\",\n    \"scripts/office/validate.py\": \"381aad193e39e1df416fdd8f3744d9099323aae47801beb3c80d91d64af7675b\",\n    \"scripts/office/validators/__init__.py\": \"e451211d10bd74a44a0ec311b93e1dd4f55cf0796b3249848000f5437846a2e5\",\n    \"scripts/office/validators/advanced.py\": \"9e9332a59743ba2df51787c964837c85fd79be4b0c999ec8cea9f8cf7c3d88c3\",\n    \"scripts/office/validators/generation.py\": \"f65d757c9a916a3d26e6305671beed05346180d55a4cb4b56791606057137756\",\n    \"scripts/office/validators/redlining.py\": \"08e2ce5d27e2f7b6caad3a1c62c698b9b4fad8c9beb9fc8c6312c8b5a92ba63e\",\n    \"scripts/office/validators/structure.py\": \"b0c80b8c022a27f00b94c239ac1a83f387f057f992a25d76b4b75cc03415f4bc\",\n    \"scripts/office/xmlio.py\": \"e88b37b5e71638d258a681fef0445d74eae24e63fa9ae3fe9f466a2f9d293b63\",\n    \"scripts/output_location.py\": \"924cbf03bd1f67e31ab54ac5bbf46af26ea6c9ac819af8fe1e38bc21eb1b61c4\",\n    \"scripts/read_docx.py\": \"b6bbd077827bd644cefa550392191eb671c2c534369995a78143f3e0ed370360\",\n    \"scripts/replace_image.py\": \"ca1b6576ca9b6700d7edb4ffa4b3616583dd0dca9f46ed3fb2afcfe9bbee93b0\",\n    \"scripts/run_docx_task.py\": \"df0bacc33ac41b3279da0708a405aedf4baab9f0fca814954eecef77e784e198\",\n    \"scripts/test_archive_deliverables.py\": \"d5f4bbebeb83cc89d3b14b16bcfa650e1a2d200dc6e1281af92accbfae0edacc\",\n    \"scripts/test_cleanup_task.py\": \"f9cfbe6341f7f0af7a6e77fb4beb9bbc493b1d010376c6181222bb9c04d911c9\",\n    \"scripts/test_delivery_api.py\": \"8bbd2ba369186f5ff1010f08c9d9a52a22c4f4552126feceae106e0b9d5d97f9\",\n    \"scripts/test_docx_delivery.py\": \"cd8e765e292b2ea95da79f0ee808b7454963a62bf51f877b04df65acc7b14a9f\",\n    \"scripts/test_docx_editing.py\": \"c40dadde89bcc1029c6a2645a6d65f4d55d2fa70d6943c1469c599b856756ec1\",\n    \"scripts/test_docx_generation.py\": \"8a1f56d982ca81e0a68f3c01e2762f4adf90660ca93cf7ba303211a220520dc8\",\n    \"scripts/test_docx_io.py\": \"31ad03e77bf247eeceb02af56c84e9a0d4987ebc79eca574ac45702bad3e2b93\",\n    \"scripts/test_docx_legacy_entry.py\": \"5a90aed9a0842d3e3af07211f56a228cf3fca11c09a6432e0d85ba4daa5bb65d\",\n    \"scripts/test_docx_routing.py\": \"2b35a7914ba51865e86ca78a78c20ef581216671679206af3dae6b647dda41b7\",\n    \"scripts/test_docx_runtime.py\": \"d14247ffab67ad1d062430b8b3d8177b289a5b9e99487477cc4a36f9d76c81d5\",\n    \"scripts/test_docx_task_reliability.py\": \"e57e9a47ba36c15ce22da63333aa0d189eb544462192f9ef14d791d1d0dd305a\",\n    \"scripts/test_edit_delivery.py\": \"8dfd6c0df0452c929fd97f54e4a371372ccae7fa4af2e872963d9b405aea2717\",\n    \"scripts/test_output_location.py\": \"41a95aef289779a60c4235706652001ce7df58a5be9d98d79a38bd0e28a66e86\",\n    \"scripts/test_run_docx_task.py\": \"468f3476a77686bc7391c175c392a7190d1e37fc45e26f93df041b4496b6a49f\"\n  },\n  \"output_collision\": false,\n  \"record_collision\": false\n}\n"
+      }
+    },
+    "self_check": {
+      "command": "DOCX_DEBUG_ROUTER_CONFIG=0 /Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/run_docx_task.py check",
+      "result": {
+        "chunk_id": "d70839",
+        "wall_time_seconds": 0.000028592,
+        "exit_code": 0,
+        "original_token_count": 55,
+        "output": "archive-location: skipped; reason=missing_router_config\nauto-cleanup=available\npython=3.13.12 required>=3.10 supported=True\nzlib=ok\nexpat=expat_2.6.3 required>=2.6.0 supported=True\noutput_dir=. writable=True\ncheck-ok\n"
+      }
+    },
+    "create": {
+      "command": "DOCX_DEBUG_ROUTER_CONFIG=0 /Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/run_docx_task.py create service_notice.docx --protect-input input_round1.json <<'JSON'\n{\"theme\":\"business\",\"blocks\":[{\"type\":\"title\",\"text\":\"服务提示\"},{\"type\":\"paragraph\",\"text\":\"办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。\"}]}\nJSON",
+      "result": {
+        "chunk_id": "88bfdb",
+        "wall_time_seconds": 0.040595844,
+        "exit_code": 0,
+        "original_token_count": 387,
+        "output": "python=3.13.12 required>=3.10 supported=True\nzlib=ok\nexpat=expat_2.6.3 required>=2.6.0 supported=True\n{\"status\": \"verified\", \"archive_status\": \"skipped\", \"used_fallback\": true, \"fallback_reason\": \"missing_router_config\", \"files\": [{\"output\": \"service_notice.docx\", \"archive_output\": null, \"archive_status\": \"skipped\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u672a\\u6267\\u884c\", \"output\": \"service_notice.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": null, \"blocks\": 2, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false, \"task_manifest\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json\", \"task_status\": \"completed\", \"cleanup\": {\"status\": \"cleaned\", \"deleted\": [{\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json\", \"reason\": \"already_absent\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c\", \"reason\": \"removed\"}], \"retained\": [], \"failed\": [], \"manifest_retained\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json\", \"deliverables_unchanged\": true, \"cleanup_complete\": true, \"outcome\": \"success\", \"archive_status\": \"skipped\"}}\n"
+      }
+    },
+    "postcheck": {
+      "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B - <<'PY'\nimport hashlib, json\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nroot = Path('/Users/yangxuezhen/git/PSL-SKILLS')\ndef hashes(directory):\n    return {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(directory.rglob('*')) if path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'}\ndef version(path):\n    return next(line for line in path.read_text(encoding='utf-8').splitlines() if line.startswith('version:'))\noutput = Path('service_notice.docx')\nmanifest = Path('docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json')\nprint(json.dumps({'recorded_utc': datetime.now(timezone.utc).isoformat(), 'candidate_version_line': version(root / 'tests/bank_writing_summary_imitation_evaluation/inputs/candidate/SKILL.md'), 'docx_version_line': version(root / 'skills/docx/SKILL.md'), 'candidate_hashes_after': hashes(root / 'tests/bank_writing_summary_imitation_evaluation/inputs/candidate'), 'docx_hashes_after': hashes(root / 'skills/docx'), 'input_sha256_after': hashlib.sha256(Path('input_round1.json').read_bytes()).hexdigest(), 'output': str(output), 'output_exists': output.is_file(), 'output_size': output.stat().st_size, 'output_sha256': hashlib.sha256(output.read_bytes()).hexdigest(), 'manifest': str(manifest), 'manifest_sha256': hashlib.sha256(manifest.read_bytes()).hexdigest(), 'manifest_content': json.loads(manifest.read_text(encoding='utf-8'))}, ensure_ascii=False, indent=2))\nPY",
+      "result": {
+        "chunk_id": "9e8a4c",
+        "wall_time_seconds": 0.000027742,
+        "exit_code": 0,
+        "original_token_count": 3634,
+        "output": "{\n  \"recorded_utc\": \"2026-10-28T16:45:29.642470+00:00\",\n  \"candidate_version_line\": \"version: \\\"20261029.0035.4979\\\"\",\n  \"docx_version_line\": \"version: \\\"20261028.2341.0954\\\"\",\n  \"candidate_hashes_after\": {\n    \"SKILL.md\": \"eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b\",\n    \"references/activity-planning.md\": \"0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8\",\n    \"references/business-analysis.md\": \"c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6\",\n    \"references/comprehensive-writing.md\": \"e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2\",\n    \"references/official-documents.md\": \"a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc\",\n    \"references/speech-and-report.md\": \"b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a\",\n    \"references/summary-and-imitation.md\": \"cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737\",\n    \"references/writing-review.md\": \"49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320\"\n  },\n  \"docx_hashes_after\": {\n    \"SKILL.md\": \"58e44a7aa06c366a6a170317f1932d472c5de8ccbe82edf11088bb66c1504d5e\",\n    \"assets/comments/comments.xml\": \"a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d\",\n    \"assets/comments/commentsExtended.xml\": \"544eeecfeceed4b468fff163cd9c366d33641c8b8ab691ce002576197846afe8\",\n    \"assets/comments/commentsExtensible.xml\": \"bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631\",\n    \"assets/comments/commentsIds.xml\": \"db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420\",\n    \"references/binary-reading.md\": \"411e5cdb16618184b84c450ca1d6dbf53b1a680acbcfeeb0cb2c54897c46a0c8\",\n    \"references/comments-management.md\": \"cb6c369ba174b9707a4dc739e8ff0b89abbf4369c3f87bd7aa4d0ed143d1f4f3\",\n    \"references/delivery.md\": \"58d841e8b84a8cd1033106369251065cd314e91216993eb02c79687f82f7324d\",\n    \"references/generation-details.md\": \"573696eb7f03ab25cbd16bfe17cc696d81170d09fbb1a3963aeeb8e081dcafbe\",\n    \"references/generation.md\": \"59d924f7f74198f8f0e1a0f4e44af7551112c4367659ac74a28f787cf232546b\",\n    \"references/inspection.md\": \"17a5efbfa547f0cc7af3587ce79259b60153516b2b70b7797dd7b0d5254495bc\",\n    \"references/ooxml-editing.md\": \"522c0abfeea01d0f1f0070886a95b030845a45d2f67a2ccb680dd783f4db9b34\",\n    \"references/security.md\": \"5ed555f6ba5ad3cc2b06fa1f2d0b4d8cd2052f2c3d98bdddd95445e5c0488db2\",\n    \"references/structure-editing.md\": \"2202fe2cd7337609fb8d167fee8000e2b6771435ddc842aa4c53ae52ba7e7c57\",\n    \"references/table-media-editing.md\": \"4a64b139cce7f9499fe4762a3819e25a3a0bb159c50d90547440a69fea25ea7e\",\n    \"references/task-cleanup.md\": \"f99ba82f2b84bf71562f199c46ec19cc4710604643be3b1a30260f7ac0a02c89\",\n    \"references/validation.md\": \"b9133db51c4ff3a2993aca6501454fbbf7f3521bcb88373cd2a32c8a82f2e3a4\",\n    \"requirements.txt\": \"e8be4dfc1ea841ee45f6b75c60b4a7577286240b928232ea9b42527249f4b952\",\n    \"scripts/__init__.py\": \"530303bfb28a74538aa91aa58238823d350d2206a34212ec0579e80cd135ac09\",\n    \"scripts/archive_deliverables.py\": \"70fb201c848e8b27135e63bd049714917e4ad8946dff45f07f3ea9768b008fcc\",\n    \"scripts/cleanup_task.py\": \"a024bacbab22ae0719ee3502e10aa15056b0c0a536892145f20271862ab2660a\",\n    \"scripts/comment.py\": \"4a62a8d9a72f68af143d5f39c0b5d8a15e736ea13b523a0f25ed7cc27f14c345\",\n    \"scripts/create_docx.py\": \"940e7d2cf47b75de33340bfeb9a58b6074ac86e8428a14463dfe23b0cd696447\",\n    \"scripts/docx_task_state.py\": \"550a78c9c86e7763846e82c9c66e8fda5ecbee54388d7ae6df4a24326282fce6\",\n    \"scripts/edit_docx.py\": \"8d1e0ec1f713072d6d11f2e0470e11d98063956d0141d3d28c00cc124ae4cdd1\",\n    \"scripts/edit_structure.py\": \"29c2ea21692f0b4bf178bb25161a537ea2b045615d3590e180b91c2dc96a83e6\",\n    \"scripts/edit_tables.py\": \"5726e0897955f7a6177420a454f3d59ca28287bda3b8bed125eac7ecdf254f12\",\n    \"scripts/manage_comments.py\": \"e1f97dcc340ecb3d1fc2f8d3d029ecf6f660164b866abcf82b2346385db92130\",\n    \"scripts/merge_runs.py\": \"14a9070053669af1bfeab627d51705801f3e52d05d84fe4d86cea2c2b525e0f1\",\n    \"scripts/office/archiveio.py\": \"832de2e5f37387fa0a7ec86fc4ccad7914e898e2d0aff33bc616e8c8a67e7e6e\",\n    \"scripts/office/binary_doc.py\": \"e648b378fc45a3da5bce2a233fdeffebd5ea89e36cf1c005daf3f2a4f4506a38\",\n    \"scripts/office/helpers/__init__.py\": \"b4b670db095ff6d180b036cb3a5faaa064cf0c2dcebf8aa51b4686fc1e7ab25e\",\n    \"scripts/office/package.py\": \"32338d7b32750cb23b28ddd07f5355eacfbff280b40664a273738efc5f170f4f\",\n    \"scripts/office/runtime.py\": \"9d4a131c38e43b83dac6e0868f85003b1f4b5e6f2ff1ae17c4942da0e9c5f0c9\",\n    \"scripts/office/validate.py\": \"381aad193e39e1df416fdd8f3744d9099323aae47801beb3c80d91d64af7675b\",\n    \"scripts/office/validators/__init__.py\": \"e451211d10bd74a44a0ec311b93e1dd4f55cf0796b3249848000f5437846a2e5\",\n    \"scripts/office/validators/advanced.py\": \"9e9332a59743ba2df51787c964837c85fd79be4b0c999ec8cea9f8cf7c3d88c3\",\n    \"scripts/office/validators/generation.py\": \"f65d757c9a916a3d26e6305671beed05346180d55a4cb4b56791606057137756\",\n    \"scripts/office/validators/redlining.py\": \"08e2ce5d27e2f7b6caad3a1c62c698b9b4fad8c9beb9fc8c6312c8b5a92ba63e\",\n    \"scripts/office/validators/structure.py\": \"b0c80b8c022a27f00b94c239ac1a83f387f057f992a25d76b4b75cc03415f4bc\",\n    \"scripts/office/xmlio.py\": \"e88b37b5e71638d258a681fef0445d74eae24e63fa9ae3fe9f466a2f9d293b63\",\n    \"scripts/output_location.py\": \"924cbf03bd1f67e31ab54ac5bbf46af26ea6c9ac819af8fe1e38bc21eb1b61c4\",\n    \"scripts/read_docx.py\": \"b6bbd077827bd644cefa550392191eb671c2c534369995a78143f3e0ed370360\",\n    \"scripts/replace_image.py\": \"ca1b6576ca9b6700d7edb4ffa4b3616583dd0dca9f46ed3fb2afcfe9bbee93b0\",\n    \"scripts/run_docx_task.py\": \"df0bacc33ac41b3279da0708a405aedf4baab9f0fca814954eecef77e784e198\",\n    \"scripts/test_archive_deliverables.py\": \"d5f4bbebeb83cc89d3b14b16bcfa650e1a2d200dc6e1281af92accbfae0edacc\",\n    \"scripts/test_cleanup_task.py\": \"f9cfbe6341f7f0af7a6e77fb4beb9bbc493b1d010376c6181222bb9c04d911c9\",\n    \"scripts/test_delivery_api.py\": \"8bbd2ba369186f5ff1010f08c9d9a52a22c4f4552126feceae106e0b9d5d97f9\",\n    \"scripts/test_docx_delivery.py\": \"cd8e765e292b2ea95da79f0ee808b7454963a62bf51f877b04df65acc7b14a9f\",\n    \"scripts/test_docx_editing.py\": \"c40dadde89bcc1029c6a2645a6d65f4d55d2fa70d6943c1469c599b856756ec1\",\n    \"scripts/test_docx_generation.py\": \"8a1f56d982ca81e0a68f3c01e2762f4adf90660ca93cf7ba303211a220520dc8\",\n    \"scripts/test_docx_io.py\": \"31ad03e77bf247eeceb02af56c84e9a0d4987ebc79eca574ac45702bad3e2b93\",\n    \"scripts/test_docx_legacy_entry.py\": \"5a90aed9a0842d3e3af07211f56a228cf3fca11c09a6432e0d85ba4daa5bb65d\",\n    \"scripts/test_docx_routing.py\": \"2b35a7914ba51865e86ca78a78c20ef581216671679206af3dae6b647dda41b7\",\n    \"scripts/test_docx_runtime.py\": \"d14247ffab67ad1d062430b8b3d8177b289a5b9e99487477cc4a36f9d76c81d5\",\n    \"scripts/test_docx_task_reliability.py\": \"e57e9a47ba36c15ce22da63333aa0d189eb544462192f9ef14d791d1d0dd305a\",\n    \"scripts/test_edit_delivery.py\": \"8dfd6c0df0452c929fd97f54e4a371372ccae7fa4af2e872963d9b405aea2717\",\n    \"scripts/test_output_location.py\": \"41a95aef289779a60c4235706652001ce7df58a5be9d98d79a38bd0e28a66e86\",\n    \"scripts/test_run_docx_task.py\": \"468f3476a77686bc7391c175c392a7190d1e37fc45e26f93df041b4496b6a49f\"\n  },\n  \"input_sha256_after\": \"4427b8a3c481763dc801d80dafbddd75c79c0d166390ed30ac533c519141f195\",\n  \"output\": \"service_notice.docx\",\n  \"output_exists\": true,\n  \"output_size\": 2823,\n  \"output_sha256\": \"03687fd01d8b843f2e112fe03fe2934a2dadaae1f1725be676c6262da42ff69b\",\n  \"manifest\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json\",\n  \"manifest_sha256\": \"6a59e1e48c2f4a9557e23acebf3e8e92ccfbf336ae0852775e52acb63fcc6bd8\",\n  \"manifest_content\": {\n    \"schema\": \"docx_cleanup_v1\",\n    \"manifest\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json\",\n    \"task_identity\": [\n      16777234,\n      45707796\n    ],\n    \"phase\": \"sealed\",\n    \"entries\": [\n      {\n        \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py\",\n        \"kind\": \"file\",\n        \"absent_at_plan\": true,\n        \"retain_reason\": null,\n        \"fingerprint\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707975\n          ],\n          \"size\": 124,\n          \"mtime_ns\": 1793205887645863843,\n          \"links\": 1,\n          \"sha256\": \"42cd400eb3dccb05c9b6b288b0ba00be4b086fe3d2887aaccb6af6fc62f6ad37\"\n        }\n      },\n      {\n        \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json\",\n        \"kind\": \"file\",\n        \"absent_at_plan\": true,\n        \"retain_reason\": null,\n        \"fingerprint\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707977\n          ],\n          \"size\": 324,\n          \"mtime_ns\": 1793205887646196426,\n          \"links\": 1,\n          \"sha256\": \"38e2d9db707d57273c90af53c579a5a5353c504419760619ecbd68fe47cfa188\"\n        }\n      },\n      {\n        \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json\",\n        \"kind\": \"file\",\n        \"absent_at_plan\": true,\n        \"retain_reason\": null,\n        \"fingerprint\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707984\n          ],\n          \"size\": 1995,\n          \"mtime_ns\": 1793205887700857968,\n          \"links\": 1,\n          \"sha256\": \"ab44026c8f555ccc262ae9b49362328e11a930a4d5882f4e468f653f4ccf21b5\"\n        }\n      },\n      {\n        \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock\",\n        \"kind\": \"file\",\n        \"absent_at_plan\": true,\n        \"retain_reason\": null,\n        \"fingerprint\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707979\n          ],\n          \"size\": 0,\n          \"mtime_ns\": 1793205887646489926,\n          \"links\": 1,\n          \"sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n        }\n      },\n      {\n        \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json\",\n        \"kind\": \"file\",\n        \"absent_at_plan\": true,\n        \"retain_reason\": null,\n        \"fingerprint\": null\n      },\n      {\n        \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c\",\n        \"kind\": \"directory\",\n        \"absent_at_plan\": true,\n        \"retain_reason\": null,\n        \"fingerprint\": {\n          \"kind\": \"directory\",\n          \"identity\": [\n            16777234,\n            45707974\n          ]\n        }\n      }\n    ],\n    \"protected\": [\n      {\n        \"path\": \"input_round1.json\",\n        \"initial\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707797\n          ],\n          \"size\": 852,\n          \"mtime_ns\": 1793205676230559926,\n          \"links\": 1\n        }\n      }\n    ],\n    \"deliverables\": [\n      \"service_notice.docx\"\n    ],\n    \"runner\": {\n      \"schema\": \"docx_auto_task_v1\",\n      \"workspace\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c\",\n      \"output\": \"service_notice.docx\",\n      \"created\": {\n        \"docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707975\n          ],\n          \"size\": 124,\n          \"mtime_ns\": 1793205887645863843,\n          \"links\": 1,\n          \"sha256\": \"42cd400eb3dccb05c9b6b288b0ba00be4b086fe3d2887aaccb6af6fc62f6ad37\"\n        },\n        \"docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707977\n          ],\n          \"size\": 324,\n          \"mtime_ns\": 1793205887646196426,\n          \"links\": 1,\n          \"sha256\": \"38e2d9db707d57273c90af53c579a5a5353c504419760619ecbd68fe47cfa188\"\n        },\n        \"docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock\": {\n          \"kind\": \"file\",\n          \"identity\": [\n            16777234,\n            45707979\n          ],\n          \"size\": 0,\n          \"mtime_ns\": 1793205887646489926,\n          \"links\": 1,\n          \"sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n        }\n      },\n      \"attempts\": 1,\n      \"state\": \"delivered\",\n      \"retry_stage\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json\",\n      \"workspace_identity\": {\n        \"kind\": \"directory\",\n        \"identity\": [\n          16777234,\n          45707974\n        ]\n      },\n      \"delivery\": {\n        \"status\": \"verified\",\n        \"archive_status\": \"skipped\",\n        \"used_fallback\": true,\n        \"fallback_reason\": \"missing_router_config\",\n        \"files\": [\n          {\n            \"output\": \"service_notice.docx\",\n            \"archive_output\": null,\n            \"archive_status\": \"skipped\"\n          }\n        ],\n        \"warnings\": [],\n        \"archive_message\": \"归档未执行\",\n        \"output\": \"service_notice.docx\",\n        \"generation_status\": \"verified\",\n        \"output_dir\": \".\",\n        \"archive_output\": null,\n        \"blocks\": 2,\n        \"zip_crc\": true,\n        \"structure\": true,\n        \"content_coverage\": true,\n        \"layout_intent\": true,\n        \"visual_validation\": false,\n        \"xsd_validation\": false\n      }\n    },\n    \"outcome\": \"success\",\n    \"verified\": true,\n    \"archive_status\": \"skipped\",\n    \"output_fingerprints\": {\n      \"service_notice.docx\": {\n        \"kind\": \"file\",\n        \"identity\": [\n          16777234,\n          45707983\n        ],\n        \"size\": 2823,\n        \"mtime_ns\": 1793205887690822468,\n        \"links\": 1,\n        \"sha256\": \"03687fd01d8b843f2e112fe03fe2934a2dadaae1f1725be676c6262da42ff69b\"\n      }\n    },\n    \"last_cleanup\": {\n      \"status\": \"cleaned\",\n      \"deleted\": [\n        {\n          \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py\",\n          \"reason\": \"removed\"\n        },\n        {\n          \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json\",\n          \"reason\": \"removed\"\n        },\n        {\n          \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json\",\n          \"reason\": \"removed\"\n        },\n        {\n          \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock\",\n          \"reason\": \"removed\"\n        },\n        {\n          \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json\",\n          \"reason\": \"already_absent\"\n        },\n        {\n          \"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c\",\n          \"reason\": \"removed\"\n        }\n      ],\n      \"retained\": [],\n      \"failed\": [],\n      \"manifest_retained\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json\",\n      \"deliverables_unchanged\": true,\n      \"cleanup_complete\": true,\n      \"outcome\": \"success\",\n      \"archive_status\": \"skipped\"\n    }\n  }\n}\n"
+      }
+    }
+  },
+  "scope": {
+    "no_network": true,
+    "no_install": true,
+    "stdlib_only": true,
+    "source_modifications": false,
+    "other_group_outputs_read": false,
+    "linux_execution": false,
+    "visual_validation": false,
+    "xsd_validation": false
+  },
+  "manual_checks": {
+    "body_origin": "R1/R2 prose authored directly by model; R3 exact user-approved prose passed to public DOCX entry point.",
+    "current_output_hash_matches_manifest": true
+  }
+}

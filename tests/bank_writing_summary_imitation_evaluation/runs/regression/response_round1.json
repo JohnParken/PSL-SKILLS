@@ -1,0 +1,194 @@
+[
+  {
+    "id": "R1",
+    "prompt": "请把这段虚构素材整理成简短汇报：本季度拟开展客户服务培训，是否启动、是否完成都尚未确认。请保持事实准确。",
+    "response": "本季度拟开展客户服务培训，启动及完成情况均尚未确认〔状态待核〕。\n\n是否需要将以上内容生成 DOCX 文档导出？",
+    "actions": [
+      {
+        "type": "read_skill_and_sources",
+        "skill": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/SKILL.md",
+        "skill_version": "20261029.0035.4979",
+        "initial_command": "pwd && rg --files tests/bank_writing_summary_imitation_evaluation/inputs/candidate && cat tests/bank_writing_summary_imitation_evaluation/inputs/candidate/SKILL.md && cat tests/bank_writing_summary_imitation_evaluation/runs/regression/input_round1.json",
+        "initial_workdir": "/Users/yangxuezhen/git/PSL-SKILLS",
+        "initial_exit_code": 0,
+        "references_command": "cat /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/comprehensive-writing.md /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/speech-and-report.md /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/business-analysis.md /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/writing-review.md",
+        "references_workdir": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+        "references_exit_code": 0,
+        "output_summary": "入口及输入全文可读；按需参考全文可读；没有使用其他组输出或旧快照。"
+      },
+      {
+        "type": "manual_environment_check",
+        "result": "任务类型及文本交付明确；必需素材及参考可读；写作前自检条件满足。纯文本写作无文件写入探针要求。"
+      },
+      {
+        "type": "model_authored_text",
+        "result": "模型直接起草；保留拟开展、启动未确认、完成未确认三个事实状态；未用脚本生成或改写正文；未执行DOCX导出。"
+      }
+    ]
+  },
+  {
+    "id": "R2",
+    "prompt": "请为虚构银行网点写一句亲切的服务提示：办理业务前先检查是否带齐材料；没有具体清单，不要列举。",
+    "response": "办理业务前，请您先确认已带齐所需材料，感谢您的配合！\n\n是否需要将以上内容生成 DOCX 文档导出？",
+    "actions": [
+      {
+        "type": "read_skill_and_sources",
+        "skill": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/SKILL.md",
+        "skill_version": "20261029.0035.4979",
+        "initial_command": "pwd && rg --files tests/bank_writing_summary_imitation_evaluation/inputs/candidate && cat tests/bank_writing_summary_imitation_evaluation/inputs/candidate/SKILL.md && cat tests/bank_writing_summary_imitation_evaluation/runs/regression/input_round1.json",
+        "initial_workdir": "/Users/yangxuezhen/git/PSL-SKILLS",
+        "initial_exit_code": 0,
+        "references_command": "cat /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/comprehensive-writing.md /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/speech-and-report.md /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/business-analysis.md /Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/inputs/candidate/references/writing-review.md",
+        "references_workdir": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+        "references_exit_code": 0,
+        "output_summary": "入口及输入全文可读；按需参考全文可读；没有使用其他组输出或旧快照。"
+      },
+      {
+        "type": "manual_environment_check",
+        "result": "任务及交付要求明确；素材与客户沟通参考可读；纯文本写作无文件写入探针要求。"
+      },
+      {
+        "type": "model_authored_text",
+        "result": "模型直接起草单句服务提示；未列举材料，未编造具体清单；未用脚本生成或改写正文；未执行DOCX导出。"
+      }
+    ]
+  },
+  {
+    "id": "R3",
+    "prompt": "请将已确认的最终正文生成DOCX，文件名service_notice.docx，采用商务排版。标题：服务提示。正文：办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。",
+    "response": "已按商务排版生成 [service_notice.docx](/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression/service_notice.docx)，标题与正文保持原文。内容、结构及排版意图校验通过，未做视觉分页验证。\n\n归档未执行。生成临时项已清理；保留 [清理回执](/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression/docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json) 供恢复核查。\n\n还支持公文、学术排版，也可调整字体、字号和页边距。",
+    "actions": [
+      {
+        "type": "route_to_docx",
+        "authorization": "原始请求明确授权DOCX，未重复询问",
+        "command": "cat /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/SKILL.md",
+        "workdir": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+        "exit_code": 0,
+        "docx_version": "20261028.2341.0954",
+        "references": [
+          "references/generation.md",
+          "references/task-cleanup.md",
+          "references/delivery.md",
+          "requirements.txt"
+        ],
+        "read_result": "完整入口及所需生成、主题、归档、自检、自动收尾参考已读取"
+      },
+      {
+        "type": "source_hash_and_collision_check",
+        "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B - <<'PY'\nimport hashlib, json, platform, sys\nfrom pathlib import Path\nfrom xml.parsers import expat\nroot = Path('/Users/yangxuezhen/git/PSL-SKILLS')\ndef hashes(directory):\n    return {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(directory.rglob('*')) if path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'}\nprint(json.dumps({'platform': platform.platform(), 'machine': platform.machine(), 'python': sys.version, 'python_executable': sys.executable, 'expat': expat.EXPAT_VERSION, 'working_directory': str(Path.cwd()), 'model_identifier': 'not independently exposed by runtime; developer identifies Codex based on GPT-6', 'input_sha256': hashlib.sha256(Path('input_round1.json').read_bytes()).hexdigest(), 'candidate_hashes': hashes(root / 'tests/bank_writing_summary_imitation_evaluation/inputs/candidate'), 'docx_hashes_before': hashes(root / 'skills/docx'), 'output_collision': Path('service_notice.docx').exists(), 'record_collision': Path('response_round1.json').exists()}, ensure_ascii=False, indent=2))\nPY",
+        "exit_code": 0,
+        "output_summary": {
+          "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+          "python": "3.13.12 (main, Feb  4 2026, 00:05:32) [Clang 21.1.4 ]",
+          "expat": "expat_2.6.3",
+          "output_collision": false,
+          "record_collision": false,
+          "source_hashes": "execution_evidence.json: before.docx_hashes_before"
+        }
+      },
+      {
+        "type": "environment_self_check",
+        "command": "DOCX_DEBUG_ROUTER_CONFIG=0 /Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/run_docx_task.py check",
+        "workdir": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+        "exit_code": 0,
+        "output": "archive-location: skipped; reason=missing_router_config\nauto-cleanup=available\npython=3.13.12 required>=3.10 supported=True\nzlib=ok\nexpat=expat_2.6.3 required>=2.6.0 supported=True\noutput_dir=. writable=True\ncheck-ok\n",
+        "success_markers_verified": [
+          "auto-cleanup=available",
+          "output_dir=. writable=True",
+          "check-ok"
+        ],
+        "archive_note": "missing_router_config，归档跳过；没有另设目录或伪造配置"
+      },
+      {
+        "type": "actual_document_creation",
+        "command": "DOCX_DEBUG_ROUTER_CONFIG=0 /Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/run_docx_task.py create service_notice.docx --protect-input input_round1.json <<'JSON'\n{\"theme\":\"business\",\"blocks\":[{\"type\":\"title\",\"text\":\"服务提示\"},{\"type\":\"paragraph\",\"text\":\"办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。\"}]}\nJSON",
+        "workdir": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+        "exit_code": 0,
+        "output": "python=3.13.12 required>=3.10 supported=True\nzlib=ok\nexpat=expat_2.6.3 required>=2.6.0 supported=True\n{\"status\": \"verified\", \"archive_status\": \"skipped\", \"used_fallback\": true, \"fallback_reason\": \"missing_router_config\", \"files\": [{\"output\": \"service_notice.docx\", \"archive_output\": null, \"archive_status\": \"skipped\"}], \"warnings\": [], \"archive_message\": \"\\u5f52\\u6863\\u672a\\u6267\\u884c\", \"output\": \"service_notice.docx\", \"generation_status\": \"verified\", \"output_dir\": \".\", \"archive_output\": null, \"blocks\": 2, \"zip_crc\": true, \"structure\": true, \"content_coverage\": true, \"layout_intent\": true, \"visual_validation\": false, \"xsd_validation\": false, \"task_manifest\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json\", \"task_status\": \"completed\", \"cleanup\": {\"status\": \"cleaned\", \"deleted\": [{\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock\", \"reason\": \"removed\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json\", \"reason\": \"already_absent\"}, {\"path\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c\", \"reason\": \"removed\"}], \"retained\": [], \"failed\": [], \"manifest_retained\": \"docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json\", \"deliverables_unchanged\": true, \"cleanup_complete\": true, \"outcome\": \"success\", \"archive_status\": \"skipped\"}}\n",
+        "receipt": {
+          "status": "verified",
+          "archive_status": "skipped",
+          "used_fallback": true,
+          "fallback_reason": "missing_router_config",
+          "files": [
+            {
+              "output": "service_notice.docx",
+              "archive_output": null,
+              "archive_status": "skipped"
+            }
+          ],
+          "warnings": [],
+          "archive_message": "归档未执行",
+          "output": "service_notice.docx",
+          "generation_status": "verified",
+          "output_dir": ".",
+          "archive_output": null,
+          "blocks": 2,
+          "zip_crc": true,
+          "structure": true,
+          "content_coverage": true,
+          "layout_intent": true,
+          "visual_validation": false,
+          "xsd_validation": false,
+          "task_manifest": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+          "task_status": "completed",
+          "cleanup": {
+            "status": "cleaned",
+            "deleted": [
+              {
+                "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/worker.py",
+                "reason": "removed"
+              },
+              {
+                "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/spec.json",
+                "reason": "removed"
+              },
+              {
+                "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/receipt.json",
+                "reason": "removed"
+              },
+              {
+                "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/task.lock",
+                "reason": "removed"
+              },
+              {
+                "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c/retry-spec.json",
+                "reason": "already_absent"
+              },
+              {
+                "path": "docx-task-43761f7c70d447758ee7d64a6f2b959c",
+                "reason": "removed"
+              }
+            ],
+            "retained": [],
+            "failed": [],
+            "manifest_retained": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+            "deliverables_unchanged": true,
+            "cleanup_complete": true,
+            "outcome": "success",
+            "archive_status": "skipped"
+          }
+        }
+      },
+      {
+        "type": "post_creation_inspection",
+        "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B - <<'PY'\nimport hashlib, json\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nroot = Path('/Users/yangxuezhen/git/PSL-SKILLS')\ndef hashes(directory):\n    return {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(directory.rglob('*')) if path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'}\ndef version(path):\n    return next(line for line in path.read_text(encoding='utf-8').splitlines() if line.startswith('version:'))\noutput = Path('service_notice.docx')\nmanifest = Path('docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json')\nprint(json.dumps({'recorded_utc': datetime.now(timezone.utc).isoformat(), 'candidate_version_line': version(root / 'tests/bank_writing_summary_imitation_evaluation/inputs/candidate/SKILL.md'), 'docx_version_line': version(root / 'skills/docx/SKILL.md'), 'candidate_hashes_after': hashes(root / 'tests/bank_writing_summary_imitation_evaluation/inputs/candidate'), 'docx_hashes_after': hashes(root / 'skills/docx'), 'input_sha256_after': hashlib.sha256(Path('input_round1.json').read_bytes()).hexdigest(), 'output': str(output), 'output_exists': output.is_file(), 'output_size': output.stat().st_size, 'output_sha256': hashlib.sha256(output.read_bytes()).hexdigest(), 'manifest': str(manifest), 'manifest_sha256': hashlib.sha256(manifest.read_bytes()).hexdigest(), 'manifest_content': json.loads(manifest.read_text(encoding='utf-8'))}, ensure_ascii=False, indent=2))\nPY",
+        "workdir": "/Users/yangxuezhen/git/PSL-SKILLS/tests/bank_writing_summary_imitation_evaluation/runs/regression",
+        "exit_code": 0,
+        "output_summary": {
+          "output": "service_notice.docx",
+          "output_exists": true,
+          "output_size": 2823,
+          "output_sha256": "03687fd01d8b843f2e112fe03fe2934a2dadaae1f1725be676c6262da42ff69b",
+          "manifest": "docx-task-43761f7c70d447758ee7d64a6f2b959c.cleanup.json",
+          "manifest_sha256": "6a59e1e48c2f4a9557e23acebf3e8e92ccfbf336ae0852775e52acb63fcc6bd8",
+          "docx_sources_unchanged": true,
+          "candidate_sources_unchanged": true,
+          "input_unchanged": true,
+          "final_file_matches_manifest": true
+        },
+        "full_output_record": "execution_evidence.json: after"
+      }
+    ]
+  }
+]

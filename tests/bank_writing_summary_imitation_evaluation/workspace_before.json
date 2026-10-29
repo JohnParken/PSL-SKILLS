@@ -1,0 +1,43 @@
+{
+  "status": [
+    " M AGENTS.md",
+    " M README.md",
+    " M skills/docx/SKILL.md",
+    " M skills/docx/references/delivery.md",
+    " M skills/docx/references/generation.md",
+    " M skills/docx/references/task-cleanup.md",
+    " M skills/docx/references/validation.md",
+    " M skills/docx/requirements.txt",
+    " M skills/docx/scripts/archive_deliverables.py",
+    " M skills/docx/scripts/create_docx.py",
+    " M skills/docx/scripts/test_archive_deliverables.py",
+    "?? skills/docx/scripts/docx_task_state.py",
+    "?? skills/docx/scripts/run_docx_task.py",
+    "?? skills/docx/scripts/test_docx_legacy_entry.py",
+    "?? skills/docx/scripts/test_docx_task_reliability.py",
+    "?? skills/docx/scripts/test_run_docx_task.py",
+    "?? tests/bank_writing_summary_imitation_evaluation/",
+    "?? tests/docx_auto_task_verification.json",
+    "?? tests/docx_reliability_verification.json",
+    ""
+  ],
+  "unrelated_hashes": {
+    "AGENTS.md": "bb54388fc1419c70abb5d0384cc52fa5093f29c56931759549eb5fa4c5e6abc8",
+    "skills/docx/SKILL.md": "58e44a7aa06c366a6a170317f1932d472c5de8ccbe82edf11088bb66c1504d5e",
+    "skills/docx/references/delivery.md": "58d841e8b84a8cd1033106369251065cd314e91216993eb02c79687f82f7324d",
+    "skills/docx/references/generation.md": "59d924f7f74198f8f0e1a0f4e44af7551112c4367659ac74a28f787cf232546b",
+    "skills/docx/references/task-cleanup.md": "f99ba82f2b84bf71562f199c46ec19cc4710604643be3b1a30260f7ac0a02c89",
+    "skills/docx/references/validation.md": "b9133db51c4ff3a2993aca6501454fbbf7f3521bcb88373cd2a32c8a82f2e3a4",
+    "skills/docx/requirements.txt": "e8be4dfc1ea841ee45f6b75c60b4a7577286240b928232ea9b42527249f4b952",
+    "skills/docx/scripts/archive_deliverables.py": "70fb201c848e8b27135e63bd049714917e4ad8946dff45f07f3ea9768b008fcc",
+    "skills/docx/scripts/create_docx.py": "940e7d2cf47b75de33340bfeb9a58b6074ac86e8428a14463dfe23b0cd696447",
+    "skills/docx/scripts/test_archive_deliverables.py": "d5f4bbebeb83cc89d3b14b16bcfa650e1a2d200dc6e1281af92accbfae0edacc",
+    "skills/docx/scripts/docx_task_state.py": "550a78c9c86e7763846e82c9c66e8fda5ecbee54388d7ae6df4a24326282fce6",
+    "skills/docx/scripts/run_docx_task.py": "df0bacc33ac41b3279da0708a405aedf4baab9f0fca814954eecef77e784e198",
+    "skills/docx/scripts/test_docx_legacy_entry.py": "5a90aed9a0842d3e3af07211f56a228cf3fca11c09a6432e0d85ba4daa5bb65d",
+    "skills/docx/scripts/test_docx_task_reliability.py": "e57e9a47ba36c15ce22da63333aa0d189eb544462192f9ef14d791d1d0dd305a",
+    "skills/docx/scripts/test_run_docx_task.py": "468f3476a77686bc7391c175c392a7190d1e37fc45e26f93df041b4496b6a49f",
+    "tests/docx_auto_task_verification.json": "09483829519623840efdea81e9dd79d07edeb75b05eb8b9f93bbcfebd480243e",
+    "tests/docx_reliability_verification.json": "c6a99e425402dd10299549728b5f14e8b87a7d90df0586c362f42467b31c6953"
+  }
+}

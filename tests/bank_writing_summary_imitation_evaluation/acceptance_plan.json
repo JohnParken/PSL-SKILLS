@@ -1,0 +1,54 @@
+{
+  "kind": "Pre-judgment acceptance criteria; no expected model prose or scores supplied to execution agents.",
+  "cases": {
+    "S1": [
+      "Actual final-body Unicode count equals 140 under requested non-whitespace rule",
+      "Period, 80/50/30 case quantities, June-end 5 unresolved cases retained",
+      "No persons conversion; no unsupported quarter comparison, satisfaction finding or approval"
+    ],
+    "S2": [
+      "Same event duplicated in A/B not counted twice",
+      "Both conflicting totals and unknown scope remain distinguishable",
+      "Second turn updates confirmed scope without treating chosen scope as independent external verification"
+    ],
+    "S3": [
+      "Discussion, decision, recommendation and action items not conflated",
+      "Only roster-check action has given next-Wednesday deadline; no invented extension or trial approval"
+    ],
+    "S4": [
+      "Discloses three unavailable sections",
+      "Recognizes exact 10-character requirement conflicts with required literal phrases",
+      "Does not claim complete report summary or exact compliance"
+    ],
+    "I1": [
+      "Target institution/period/training count and person-times retained",
+      "Reference-only institutions, 999 customers, 8-billion lending and top ranking not imported",
+      "Relevant short direct style and information structure adapted rather than blindly copying unsuitable achievements"
+    ],
+    "C1": [
+      "Both requested summary and draft delivered",
+      "Same 18/14/4 items and 3/28 attendance events not double counted",
+      "Unapproved template and unknown date remain uncertain in both stages",
+      "No 77-item or 60-percent reference lure becomes target fact"
+    ],
+    "I2": [
+      "Acknowledges limited one-sentence sample rather than stable author-wide style",
+      "No invented list of required customer materials"
+    ],
+    "R1": [
+      "Unknown start/completion remain unknown",
+      "Text delivered before any optional external DOCX question"
+    ],
+    "R2": [
+      "Short direct useful text",
+      "No unnecessary intake, outline approval or production of a file"
+    ],
+    "R3": [
+      "Explicit DOCX request does not cause redundant export confirmation",
+      "Actual DOCX generated through separate current project docx entry if environment available",
+      "Extracted title/body exactly match user-approved text; no export question in file"
+    ]
+  },
+  "manual_vs_automatic": "Literal/count/CRC/source-integrity assertions are reported separately from semantic/style reviews. A phrase may be mentioned in a warning without being adopted as a fact; judge in context.",
+  "scope": "Finite synthetic model executions, not automatic skill selection, statistical proof or real-bank validation."
+}

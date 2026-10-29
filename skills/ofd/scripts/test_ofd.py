@@ -53,6 +53,21 @@ class ReaderTests(unittest.TestCase):
         write_package(self.path, fixture() if files is None else files)
         return READER.read_ofd(self.path)
 
+    def test_duplicate_page_content_rejected(self):
+        with self.assertRaisesRegex(READER.ReadError, 'duplicate Content'):
+            self.read(fixture(page_extra='<ofd:Content/>'))
+
+    def test_duplicate_template_content_rejected(self):
+        files = fixture(page_extra='<ofd:Template TemplateID="9"/>', common_extra='<ofd:TemplatePage ID="9" BaseLoc="T.xml"/>', extra={'Doc/T.xml': xml('Page', '<ofd:Content/><ofd:Content/>')})
+        with self.assertRaisesRegex(READER.ReadError, 'duplicate Content'):
+            self.read(files)
+
+    def test_duplicate_signature_entry_rejected(self):
+        files = fixture()
+        files['OFD.xml'] = xml('OFD', '<ofd:DocBody><ofd:DocRoot>Doc/Document.xml</ofd:DocRoot><ofd:Signatures>A.xml</ofd:Signatures><ofd:Signatures>B.xml</ofd:Signatures></ofd:DocBody>')
+        with self.assertRaisesRegex(READER.ReadError, 'duplicate Signatures'):
+            self.read(files)
+
     def cli_result(self, args, directory=None):
         previous = Path.cwd()
         os.chdir(self.root if directory is None else directory)

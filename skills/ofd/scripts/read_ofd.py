@@ -418,7 +418,7 @@ def read_ofd(path, *, task_root=None):
                         if kind == 'Annotations':
                             annot_path, annot_nodes = package.metadata(meta_path, text_of(node))
                             append_to(doc['metadata'], dict(kind='PageAnnotations', source=annot_path, nodes=annot_nodes))
-        signature = body.find(q('Signatures'))
+        signature = single_child(body, 'Signatures')
         if signature is not None:
             sig_path, nodes = package.metadata('OFD.xml', text_of(signature), 'Signatures')
             append_to(doc['metadata'], dict(kind='Signatures', source=sig_path, nodes=nodes))
@@ -450,7 +450,9 @@ def read_ofd(path, *, task_root=None):
                 used.add(source)
                 page_xml = package.xml(source, 'Page')
                 if not is_template:
-                    page['content_present'] = page_xml.find(q('Content')) is not None
+                    page['content_present'] = single_child(page_xml, 'Content') is not None
+                else:
+                    single_child(page_xml, 'Content')
                 for template in page_xml.findall(q('Template')):
                     if is_template:
                         issue('ignored_template_in_template', source, template.get('TemplateID', ''))

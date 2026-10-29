@@ -1,0 +1,23 @@
+{
+  "version": "20261029.0758.3419",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "package": "skills/docx-20261029.0758.3419.zip",
+  "sha256": "2921cfa62b05441f2497edabb532f29101b31be8e42d8574aa35faa94bdfe784",
+  "members": 63,
+  "regressions": [
+    {
+      "target": "source",
+      "exit": 0,
+      "summary": "----------------------------------------------------------------------\nRan 198 tests in 8.101s\n\nOK\n"
+    },
+    {
+      "target": "readonly_package",
+      "exit": 0,
+      "summary": "----------------------------------------------------------------------\nRan 198 tests in 8.046s\n\nOK\n"
+    }
+  ],
+  "linux": "not run; no docker/podman entry found",
+  "windows": "not run",
+  "scope": "Module extraction only. Prior user changes preserved. No real residual deletion, installation, staging, commit, push or upload."
+}

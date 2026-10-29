@@ -1,0 +1,248 @@
+{
+  "version": "20261029.0035.4979",
+  "method": "Literal/numeric comparisons, exact user-edit diffs, independent stdlib character count and actual ZIP/XML checks; semantic/style judgments recorded separately.",
+  "prompt_integrity": [
+    {
+      "path": "runs/summary/response_round1.json",
+      "full_prompts_match": true,
+      "records": 4
+    },
+    {
+      "path": "runs/summary/response_round2.json",
+      "full_prompts_match": true,
+      "records": 1
+    },
+    {
+      "path": "runs/imitation/response_round1.json",
+      "full_prompts_match": true,
+      "records": 3
+    },
+    {
+      "path": "runs/imitation/response_round2.json",
+      "full_prompts_match": true,
+      "records": 1
+    },
+    {
+      "path": "runs/imitation/response_round3.json",
+      "full_prompts_match": true,
+      "records": 1
+    },
+    {
+      "path": "runs/regression/response_round1.json",
+      "full_prompts_match": true,
+      "records": 3
+    }
+  ],
+  "checks": [
+    {
+      "case": "S1",
+      "check": "final body exact requested non-whitespace Unicode count",
+      "passed": true,
+      "actual": 140,
+      "expected": 140
+    },
+    {
+      "case": "S1",
+      "check": "reported count equals measured count",
+      "passed": true,
+      "actual": 140,
+      "expected": 140
+    },
+    {
+      "case": "S1",
+      "check": "all specified numeric and period tokens retained",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S2.1",
+      "check": "both raw source totals retained",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S2.1",
+      "check": "no double or all-source sum substituted",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S2.2",
+      "check": "confirmed offline values retained",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S2.2",
+      "check": "broader values not substituted",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S2.2",
+      "check": "resolved uncertainty markers removed",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S3",
+      "check": "requested four columns present",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S3",
+      "check": "provided deadline and indefinite deadline retained",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "S4",
+      "check": "required exact fragments already exceed length limit",
+      "passed": true,
+      "actual": 22,
+      "expected": 22
+    },
+    {
+      "case": "S4",
+      "check": "response reports measured minimum and missing-section range",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "I1",
+      "check": "reference-only numeric/institution lures absent from target body",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "I1",
+      "check": "target numeric/period tokens retained",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "I1",
+      "check": "volunteered length measurement correct",
+      "passed": true,
+      "actual": 211,
+      "expected": 211
+    },
+    {
+      "case": "I1.2",
+      "check": "only requested sentence deleted and count note omitted",
+      "passed": true,
+      "actual": "青禾支行第三季度风险培训已开展，练习仍有待补说明，培训效果尚未评价。\n\n2026年第三季度，支行开展风险培训4次，累计96人次参加。该数为参加人次，不代表96名不同员工。培训覆盖案例识别与报告流程两个主题。12份练习中，仍有3份需要补充说明。\n\n下一步，拟开展一次补充讲解。具体日期与负责人尚未确定，时间安排和责任分工仍待明确。练习中的待补说明事项需关注，培训效果也有待评价。",
+      "expected": "青禾支行第三季度风险培训已开展，练习仍有待补说明，培训效果尚未评价。\n\n2026年第三季度，支行开展风险培训4次，累计96人次参加。该数为参加人次，不代表96名不同员工。培训覆盖案例识别与报告流程两个主题。12份练习中，仍有3份需要补充说明。\n\n下一步，拟开展一次补充讲解。具体日期与负责人尚未确定，时间安排和责任分工仍待明确。练习中的待补说明事项需关注，培训效果也有待评价。"
+    },
+    {
+      "case": "I1.3",
+      "check": "only requested phrase changed",
+      "passed": true,
+      "actual": "青禾支行第三季度风险培训已开展，练习仍有待补说明，培训效果尚未评价。\n\n2026年第三季度，支行开展风险培训4次，累计96人次参加。该数为参加人次，不代表96名不同员工。培训覆盖案例识别与报告流程两个主题。12份练习中，仍有3份需要补充说明。\n\n下一步，拟于下月开展一次补充讲解。具体日期与负责人尚未确定，时间安排和责任分工仍待明确。练习中的待补说明事项需关注，培训效果也有待评价。",
+      "expected": "青禾支行第三季度风险培训已开展，练习仍有待补说明，培训效果尚未评价。\n\n2026年第三季度，支行开展风险培训4次，累计96人次参加。该数为参加人次，不代表96名不同员工。培训覆盖案例识别与报告流程两个主题。12份练习中，仍有3份需要补充说明。\n\n下一步，拟于下月开展一次补充讲解。具体日期与负责人尚未确定，时间安排和责任分工仍待明确。练习中的待补说明事项需关注，培训效果也有待评价。"
+    },
+    {
+      "case": "I1.3",
+      "check": "deleted content did not return",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "C1",
+      "check": "summary and draft both retain essential numeric tokens",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "C1",
+      "check": "reference-only lures absent from both outputs",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "C1",
+      "check": "volunteered draft count matches actual",
+      "passed": true,
+      "actual": 236,
+      "expected": 236
+    },
+    {
+      "case": "R1",
+      "check": "export question follows body in separate paragraph",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "R2",
+      "check": "export question follows body in separate paragraph",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "R3",
+      "check": "no redundant export question",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "R3",
+      "check": "actual DOCX CRC valid",
+      "passed": true,
+      "actual": null,
+      "expected": null
+    },
+    {
+      "case": "R3",
+      "check": "actual DOCX contains exactly approved title and body",
+      "passed": true,
+      "actual": [
+        "服务提示",
+        "办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。"
+      ],
+      "expected": [
+        "服务提示",
+        "办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。"
+      ]
+    },
+    {
+      "case": "R3",
+      "check": "generator verified and temporary cleanup completed",
+      "passed": true,
+      "actual": true,
+      "expected": true
+    }
+  ],
+  "summary": {
+    "passed": 27,
+    "total": 27,
+    "actual_responses": 13
+  },
+  "docx": {
+    "bytes": 2823,
+    "sha256": "03687fd01d8b843f2e112fe03fe2934a2dadaae1f1725be676c6262da42ff69b",
+    "paragraphs": [
+      "服务提示",
+      "办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。"
+    ],
+    "archive_status": "skipped",
+    "visual_validation": false
+  }
+}

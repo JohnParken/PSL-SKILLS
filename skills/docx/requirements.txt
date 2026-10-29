@@ -1,3 +1,5 @@
 # No third-party runtime dependencies. Do not install packages for this skill.
 # Requires Python >=3.10 with standard-library zlib and Expat >=2.6.0.
 # Font names are stored in DOCX styles; fonts are not installed or embedded.
+# Automatic task controller requires stdlib fcntl/POSIX locks and dir_fd/no-follow operations.
+# Missing platform capabilities stop automatic operations; no extra component installation.

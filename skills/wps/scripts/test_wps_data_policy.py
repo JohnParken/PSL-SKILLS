@@ -38,6 +38,15 @@ class DataPolicyTests(unittest.TestCase):
         self.assertFalse(result['formulas_executed'])
         self.assertFalse(result['external_links_followed'])
 
+    def test_partial_metadata_reports_every_affected_sheet(self):
+        payload = rec(0x0084, bytes(2)) + rec(0x0203, cell(0, 0) + struct.pack('<d', 42))
+        result = read_bytes(synthetic_cfb({'Workbook': workbook([payload, payload], names=['One', 'Two'])}))
+        event = next(item for item in result['issues'] if item.get('record_id') == '0x84')
+        self.assertEqual(event['scopes'], ['One', 'Two'])
+        self.assertEqual(event['records'], 2)
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual([sheet['cells']['A1']['value'] for sheet in result['sheets']], [42, 42])
+
     def test_explicit_strict_keeps_old_metadata_rejection(self):
         data = synthetic_cfb({'Workbook': workbook(extra_global=rec(0xE1, b'x'))})
         with self.assertRaises(ParseError):

@@ -32,6 +32,8 @@ the Python 3.9+ standard-library path. No LibreOffice installation or runtime is
 
 ## Task intermediate files
 
+Use the executable [delivery lifecycle](delivery-lifecycle.md): run_xlsx_task.py owns new stdin JSON configs; xlsx_lifecycle.py provides explicit plan/seal/clean for custom helpers. Existing inputs are protected, never automatically adopted. The following rules remain the boundary, rather than permission for extension scanning.
+
 - Before creating auxiliary files, record the exact task-relative paths and purpose of
   files/directories newly created by this task. Use a new independent subdirectory for
   work copies or unpacked data; never reuse an existing directory as disposable storage.

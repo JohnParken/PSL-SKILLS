@@ -1,0 +1,98 @@
+{
+  "description_characters": 137,
+  "source_body_unchanged": true,
+  "all_seven_references_unchanged": true,
+  "version_consistent": true,
+  "internal_links": [
+    {
+      "source": "SKILL.md",
+      "target": "#六docx-导出交接"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/summary-and-imitation.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md#多份素材整合"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md#多轮编辑纪律"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md#重要复杂文稿的读者检查"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/comprehensive-writing.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/official-documents.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/speech-and-report.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/business-analysis.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/activity-planning.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/writing-review.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/summary-and-imitation.md"
+    },
+    {
+      "source": "SKILL.md",
+      "target": "references/summary-and-imitation.md#长度核验"
+    },
+    {
+      "source": "references/writing-review.md",
+      "target": "summary-and-imitation.md"
+    },
+    {
+      "source": "references/summary-and-imitation.md",
+      "target": "writing-review.md#多份素材整合"
+    },
+    {
+      "source": "references/summary-and-imitation.md",
+      "target": "writing-review.md#多轮编辑纪律"
+    },
+    {
+      "source": "references/summary-and-imitation.md",
+      "target": "../SKILL.md#六docx-导出交接"
+    }
+  ],
+  "link_count": 17,
+  "current_hashes": {
+    "SKILL.md": "8de2fba33edbc018cfb40850cdb9029654ced55fff0a691d23e0247e5bc65b8d",
+    "references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "references/writing-review.md": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320",
+    "references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "references/summary-and-imitation.md": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737",
+    "references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8"
+  },
+  "platform": "macOS; no Linux/Windows runtime test in this description-only change",
+  "name_description_selection": {
+    "passed": 10,
+    "total": 10,
+    "host_automatic_selection_tested": false
+  },
+  "strict": {
+    "exit_code": 0,
+    "output": "OK skills/bank-writing"
+  },
+  "unrelated_existing_hashes_changed": []
+}

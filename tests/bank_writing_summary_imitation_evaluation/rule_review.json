@@ -1,0 +1,208 @@
+{
+  "review_type": "independent_read_only_rule_consistency_review",
+  "reviewed_at_utc": "2026-10-28T16:44:05.186225+00:00",
+  "target": "skills/bank-writing",
+  "reviewed_version": "20261029.0035.4979",
+  "verdict": "no_material_rule_conflict_found",
+  "summary": "在本次审查范围内，新增摘要、仿写及先摘要再仿写路径与纯文本写作、实际计数、最少追问、来源保真、受限样本不直接复制、DOCX 授权交接、只读安装及云端 Linux 目标一致。未发现需要修改的真实缺陷或阻断项；静态一致性不证明模型一定遵循规则，也不等于目标环境运行验收。",
+  "findings": [],
+  "blockers": [],
+  "scope": {
+    "instructions_read": [
+      "AGENTS.md",
+      "skills/skill-development-standards/SKILL.md"
+    ],
+    "content_read": [
+      "skills/bank-writing/SKILL.md",
+      "skills/bank-writing/references/summary-and-imitation.md",
+      "skills/bank-writing/references/writing-review.md",
+      "skills/bank-writing/references/comprehensive-writing.md",
+      "skills/bank-writing/references/official-documents.md",
+      "skills/bank-writing/references/speech-and-report.md",
+      "skills/bank-writing/references/business-analysis.md",
+      "skills/bank-writing/references/activity-planning.md",
+      "README.md 中 bank-writing 对应条目、环境要求及使用说明"
+    ],
+    "model_test_outputs_read": false,
+    "model_scores_read": false,
+    "skill_files_modified": false,
+    "readme_modified": false,
+    "only_written_file": "tests/bank_writing_summary_imitation_evaluation/rule_review.json",
+    "scope_note": "查看了目标说明的当前差异以识别新增规则；未读取任何模型输出或评分。README 中已有评测链接及概述作为说明文本可见，但未打开其评测文件，也未以这些概述作为本审查结论依据。"
+  },
+  "checks": [
+    {
+      "area": "纯写作与三路径路由",
+      "result": "consistent",
+      "reason": "入口将摘要、仿写、组合路径限定为文本任务，普通写作不增加这些流程；专项参考也只交付文本。只读计数是明确允许的辅助核验，未授权脚本生成或改写正文。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [10, 16]},
+        {"path": "skills/bank-writing/SKILL.md", "lines": [39, 39]},
+        {"path": "skills/bank-writing/SKILL.md", "lines": [54, 62]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [5, 7]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [41, 41]}
+      ]
+    },
+    {
+      "area": "精确计数与事实保真",
+      "result": "consistent",
+      "reason": "区分约数与硬限制，优先采用用户口径，否则明确默认 Unicode 字符口径；对最终正文实际计数，修改后重新计数，无法可靠核验时披露。不能以填空话或删关键限定达标，冲突时只请求必要选择。没有将标准库计数扩大为写稿或文件制作能力。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [14, 14]},
+        {"path": "skills/bank-writing/SKILL.md", "lines": [70, 70]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [35, 37]}
+      ]
+    },
+    {
+      "area": "最少追问与可继续工作",
+      "result": "consistent",
+      "reason": "非关键缺项采用默认值；追问限于影响事实、材料角色或交付的关键歧义。组合任务仅在未解关键冲突影响成稿时请求确认，可继续部分照常完成；没有要求先展示风格分析、事实表或逐段审批。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [39, 39]},
+        {"path": "skills/bank-writing/SKILL.md", "lines": [71, 71]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [7, 9]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [21, 22]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [31, 31]},
+        {"path": "skills/bank-writing/references/writing-review.md", "lines": [10, 12]}
+      ]
+    },
+    {
+      "area": "摘要与多源材料的来源保真",
+      "result": "consistent",
+      "reason": "规则覆盖读取范围披露、逐来源提取、去重但不重复累计、冲突不擅选、讨论与决议分离，以及期间、范围、单位、否定、风险和不确定性的保留。摘要不自动新增分析或建议；文种参考的建议结构不构成凭空补写授权。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [19, 24]},
+        {"path": "skills/bank-writing/SKILL.md", "lines": [42, 42]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [5, 5]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [9, 17]},
+        {"path": "skills/bank-writing/references/writing-review.md", "lines": [15, 22]},
+        {"path": "skills/bank-writing/references/comprehensive-writing.md", "lines": [13, 15]},
+        {"path": "skills/bank-writing/references/business-analysis.md", "lines": [4, 6]},
+        {"path": "skills/bank-writing/references/activity-planning.md", "lines": [11, 12]}
+      ]
+    },
+    {
+      "area": "仿写事实隔离与非商业等受限样本",
+      "result": "consistent",
+      "reason": "范文、目标素材与交付要求的角色分开；同一材料兼作事实来源需用户明确说明或确认。跨主题仅借适用风格或结构，不带入样稿事实；明确要求新表述、不照搬独特句子或大段内容，并专门限制非商业等受限样本的直接复制。该规则没有推定额外复制或商业授权。",
+      "evidence": [
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [21, 25]},
+        {"path": "skills/bank-writing/references/writing-review.md", "lines": [25, 26]}
+      ]
+    },
+    {
+      "area": "组合路径与多轮编辑纪律",
+      "result": "consistent",
+      "reason": "先从目标素材摘要再借范文表达，仍保留原文供回查；第二步不能把推测、冲突或未批准安排写成确定事实。已确认摘要与原文发生实质冲突时应指出，不静默改动；这与保留已确认段落、局部同步及不恢复已删内容的规则一致。",
+      "evidence": [
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [25, 31]},
+        {"path": "skills/bank-writing/references/writing-review.md", "lines": [10, 12]},
+        {"path": "skills/bank-writing/references/writing-review.md", "lines": [22, 22]}
+      ]
+    },
+    {
+      "area": "DOCX 授权与技能交接",
+      "result": "consistent",
+      "reason": "写作内容先交付，提示置于正文外；已授权导出不重复确认，只在交接内容不明确时澄清。由宿主定位独立 docx 技能并按其当前规则执行，失败保留文本，写作技能不自行制作文件或安装依赖。三路径引用此统一规则，没有另建导出授权分支。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [13, 15]},
+        {"path": "skills/bank-writing/SKILL.md", "lines": [75, 79]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [41, 41]},
+        {"path": "README.md", "lines": [66, 66]}
+      ]
+    },
+    {
+      "area": "只读安装、任务目录与云端 Linux 目标",
+      "result": "consistent_static_only",
+      "reason": "内部资源按实际入口定位；任务输入限定宿主确认的工作目录；不向技能安装目录写任务文件。包内仅 Markdown，文本写作无需平台专用解释器或依赖，计数工具按宿主已有能力核对。入口明确本地检查不替代未执行的云端验收；未发现新路径写安装目录或引入依赖的指令。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [28, 35]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [36, 36]},
+        {"path": "README.md", "lines": [49, 49]},
+        {"path": "README.md", "lines": [62, 62]}
+      ]
+    },
+    {
+      "area": "description、入口、参考及 README 的能力声明",
+      "result": "consistent",
+      "reason": "description 为 120 个 Unicode 字符，覆盖银行文本任务、摘要、范文风格和结构写作、组合路径、事实保真及文本交付边界；入口路由、专项参考和 README 相符。仅作描述语义人工检查，未进行宿主自动触发试验。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [3, 4]},
+        {"path": "skills/bank-writing/SKILL.md", "lines": [56, 62]},
+        {"path": "README.md", "lines": [9, 9]},
+        {"path": "README.md", "lines": [26, 26]},
+        {"path": "README.md", "lines": [49, 49]},
+        {"path": "README.md", "lines": [66, 66]}
+      ]
+    }
+  ],
+  "not_defects": [
+    {
+      "topic": "给所有摘要强制附来源表或展示全部中间步骤",
+      "assessment": "属于额外流程偏好，并非当前缺陷。现规则要求可回查来源及必要差异说明，同时避免给短任务强制建表；事实核对与是否展示台账是不同要求。",
+      "evidence": [
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [13, 17]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [31, 31]},
+        {"path": "skills/bank-writing/references/writing-review.md", "lines": [21, 21]}
+      ]
+    },
+    {
+      "topic": "禁止所有计数工具以维持纯写作",
+      "assessment": "并非必要限制。入口明确只禁止脚本生成或改写正文，允许只读计数；与文本交付边界不矛盾。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [14, 14]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [36, 36]}
+      ]
+    },
+    {
+      "topic": "改变默认字数口径或增加第三方字数工具",
+      "assessment": "属于实现偏好或范围扩展。现规则优先用户口径并披露默认字符口径，禁止冒充编辑器统计；没有发现必须新增依赖才能解决的规则冲突。",
+      "evidence": [
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [35, 36]}
+      ]
+    },
+    {
+      "topic": "DOCX 提示与最少追问",
+      "assessment": "现有统一交接提示发生在内容已交付之后，不阻断写作；明确只要文本、不导出或不再提示时省略，已有导出授权不再询问。因此新增三路径继续引用该规则未构成新的重复授权缺陷。",
+      "evidence": [
+        {"path": "skills/bank-writing/SKILL.md", "lines": [75, 76]},
+        {"path": "skills/bank-writing/references/summary-and-imitation.md", "lines": [41, 41]}
+      ]
+    }
+  ],
+  "validation": {
+    "platform": "macOS (Darwin), arm64",
+    "python_version": "3.13.12",
+    "interpreter": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3",
+    "interpreter_self_check": {"exit_code": 0, "observed_marker": "environment-ok"},
+    "checker_help": {"exit_code": 0, "usage_displayed": true},
+    "strict_structure_check": {
+      "command": "/Users/yangxuezhen/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/bin/python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/bank-writing --strict",
+      "exit_code": 0,
+      "output": "OK skills/bank-writing"
+    },
+    "manual_rule_consistency_review": "completed",
+    "description_character_count": 120,
+    "python_naming_check": "not_applicable: target skill contains no Python code and none was changed",
+    "packages_installed": false,
+    "pyyaml_tools_used": false,
+    "not_executed": [
+      "模型写作、自动触发或匿名评分试验；按本次独立审查约束未读取其输出",
+      "云端 Linux 容器实际写作、计数与 DOCX 交接运行验收",
+      "Windows 运行验收",
+      "将安装目录设为只读后的实际模型运行与重复或并发执行试验",
+      "DOCX 文件生成、验收及最终文档视觉检查",
+      "版本生成时钟及 America/New_York 日历加 12 小时过程的独立验证；结构检查仅核对格式和合法日期时间"
+    ]
+  },
+  "reviewed_content_sha256": {
+    "skills/bank-writing/SKILL.md": "eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b",
+    "skills/bank-writing/references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+    "skills/bank-writing/references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "skills/bank-writing/references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "skills/bank-writing/references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "skills/bank-writing/references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "skills/bank-writing/references/summary-and-imitation.md": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737",
+    "skills/bank-writing/references/writing-review.md": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+  }
+}

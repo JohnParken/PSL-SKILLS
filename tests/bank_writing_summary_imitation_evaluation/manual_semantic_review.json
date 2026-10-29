@@ -1,0 +1,61 @@
+{
+  "reviewer": "maintaining parent agent; separate from independent quality reviewer",
+  "method": "Read raw prompts and actual responses, inspect facts/conditions in context rather than treating keyword presence as semantic proof.",
+  "cases": [
+    {
+      "case": "S1",
+      "result": "pass",
+      "basis": "140字符正文保留2026年第二季度、80/50/30件、6月末5件待回复、件非人数、不可比及无满意度评分，话术仅建议且未批；未补成绩。"
+    },
+    {
+      "case": "S2.1",
+      "result": "pass",
+      "basis": "甲乙同一L01-L12去重为12场240人次；培训2次不重复累计。丙15场300人次及范围不明单列，未按日期新旧定权威；丙培训是否同批原文未明，保留待核合理。"
+    },
+    {
+      "case": "S2.2",
+      "result": "pass",
+      "basis": "用户确认同批和线下范围后只保留12场240人次及培训2次，不累计线上、不保留已解决疑问、不新增计划或外部核验声明。"
+    },
+    {
+      "case": "S3",
+      "result": "pass",
+      "basis": "未表决延时列讨论，运营岗核对值班表列决定及待办；预约提醒为未批准建议，综合岗期限未定；无立即调整或试行批准。"
+    },
+    {
+      "case": "S4",
+      "result": "pass",
+      "basis": "明确仅见第1节，不能概括整份报告；实测必留片段最少22字符，与10字符要求冲突，给限定节选摘要并请求补齐与调整，没有冒充达标。"
+    },
+    {
+      "case": "I1",
+      "result": "facts_pass_with_style_reservations",
+      "basis": "保留目标机构期间及4次96人次/12份3份、效果未评和安排未定；范文旧机构、999户、8亿元、排名未混入。结论与末段重复待补说明/效果未评，风格精简程度仍可改善；不据单例宣称仿写质量提高。"
+    },
+    {
+      "case": "I1.2/I1.3",
+      "result": "pass",
+      "basis": "两次真实后续输入顺序执行，逐字比对仅发生指定删除和短语修改，删除内容未回流。"
+    },
+    {
+      "case": "C1",
+      "result": "facts_pass_with_style_reservations",
+      "basis": "先给事实摘要后给简报，18/14/4和3/28未重复累计；模板未批和日期未定两阶段保持。按三段结构重写未决问题，没有沿用样稿全面升级/无遗留/立即推广。成稿保留来源去重说明且重复未定日期，偏冗余。"
+    },
+    {
+      "case": "I2",
+      "result": "pass",
+      "basis": "只从单句观察礼貌、直接、短句与收尾，明确不足判断稳定风格；新提醒未虚构材料清单。"
+    },
+    {
+      "case": "R1/R2",
+      "result": "pass",
+      "basis": "直接短文本交付，未知状态仍未知，没有强制摘要/提纲/访谈；正文后单独导出询问。"
+    },
+    {
+      "case": "R3",
+      "result": "pass_scoped",
+      "basis": "原始请求已有DOCX授权，读取独立项目docx并实际生成，无重复询问；父执行器检查ZIP和两段文本吻合。只证明本次生成，不含视觉分页或完整XSD。"
+    }
+  ]
+}

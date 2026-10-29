@@ -1,0 +1,33 @@
+{
+  "recorded_before_model_output": true,
+  "expectations": {
+    "Q1": [
+      "bank-writing"
+    ],
+    "Q2": [
+      "bank-writing"
+    ],
+    "Q3": [
+      "bank-writing"
+    ],
+    "Q4": [
+      "bank-writing"
+    ],
+    "Q5": [
+      "bank-writing"
+    ],
+    "Q6": [],
+    "Q7": [
+      "docx"
+    ],
+    "Q8": [
+      "bank-writing",
+      "docx"
+    ],
+    "Q9": [],
+    "Q10": [
+      "docx"
+    ]
+  },
+  "reasoning": "Bank text tasks use bank-writing; document-only production/layout uses docx; combined bank drafting/export uses both; unrelated writing and OCR use neither candidate."
+}

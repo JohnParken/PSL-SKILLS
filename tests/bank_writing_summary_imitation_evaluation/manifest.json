@@ -1,0 +1,41 @@
+{
+  "purpose": "Test-only snapshots, synthetic prompts and actual model outputs; excluded from skill distribution.",
+  "baseline_version": "20261028.1418.3566",
+  "candidate_version": "20261029.0035.4979",
+  "version_clock": "2026-10-28T12:35:49.799034-04:00",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "linux_runtime_discovery": {
+    "docker": null,
+    "podman": null,
+    "nerdctl": null,
+    "colima": null,
+    "limactl": null
+  },
+  "baseline_hashes": {
+    "SKILL.md": "3b8639e6d4a4f09cf30bf5287c22c8c28e1349276ee5d3c737a4ba2eff05e96f",
+    "references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "references/writing-review.md": "5560ebecdbfdf4e68add83bb88a85a07eacb6e6443f4337fbad237978fe7aed7",
+    "references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8"
+  },
+  "host_automatic_selection_tested": false,
+  "candidate_hashes": {
+    "SKILL.md": "eed15ac6397cb35da098a0709b8c90193b01a2297cf75d87e68c30bc8e7df13b",
+    "references/activity-planning.md": "0ebd4437e7af9cb0a0b5b584828e3c2c2934f590056939f31c23968e8e17d1c8",
+    "references/business-analysis.md": "c3aea16f930439caa9b1c999b747224fdd0c08a8967639ba35fdc8cbc6db36e6",
+    "references/comprehensive-writing.md": "e67c698eea8611e9ba44bbf307ae52def9202cede610ab29f8518235305d49d2",
+    "references/official-documents.md": "a55a1706f2ad66c236dba1c881e1a4346d18102df7b2f0cd7486159b277d1bbc",
+    "references/speech-and-report.md": "b04402e5ae85a3b29956904d6221a80e053e521aadcfd7de859e5fabcc411f4a",
+    "references/summary-and-imitation.md": "cb620e73037b82ccd092db4f2e72ce419126713e19979552ac44d196eef29737",
+    "references/writing-review.md": "49d127d20f41e0a8753d9f5ecedde5ee4bfef0748be94df424cbde89c2668320"
+  },
+  "readonly_installation": {
+    "path": "tests/bank_writing_summary_imitation_evaluation/inputs/candidate",
+    "file_mode": "0444",
+    "directory_mode": "0555",
+    "new_file_write_denied": true
+  },
+  "description_characters": 120
+}

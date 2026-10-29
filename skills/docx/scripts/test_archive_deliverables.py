@@ -138,6 +138,57 @@ class ArchiveOutputsTests(unittest.TestCase):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 delivery.validate_output_path(path)
 
+    def test_success_notice_hides_archive_path_but_keeps_machine_contract(self):
+        Path('交付.txt').write_text('正文', encoding='utf-8')
+        code, result, _ = self.run_cli('交付.txt')
+        self.assertEqual(code, 0)
+        self.assertEqual(result['archive_message'], '归档完成')
+        self.assertEqual(result['files'][0]['archive_output'], 'output/record/交付.txt')
+        self.assertEqual(Path(result['files'][0]['archive_output']).read_text(encoding='utf-8'), '正文')
+        again = delivery.archive_outputs([Path('output/record/交付.txt')], [])
+        self.assertEqual(again['files'][0]['archive_status'], 'already_archived')
+        self.assertEqual(again['archive_message'], '归档完成')
+        self.assertNotIn('record', again['archive_message'])
+        self.assertNotIn('/', again['archive_message'])
+
+    def test_partial_copy_failure_never_announces_archive_complete(self):
+        for name in ('first.txt', 'second.txt'):
+            Path(name).write_text(name, encoding='utf-8')
+        original = delivery._copy_main_to_archive
+        def fail_second(task_dir, source, *args):
+            if source.name == 'second.txt':
+                raise OSError('copy denied at output/private-id/second.txt')
+            return original(task_dir, source, *args)
+        with patch.object(delivery, '_copy_main_to_archive', side_effect=fail_second):
+            code, result, errors = self.run_cli('first.txt', 'second.txt')
+        self.assertEqual(code, 0)
+        self.assertEqual(result['archive_status'], 'failed')
+        self.assertEqual(result['files'][0]['archive_status'], 'copied')
+        self.assertEqual(result['archive_message'], '归档未完成')
+        self.assertIn('output/private-id', errors)
+        self.assertIn('output/private-id', result['warnings'][0])
+        self.assertNotIn('private-id', result['archive_message'])
+        self.assertTrue(Path('second.txt').exists())
+
+    def test_skipped_and_unconfirmed_results_do_not_claim_completion(self):
+        Path('report.txt').write_bytes(b'report')
+        os.environ['ROUTER_CONFIG_VARIABLES'] = 'invalid'
+        result = delivery.archive_outputs([Path('report.txt')], [])
+        self.assertEqual(result['archive_message'], '归档未执行')
+        for result in ({}, {'archive_status': 'copied', 'files': []},
+                       {'archive_status': 'copied', 'files': [{'archive_status': 'failed'}]}):
+            self.assertEqual(delivery.archive_user_message(result), '归档状态未确认')
+
+    def test_delivery_exception_preserves_primary_output_and_internal_diagnostic(self):
+        Path('report.txt').write_bytes(b'report')
+        with patch.object(delivery, 'archive_outputs', side_effect=RuntimeError('output/private-id unavailable')):
+            result = delivery.finalize_delivery(Path('report.txt'), [], status='edited')
+        self.assertEqual(result['status'], 'edited')
+        self.assertEqual(result['output'], 'report.txt')
+        self.assertEqual(result['archive_message'], '归档未完成')
+        self.assertIn('output/private-id', result['warnings'][0])
+        self.assertEqual(Path(result['output']).read_bytes(), b'report')
+
 
 if __name__ == '__main__':
     unittest.main()

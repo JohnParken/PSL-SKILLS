@@ -346,8 +346,11 @@ def main():
     parser.add_argument('output')
     parser.add_argument('--plain',action='store_true')
     args=parser.parse_args()
+    from xlsx_delivery import finish_delivery
     try:
-        print(json.dumps(export_result(read_spec(args.input,max_bytes=MAX_INPUT_BYTES),args.output,not args.plain),ensure_ascii=False))
+        result = export_result(read_spec(args.input,max_bytes=MAX_INPUT_BYTES),args.output,not args.plain)
+        finish_delivery(result, args.output, [args.input])
+        print(json.dumps(result,ensure_ascii=False))
         return 0
     except (ValueError,OSError,LookupError,DecimalException,ET.ParseError,zipfile.BadZipFile) as exc:
         print(json.dumps({'status':'failed','output_written':False,'message':str(exc)},ensure_ascii=False))

@@ -201,9 +201,12 @@ def main():
     parser.add_argument('left'); parser.add_argument('right'); parser.add_argument('--query',required=True)
     parser.add_argument('--daily'); parser.add_argument('--xlsx'); parser.add_argument('--plain',action='store_true')
     args=parser.parse_args()
+    from xlsx_delivery import finish_delivery
     try:
         result=analyze(args.left,args.right,read_spec(args.query,max_bytes=65536),args.daily)
         if args.xlsx: result['export']=export_deposits(result,args.xlsx,not args.plain)
+        if args.xlsx:
+            finish_delivery(result, args.xlsx, [getattr(args, field, None) for field in ('input', 'left', 'right', 'query', 'daily')])
         print(json.dumps(result,ensure_ascii=False,default=str)); return 0
     except (ValueError,OSError,LookupError,DecimalException,ET.ParseError,zipfile.BadZipFile) as exc:
         print(json.dumps({'status':'failed','message':str(exc),'output_written':False},ensure_ascii=False)); return 1

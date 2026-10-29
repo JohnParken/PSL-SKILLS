@@ -1,0 +1,17 @@
+{
+  "notice": "All source texts, institutions, people and figures below are invented for this evaluation. No real bank/customer data.",
+  "cases": [
+    {
+      "id": "R1",
+      "prompt": "请把这段虚构素材整理成简短汇报：本季度拟开展客户服务培训，是否启动、是否完成都尚未确认。请保持事实准确。"
+    },
+    {
+      "id": "R2",
+      "prompt": "请为虚构银行网点写一句亲切的服务提示：办理业务前先检查是否带齐材料；没有具体清单，不要列举。"
+    },
+    {
+      "id": "R3",
+      "prompt": "请将已确认的最终正文生成DOCX，文件名service_notice.docx，采用商务排版。标题：服务提示。正文：办理业务前，请确认已备齐所需材料。如有疑问，请先向工作人员咨询。谢谢您的理解与配合。"
+    }
+  ]
+}

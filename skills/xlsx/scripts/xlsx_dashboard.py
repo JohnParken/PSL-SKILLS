@@ -191,9 +191,12 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input'); parser.add_argument('--query',required=True); parser.add_argument('--xlsx')
     args=parser.parse_args()
+    from xlsx_delivery import finish_delivery
     try:
         result=build(read_spec(args.input,max_bytes=MAX_INPUT_BYTES),read_spec(args.query,max_bytes=65536))
         if args.xlsx: result['export']=export_dashboard(result,args.xlsx)
+        if args.xlsx:
+            finish_delivery(result, args.xlsx, [getattr(args, field, None) for field in ('input', 'left', 'right', 'query', 'daily')])
         print(json.dumps(result,ensure_ascii=False,default=str)); return 0
     except (ValueError,OSError,LookupError,DecimalException) as exc:
         print(json.dumps({'status':'failed','message':str(exc),'output_written':False},ensure_ascii=False)); return 1
