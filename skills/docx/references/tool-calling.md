@@ -6,7 +6,7 @@
 
 ## 当前宿主的完整调用表示
 
-用户确认当前形态为`execute(command=命令字符串)`。下例展示完整关键字调用的字符串编码；仅在宿主命令入口支持POSIX here-document时适用。它不是要放进Shell或再次放进command的代码；原生工具接口按真实schema提交参数。宿主展示函数式调用不等于它接受任意Python表达式，不能据此改用三引号、字符串拼接或自定义包装。
+用户确认当前平台推荐`execute(command=命令字符串)`；本技能主入口与业务参考中的Bash执行示例统一采用这一形态。参数名command不加引号，每次传一个完整非空字符串；原生工具接口按真实schema提交参数。下例包含POSIX here-document，字符串解码后由命令入口处理；不把整个execute表示式再放进command，不改用三引号、字符串拼接或自定义包装。JSON数据与明确的Python API源码示例不属于Bash调用，保留原格式。
 
 ```python
 execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'DOCX_SPEC'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程。\"}]}\nDOCX_SPEC\n")

@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.0103.0751 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后由 docx 生成文件 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261029.0940.0902 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；可消费 wps 提取的受支持电子表格 JSON；不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261029.1746.5085 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261029.1811.0069 | DOCX 生成、DOCX/DOTX 读取与受控编辑；标准新建自动管理临时Python/JSON及收尾，其他任务显式清单清理；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261029.0400.2169 | .wps/.et/.ett 内容识别、MS-DOC/Strict及Transitional OOXML Word/OOXML电子表格/BIFF8 子集只读；内联文字、日期与公式缓存、默认data保留已知元数据并报告partial，纯表格Unicode兼容、统一文件安全接入与ET/文字分流，保留strict、未读取范围诊断及有限二进制行/单元格证据 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261029.0924.5633 | OFD 1.0 字面文字与元数据只读；原始坐标与来源；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261029.1442.4400 | 本轮临时文件登记、最终交付物清单归档、封存与受控清理；不生成或验收业务内容、不清理历史发布ZIP |
@@ -90,6 +90,8 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.
 
 ### DOCX
 
+当前平台的Bash执行示例统一使用`execute(command="…")`；每条表示一次工具调用，JSON输入与Python API源码保留各自格式。历史维护记录中的终端命令仅供追溯，不作为业务调用示例。
+
 普通生成按[主入口四步流程](skills/docx/SKILL.md#新建与受控编辑)执行。先核对宿主实际工具schema：执行工具的参数与传给Python stdin的文档JSON分开；要求`command`时传完整非空命令。缺参且确认尚未执行才修正一次，断流或状态不明不盲目重发。工具接入、流式拼接和Qwen/DeepSeek排查按需见[工具调用故障](skills/docx/references/tool-calling.md)；Skill不自动配置宿主门禁或模型参数，未验证真实模型成功率改善。
 
 依赖、只读、工具间文件不可见、版本/长会话、断流及下载问题按需查[环境与交付故障表](skills/docx/references/troubleshooting.md)。表中按当前标准库实现修正平台经验；不强制固定虚拟环境、不把check当下载验证、不在执行状态未知时直接重发。
@@ -98,10 +100,8 @@ python3 -I -S -B "<skill_dir>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.
 
 按照[生成说明](skills/docx/references/generation.md)组织JSON，直接送入统一入口的stdin，不另建临时.py或document.json。未指定排版时显式使用official；用户指定格式优先。命令示例：
 
-```console
-python3 -I -S -B "<skill_dir>/scripts/run_docx_task.py" create "客户服务改进方案.docx" <<'JSON'
-{"theme":"official","blocks":[{"type":"title","text":"客户服务改进方案"},{"type":"paragraph","text":"完善服务流程，提升客户服务质量。"}]}
-JSON
+```python
+execute(command="python3 -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'JSON'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程，提升客户服务质量。\"}]}\nJSON\n")
 ```
 
 自动入口创建前登记自己的worker.py/spec.json，强制验收及占位符检查，处理归档并等待worker退出后自动清理。最终DOCX和恢复manifest保留。回执独占写入且不创建暂存硬链接，持久化完整归属指纹后由父进程核对；证明已提交后的worker清理异常只提示，回执或主文件变化仍拒绝。失败待重试时材料保留，使用返回manifest的retry/resume，不重新创建同名任务；`task_status`和`cleanup.cleanup_complete`与归档状态分开核对。自检还需要标准库POSIX锁与描述符能力，当前只验证macOS。旧create_docx.py生成CLI已deprecated，仅stderr提示迁移、JSON stdout和退出码兼容；底层库与五类编辑等尚有用途的接口保留，不会自动清理调用方自建的Python/JSON；自定义或多步编辑流程继续显式登记清单，见[自动任务及清理边界](skills/docx/references/task-cleanup.md#自动新建任务入口)。

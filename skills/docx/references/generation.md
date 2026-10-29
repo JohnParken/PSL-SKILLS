@@ -27,8 +27,8 @@
 
 假设任务目录已有 `./inputs/document.json` 和 `./inputs/images/logo.png`，JSON 内图片字段使用 `"path": "images/logo.png"`。完成自检后仍从任务目录调用：
 
-```console
-python -I -S -B "<skill_dir>/scripts/create_docx.py" ./inputs/document.json "客户服务改进方案.docx" --verify --require-no-placeholders
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./inputs/document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
 ```
 
 读取的是 `./inputs/images/logo.png`，主文件为 `./客户服务改进方案.docx`；有效 `questionId` 下副本为 `./output/{questionId}/客户服务改进方案.docx`。不把主文件写入 `inputs/`，不切换到该目录。如果在 Python 中自行读取这个 JSON 再调用字典 API，须明确保留图片基准并保护输入：
@@ -51,9 +51,9 @@ result = create_document_delivery(
 
 先按主入口执行环境自检。以下命令中的 `<skill_dir>` 替换为已确认的真实目录；输入输出位于任务工作目录：
 
-```console
-python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json --preflight
-python -I -S -B "<skill_dir>/scripts/create_docx.py" ./document.json "客户服务改进方案.docx" --verify --require-no-placeholders
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./document.json --preflight")
+execute(command="python -I -S -B \"<skill_dir>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
 ```
 
 `--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条仅用于前述兼容/定制调用，按需选择，不串行执行预检与生成；标准新建直接用 `run_docx_task.py create`（已集成必要环境自检，不另调用check），不再执行这里的第二条生成命令。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。验收遇到未验证警告同样拒绝发布。成功摘要增加 `layout_intent: true`；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。

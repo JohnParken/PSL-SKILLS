@@ -29,8 +29,8 @@
 {"replacements": [{"old": "{{ 公司名称 }}", "new": "星河科技有限公司", "count": 1}]}
 ```
 
-```console
-python -I -S -B "<skill_dir>/scripts/edit_docx.py" ./采购申请模板.docx ./replacements.json ./采购申请.docx --require-no-placeholders
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/edit_docx.py\" ./采购申请模板.docx ./replacements.json ./采购申请.docx --require-no-placeholders")
 ```
 
 - 使用输出新文件；禁止输入输出指向同一文件或通过链接指向同一文件。
@@ -97,10 +97,10 @@ python -I -S -B "<skill_dir>/scripts/edit_docx.py" ./采购申请模板.docx ./r
 
 压缩文档输入必须显式指定 `-o` 输出新文件；禁止与输入同路径或通过符号链接、硬链接指向输入。目录入口仍就地修改工作副本，且不接受 `-o`；先保留原目录再操作。`comment.py` 默认作者为 `Editor`、缩写为 `E`，按需用 `--author` 和 `--initials` 指定真实作者。
 
-```console
-python -I -S -B "<skill_dir>/scripts/comment.py" ./采购管理办法.docx "核对费用上限" -o ./annotated.docx
-python -I -S -B "<skill_dir>/scripts/merge_runs.py" ./采购管理办法.docx -o ./merged.docx
-python -I -S -B "<skill_dir>/scripts/office/validate.py" ./采购管理办法_修订版.docx --original ./采购管理办法.docx
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/comment.py\" ./采购管理办法.docx \"核对费用上限\" -o ./annotated.docx")
+execute(command="python -I -S -B \"<skill_dir>/scripts/merge_runs.py\" ./采购管理办法.docx -o ./merged.docx")
+execute(command="python -I -S -B \"<skill_dir>/scripts/office/validate.py\" ./采购管理办法_修订版.docx --original ./采购管理办法.docx")
 ```
 
 添加批注定义后，先补正文锚点再验收。当前基础检查仅支持有起点、终点和引用的范围批注，不支持无范围的点批注，也不验证完整线程回复语义；不要把生成批注部件声称为已验证阅读器中的显示效果。

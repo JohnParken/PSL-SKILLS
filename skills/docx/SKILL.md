@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261029.1746.5085"
+version: "20261029.1811.0069"
 description: 当用户需要制作 Word 公文、报告或信函，读取 DOCX/DOTX 的正文和表格，或填充模板、修改指定文字、表格、图片和批注时使用。帮助生成可交付的 DOCX 文档，按需调整字体、字号和页边距，并核对生成内容；不用于 WPS 专有格式读取或 PDF 导出。
 ---
 
@@ -18,10 +18,12 @@ description: 当用户需要制作 Word 公文、报告或信函，读取 DOCX/D
 2. 由实际读取本 `SKILL.md` 的 `file_path` 去掉文件名确定 `<skill_dir>`；相对路径按当次已确认基准解析。脚本、依赖及资源以它为基准，可用已确认绝对路径；Markdown 链接相对所在文件解析，不以任务目录解析。先替换占位符并正确引用完整路径；不猜测环境变量、其他会话路径或宿主掩码。无法定位时停止。
 3. 使用宿主已确认的 Python >=3.10、自带 zlib 和 Expat >=2.6.0；仅标准库，见 [requirements.txt](requirements.txt)。保留 `-I -S -B`，不安装第三方包，不调用办公软件、转换器、Git或编译器。业务处理仅用本技能Python入口；下文here-document仅在宿主已支持POSIX命令字符串时用于传stdin，不另启Shell，不用Shell承担文档处理。
 
+**当前平台执行规则：**按平台推荐，所有供模型执行的Bash命令统一写为`execute(command="…")`，command为完整命令字符串；`python`代码围栏用于该调用的语法展示，不将表示式写入临时脚本或再作为command内容。每个execute表示一次独立调用，多条示例按任务选择或依赖顺序执行，不因列在同一代码块就全部运行。JSON输入和明确标注的Python API源码示例保留原格式；移至其他宿主时按其真实工具schema适配。
+
 **仅读取、检查或预检而不保存文件：**
 
-```console
-python -I -S -B "<skill_dir>/scripts/read_docx.py" --check
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/read_docx.py\" --check")
 ```
 
 要求退出0且输出 `read-check-ok`；它检查 Python、zlib往返和Expat/XML，不读取输出配置、不创建目录或写入探针。另确认输入为可读文件，读取输出到stdout无需写权限。
@@ -40,8 +42,7 @@ python -I -S -B "<skill_dir>/scripts/read_docx.py" --check
 
 ## 工具调用约定
 
-- 先看宿主实际工具schema，按它要求的字段传参；本技能不定义名为`execute`的工具，也不假定所有宿主都使用`command`。若工具要求`command`，它必须是包含完整执行命令的非空字符串；只输出代码块不能代替工具调用。
-- 当前用户确认的调用形态为`execute(command=命令字符串)`；在该宿主只向`command`传命令，不把`execute(...)`表示式再包进命令中。完整调用表示与参数填写说明见[调用示例](references/tool-calling.md#当前宿主的完整调用表示)；其他宿主仍按实际schema，不照抄工具名。
+- 当前平台统一使用`execute(command=完整命令字符串)`，command须为非空字符串，参数名不加引号；本技能不安装或改造execute工具。完整调用与编码说明见[调用示例](references/tool-calling.md#当前宿主的完整调用表示)。通过宿主工具接口实际提交，仅回复代码块不能代替调用，也不把execute表示式再放进command；其他宿主按其真实schema适配。
 - 区分外层工具参数和内层文档规格：`theme`、`blocks`属于传给Python入口stdin的JSON，不是执行工具的参数。先准备完整规格与命令，再按宿主JSON编码要求转义引号和换行；不发送`{}`、缺字段、空字符串或省略正文的占位调用。
 - 普通新建只调用一次create，等结果返回后再决定下一步；不同时提交依赖同一输出的调用。不为避免长参数删减用户正文或放宽校验；遇到宿主长度限制或不支持stdin时报告具体限制，不擅自新建规格文件、脚本或切换旧CLI。
 - 缺少必填参数且宿主明确确认工具尚未执行时，检查并修正外层参数，最多再提交一次；相同错误再次出现就停止并报告。若超时、断流或执行状态不明，保留材料，先核实本轮状态，不盲目重发create；脚本已返回的生成失败按`next_action`和原manifest处理。
@@ -63,13 +64,11 @@ python -I -S -B "<skill_dir>/scripts/read_docx.py" --check
 
 未指定排版时显式使用 `"theme": "official"`；不要仅因“报告”“信函”自动改主题，也不要求先确认主题。用户明确指定商务、学术或格式覆盖时遵从，其余字段沿用所选主题默认值。读取和编辑沿用已有样式。章节使用 `heading` 和1–4级 `level`，不能仅用加粗段落替代；中文JSON用UTF-8保存，半角语法标点，不安装或嵌入字体。
 
-```console
-python -I -S -B "<skill_dir>/scripts/run_docx_task.py" create "客户服务改进方案.docx" <<'JSON'
-{"theme":"official","blocks":[{"type":"title","text":"客户服务改进方案"},{"type":"paragraph","text":"完善服务流程。"}]}
-JSON
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'JSON'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程。\"}]}\nJSON\n")
 ```
 
-上例是宿主支持POSIX命令字符串时的stdin传递方式；工具若只接受Python代码或独立stdin字段，按实际接口传递，不把here-document当Python代码。执行前替换真实`<skill_dir>`及本次文件名，here-document分隔行不能与正文中的完整行相同。固定worker强制verify及占位符检查，退出后外层核对回执和主文件指纹，再清理登记项；manifest保留恢复。核对`task_status`和`cleanup.cleanup_complete`，归档与清理分别报告。失败只用原manifest执行retry或resume，不以新任务认领旧文件；回执证明、保护及恢复边界见[自动任务流程](references/task-cleanup.md#自动新建任务入口)。
+上例将完整POSIX命令及stdin规格放入command，调用表示中的`\n`解码后成为真实换行，不把here-document当Python源码。执行前替换真实`<skill_dir>`及本次文件名，here-document分隔行不能与正文中的完整行相同。固定worker强制verify及占位符检查，退出后外层核对回执和主文件指纹，再清理登记项；manifest保留恢复。核对`task_status`和`cleanup.cleanup_complete`，归档与清理分别报告。失败只用原manifest执行retry或resume，不以新任务认领旧文件；回执证明、保护及恢复边界见[自动任务流程](references/task-cleanup.md#自动新建任务入口)。
 
 输入字段及图片/表格/页眉页脚范围见[生成约定](references/generation.md)；不支持复杂合并/嵌套表格、多节、任意编号、图表、浮动图片或目录。输出参数仅文件名，不带`./`或目录。标准入口强制验收；公开交付API不得关闭verify，旧CLI/API不替代自动入口，也不自动清理调用方另建的文件。成功后只按真实摘要报告主文件、归档与清理，不因警告重跑生成。
 
@@ -95,9 +94,9 @@ JSON
 
 `./output/{questionId}/` 默认仅用于归档，不作为输入来源或检索目录；不主动扫描、打开或提取其中的文档内容。仅在用户明确要求查看、比较、恢复或基于归档继续编辑时，读取其指定文件；普通续写或多轮对话不自动授权读取历史归档。必要的定点同名检查、输入保护及本轮副本验证仍执行，详见 [归档目录使用边界](references/delivery.md#归档目录使用边界)。
 
-```console
-python -I -S -B "<skill_dir>/scripts/read_docx.py" ./input.docx
-python -I -S -B "<skill_dir>/scripts/read_docx.py" ./input.docx --format json --include-related --revisions all
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/read_docx.py\" ./input.docx")
+execute(command="python -I -S -B \"<skill_dir>/scripts/read_docx.py\" ./input.docx --format json --include-related --revisions all")
 ```
 
 默认文本视图为accepted；original排除插入，all保留两类修订。只改变提取视图，不接受修订或生成净稿。`--include-related` 将带标签的附加内容与正文分开，不代表页面顺序。JSON保留显式属性、原始编号和合并标记，但不计算样式继承、列表显示值、布局、文本框、绘图或字段结果；详见 [结构契约](references/inspection.md)。保存时用任务目录内新输出，禁止覆盖输入。

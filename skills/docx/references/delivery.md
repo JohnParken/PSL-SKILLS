@@ -89,16 +89,16 @@ result = replace_text_delivery(
 
 先按 [主入口](../SKILL.md#执行环境约束与首步自检) 确认任务目录、解释器及 `<skill_dir>`。用实际 Skill 目录替换占位符，不切换到源码目录：
 
-```console
-python -I -S -B "<skill_dir>/scripts/archive_deliverables.py" --check
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/archive_deliverables.py\" --check")
 ```
 
 要求退出 0、`check-ok`、`output_dir=. writable=True`，有效配置会报告 `archive_dir=output/实际ID writable=True/False`；归档目录路径或访问权限检查失败只警告（探针只在 `./` 创建），不阻止主流程自检通过。仍须按实际编辑输出目录确认写入能力；运行环境或主输出目录自检失败时停止，不换目录或降低保护。
 
 本轮生成多个已验收交付文件后，显式列出文件和所有需要保护的输入原件/操作文件/图片：
 
-```console
-python -I -S -B "<skill_dir>/scripts/archive_deliverables.py" ./采购管理办法_修订版.docx ./采购管理办法_修改说明.txt --protect-input ./采购管理办法.docx --protect-input ./操作.json
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/archive_deliverables.py\" ./采购管理办法_修订版.docx ./采购管理办法_修改说明.txt --protect-input ./采购管理办法.docx --protect-input ./操作.json")
 ```
 
 不传通配符或目录；只传当前任务目录内的相对文件路径。助手负责核实清单属于本轮产物，脚本不会根据修改时间猜测。不同目录下同名交付物（含大小写折叠后相同）会整体拒绝，避免扁平归档时互相覆盖。单独调用或使用低层 API 时，调用方须列全 `--protect-input`；编辑 CLI 自动传入源文档及操作/替换图片等输入。

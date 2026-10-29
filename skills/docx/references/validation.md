@@ -35,9 +35,9 @@ print(f"./{output.as_posix()} exists=True size={output.stat().st_size} zip-ok")
 
 禁止用其他目录中的同名文件代替该目标；验证失败时停止本次交付，新建文档仅可按下述有限重试规则修正后重新验收。无法修正时报告实际失败。以上步骤不替代下列结构检查。下面两条仅示范检查已有 `./客户服务改进方案.docx`；检查本次新生成文件时，将其替换为成功摘要中已核实的实际 `output` 路径：
 
-```console
-python -I -S -B "<skill_dir>/scripts/office/validate.py" ./客户服务改进方案.docx --require-no-placeholders
-python -I -S -B "<skill_dir>/scripts/read_docx.py" ./客户服务改进方案.docx --include-related -o ./checked-content.txt
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/office/validate.py\" ./客户服务改进方案.docx --require-no-placeholders")
+execute(command="python -I -S -B \"<skill_dir>/scripts/read_docx.py\" ./客户服务改进方案.docx --include-related -o ./checked-content.txt")
 ```
 
 1. 核对 ZIP 完整性与必需部件；解包脚本会读取成员并检查 CRC、路径和重复名称。单独使用 `zipfile.testzip()` 时确认返回 `None`。

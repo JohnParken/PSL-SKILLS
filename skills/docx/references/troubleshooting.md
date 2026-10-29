@@ -23,16 +23,16 @@
 
 先定位真实脚本并使用宿主确认的解释器。仅读环境诊断使用：
 
-```console
-python -I -S -B "<skill_dir>/scripts/read_docx.py" --check
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/read_docx.py\" --check")
 ```
 
 要求退出0且有`read-check-ok`；它检查Python/zlib/Expat/XML，不创建写入探针，不能证明目录可写。
 
 确需排查标准新建的必要写入/锁能力时使用已有诊断入口：
 
-```console
-python -I -S -B "<skill_dir>/scripts/run_docx_task.py" check
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_task.py\" check")
 ```
 
 要求退出0并有`auto-cleanup=available`、`output_dir=. writable=True`、`check-ok`；失败读取具体检查项后停止。它在当前任务根检查必要能力，不搜索其他可写目录，不证明可归档或可下载。正常新建的create/retry已集成同样必要自检，不为本表再增加check调用。

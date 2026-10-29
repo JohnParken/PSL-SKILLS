@@ -8,10 +8,8 @@
 
 ## 五类编辑统一入口
 
-```console
-python -I -S -B "<skill_dir>/scripts/run_docx_edit.py" text ./原件.docx ./修订版.docx <<'JSON'
-{"replacements":[{"old":"原文","new":"新文","count":1}]}
-JSON
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/run_docx_edit.py\" text ./原件.docx ./修订版.docx <<'JSON'\n{\"replacements\":[{\"old\":\"原文\",\"new\":\"新文\",\"count\":1}]}\nJSON\n")
 ```
 
 operation为text、structure、tables、image、comments；各自stdin规格与原API相同，image另传 `--replacement ./替换.png`。comments list继续原只读入口，不创建无用临时文件。入口只调用固定的五类已有编辑API，不执行输入脚本。
@@ -22,8 +20,8 @@ operation为text、structure、tables、image、comments；各自stdin规格与�
 
 ## 读取结果显式交付
 
-```console
-python -I -S -B "<skill_dir>/scripts/read_docx.py" ./原件.docx --format json -o ./提取.json --delivery
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/read_docx.py\" ./原件.docx --format json -o ./提取.json --delivery")
 ```
 
 仅--delivery改变保存后的行为：要求-o且禁止--check，拒绝既存输出及输入别名，写入成功后调用统一归档并向stdout输出read_exported摘要。提取文件仍按原--format保存；不加--delivery时保持旧文本/JSON stdout和-o行为。没有临时文件就不建立清理清单。归档失败不回滚提取文件；用户成功仅提示“归档完成”，正常主文件链接保留，不展示内部路径、ID或原始日志。

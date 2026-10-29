@@ -57,33 +57,33 @@ API为 `create_task(spec, output, protected_inputs=(), workspace=None)`、`retry
 
 **创建辅助文件前登记：**
 
-```console
-python -I -S -B "<skill_dir>/scripts/cleanup_task.py" plan cleanup-task.json --file docx-work.spec.json --file docx-work.build.py --file docx-work.intermediate.docx --protect 用户原件.docx --deliverable 客户服务改进方案.docx
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/cleanup_task.py\" plan cleanup-task.json --file docx-work.spec.json --file docx-work.build.py --file docx-work.intermediate.docx --protect 用户原件.docx --deliverable 客户服务改进方案.docx")
 ```
 
 `--file`、`--protect`、`--deliverable` 可重复。新plan的清单及临时文件必须是 `./` 下的单一文件名；`--directory` 仅保留参数兼容，传入会拒绝。历史清单仍可seal/clean目录项，但不能新登记临时目录或嵌套临时文件。保护路径可为输入目录；候选与受保护路径、最终文件或清单重叠时拒绝整个 plan。plan 不创建候选文件，已存在的候选和清单均拒绝。生成期间新增未规划的辅助文件时，先为它们建立另一份不重叠清单；不得改写旧清单来伪造所有权。把用户要求保留的辅助产物作为交付物或保护项，不登记为临时项。
 
 **成功完成验收和归档后记录状态：**
 
-```console
-python -I -S -B "<skill_dir>/scripts/cleanup_task.py" seal cleanup-task.json --outcome success --verified --archive-status copied
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome success --verified --archive-status copied")
 ```
 
 `--archive-status` 必须使用本轮实际返回结果；有多个交付物时先逐项确认归档步骤完成，任何失败使用 failed，全部完成的批量结果可使用 completed。主文件缺失、为空或不安全时不能 seal success。seal 记录当前文件身份、大小、修改时间和 SHA-256；目录仅记录身份，不读取目录内容。最终文件之后若变化，需重新验收，不得手改指纹以跳过检查。
 
 失败收尾和重试示例：
 
-```console
-python -I -S -B "<skill_dir>/scripts/cleanup_task.py" seal cleanup-task.json --outcome failed --retain docx-work.spec.json "定位生成错误所需"
-python -I -S -B "<skill_dir>/scripts/cleanup_task.py" seal cleanup-task.json --outcome retry
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome failed --retain docx-work.spec.json \"定位生成错误所需\"")
+execute(command="python -I -S -B \"<skill_dir>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome retry")
 ```
 
 上述是不同任务状态的替代示例，不能连续照抄。只有 retry 清单可在任务继续后重新 seal；最终 sealed 清单不会重新采集变化后的候选来扩大删除范围。
 
 **执行清理并核对：**
 
-```console
-python -I -S -B "<skill_dir>/scripts/cleanup_task.py" clean cleanup-task.json
+```python
+execute(command="python -I -S -B \"<skill_dir>/scripts/cleanup_task.py\" clean cleanup-task.json")
 ```
 
 仅删除身份和指纹匹配的登记普通文件；所有文件先处理，目录按从深到浅用 rmdir 删除，仅空目录可移除。未知文件混入目录时保留该目录，不扫描、不递归删除。当前文件或父目录是链接、类型改变、文件变化、身份与输入/交付物重合或存在硬链接时保留并报告。清理前后均核对已记录的最终文件；前置核对失败则不开始删除，后置失败则报告失败，不声称交付完整。
