@@ -226,6 +226,58 @@ def _walk(skill: Path, issues: list[Issue]):
     return collected
 
 
+def _root_resources(text: str, rel: str, skill: Path, issues: list[Issue]) -> None:
+    """Check literal root-qualified paths, never execute examples or resolve task data."""
+    prose = _outside_fences(text)
+    notice = next((line for line in prose.splitlines() if line.startswith("路径占位符说明：")), "")
+    required_notice = ("<skill-root>", "占位符", "主入口", "SKILL.md", "file_path",
+                       "相对", "基准", "去掉", "替换", "完整路径", "停止")
+    if not all(word in notice for word in required_notice):
+        issues.append(Issue("error", "root-notice", rel, "Explain the root placeholder, entry file_path, relative read base, filename removal, full-path substitution and stop condition in every Markdown file."))
+    if re.search(r"<skill[_-]dir>|<skill_root>|\.\./SKILL\.md", text):
+        issues.append(Issue("error", "path-style", rel, "Use <skill-root> consistently."))
+    for value in re.findall(r"`([^`\n]+)`", prose):
+        if re.match(r"(?:\.\./|\./)?(?:scripts/|references/|assets/|requirements\.txt|\.\./SKILL\.md)", value):
+            issues.append(Issue("error", "path-style", rel, "Internal resource requires <skill-root>: " + value))
+    for target in re.findall(r"(?m)^\s{0,3}\[[^\]]+\]:\s*(\S+)", prose):
+        if not re.match(r"[A-Za-z][A-Za-z0-9+.-]*:", target.strip("<>")):
+            issues.append(Issue("error", "path-style", rel, "Local reference-style Markdown links require root code references."))
+    normalized = text.replace('\\"', '"').replace("\\'", "'")
+    pattern = r"[`\"'](<skill-root>/[^`\"'\n]+)[`\"']|(<skill-root>/[^\s`\"'<>）]+)"
+    for match in re.finditer(pattern, normalized):
+        target = match.group(1) or match.group(2)
+        path, _, fragment = target[len("<skill-root>/"):].partition("#")
+        path = unquote(path)
+        parts = path.rstrip("/").split("/")
+        if not path:
+            continue
+        if any(part in ("", ".", "..") for part in parts) or any(c in path for c in ("\\", ":", "?", "\0")):
+            issues.append(Issue("error", "link-escape", rel, "Invalid root resource: " + target))
+            continue
+        candidate = skill.joinpath(*parts)
+        try:
+            resolved = candidate.resolve()
+            resolved.relative_to(skill.resolve())
+            current = skill
+            for part in parts:
+                current = current / part
+                if current.is_symlink():
+                    raise ValueError("symlink resource")
+            if not resolved.exists() or (path.endswith("/") and not resolved.is_dir()):
+                issues.append(Issue("error", "broken-link", rel, "Missing root resource: " + target))
+                continue
+            if fragment:
+                if resolved.suffix.lower() != ".md" or not resolved.is_file():
+                    issues.append(Issue("error", "broken-anchor", rel, "Anchor requires Markdown: " + target))
+                    continue
+                headings = _outside_fences(resolved.read_text(encoding="utf-8"))
+                anchors = {re.sub(r"[^\w -]", "", h.group(1).lower()).strip().replace(" ", "-") for h in re.finditer(r"(?m)^#{1,6}\s+(.+?)\s*#*\s*$", headings)}
+                if unquote(fragment).lower() not in anchors:
+                    issues.append(Issue("error", "broken-anchor", rel, "Missing anchor: " + target))
+        except (OSError, RuntimeError, ValueError, UnicodeError) as exc:
+            issues.append(Issue("error", "link-escape", rel, "Cannot safely read root resource: " + str(exc)))
+
+
 def _markdown_links(markdown: Path, skill: Path, issues: list[Issue]) -> None:
     rel = markdown.relative_to(skill).as_posix()
     try:
@@ -233,6 +285,7 @@ def _markdown_links(markdown: Path, skill: Path, issues: list[Issue]) -> None:
     except (OSError, UnicodeError) as exc:
         issues.append(Issue("error", "unreadable", rel, f"Cannot read Markdown file: {exc}"))
         return
+    _root_resources(text, rel, skill, issues)
     text = _outside_fences(text)
     for match in re.finditer(r"!??\[[^\]]*\]\(([^)]*)\)", text):
         raw = match.group(1).strip()
@@ -249,6 +302,7 @@ def _markdown_links(markdown: Path, skill: Path, issues: list[Issue]) -> None:
         if parts.scheme or parts.netloc or target.startswith("/") or re.match(r"^[A-Za-z]:[/\\]", target):
             issues.append(Issue("warning", "resource-link", rel, f"Resource link '{target}' is external or absolute."))
             continue
+        issues.append(Issue("error", "path-style", rel, "Use a <skill-root> code reference instead of a local Markdown link."))
         dest = unquote(parts.path)
         resolved = markdown
         if dest:

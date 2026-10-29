@@ -17,12 +17,15 @@ import check_skill
 DESCRIPTION = "A useful description that explains when and how this skill should be used, with enough detail for discovery and selection by the assistant."
 
 
+NOTICE = "路径占位符说明：<skill-root> 是占位符；由主入口 SKILL.md 的真实 file_path 按宿主基准解析相对路径，再去掉文件名确定；使用前替换并引用完整路径，无法确认时停止。\n"
+
+
 def make_skill(root: Path, body: str = "Instructions.\n", front: str | None = None) -> Path:
     path = root / "sample-skill"
     path.mkdir()
     if front is None:
         front = f"---\nname: sample-skill\nversion: '20261023.0608.1120'\ndescription: {DESCRIPTION}\n---\n"
-    (path / "SKILL.md").write_text(front + body, encoding="utf-8")
+    (path / "SKILL.md").write_text(front + NOTICE + body, encoding="utf-8")
     return path
 
 
@@ -133,12 +136,12 @@ class CheckSkillTests(unittest.TestCase):
 
     def test_clean_skill_and_python_dependency_metadata(self):
         with tempfile.TemporaryDirectory() as tmp:
-            skill = make_skill(Path(tmp), "See [guide](references/guide.md).\n", "---\nname: 'sample-skill'\nversion: '20261023.0608.1120'\ndescription: \"" + DESCRIPTION + "\"\ndependency:\n  python:\n    - requests\n---\n")
+            skill = make_skill(Path(tmp), "See `<skill-root>/references/guide.md`.\n", "---\nname: 'sample-skill'\nversion: '20261023.0608.1120'\ndescription: \"" + DESCRIPTION + "\"\ndependency:\n  python:\n    - requests\n---\n")
             (skill / "requirements.txt").write_text("requests\n", encoding="utf-8")
             (skill / "scripts").mkdir()
             (skill / "scripts" / "ok.py").write_text("x = 1\n", encoding="utf-8")
             (skill / "references").mkdir()
-            (skill / "references" / "guide.md").write_text("Guide\n", encoding="utf-8")
+            (skill / "references" / "guide.md").write_text(NOTICE + "Guide\n", encoding="utf-8")
             self.assertEqual([], check_skill.check_skill(skill))
 
     def test_detects_invalid_layout_links_and_python_without_executing(self):
@@ -210,6 +213,7 @@ class CheckSkillTests(unittest.TestCase):
             rules = {i.rule for i in check_skill.check_skill(skill)}
             self.assertNotIn("broken-link", rules)
             self.assertNotIn("broken-anchor", rules)
+            self.assertIn("path-style", rules)
 
     def test_valid_python_is_parsed_but_never_executed_and_requires_file(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -313,17 +317,17 @@ class CheckSkillTests(unittest.TestCase):
             refs = skill / "references"
             refs.mkdir()
             guide = refs / "guide.md"
-            guide.write_text("# Guide\n\n## 目录\n\n- 内容\n" + "内容\n" * 101)
+            guide.write_text(NOTICE + "# Guide\n\n## 目录\n\n- 内容\n" + "内容\n" * 101)
             self.assertEqual([], check_skill.check_skill(skill))
             guide.write_text("# Guide\n" + "内容\n" * 101)
             self.assertIn("reference-toc", {i.rule for i in check_skill.check_skill(skill)})
 
     def test_invalid_and_encoded_link_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
-            skill = make_skill(Path(tmp), body='[valid](<references/a%23b.md> "title")\n')
+            skill = make_skill(Path(tmp), body='`<skill-root>/references/a%23b.md`\n')
             refs = skill / "references"
             refs.mkdir()
-            (refs / "a#b.md").write_text("# Title\n")
+            (refs / "a#b.md").write_text(NOTICE + "# Title\n")
             self.assertEqual([], check_skill.check_skill(skill))
             (skill / "SKILL.md").write_text(
                 f"---\nname: sample-skill\nversion: '20261023.0608.1120'\ndescription: {DESCRIPTION}\n---\n"
@@ -336,6 +340,79 @@ class CheckSkillTests(unittest.TestCase):
             skill = make_skill(Path(tmp))
             with mock.patch.object(Path, "read_text", side_effect=PermissionError("denied")):
                 self.assertIn("unreadable", {i.rule for i in check_skill.check_skill(skill)})
+
+
+class RootResourceTests(unittest.TestCase):
+    def test_literal_paths_spaces_unicode_anchors_and_command_escaping(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp), '`<skill-root>/references/guide 空格.md#章节`\npython "<skill-root>/requirements.txt"\n')
+            (skill / 'references').mkdir()
+            (skill / 'references/guide 空格.md').write_text(NOTICE + '# 章节\n')
+            (skill / 'requirements.txt').write_text('# standard library\n')
+            before = {p: p.read_bytes() for p in skill.rglob('*') if p.is_file()}
+            self.assertEqual([], check_skill.check_skill(skill))
+            self.assertEqual(before, {p: p.read_bytes() for p in skill.rglob('*') if p.is_file()})
+            with (skill / 'SKILL.md').open('a') as handle:
+                handle.write('execute(command="python \\"<skill-root>/missing.py\\"",)\n')
+            self.assertIn('broken-link', {i.rule for i in check_skill.check_skill(skill)})
+
+    def test_missing_resources_anchors_and_unsafe_paths_fail_both_modes(self):
+        for target, rule in [('missing.txt', 'broken-link'), ('SKILL.md#missing', 'broken-anchor'),
+                             ('../outside.md', 'link-escape'), ('%2e%2e/outside.md', 'link-escape'),
+                             ('/etc/passwd', 'link-escape'), ('SKILL.md/', 'broken-link')]:
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as tmp:
+                skill = make_skill(Path(tmp), '`<skill-root>/' + target + '`\n')
+                self.assertIn(rule, {i.rule for i in check_skill.check_skill(skill)})
+                for options in ([], ['--strict']):
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(1, check_skill.main([str(skill), *options]))
+
+    def test_old_styles_and_notice_are_rejected_task_paths_are_not(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp), '`./input.docx` `_rels/.rels` `word/document.xml`\n')
+            self.assertEqual([], check_skill.check_skill(skill))
+            (skill / 'SKILL.md').write_text((skill / 'SKILL.md').read_text().replace(NOTICE, '') + '<skill_dir> [old](SKILL.md) `scripts/tool.py`\n')
+            rules = {i.rule for i in check_skill.check_skill(skill)}
+            self.assertTrue({'root-notice', 'path-style'} <= rules)
+
+    def test_each_required_notice_clause_is_checked_in_every_markdown(self):
+        for clause in ("主入口", "file_path", "相对", "基准", "去掉", "替换", "完整路径", "停止"):
+            with self.subTest(clause=clause), tempfile.TemporaryDirectory() as tmp:
+                skill = make_skill(Path(tmp))
+                (skill / 'references').mkdir()
+                reference = skill / 'references/guide.md'
+                reference.write_text(NOTICE.replace(clause, '') + '# Guide\n')
+                errors = [i for i in check_skill.check_skill(skill) if i.rule == 'root-notice']
+                self.assertEqual(['references/guide.md'], [i.path for i in errors])
+                reference.write_text(NOTICE + '# Guide\n')
+                self.assertEqual([], check_skill.check_skill(skill))
+
+    def test_reference_style_links_and_escaped_command_targets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp), '[entry][root]\n[root]: SKILL.md\n')
+            self.assertIn('path-style', {i.rule for i in check_skill.check_skill(skill)})
+            (skill / 'SKILL.md').write_text((skill / 'SKILL.md').read_text().replace('[entry][root]\n[root]: SKILL.md\n', ''))
+            command = 'python "<skill-root>/requirements.txt" ./input.json'
+            with (skill / 'SKILL.md').open('a') as handle:
+                handle.write('```python\nexecute(command=' + json.dumps(command) + ')\n```\n')
+            (skill / 'requirements.txt').write_text('# standard library\n')
+            self.assertEqual([], check_skill.check_skill(skill))
+            (skill / 'requirements.txt').unlink()
+            self.assertIn('broken-link', {i.rule for i in check_skill.check_skill(skill)})
+
+    def test_reference_notice_required_and_symlink_not_followed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp), '`<skill-root>/references/outside.md`\n')
+            (skill / 'references').mkdir()
+            (skill / 'references/plain.md').write_text('# No notice\n')
+            outside = Path(tmp) / 'outside.md'
+            outside.write_text('private text')
+            try:
+                (skill / 'references/outside.md').symlink_to(outside)
+            except OSError:
+                self.skipTest('symlink unavailable')
+            rules = {i.rule for i in check_skill.check_skill(skill)}
+            self.assertTrue({'root-notice', 'link-escape', 'symlink'} <= rules)
 
 
 if __name__ == "__main__":
