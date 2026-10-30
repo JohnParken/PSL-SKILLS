@@ -22,7 +22,7 @@ from docx_outcome import failure, spec_identity
 from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, retire_cleanup_manifest, _unique_object
 from controlled_cleanup import finalize_failed_cleanup
 from create_docx import _delivery_output_path
-from archive_deliverables import validate_output_path
+from archive_deliverables import validate_output_path, choose_delivery_output
 from office.runtime import check_runtime
 from docx_task_state import (
     MAX_ATTEMPTS,
@@ -466,9 +466,7 @@ def _create_task(spec, output, *, protected_inputs=(), workspace=None):
         print(warning, file=sys.stderr)
     output = _delivery_output_path(Path.cwd(), str(output)).as_posix()
     protected = [Path(p).as_posix() for p in protected_inputs]
-    validate_output_path(Path(output), protected_inputs=protected)
-    if os.path.lexists(output):
-        raise ValueError('Automatic task refuses an existing final filename; choose an authorized new name')
+    output = choose_delivery_output(Path(output), protected_inputs=protected).as_posix()
     workspace = workspace or 'docx-task-' + uuid.uuid4().hex
     if not isinstance(workspace, str) or '/' in workspace or '\\' in workspace or workspace in ('', '.', '..'):
         raise ValueError('Workspace must be a new single task-relative filename prefix')

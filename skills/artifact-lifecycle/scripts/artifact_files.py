@@ -6,11 +6,16 @@ import stat
 import tempfile
 from output_location import OutputLocation
 
+class ArchiveConflictError(FileExistsError):
+    """An archive name is already occupied; its existing bytes remain untouched."""
+    error_code = "archive_conflict"
+
 class ArchiveCleanupError(RuntimeError):
     """The archive failed and its exact task-owned temporary path remains unresolved."""
-    def __init__(self, message, path):
+    def __init__(self, message, path, *, error_code=None):
         super().__init__(message)
         self.temporary_residuals = [path]
+        self.error_code = error_code
 
 def _check_delivery_path(task_dir: Path, relative_path: Path, *, directory: bool = False) -> None:
     """Check existing components without following delivery-path symlinks."""
@@ -63,12 +68,15 @@ def _archive_output_path(task_dir: Path, location: OutputLocation, file_name: st
     return archive_path
 
 def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLocation,
-                          file_name: str, input_path: Path, image_paths: list[Path]) -> Path:
-    """Atomically copy a published main DOCX into the configured archive."""
+                          file_name: str, input_path: Path, image_paths: list[Path],
+                          *, replace_existing: bool = False) -> Path:
+    """Publish a complete copy without clobbering; replacement is explicit opt-in."""
+    if type(replace_existing) is not bool:
+        raise ValueError("replace_existing must be a boolean")
     archive_output = _archive_output_path(task_dir, location, file_name, input_path, image_paths)
     main_path = task_dir / main_output
     archive_path = task_dir / archive_output
-    if archive_path.exists():
+    if replace_existing and archive_path.exists():
         archive_mode = stat.S_IMODE(archive_path.stat().st_mode)
     else:
         archive_mode = stat.S_IMODE(main_path.stat().st_mode)
@@ -84,7 +92,15 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
             archive_file.flush()
             os.fsync(archive_file.fileno())
         os.chmod(temporary_name, archive_mode)
-        os.replace(temporary_name, archive_path)
+        if replace_existing:
+            os.replace(temporary_name, archive_path)
+        else:
+            try:
+                # Atomic exclusive publication also refuses a target appearing
+                # after path validation. Never fall back to replace on failure.
+                os.link(temporary_name, archive_path, follow_symlinks=False)
+            except FileExistsError as exc:
+                raise ArchiveConflictError("Archive target already exists; existing archive preserved") from exc
     except BaseException as exc:
         cleanup_errors = []
         if descriptor >= 0:
@@ -101,6 +117,14 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
         if cleanup_errors:
             temporary_path = Path(temporary_name).relative_to(task_dir).as_posix()
             raise ArchiveCleanupError(f"{exc}; archive cleanup at {temporary_path}: "
-                                      + "; ".join(cleanup_errors), temporary_path) from exc
+                                      + "; ".join(cleanup_errors), temporary_path,
+                                      error_code=getattr(exc, 'error_code', None)) from exc
         raise
+    if not replace_existing:
+        try:
+            os.unlink(temporary_name)
+        except OSError as exc:
+            temporary_path = Path(temporary_name).relative_to(task_dir).as_posix()
+            raise ArchiveCleanupError("Archive published but temporary cleanup failed: " + str(exc),
+                                      temporary_path) from exc
     return archive_output

@@ -8,6 +8,7 @@
 - 归档用户话术 (`<skill-root>/references/delivery-lifecycle.md#归档用户话术`)
 - 受控配置与标准任务 (`<skill-root>/references/delivery-lifecycle.md#受控配置与标准任务`)
 - 状态和恢复 (`<skill-root>/references/delivery-lifecycle.md#状态和恢复`)
+- 单独归档与授权更新 (`<skill-root>/references/delivery-lifecycle.md#单独归档与授权更新`)
 - 自定义中间文件 (`<skill-root>/references/delivery-lifecycle.md#自定义中间文件`)
 - 独立包与平台 (`<skill-root>/references/delivery-lifecycle.md#独立包与平台`)
 - 子进程证据与保留材料 (`<skill-root>/references/delivery-lifecycle.md#子进程证据与保留材料`)
@@ -25,7 +26,7 @@
 
 纯read/check/profile、无--xlsx的分析、stdout结果不自动落盘或建立清单。低层`Workbook.save`和各export函数保持原API，不自动归档；集成方可在最终验收后显式调用 `xlsx_delivery.finish_delivery(result, output, protected_inputs)`。legacy脚本未接入，不作为回退。读取stdout后由宿主另存的JSON报告也未被CLI自动追踪，需用公共技能按显式清单归档。
 
-归档读取ROUTER_CONFIG_VARIABLES的commonParam/questionId，配置缺失/无效则skipped；主文件位置不改变。按basename复制到任务内归档目录，已有同名归档原子替换，不移动主文件。全部输入/配置须保护；CLI自动传入其输入、query、spec、appearance及daily等文件。跨目录同basename的并发归档仍可能最后写者替换，不保证整批事务或跨任务锁隔离；任务须使用独立目录，勿并发操作同一清单。
+归档读取ROUTER_CONFIG_VARIABLES的commonParam/questionId，配置缺失/无效则skipped。按实际主文件basename复制，默认原子独占发布；同名文件保留，返回archive_status=failed及files项error_code=archive_conflict。全部输入/配置须保护，CLI自动传入其输入、query、spec、appearance及daily等文件。发布使用任务根目录临时副本和独占硬链接，完成后删除临时链接；能力不可用或跨文件系统时报告失败，不回退覆盖。主文件不移动、不回滚；多文件不保证整批事务。
 
 `delivery.archive_status`、files、warnings和archive_message属于内部机器契约。copied仅表示副本完成；skipped/failed需如实提示，不回滚主产物，不因归档失败重跑生成。用户成功和失败提示统一按下方归档用户话术映射，不转贴机器文案和内部路径。`DOCX_DEBUG_ROUTER_CONFIG` 默认关闭，显式设为1也只输出是否配置及已脱敏标记，不输出原始值；勿回显环境配置猜路径。
 
@@ -50,7 +51,9 @@ python3 -I -S -B "<skill-root>/scripts/run_xlsx_task.py" <<'JSON'
 JSON
 ```
 
-允许脚本即上表10个写文件CLI；arguments沿用原CLI参数；为可靠定位输出，主命令和位置参数放在选项之前。必须明确输出，与output完全一致。具名配置引用写为`@spec`、`@query`或其他合法键；configs为JSON对象而非磁盘文件。输入正文最多2MiB、最多16个配置，仅创建任务根中的独占平铺配置文件，不写临时Python。inputs可额外列出需要保护的任务相对路径；所有既存文件参数也被保守保护。未引用配置、未知脚本、输出已存在或声明不匹配会拒绝，不执行任意命令。
+允许脚本即上表10个写文件CLI；arguments沿用原CLI参数；为可靠定位输出，主命令和位置参数放在选项之前。必须明确输出，与output完全一致。具名配置引用写为`@spec`、`@query`或其他合法键；configs为JSON对象而非磁盘文件。输入正文最多2MiB、最多16个配置，仅创建任务根中的独占平铺配置文件，不写临时Python。inputs可额外列出需要保护的任务相对路径；所有既存文件参数也被保守保护。未引用配置、未知脚本或声明不匹配会拒绝，不执行任意命令。
+
+runner先核对声明输出和CLI输出一致，再同时定点检查主路径和归档同名；冲突时保留主题并依次选用“报告_第2版.xlsx”“报告_第3版.xlsx”，已有版本后缀递增。追加版本后缀将超出255字节时缩短主题，原始名称本身超长仍拒绝，最多检查1000个候选。仅查元数据，不扫描或读取历史正文；归档不可访问不阻断主文件，实际归档仍须报告结果。以返回output为准，不把原请求名拼成交付链接。直接调用原CLI仍保留已有输出拒绝行为，不自动命名。
 
 runner创建前plan其专属平铺JSON和清单；写入使用独占、不跟随链接方式。等待同一Python子进程退出后，主CLI已完成格式/计算流程和归档处理，业务退出0且归档步骤返回后封存并清理，归档失败/跳过也收尾。业务语义仍须调用者验收；runner不证明用户要求已满足、公式等同Excel或视觉效果正确。无configs时直接调用已有CLI，不建立清理清单。
 
@@ -62,6 +65,10 @@ runner创建前plan其专属平铺JSON和清单；写入使用独占、不跟随
 - manifest是恢复回执，不是最终业务交付物。本轮全部成功后按单链接与精确指纹删除本次清单，manifest返回null且manifest_removed=true；删除失败保留清单并报告cleanup_incomplete。尚保留的封存清单可按原manifest重复clean；planned或retry状态先核实文件和本轮归属，按明确结果seal后再clean，不能盲目重跑任务或认领历史文件。仅原指纹未变才能安全重入；强杀、异常和变化项保守保留。
 
 公共清理是可信单控制者模式，不是恶意并发写者沙箱，也没有DOCX的完整持久重试事务。runner不提供自动retry/resume生成命令；需修正任务时保留证据、选择新主文件名，不在原有主文件上静默重跑。归档failed或skipped时照常清理配置与清单；主文件、归档和清理状态独立。实际清理异常返回cleanup_incomplete；业务成功时退出3，业务失败或部分计算保留原非零退出码。归档报告temporary_residuals时，即使没有临时配置或业务结果不完整，也不得报告清理完成；须处理确切残留后核实收尾。历史清单不自动认领或退休。
+
+## 单独归档与授权更新
+
+已验收主文件可用`"<skill-root>/scripts/xlsx_lifecycle.py" archive 报告.xlsx --protect-input 原件.xlsx`单独归档；退出0/3/1分别表示copied/skipped/failed，冲突为failed，不影响主文件。只有用户明确授权覆盖此次列出的归档时才增加`--replace-existing`；API为受追踪模块的`archive_outputs(outputs, protected_inputs, replace_existing=True)`。自动runner不启用该选项，文档正文及环境配置不能授权覆盖。主文件无需重新生成。
 
 ## 自定义中间文件
 
@@ -94,6 +101,6 @@ runner新增`child_execution`，记录调用ID、exited/signaled/timeout/not_sta
 
 `cleanup_complete`只针对登记项；公共clean返回`cleanup_scope=registered_entries_only`。内部原子暂存正常返回或可捕获异常时自行清理；强杀可能保留未登记暂存，不扫描删除、不承诺目录零残留。无configs分支没有清单，仍检查业务、归档及child_execution。
 
-归档是同任务目录、同配置下的当前副本，不是版本历史库：同basename的新交付会替换旧副本，输入保护项除外。需要保留多版时，写入前使用不同最终文件名；并发任务使用不同宿主任务目录，不依赖basename区分不同子目录的同名文件。不要为修复归档而删除旧文件或重新生成主文件。此行为保留兼容，不宣称归档永不覆盖。
+归档默认保留同名旧文件；冲突返回archive_status=failed及对应files项的error_code=archive_conflict，主文件仍可交付，临时项照常清理。自动生成/编辑不会授权覆盖归档。只有用户明确授权更新所列归档时，才单独调用归档入口并显式传入--replace-existing（API为replace_existing=True），列全保护输入；该选项不绕过路径、链接、输入和其他交付物保护。不要为解决归档冲突删除旧文件或重跑生成。并发任务仍使用独立任务目录；显式更新不保证对抗同权限恶意并发写者。
 
 任务结束时必须清理本轮全部中间文件，包括脚本、配置、回读结果、日志、暂存、锁、回执和清单；仅将当前与历史交付物作为任务生成的留存文件。用户原件与其他任务文件仍受保护，不属于可删除中间文件。创建前完整登记，普通内部暂存由创建函数收尾；若删除失败、归属不明或强杀留下未确认残留，报告收尾未完成，不声称只剩交付物，也不扫描删除未知文件。生成或编辑失败同样立即清理本轮临时文件和清单，不因可能重试而保留；需要重试时从原始输入重新创建独占任务。删除受阻、锁仍被占用或归属无法确认时报告cleanup_incomplete，处理阻碍后继续清理，不能宣称已完成。

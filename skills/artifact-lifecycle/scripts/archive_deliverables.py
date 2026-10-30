@@ -41,6 +41,42 @@ def validate_output_path(path: Path, protected_inputs=()) -> Path:
     return path
 
 
+def choose_delivery_output(path: Path, protected_inputs=()) -> Path:
+    """Choose an unused versioned name using metadata only; do not reserve it."""
+    path = validate_output_path(Path(path), protected_inputs)
+    location = resolve_output_location(read_router_config_from_environment())
+    stem, suffix = path.stem, path.suffix
+    match = re.fullmatch(r'(.+)_第([1-9][0-9]*)版', stem)
+    base = match[1] if match else stem
+    first_version = int(match[2]) + 1 if match else 2
+    for attempt in range(1000):
+        candidate = path
+        if attempt:
+            ending = f'_第{first_version + attempt - 1}版{suffix}'
+            budget = 255 - len(ending.encode('utf-8'))
+            shortened = base
+            while shortened and len(shortened.encode('utf-8')) > budget:
+                shortened = shortened[:-1]
+            if not shortened:
+                raise ValueError('Filename has no space for a version suffix')
+            candidate = path.with_name(shortened + ending)
+        validate_output_path(candidate, protected_inputs)
+        if os.path.lexists(candidate):
+            continue
+        if not location.used_fallback:
+            try:
+                _check_delivery_path(Path.cwd(), location.output_dir, directory=True)
+                target = location.output_dir / candidate.name
+                if os.path.lexists(target):
+                    continue
+            except (OSError, ValueError):
+                # Optional archive access must not block a usable main output.
+                # Actual archival will report its own failure without overwriting.
+                pass
+        return candidate
+    raise ValueError('No free filename found within 1000 version candidates')
+
+
 def archive_user_message(result: dict) -> str:
     """Render archive state for users without exposing internal paths or errors."""
     status = result.get('archive_status')
@@ -61,12 +97,15 @@ def _archive_summary(summary: dict) -> dict:
     return summary
 
 
-def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
+def archive_outputs(outputs: list[Path], protected_inputs: list[Path],
+                    *, replace_existing: bool = False) -> dict:
     """Copy only supplied completed files; preserve inputs and report partial failures."""
     summary = {'status': 'completed', 'archive_status': 'skipped',
                'used_fallback': True, 'fallback_reason': 'archive_config_error',
                'files': [], 'warnings': []}
     try:
+        if type(replace_existing) is not bool:
+            raise ValueError('replace_existing must be a boolean')
         task_dir = Path.cwd()
         location = resolve_output_location(read_router_config_from_environment())
         summary.update(archive_status='skipped' if location.used_fallback else 'copied',
@@ -104,11 +143,17 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path]) -> dict:
                 item['archive_status'] = 'already_archived'
                 continue
             protected = [Path(p) for p in protected_inputs] + [p for p in sources if p != source]
-            _copy_main_to_archive(task_dir, source, location, source.name, source, protected)
+            if replace_existing:
+                _copy_main_to_archive(task_dir, source, location, source.name, source, protected,
+                                      replace_existing=True)
+            else:
+                _copy_main_to_archive(task_dir, source, location, source.name, source, protected)
             item['archive_status'] = 'copied'
         except Exception as exc:
             item['archive_status'] = 'failed'
             item['error'] = str(exc)
+            if getattr(exc, 'error_code', None):
+                item['error_code'] = exc.error_code
             if getattr(exc, 'temporary_residuals', None):
                 summary.setdefault('temporary_residuals', []).extend(exc.temporary_residuals)
             summary['archive_status'] = 'failed'

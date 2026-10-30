@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261029.2132.0838"
+version: "20261030.1033.3653"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -14,6 +14,8 @@ Read XLSX/XLSM, create XLSX reports, patch existing cells, or analyze typed data
 原生 XLSX/XLSM 按文件格式处理，包括 WPS 软件保存的文件；`.wps/.et/.ett`（不区分大小写）交由 wps 技能。本技能拒绝这些输入及伪装成 XLSX/XLSM 的 CFB，不自动调用其他技能或转换。可分析 wps 已提取的 JSON，不读取其原件。
 
 ## 执行环境约束与首步自检
+
+**用户文件定位：** 用户上传文件及用户要求读取的交付物，默认以宿主确认的任务工作目录为基准，按 `./文件路径` 查找；文件路径含子目录时使用已确认的相对路径。优先采用宿主提供的附件映射或用户明确指定的路径；映射缺失、文件不可访问或目标不明确时如实说明并按需询问，不猜测其他路径或自行搜索其他目录。此规则不授权扫描或读取未指定的历史归档。
 
 **任务路径基准：** `./` 就是宿主本次确认的任务工作目录，执行期间保持不变。默认示例中的任务文件直接位于 `./`；仅当宿主附件映射或用户明确给出的真实相对路径含子目录时才按该路径读取，不自行添加 `inputs/`、`data/` 等目录，也不为匹配示例搬移文件或切换工作目录。Skill 脚本及内部资源仍按 `<skill-root>` 定位；由程序管理的归档子目录不是工作目录。
 
@@ -49,10 +51,10 @@ Read only the selected reference. `read`, `create`, `edit` and `calculate` are s
 | Read XLSX/XLSM or CSV/TSV | `"<skill-root>/scripts/stdlib_xlsx.py" read` | Read and inspect (`<skill-root>/references/read-analyze.md`) |
 | Profile, filter or group a region; identify format | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize`; `<skill-root>/scripts/xlsx_identify.py` | Analysis and identification (`<skill-root>/references/data-analysis.md`) |
 | Analyze WPS extraction JSON | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize` | WPS result contract (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`) |
-| Import/export CSV/TSV | `"<skill-root>/scripts/xlsx_tabular.py" import` / `export` | Tabular interchange (`<skill-root>/references/tabular-interchange.md`) |
+| Import/export CSV/TSV | `<skill-root>/scripts/run_xlsx_task.py` wrapping `xlsx_tabular.py import` / `export` | Tabular interchange (`<skill-root>/references/tabular-interchange.md`) |
 | Create a report | stdin task specification → `<skill-root>/scripts/run_xlsx_task.py`; existing `"<skill-root>/scripts/stdlib_xlsx.py" create` remains supported | Create (`<skill-root>/references/create.md`) |
-| Correct existing cells | JSON patch → `"<skill-root>/scripts/stdlib_xlsx.py" edit` | Edit and preservation (`<skill-root>/references/edit.md`) |
-| Compute supported formulas | `"<skill-root>/scripts/stdlib_xlsx.py" calculate` to a new file | Calculation contract (`<skill-root>/references/python-calculation.md`) |
+| Correct existing cells | `<skill-root>/scripts/run_xlsx_task.py` wrapping `stdlib_xlsx.py edit` | Edit and preservation (`<skill-root>/references/edit.md`) |
+| Compute supported formulas | `<skill-root>/scripts/run_xlsx_task.py` wrapping `stdlib_xlsx.py calculate` to a new file | Calculation contract (`<skill-root>/references/python-calculation.md`) |
 | Fix a known formula defect | Diagnose intent, then `edit` | Fix (`<skill-root>/references/fix.md`) |
 | Validate an output | Inspect stored data, calculation report and preserved content | Validation (`<skill-root>/references/validate.md`) |
 
@@ -78,7 +80,7 @@ Before any writing or calculation, read the JSON/CLI contract (`<skill-root>/ref
 
 所有受支持的写文件CLI在主产物写入后自动归档，新增 `delivery` 字段，原status、output、退出码和已有输出保护不变。先按原状态验收业务结果；部分计算仍为incomplete/退出2，归档完成不代表公式完整。只读stdout不创建归档或清理清单。
 
-推荐对需要临时JSON配置的任务使用 `<skill-root>/scripts/run_xlsx_task.py`：stdin提供原CLI参数和具名配置，创建前登记本轮专属JSON；子进程业务成功且归档步骤返回后自动seal/clean；归档失败或跳过也清理，核对后删除本次清单，临时JSON均平铺于任务根。业务失败、部分计算、子进程超时或退出异常也清理配置及清单，保留原退出码；不自动覆盖已有输出重跑。无临时配置时不建立无用清单。它不运行用户Python脚本，不认领旧CLI传入的既存JSON；其他自定义辅助文件仍须创建前通过 `"<skill-root>/scripts/xlsx_lifecycle.py" plan` 显式登记。完整命令、入口覆盖、恢复及限制见交付生命周期 (`<skill-root>/references/delivery-lifecycle.md`)。
+所有文件交付优先使用 `<skill-root>/scripts/run_xlsx_task.py`：stdin提供原CLI参数和按需具名配置；runner生成前同时检查主路径和归档同名，保留主题并自动选择“_第2版”“_第3版”等后缀，以返回的实际output交付。归档默认拒绝覆盖旧文件；直接CLI不自动改名。创建前登记本轮专属JSON；子进程业务成功且归档步骤返回后自动seal/clean；归档失败或跳过也清理，核对后删除本次清单，临时JSON均平铺于任务根。业务失败、部分计算、子进程超时或退出异常也清理配置及清单，保留原退出码；不自动覆盖已有输出重跑。无临时配置时不建立无用清单。它不运行用户Python脚本，不认领旧CLI传入的既存JSON；其他自定义辅助文件仍须创建前通过 `"<skill-root>/scripts/xlsx_lifecycle.py" plan` 显式登记。完整命令、入口覆盖、恢复及限制见交付生命周期 (`<skill-root>/references/delivery-lifecycle.md`)。
 
 用户归档提示根据完整 `delivery` 结果按归档用户话术 (`<skill-root>/references/delivery-lifecycle.md#归档用户话术`)映射，保留原 `delivery.archive_message` 机器文案而不逐字转贴，不展示内部路径、目录、ID或原始配置日志；正常主文件链接保留。归档失败保留主产物，不为此重跑计算；归档、业务计算与清理状态分别报告。
 

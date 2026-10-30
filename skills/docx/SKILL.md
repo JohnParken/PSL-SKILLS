@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261029.2132.0838"
+version: "20261030.1033.3653"
 description: 用于新建 Word 公文、报告和信函，提取 DOCX/DOTX 正文与表格，或按明确目标替换文字、填充简单占位符、修改表格、图片和批注。输出 DOCX 并检查已支持的内容与结构；不承诺复杂模板无损编辑、视觉分页验证、旧 DOC 或 WPS 专有格式转换及 PDF 导出。
 ---
 
@@ -15,6 +15,8 @@ description: 用于新建 Word 公文、报告和信函，提取 DOCX/DOTX 正�
 生成 DOCX，读取及定点编辑 DOCX/DOTX；不生成 DOTX，不通过改后缀转换格式。`.wps/.et/.ett` 和伪装原生格式的 CFB 内容交由 wps 技能；WPS 软件保存的真正 DOCX/DOTX 仍属本技能。不自动调用其他技能，不承诺任意复杂文档无损编辑、旧 DOC 转换、PDF、精确页数、字体可用性或视觉验证。
 
 ## 执行环境约束与首步自检
+
+**用户文件定位：** 用户上传文件及用户要求读取的交付物，默认以宿主确认的任务工作目录为基准，按 `./文件路径` 查找；文件路径含子目录时使用已确认的相对路径。优先采用宿主提供的附件映射或用户明确指定的路径；映射缺失、文件不可访问或目标不明确时如实说明并按需询问，不猜测其他路径或自行搜索其他目录。此规则不授权扫描或读取未指定的历史归档。
 
 **任务路径基准：** `./` 就是宿主本次确认的任务工作目录，执行期间保持不变。默认示例中的任务文件直接位于 `./`；仅当宿主附件映射或用户明确给出的真实相对路径含子目录时才按该路径读取，不自行添加 `inputs/`、`data/` 等目录，也不为匹配示例搬移文件或切换工作目录。Skill 脚本及内部资源仍按 `<skill-root>` 定位；由程序管理的归档子目录不是工作目录。
 
@@ -34,7 +36,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" --check")
 
 **新建DOCX：**直接调用下文 `"<skill-root>/scripts/run_docx_task.py" create`，代码在同一次调用中自检并生成，不先另调check。自检包含Python/zlib/XML、Expat、实际POSIX加解锁、安全描述符文件操作，以及任务根目录独占探针的写入/同步/读回。必要条件失败时返回退出1、`task_status=environment_failed`及`environment.errors`，不启动生成；必要检查通过后的探针清理异常只提示。可选诊断`check`要求退出0并包含`auto-cleanup=available`、`output_dir=. writable=True`、`check-ok`，正常新建不调用；详细执行与恢复见自动任务流程（`<skill-root>/references/task-cleanup.md#自动新建任务入口`）。
 
-助手只提供主文件名，不读取或转贴归档配置、不拼接归档目录。缺少/无效配置、归档不可用及复制失败只提示，保留已验收主文件；清理异常且主文件指纹不变时保留主成功状态，但runner退出3，如实核对`archive_status`、`archive_message`、`cleanup`、`warnings`。配置与参数两端空白处理见输出目录与文件名（`<skill-root>/references/generation.md#输出目录与文件名`）。必需写入失败不换位置；输入保护、内容校验或验收失败不作成功处理。
+助手只提供主文件名，不读取或转贴归档配置、不拼接归档目录。标准runner在生成前由代码检查主路径及归档同名并递增版本名；归档默认拒绝覆盖旧文件，冲突不影响主文件交付或本轮清理。缺少/无效配置、归档不可用及复制失败只提示，保留已验收主文件；清理异常且主文件指纹不变时保留主成功状态，但runner退出3，如实核对`archive_status`、`archive_message`、`cleanup`、`warnings`。配置与参数两端空白处理见输出目录与文件名（`<skill-root>/references/generation.md#输出目录与文件名`）。必需写入失败不换位置；输入保护、内容校验或验收失败不作成功处理。
 
 **受控编辑：**优先使用 `"<skill-root>/scripts/run_docx_edit.py" text|structure|tables|image|comments 输入 输出`，从stdin传原操作JSON；入口自动自检、登记平铺配置、调用原编辑校验、归档及清理。编辑已验收且主文件复核未变后清理本次配置和清单，归档失败/跳过也收尾；生成或编辑失败同样立即清理本轮临时文件和清单，不因可能重试而保留；需要重试时从原始输入重新创建独占任务。删除受阻、锁仍被占用或归属无法确认时报告cleanup_incomplete，处理阻碍后继续清理，不能宣称已完成。comments list仍使用原只读入口。命令及恢复见受控流程（`<skill-root>/references/controlled-flow.md`）。
 
@@ -72,7 +74,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" --check")
 
 标准新建使用下方统一任务入口，不另写临时Python或配置JSON：入口从stdin接收生成规格，在创建前登记 `./docx-task-<随机值>.worker.py`、同前缀 `.spec.json` 等平铺文件，不创建 `docx-task-*` 目录，待子进程验收、归档返回并退出后自动收尾。生成或编辑失败同样立即清理本轮临时文件和清单，不因可能重试而保留；需要重试时从原始输入重新创建独占任务。删除受阻、锁仍被占用或归属无法确认时报告cleanup_incomplete，处理阻碍后继续清理，不能宣称已完成。自定义脚本、多步编辑等其它辅助产物仍先按任务清单清理工具（`<skill-root>/references/task-cleanup.md`）登记尚不存在路径；不能补登历史文件。纯读取stdout不建立无用清单。
 
-写入前确定文件名：优先用户指定的合法名称，否则按“主题＋文种”命名，不照抄示例或默认用output/document/result/edited.docx。编辑保留业务主题，必要时加“修订版”；不得覆盖输入及归属不明的同名文件。冲突时按交付文件命名（`<skill-root>/references/generation.md#交付文件命名`）处理。
+写入前确定文件名：优先用户指定的合法名称，否则按“主题＋文种”命名，不照抄示例或默认用output/document/result/edited.docx。编辑保留业务主题，必要时加“修订版”；不得覆盖输入及归属不明的同名文件。标准新建/编辑runner同时检查主路径和归档同名，冲突时保留主题并自动使用“_第2版”“_第3版”等后缀；以返回的实际output交付。旧CLI/API不自动改名。具体按交付文件命名（`<skill-root>/references/generation.md#交付文件命名`）处理。
 
 未指定排版时显式使用 `"theme": "official"`；不要仅因“报告”“信函”自动改主题，也不要求先确认主题。用户明确指定商务、学术或格式覆盖时遵从，其余字段沿用所选主题默认值。读取和编辑沿用已有样式。章节使用 `heading` 和1–4级 `level`，不能仅用加粗段落替代；中文JSON用UTF-8保存，半角语法标点，不安装或嵌入字体。
 

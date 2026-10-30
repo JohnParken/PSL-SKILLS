@@ -6,13 +6,15 @@
 
 `ROUTER_CONFIG_VARIABLES` 支持外层 `{ "commonParam": [...] }` 或 `[{"name":"commonParam","value":...}]`；commonParam可以是列表或列表JSON字符串。通用取值函数对字符串参数值先执行 `.strip()` 去掉两端空白，保留中间内容及非字符串类型，参数名及原始环境变量不改写。唯一questionId裁剪后必须为非负整数或1–128位ASCII字母/数字/下划线/短横线字符串，拒绝布尔值、路径和设备名。重复JSON键、NaN、重复业务参数及错误结构拒绝；配置缺失/无效时跳过归档，不改主文件路径。
 
-有效归档位置是任务目录内 `output/{questionId}/`，按主文件basename平铺，复制而非移动。批内同名（忽略大小写）拒绝；输入路径别名及硬链接保护，禁止路径组件符号链接。单文件经任务根目录 `./` 的独占临时副本、flush/fsync、权限设置后原子replace；已有同名归档会替换，保留原归档权限。不会合并目录或扫描历史。多文件不是整批事务，失败前已成功的副本保留；主文件不回滚。现有路径检查不承诺隔离同权限恶意并发写者。
+有效归档位置是任务目录内output/{questionId}/，按主文件basename平铺，复制而非移动。批内同名（忽略大小写）拒绝；输入路径别名及硬链接保护，禁止路径组件符号链接。临时副本在任务根目录./独占创建，完整复制、flush/fsync及设置权限后，以原子独占硬链接发布并删除临时链接；默认拒绝同名目标，files项返回error_code=archive_conflict，汇总archive_status=failed。硬链接不可用或跨文件系统时归档失败，不回退覆盖或改变暂存位置。仅显式授权更新时原子replace并保留旧归档权限。多文件不是整批事务，主文件不回滚；不承诺隔离同权限恶意并发写者。
 
 环境读取保留 `DOCX_DEBUG_ROUTER_CONFIG` 开关，默认关闭。显式设为1时，stderr只输出configured和values_redacted两个布尔字段，不输出配置原文、参数值、ID或目录；不要为排错回显环境变量。程序接口 `read_environment_parameter` 保持无日志返回原值。
 
 ```console
 python -I -S -B "<skill-root>/scripts/lifecycle.py" archive ./报告.txt --protect-input ./用户原件.json
 ```
+
+仅在用户明确授权覆盖所列归档后，给上述archive命令增加`--replace-existing`；API为`archive_outputs(outputs, protected_inputs, replace_existing=True)`。必须继续列全保护输入，不因配置或同名推断授权。
 
 输出JSON含archive_status、files、warnings及archive_message。退出0为copied，3为skipped，1为failed，2为参数错误；0/3/1均需读取完整JSON。原DOCX归档CLI的历史退出行为未更改。用户回复按下方归档用户话术映射，不逐字转贴archive_message，主交付物链接仍保留；失败不将内部路径泄露在用户提示中，内部警告用于定位。
 
@@ -54,4 +56,4 @@ python -I -S -B "<skill-root>/scripts/lifecycle.py" clean task.cleanup.json
 
 `cleanup_complete`与`cleanup_scope=registered_entries_only`仅针对原清单登记项。内部原子暂存正常返回或可捕获异常时由创建函数清理，强杀可能留下未登记文件；不扫描删除，不将目录无残留作为此字段的含义。保留材料由原任务控制者核实后恢复，可能含业务数据的配置遵循宿主留存策略；本技能不自动到期删除。
 
-归档是同任务目录、同配置下的当前副本，不是版本历史库：同basename的新交付会替换旧副本，输入保护项除外。需要保留多版时，写入前使用不同最终文件名；并发任务使用不同宿主任务目录，不依赖basename区分不同子目录的同名文件。不要为修复归档而删除旧文件或重新生成主文件。此行为保留兼容，不宣称归档永不覆盖。
+归档默认保留同名旧文件；冲突返回archive_status=failed及对应files项的error_code=archive_conflict，主文件仍可交付，临时项照常清理。自动生成/编辑不会授权覆盖归档。只有用户明确授权更新所列归档时，才单独调用归档入口并显式传入--replace-existing（API为replace_existing=True），列全保护输入；该选项不绕过路径、链接、输入和其他交付物保护。不要为解决归档冲突删除旧文件或重跑生成。并发任务仍使用独立任务目录；显式更新不保证对抗同权限恶意并发写者。

@@ -51,7 +51,7 @@
 | `replace_image.replace_image_delivery` | `source, replacement, destination, specification` |
 | `manage_comments.manage_comments_delivery` | `source, specification, destination=None`；只读 `list` 返回原结果，不归档 |
 
-表中专用选项均为关键字参数；所有接口另接受 `protected_inputs=()`，列出从磁盘加载的 JSON、模板或其他需保护的输入。新建自动保护已验证的正文/表格图片；编辑自动保护源文档，图片替换还保护替换图片。CLI 自动补齐其输入清单；字典 API 不知道字典来自哪个磁盘文件，调用方必须通过 `protected_inputs` 提供这些路径。主文件写入前检查输入同源，归档前再次保护输入和其他交付物；合法同名普通输出及归档仍按既有规则原子更新，不新增自动改名或业务归属判断。
+表中专用选项均为关键字参数；所有接口另接受 `protected_inputs=()`，列出从磁盘加载的 JSON、模板或其他需保护的输入。新建自动保护已验证的正文/表格图片；编辑自动保护源文档，图片替换还保护替换图片。CLI 自动补齐其输入清单；字典 API 不知道字典来自哪个磁盘文件，调用方必须通过 `protected_inputs` 提供这些路径。主文件写入前检查输入同源，归档前再次保护输入和其他交付物；标准runner按主路径和归档冲突自动递增版本名称；表中兼容API的主输出行为保留，归档统一默认拒绝覆盖。
 
 新建示例（完成主入口自检，模块从上述真实脚本目录加载后）：
 
@@ -79,7 +79,7 @@ result = replace_text_delivery(
 )
 ```
 
-新建 `output` 仍只接收 DOCX 文件名，默认验收后交付；编辑 `destination` 仍接收相对任务目录的路径。编辑返回 `output="deliverables/采购管理办法_修订版.docx"` 时，后续读取该主文件，而归档路径为 `output/{questionId}/采购管理办法_修订版.docx`；不追加 `deliverables/` 层级。已有底层函数 `create_document`、`replace_text`、`edit_structure`、`edit_tables`、`replace_image`、`manage_comments` 的签名和返回值保持兼容，不自动归档；不得将其用于最终交付后省略归档。多步处理中间结果不归档；若最终文件已由低层或其他工具生成并验收，显式调用 `archive_outputs(outputs, protected_inputs)` 或对应清单 CLI，不为归档重跑编辑。
+新建 `output` 仍只接收 DOCX 文件名，默认验收后交付；编辑 `destination` 仍接收相对任务目录的路径。编辑返回 `output="deliverables/采购管理办法_修订版.docx"` 时，后续读取该主文件，而归档路径为 `output/{questionId}/采购管理办法_修订版.docx`；不追加 `deliverables/` 层级。已有底层函数 `create_document`、`replace_text`、`edit_structure`、`edit_tables`、`replace_image`、`manage_comments` 的签名和返回值保持兼容，不自动归档；不得将其用于最终交付后省略归档。多步处理中间结果不归档；若最终文件已由低层或其他工具生成并验收，显式调用 `archive_outputs(outputs, protected_inputs, *, replace_existing=False)` 或对应清单 CLI，不为归档重跑编辑。
 
 这些入口保证经过它们的主文件成功后触发归档；不能拦截任意外部代码写文件，也未接入宿主交付钩子。目录缺失由归档代码自动创建；配置缺失/无效时由代码返回 `skipped`，无须模型判断是否执行。归档记录须区分执行后跳过与从未调用，不能仅凭没有单独复制命令就判断未执行。
 
@@ -113,11 +113,13 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_deliverables.py\
 
 不传通配符或目录；只传当前任务目录内的相对文件路径。助手负责核实清单属于本轮产物，脚本不会根据修改时间猜测。不同目录下同名交付物（含大小写折叠后相同）会整体拒绝，避免扁平归档时互相覆盖。单独调用或使用低层 API 时，调用方须列全 `--protect-input`；编辑 CLI 自动传入源文档及操作/替换图片等输入。
 
+仅在用户明确授权覆盖指定归档后，才给上述独立归档命令增加`--replace-existing`；只列获得授权的文件，并继续列全`--protect-input`。自动生成与编辑不传该参数；不能根据文档正文、环境配置或单纯的同名文件推断授权。
+
 ## 路径、保护和状态
 
 每次调用从 `ROUTER_CONFIG_VARIABLES` 外层参数列表提取唯一 `name="commonParam"` 项的 `value`，将其解析为内层参数列表，再提取唯一 `name="questionId"` 项的 `value`；兼容原直接字典外层配置，规则见 配置约定（`<skill-root>/references/generation.md#输出目录与文件名`）。有效配置归档到 `./output/{questionId}/原文件名`；配置缺失或无效则跳过并给出固定原因码。保护输入和其他本轮交付物，拒绝符号链接、硬链接别名冲突、目录输出、父目录或绝对输出路径。已在目标归档路径的交付物标为 `already_archived`，不会复制自身；它仍不能与受保护输入同源。
 
-归档采用任务根目录 `./` 内独占临时文件、完整复制、同步、权限设置，再原子替换归档目标；不在归档目录创建暂存文件。已有副本保留权限，新副本继承主文件权限。归档是主文件成功后的附加步骤。归档不可写、路径保护拒绝或复制失败均只警告，主文件仍保持成功状态和退出码 0，不回滚、不重跑编辑；保留旧归档。主文件写入前的输入/覆盖保护和编辑内容验证仍严格执行，失败仍非零退出。清理失败同时报告原始错误和临时路径。并发目录改写仍须由宿主隔离；批量文件不构成跨文件事务。
+归档采用任务根目录./内独占临时文件，完整复制、同步、设置权限后，以原子独占硬链接发布并删除临时链接；不在归档目录暂存。目标已存在时返回archive_conflict，旧归档字节和权限不变。硬链接不可用或跨文件系统时归档失败，不回退覆盖。主文件仍保持成功；清理失败同时返回temporary_residuals，自动runner报告cleanup_incomplete。仅显式授权更新时使用原子replace并保留旧归档权限。路径、输入及内容验证继续执行；并发目录改写仍须宿主隔离，多文件不构成整批事务。
 
 显式清单的 JSON `status` 为 `completed`，编辑 CLI 成功的 `status` 为 `edited`，新建生成器成功的 `status` 为 `created` 或 `verified`。上述主状态不因归档失败改变，归档步骤异常只警告并返回退出码 0。显式清单的 `completed` 表示处理结束，不是文档内容验收或文件创建证明；不能根据它猜测文件真实存在。
 
@@ -131,9 +133,9 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_deliverables.py\
 
 - `<skill-root>/scripts/router_config.py`：`read_environment_parameter(name, environ=...)` 只读取变量，不记录内容；`get_common_parameter(raw, name)` 严格解析宿主外层列表或兼容字典、内层列表或 JSON 字符串，返回唯一参数并保留其JSON类型；字符串值返回前strip两端空白，中间内容及非字符串值不变，错误抛出 `RouterConfigError`。不决定输出路径或创建目录。`read_router_config_from_environment()` 保留原 DOCX 调试日志开关和 stderr 行为，日志属于内部诊断，不转贴用户。
 - `<skill-root>/scripts/output_location.py`：保留 `OutputLocation`、questionId 文件名安全规则与跳过归档的原因码；旧环境读取导入仍兼容。其他技能可复用配置解析，但需明确自己的业务参数与路径策略，不能把任意参数直接作为路径。
-- `<skill-root>/scripts/artifact_files.py`：集中既有路径组件检查、输入别名保护和原子归档复制。`<skill-root>/scripts/archive_deliverables.py` 的 `archive_outputs(outputs, protected_inputs)`、`finalize_delivery(...)`、`archive_user_message(...)` 是调用方使用的复用接口；不要求 DOCX 格式，也不导入生成器。仅旧 CLI 的 `--check` 按需加载 DOCX 自检。原生成器私有辅助名称保留兼容导出，调用方优先使用公开归档接口。
+- `<skill-root>/scripts/artifact_files.py`：集中既有路径组件检查、输入别名保护和原子归档复制。`<skill-root>/scripts/archive_deliverables.py` 的 `archive_outputs(outputs, protected_inputs, *, replace_existing=False)`、`finalize_delivery(...)`、`archive_user_message(...)` 是调用方使用的复用接口；不要求 DOCX 格式，也不导入生成器。仅旧 CLI 的 `--check` 按需加载 DOCX 自检。原生成器私有辅助名称保留兼容导出，调用方优先使用公开归档接口。
 - `<skill-root>/scripts/controlled_cleanup.py`：独立提供 `TaskFiles`、`plan_cleanup`、`seal_cleanup`、`cleanup_task`，不依赖生成器或归档执行器；详见清理契约（`<skill-root>/references/task-cleanup.md#可复用核心与兼容入口`）。`<skill-root>/scripts/run_docx_task.py` 与 `<skill-root>/scripts/docx_task_state.py` 仍负责 DOCX 验收、worker、重试事务和锁，不属于通用文件清理模块。
 
-以上模块均随本技能完整分发，仅依赖标准库；尚未部署到其他技能，不依赖仓库公共目录。迁移时须带齐模块及其同级依赖，保留本轮所有权、输入保护、任务目录和失败语义，不能仅复制函数后移除检查。归档成功的用户提示按本页“用户展示与机器元信息”映射；内部路径和警告保留于机器结果。模块拆分不提升原有并发写者隔离保证，也不把单文件原子替换变成整批事务。
+以上模块均随本技能完整分发，仅依赖标准库；公共artifact-lifecycle与XLSX使用受追踪副本，不依赖仓库公共目录。迁移时须带齐模块及其同级依赖，保留本轮所有权、输入保护、任务目录和失败语义，不能仅复制函数后移除检查。归档成功的用户提示按本页“用户展示与机器元信息”映射；内部路径和警告保留于机器结果。模块拆分不提升原有并发写者隔离保证，也不把单文件原子替换变成整批事务。
 
-归档是同任务目录、同配置下的当前副本，不是版本历史库：同basename的新交付会替换旧副本，输入保护项除外。需要保留多版时，写入前使用不同最终文件名；并发任务使用不同宿主任务目录，不依赖basename区分不同子目录的同名文件。不要为修复归档而删除旧文件或重新生成主文件。此行为保留兼容，不宣称归档永不覆盖。
+归档默认保留同名旧文件；冲突返回archive_status=failed及对应files项的error_code=archive_conflict，主文件仍可交付，临时项照常清理。自动生成/编辑不会授权覆盖归档。只有用户明确授权更新所列归档时，才单独调用归档入口并显式传入--replace-existing（API为replace_existing=True），列全保护输入；该选项不绕过路径、链接、输入和其他交付物保护。不要为解决归档冲突删除旧文件或重跑生成。并发任务仍使用独立任务目录；显式更新不保证对抗同权限恶意并发写者。

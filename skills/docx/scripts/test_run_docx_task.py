@@ -176,8 +176,10 @@ class AutomaticTaskTests(unittest.TestCase):
         self.assertFalse(task_file('other', 'worker.py').exists())
         self.assertEqual(Path('other.cleanup.json').read_bytes(), b'user original manifest')
         Path('existing.docx').write_bytes(b'user original final')
-        with self.assertRaises(ValueError):
-            self.create(output='existing.docx', workspace='new')
+        result = self.create(output='existing.docx', workspace='new')
+        self.assertEqual(result['output'], 'existing_第2版.docx')
+        self.assertTrue(result['cleanup']['manifest_removed'])
+        self.assertTrue(Path(result['output']).is_file())
         self.assertEqual(Path('existing.docx').read_bytes(), b'user original final')
         self.assertFalse(task_file('new', 'worker.py').exists())
 

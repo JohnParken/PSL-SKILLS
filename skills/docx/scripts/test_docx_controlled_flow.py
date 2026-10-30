@@ -51,7 +51,15 @@ class ControlledTests(unittest.TestCase):
         self.assertIsNone(result['task_manifest'])
         self.assertIsNone(result['cleanup']['manifest_retained'])
         self.assertTrue(result['cleanup']['manifest_removed'])
-        with self.assertRaises(ValueError): edit_task('text', source, 'edited.docx', {})
+        failed = edit_task('text', source, 'edited.docx', {})
+        self.assertEqual(failed['status'], 'failed')
+        self.assertTrue(failed['cleanup']['manifest_removed'])
+        self.assertFalse(Path('edited_第2版.docx').exists())
+        repeated = edit_task('text', source, 'edited.docx',
+                             {'replacements':[{'old':'ABC','new':'Second','count':1}]})
+        self.assertEqual(repeated['output'], 'edited_第2版.docx')
+        self.assertEqual(read_docx('edited.docx'), '合同 XYZ')
+        self.assertEqual(read_docx(repeated['output']), '合同 Second')
 
     def test_structure_tables_comments_dispatch(self):
         self.source()

@@ -12,7 +12,7 @@ Python集成可从本独立包的scripts导入：
 |---|---|
 | router_config | read_environment_parameter(name, environ=...)、get_common_parameter(raw,name)，返回原值、不拼路径 |
 | output_location | resolve_output_location(raw)，questionId校验、相对归档位置及fallback原因 |
-| archive_deliverables | archive_outputs(outputs,protected_inputs)、finalize_delivery、archive_user_message |
+| archive_deliverables | archive_outputs(outputs,protected_inputs,replace_existing=False)、finalize_delivery、archive_user_message、choose_delivery_output（仅选择名称，不预留路径） |
 | artifact_files | 既有内部路径检查和单文件原子复制原语，公开调用优先archive_outputs |
 | controlled_cleanup | TaskFiles、plan_cleanup、seal_cleanup、finalize_cleanup（最终收尾）；cleanup_task仅内部清理阶段 |
 | cleanup_task | 保留DOCX来源的兼容CLI；公共默认使用lifecycle.py |
@@ -23,7 +23,7 @@ Python集成可从本独立包的scripts导入：
 
 本批经用户授权从已验证DOCX提取分发副本，文件来源及哈希见来源清单 (`<skill-root>/references/upstream.json`)。DOCX保留标准runner和CLI；已同步任务根目录暂存及新plan禁止临时目录的规则；本次同步字符串参数取值时strip两端空白，来源与哈希按当前副本记录。router_config、output_location、artifact_files、controlled_cleanup、cleanup_task与DOCX逐字节一致；archive_deliverables只保留main之前的共享实现，移除DOCX专属CLI自检依赖。旧docx_cleanup_v1 schema及内部docx临时前缀保留兼容，不意味着公共技能只处理DOCX。
 
-仓库维护回归 `tests/test_artifact_lifecycle_parity.py` 同时比较DOCX来源、公共副本和来源清单哈希。任一边改变时必须先审阅语义差异、同步适用副本与清单、重跑双方回归再更新对应版本包；不能仅更新哈希把未知差异视为通过。该仓库测试不随公共技能包发布；独立包用自身合成测试，不要求DOCX存在。此机制可检测分叉，不自动同步代码，也不宣称已经完成共享源码迁移。未来可评估单一构建源生成各独立包，本轮不改变DOCX行为。
+仓库维护回归 `tests/test_artifact_lifecycle_parity.py` 同时比较DOCX来源、公共副本和来源清单哈希。任一边改变时必须先审阅语义差异、同步适用副本与清单、重跑双方回归再更新对应版本包；不能仅更新哈希把未知差异视为通过。该仓库测试不随公共技能包发布；独立包用自身合成测试，不要求DOCX存在。此机制可检测分叉，不自动同步代码，也不宣称已经完成共享源码迁移。默认拒绝覆盖的归档和递增版本命名与DOCX来源同步；显式更新仍由可信调用者核对用户授权。
 
 ## 验证边界
 

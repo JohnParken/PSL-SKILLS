@@ -101,9 +101,30 @@ class DeliveryTests(unittest.TestCase):
 
     def test_existing_output_never_adopted(self):
         Path('report.xlsx').write_bytes(b'original')
-        with self.assertRaises(ValueError): self.task()
+        code, result = self.task()
+        self.assertEqual(code, 0)
+        self.assertEqual(result['output'], 'report_第2版.xlsx')
+        self.assertTrue(result['cleanup']['manifest_removed'])
+        self.assert_archived(result, 'report_第2版.xlsx')
         self.assertEqual(Path('report.xlsx').read_bytes(), b'original')
-        self.assertEqual(len(list(Path('.').iterdir())), 1)
+
+    def test_archive_only_collision_versions_then_explicit_archive_update(self):
+        target = Path('output/test/report.xlsx')
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b'previous archive')
+        code, result = self.task()
+        self.assertEqual(code, 0)
+        self.assertEqual(result['output'], 'report_第2版.xlsx')
+        self.assert_archived(result, 'report_第2版.xlsx')
+        self.assertTrue(result['cleanup']['manifest_removed'])
+        self.assertEqual(target.read_bytes(), b'previous archive')
+        Path('report.xlsx').write_bytes(b'authorized update')
+        code, conflict = self.cli('xlsx_lifecycle.py', 'archive', 'report.xlsx')
+        self.assertEqual(code, 1)
+        self.assertEqual(conflict['files'][0]['error_code'], 'archive_conflict')
+        code, updated = self.cli('xlsx_lifecycle.py', 'archive', 'report.xlsx', '--replace-existing')
+        self.assertEqual((code, updated['archive_status']), (0, 'copied'))
+        self.assertEqual(target.read_bytes(), b'authorized update')
 
     def test_archive_failure_keeps_primary_and_removes_helpers(self):
         Path('output').write_text('blocked')
@@ -136,11 +157,28 @@ class DeliveryTests(unittest.TestCase):
 
     def test_no_config_task_does_not_create_cleanup_manifest(self):
         Workbook.create(SPEC).save('source.xlsx')
-        code, result = run_task({'script': 'stdlib_xlsx.py', 'arguments': ['calculate', 'source.xlsx', 'calculated.xlsx'], 'output': 'calculated.xlsx'})
-        self.assertEqual(code, 0)
-        self.assertEqual(result['task_status'], 'no_intermediates')
+        source_bytes = Path('source.xlsx').read_bytes()
+        for expected in ('calculated.xlsx', 'calculated_第2版.xlsx'):
+            code, result = run_task({'script': 'stdlib_xlsx.py', 'arguments': ['calculate', 'source.xlsx', 'calculated.xlsx'], 'output': 'calculated.xlsx'})
+            self.assertEqual(code, 0)
+            self.assertEqual(result['output'], expected)
+            self.assertEqual(result['task_status'], 'no_intermediates')
+            self.assert_archived(result, expected)
+        self.assertEqual(Path('source.xlsx').read_bytes(), source_bytes)
         self.assertFalse(list(Path('.').glob('*.cleanup.json')))
-        self.assert_archived(result, 'calculated.xlsx')
+
+    def test_versioned_generation_failure_cleans_helpers_and_keeps_history(self):
+        Path('report.xlsx').write_bytes(b'previous main')
+        target = Path('output/test/report_第2版.xlsx')
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b'previous archive')
+        code, result = self.task(spec={'invalid': True})
+        self.assertEqual(code, 1)
+        self.assertEqual(result['task_status'], 'failed_cleaned')
+        self.assertTrue(result['cleanup']['manifest_removed'])
+        self.assertEqual(Path('report.xlsx').read_bytes(), b'previous main')
+        self.assertEqual(target.read_bytes(), b'previous archive')
+        self.assertEqual({p.name for p in Path('.').iterdir()}, {'report.xlsx', 'output'})
 
     def test_old_create_edit_cli_retains_user_specs(self):
         Path('spec.json').write_text(json.dumps(SPEC), encoding='utf-8')
@@ -185,15 +223,25 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(result['delivery']['archive_status'], 'failed')
         self.assertEqual(Path('source.json').read_text(), 'input')
 
-    def test_concurrent_same_output_one_winner_and_no_foreign_cleanup(self):
+    def test_concurrent_same_request_preserves_unique_successful_outputs(self):
         spec = {'script': 'stdlib_xlsx.py', 'arguments': ['create', '@spec', 'same.xlsx'], 'output': 'same.xlsx', 'configs': {'spec': SPEC}}
         payload = json.dumps(spec)
         def run():
             p = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS/'run_xlsx_task.py')], input=payload, text=True, capture_output=True)
             return p.returncode, json.loads(p.stdout)
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool: results = list(pool.map(lambda _: run(), range(2)))
-        self.assertEqual(sum(code == 0 for code, _ in results), 1)
-        self.assertEqual(Workbook.load('same.xlsx').cells['Data']['B1']['value'], 42)
+        winners = [result for code, result in results if code == 0]
+        # A later selector may observe the first publication and choose version 2.
+        # Selectors that choose the same path must still have only one publisher.
+        self.assertIn(len(winners), (1, 2))
+        self.assertEqual(len({result['output'] for result in winners}), len(winners))
+        self.assertEqual({p.name for p in Path('.').glob('*.xlsx')},
+                         {result['output'] for result in winners})
+        for result in winners:
+            self.assertEqual(Workbook.load(result['output']).cells['Data']['B1']['value'], 42)
+            self.assert_archived(result, result['output'])
+            self.assertTrue(result['cleanup']['manifest_removed'])
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
 
     def test_unknown_script_or_wrong_output_rejected_before_creation(self):
         for spec in ({'script':'unknown.py','arguments':[],'output':'x.xlsx'}, {'script':'stdlib_xlsx.py','arguments':['create','@spec','other.xlsx'],'output':'x.xlsx','configs':{'spec':SPEC}}):

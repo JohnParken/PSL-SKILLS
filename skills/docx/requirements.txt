@@ -3,3 +3,4 @@
 # Font names are stored in DOCX styles; fonts are not installed or embedded.
 # Automatic task controller requires stdlib fcntl/POSIX locks and dir_fd/no-follow operations.
 # Missing platform capabilities stop automatic operations; no extra component installation.
+# Default archive publication needs same-filesystem hard links; failure preserves primary and existing archive.

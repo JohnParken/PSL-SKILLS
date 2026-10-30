@@ -44,7 +44,10 @@ class ArchiveOutputsTests(unittest.TestCase):
         self.assertEqual(sorted(p.name for p in Path('output/record').iterdir()),
                          ['report.docx', 'summary.txt'])
         Path('report.docx').write_bytes(b'new turn')
-        delivery.archive_outputs([Path('report.docx')], [])
+        conflict = delivery.archive_outputs([Path('report.docx')], [])
+        self.assertEqual(conflict['files'][0]['error_code'], 'archive_conflict')
+        self.assertEqual(Path('output/record/report.docx').read_bytes(), b'report.docx')
+        delivery.archive_outputs([Path('report.docx')], [], replace_existing=True)
         self.assertEqual(Path('output/record/report.docx').read_bytes(), b'new turn')
         self.assertEqual(Path('output/record/summary.txt').read_bytes(), b'summary.txt')
         os.environ['ROUTER_CONFIG_VARIABLES'] = json.dumps({'commonParam': [{'name': 'questionId', 'value': 'next'}]})

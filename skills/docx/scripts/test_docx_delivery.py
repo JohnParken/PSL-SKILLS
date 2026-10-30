@@ -417,18 +417,18 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual((self.work / 'input.json').read_bytes(), input_bytes)
         self.assertEqual([path.name for path in archive_output.parent.iterdir()], ['report.docx'])
 
-    def test_replace_failure_preserves_published_main_and_old_archive_and_cleans_stage(self):
+    def test_link_failure_preserves_published_main_and_old_archive_and_cleans_stage(self):
         archive_output = self.archive_path()
         archive_output.parent.mkdir(parents=True)
         archive_output.write_bytes(b'keep-archive')
-        real_replace = os.replace
+        real_link = os.link
 
-        def fail_archive_replace(source, destination):
+        def fail_archive_link(source, destination, **kwargs):
             if Path(destination) == archive_output:
-                raise OSError('injected archive replace failure')
-            return real_replace(source, destination)
+                raise OSError('injected archive link failure')
+            return real_link(source, destination, **kwargs)
 
-        with patch.object(create_docx.os, 'replace', side_effect=fail_archive_replace):
+        with patch.object(create_docx.os, 'link', side_effect=fail_archive_link):
             code, stdout, stderr = self.run_main('input.json', 'report.docx', '--verify',
                                                  config=self.config())
         result = json.loads(stdout)
@@ -437,21 +437,25 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(result['archive_status'], 'failed')
         self.assertTrue(result['warnings'])
         self.assertIn('archive-warning:', stderr)
-        self.assertIn('injected archive replace failure', stderr)
+        self.assertIn('injected archive link failure', stderr)
         self.assertEqual(read_docx(self.work / 'report.docx'), '交付内容 & 原样保留')
         self.assertEqual(archive_output.read_bytes(), b'keep-archive')
         self.assertEqual([path.name for path in archive_output.parent.iterdir()], ['report.docx'])
 
-    def test_repeated_replacement_keeps_root_and_archive_in_sync(self):
-        for text in ('first document', 'second document'):
+    def test_legacy_main_replacement_does_not_replace_archive(self):
+        for index, text in enumerate(('first document', 'second document')):
             (self.work / 'input.json').write_text(json.dumps({
                 'blocks': [{'type': 'paragraph', 'text': text}],
             }), encoding='utf-8')
             process = self.run_cli('input.json', 'report.docx', '--verify', config=self.config())
             self.assertEqual(process.returncode, 0, process.stderr)
-            self.assertEqual((self.work / 'report.docx').read_bytes(), self.archive_path().read_bytes())
             self.assertIn(text, read_docx(self.work / 'report.docx'))
-            self.assertIn(text, read_docx(self.archive_path()))
+            if index == 0:
+                self.assertEqual((self.work / 'report.docx').read_bytes(), self.archive_path().read_bytes())
+                original_archive = self.archive_path().read_bytes()
+            else:
+                self.assertEqual(json.loads(process.stdout)['files'][0]['error_code'], 'archive_conflict')
+                self.assertEqual(self.archive_path().read_bytes(), original_archive)
         self.assertEqual([path.name for path in self.archive_path().parent.iterdir()], ['report.docx'])
 
     def test_main_output_hardlink_to_input_is_rejected_before_generation(self):
@@ -489,15 +493,15 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(archive_output.read_bytes(), input_bytes)
         self.assertEqual(read_docx(self.work / 'report.docx'), '交付内容 & 原样保留')
 
-    def test_selected_existing_archive_is_replaced_and_readable(self):
+    def test_existing_archive_is_preserved_and_new_main_is_readable(self):
         archive_output = self.archive_path()
         archive_output.parent.mkdir(parents=True)
         archive_output.write_bytes(b'old-package')
         process = self.run_cli('input.json', 'report.docx', '--verify', config=self.config())
         self.assertEqual(process.returncode, 0, process.stderr)
         self.assertEqual(read_docx(self.work / 'report.docx'), '交付内容 & 原样保留')
-        self.assertEqual(read_docx(archive_output), '交付内容 & 原样保留')
-        self.assertEqual((self.work / 'report.docx').read_bytes(), archive_output.read_bytes())
+        self.assertEqual(archive_output.read_bytes(), b'old-package')
+        self.assertEqual(json.loads(process.stdout)['files'][0]['error_code'], 'archive_conflict')
         self.assertEqual([path.name for path in archive_output.parent.iterdir()], ['report.docx'])
 
     def test_archive_cannot_replace_an_input_image_or_its_alias(self):
@@ -644,7 +648,11 @@ class DeliveryTests(unittest.TestCase):
                 self.assertEqual(process.returncode, 0, process.stderr)
                 self.assertEqual(main_output.stat().st_mode & 0o777, 0o600)
                 self.assertEqual(archive_output.stat().st_mode & 0o777, expected_mode)
-                self.assertEqual(main_output.read_bytes(), archive_output.read_bytes())
+                if expected_mode == 0o640:
+                    self.assertEqual(archive_output.read_bytes(), b'old-archive')
+                    self.assertEqual(json.loads(process.stdout)['files'][0]['error_code'], 'archive_conflict')
+                else:
+                    self.assertEqual(main_output.read_bytes(), archive_output.read_bytes())
                 archive_output.unlink()
 
     def test_probe_close_failure_only_fails_for_task_root(self):

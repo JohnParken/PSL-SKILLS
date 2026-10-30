@@ -18,7 +18,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" text 
 
 operation为text、structure、tables、image、comments；各自stdin规格与原API相同，image另传 `--replacement ./替换.png`。comments list继续原只读入口，不创建无用临时文件。入口只调用固定的五类已有编辑API，不执行输入脚本。
 
-入口自动必要环境自检，在任务根创建前登记本轮独占平铺spec.json和manifest；保护原件、替换图片及最终文件，拒绝已有最终名称，不认领旧配置。任务根非阻塞锁与生成runner协作；锁内重查输出、调用编辑校验及自动归档，主文件已验收后按真实归档结果封存并清理配置JSON；归档failed/skipped也清理，不因此保留配置或清单。成功主文件经收尾前后指纹确认；全部成功后，在同一任务根锁内核对本次清单身份、内容及单链接条件并删除清单，不扫描同前缀文件。摘要返回task_manifest=null、cleanup.manifest_retained=null、cleanup.manifest_removed=true，并在deleted记录清单。清单变化、链接替换或删除失败时保留并报告cleanup_incomplete，不返回已删除标记；清理失败保留主成功并报告cleanup_incomplete，不能声称已清理。编辑拒绝同样自动清理；锁忙、文件变化或删除失败则报告cleanup_incomplete，不自动修改匹配锚点或重跑。
+入口自动必要环境自检，在任务根创建前登记本轮独占平铺spec.json和manifest；保护原件、替换图片及最终文件，已有主文件或归档同名时选择递增版本名，返回实际output，不认领旧配置。任务根非阻塞锁与生成runner协作；锁内重查输出、调用编辑校验及自动归档，主文件已验收后按真实归档结果封存并清理配置JSON；归档failed/skipped也清理，不因此保留配置或清单。成功主文件经收尾前后指纹确认；全部成功后，在同一任务根锁内核对本次清单身份、内容及单链接条件并删除清单，不扫描同前缀文件。摘要返回task_manifest=null、cleanup.manifest_retained=null、cleanup.manifest_removed=true，并在deleted记录清单。清单变化、链接替换或删除失败时保留并报告cleanup_incomplete，不返回已删除标记；清理失败保留主成功并报告cleanup_incomplete，不能声称已清理。编辑拒绝同样自动清理；锁忙、文件变化或删除失败则报告cleanup_incomplete，不自动修改匹配锚点或重跑。
 
 旧五类CLI/API保留；旧入口既有配置仍为输入，不自动删除。读取stdout不受影响。新编辑入口不提供自动retry/resume生成；失败且清理完成后从原始输入重新建立任务；只有返回非空manifest并报告清理受阻时才检查原清单及输出，不能重新登记旧文件。已封存的清单可按原cleanup_task clean幂等恢复登记项，该通用入口在完成后也删除指定清单，不扫描或追认其他历史清单；未封存且主文件可能已存在时，先明确业务验收和实际归档状态后按原seal/clean处理，不能根据文件存在就声明成功。同权限恶意写者及强杀自动恢复不作保证。
 

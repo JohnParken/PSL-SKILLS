@@ -8,7 +8,7 @@ import uuid
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, _unique_object
 from run_docx_task import task_environment, _finish_delivery, finish_failed_task, MAX_TASK_BYTES
-from archive_deliverables import validate_output_path
+from archive_deliverables import validate_output_path, choose_delivery_output
 from docx_outcome import failure
 
 OPERATIONS = ('text', 'structure', 'tables', 'image', 'comments')
@@ -53,9 +53,7 @@ def _edit_task(kind, source, output, specification, *, replacement=None):
         validate_output_path(path)
         if not path.is_file():
             raise ValueError('Required input is not a regular file')
-    validate_output_path(output, protected_inputs=protected)
-    if output.exists():
-        raise ValueError('Output already exists; choose a new authorized filename')
+    output = choose_delivery_output(output, protected_inputs=protected)
     raw = json.dumps(specification, ensure_ascii=False, allow_nan=False).encode('utf-8')
     if len(raw) > MAX_TASK_BYTES:
         raise ValueError('Edit specification exceeds 2 MiB')

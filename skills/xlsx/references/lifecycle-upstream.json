@@ -1,5 +1,5 @@
 {
-  "source": "artifact-lifecycle 20261029.2101.4877",
+  "source": "artifact-lifecycle 20261029.2203.2365",
   "transform": "Prepend future annotations; replace listed sibling imports with package-relative imports. No runtime cross-skill dependency.",
   "files": [
     {
@@ -14,8 +14,8 @@
     },
     {
       "file": "artifact_files.py",
-      "source_sha256": "a5ad0e65c056103c936f8e679edf362751650908f5236906a4adfe893f97c18a",
-      "installed_sha256": "1e2a74ae9aa667ac4418879b0accc1eab71b6288364715e27aa5cbb329ba29a6"
+      "source_sha256": "83c7a6c62afc2cb66d21bc1e9edcdd142ed0b559da668b0abd99eb7c63ebe4b6",
+      "installed_sha256": "8d912ae023e5b61eab86bbe89507cf8968fb2903e22f5a4eeb8f4f70e75147f6"
     },
     {
       "file": "controlled_cleanup.py",
@@ -29,8 +29,8 @@
     },
     {
       "file": "archive_deliverables.py",
-      "source_sha256": "ae35884c36f10e4fa7bab172b5b7b5bdef5a239b805916e91178439ec546dae3",
-      "installed_sha256": "37367651d79eded63648b20aca084112e53cde6aae640af1e5b733586eb2bbb0"
+      "source_sha256": "2f9b46917d9fd88dc3c286f6970b5ca27d14eb01b11e3a653f2b1e5bead9ca4d",
+      "installed_sha256": "6794c5875cefb635e54ab7bca68278218779ff80136a17e308dfc23c8cef1895"
     }
   ]
 }

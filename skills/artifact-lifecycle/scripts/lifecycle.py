@@ -36,13 +36,15 @@ def main(argv=None):
     archive = commands.add_parser('archive')
     archive.add_argument('outputs', nargs='+', type=Path)
     archive.add_argument('--protect-input', action='append', default=[], type=Path)
+    archive.add_argument('--replace-existing', action='store_true',
+                         help='Replace archives only for this explicitly authorized output list')
     args = parser.parse_args(arguments)
     try:
         if args.command == 'check':
             result = environment_check()
             code = 0
         else:
-            result = archive_outputs(args.outputs, args.protect_input)
+            result = archive_outputs(args.outputs, args.protect_input, replace_existing=args.replace_existing)
             code = {'copied': 0, 'skipped': 3, 'failed': 1}.get(result['archive_status'], 1)
         print(json.dumps(result, ensure_ascii=True), flush=True)
         return code

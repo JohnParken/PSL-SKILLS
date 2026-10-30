@@ -10,7 +10,7 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, finalize_failed_cleanup, _unique_object
-from _artifact_runtime.archive_deliverables import validate_output_path
+from _artifact_runtime.archive_deliverables import validate_output_path, choose_delivery_output
 
 SCRIPTS = {'stdlib_xlsx.py', 'xlsx_tabular.py', 'xlsx_result_export.py', 'xlsx_management.py',
            'xlsx_dashboard.py', 'xlsx_deposits.py', 'xlsx_deposit_structure.py',
@@ -63,21 +63,25 @@ def _run_child(script, arguments):
     return (child.returncode if child.returncode > 0 else 0 if valid and child.returncode == 0 else 1), result
 
 
-def final_argument(script, arguments):
+def output_argument_index(script, arguments):
     if script == 'stdlib_xlsx.py':
         positions = {'create': 2, 'edit': 3, 'calculate': 2}
         if not arguments or arguments[0] not in positions:
             raise ValueError('Only create/edit/calculate are task writes')
-        return arguments[positions[arguments[0]]]
+        return positions[arguments[0]]
     if script == 'xlsx_tabular.py':
         if not arguments or arguments[0] not in ('import', 'export'):
             raise ValueError('Only import/export are task writes')
-        return arguments[2]
+        return 2
     if script == 'xlsx_result_export.py':
-        return arguments[1]
+        return 1
     if arguments.count('--xlsx') != 1:
         raise ValueError('Report task requires exactly one --xlsx output')
-    return arguments[arguments.index('--xlsx') + 1]
+    return arguments.index('--xlsx') + 1
+
+
+def final_argument(script, arguments):
+    return arguments[output_argument_index(script, arguments)]
 
 
 def _run_task(specification):
@@ -93,8 +97,6 @@ def _run_task(specification):
             or not isinstance(inputs, list) or not all(isinstance(x, str) for x in inputs)):
         raise ValueError('Invalid task script, arguments, config names or inputs')
     output = validate_output_path(Path(specification['output']))
-    if output.exists():
-        raise ValueError('Output already exists; task will not adopt it')
     try:
         if final_argument(script, arguments) != str(output):
             raise ValueError('Declared output must match the command output exactly')
@@ -102,12 +104,18 @@ def _run_task(specification):
         raise ValueError('Missing command arguments') from exc
     # Existing CLI arguments are inputs, never inferred disposable files.
     protected = list(inputs)
-    for item in arguments:
+    output_index = output_argument_index(script, arguments)
+    for index, item in enumerate(arguments):
+        if index == output_index:
+            continue
         if not item.startswith(('-', '@')) and Path(item).is_file():
             validate_output_path(Path(item))
             protected.append(item)
     for item in protected:
         validate_output_path(Path(item))
+    output = choose_delivery_output(output, protected_inputs=protected)
+    arguments = list(arguments)
+    arguments[output_index] = output.as_posix()
     workspace = 'xlsx-task-' + uuid.uuid4().hex
     manifest = workspace + '.cleanup.json'
     paths = {key: workspace + '.' + key + '.json' for key in configs}

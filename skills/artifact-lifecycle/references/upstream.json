@@ -1,5 +1,5 @@
 {
-  "origin": "DOCX 20261029.2101.4877; failure and success terminal cleanup",
+  "origin": "DOCX 20261029.2203.2365; no-clobber archival and collision-aware version names",
   "policy": "Explicit vendored distribution; repository parity test must pass for changes to either copy. No runtime cross-skill imports.",
   "files": [
     {
@@ -15,7 +15,7 @@
     {
       "file": "artifact_files.py",
       "mode": "exact",
-      "sha256": "a5ad0e65c056103c936f8e679edf362751650908f5236906a4adfe893f97c18a"
+      "sha256": "83c7a6c62afc2cb66d21bc1e9edcdd142ed0b559da668b0abd99eb7c63ebe4b6"
     },
     {
       "file": "controlled_cleanup.py",
@@ -30,7 +30,7 @@
     {
       "file": "archive_deliverables.py",
       "mode": "before-main",
-      "sha256": "ae35884c36f10e4fa7bab172b5b7b5bdef5a239b805916e91178439ec546dae3"
+      "sha256": "2f9b46917d9fd88dc3c286f6970b5ca27d14eb01b11e3a653f2b1e5bead9ca4d"
     }
   ]
 }

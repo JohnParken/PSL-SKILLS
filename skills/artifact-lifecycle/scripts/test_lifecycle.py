@@ -117,6 +117,20 @@ class LifecycleTests(unittest.TestCase):
             self.assertNotEqual(result['archive_message'], '归档完成')
         self.assertFalse(Path('output').exists())
 
+    def test_conflict_requires_explicit_replacement_and_preserves_inputs(self):
+        Path('report.txt').write_bytes(b'first')
+        self.assertEqual(self.call('archive', 'report.txt')[0], 0)
+        Path('report.txt').write_bytes(b'second')
+        code, result = self.call('archive', 'report.txt')
+        self.assertEqual(code, 1)
+        self.assertEqual(result['files'][0]['error_code'], 'archive_conflict')
+        self.assertEqual(Path('output/case/report.txt').read_bytes(), b'first')
+        self.assertEqual(self.call('archive', 'report.txt', '--replace-existing',
+                                  '--protect-input', 'output/case/report.txt')[0], 1)
+        self.assertEqual(self.call('archive', 'report.txt', '--replace-existing')[0], 0)
+        self.assertEqual(Path('output/case/report.txt').read_bytes(), b'second')
+        self.assertFalse(list(Path('.').glob('.docx-*.tmp')))
+
     def test_archive_failure_preserves_primary_and_allows_truthful_cleanup(self):
         self.prepare()
         Path('output').write_text('blocked')

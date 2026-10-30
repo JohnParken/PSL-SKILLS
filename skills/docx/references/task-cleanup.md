@@ -18,7 +18,7 @@
 
 正常新建只需主入口中的create一次调用和返回结果核对，无须先通读本页。下述所有权、重试事务及恢复细节供失败诊断、自定义调用和维护使用；自动清理成功后不再手工 plan/seal/clean。
 
-标准新建直接执行 `"<skill-root>/scripts/run_docx_task.py" create 文件名.docx`，从stdin接收规格（主入口有完整例子）。create/retry在代码中调用task_environment，检查Python及自带zlib/XML、Expat、真实文件锁、安全文件操作、根目录探针写入/同步/读回。必要条件失败返回environment_failed与具体原因，不创建任务辅助文件或启动生成；探针在必要检查通过后的清理异常只提示。无需模型先运行check或解读日志决定下一步，check仅供独立诊断，不提前检查归档。缺少/无效归档配置、归档目录不可用或归档复制失败不阻断生成。保持主入口文件保护和内容验收，规格与内部信封最多2MiB，已有最终文件名拒绝；大规格或定制流程继续用专用API及显式清单。
+标准新建直接执行 `"<skill-root>/scripts/run_docx_task.py" create 文件名.docx`，从stdin接收规格（主入口有完整例子）。create/retry在代码中调用task_environment，检查Python及自带zlib/XML、Expat、真实文件锁、安全文件操作、根目录探针写入/同步/读回。必要条件失败返回environment_failed与具体原因，不创建任务辅助文件或启动生成；探针在必要检查通过后的清理异常只提示。无需模型先运行check或解读日志决定下一步，check仅供独立诊断，不提前检查归档。缺少/无效归档配置、归档目录不可用或归档复制失败不阻断生成。保持主入口文件保护和内容验收，规格与内部信封最多2MiB，已有主文件或归档同名时先选择递增版本名，最终摘要返回实际output；大规格或定制流程继续用专用API及显式清单。
 
 代码先在 `./` 建立独占 `docx-task-<随机值>.cleanup.json`，登记同前缀的 `.worker.py`、`.spec.json`、`.receipt.json`、`.task.lock`、`.retry-spec.json`，不创建工作子目录，然后用独占创建写入，立即记录创建完成的身份、SHA和修改时间。固定worker只生成并验收本次DOCX及处理归档，不执行输入里的任意Python。图片相对任务目录解析；用户输入通过create的重复 `--protect-input` 或API `protected_inputs` 显式保护，已有图片仍受生成器同源保护。辅助文件及manifest的同名既存路径绝不接纳。
 
