@@ -10,6 +10,7 @@
 
 - 路径解析示例（`<skill-root>/references/generation.md#路径解析示例`）
 - 预检与集成验收（`<skill-root>/references/generation.md#预检与集成验收`）
+- 非阻断排版风险诊断（`<skill-root>/references/generation.md#非阻断排版风险诊断`）
 - 交付文件命名（`<skill-root>/references/generation.md#交付文件命名`）
 - 输出目录与文件名（`<skill-root>/references/generation.md#输出目录与文件名`）
 - 配置调试（`<skill-root>/references/generation.md#配置调试`）
@@ -19,6 +20,7 @@
 - 样式字段与覆盖顺序（`<skill-root>/references/generation.md#样式字段与覆盖顺序`）
 - 分页、缩进与制表位（`<skill-root>/references/generation.md#分页缩进与制表位`）
 - 内容块（`<skill-root>/references/generation.md#内容块`）
+- 简短内容与分页选择（`<skill-root>/references/generation.md#简短内容与分页选择`）
 - 表格配置与示例（`<skill-root>/references/generation.md#表格配置与示例`）
 - 显式覆盖示例（`<skill-root>/references/generation.md#显式覆盖示例`）
 - 中文 JSON 与引号（`<skill-root>/references/generation.md#中文-json-与引号`）
@@ -59,11 +61,24 @@ execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./docum
 execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
 ```
 
-`--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条仅用于前述兼容/定制调用，按需选择，不串行执行预检与生成；标准新建直接用 `"<skill-root>/scripts/run_docx_task.py" create`（已集成必要环境自检，不另调用check），不再执行这里的第二条生成命令。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。验收遇到未验证警告同样拒绝发布。成功摘要增加 `layout_intent: true`；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。
+`--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条仅用于前述兼容/定制调用，按需选择，不串行执行预检与生成；标准新建直接用 `"<skill-root>/scripts/run_docx_task.py" create`（已集成必要环境自检，不另调用check），不再执行这里的第二条生成命令。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。结构验收遇到未验证警告同样拒绝发布；另行返回的 `layout_issues` 是非阻断风险提示，不纳入这一拒绝条件。成功摘要增加 `layout_intent: true`；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。
 
 低层 `create_document()` 的 `verify=False` 保持兼容；最终交付使用默认 `verify=True` 的 `create_document_delivery()`，由代码自动归档。所有生成调用在写出前检查共享 XML 预算，避免输出自身校验器拒绝的超限文件。调用 `preflight_document(spec, base_dir=None)` 获取预检摘要，返回块数、部件数和未压缩大小。使用 Python 字典可直接调用 API，无需先写 JSON。CLI 拒绝重复 JSON 键，未知字段在可确定时提示相近字段名；非法字符诊断包含字段路径、从 1 起的字符位置和 Unicode 码位，不静默清洗内容。
 
 生成失败时执行 生成失败修正与有限重试（`<skill-root>/references/validation.md#生成失败修正与有限重试`）：由助手按诊断修正可确定的输入或调用错误，首次之外最多重试 2 次，每次重新完整验收；脚本本身仍为单次执行。安全、资源、环境或能力边界受阻时停止，不绕过校验，也不将旧输出交付为本次结果。
+
+## 非阻断排版风险诊断
+
+预检摘要和新建交付摘要增加 `layout_issues` 数组及 `layout_issues_truncated` 布尔值。每项为 `level`（固定为 `warning`）、`code`、`location` 和 `message`；位置使用 `blocks[0]` 或表格行列等规格位置，不包含用户正文或归档路径。相应提示同时追加到 `warnings` 字符串列表，前缀为 `layout-warning:`，不替代原有归档警告。低层 `create_document()` 保持返回 Path，仅将风险提示通过 print 写入 stderr，超过上限时另提示诊断已截断；诊断输出通道异常不改变已生成主文件的成功结果。JSON stdout 不混入提示。无风险时数组为空、截断标记为 false。最多返回 100 项诊断，另有问题时截断标记为 true，不将已截断结果视为完整清单。
+
+| 代码 | 判断条件与范围 | 处理建议 |
+|---|---|---|
+| `FIXED_LINE_HEIGHT_RISK` | 标题、普通正文或表格单元格中，继承与局部覆盖后的实际文字字号大于固定行距；普通段落含 run 时逐 run 核对。按生成器写入单位取整，倍数行距不作此比较。 | 可能出现显示不完整；核对字号及行距，按用户要求调整，不自动改变格式。 |
+| `PARAGRAPH_WIDTH_RISK` | 上述非空段落左右缩进之和达到或超过可用宽度；正文按页面版心，表格按列宽扣除单元格左右留白计算。 | 有效宽度非正；核对缩进、列宽或页面设置。 |
+
+只在有实际内容的位置诊断；不对空段落报文字裁切风险。字号检查不估算字形高度、实际行高或页数，也不涵盖图片高度、文本框及任意外部文档。首行/悬挂缩进不计入整段左右宽度之和；这两项静态检查不是完整的版面检查。
+
+两项风险均为非阻断诊断：保留输入和生成 XML，规格有效时仍可返回 `preflight-ok` 或 `verified`，继续原归档及清理流程。它们与结构/内容验收失败不同，不能因为出现风险提示就当作生成失败而重试。向用户简要说明实际风险；用户未授权改格式时不自动修正或重跑。预检只供已有预检需求使用，不因新增诊断为每次标准新建增加一次预检。
 
 ## 交付文件命名
 
@@ -144,7 +159,7 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 | business | 微软雅黑 / Calibri | 10.5pt、1.25 倍、段后 4pt、无首行缩进 | 黑体、深蓝、章节左对齐 |
 | academic | 宋体 / Times New Roman | 10.5pt、1.25 倍、段后 4pt、首行 2 字 | 黑体、黑色、章节左对齐 |
 
-主题同时设置表格正文和表头的基础字体、字号、行距；后者保留加粗及居中。字体只记录名称，不安装或嵌入。`title` 和 `subtitle` 块支持 `text`、`format`、`align`，不接受 `level`，不写大纲级别；使用 `styles.title`、`styles.subtitle` 覆盖，默认分别为 22pt 和 14pt。章节继续使用原有 heading 1–4，不改变旧输入的语义。
+主题同时设置表格正文和表头的基础字体、字号、行距；后者保留加粗及居中。字体只记录名称，不安装或嵌入。`title` 和 `subtitle` 块支持 `text`、`format`、`align`，不接受 `level`，不写大纲级别；使用 `styles.title`、`styles.subtitle` 覆盖。三个主题的标题默认均为 22pt；副标题在公文主题为 14pt，商务和学术主题为 12pt。章节继续使用原有 heading 1–4，不改变旧输入的语义。
 
 商务和学术主题的页眉页脚使用独立的 `Header`、`Footer` 段落样式，采用对应主题基础中西文字体、10.5pt、1.25 倍行距、黑色、不加粗、左对齐、无首行缩进、段前段后 0pt。正文的 `styles.body` 覆盖不会改变这些样式；它们是内置 Word 样式，不是新增 JSON 样式字段。纯页码页脚及页码字段结果同样继承 `Footer`。公文主题保留原有基础样式：仿宋 / Times New Roman、16pt、1.15 倍行距、段前段后 0pt。省略页眉页脚且未启用页码时不生成相应部件；显式空字符串保留空部件。字体是否可用及页码实际值仍须在阅读器中核对。
 
@@ -249,6 +264,26 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 ```
 
 生成验收独立核对已支持段落属性的值、顺序和唯一性及制表符内容，不进行完整 XSD 或视觉验证。外部已有 DOCX 的基础结构检查不因此改成仅接受本生成器的格式。
+
+## 简短内容与分页选择
+
+短诗、短文和短信函默认连续排版，题目不默认独占一页。`title` 表示标题样式，不表示封面；题目后直接放正文块。每行诗使用一个 `paragraph`，不用 `heading` 模拟诗行，不在单个文本中嵌入换行，也不插入空段落把正文挤到下一页。居中、无首行缩进等按具体需要显式覆盖，未指定时保留原主题规则。
+
+提交生成规格前，核对 `page_break` 块、全局样式及块级 `page_break_before:true` 的依据：仅在用户明确要求或已经确定的封面/章节结构需要时保留。简短内容不因“有标题”“更正式”而添加强制分页；用户要求题目独占封面或各节另起页时照办，不按文字长短自动删除分页。
+
+标题默认与下一段尽量同页；普通诗行不默认设置 `keep_with_next:true`，避免连续同页约束把多行内容一起推走。长诗自然跨页，不为凑一页删文字或擅自缩小字号。仅检查“没有强制分页”不等于验证只有一页，真实分页仍取决于字体、行距和阅读器。
+
+下面是按居中、无首行缩进排版的简短诗歌示例，标题与四行诗之间没有强制分页；这些局部选择不改变其他文档的主题默认值：
+
+```json
+{"theme":"official","styles":{"body":{"align":"center","first_line_chars":0}},"blocks":[
+  {"type":"title","text":"晨光"},
+  {"type":"paragraph","text":"晨光轻落窗边，"},
+  {"type":"paragraph","text":"树影写满庭前。"},
+  {"type":"paragraph","text":"一阵清风吹过，"},
+  {"type":"paragraph","text":"新的一天舒展。"}
+]}
+```
 
 ## 内容块
 

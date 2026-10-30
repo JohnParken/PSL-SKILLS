@@ -28,6 +28,11 @@ from artifact_files import (_check_delivery_path, _prepare_delivery_directory,
                             _paths_alias, _archive_output_path, _copy_main_to_archive)
 
 from office import xmlio
+from office.layout_diagnostics import (
+    LAYOUT_TRUNCATION_NOTICE,
+    diagnose_layout,
+    layout_warning_messages,
+)
 from office.runtime import check_runtime
 from output_location import OutputLocation, resolve_output_location, read_router_config_from_environment
 
@@ -1560,10 +1565,14 @@ def _check_generated_budget(parts: dict[str, bytes]) -> None:
 def preflight_document(spec: dict, base_dir: str | Path | None = None) -> dict:
     """Check the full specification and generated XML budgets without writing."""
     validated = _validate_spec(spec, Path(base_dir) if base_dir is not None else Path.cwd())
+    layout_issues, layout_issues_truncated = diagnose_layout(validated)
     parts = _package_parts(validated)
     _check_generated_budget(parts)
     return {"status": "preflight-ok", "blocks": len(validated["blocks"]),
             "parts": len(parts), "uncompressed_bytes": sum(map(len, parts.values())),
+            "layout_issues": layout_issues,
+            "layout_issues_truncated": layout_issues_truncated,
+            "warnings": layout_warning_messages(layout_issues),
             "visual_validation": False, "xsd_validation": False}
 
 
@@ -1622,8 +1631,19 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
         raise ValueError("output path must use the .docx extension")
     image_base = Path(base_dir) if base_dir is not None else Path.cwd()
     validated = _validate_spec(spec, image_base)
-    return _create_validated_document(validated, output_path, verify=verify,
-                                      require_no_placeholders=require_no_placeholders)
+    layout_issues, layout_issues_truncated = diagnose_layout(validated)
+    result = _create_validated_document(validated, output_path, verify=verify,
+                                        require_no_placeholders=require_no_placeholders)
+    try:
+        for warning in layout_warning_messages(layout_issues):
+            print(warning, file=sys.stderr)
+        if layout_issues_truncated:
+            print(LAYOUT_TRUNCATION_NOTICE, file=sys.stderr)
+    except (OSError, UnicodeError, ValueError):
+        # Diagnostics are best-effort after publication; a closed or non-UTF-8
+        # stderr must not turn a completed document into a failed API call.
+        pass
+    return result
 
 
 def validate_task_resources(spec, base_dir=None):
@@ -1667,6 +1687,7 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
     validate_output_path(output_path, protected_inputs=protected)
     validate_task_resources(spec, base_dir)
     validated = _validate_spec(spec, Path(base_dir) if base_dir is not None else Path.cwd())
+    layout_issues, layout_issues_truncated = diagnose_layout(validated)
     protected.extend(validated["image_paths"])
     verified = verify or require_no_placeholders
     _create_validated_document(validated, output_path, verify=verified,
@@ -1675,7 +1696,11 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
     summary = finalize_delivery(output_path, protected, status=status)
     files = summary.get("files", [])
     summary.update(generation_status=status, output_dir=".",
-                   archive_output=files[0]["archive_output"] if files else None)
+                   archive_output=files[0]["archive_output"] if files else None,
+                   layout_issues=layout_issues,
+                   layout_issues_truncated=layout_issues_truncated,
+                   warnings=list(summary.get("warnings", []))
+                   + layout_warning_messages(layout_issues))
     if verified:
         summary.update(blocks=len(spec["blocks"]), zip_crc=True, structure=True,
                        content_coverage=True, layout_intent=True,
@@ -1865,7 +1890,10 @@ def main(argv: list[str] | None = None) -> int:
                 print("archive-location: skipped; reason=" + summary["fallback_reason"],
                       file=sys.stderr)
             for warning in summary["warnings"]:
-                print("archive-warning: " + warning, file=sys.stderr)
+                if warning.startswith("layout-warning:"):
+                    print(warning, file=sys.stderr)
+                else:
+                    print("archive-warning: " + warning, file=sys.stderr)
             print(json.dumps(summary, ensure_ascii=True))
     except (OSError, UnicodeError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         parser.error(str(exc))

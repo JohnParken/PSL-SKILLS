@@ -8,6 +8,8 @@
 
 ## 目录
 
+- 非阻断排版诊断（2026-10-30）（`<skill-root>/references/maintenance-validation.md#非阻断排版诊断2026-10-30`）
+- 简短内容默认连续排版（2026-10-30）（`<skill-root>/references/maintenance-validation.md#简短内容默认连续排版2026-10-30`）
 - 段落排版第一批增强（2026-10-30）（`<skill-root>/references/maintenance-validation.md#段落排版第一批增强2026-10-30`）
 - DOCX路径统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#docx路径统一2026-10-29`）
 
@@ -46,6 +48,33 @@
 新增测试覆盖显式 false、样式与局部缩进切换、不同位数位置的数值排序、制表位继承/clear 的 XML 表达、连续/首尾 Tab、空文本、表格文字格式、非法输入和输出保护，以及属性/顺序篡改拒绝。均为合成样本；未执行 Word/WPS 人工确认样本、视觉分页或字体替换验收。description 人工核对仍准确（135 字符），保留原文；未执行真实模型触发测试。目标 Linux 容器、Windows、专用命名 linter 和生产宿主通道联调未验证；本机生成及静态结果不代表这些范围通过。未更新分发 ZIP、提交或推送。
 
 Subagent execution record：一次 spawn，`luna__paragraph_layout`（luna_worker / gpt-6-luna / max），独占生成器、生成验收器和新增测试；主代理发出澄清及一轮范围内排序修正，不新增代理。Main-agent work：范围与契约、文档/版本维护、读取器修复、源码与证据审查、兼容性对比、真实示例和全量集成验收、最终接受。最终严格结构、AST 及空白检查结果见本轮交付报告。
+
+## 简短内容默认连续排版（2026-10-30）
+
+版本 `20261030.2126.1882`。主入口增加短诗、短文、短信函默认连续排版及生成前核对强制分页依据的规则，题目不自动作为独立封面，诗行用 paragraph 而不是 heading，不默认用空段落撑页或对全部诗行连续设置 keep_with_next。生成说明补充一致规则和四行自拟短诗 JSON；保留明确的封面、章节及用户分页要求。仅修改说明、版本和 README，不改 Python、依赖、执行链路、归档/清理或开发规范；description 人工核对仍准确（135 字符），保留原文。
+
+实际维护环境 macOS、宿主已确认 Python 3.12.14 / Expat 2.8.3，使用 `-I -S -B`。版本取纽约时间 2026-10-30 09:26:18.822216，整体加 12 小时并截断到百分之一秒。仓库根目录执行维护解释器与检查器 help 自检，均退出 0；独占维护目录中的只读自检含 read-check-ok、退出 0。
+
+主代理通过 stdin 维护检查提取新文档 JSON，以真实标准 runner 生成合成样本：默认连续规格 verified，包内无手动换页符和启用的 pageBreakBefore，正文逐行回读符合固定预期；另两组分别显式插入 page_break、为首行诗设置 page_break_before，验证两种指令分别写入且不被删除。三组 runner 均退出 0、stderr 为空、主文件与归档副本字节相同，自动清理完成且清单移除。首次维护检查退出 1：对显式换页样本的回读预期漏算独立换页段落产生的换行；不是生成失败。修正该检查的独立文本预期后，两组显式分页样本均退出 0 并按精确文本及 XML 节点核对，未改读取器或放宽生成校验。所有维护目录均创建前显式登记、确认不存在，使用独占名称及合成配置，finally 仅清理本轮目录；未接触用户归档配置或历史文件。
+
+最终从仓库根运行 `python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict` 和 `git diff --check`，结果记录于本轮交付。此次为提示规则维护，未新增永久测试或重复 Python 全量回归；无 Python 代码变更，未运行命名 linter。未验证真实模型遵循率、用户原文件成因、Word/WPS 视觉分页、目标 Linux、Windows 或生产宿主；无强制分页不代表已证明只有一页。未更新分发 ZIP、提交或推送。
+
+Main-agent work：主代理完成规则、文档、示例生成、差异审查及最终验收。Subagent execution record：本轮未调用子代理，范围小于委派开销。
+
+## 非阻断排版诊断（2026-10-30）
+
+版本 `20261030.2134.3052`。修正副标题说明：公文 14pt、商务/学术 12pt，三个主题标题均为 22pt。新增纯标准库诊断模块（`<skill-root>/scripts/office/layout_diagnostics.py`），对标题、正文及表格单元格按有效样式、局部/run 覆盖和实际序列化取整结果检查字号超过固定行距、左右缩进耗尽可用宽度两项风险。表格宽度扣除单元格留白；空段落和空 run 不误报，图片单元格仍检查宽度。最多 100 项并明确截断，诊断不含用户原文或物理路径。预检及交付摘要返回 layout_issues、layout_issues_truncated 和相应 warnings；低层 Path API 仅 stderr 提示，提示写入失败不改变已发布文件成功。保留结构/内容校验失败阻断，风险本身不自动修改、拒绝或重试。runner、归档、清理、生命周期及 XML 生成规则均未改动；保留此前短内容分页说明修改。description 人工核对仍准确（135 字符），依赖不变。
+
+实际环境 macOS、Python 3.12.14 / Expat 2.8.3，使用宿主已确认的兼容解释器及 `-I -S -B`；版本取纽约时间 2026-10-30 09:34:30.521131，整体加 12 小时并截断到百分之一秒。维护解释器及检查器 help 自检通过；子代理执行 DOCX 运行条件自检通过。以下命令相对于已确认仓库根，python 指上述解释器，不是安装后业务示例：
+
+- 主代理：`python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`，291 项通过、退出 0、无跳过，发现测试时新增集为 14 项；其后补充的第 15 项由最终定向测试覆盖。输出包含旧段落测试刻意使用过大缩进触发的预期风险提示，不是测试失败。
+- 子代理最终执行：同命令分别筛选 `test_layout_diagnostics.py`、`test_docx_generation.py`、`test_paragraph_layout.py`，15、9、8 项通过，均退出 0。首次新增测试执行因漏导入 redirect_stdout 退出 1，修正测试导入后通过，没有修改预期或放宽断言。
+- 主代理：`python -I -S -B -m unittest discover -s tests -p 'test_artifact_lifecycle_parity.py' -v`，1 项通过、退出 0，公共副本及来源记录未变；严格 Skill 检查通过。
+- 主代理：以 stdin 维护脚本重现审查中的 40pt 正文/固定 28pt 行距、左右各缩进 300pt 两个合成样例，经真实标准 runner 返回两项对应警告，退出 0、stderr 为空、主状态 verified、正文正确。检查 XML 中字号仍为 40pt、行距仍为 28pt、左右缩进仍为 300pt；主文件与归档副本字节一致，自动清理及清单删除完成。维护目录创建前显式登记并确认不存在，使用独占名称和合成配置，结束仅删除本轮目录。
+
+主代理审查完整差异及测试证据，确认旧归档警告不被覆盖、新诊断不混入 JSON stdout、上限与截断、无输入/XML 修改、实际 runner 状态和生命周期兼容。新增 Python 标识符及引用人工核对为 snake_case/UPPER_SNAKE_CASE，AST 和空白检查通过；专用命名 linter 当前不可用，未执行。未验证云端 Linux、Windows、Word/WPS 真实视觉、生产宿主通道及真实模型触发；固定行距提示不是已确认裁切，诊断为空也不证明视觉正确。未更新 ZIP、提交或推送。
+
+Subagent execution record：一次 spawn `luna__layout_diagnostics`（luna_worker / gpt-6-luna / max），独占生成入口、诊断模块和新增测试；主代理提出一轮范围内修正（空段落、低层截断提示及 stderr 异常隔离），无新增代理或扩大文件所有权。Main-agent work：需求/契约、文档/版本、源码及证据审查、原问题实际样例和全量集成验收、最终接受。
 
 ## 运行条件与命令
 

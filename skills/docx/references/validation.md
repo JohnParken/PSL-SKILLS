@@ -60,6 +60,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./客户�
 
 ### 生成失败修正与有限重试
 
+新建摘要的 `layout_issues` 及 `warnings` 中的 `layout-warning:` 是非阻断排版风险诊断（`<skill-root>/references/generation.md#非阻断排版风险诊断`），不属于本节的生成失败。保留主文件及用户格式，简要说明风险，不因此触发重试；不把静态风险宣称为已确认裁切或实际页数。结构/内容验收失败仍按原规则阻断。
+
 先区分主文件生成失败与归档警告：主文件成功且清理完成后，CLI 保持退出码 0 和生成/编辑成功状态；标准runner清理未完成则退出3；`archive_status=failed` 与 `warnings` 说明归档未完成。交付已成功主文件的正常链接，并按用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）单独提示归档未完成，详细警告只留内部记录，不按下述输入修正流程重跑生成器，也不把归档警告判为主流程失败。若暂存清理失败，记录警告中的实际路径及原因；不自动换目录、覆盖输入或扩大清理范围。
 
 由执行本 Skill 的助手按以下流程组织新建文档任务；CLI/API 每次仍只执行一次，不会自动修复或循环重试。低层create_document API默认verify=False保持兼容，按交付流程调用时必须显式设为True；标准run_docx_task.py的create/retry已经强制验收及占位符检查，不另传--verify，也不在自动成功后重复seal。标准create/retry内置必要环境判断，失败即返回environment_failed，不要求模型另跑check；归档/清理警告不阻断已验收文档交付。参数、输入保护与内容验收失败仍按拒绝契约处理。
