@@ -17,6 +17,7 @@
 - 顶层字段（`<skill-root>/references/generation.md#顶层字段`）
 - 默认格式与页面（`<skill-root>/references/generation.md#默认格式与页面`）
 - 样式字段与覆盖顺序（`<skill-root>/references/generation.md#样式字段与覆盖顺序`）
+- 分页、缩进与制表位（`<skill-root>/references/generation.md#分页缩进与制表位`）
 - 内容块（`<skill-root>/references/generation.md#内容块`）
 - 表格配置与示例（`<skill-root>/references/generation.md#表格配置与示例`）
 - 显式覆盖示例（`<skill-root>/references/generation.md#显式覆盖示例`）
@@ -213,6 +214,13 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 | `line_spacing_multiple` | 数值，0.5–10 | 正文、标题及表格均支持倍数行距；与同层固定行距互斥。 |
 | `color` | 六位十六进制 RGB，不带 `#` | 正文、标题及表格均支持文字颜色。 |
 | `space_before_pt`、`space_after_pt` | 数值，0–400 | 段前、段后间距，单位 pt。 |
+| `keep_with_next` | 布尔值 | 与下一段尽量同页；标题样式原有默认值保持开启，显式 `false` 可关闭。 |
+| `keep_together` | 布尔值 | 同一段落尽量不跨页。 |
+| `widow_control` | 布尔值 | 启用或关闭孤行控制。 |
+| `page_break_before` | 布尔值 | 段落前分页。 |
+| `left_indent_pt`、`right_indent_pt` | 数值，0–1584 | 左右缩进，单位 pt；0 显式取消对应缩进。 |
+| `hanging_indent_pt` | 数值，0–1584 | 悬挂缩进，单位 pt；与非零首行缩进不能在同层同时设置。 |
+| `tab_stops` | 1–64 项对象数组 | 指定位置的制表位，字段与继承规则见下文。 |
 
 按字段依次覆盖：内置主题默认值 → 对应 `styles` 项 → 当前块 `format` → 块级 `align`（仅对齐）→ run 字符字段（仅文字格式）。省略字段表示继承；禁止使用 `null` 表示默认值。不要用字符串、布尔值代替数值，不要使用 NaN、Infinity、负值或未知字段。
 
@@ -221,6 +229,26 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 使用 run 的 `font_east_asia`、`font_latin` 分别控制中西文字体。保留 run 的旧字段 `font`：它同时指定中西文字体；同一 run 中的专用字体字段再覆盖相应字体。例如 `{"text": "中文 ABC", "font": "Arial", "font_east_asia": "仿宋"}` 使用仿宋显示中文、Arial 显示西文。不要将 run 的 `font` 放入 `styles` 或 `format`。
 
 允许 run 的 `bold`、`italic`、`underline` 显式设为 `false`；不要通过省略字段尝试取消已继承的格式。仅覆盖已声明字段，不要假定修改字号会自动调整行距或首行字符缩进。
+
+### 分页、缩进与制表位
+
+上述新增段落字段可用于全局文字样式及块级 `format`，也适用于表格的 `body_format` / `header_format`，不用于 run 字符字段或表格布局 `format`。分页字段省略表示继承，显式 `false` 写入关闭属性；不改变旧文档的默认分页策略。它们向阅读器表达分页要求，不保证实际页数或视觉效果；过长段落仍可能跨页，连续的同页要求也可能造成留白。
+
+首行与悬挂缩进按模式覆盖：指定悬挂缩进会取消继承的首行缩进，指定首行缩进会取消继承的悬挂缩进。两者在同层不能同时为非零。左右缩进分别继承；不支持负缩进。缩进上限是输入边界，不表示段落仍有足够宽度，实际效果需在阅读器中核对。
+
+每个制表位为 `{"position_pt": 72, "align": "left", "leader": "none"}`。位置为相对文字左边距的 0–1584pt；`align` 为 `left`、`center`、`right`、`decimal` 或 `clear`；`leader` 可省略，默认为 `none`，还可选 `dot`、`hyphen`、`underscore`。`clear` 用于取消该位置的继承制表位，不能附带 `leader`。位置换算为 twip 后不能重复，输出按位置递增；拒绝空数组、未知字段和无效数值。
+
+同一层配置数组整体替换较低配置层的数组，但 Word 段落仍会继承样式中其他位置的制表位；取消指定位置须写 `clear`，不支持一次清空全部阅读器默认制表位。实际制表符仅允许出现在 `paragraph.text` 和 `paragraph.runs[].text`，JSON 中写作 `\t`，生成原生 `w:tab`，不要用空格模拟对齐。标题、表格单元格、列表及页眉页脚文本仍不接受制表符；所有文本仍禁止嵌入换行，多段拆成独立段落。
+
+```json
+{"theme":"official","blocks":[
+  {"type":"heading","level":1,"text":"附件说明","format":{"page_break_before":true,"keep_with_next":true}},
+  {"type":"paragraph","text":"项目\t金额","format":{"first_line_chars":0,"tab_stops":[{"position_pt":240,"align":"right","leader":"dot"}]}},
+  {"type":"paragraph","text":"较长说明文字。","format":{"left_indent_pt":24,"hanging_indent_pt":24,"widow_control":true,"keep_together":false}}
+]}
+```
+
+生成验收独立核对已支持段落属性的值、顺序和唯一性及制表符内容，不进行完整 XSD 或视觉验证。外部已有 DOCX 的基础结构检查不因此改成仅接受本生成器的格式。
 
 ## 内容块
 
@@ -236,7 +264,7 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 
 在 `runs` 中使用 `text`、`bold`、`italic`、`underline`、`font`、`font_east_asia`、`font_latin`、`size_pt`、`color`；颜色使用不带井号的六位十六进制 RGB。让 XML 库处理文本转义，禁止预先将 `&` 转成 `&amp;`。
 
-将文本字段限制为单行，禁止插入控制字符；多段文字拆成多个 paragraph 块。提供 image 的 `alt` 描述（允许空字符串），只给宽或高时读取 PNG IHDR（含头部 CRC）或 JPEG SOF 尺寸头推算比例；两项都给时保持显式尺寸。尺寸头检查不等于像素解码，不按 EXIF 方向旋转。
+将文本字段限制为单行，除上述普通段落制表符外禁止插入控制字符；多段文字拆成多个 paragraph 块。提供 image 的 `alt` 描述（允许空字符串），只给宽或高时读取 PNG IHDR（含头部 CRC）或 JPEG SOF 尺寸头推算比例；两项都给时保持显式尺寸。尺寸头检查不等于像素解码，不按 EXIF 方向旋转。
 
 按以下正反例构造输入；不要把自然语言需求直接当作生成器字段：
 

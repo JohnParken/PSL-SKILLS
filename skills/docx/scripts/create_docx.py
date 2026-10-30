@@ -72,8 +72,9 @@ _COLOR_RE = re.compile(r"^[0-9A-Fa-f]{6}$")
 _ALIGNMENTS = {"left", "center", "right", "justify"}
 _STYLE_FIELDS = {
     "font_east_asia", "font_latin", "size_pt", "bold", "align",
-    "first_line_chars", "line_spacing_pt", "space_before_pt", "space_after_pt",
-    "line_spacing_multiple", "color",
+    "first_line_chars", "left_indent_pt", "right_indent_pt", "hanging_indent_pt",
+    "line_spacing_pt", "space_before_pt", "space_after_pt", "line_spacing_multiple", "color",
+    "keep_with_next", "keep_together", "widow_control", "page_break_before", "tab_stops",
 }
 _STYLE_DEFAULTS = {
     "body": {
@@ -193,6 +194,8 @@ def _validate_style_fields(value: Any, label: str) -> dict:
             result[key] = field_value
         elif key == "first_line_chars":
             result[key] = _number(field_value, field_label, 0, 20, allow_zero=True)
+        elif key in {"left_indent_pt", "right_indent_pt", "hanging_indent_pt"}:
+            result[key] = _number(field_value, field_label, 0, 1584, allow_zero=True)
         elif key == "line_spacing_pt":
             result[key] = _number(field_value, field_label, 1, 400)
         elif key == "line_spacing_multiple":
@@ -204,7 +207,44 @@ def _validate_style_fields(value: Any, label: str) -> dict:
             result[key] = color.upper()
         elif key in ("space_before_pt", "space_after_pt"):
             result[key] = _number(field_value, field_label, 0, 400, allow_zero=True)
+        elif key in {"keep_with_next", "keep_together", "widow_control", "page_break_before"}:
+            if not isinstance(field_value, bool):
+                raise ValueError(f"{field_label} must be a boolean")
+            result[key] = field_value
+        elif key == "tab_stops":
+            result[key] = _validate_tab_stops(field_value, field_label)
+    if result.get("first_line_chars", 0) > 0 and result.get("hanging_indent_pt", 0) > 0:
+        raise ValueError(f"{label} cannot set nonzero first_line_chars and hanging_indent_pt together")
     return result
+
+
+def _validate_tab_stops(value: Any, label: str) -> list[dict]:
+    if not isinstance(value, list) or not 1 <= len(value) <= 64:
+        raise ValueError(f"{label} must be an array of 1 to 64 tab stops")
+    stops = []
+    positions = set()
+    alignments = {"left", "center", "right", "decimal", "clear"}
+    leaders = {"none", "dot", "hyphen", "underscore"}
+    for index, value in enumerate(value):
+        stop_label = f"{label}[{index}]"
+        fields = _object(value, stop_label, {"position_pt", "align", "leader"},
+                         {"position_pt", "align"})
+        position = _number(fields["position_pt"], f"{stop_label}.position_pt", 0, 1584,
+                           allow_zero=True)
+        align = fields["align"]
+        if not isinstance(align, str) or align not in alignments:
+            raise ValueError(f"{stop_label}.align must be left, center, right, decimal, or clear")
+        if align == "clear" and "leader" in fields:
+            raise ValueError(f"{stop_label}.leader is not allowed when align is clear")
+        leader = fields.get("leader", "none")
+        if not isinstance(leader, str) or leader not in leaders:
+            raise ValueError(f"{stop_label}.leader must be none, dot, hyphen, or underscore")
+        position_twips = _points_to_twips(position)
+        if position_twips in positions:
+            raise ValueError(f"{label} contains duplicate positions after twips rounding")
+        positions.add(position_twips)
+        stops.append({"position_pt": position, "align": align, "leader": leader})
+    return sorted(stops, key=lambda stop: int(_points_to_twips(stop["position_pt"])))
 
 
 def _merge_table_text_format(base: dict, layer: dict) -> dict:
@@ -213,6 +253,10 @@ def _merge_table_text_format(base: dict, layer: dict) -> dict:
         result.pop("line_spacing_multiple", None)
     elif "line_spacing_multiple" in layer:
         result.pop("line_spacing_pt", None)
+    if "hanging_indent_pt" in layer and "first_line_chars" not in layer:
+        result.pop("first_line_chars", None)
+    elif "first_line_chars" in layer and "hanging_indent_pt" not in layer:
+        result.pop("hanging_indent_pt", None)
     result.update(layer)
     return result
 
@@ -417,13 +461,15 @@ def _normalize_run_fonts(run: dict) -> dict:
     return normalized
 
 
-def _text(value: Any, label: str, *, allow_empty: bool = True) -> str:
+def _text(value: Any, label: str, *, allow_empty: bool = True, allow_tab: bool = False) -> str:
     if not isinstance(value, str):
         raise ValueError(f"{label} must be a string")
     if not allow_empty and not value:
         raise ValueError(f"{label} must not be empty")
     for index, char in enumerate(value):
         point = ord(char)
+        if char == "\t" and allow_tab:
+            continue
         if unicodedata.category(char) == "Cc" or not (
             point in (0x9, 0xA, 0xD)
             or 0x20 <= point <= 0xD7FF
@@ -596,7 +642,7 @@ def _validate_run(value: Any, label: str) -> dict:
                   {"text", "bold", "italic", "underline", "font", "font_east_asia",
                    "font_latin", "size_pt", "color"},
                   {"text"})
-    result = {"text": _text(run["text"], f"{label}.text")}
+    result = {"text": _text(run["text"], f"{label}.text", allow_tab=True)}
     for key in ("bold", "italic", "underline"):
         if key in run:
             if not isinstance(run[key], bool):
@@ -705,7 +751,7 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
             block_format = _validate_style_fields(block["format"], f"{label}.format") \
                 if "format" in block else {}
             if "text" in block:
-                content: Any = _text(block["text"], f"{label}.text")
+                content: Any = _text(block["text"], f"{label}.text", allow_tab=True)
             else:
                 if not isinstance(block["runs"], list):
                     raise ValueError(f"{label}.runs must be an array")
@@ -911,16 +957,55 @@ def _add_text_run(parent: ET.Element, text: str, formatting: dict | None = None)
         _append_character_properties(props, formatting)
         if len(props):
             run.append(props)
-    text_element = ET.SubElement(run, _q(W, "t"))
-    if text[:1].isspace() or text[-1:].isspace():
-        text_element.set(_q(XML, "space"), "preserve")
-    text_element.text = text
+    segments = text.split("\t")
+    for index, segment in enumerate(segments):
+        if segment or not text:
+            text_element = ET.SubElement(run, _q(W, "t"))
+            if segment[:1].isspace() or segment[-1:].isspace():
+                text_element.set(_q(XML, "space"), "preserve")
+            text_element.text = segment
+        if index < len(segments) - 1:
+            ET.SubElement(run, _q(W, "tab"))
 
 
-def _append_paragraph_properties(props: ET.Element, formatting: dict, *, outline_level: int | None = None,
-                                 keep_next: bool = False) -> None:
-    if keep_next:
-        ET.SubElement(props, _q(W, "keepNext"))
+def _append_paragraph_properties(props: ET.Element, formatting: dict, *, style: str | None = None,
+                                 num_id: int | None = None, list_level: int = 0,
+                                 outline_level: int | None = None,
+                                 keep_next_default: bool = False,
+                                 numbering_tab: dict | None = None,
+                                 numbering_indent: dict | None = None) -> None:
+    if style:
+        ET.SubElement(props, _q(W, "pStyle"), {_q(W, "val"): style})
+    for key, tag in (("keep_with_next", "keepNext"), ("keep_together", "keepLines"),
+                     ("page_break_before", "pageBreakBefore"), ("widow_control", "widowControl")):
+        if key in formatting:
+            ET.SubElement(props, _q(W, tag), {_q(W, "val"): "1" if formatting[key] else "0"})
+        elif key == "keep_with_next" and keep_next_default:
+            ET.SubElement(props, _q(W, tag))
+    if num_id is not None:
+        num_props = ET.SubElement(props, _q(W, "numPr"))
+        ET.SubElement(num_props, _q(W, "ilvl"), {_q(W, "val"): str(list_level)})
+        ET.SubElement(num_props, _q(W, "numId"), {_q(W, "val"): str(num_id)})
+    tab_stops = formatting.get("tab_stops")
+    if tab_stops or numbering_tab is not None:
+        tabs = ET.SubElement(props, _q(W, "tabs"))
+        stops = []
+        if tab_stops:
+            for stop in tab_stops:
+                attributes = {
+                    _q(W, "val"): stop["align"],
+                    _q(W, "pos"): _points_to_twips(stop["position_pt"]),
+                }
+                if stop["align"] != "clear" and stop["leader"] != "none":
+                    attributes[_q(W, "leader")] = stop["leader"]
+                stops.append((int(attributes[_q(W, "pos")]), attributes))
+        if numbering_tab is not None:
+            stops.append((int(numbering_tab["pos"]), {
+                _q(W, "val"): numbering_tab["val"],
+                _q(W, "pos"): numbering_tab["pos"],
+            }))
+        for _, attributes in sorted(stops, key=lambda item: item[0]):
+            ET.SubElement(tabs, _q(W, "tab"), attributes)
     if "space_before_pt" in formatting or "space_after_pt" in formatting \
             or "line_spacing_pt" in formatting or "line_spacing_multiple" in formatting:
         attrs = {}
@@ -935,10 +1020,17 @@ def _append_paragraph_properties(props: ET.Element, formatting: dict, *, outline
             attrs[_q(W, "line")] = str(int(formatting["line_spacing_multiple"] * 240 + 0.5))
             attrs[_q(W, "lineRule")] = "auto"
         ET.SubElement(props, _q(W, "spacing"), attrs)
+    indent_attrs = {}
+    for key, attr in (("left_indent_pt", "left"), ("right_indent_pt", "right"),
+                      ("hanging_indent_pt", "hanging")):
+        if key in formatting:
+            indent_attrs[_q(W, attr)] = _points_to_twips(formatting[key])
     if "first_line_chars" in formatting:
-        ET.SubElement(props, _q(W, "ind"), {
-            _q(W, "firstLineChars"): _characters_to_hundredths(formatting["first_line_chars"]),
-        })
+        indent_attrs[_q(W, "firstLineChars")] = _characters_to_hundredths(formatting["first_line_chars"])
+    if numbering_indent is not None:
+        indent_attrs.update({_q(W, key): value for key, value in numbering_indent.items()})
+    if indent_attrs:
+        ET.SubElement(props, _q(W, "ind"), indent_attrs)
     if "align" in formatting:
         value = "both" if formatting["align"] == "justify" else formatting["align"]
         ET.SubElement(props, _q(W, "jc"), {_q(W, "val"): value})
@@ -949,20 +1041,21 @@ def _append_paragraph_properties(props: ET.Element, formatting: dict, *, outline
 def _paragraph(parent: ET.Element, *, text: str | None = None, runs: list[dict] | None = None,
                style: str | None = None, formatting: dict | None = None,
                num_id: int | None = None, bold: bool = False,
-               outline_level: int | None = None, keep_next: bool = False,
-               list_level: int = 0) -> ET.Element:
+               inherited_format: dict | None = None,
+               outline_level: int | None = None, list_level: int = 0) -> ET.Element:
     paragraph = ET.SubElement(parent, _q(W, "p"))
-    if style or formatting or num_id is not None or outline_level is not None or keep_next:
+    if style or formatting or num_id is not None or outline_level is not None:
         props = ET.SubElement(paragraph, _q(W, "pPr"))
-        if style:
-            ET.SubElement(props, _q(W, "pStyle"), {_q(W, "val"): style})
-        if keep_next:
-            ET.SubElement(props, _q(W, "keepNext"))
-        if num_id is not None:
-            num_props = ET.SubElement(props, _q(W, "numPr"))
-            ET.SubElement(num_props, _q(W, "ilvl"), {_q(W, "val"): str(list_level)})
-            ET.SubElement(num_props, _q(W, "numId"), {_q(W, "val"): str(num_id)})
-        _append_paragraph_properties(props, formatting or {}, outline_level=outline_level)
+        resolved_format = dict(formatting or {})
+        inherited_format = inherited_format or {}
+        if "hanging_indent_pt" in resolved_format and "first_line_chars" not in resolved_format \
+                and "first_line_chars" in inherited_format:
+            resolved_format["first_line_chars"] = 0
+        elif "first_line_chars" in resolved_format and "hanging_indent_pt" not in resolved_format \
+                and "hanging_indent_pt" in inherited_format:
+            resolved_format["hanging_indent_pt"] = 0
+        _append_paragraph_properties(props, resolved_format, style=style, num_id=num_id,
+                                     list_level=list_level, outline_level=outline_level)
     if text is not None:
         _add_text_run(paragraph, text, formatting if formatting is not None else ({"bold": True} if bold else None))
     elif runs is not None:
@@ -998,12 +1091,11 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
     ET.SubElement(normal, _q(W, "qFormat"))
     normal_ppr = ET.SubElement(normal, _q(W, "pPr"))
     _append_paragraph_properties(normal_ppr, {
-        "space_before_pt": 0, "space_after_pt": 0,
+        "space_before_pt": 0, "space_after_pt": 0, "align": "left",
     })
     normal_spacing = normal_ppr.find(_q(W, "spacing"))
     normal_spacing.set(_q(W, "line"), "276")
     normal_spacing.set(_q(W, "lineRule"), "auto")
-    normal_ppr.append(ET.Element(_q(W, "jc"), {_q(W, "val"): "left"}))
     normal_rpr = ET.SubElement(normal, _q(W, "rPr"))
     _append_character_properties(normal_rpr, normal_format)
 
@@ -1060,7 +1152,8 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
         ET.SubElement(style, _q(W, "name"), {_q(W, "val"): style_id})
         ET.SubElement(style, _q(W, "basedOn"), {_q(W, "val"): "Normal"})
         ET.SubElement(style, _q(W, "next"), {_q(W, "val"): "BodyText"})
-        _append_paragraph_properties(ET.SubElement(style, _q(W, "pPr")), style_formats[key], keep_next=True)
+        _append_paragraph_properties(ET.SubElement(style, _q(W, "pPr")), style_formats[key],
+                                     keep_next_default=True)
         _append_character_properties(ET.SubElement(style, _q(W, "rPr")), style_formats[key])
 
     for level in range(1, 5):
@@ -1075,7 +1168,7 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
         ET.SubElement(heading, _q(W, "qFormat"))
         ppr = ET.SubElement(heading, _q(W, "pPr"))
         _append_paragraph_properties(ppr, style_formats[format_name],
-                                     outline_level=level - 1, keep_next=True)
+                                     outline_level=level - 1, keep_next_default=True)
         rpr = ET.SubElement(heading, _q(W, "rPr"))
         _append_character_properties(rpr, style_formats[format_name])
 
@@ -1117,11 +1210,12 @@ def _numbering_xml(instances: list[dict]) -> bytes:
             label = ".".join(f"%{position + 1}" for position in range(index + 1)) + "." if ordered else "•"
             ET.SubElement(level, _q(W, "lvlText"), {_q(W, "val"): label})
             ET.SubElement(level, _q(W, "lvlJc"), {_q(W, "val"): "left"})
-            ppr = ET.SubElement(level, _q(W, "pPr"))
-            tabs = ET.SubElement(ppr, _q(W, "tabs"))
             left = str(720 * (index + 1))
-            ET.SubElement(tabs, _q(W, "tab"), {_q(W, "val"): "num", _q(W, "pos"): left})
-            ET.SubElement(ppr, _q(W, "ind"), {_q(W, "left"): left, _q(W, "hanging"): "360"})
+            ppr = ET.SubElement(level, _q(W, "pPr"))
+            _append_paragraph_properties(
+                ppr, {}, numbering_tab={"val": "num", "pos": left},
+                numbering_indent={"left": left, "hanging": "360"},
+            )
     for num_id, instance in enumerate(instances, start=1):
         num = ET.SubElement(numbering, _q(W, "num"), {_q(W, "numId"): str(num_id)})
         abstract_id = int(instance["ordered"]) + (2 if instance["multilevel"] else 0)
@@ -1129,7 +1223,8 @@ def _numbering_xml(instances: list[dict]) -> bytes:
     return ET.tostring(numbering, encoding="UTF-8", xml_declaration=True)
 
 
-def _table(parent: ET.Element, block: dict, next_drawing_id: int) -> list[dict]:
+def _table(parent: ET.Element, block: dict, next_drawing_id: int,
+           style_formats: dict[str, dict]) -> list[dict]:
     table = ET.SubElement(parent, _q(W, "tbl"))
     props = ET.SubElement(table, _q(W, "tblPr"))
     layout = block["format"]
@@ -1183,7 +1278,9 @@ def _table(parent: ET.Element, block: dict, next_drawing_id: int) -> list[dict]:
             style_name = "TableHeader" if is_header else "TableBody"
             text_format = block["header_format"] if is_header else block["body_format"]
             text = content if isinstance(content, str) else content["text"]
-            paragraph = _paragraph(cell, text=text, style=style_name, formatting=text_format)
+            inherited_format = style_formats["table_header" if is_header else "table_body"]
+            paragraph = _paragraph(cell, text=text, style=style_name, formatting=text_format,
+                                   inherited_format=inherited_format)
             if isinstance(content, dict) and content["image"] is not None:
                 image = content["image"]
                 _add_picture(paragraph, image, next_drawing_id)
@@ -1260,22 +1357,26 @@ def _document_xml(spec: dict) -> tuple[bytes, list[dict], list[dict]]:
     for block in spec["blocks"]:
         kind = block["type"]
         if kind in {"title", "subtitle"}:
+            style_key = kind
             _paragraph(body, text=block["text"], style="Title" if kind == "title" else "Subtitle",
-                       formatting=block["format"])
+                       formatting=block["format"], inherited_format=spec["styles"][style_key])
         elif kind == "heading":
             formatting = block["format"].copy()
             if block["align"] is not None:
                 formatting["align"] = block["align"]
             _paragraph(body, text=block["text"], style=f"Heading{block['level']}",
-                       formatting=formatting)
+                       formatting=formatting,
+                       inherited_format=spec["styles"][f"heading{block['level']}"])
         elif kind == "paragraph":
             formatting = block["format"].copy()
             if block["align"] is not None:
                 formatting["align"] = block["align"]
             if isinstance(block["content"], str):
-                _paragraph(body, text=block["content"], style="BodyText", formatting=formatting)
+                _paragraph(body, text=block["content"], style="BodyText", formatting=formatting,
+                           inherited_format=spec["styles"]["body"])
             else:
-                _paragraph(body, runs=block["content"], style="BodyText", formatting=formatting)
+                _paragraph(body, runs=block["content"], style="BodyText", formatting=formatting,
+                           inherited_format=spec["styles"]["body"])
         elif kind == "list":
             identifier = block["list_id"]
             if identifier is None or identifier not in shared_ids:
@@ -1290,7 +1391,7 @@ def _document_xml(spec: dict) -> tuple[bytes, list[dict], list[dict]]:
                 _paragraph(body, text=item, num_id=block["num_id"], list_level=block["level"],
                            style="ListParagraph" if spec["list_format"] is not None else None)
         elif kind == "table":
-            images = _table(body, block, next_drawing_id)
+            images = _table(body, block, next_drawing_id, spec["styles"])
             image_blocks.extend(images)
             next_drawing_id += len(images)
         elif kind == "image":
@@ -1469,20 +1570,31 @@ def preflight_document(spec: dict, base_dir: str | Path | None = None) -> dict:
 def _verify_content(spec: dict, roots: dict) -> None:
     expected = []
     images = tables = 0
+
+    def add_text(value: str, *, paragraph_text: bool = False) -> None:
+        if paragraph_text and "\t" in value:
+            expected.extend(segment for segment in value.split("\t") if segment)
+        else:
+            expected.append(value)
+
     for block in spec["blocks"]:
         kind = block["type"]
         if kind in {"title", "subtitle", "heading"}:
-            expected.append(block["text"])
+            add_text(block["text"])
         elif kind == "paragraph":
-            expected.extend([block["content"]] if isinstance(block["content"], str)
-                            else [run["text"] for run in block["content"]])
+            if isinstance(block["content"], str):
+                add_text(block["content"], paragraph_text=True)
+            else:
+                for run in block["content"]:
+                    add_text(run["text"], paragraph_text=True)
         elif kind == "list":
-            expected.extend(block["items"])
+            for item in block["items"]:
+                add_text(item)
         elif kind == "table":
             tables += 1
             for row in block["rows"]:
                 for cell in row:
-                    expected.append(cell if isinstance(cell, str) else cell["text"])
+                    add_text(cell if isinstance(cell, str) else cell["text"])
                     images += int(isinstance(cell, dict) and cell["image"] is not None)
         elif kind == "image":
             images += 1

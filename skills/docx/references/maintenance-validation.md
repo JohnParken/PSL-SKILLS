@@ -8,6 +8,7 @@
 
 ## 目录
 
+- 段落排版第一批增强（2026-10-30）（`<skill-root>/references/maintenance-validation.md#段落排版第一批增强2026-10-30`）
 - DOCX路径统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#docx路径统一2026-10-29`）
 
 - 受控编辑清单收尾（2026-10-29）（`<skill-root>/references/maintenance-validation.md#受控编辑清单收尾2026-10-29`）
@@ -28,6 +29,23 @@
 - execute调用形式补充（2026-10-29）（`<skill-root>/references/maintenance-validation.md#execute调用形式补充2026-10-29`）
 - 常见环境与交付故障说明（2026-10-29）（`<skill-root>/references/maintenance-validation.md#常见环境与交付故障说明2026-10-29`）
 - Bash执行示例统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#bash执行示例统一2026-10-29`）
+
+## 段落排版第一批增强（2026-10-30）
+
+版本 `20261030.1802.1732`。增加可选分页布尔字段、左右及悬挂缩进、原生制表位和普通段落文本/run 的制表符；统一生成器段落属性序列化，生成验收独立核对对应属性值、顺序、唯一性和文本。修复读取器把段落属性中的制表位误作正文 Tab 的问题。保持原主题、默认分页及旧规格语义；不改任务执行、归档、清理、编辑入口或公共生命周期实现，不增加依赖。Profile、标题自动编号、复杂表格、多节和目录不属于本批实现。
+
+实际环境为 macOS、宿主提供 Python 3.12.14 / Expat 2.8.3，保留 `-I -S -B`。默认 `python` 不存在、系统 `python3` 为 3.9.6，均未用作验收解释器；通过宿主依赖定位取得兼容解释器后，维护解释器/检查器入口自检与 DOCX 只读自检通过，后者包含 `read-check-ok`。版本取纽约时间 2026-10-30 06:02:17.325016，整体加 12 小时并截断到百分之一秒。
+
+以下维护命令从已确认仓库根目录执行，`python` 指上述宿主提供的兼容解释器；路径相对于仓库根，不是安装后业务示例：
+
+- `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：277 项通过，退出 0，无失败或跳过，包含新增 8 项段落排版测试。
+- `python -I -S -B -m unittest discover -s tests -p 'test_artifact_lifecycle_parity.py' -v`：1 项通过，退出 0，公共副本及来源哈希保持一致。
+- 主代理用 stdin 内存检查对比 HEAD 原生成器与本次实现：6 组合成旧规格覆盖三种主题、标题、列表、表格、页眉页脚及旧格式覆盖，全部包部件逐字节相同，退出 0；不是任意旧输入的穷举证明。
+- 主代理提取生成说明中的新增 JSON 示例，通过真实标准 runner 子进程执行：退出 0、stderr 为空、主状态 verified，中文正文及 Tab 回读符合独立预期，归档副本与主文件字节相同，清理完成且清单移除。使用本轮独占维护目录和合成配置，不访问用户归档配置；完成后删除本轮独占目录。
+
+新增测试覆盖显式 false、样式与局部缩进切换、不同位数位置的数值排序、制表位继承/clear 的 XML 表达、连续/首尾 Tab、空文本、表格文字格式、非法输入和输出保护，以及属性/顺序篡改拒绝。均为合成样本；未执行 Word/WPS 人工确认样本、视觉分页或字体替换验收。description 人工核对仍准确（135 字符），保留原文；未执行真实模型触发测试。目标 Linux 容器、Windows、专用命名 linter 和生产宿主通道联调未验证；本机生成及静态结果不代表这些范围通过。未更新分发 ZIP、提交或推送。
+
+Subagent execution record：一次 spawn，`luna__paragraph_layout`（luna_worker / gpt-6-luna / max），独占生成器、生成验收器和新增测试；主代理发出澄清及一轮范围内排序修正，不新增代理。Main-agent work：范围与契约、文档/版本维护、读取器修复、源码与证据审查、兼容性对比、真实示例和全量集成验收、最终接受。最终严格结构、AST 及空白检查结果见本轮交付报告。
 
 ## 运行条件与命令
 

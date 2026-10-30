@@ -85,7 +85,8 @@ def _paragraph_text(p: Element, revisions: str) -> str:
     def visit(node: Element, blocked: bool = False) -> None:
         name = node.tag.rsplit("}", 1)[-1]
         blocked = blocked or name in _REVISION_TAGS[revisions]
-        if blocked or name == "txbxContent":
+        # Property subtrees can contain w:tab stop definitions, not body tabs.
+        if blocked or name == "txbxContent" or name in _PROPERTY_ROOTS:
             return
         if name in ("t", "delText"):
             if node.text:
