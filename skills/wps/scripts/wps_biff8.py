@@ -23,7 +23,10 @@ from wps_biff8_noncell import inspect_noncell
 
 READING_MODES = COMPATIBILITY_MODES + ("data",)
 
-SUPPORTED_BIFF8_CODE_PAGES = {1200, 932, 936, 1252}
+# Accepted BIFF8 workbook declarations, not byte-decoder selections.
+# These identifiers appear in Microsoft CODEPG; all supported BIFF8 cell text
+# continues to use each XLUnicodeString's own fHighByte representation.
+SUPPORTED_BIFF8_CODE_PAGES = {874, 932, 936, 949, 950, 1200, 1250, 1251, 1252}
 
 MAX_RECORDS=100000
 MAX_CELLS=200000
