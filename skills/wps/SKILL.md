@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261030.1033.3653"
+version: "20261031.1644.5406"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -43,6 +43,10 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
 3. **交付或分析。** 提交所需工作表/区域及明确缺口；需要汇总时先确认 schema、选定区域和缓存政策。如另有 xlsx 技能，可消费满足其限制的 JSON，仍保留源 partial 和诊断；本包不依赖相邻技能。BIFF 合并表头重建及适配器每表 256 个合并范围限制见 分析接入 (`<skill-root>/references/biff8-readonly.md#headers-and-output`)。
 
 默认 data 对有证据的非单元格元数据及受支持图表保留原始记录并报告 partial；包括结构校验后的 DXF（`0x088D`）差异格式属性，格式不应用到保存值。未知记录、加密、结构与资源错误仍停止，不在失败后轮换策略。只有任务明确要求更窄子集才加 `--compatibility strict`；单独拒绝图表可加 `--chart-policy reject`。需排查格式时按结果读 BIFF8 边界与高级策略 (`<skill-root>/references/biff8-readonly.md`) 或 OOXML 保存值 (`<skill-root>/references/ooxml-spreadsheet.md`)；编码、容量及失败定位按需读 解析增强边界 (`<skill-root>/references/et-parser-stability.md`)，容器检查另见 CFB 调查 (`<skill-root>/references/et-ett-readonly.md`)。
+
+## BIFF8 额外审计（可选，不影响文字读取）
+
+需要核对 ET/ETT 中富字符串 FormatRun 位置、公式保存缓存风险、原始 XF 格式证据时，可以在完成上述自检后，使用**独立入口** `python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et`。它只接受经当前读取器确认的 `biff8_readonly_v1`，默认正常 `read_wps.py` 输出与 Word/MS-DOC 文字读取器均不变；新增可选的 Font 原始记录引用、CalcMode/CalcSaveRecalc/RecalcId 保存值和 XF 父样式直接来源观察，**不计算字体效果、样式级联或公式缓存的最新性**，绝不执行公式。详情、范围、退出码和上限见 BIFF8 保存证据审计（`<skill-root>/references/biff8-stored-audit.md`）。本次为合成及格式证据验证，未证明新审计结果在 WPS Office 原生富文本/公式文档上的完整语义兼容。
 
 ## 文字：读取 WPS 正文与附加内容
 
