@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1646.5261"
+version: "20261031.1719.1010"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -69,6 +69,8 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 中国农业银行官网公开附件的只读实测中，五份 `.doc` 有三份为 ZIP/OOXML、一份为受限可读 MS-DOC CFB（partial）、一份 CFB 被严格容器校验拒绝；另三份总行附件实际为 PDF。它们并非已验证的原生 `.wps`，不得用其成功数宣称 WPS 专有格式兼容。详细结果见农业银行官方附件验收（`<skill-root>/references/wps-abc-official-validation.md`）。
 
 中国银行/建设银行/工商银行官网公开附件的受限维护验收已记录：10 个官方链接中 4 份实际下载，2 份中行 OOXML 返回 ok，工商银行 1 份 OOXML 和 1 份 CFB/MS-DOC 返回 partial（其中 CFB 的正文算法交叉核对一致）；建行 6 份因官网 TLS 旧版重协商要求未能安全下载。**这不是原生 `.wps` 的验收通过率**，详见三行官网实测（`<skill-root>/references/wps-three-banks-official-validation.md`），禁止将下载失败统计为解析失败。
+
+本轮只优化**现有结果质量和验收**：`drawn_shape_anchor_not_rendered` 与图片标记共同计入 `reading_assessment.coverage.objects=not_decoded`；保留绘图对象 CP、SPA 原始偏移等受控来源数据，不复制未渲染对象中的原文。维护 CI 已对 7 份政府官网真实 CFB 文件固定 SHA-256、现有 partial/段落数及 6 份独立正文算法比较；生产 Skill 不下载这些文件。相关证据见 验证记录（`<skill-root>/references/validation.md#读取质量基线与资源测量`）。
 
 ## 结果与按需验收
 
