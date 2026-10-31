@@ -1,36 +1,27 @@
 {
   "schema_version": "wps_validation_evidence_v1",
   "current": {
-    "version": "20261031.1435.5095",
-    "platform": "GitHub Actions ubuntu-latest x86_64; Python 3.11 and 3.13 (separate jobs)",
+    "version": "20261031.1459.1079",
+    "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
     "stdlib_only": true,
     "changes": [
-      "Opt-in UTF-16 stored paragraph CP source ranges in MS-DOC branch",
-      "No-op field/object policies preserve exact stored CP provenance",
-      "JSON-only metadata output; transformed stories report partial without fabricated source positions",
-      "Added explicit coverage check against stored story CP end and regression for fragmented surrogate-pair pieces/empty story"
+      "Optional stored paragraph CP spans remain default-off",
+      "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+      "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+      "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+      "Bounded links and fail-safe partial diagnostic on unresolvable association"
     ],
     "tests": {
-      "isolated_helper": {
-        "passed": 5,
-        "failed": 0,
-        "command": "python -I -S -B -m unittest discover -s . -p 'test_*.py' -v (isolated helper prototype)"
-      },
-      "new_wps_integration": {
-        "defined": 11,
-        "executed": true,
-        "status": "passed_in_full_suite"
-      },
       "full_wps_suite": {
         "executed": true,
         "status": "passed",
         "python_3_11": {
-          "passed": 435,
+          "passed": 443,
           "failed": 0,
           "skipped": 0
         },
         "python_3_13": {
-          "passed": 435,
+          "passed": 443,
           "failed": 0,
           "skipped": 0
         },
@@ -39,44 +30,131 @@
       "strict_skill_check": {
         "executed": true,
         "status": "passed",
+        "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
         "python_3_11": "OK skills/wps",
-        "python_3_13": "OK skills/wps",
-        "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict"
+        "python_3_13": "OK skills/wps"
       },
       "environment_selfcheck": {
         "executed": true,
         "status": "passed",
         "python_3_11": true,
         "python_3_13": true
+      },
+      "new_tests": {
+        "paragraph_sources": 11,
+        "paragraph_evidence": 8,
+        "executed_in_full_suite": true
       }
     },
-    "real_wps_producer_validation": "not_run_no_verifiable_native_sample_and_independent_paragraph_expectations",
-    "host_automatic_trigger": "not_run",
+    "ci": {
+      "run_id": 41178785301,
+      "commit_sha": "1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab",
+      "job_ids": {
+        "python_3_11": 124471737217,
+        "python_3_13": 124471737020
+      },
+      "source": "GitHub Actions actual job logs"
+    },
     "description": {
       "characters": 141,
       "changed_this_batch": false,
       "scope_manually_reviewed": true
     },
-    "limits": [
-      "Full synthetic/automated regression passed; real WPS producer semantic acceptance not run",
-      "No Word/WPS application output validation",
-      "No external office conversion or writing enabled",
-      "CI runner is Linux GitHub Actions, not actual production harness end-to-end host"
-    ],
+    "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+    "word_wps_visual_validation": "not_run",
+    "true_production_host_integration": "not_run",
+    "dedicated_naming_linter": "not_run_no_tool_available",
     "branch": "codex/wps-paragraph-source-cp-20261031",
     "pr": 1,
     "package": "no_package_generated_draft_pr_only",
-    "ci": {
-      "run_id": 41178515332,
-      "job_ids": {
-        "python_3_11": 124470941320,
-        "python_3_13": 124470941266
-      },
-      "commit_sha": "859106446b74f34e3d3b50dc287a2b42dbcd198d",
-      "source": "GitHub Actions log; both jobs completed success"
-    }
+    "limits": [
+      "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+      "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+      "No independently verified native WPS producers and expected content/format",
+      "GitHub Actions Linux runner not a production harness integration test"
+    ]
   },
   "history": [
+    {
+      "version": "20261031.1435.5095",
+      "note": "Previous CP-source-only branch stage, GitHub CI 435 passing; preserved as history after CHPX/PAPX association.",
+      "evidence": {
+        "version": "20261031.1435.5095",
+        "platform": "GitHub Actions ubuntu-latest x86_64; Python 3.11 and 3.13 (separate jobs)",
+        "stdlib_only": true,
+        "changes": [
+          "Opt-in UTF-16 stored paragraph CP source ranges in MS-DOC branch",
+          "No-op field/object policies preserve exact stored CP provenance",
+          "JSON-only metadata output; transformed stories report partial without fabricated source positions",
+          "Added explicit coverage check against stored story CP end and regression for fragmented surrogate-pair pieces/empty story"
+        ],
+        "tests": {
+          "isolated_helper": {
+            "passed": 5,
+            "failed": 0,
+            "command": "python -I -S -B -m unittest discover -s . -p 'test_*.py' -v (isolated helper prototype)"
+          },
+          "new_wps_integration": {
+            "defined": 11,
+            "executed": true,
+            "status": "passed_in_full_suite"
+          },
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 435,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 435,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          }
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_sample_and_independent_paragraph_expectations",
+        "host_automatic_trigger": "not_run",
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "limits": [
+          "Full synthetic/automated regression passed; real WPS producer semantic acceptance not run",
+          "No Word/WPS application output validation",
+          "No external office conversion or writing enabled",
+          "CI runner is Linux GitHub Actions, not actual production harness end-to-end host"
+        ],
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "ci": {
+          "run_id": 41178515332,
+          "job_ids": {
+            "python_3_11": 124470941320,
+            "python_3_13": 124470941266
+          },
+          "commit_sha": "859106446b74f34e3d3b50dc287a2b42dbcd198d",
+          "source": "GitHub Actions log; both jobs completed success"
+        }
+      }
+    },
     {
       "version": "20261029.1850.4782",
       "note": "Prior current evidence moved into history; not rerun in optional paragraph CP source branch.",
