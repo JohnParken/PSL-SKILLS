@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1632.3452"
+version: "20261031.1644.5406"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -46,7 +46,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
 
 ## BIFF8 额外审计（可选，不影响文字读取）
 
-需要核对 ET/ETT 中富字符串 FormatRun 位置、公式保存缓存风险、原始 XF 格式证据时，可以在完成上述自检后，使用**独立入口** `python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et`。它只接受经当前读取器确认的 `biff8_readonly_v1`，默认正常 `read_wps.py` 输出与 Word/MS-DOC 文字读取器均不变；返回的富文本字体索引和 XF 字节不代表最终显示格式，公式缓存不保证最新且绝不计算。详情、范围、退出码和上限见 BIFF8 保存证据审计（`<skill-root>/references/biff8-stored-audit.md`）。本次为合成及格式证据验证，未证明新审计结果在 WPS Office 原生富文本/公式文档上的完整语义兼容。
+需要核对 ET/ETT 中富字符串 FormatRun 位置、公式保存缓存风险、原始 XF 格式证据时，可以在完成上述自检后，使用**独立入口** `python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et`。它只接受经当前读取器确认的 `biff8_readonly_v1`，默认正常 `read_wps.py` 输出与 Word/MS-DOC 文字读取器均不变；新增可选的 Font 原始记录引用、CalcMode/CalcSaveRecalc/RecalcId 保存值和 XF 父样式直接来源观察，**不计算字体效果、样式级联或公式缓存的最新性**，绝不执行公式。详情、范围、退出码和上限见 BIFF8 保存证据审计（`<skill-root>/references/biff8-stored-audit.md`）。本次为合成及格式证据验证，未证明新审计结果在 WPS Office 原生富文本/公式文档上的完整语义兼容。
 
 ## 文字：读取 WPS 正文与附加内容
 
