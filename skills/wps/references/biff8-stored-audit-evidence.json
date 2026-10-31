@@ -1,36 +1,36 @@
 {
   "schema_version": "wps_biff8_audit_evidence_v1",
-  "status": "synthetic_ci_passed_native_wps_semantics_not_run",
+  "status": "synthetic_and_four_pinned_real_stored_value_checks_passed_native_styling_not_run",
   "date": "2026-10-31",
   "scope": "standalone_readonly_BIFF8_saved_evidence_audit",
   "source_base": "main",
   "implementation": "skills/wps/scripts/wps_biff8_audit.py",
   "tests": "skills/wps/scripts/test_wps_biff8_audit.py",
-  "new_unit_tests": 10,
+  "new_unit_tests": 15,
   "ci": {
-    "run_id": 41185200301,
-    "commit_sha": "00aaa0f4dd3051a1723e6a5482b6247830ac7868",
+    "run_id": 41185939309,
+    "commit_sha": "2438ce27872ad2003bd17209de98115a1bddccab",
     "python_3_11": {
-      "job_id": 124490612462,
+      "job_id": 124492756711,
       "new_tests": {
-        "passed": 10,
+        "passed": 15,
         "failed": 0
       },
       "full_wps_suite": {
-        "passed": 434,
+        "passed": 439,
         "failed": 0
       },
       "selfcheck": "environment-ok",
       "strict_skill": "OK skills/wps"
     },
     "python_3_13": {
-      "job_id": 124490612370,
+      "job_id": 124492756863,
       "new_tests": {
-        "passed": 10,
+        "passed": 15,
         "failed": 0
       },
       "full_wps_suite": {
-        "passed": 434,
+        "passed": 439,
         "failed": 0
       },
       "selfcheck": "environment-ok",
@@ -57,6 +57,82 @@
     "No final applied font or rich rendering is inferred",
     "Formula cache freshness, expression meaning and recomputation remain unknown",
     "XF source bytes are not applied/effective cell styles",
-    "Synthetic tests do not prove WPS Office producer/version compatibility"
-  ]
+    "Synthetic tests do not prove WPS Office producer/version compatibility",
+    "Four pinned originals have no rich SST FormatRun; Font linkage is supported by synthetic tests only",
+    "Real stored-value acceptance checks source records, not independent application-level formula results or WPS visuals"
+  ],
+  "version": "20261031.1644.5406",
+  "previous_stage_evidence": {
+    "new_unit_tests": 10,
+    "ci": {
+      "run_id": 41185200301,
+      "commit_sha": "00aaa0f4dd3051a1723e6a5482b6247830ac7868",
+      "python_3_11": {
+        "job_id": 124490612462,
+        "new_tests": {
+          "passed": 10,
+          "failed": 0
+        },
+        "full_wps_suite": {
+          "passed": 434,
+          "failed": 0
+        },
+        "selfcheck": "environment-ok",
+        "strict_skill": "OK skills/wps"
+      },
+      "python_3_13": {
+        "job_id": 124490612370,
+        "new_tests": {
+          "passed": 10,
+          "failed": 0
+        },
+        "full_wps_suite": {
+          "passed": 434,
+          "failed": 0
+        },
+        "selfcheck": "environment-ok",
+        "strict_skill": "OK skills/wps"
+      },
+      "initial_cli_issue": "Python -I removed script directory from sys.path; standalone module import corrected and rerun passed"
+    },
+    "scope": "Initial standalone audit before Font/calc/XF source linking"
+  },
+  "implementation_helpers": [
+    "skills/wps/scripts/wps_biff8_audit.py",
+    "skills/wps/scripts/wps_biff8_audit_sources.py"
+  ],
+  "real_samples": {
+    "run_id": 41185939341,
+    "job_id": 124492756992,
+    "source_manifest": "skills/wps/references/et-real-samples.json",
+    "verification_code": "tests/wps_biff8_audit_real_samples.py",
+    "original_samples": 4,
+    "sha256_verified": 4,
+    "frozen_stored_values_checked": 198,
+    "saved_formula_caches_checked": 33,
+    "actual_rich_format_sst_observed": 0,
+    "font_records_observed": [
+      4,
+      9,
+      9,
+      9
+    ],
+    "calc_records_observed": [
+      6,
+      2,
+      2,
+      2
+    ],
+    "xf_records_observed": [
+      21,
+      73,
+      31,
+      42
+    ],
+    "software_producer_version_confirmed": false,
+    "effective_style_semantics_verified": false,
+    "cache_freshness_verified": false,
+    "originals_vendored": false,
+    "download_maintenance_only": true
+  }
 }
