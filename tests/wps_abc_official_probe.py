@@ -118,7 +118,11 @@ def _inspect(item, read_bytes):
             entry["reader_scope"] = "not_a_supported_document_container"
             return entry
         try:
-            result = read_bytes(data, compatibility="data", object_policy="placeholder")
+            # OOXML must not receive binary-only object policy.
+            # A .doc suffix is never used to pick the parser.
+            options = ({"compatibility": "data", "object_policy": "placeholder"}
+                       if entry["magic"] == "CFB_OLE" else {})
+            result = read_bytes(data, **options)
             entry.update({"reader_status": result.get("status"),
                           "reader_format": result.get("format"),
                           "paragraph_count": len(result.get("paragraphs", [])),
