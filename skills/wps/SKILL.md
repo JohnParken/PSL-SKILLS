@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1546.1688"
+version: "20261031.1617.5405"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -66,6 +66,8 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 公开候选 `.wps` 文件已获得一次固定哈希与独立算法的全文/段落对照，但来源声明不能证明创建工具或版本，且尚缺 WPS 软件导出的独立完整预期；具体见真实验收 (`<skill-root>/references/wps-real-validation.md`)。 政府官网公开附件中已有 7 份 CFB 文件下载并核实签名，其中 6 份正文在受控 MS-DOC 子集内返回 partial 并与另一套算法逐段一致；仍不能据此证明 WPS Office 制作版本或完整显示兼容。详情见政府文件实测 (`<skill-root>/references/wps-government-validation.md`)。不得将其视为已完成原生格式兼容认证。
 
 中国农业银行官网公开附件的只读实测中，五份 `.doc` 有三份为 ZIP/OOXML、一份为受限可读 MS-DOC CFB（partial）、一份 CFB 被严格容器校验拒绝；另三份总行附件实际为 PDF。它们并非已验证的原生 `.wps`，不得用其成功数宣称 WPS 专有格式兼容。详细结果见农业银行官方附件验收（`<skill-root>/references/wps-abc-official-validation.md`）。
+
+中国银行/建设银行/工商银行官网公开附件的受限维护验收已记录：10 个官方链接中 4 份实际下载，2 份中行 OOXML 返回 ok，工商银行 1 份 OOXML 和 1 份 CFB/MS-DOC 返回 partial（其中 CFB 的正文算法交叉核对一致）；建行 6 份因官网 TLS 旧版重协商要求未能安全下载。**这不是原生 `.wps` 的验收通过率**，详见三行官网实测（`<skill-root>/references/wps-three-banks-official-validation.md`），禁止将下载失败统计为解析失败。
 
 ## 结果与按需验收
 
