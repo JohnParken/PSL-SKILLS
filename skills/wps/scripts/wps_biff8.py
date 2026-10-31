@@ -19,6 +19,7 @@ from wps_biff8_charts import CHART_POLICIES, drawing_frame, chart_end
 from wps_numeric import interpret_cell_number
 from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
 from wps_dxf import validate_dxf
+from wps_biff8_noncell import inspect_noncell
 
 READING_MODES = COMPATIBILITY_MODES + ("data",)
 
@@ -394,7 +395,14 @@ class Reader:
             self.current_location = {'record_offset': offset, 'record_id': hex(kind), 'scope': 'globals'}
             if kind==0x000A:
                 require(not payload,'EOF payload must be empty'); global_end=index+1; break
-            if kind==0x0085:
+            if self.compatibility == 'data' and kind == 0x0086:
+                # MS-XLS Globals Substream: optional WriteProtect must be first.
+                # Its presence does not authorize editing or skipping protection.
+                require(index == 1, 'WriteProtect must be first after global BOF')
+                evidence = inspect_noncell(kind, payload, 'globals')
+                self.metadata_record(record, {kind: 'WriteProtectValidated'}, 'globals')
+                self.metadata[-1]['structure'] = evidence
+            elif kind==0x0085:
                 require(len(payload)>=8,'Truncated BoundSheet8')
                 position=struct.unpack_from('<I',payload)[0]; hidden=payload[4]&3; sheet_type=payload[5]
                 require(hidden in (0,1,2) and sheet_type==0,'Macro/chart/VBA BoundSheet8 types unsupported')
@@ -558,6 +566,7 @@ class Reader:
     def sheet(self,index,bound):
         self.current_location = {'record_offset': self.records[index][0],
                                  'record_id': hex(self.records[index][1]), 'sheet': bound['name']}
+        sheet_bof_index = index
         bof_raw=bof(self.records[index],0x0010); index+=1; cells={}; merges=[]; ws_bool=False; pending=None
         drawing_pending=False; chart_pending=None; object_ids=set()
         page_break_last_key={0x001B:None,0x001A:None}
@@ -641,7 +650,17 @@ class Reader:
                     group['observed_members'] = counts[anchor]
                 return {**bound,'bof_raw_hex':bof_raw,'cells':cells,'merges':merges,
                         'formula_groups':list(formula_groups.values()), 'visibility':visibility.report()},index
-            if kind==0x0081:
+            if self.compatibility == 'data' and kind == 0x005E:
+                # MS-XLS Worksheet Substream: Uncalced can only precede Index
+                # and all other worksheet records. The cached values remain raw.
+                require(index == sheet_bof_index + 2, 'Uncalced must immediately follow worksheet BOF')
+                evidence = inspect_noncell(kind, payload, 'worksheet')
+                self.metadata_record(record, {kind: 'UncalcedValidated'}, bound['name'])
+                self.metadata[-1]['structure'] = evidence
+                self.issue({'sheet': bound['name'], 'offset': offset,
+                            'code': 'saved_formula_recalculation_pending',
+                            'message': 'Uncalced signals saved formulas were pending recalculation; cached values remain unverified.'})
+            elif kind==0x0081:
                 require(not ws_bool and len(payload)==2 and not struct.unpack('<H',payload)[0]&0x0010,'Duplicate/malformed/dialog WsBool unsupported')
                 ws_bool=True
             elif kind in (0x0203,0x027E,0x0205,0x0201,0x00FD,0x0204,0x0006):
