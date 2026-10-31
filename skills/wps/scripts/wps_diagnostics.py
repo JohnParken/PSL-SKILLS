@@ -200,7 +200,8 @@ def _coverage(result, diagnostic_records):
         source_field = record['source_field']
         code = item.get('code', 'reader_diagnostic')
         code_text = code if isinstance(code, str) else ''
-        if code_text == 'picture_or_data_marker_not_decoded':
+        if code_text in ('picture_or_data_marker_not_decoded',
+                         'drawn_shape_anchor_not_rendered'):
             objects.state = 'not_decoded'
             locations = _sequence(item.get('locations'))
             if locations:
