@@ -35,6 +35,8 @@ python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et
 
 ## 回归检查
 
+Linux 自动化完成了 Python 3.11 与 3.13 环境的独立脚本测试（各 10 项）、WPS 全量回归（各 434 项）和严格 Skill 检查，均通过。实际 CI、初次 CLI 隔离导入问题及未完成的原生 ET/ETT 应用级验证记于机器证据（`<skill-root>/references/biff8-stored-audit-evidence.json`）。这不是原生富文本/复杂格式的真实生产者验收。
+
 本工作线的验证应包含以下命令（按真实已确认的仓库路径或 Skill 实际根目录执行）。严格 Skill 检查的脚本是**仓库维护入口**，不是分发 Skill 的运行时依赖：
 
 ```console
