@@ -19,7 +19,7 @@
 
 仅在 `data` 模式，对有明确微软编码标识的 CodePage (0x0042) 元数据另接受 `874`、`949`、`950`、`1250`、`1251`。保留以前的 `1200`、`932`、`936`、`1252`。这些数值仅作为 **Workbook 声明**保存并输出 `code_page_raw`；BIFF8 的 SST/Label/Formula String 等依各自 Unicode fHighByte 读取，**不使用声明的 CodePage 重新解释压缩 Unicode 字节**。非 1200 返回 `partial` 与 `codepage_metadata_not_applied`，提示字节编码并未应用。既有合法文本、数字、缓存和错误值不改变。
 
-严格模式与显式 legacy 模式仍只接受 1200；未知编码页（包括无专门实测依据的 65001）、错误 payload 长度及相互冲突的 CodePage 声明仍拒绝。**Date1904 在 MS-XLS Globals Substream 规范中是必需记录**；缺失仍拒绝，不静默默认 1900。详细代码仅改 `wps_biff8.py` 的编码编号集合，新增 `<skill-root>/scripts/test_wps_biff_codepage_decl.py` 合成单测。暂未找到包含新 5 种声明的真实原生 ET/ETT 及独立完整预期；既有四份真实 ET/ETT 仅能证明保存值无回归。
+严格模式与显式 legacy 模式仍只接受 1200；未知编码页（包括无专门实测依据的 65001）、错误 payload 长度及相互冲突的 CodePage 声明仍拒绝。**Date1904 在 MS-XLS Globals Substream 规范中是必需记录**；缺失仍拒绝，不静默默认 1900。详细代码仅改 `wps_biff8.py` 的编码编号集合，新增 `<skill-root>/scripts/test_wps_biff_codepage_decl.py` 合成单测。本轮 Linux Python 3.11/3.13 分别完整运行 **452 项** WPS 单测、入口自检和严格 Skill 检查，全数通过。四份固定原件在校验哈希后重新核对 **198 项保存值**，其中 33 项仍属于未验证新鲜度的公式缓存；已验证保存值未回归。详见机器证据（`<skill-root>/references/et-codepage-evidence.json`）。**尚无包含新增五种 CodePage 声明的独立真实 ET/ETT 原件**；因此新增兼容行为只通过合成记录验证，不能宣称生产者级 ET 兼容率。
 
 开发依据（仅维护时访问）：Microsoft MS-XLS Globals Substream、CodePage、Date1904，及 Microsoft Windows Code Page Identifiers：
 
