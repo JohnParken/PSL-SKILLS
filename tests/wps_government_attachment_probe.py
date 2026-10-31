@@ -138,7 +138,7 @@ def inspect(item, read_bytes):
                     'text_equal': text_match, 'paragraphs_equal': paragraphs_match,
                     'main_units': independent['main_units'],
                     'piece_count': independent['piece_count'],
-                    'independent_paragraph_count': independent['paragraph_count']}
+                    'independent_paragraph_count': len(independent['paragraphs'])}
             except (ValueError, KeyError, UnicodeError, IndexError, OSError) as exc:
                 result['independent_story_comparison'] = {
                     'status': 'not_supported_by_independent_checker',
