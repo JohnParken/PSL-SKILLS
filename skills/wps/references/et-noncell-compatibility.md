@@ -15,6 +15,19 @@
 
 这两种记录原先没有被读取器列入白名单，即使其出现不一定改变单元格保存值也会阻止整簿提取。现在仅在精准验证成功时保留为 `uninterpreted_metadata`，结构见各记录的 `structure` 子段。低层严格 `strict` 和显式旧版 `legacy_excel_clsid` 的原有拒绝边界不变；不在任何失败后自动重试 `data`。
 
+## CodePage 声明的受控扩展（下一批）
+
+仅在 `data` 模式，对有明确微软编码标识的 CodePage (0x0042) 元数据另接受 `874`、`949`、`950`、`1250`、`1251`。保留以前的 `1200`、`932`、`936`、`1252`。这些数值仅作为 **Workbook 声明**保存并输出 `code_page_raw`；BIFF8 的 SST/Label/Formula String 等依各自 Unicode fHighByte 读取，**不使用声明的 CodePage 重新解释压缩 Unicode 字节**。非 1200 返回 `partial` 与 `codepage_metadata_not_applied`，提示字节编码并未应用。既有合法文本、数字、缓存和错误值不改变。
+
+严格模式与显式 legacy 模式仍只接受 1200；未知编码页（包括无专门实测依据的 65001）、错误 payload 长度及相互冲突的 CodePage 声明仍拒绝。**Date1904 在 MS-XLS Globals Substream 规范中是必需记录**；缺失仍拒绝，不静默默认 1900。详细代码仅改 `wps_biff8.py` 的编码编号集合，新增 `<skill-root>/scripts/test_wps_biff_codepage_decl.py` 合成单测。暂未找到包含新 5 种声明的真实原生 ET/ETT 及独立完整预期；既有四份真实 ET/ETT 仅能证明保存值无回归。
+
+开发依据（仅维护时访问）：Microsoft MS-XLS Globals Substream、CodePage、Date1904，及 Microsoft Windows Code Page Identifiers：
+
+- https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/ca4c1748-8729-4a93-abb9-4602b3a01fb1
+- https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/03651cf7-1926-4356-b42b-a378938975e5
+- https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/4a5e900a-0eb0-4355-8fc1-81aab8f46e8b
+- https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+
 ## 仍应拒绝、暂不放宽的记录与结构
 
 | 情况 | 保持拒绝的原因 |
