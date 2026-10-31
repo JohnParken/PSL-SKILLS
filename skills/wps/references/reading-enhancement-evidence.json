@@ -2,7 +2,7 @@
   "schema_version": "wps_validation_evidence_v1",
   "current": {
     "version": "20261031.1435.5095",
-    "platform": "Linux / Python 3.13 isolated standard-library helper tests; full repository runtime unavailable",
+    "platform": "GitHub Actions ubuntu-latest x86_64; Python 3.11 and 3.13 (separate jobs)",
     "stdlib_only": true,
     "changes": [
       "Opt-in UTF-16 stored paragraph CP source ranges in MS-DOC branch",
@@ -18,16 +18,36 @@
       },
       "new_wps_integration": {
         "defined": 11,
-        "executed": false,
-        "status": "not_run"
+        "executed": true,
+        "status": "passed_in_full_suite"
       },
       "full_wps_suite": {
-        "executed": false,
-        "status": "not_run"
+        "executed": true,
+        "status": "passed",
+        "python_3_11": {
+          "passed": 435,
+          "failed": 0,
+          "skipped": 0
+        },
+        "python_3_13": {
+          "passed": 435,
+          "failed": 0,
+          "skipped": 0
+        },
+        "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
       },
       "strict_skill_check": {
-        "executed": false,
-        "status": "not_run"
+        "executed": true,
+        "status": "passed",
+        "python_3_11": "OK skills/wps",
+        "python_3_13": "OK skills/wps",
+        "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict"
+      },
+      "environment_selfcheck": {
+        "executed": true,
+        "status": "passed",
+        "python_3_11": true,
+        "python_3_13": true
       }
     },
     "real_wps_producer_validation": "not_run_no_verifiable_native_sample_and_independent_paragraph_expectations",
@@ -38,14 +58,23 @@
       "scope_manually_reviewed": true
     },
     "limits": [
-      "Isolated helper tests are not full WPS regression",
+      "Full synthetic/automated regression passed; real WPS producer semantic acceptance not run",
       "No Word/WPS application output validation",
-      "No Linux target harness integration beyond helper",
-      "No external office conversion or writing enabled"
+      "No external office conversion or writing enabled",
+      "CI runner is Linux GitHub Actions, not actual production harness end-to-end host"
     ],
     "branch": "codex/wps-paragraph-source-cp-20261031",
     "pr": 1,
-    "package": "no_package_generated_draft_pr_only"
+    "package": "no_package_generated_draft_pr_only",
+    "ci": {
+      "run_id": 41178515332,
+      "job_ids": {
+        "python_3_11": 124470941320,
+        "python_3_13": 124470941266
+      },
+      "commit_sha": "859106446b74f34e3d3b50dc287a2b42dbcd198d",
+      "source": "GitHub Actions log; both jobs completed success"
+    }
   },
   "history": [
     {
