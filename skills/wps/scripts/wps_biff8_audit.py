@@ -170,6 +170,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', help='Task-relative BIFF8 .et/.ett or supported BIFF workbook')
     arguments = parser.parse_args(argv)
+    # -I does not include the executable's directory in sys.path.
+    # Resolve only this installed Skill script folder, never the task input path.
+    from pathlib import Path
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     from read_wps import read
     from wps_result import encode_result
     original = read(arguments.input)
