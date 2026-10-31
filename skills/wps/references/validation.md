@@ -8,6 +8,7 @@
 - 分支增量：MS-DOC 段落来源范围 (`<skill-root>/references/validation.md#分支增量ms-doc-段落来源范围`)
 - 分支增量：CHPX/PAPX 观测来源关联 (`<skill-root>/references/validation.md#分支增量chpxpapx-观测来源关联`)
 - 农业银行官网公开 DOC/PDF 实测 (`<skill-root>/references/validation.md#农业银行官网公开-docpdf-实测`)
+- 中行、建行、工行官网公开文档实测 (`<skill-root>/references/validation.md#中行建行工行官网公开文档实测`)
 - 可复现的本地检查 (`<skill-root>/references/validation.md#可复现的本地检查`)
 - 样本与未验证边界 (`<skill-root>/references/validation.md#样本与未验证边界`)
 - 历史证据 (`<skill-root>/references/validation.md#历史证据`)
@@ -33,6 +34,12 @@
 ## 农业银行官网公开 DOC/PDF 实测
 
 2026-10-31，维护 CI 针对中国农业银行官网正式公开下载附件，按实际内容而非文件后缀识别格式：共 8 份全部下载；3 份名为 `.doc` 的广东省分行文件实为 ZIP/OOXML，分别 `ok` 读出 16/9/12 个段落；广西两份 `.doc` 实为 CFB，其中桂林分行 76 个段落以 `partial` 返回并记录对象缺口，南宁分行因容器严格结构门禁拒绝；另三份总行附件为 PDF，不属于本 Skill 可用输入。所有 SHA、来源链接和原始错误见农业银行验证报告（`<skill-root>/references/wps-abc-official-validation.md`）及机器证据（`<skill-root>/references/wps-abc-official-evidence.json`）。这不是原生 `.wps` 的生产版本或全文视觉认证，不能绕过 CFB 检查提升“成功率”；测试通过说明分支路由与声明的有限读取范围。
+
+## 中行、建行、工行官网公开文档实测
+
+维护 CI 在三家银行官方公告中的 10 个办公附件直链上分别执行**受限真实下载与文件内容签名识别**：中行 2 份 .docx 均下载、识别 OOXML 且以 ok 提取 16/14 个段落；工行 2 份下载，其中 1 份 .docx 为 OOXML/partial（1 段，报价标题锚点缺失），1 份 .doc 为 CFB/MS-DOC/partial（1 段，另一个独立 FIB/CLX 算法的全文和段落数组一致）；建行两处官网的 6 份 .doc/.docx 均因 `UNSAFE_LEGACY_RENEGOTIATION_DISABLED` 下载失败，无文件字节可解析，**不计入解析成功或失败**。CI 运行 `41183896639`，精确 URL/SHA-256、锚点及受限结论见三行实测报告（`<skill-root>/references/wps-three-banks-official-validation.md`）和机器证据（`<skill-root>/references/wps-three-banks-official-evidence.json`）。不禁用 TLS 证书验证或降低协议安全条件，不从第三方副本替代原件。
+
+四份已读取文件均非已验证的原生 .wps，包含 3 份 OOXML 和 1 份 CFB/MS-DOC；不能以 4/4 推论 WPS 专有格式兼容，也不能将算法一致当成 Office 应用人工逐段验证。生产读取器、安全边界及公共 `partial` 契约未因该维护测试修改。
 
 ## 当前验证范围
 
