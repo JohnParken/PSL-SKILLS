@@ -63,7 +63,11 @@ class BinaryShapesTests(unittest.TestCase):
                               if i['code'] == 'drawn_shape_anchor_not_rendered'), 2)
         self.assert_error(shaped_document('甲\x08乙\x08\r', anchors=(1, 1)),
                           'corrupt', object_policy='placeholder')
-        self.assert_error(shaped_document(terminal=100),
+        # The final PlcfSpa CP is undefined by MS-DOC: ignore its magnitude.
+        self.assertEqual(parse_streams(shaped_document(terminal=100),
+                                       object_policy='placeholder')['status'], 'partial')
+        # Real anchor CPs, unlike the final sentinel, must belong to the story.
+        self.assert_error(shaped_document(anchors=(4,), terminal=100),
                           'corrupt', object_policy='placeholder')
 
     def test_bad_plcf_size_and_alias(self):
