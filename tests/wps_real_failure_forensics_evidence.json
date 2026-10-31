@@ -1,0 +1,122 @@
+{
+  "schema_version": "wps_real_failure_forensics_v1",
+  "date": "2026-10-31",
+  "source_class": "pinned_sha256_official_public_attachments",
+  "code_scope": "maintenance_only_diagnostics_no_reader_patch",
+  "ci": {
+    "run_id": 41184963914,
+    "job_id": 124489928317,
+    "linux": "GitHub Actions ubuntu-latest",
+    "python": "3.13",
+    "source_commit": "d1b81a9c8687bb5973092e1d383c9b4044acd8ff",
+    "conclusion": "success"
+  },
+  "cases": [
+    {
+      "id": "government_supporting_material_wps",
+      "official_page": "https://jsj.zs.gov.cn/gkmlpt/content/2/2656/post_2656565.html",
+      "original_url": "https://jsj.zs.gov.cn/attachment/0/579/579836/2656565.wps",
+      "sha256": "3ccedb9e26d89410796508531912169559c0a0258303a085075e69829762375c",
+      "bytes": 24576,
+      "detector": "CFB/OLE MS-DOC supported container",
+      "reader_outcome": "unsupported",
+      "reader_reason": "Fields/objects/C0 control codes outside plain-text subset",
+      "reader_location": {
+        "stream": "WordDocument",
+        "offset": 2546
+      },
+      "cfb_header": {
+        "major": 3,
+        "minor": 62,
+        "sector_shift": 9,
+        "sector_size": 512,
+        "alignment_remainder": 0,
+        "reserved_fields_zero": true,
+        "header_clsid_zero": false
+      },
+      "code": {
+        "piece": 0,
+        "compressed": false,
+        "cp": 249,
+        "utf16_code": "U+0008",
+        "spec_kind": "drawn object"
+      },
+      "shape_metadata": {
+        "fc_lcb_pair_index": 40,
+        "plcf_spa_mom_length": 64,
+        "shape_count": 2,
+        "anchors_strictly_increasing": true,
+        "target_cp_in_anchors": true
+      },
+      "inference": "Normative MS-DOC drawn-object character with observed PlcfSpa anchor, not arbitrary unknown text",
+      "unverified": [
+        "sprmCFSpec run/property consistency",
+        "SPA payload semantics",
+        "actual shape rendering",
+        "full document body/text acceptance"
+      ],
+      "recommended_change": "opt-in validated drawn object placeholder, preserve diagnostics and strict default"
+    },
+    {
+      "id": "agricultural_bank_nda_doc",
+      "official_page": "https://www.abchina.com/cn/branch/gx/cg/bm/202404/t20240425_2415781.htm",
+      "original_url": "https://www.abchina.com/cn/branch/gx/cg/bm/202404/W020240425607944480483.doc",
+      "sha256": "a3be79ad74fa0a810215ab477116fdba687aac628b0ab9477fbce7936e20ae1a",
+      "bytes": 862771,
+      "detector": "CFB/OLE",
+      "reader_outcome": "invalid_or_unsupported",
+      "reader_reason": "Invalid CFB reserved header fields/alignment/minimum size",
+      "cfb_header": {
+        "major": 3,
+        "minor": 62,
+        "sector_shift": 9,
+        "sector_size": 512,
+        "reserved_fields_zero": true,
+        "header_clsid_zero": true,
+        "minimum_size_ok": true,
+        "alignment_remainder": 51,
+        "trailer_nonzero": true,
+        "trailer_sha256": "e7433e2f9f222b78938aa11c97e88f8c0108f8e2daa88770a01786034cbd6b47"
+      },
+      "aligned_prefix_forensics": {
+        "mode": "in_memory_forensic_only_not_production_fallback",
+        "trailing_51_bytes_removed_for_structure_test_only": true,
+        "cfb_parse_result": "failed",
+        "reason": "FAT allocates sectors beyond physical input"
+      },
+      "inference": "At least two structural blockers; not safely resolvable by dropping trailing 51 bytes",
+      "unverified": [
+        "why original bytes are not sector aligned",
+        "whether official source is malformed/exported in nonstandard manner",
+        "independent Word/WPS opening/rendering",
+        "safe supported normalization profile"
+      ],
+      "recommended_change": "diagnose FAT indices/header and independent producer evidence before even considering any opt-in compatibility reader"
+    }
+  ],
+  "additional_cases": [
+    {
+      "id": "icbc_jinan_2024_price",
+      "outcome": "OOXML partial one paragraph",
+      "anchor": "报价",
+      "anchor_matched": false,
+      "classification": "semantic coverage gap not parse crash",
+      "missing_reason": "unknown; cannot infer scan-only content without media inspection"
+    },
+    {
+      "id": "ccb_2026_six_files",
+      "outcome": "download failed",
+      "error": "SSL UNSAFE_LEGACY_RENEGOTIATION_DISABLED",
+      "classification": "transport/TLS; no bytes obtained; not a parser failure"
+    }
+  ],
+  "safety_boundary": {
+    "default_strict_reader_unchanged": true,
+    "no_implicit_trim": true,
+    "no_automatic_retry": true,
+    "no_unknown_control_skipping": true,
+    "no_runtime_network": true,
+    "full_format_verified": false,
+    "producer_verified": false
+  }
+}
