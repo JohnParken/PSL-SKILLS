@@ -28,27 +28,33 @@
     "no_legacy_encoded_bytes_decoded": true
   },
   "tests": {
-    "workflow_run_id": 41253516735,
+    "workflow_run_id": 41253596013,
     "python_3_11": {
-      "job_id": 124691757020,
+      "job_id": 124691993352,
       "full_suite_passed": 452,
       "failed": 0,
       "strict_skill": "OK skills/wps",
       "environment": "environment-ok"
     },
     "python_3_13": {
-      "job_id": 124691756847,
+      "job_id": 124691993471,
       "full_suite_passed": 452,
       "failed": 0,
       "strict_skill": "OK skills/wps",
       "environment": "environment-ok"
     },
     "new_codepage_synthetic_cases": 7,
-    "pinned_real_samples_run_id": 41253516759,
-    "pinned_real_samples_job_id": 124691756728,
+    "pinned_real_samples_run_id": 41253596064,
+    "pinned_real_samples_job_id": 124691993194,
     "real_et_ett_originals_verified": 4,
     "independently_frozen_saved_values_matched": 198,
-    "frozen_formula_caches_retained_unverified": 33
+    "frozen_formula_caches_retained_unverified": 33,
+    "previous_passed_ci": {
+      "workflow_run_id": 41253516735,
+      "pinned_real_samples_run_id": 41253516759,
+      "description": "First code and docs snapshot, final source document update was subsequently rerun"
+    },
+    "final_source_sha": "9ed786a22cf5dbd6c694f10bdab6fa3c7fd803f0"
   },
   "independence": {
     "word_msdoc_reader_code_changed": false,
