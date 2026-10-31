@@ -41,6 +41,7 @@ CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupport
 - `regions` 仅汇总附加区域类型、状态、来源、空状态与引用状态，不复制正文或被排除文字。
 - `visibility` 按部件统计已记录 run 的 action/state，保留策略；精确路径见原 `visibility.runs`。计数不是字符覆盖率，未记录 run 不推断可见性。
 - `full_format_verified` 始终 false。原始诊断仍是完整依据，摘要不是隐私或安全认证。
+- 已有绘图锚点未渲染 `drawn_shape_anchor_not_rendered` 与 `picture_or_data_marker_not_decoded` 同属 `coverage.objects.state=not_decoded`；摘要按已有对象来源位置/CP 计数，允许保留 `shape_index`、`spa_record_offset`、`plcf_offset` 等受控定位字段，不读取、复制或展示对象正文。嵌套附加故事中出现的对象诊断同样参与覆盖统计；这些是未解码证据，不能视为对象渲染能力。
 
 本轮二进制主正文新增保守绘图标记：`--object-policy placeholder` 可以在 `PlcfSpa` CP/存储字符全部经过校验的情况下，将 `U+0008` 替换成 `U+FFFC` 并返回 `drawn_shape_anchor_not_rendered`，保留 CP、WordDocument 偏移与 SPA 源偏移；默认 reject 不变。该诊断不是图像、文字、字体或绘制结果的还原。具体边界见 绘图锚点（`<skill-root>/references/binary-shapes.md`）。
 
