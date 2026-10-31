@@ -1,53 +1,103 @@
 {
   "schema_version": "wps_validation_evidence_v1",
   "current": {
-    "version": "20261029.1850.4782",
-    "platform": "Darwin arm64; Linux target not available (docker/podman absent)",
-    "python": "3.12.14",
-    "expat": "2.8.3",
+    "version": "20261031.1435.5095",
+    "platform": "Linux / Python 3.13 isolated standard-library helper tests; full repository runtime unavailable",
     "stdlib_only": true,
     "changes": [
-      "Default data selects exact existing legacy Word CFB header profile",
-      "Data and legacy file entrypoints accept observed CFB minor 0x003B with diagnostics",
-      "Global DXF 0x088D structurally parsed and retained without applying formatting",
-      "Explicit data policy accepted by WPS sample verifier"
+      "Opt-in UTF-16 stored paragraph CP source ranges in MS-DOC branch",
+      "No-op field/object policies preserve exact stored CP provenance",
+      "JSON-only metadata output; transformed stories report partial without fabricated source positions"
     ],
-    "wps_tests": {
-      "passed": 424,
-      "failed": 0,
-      "skipped": 0,
-      "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p test_*.py"
+    "tests": {
+      "isolated_helper": {
+        "passed": 5,
+        "failed": 0,
+        "command": "python -I -S -B -m unittest discover -s . -p 'test_*.py' -v (isolated helper prototype)"
+      },
+      "new_wps_integration": {
+        "defined": 10,
+        "executed": false,
+        "status": "not_run"
+      },
+      "full_wps_suite": {
+        "executed": false,
+        "status": "not_run"
+      },
+      "strict_skill_check": {
+        "executed": false,
+        "status": "not_run"
+      }
     },
-    "related_current_tests": {
-      "repository_et_pipeline": 2,
-      "failed": 0,
-      "skipped": 0,
-      "command": "python -I -S -B -m unittest discover -s tests -p test_wps_et_pipeline.py -v"
-    },
+    "real_wps_producer_validation": "not_run_no_verifiable_native_sample_and_independent_paragraph_expectations",
+    "host_automatic_trigger": "not_run",
     "description": {
       "characters": 141,
       "changed_this_batch": false,
       "scope_manually_reviewed": true
     },
-    "validation_kind": "Synthetic structural and behavior regressions; no real failed user file available",
-    "real_samples_rerun": false,
-    "dedicated_naming_linter": "Not installed; not run. Changed identifiers manually reviewed.",
-    "package": "Existing ZIP files unchanged; no release package generated in this batch",
     "limits": [
-      "No Linux/Windows execution",
-      "No new real WPS/ET sample semantic acceptance",
-      "DXF property payload semantics and effective styles remain uninterpreted",
-      "Unknown private records and containers still refused; no complete native WPS conformance claim",
-      "No host attachment auto-selection end-to-end test"
+      "Isolated helper tests are not full WPS regression",
+      "No Word/WPS application output validation",
+      "No Linux target harness integration beyond helper",
+      "No external office conversion or writing enabled"
     ],
-    "structure_check": {
-      "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
-      "exit_code": 0,
-      "result": "OK skills/wps"
-    },
-    "diff_whitespace_check": "git diff --check passed"
+    "branch": "codex/wps-paragraph-source-cp-20261031",
+    "pr": 1,
+    "package": "no_package_generated_draft_pr_only"
   },
   "history": [
+    {
+      "version": "20261029.1850.4782",
+      "note": "Prior current evidence moved into history; not rerun in optional paragraph CP source branch.",
+      "evidence": {
+        "version": "20261029.1850.4782",
+        "platform": "Darwin arm64; Linux target not available (docker/podman absent)",
+        "python": "3.12.14",
+        "expat": "2.8.3",
+        "stdlib_only": true,
+        "changes": [
+          "Default data selects exact existing legacy Word CFB header profile",
+          "Data and legacy file entrypoints accept observed CFB minor 0x003B with diagnostics",
+          "Global DXF 0x088D structurally parsed and retained without applying formatting",
+          "Explicit data policy accepted by WPS sample verifier"
+        ],
+        "wps_tests": {
+          "passed": 424,
+          "failed": 0,
+          "skipped": 0,
+          "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p test_*.py"
+        },
+        "related_current_tests": {
+          "repository_et_pipeline": 2,
+          "failed": 0,
+          "skipped": 0,
+          "command": "python -I -S -B -m unittest discover -s tests -p test_wps_et_pipeline.py -v"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "validation_kind": "Synthetic structural and behavior regressions; no real failed user file available",
+        "real_samples_rerun": false,
+        "dedicated_naming_linter": "Not installed; not run. Changed identifiers manually reviewed.",
+        "package": "Existing ZIP files unchanged; no release package generated in this batch",
+        "limits": [
+          "No Linux/Windows execution",
+          "No new real WPS/ET sample semantic acceptance",
+          "DXF property payload semantics and effective styles remain uninterpreted",
+          "Unknown private records and containers still refused; no complete native WPS conformance claim",
+          "No host attachment auto-selection end-to-end test"
+        ],
+        "structure_check": {
+          "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+          "exit_code": 0,
+          "result": "OK skills/wps"
+        },
+        "diff_whitespace_check": "git diff --check passed"
+      }
+    },
     {
       "version": "20261027.2320.5486",
       "note": "Prior current summary retained as history; not rerun in the CFB/DXF implementation batch.",
