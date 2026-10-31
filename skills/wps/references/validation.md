@@ -6,6 +6,7 @@
 
 - 当前验证范围 (`<skill-root>/references/validation.md#当前验证范围`)
 - 分支增量：MS-DOC 段落来源范围 (`<skill-root>/references/validation.md#分支增量ms-doc-段落来源范围`)
+- 分支增量：CHPX/PAPX 观测来源关联 (`<skill-root>/references/validation.md#分支增量chpxpapx-观测来源关联`)
 - 可复现的本地检查 (`<skill-root>/references/validation.md#可复现的本地检查`)
 - 样本与未验证边界 (`<skill-root>/references/validation.md#样本与未验证边界`)
 - 历史证据 (`<skill-root>/references/validation.md#历史证据`)
@@ -15,6 +16,12 @@
 本次分支针对二进制 MS-DOC 的原始段落 CP 范围增加**默认关闭**的可选来源信息：`--binary-paragraph-sources`。默认 JSON/退出码和原有文本处理不变；对经过字段过滤、占位符或标记替换的故事明确拒绝输出虚假精确来源。未新增 WPS 格式兼容模式，不修改 CFB/CLX 安全边界。
 
 本轮已在 Linux/Python3.13 标准库环境，对独立 CP 范围算法运行 **5 项隔离单元测试，全部通过**。合成 CP 计算测试的结果不能代替完整解析器验收；可选字段模式无实际文本转换时保留来源，实际字段/占位替换时明确放弃精确对齐。仓库分支新增 11 项 MS-DOC/CFB 合成集成测试。**GitHub Actions Linux** 两个独立环境（Python 3.11、3.13）均完整执行 WPS **435 项测试且全部通过**，环境自检通过、`check_skill.py skills/wps --strict` 通过（运行 `41178515332`，基于提交 `859106446b74f34e3d3b50dc287a2b42dbcd198d`）。这不是目标业务容器的真实宿主集成验证，也不是原生 WPS 文件的语义验收。没有真实 WPS 原生全文及独立段落位置预期，本次不宣称实际生产兼容性提升已被验证。分支审查完成前保持候选状态。
+
+## 分支增量：CHPX/PAPX 观测来源关联
+
+在已有 `--binary-paragraph-sources` 的精确存储 CP 坐标上，新增加法关联 `paragraph_evidence`：仅对 `--hidden-text annotate` 已解析的 CHPX run 区间给出 CP 交集；对 PAPX 直接支持的一级表格行结束标记，只给出结束符属于哪个段落的证据。若 CHPX 观察区间重叠/不合法，不声明精确链接；字符最终格式、可见性、修订和网格始终为 unknown。没有新增读取器、写入器或私有记录猜测。
+
+**实际验证**：GitHub Actions Ubuntu Linux / Python 3.11 和 3.13 独立运行，WPS Skill 各 **443/443 项单元测试通过**、无失败或跳过，入口 `--check` 输出 `environment-ok`，严格 `check_skill.py skills/wps --strict` 输出 `OK skills/wps`。来源：workflow run `41178785301`，测试提交 `1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab`（3.11 job `124471737217`，3.13 job `124471737020`）。这验证了仓库代码及合成测试，不是生产业务容器或 Word/WPS 真实原件全文语义验证。当前尚未取得可核实来源的原生 .wps 和独立段落/格式预期，未运行真实软件布局测试。保留 Draft PR，不合并主分支。
 
 ## 当前验证范围
 
