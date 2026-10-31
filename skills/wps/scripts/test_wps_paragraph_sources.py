@@ -82,6 +82,17 @@ class ParagraphSourceTests(unittest.TestCase):
                        binary_paragraph_sources=True)
         self.assertEqual(caught.exception.status, 'unsupported')
 
+    def test_source_metadata_requires_json_output(self):
+        source = Path(__file__).resolve().with_name('read_wps.py')
+        result = subprocess.run(
+            [sys.executable, '-I', '-S', '-B', str(source),
+             'synthetic.wps', '--format', 'text', '--binary-paragraph-sources'],
+            capture_output=True, text=True, timeout=15,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('requires --format json', result.stderr)
+        self.assertEqual(result.stdout, '')
+
     def test_synthetic_file_cli_and_source_preservation(self):
         raw = '甲😀\r乙\r'.encode('utf-16le')
         data = synthetic_cfb({path[0]: value
