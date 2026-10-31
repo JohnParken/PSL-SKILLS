@@ -35,3 +35,6 @@ jobs:
       - name: Verify public limited smoke assertions without source modifications
         run: |
           python -I -S -B tests/wps_public_sample_probe.py wps_candidate_fixture.wps skills/wps/scripts/read_wps.py
+      - name: Independent bounded MS-DOC main-story decoder cross-check
+        run: |
+          python -I -S -B tests/wps_public_story_oracle.py wps_candidate_fixture.wps skills/wps/scripts
