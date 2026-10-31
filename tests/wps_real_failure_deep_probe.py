@@ -126,6 +126,59 @@ def _locate_msdoc_code(data, byte_offset):
     return {"status":"not_in_piece_table"}
 
 
+
+def _shape_anchor_evidence(data, cp):
+    # MS-DOC FibRgFcLcb97 pair index 40 = fcPlcSpaMom/lcbPlcSpaMom.
+    # This is metadata inspection only, not object rendering/decoding.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills" / "wps" / "scripts"))
+    from wps_access import load_compound
+    streams=load_compound(data, "data").streams
+    word=streams[("WordDocument",)]
+    flags=struct.unpack_from("<H",word,10)[0]
+    table=streams[(("1Table" if flags & 0x0200 else "0Table"),)]
+    pair_offset=154+40*8
+    start,size=struct.unpack_from("<II",word,pair_offset)
+    result={"fclcb_pair_index":40,"stored_length":size}
+    if not size:
+        result["status"]="missing_plcf_spa_mom"
+        return result
+    if size<34 or (size-4)%30 or start>len(table)-size:
+        result["status"]="invalid_or_out_of_subset_plcf_spa_mom"
+        return result
+    count=(size-4)//30
+    if count>100000:
+        result["status"]="resource_limited"
+        return result
+    cps=struct.unpack_from("<"+"I"*(count+1),table,start)
+    result.update({"status":"bounded_cp_array_checked","shape_count":count,
+                   "cp_list_strictly_increasing":all(a<b for a,b in zip(cps,cps[1:])),
+                   "failing_control_cp_in_shape_anchors":cp in cps[:-1]})
+    return result
+
+
+def _cfb_prefix_forensic_only(data):
+    # In-memory structural check of the sector-aligned prefix ONLY.
+    # NEVER used as a fallback or a production read; no text extracted.
+    header=_cfb_header(data)
+    remainder=header.get("input_byte_length_remainder")
+    if not remainder:
+        return {"status":"not_needed"}
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills" / "wps" / "scripts"))
+    from wps_cfb import CompoundFile
+    prefix=data[:-remainder]
+    try:
+        cfb=CompoundFile(prefix,compatibility="strict")
+        return {"status":"sector_aligned_prefix_structurally_readable",
+                "streams_count":len(cfb.streams),
+                "worddocument_stream_present":("WordDocument",) in cfb.streams,
+                "strictly_forensic_not_accepted":True}
+    except ValueError as exc:
+        return {"status":"sector_aligned_prefix_still_rejected",
+                "error_type":type(exc).__name__,
+                "reason":str(exc)[:160],
+                "strictly_forensic_not_accepted":True}
+
+
 def main():
     report = {"schema_version":"wps_real_failure_deep_diagnostics_v1",
               "source_policy":"pinned_sha256_official_https_only",
@@ -138,8 +191,12 @@ def main():
             row["download"]="ok"
             row["length"]=len(data)
             row["cfb_header"]=_cfb_header(data)
+            if item["id"] == "agricultural_bank_nda_doc":
+                row["aligned_prefix_forensics"] = _cfb_prefix_forensic_only(data)
             if "error_offset_word_stream" in item:
                 row["failing_character"] = _locate_msdoc_code(data,item["error_offset_word_stream"])
+                if row["failing_character"].get("status") == "mapped":
+                    row["shape_anchor_evidence"] = _shape_anchor_evidence(data, row["failing_character"]["cp"])
         except Exception as exc:
             row.update({"download":"failed","error_type":type(exc).__name__,
                         "error_summary":str(exc)[:120]})
