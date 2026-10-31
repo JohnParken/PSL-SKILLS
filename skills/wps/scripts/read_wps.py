@@ -219,6 +219,14 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             require(all(offset + size <= left or right <= offset for left, right in table_spans),
                     table.location(offset), 'Overlapping decoded table/CLX ranges')
             table_spans.append((offset, offset + size))
+    shape_anchors = {}
+    if object_policy == 'placeholder':
+        from wps_binary_shapes import main_shape_anchors
+        shape_anchors = main_shape_anchors(word, table, main_count, read_unit, table_spans)
+        if shape_anchors:
+            pair = FC_LCB_START + 40 * 8
+            start, size = word.number(pair), word.number(pair + 4)
+            table_spans.append((start, start + size))
     header_mapping = None
     note_mappings = {}
     automatic_note_markers = set()
@@ -281,6 +289,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         field_count = 0
         hidden = 0
         object_locations = []
+        shape_locations = []
         note_marker_locations = []
         rendered = [] if field_policy == 'cached_result' or object_policy == 'placeholder' or automatic_note_markers or comment_markers else None
         for char in text:
@@ -318,6 +327,16 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 object_locations.append({**text_location(cp), 'placeholder_emitted': not bool(hidden)})
                 if not hidden:
                     rendered.append('\ufffc')
+            elif char == '\x08' and object_policy == 'placeholder' and story_type == 'main':
+                require(cp in shape_anchors, text_location(cp),
+                        'Drawn object marker lacks validated main-story PlcfSpa anchor', 'unsupported')
+                require(remaining_objects > 0, text_location(cp),
+                        'Drawn object marker budget exceeded', 'resource_limit')
+                remaining_objects -= 1
+                shape_locations.append({**text_location(cp), **shape_anchors[cp],
+                                        'placeholder_emitted': not bool(hidden)})
+                if not hidden:
+                    rendered.append('\ufffc')
             else:
                 if ord(char) < 32 and char not in '\t\r\x07\x0b\x0c':
                     raise ParseError('unsupported', text_location(cp),
@@ -338,6 +357,11 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                            'field_count': field_count,
                            'message': 'Field instructions omitted; cached results retained without execution, '
                                       'freshness checks or sprmCFSpec/Plcfld validation'})
+        if shape_locations:
+            issues.append({'code': 'drawn_shape_anchor_not_rendered',
+                           'count': len(shape_locations), 'locations': shape_locations,
+                           'message': 'Validated main-story PlcfSpa CP and U+0008 anchor replaced '
+                                      'by U+FFFC; sprmCFSpec, SPA properties and shape rendering unverified'})
         if object_locations:
             issues.append({'code': 'picture_or_data_marker_not_decoded',
                            'count': len(object_locations), 'locations': object_locations,
