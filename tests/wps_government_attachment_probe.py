@@ -142,7 +142,8 @@ def inspect(item, read_bytes):
             except (ValueError, KeyError, UnicodeError, IndexError, OSError) as exc:
                 result['independent_story_comparison'] = {
                     'status': 'not_supported_by_independent_checker',
-                    'error_type': type(exc).__name__}
+                    'error_type': type(exc).__name__,
+                    'error_detail': str(exc)[:100]}
 
     except Exception as exc:
         result.update({'retrieval': 'failed', 'error_type': type(exc).__name__,
