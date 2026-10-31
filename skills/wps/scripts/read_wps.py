@@ -623,6 +623,8 @@ def main():
     args = parser.parse_args()
     if args.include_related and args.format == 'text':
         parser.error('--include-related requires --format json to preserve separate story regions')
+    if args.binary_paragraph_sources and args.format == 'text':
+        parser.error('--binary-paragraph-sources requires --format json to retain provenance ranges')
     if args.check:
         return check_environment()
     if sys.version_info < (3, 9):
