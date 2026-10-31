@@ -13,6 +13,9 @@ import sys
 
 MAX_PIECES = 100000
 MAX_MAIN_UNITS = 8 * 1024 * 1024
+# Frozen from the independent story decoder for the pinned public fixture.
+EXPECTED_TEXT_SHA256 = '54d875f79e02cac659a5298e78593773639f51d858e9a0daacb63652a940140f'
+EXPECTED_PARAGRAPHS_SHA256 = '27b13210fe44425ed6158738804f581538c4313e7cfab661434112346232f95f'
 COMPRESSED_TRANSLATE = dict(zip(
     range(0x80, 0xa0),
     [0x80, 0x81, 0x201a, 0x192, 0x201e, 0x2026, 0x2020, 0x2021, 0x2c6,
@@ -113,6 +116,9 @@ def main():
     sample_path=Path(arguments.fixture)
     sample=sample_path.read_bytes()
     expected=independently_decode_main(sample, Path(arguments.scripts).resolve())
+    if (expected['text_sha256'] != EXPECTED_TEXT_SHA256 or
+            expected['paragraphs_sha256'] != EXPECTED_PARAGRAPHS_SHA256):
+        raise SystemExit('Frozen independent oracle digest mismatch')
     process=run([sys.executable,'-I','-S','-B',
                  str(Path(arguments.scripts).resolve()/'read_wps.py'),
                  str(sample_path.resolve()),
