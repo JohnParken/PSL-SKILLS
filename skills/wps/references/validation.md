@@ -17,6 +17,12 @@
 
 本轮已在 Linux/Python3.13 标准库环境，对独立 CP 范围算法运行 **5 项隔离单元测试，全部通过**。合成 CP 计算测试的结果不能代替完整解析器验收；可选字段模式无实际文本转换时保留来源，实际字段/占位替换时明确放弃精确对齐。仓库分支新增 11 项 MS-DOC/CFB 合成集成测试。**GitHub Actions Linux** 两个独立环境（Python 3.11、3.13）均完整执行 WPS **435 项测试且全部通过**，环境自检通过、`check_skill.py skills/wps --strict` 通过（运行 `41178515332`，基于提交 `859106446b74f34e3d3b50dc287a2b42dbcd198d`）。这不是目标业务容器的真实宿主集成验证，也不是原生 WPS 文件的语义验收。没有真实 WPS 原生全文及独立段落位置预期，本次不宣称实际生产兼容性提升已被验证。分支审查完成前保持候选状态。
 
+## 政府官网真实 CFB 附件（内容级有限核对）
+
+政府官站页面中的 `.wps` 下载链接已由维护 CI 依真实 HTTPS 地址检查：10 份候选中 7 份成功下载且均为 CFB/OLE；6 份进入受控 MS-DOC 解析（结果均为 `partial`）且与独立 MS-DOC FIB/CLX 解码器的**全文和段落数组**一致；1 份含未支持的字段/对象/C0 控制字符，按设计明确 `unsupported`。另 3 份深圳站附件发生 TLS `BAD_ECPOINT`，属于网络受阻而非格式不兼容。固定附件 SHA、官网链接、段落计数及详细受限结论见政府文件实测 (`<skill-root>/references/wps-government-validation.md`) 和机器证据 (`<skill-root>/references/wps-government-evidence.json`)。
+
+此证据证明官方**公开发布与实存 CFB 内容**，不是 WPS Office 实际生成软件/版本认证；另一套解码器仍共用 CFB 容器基础设施，未获取由 WPS Office 独立导出的全文、人工作业表格或可视化验收。项目严格 `verify_wps_sample.py` 的原生生产来源验收仍**未完成**，不能称为完整 WPS 支持。实测来源为 GitHub Actions Linux / Python 3.13，维护流程 `41181030181`；运行时 Skill 不下载附件。 
+
 ## 分支增量：CHPX/PAPX 观测来源关联
 
 在已有 `--binary-paragraph-sources` 的精确存储 CP 坐标上，新增加法关联 `paragraph_evidence`：仅对 `--hidden-text annotate` 已解析的 CHPX run 区间给出 CP 交集；对 PAPX 直接支持的一级表格行结束标记，只给出结束符属于哪个段落的证据。若 CHPX 观察区间重叠/不合法，不声明精确链接；字符最终格式、可见性、修订和网格始终为 unknown。没有新增读取器、写入器或私有记录猜测。
