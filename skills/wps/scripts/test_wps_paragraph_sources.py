@@ -56,9 +56,9 @@ class ParagraphSourceTests(unittest.TestCase):
     def test_fragmented_surrogate_pair_and_empty_main_story(self):
         original = document([
             ('甲'.encode('utf-16le'), False),
-            (b'\\x3d\\xd8', False),
-            (b'\\x00\\xde', False),
-            ('\\r乙\\r'.encode('utf-16le'), False),
+            (b'\x3d\xd8', False),
+            (b'\x00\xde', False),
+            ('\r乙\r'.encode('utf-16le'), False),
         ])
         result = parse_streams(original, binary_paragraph_sources=True)
         self.assertEqual(result['paragraphs'], ['甲😀', '乙'])
