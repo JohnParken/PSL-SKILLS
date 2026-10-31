@@ -12,6 +12,22 @@
 
 该独立审计器不修改 `read_wps.py`、`wps_biff8.py`、`wps_ooxml.py`，默认普通读取 JSON、文字读取分支、`ok/partial` 及退出码均保持原状。它**只消费**现有受控 BIFF8 结果；不能对 DOCX、MS-DOC、OOXML 工作簿或其他 WPS 私有容器调用。没有引入 WPS/LibreOffice、第三方包、网络或写入。
 
+## 第二阶段：受限的 Font/公式计算/XF 直接来源
+
+在独立审计结果中另增加 `font_sources`、`rich_font_references`、`calculation_metadata` 与 `xf_ancestry`，仍不修改原始单元格值及来源读取器。
+
+- **Font 来源**：只检查 BIFF8 已保留的 Workbook `0x0031` 记录。在完整匹配 Font 的定长头与 ShortXLUnicodeString 尾部时，输出原始记录偏移、字体名称、twips 字高、字重、颜色索引、原始属性位和下划线等字段；否则标记 `uninterpreted_*`，不猜名字。索引 4 在 MS-XLS 中保留，第五条物理 Font 记录对应 FontIndex 5。`rich_font_references` 只把已有 FormatRun 字体索引关联到被验证的 Font 源记录，不代表最终生效字体，不自动合成默认字体。
+- **计算状态来源**：仅对已保留且长度正确的 `CalcMode(0x000D)`、`CalcSaveRecalc(0x005F)` 与 `RecalcId(0x01C1)` 读取明确的记录值。若没有记录，`calculation_settings_present=false` 只代表本次解析器未观察到；不推定实际计算模式。无论发现自动模式、保存前重算标志或最后计算引擎 ID，`saved_caches_current=unknown`，绝不验证、重算或声称缓存最新。
+- **XF 父来源**：从已有 20 字节 XF 中取原始 `fStyle` 和 12 位 `ixfParent`，标记直接观察到的 `Style XF`、`Cell XF` 和有证据的父 Style XF 引用；保留 `style_inheritance_applied=false`、`effective_style=unknown`。这不是数值格式、字体、边框或对齐最终属性级联。
+- **来源不确定性**：Font 名称/结构不符返回未解释状态，缺失字体映射返回 `font_details_unresolved`，父 XF 非样式或缺失返回 `parent_style_xf_unresolved`。不通过修改容器门禁、隐式跳过 BIFF 记录、对未知 XF 使用默认格式来提升表面覆盖率。
+
+规范依据（仅供开发维护，业务读取时不联网）：
+
+- <https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/291a910c-cb69-4799-875e-a201845d4fd1> — MS-XLS Font
+- <https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/993d15c4-ec04-43e9-ba36-594dfb336c6d> — MS-XLS XF
+- <https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/792088e4-c3b4-4020-8ff8-37ed95e82a34> — MS-XLS CalcMode
+- <https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/95ba561a-69a6-4661-a8dd-e03305bbff3f> — MS-XLS RecalcId
+
 ## 操作步骤
 
 先从任务工作目录执行目标 Skill 的自检，并核对 `environment-ok`。由实际读取 `SKILL.md` 的 `file_path` 计算 `<skill-root>` 并替换为真实目录；输入仍使用宿主确认的任务目录相对路径，不切换到源码目录：
@@ -31,11 +47,11 @@ python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et
 
 `xf_sources` 仅包含 `xf_index`、`font_index_raw`、`number_format_id_raw`、`format_and_alignment_tail_hex` 及未知格式说明。不推断合并单元格、列宽、字体效果、边框生效状态或日期显示结果。
 
-受控上限：128 工作表、200000 单元格、4096 个带格式 SST 条目、20000 个详细 run 区间、4096 个 XF。超出区间预算时清空受影响条目并返回 `audit_span_budget_exceeded`，不声称完整输出；超出主要输入预算则拒绝。本次仅针对已有合成 BIFF8 样本进行单元测试，没有新增独立 WPS Office 原生富文本/公式缓存/格式的应用级验收。原始真实 ET/ETT 文件样本及范围另见真实样本核验（`<skill-root>/references/et-real-validation.md`）。
+受控上限：128 工作表、200000 单元格、4096 个带格式 SST 条目、20000 个详细 run 区间、4096 个 XF。超出区间预算时清空受影响条目并返回 `audit_span_budget_exceeded`，不声称完整输出；超出主要输入预算则拒绝。本次对上述两阶段功能仅针对已有合成 BIFF8 样本进行单元测试，没有新增独立 WPS Office 原生富文本/公式缓存/格式的应用级验收。原始真实 ET/ETT 文件样本及范围另见真实样本核验（`<skill-root>/references/et-real-validation.md`）。
 
 ## 回归检查
 
-Linux 自动化完成了 Python 3.11 与 3.13 环境的独立脚本测试（各 10 项）、WPS 全量回归（各 434 项）和严格 Skill 检查，均通过。实际 CI、初次 CLI 隔离导入问题及未完成的原生 ET/ETT 应用级验证记于机器证据（`<skill-root>/references/biff8-stored-audit-evidence.json`）。这不是原生富文本/复杂格式的真实生产者验收。
+此前 Linux 自动化完成了 Python 3.11 与 3.13 环境的独立脚本测试（各 10 项）、WPS 全量回归（各 434 项）和严格 Skill 检查。第二阶段新增 Font/计算/XF 证据后，同环境测试各 **15 项**、WPS 全量各 **439 项**通过，严格 Skill 检查也通过。实际 CI、初次 CLI 隔离导入问题及未完成的原生 ET/ETT 应用级验证记于机器证据（`<skill-root>/references/biff8-stored-audit-evidence.json`）。这不是原生富文本/复杂格式的真实生产者验收。
 
 本工作线的验证应包含以下命令（按真实已确认的仓库路径或 Skill 实际根目录执行）。严格 Skill 检查的脚本是**仓库维护入口**，不是分发 Skill 的运行时依赖：
 
