@@ -47,6 +47,30 @@ SAMPLES = [
         'anchors': ['清洁生产', '信息公开'],
     },
     {
+        'id': 'zhongshan_construction_supporting_material',
+        'page': 'https://jsj.zs.gov.cn/gkmlpt/content/2/2656/post_2656565.html',
+        'url': 'https://jsj.zs.gov.cn/attachment/0/579/579836/2656565.wps',
+        'anchors': ['佐证材料'],
+    },
+    {
+        'id': 'zhongshan_environment_company_list',
+        'page': 'https://zsepb.zs.gov.cn/gkmlpt/content/2/2629/post_2629998.html',
+        'url': 'https://zsepb.zs.gov.cn/attachment/0/571/571978/2629998.wps',
+        'anchors': ['清洁生产'],
+    },
+    {
+        'id': 'zhongshan_environment_commitment',
+        'page': 'https://zsepb.zs.gov.cn/gkmlpt/content/2/2629/post_2629998.html',
+        'url': 'https://zsepb.zs.gov.cn/attachment/0/571/571980/2629998.wps',
+        'anchors': ['承诺'],
+    },
+    {
+        'id': 'zhongshan_environment_authorization',
+        'page': 'https://zsepb.zs.gov.cn/gkmlpt/content/2/2629/post_2629998.html',
+        'url': 'https://zsepb.zs.gov.cn/attachment/0/571/571981/2629998.wps',
+        'anchors': ['委托'],
+    },
+    {
         'id': 'shenzhen_finance_request',
         'page': 'https://szfb.sz.gov.cn/gkmlpt/mguide',
         'url': 'https://szfb.sz.gov.cn/attachment/1/1661/1661793/12555364.wps',
