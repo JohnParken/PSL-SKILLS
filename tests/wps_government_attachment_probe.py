@@ -79,6 +79,48 @@ SAMPLES = [
 ]
 
 
+# Frozen byte identities and established *subset* behavior. These are
+# regression expectations, not WPS Office independent visual-format oracles.
+PINNED_CFB_BASELINES = {
+    'zhongshan_construction_form': (
+        'ed84dcf9415e2d388d4e335dbcf301f2173137928bd0ecfee4f3f5c6e20895ee', 10),
+    'zhongshan_construction_summary': (
+        '7c21746d3d3d022aafd4aee80da0504f1f2b94663eedaf872c815c779d1404d8', 3),
+    'zhongshan_environment_disclosure': (
+        '13564403b0b1b4ebc3911fb87e94b526f88f2db0ccfeb43fa513d87a85b5a87e', 40),
+    'zhongshan_construction_supporting_material': (
+        '3ccedb9e26d89410796508531912169559c0a0258303a085075e69829762375c', 36),
+    'zhongshan_environment_company_list': (
+        '28b509c9032dc45cf2c14f55075f53abaff5989ad9c5fe740dc06771098b2be6', 4),
+    'zhongshan_environment_commitment': (
+        '4149d510b0e41c28b439b58880112ea42c821f13cb29ddddc2df9566de7ebb70', 12),
+    'zhongshan_environment_authorization': (
+        '29b2f1683b2ae97c9c6b9a2febbca0d36e6436f339b59aacf776dedc66308ba4', 10),
+}
+
+
+def _baseline_status(item):
+    baseline = PINNED_CFB_BASELINES.get(item['id'])
+    if baseline is None:
+        return 'not_in_frozen_corpus'
+    if item.get('retrieval') != 'downloaded':
+        return 'not_checked_download_unavailable'
+    expected_sha, paragraphs = baseline
+    if item.get('sha256') != expected_sha or item.get('magic') != 'CFB_OLE':
+        return 'mismatch_file_identity'
+    if (item.get('read_status') != 'partial'
+            or item.get('format') != 'ms_doc_subset'
+            or item.get('paragraph_count') != paragraphs):
+        return 'mismatch_reader_contract'
+    if item['id'] == 'zhongshan_construction_supporting_material':
+        if 'drawn_shape_anchor_not_rendered' not in item.get('diagnostic_codes', ()):
+            return 'mismatch_shape_diagnostic'
+    elif (item.get('independent_story_comparison', {}).get('status') != 'matched'
+          or not all(item.get('anchor_checks', {}).values())):
+        return 'mismatch_independent_story_or_anchor'
+    return 'verified_subset_regression'
+
+
 def _official_https(url):
     info = urlsplit(url)
     host = info.hostname or ''
@@ -183,6 +225,8 @@ def main():
     sys.path.insert(0, str(scripts_dir))
     from read_wps import read_bytes
     findings = [inspect(item, read_bytes) for item in SAMPLES]
+    for finding in findings:
+        finding['frozen_baseline_status'] = _baseline_status(finding)
     report = {
         'schema_version': 'wps_gov_attachment_probe_v1',
         'checked_by': 'maintenance_ci_only',
@@ -192,14 +236,21 @@ def main():
         'ms_doc_binary_count': sum(r.get('ms_doc_binary') is True for r in findings),
         'successful_partial_or_full': sum(r.get('read_status') in ('ok','partial') for r in findings),
         'independent_story_matches': sum(r.get('independent_story_comparison', {}).get('status') == 'matched' for r in findings),
+        'frozen_baseline_total': len(PINNED_CFB_BASELINES),
+        'frozen_baseline_verified': sum(r['frozen_baseline_status'] == 'verified_subset_regression' for r in findings),
+        'frozen_baseline_unavailable': sum(r['frozen_baseline_status'] == 'not_checked_download_unavailable' for r in findings),
+        'frozen_baseline_mismatches': sum(r['frozen_baseline_status'].startswith('mismatch_') for r in findings),
         'full_format_verified': False,
         'native_wps_producer_verified': False,
         'real_full_text_semantic_acceptance': False,
         'samples': findings,
     }
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    mismatches = any(r.get('independent_story_comparison', {}).get('status') == 'mismatch' for r in findings)
-    return 0 if report['downloaded'] and not mismatches else 1
+    mismatches = (any(r.get('independent_story_comparison', {}).get('status') == 'mismatch'
+                      for r in findings) or report['frozen_baseline_mismatches'])
+    # A network failure remains explicit/not-checked, never a false baseline pass.
+    # A successful job requires at least one real frozen file to have been checked.
+    return 0 if report['frozen_baseline_verified'] > 0 and not mismatches else 1
 
 
 if __name__ == '__main__':
