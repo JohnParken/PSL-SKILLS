@@ -42,6 +42,10 @@ CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupport
 - `visibility` 按部件统计已记录 run 的 action/state，保留策略；精确路径见原 `visibility.runs`。计数不是字符覆盖率，未记录 run 不推断可见性。
 - `full_format_verified` 始终 false。原始诊断仍是完整依据，摘要不是隐私或安全认证。
 
+本轮二进制主正文新增保守绘图标记：`--object-policy placeholder` 可以在 `PlcfSpa` CP/存储字符全部经过校验的情况下，将 `U+0008` 替换成 `U+FFFC` 并返回 `drawn_shape_anchor_not_rendered`，保留 CP、WordDocument 偏移与 SPA 源偏移；默认 reject 不变。该诊断不是图像、文字、字体或绘制结果的还原。具体边界见 绘图锚点（`<skill-root>/references/binary-shapes.md`）。
+
+CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 `location.reason_code=cfb_unaligned_physical_length` 区分；FAT 宣告分配未具备物理存储扇区时为 `cfb_fat_unbacked_allocation`。两类错误均属于 `invalid_or_unsupported`，不补齐缺失扇区，不忽略非零尾随数据。错误分层并非损坏文件读取成功。
+
 内部格式解析器、历史低层 CLI 可能没有此摘要或使用不同状态/退出码。合成回归验证范围限定、部分区域定位和隐藏文字不进入摘要，不构成真实文件语义对照。
 
 ## MS-DOC 段落 CP 来源（可选）
