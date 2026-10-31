@@ -197,6 +197,23 @@ def main():
                 row["failing_character"] = _locate_msdoc_code(data,item["error_offset_word_stream"])
                 if row["failing_character"].get("status") == "mapped":
                     row["shape_anchor_evidence"] = _shape_anchor_evidence(data, row["failing_character"]["cp"])
+                # Exercise production reader in both modes, without executing
+                # fields or objects or exporting the source document text.
+                sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills" / "wps" / "scripts"))
+                from read_wps import read_bytes
+                for policy in ("reject", "placeholder"):
+                    try:
+                        result = read_bytes(data, object_policy=policy)
+                        row["actual_reader_" + policy] = {
+                            "status": result.get("status"), "format": result.get("format"),
+                            "paragraph_count": len(result.get("paragraphs", [])),
+                            "issues": [issue.get("code") for issue in result.get("issues", [])
+                                       if isinstance(issue, dict)]}
+                    except Exception as exc:
+                        row["actual_reader_" + policy] = {
+                            "status": "rejected", "error_status": getattr(exc, "status", None),
+                            "error_type": type(exc).__name__,
+                            "error_message": str(exc)[:120]}
         except Exception as exc:
             row.update({"download":"failed","error_type":type(exc).__name__,
                         "error_summary":str(exc)[:120]})
