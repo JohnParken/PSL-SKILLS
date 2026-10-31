@@ -1,0 +1,80 @@
+{
+  "schema_version": "wps_biff8_noncell_compatibility_evidence_v1",
+  "status": "synthetic_rules_passed_and_original_values_unchanged",
+  "date": "2026-10-31",
+  "scope": "BIFF8_data_only_validated_metadata",
+  "branch": "codex/wps-biff8-noncell-guard-20261031",
+  "base_branch": "codex/wps-biff8-audit-20261031",
+  "changes": [
+    {
+      "record_id": "0x86",
+      "name": "WriteProtect",
+      "scope": "globals",
+      "position": "immediately_after_BOF",
+      "required_payload_hex": "",
+      "status": "partial",
+      "effect": "presence_of_write_protection_observed",
+      "format_fully_validated": false
+    },
+    {
+      "record_id": "0x5e",
+      "name": "Uncalced",
+      "scope": "worksheet",
+      "position": "immediately_after_BOF",
+      "required_payload_hex": "0000",
+      "status": "partial",
+      "effect": "saved_formulas_pending_recalculation",
+      "cache_freshness": "unverified"
+    }
+  ],
+  "tests": {
+    "linux_github_actions_run": 41187871280,
+    "python_3_11": {
+      "job_id": 124498366576,
+      "new_noncell_synthetic_tests": 6,
+      "full_wps_suite_passed": 445,
+      "environment_check": "passed",
+      "strict_skill_check": "passed"
+    },
+    "python_3_13": {
+      "job_id": 124498366666,
+      "new_noncell_synthetic_tests": 6,
+      "full_wps_suite_passed": 445,
+      "environment_check": "passed",
+      "strict_skill_check": "passed"
+    },
+    "real_sample_run": 41187871278,
+    "real_sample_job_id": 124498366462,
+    "original_et_ett_samples": 4,
+    "stored_values_independently_matched": 198,
+    "formula_caches_retained_unverified": 33,
+    "real_sample_input_sha256_checked": true,
+    "actual_new_WriteProtect_record_in_original_samples": "not_proven",
+    "actual_new_Uncalced_record_in_original_samples": "not_proven",
+    "word_reader_modified": false,
+    "legacy_strict_compatibility_changed": false
+  },
+  "refusal_rules_retained": [
+    "unknown_global_and_worksheet_records",
+    "FILEPASS",
+    "macro_storage",
+    "invalid_BOF_EOF_and_substream_offsets",
+    "invalid_Continue",
+    "invalid_cell_coordinates_and_SST_indexes",
+    "invalid_WriteProtect_length_or_position",
+    "invalid_Uncalced_length_nonzero_reserved_or_position",
+    "resource_limits"
+  ],
+  "producer_version_verified": false,
+  "full_native_ET_compatibility_verified": false,
+  "formula_recalculation_performed": false,
+  "no_new_dependencies": true,
+  "no_runtime_network_or_writes": true,
+  "known_limits": [
+    "Full MS-XLS grammar is not implemented",
+    "FileSharing/password linked records remain unsupported",
+    "Original four ET/ETT samples prove stable stored values, not that new metadata was exercised",
+    "Date1904 omission and unknown CodePage remain hard failures pending independent format research",
+    "No blanket skipping of unknown BIFF records"
+  ]
+}
