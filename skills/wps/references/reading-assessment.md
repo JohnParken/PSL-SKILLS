@@ -7,6 +7,7 @@
 - 入口与失败行为 (`<skill-root>/references/reading-assessment.md#入口与失败行为`)
 - 结果字段与范围评估 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)
 - MS-DOC 段落 CP 来源（可选） (`<skill-root>/references/reading-assessment.md#ms-doc-段落-cp-来源可选`)
+- MS-DOC 段落 CHPX/PAPX 原始证据关联 (`<skill-root>/references/reading-assessment.md#ms-doc-段落-chpxpapx-原始证据关联`)
 - 消费电子表格 JSON (`<skill-root>/references/reading-assessment.md#消费电子表格-json`)
 - 可运行的契约示例 (`<skill-root>/references/reading-assessment.md#可运行的契约示例`)
 
@@ -54,6 +55,16 @@ CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupport
 - 每个故事最多 100000 个段落来源、8 Mi UTF-16 单位；仍受总体文本及 16 MiB JSON 输出预算约束。请求超出预算时按既有资源失败契约返回，不偷偷截断来源。
 
 示例：存储文字 `甲😀\r乙\r` 在 `cp_start=5` 时，分别对应 `[5,9)` 与 `[9,11)`。这一示例是独立的 UTF-16 CP 算术，不是 WPS 真机输出或已验证的文档位置。
+
+## MS-DOC 段落 CHPX/PAPX 原始证据关联
+
+显式使用 `--binary-paragraph-sources` 时，在已取得准确存储 CP 来源的 MS-DOC 故事上，额外提供 `paragraph_evidence`（`schema_version=ms_doc_paragraph_evidence_v1`），将**已有的直接读取证据**按 CP 位置与段落关联。它不解析新的私有格式，不能据此声称有效样式、可见性、修订后文字、页码、完整表格结构或 Word/WPS 原生兼容。
+
+- `character_status`：默认 `not_requested`。同时显式指定 `--hidden-text annotate`，且 CHPX 读取器产生合法且无相互重叠的 CP 段时，才给出 `direct_chpx_overlaps_only` 和 `character_links`。每条链接只保存 `paragraph_index`、原始 `character_properties.runs` 中的 `run_index`、交集 `cp_start/cp_end`；原始 run 的属性、操作数和 `effective_visibility=unknown` 仍需从源结果查询。CP 段歧义时返回 `ambiguous_source_ranges`、不输出链接，不猜测哪个格式生效。
+- `papx_row_status`：仅在二进制表格读取器已经观察到明确的一级行结束标记时提供 `direct_row_end_markers_only`，`papx_row_end_links` 指明结束符 `row_mark_cp` 位于哪个已确认的段落。**这不是普通段落 PAPX 全量属性、行合并网格、列格式或表格分组恢复**。来源缺失、坐标不一致时保持空链接或标记歧义。
+- `effective_formatting` 与 `table_grid` 固定为 `unknown`。`character_status=no_observed_runs`、`papx_row_status=no_observed_row_ends` 只说明没有在本次声明的受控范围中观察到对应证据，不等于文件中不存在相应格式。
+- 已经过字段存储结果过滤或对象标记替换的故事，如果无法保持存储 CP 精确对齐，则不生成 `paragraph_evidence`，沿用 `paragraph_source_status=unavailable_after_text_transform`。需要关联 CHPX 时，必须显式组合 `--binary-paragraph-sources --hidden-text annotate`，二者均不会执行隐藏文字过滤。
+- 输出链接最多 100000 条/类型；超出时使用 `resource_limited` 并清空相应链接，不截断后声称完整。依然受 16 MiB JSON 输出预算。即使运行成功，也只说明“带来源的原始证据关联”，不表示最终样式已生效。
 
 ## 消费电子表格 JSON
 
