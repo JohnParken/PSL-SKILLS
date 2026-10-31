@@ -1,14 +1,17 @@
 """Synthetic, stdlib-only audit tests; not native WPS producer acceptance."""
 import copy
-from decimal import Decimal
+import json
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_wps_biff8 import workbook, parse_stream, formula, special, rec, cell
 from test_wps_rich_strings import rich, rich_workbook
+from test_wps_cfb import synthetic_cfb
 from wps_biff8_audit import audit_biff8, main
 
 
@@ -90,6 +93,24 @@ class Biff8AuditTests(unittest.TestCase):
         parsed = parse_stream(workbook())
         with patch('wps_biff8_audit.MAX_AUDIT_XFS', 1), self.assertRaises(ValueError):
             audit_biff8(parsed)
+
+    def test_cli_synthetic_cfb_readonly_preserves_exit_contract(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'synthetic.et'
+            original = synthetic_cfb({'Workbook': workbook()})
+            path.write_bytes(original)
+            result = subprocess.run(
+                [sys.executable, '-I', '-S', '-B',
+                 str(Path(__file__).with_name('wps_biff8_audit.py')), str(path)],
+                capture_output=True, text=True, timeout=20)
+            self.assertIn(result.returncode, (0, 3), result.stdout + result.stderr)
+            data = json.loads(result.stdout)
+            self.assertEqual(data['schema_version'], 'biff8_stored_evidence_audit_v1')
+            self.assertEqual(data['formula_caches']['total_formulas'], 5)
+            self.assertFalse(data['full_format_verified'])
+            self.assertEqual(result.returncode, 3 if data['source_read_status'] == 'partial' else 0)
+            self.assertEqual(path.read_bytes(), original)
+            self.assertEqual([x.name for x in Path(folder).iterdir()], ['synthetic.et'])
 
     def test_cli_fail_preserves_source_status_without_word_routing(self):
         import contextlib
