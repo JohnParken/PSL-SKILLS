@@ -1,0 +1,37 @@
+name: WPS public candidate sample smoke
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tests/wps_public_sample_probe.py'
+      - 'skills/wps/**'
+      - '.github/workflows/wps-public-sample.yml'
+permissions:
+  contents: read
+jobs:
+  public-wps-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Fetch pinned public candidate fixture (maintenance only)
+        run: |
+          python -I -S -B - <<'PY'
+          import hashlib
+          from pathlib import Path
+          from urllib.request import urlopen
+          commit = 'c4ae028156e44ed8b57ef879dc7bd1d14750c0f1'
+          url = f'https://raw.githubusercontent.com/listeng/wps2md/{commit}/tests/sample.wps'
+          with urlopen(url, timeout=20) as response:
+              data = response.read(125953)
+          assert len(data) == 125952, 'unexpected size'
+          blob = hashlib.sha1(b'blob 125952\0'+data).hexdigest()
+          assert blob == '140d30603be830b7ec95226e6dd8103a106938cd', 'upstream blob identity'
+          print('public fixture sha256:', hashlib.sha256(data).hexdigest())
+          Path('wps_candidate_fixture.wps').write_bytes(data)
+          PY
+      - name: Verify public limited smoke assertions without source modifications
+        run: |
+          python -I -S -B tests/wps_public_sample_probe.py wps_candidate_fixture.wps skills/wps/scripts/read_wps.py
