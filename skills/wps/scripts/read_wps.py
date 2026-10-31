@@ -380,6 +380,8 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 sources = paragraph_cp_ranges(text, cp_start)
                 require(len(sources) == len(paragraphs), word.location(76),
                         'Stored paragraph source count mismatch')
+                require((sources[-1]['cp_end'] if sources else cp_start) == cp_end,
+                        word.location(76), 'Stored paragraph CP coverage mismatch')
                 story_result['paragraph_sources'] = sources
                 story_result['paragraph_source_status'] = 'exact_stored_cp'
             else:
