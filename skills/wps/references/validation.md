@@ -7,6 +7,7 @@
 - 当前验证范围 (`<skill-root>/references/validation.md#当前验证范围`)
 - 分支增量：MS-DOC 段落来源范围 (`<skill-root>/references/validation.md#分支增量ms-doc-段落来源范围`)
 - 分支增量：CHPX/PAPX 观测来源关联 (`<skill-root>/references/validation.md#分支增量chpxpapx-观测来源关联`)
+- 农业银行官网公开 DOC/PDF 实测 (`<skill-root>/references/validation.md#农业银行官网公开-docpdf-实测`)
 - 可复现的本地检查 (`<skill-root>/references/validation.md#可复现的本地检查`)
 - 样本与未验证边界 (`<skill-root>/references/validation.md#样本与未验证边界`)
 - 历史证据 (`<skill-root>/references/validation.md#历史证据`)
@@ -28,6 +29,10 @@
 在已有 `--binary-paragraph-sources` 的精确存储 CP 坐标上，新增加法关联 `paragraph_evidence`：仅对 `--hidden-text annotate` 已解析的 CHPX run 区间给出 CP 交集；对 PAPX 直接支持的一级表格行结束标记，只给出结束符属于哪个段落的证据。若 CHPX 观察区间重叠/不合法，不声明精确链接；字符最终格式、可见性、修订和网格始终为 unknown。没有新增读取器、写入器或私有记录猜测。
 
 **实际验证**：GitHub Actions Ubuntu Linux / Python 3.11 和 3.13 独立运行，WPS Skill 各 **443/443 项单元测试通过**、无失败或跳过，入口 `--check` 输出 `environment-ok`，严格 `check_skill.py skills/wps --strict` 输出 `OK skills/wps`。来源：workflow run `41178785301`，测试提交 `1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab`（3.11 job `124471737217`，3.13 job `124471737020`）。这验证了仓库代码及合成测试，不是生产业务容器或 Word/WPS 真实原件全文语义验证。当前尚未取得可核实来源的原生 .wps 和独立段落/格式预期，未运行真实软件布局测试。保留 Draft PR，不合并主分支。
+
+## 农业银行官网公开 DOC/PDF 实测
+
+2026-10-31，维护 CI 针对中国农业银行官网正式公开下载附件，按实际内容而非文件后缀识别格式：共 8 份全部下载；3 份名为 `.doc` 的广东省分行文件实为 ZIP/OOXML，分别 `ok` 读出 16/9/12 个段落；广西两份 `.doc` 实为 CFB，其中桂林分行 76 个段落以 `partial` 返回并记录对象缺口，南宁分行因容器严格结构门禁拒绝；另三份总行附件为 PDF，不属于本 Skill 可用输入。所有 SHA、来源链接和原始错误见农业银行验证报告（`<skill-root>/references/wps-abc-official-validation.md`）及机器证据（`<skill-root>/references/wps-abc-official-evidence.json`）。这不是原生 `.wps` 的生产版本或全文视觉认证，不能绕过 CFB 检查提升“成功率”；测试通过说明分支路由与声明的有限读取范围。
 
 ## 当前验证范围
 
