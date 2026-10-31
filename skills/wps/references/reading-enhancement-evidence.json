@@ -1,7 +1,7 @@
 {
   "schema_version": "wps_validation_evidence_v1",
   "current": {
-    "version": "20261031.1510.1186",
+    "version": "20261031.1533.5060",
     "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
     "stdlib_only": true,
     "changes": [
@@ -9,7 +9,8 @@
       "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
       "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
       "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
-      "Bounded links and fail-safe partial diagnostic on unresolvable association"
+      "Bounded links and fail-safe partial diagnostic on unresolvable association",
+      "Maintenance-only government website attachment inventory: 10 links, 7 real downloaded CFB/OLE, 6 MS-DOC partial reads and independent decoder whole-text/paragraph matches, one safely rejected"
     ],
     "tests": {
       "full_wps_suite": {
@@ -72,7 +73,10 @@
       "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
       "No independently verified native WPS producers and expected content/format",
       "GitHub Actions Linux runner not a production harness integration test",
-      "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification"
+      "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification",
+      "Government publication proves public hosting, not WPS Office creator/version",
+      "6 independent MS-DOC story agreement cases do not prove full binary table grids, applied styles or layout",
+      "3 gov attachments TLS download errors; 1 CFB rejected due unsupported field/object/control subset"
     ],
     "public_candidate": {
       "evidence_path": "references/wps-public-candidate-evidence.json",
@@ -80,9 +84,111 @@
       "full_text_and_paragraph_algorithmic_match": true,
       "manual_golden_text_or_kingsoft_producer_certification": false,
       "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+    },
+    "government_attachment_validation": {
+      "evidence_file": "references/wps-government-evidence.json",
+      "reference_file": "references/wps-government-validation.md",
+      "workflow_run_id": 41181030181,
+      "linux_python": "3.13",
+      "official_urls_checked": 10,
+      "files_downloaded": 7,
+      "cfb_ole_files": 7,
+      "msdoc_partial_reads": 6,
+      "separate_text_and_paragraph_algorithms_matched": 6,
+      "unsupported_real_cfb": 1,
+      "unavailable_tls_downloads": 3,
+      "real_wps_office_creator_version_verified": false,
+      "complete_native_wps_semantic_acceptance": false,
+      "actual_wps_visual_layout_verified": false
     }
   },
   "history": [
+    {
+      "version": "20261031.1510.1186",
+      "note": "Prior public candidate validation stage before real gov-hosted samples",
+      "evidence": {
+        "version": "20261031.1510.1186",
+        "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
+        "stdlib_only": true,
+        "changes": [
+          "Optional stored paragraph CP spans remain default-off",
+          "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+          "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+          "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+          "Bounded links and fail-safe partial diagnostic on unresolvable association"
+        ],
+        "tests": {
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          },
+          "new_tests": {
+            "paragraph_sources": 11,
+            "paragraph_evidence": 8,
+            "executed_in_full_suite": true
+          }
+        },
+        "ci": {
+          "run_id": 41178785301,
+          "commit_sha": "1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab",
+          "job_ids": {
+            "python_3_11": 124471737217,
+            "python_3_13": 124471737020
+          },
+          "source": "GitHub Actions actual job logs"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+        "word_wps_visual_validation": "not_run",
+        "true_production_host_integration": "not_run",
+        "dedicated_naming_linter": "not_run_no_tool_available",
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "limits": [
+          "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+          "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+          "No independently verified native WPS producers and expected content/format",
+          "GitHub Actions Linux runner not a production harness integration test",
+          "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification"
+        ],
+        "public_candidate": {
+          "evidence_path": "references/wps-public-candidate-evidence.json",
+          "status": "passed_limited_smoke_and_independent_algorithms",
+          "full_text_and_paragraph_algorithmic_match": true,
+          "manual_golden_text_or_kingsoft_producer_certification": false,
+          "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+        }
+      }
+    },
     {
       "version": "20261031.1459.1079",
       "note": "Prior CHPX/PAPX branch stage; public candidate crosscheck added separately",
