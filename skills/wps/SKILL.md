@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1644.5406"
+version: "20261031.1711.3206"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -41,6 +41,8 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
 1. **核对结果。** 退出 0 或 3 均读取完整 JSON；电子表格 `schema_version` 应为 `biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口；退出 1 或 2 停止后续分析，不把失败当空表。自动调用不要使用把退出 3 当失败丢弃的 `check=True`，见 标准库调用示例 (`<skill-root>/references/reading-assessment.md#消费电子表格-json`)。
 2. **解释保存值。** 按单元格 `type` 解释 `value`，保留数字字符串的精度和文本编号；`numeric_interpretation` 仅补充格式解释，不能替代原值。`formula` 存在时读取的是保存缓存，结合 `cache_status` 区分缺失、错误和未验证缓存，不能保证最新或重算。BIFF 的 `cell_value_coverage`、`omissions_affect_cell_values` 与原始 `issues` 区分缓存缺失和元数据遗漏，不能据此宣称完整格式支持；详细字段见 结果契约 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)。
 3. **交付或分析。** 提交所需工作表/区域及明确缺口；需要汇总时先确认 schema、选定区域和缓存政策。如另有 xlsx 技能，可消费满足其限制的 JSON，仍保留源 partial 和诊断；本包不依赖相邻技能。BIFF 合并表头重建及适配器每表 256 个合并范围限制见 分析接入 (`<skill-root>/references/biff8-readonly.md#headers-and-output`)。
+
+仅 BIFF8 data 模式新增精准非单元格规则：Globals 首位空负载 `WriteProtect` 和 Worksheet 首位零保留字段 `Uncalced`，均验证位置/唯一性后保留源字节并返回 partial；缺损、错位、其他未知记录保持拒绝。公式缓存新鲜度仍未验证；依据与反向安全样例见 电子表格非单元格拒绝分类（`<skill-root>/references/et-noncell-compatibility.md`）。
 
 默认 data 对有证据的非单元格元数据及受支持图表保留原始记录并报告 partial；包括结构校验后的 DXF（`0x088D`）差异格式属性，格式不应用到保存值。未知记录、加密、结构与资源错误仍停止，不在失败后轮换策略。只有任务明确要求更窄子集才加 `--compatibility strict`；单独拒绝图表可加 `--chart-policy reject`。需排查格式时按结果读 BIFF8 边界与高级策略 (`<skill-root>/references/biff8-readonly.md`) 或 OOXML 保存值 (`<skill-root>/references/ooxml-spreadsheet.md`)；编码、容量及失败定位按需读 解析增强边界 (`<skill-root>/references/et-parser-stability.md`)，容器检查另见 CFB 调查 (`<skill-root>/references/et-ett-readonly.md`)。
 
