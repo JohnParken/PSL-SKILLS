@@ -5,9 +5,16 @@
 ## 目录
 
 - 当前验证范围 (`<skill-root>/references/validation.md#当前验证范围`)
+- 分支增量：MS-DOC 段落来源范围 (`<skill-root>/references/validation.md#分支增量ms-doc-段落来源范围`)
 - 可复现的本地检查 (`<skill-root>/references/validation.md#可复现的本地检查`)
 - 样本与未验证边界 (`<skill-root>/references/validation.md#样本与未验证边界`)
 - 历史证据 (`<skill-root>/references/validation.md#历史证据`)
+
+## 分支增量：MS-DOC 段落来源范围
+
+本次分支针对二进制 MS-DOC 的原始段落 CP 范围增加**默认关闭**的可选来源信息：`--binary-paragraph-sources`。默认 JSON/退出码和原有文本处理不变；对经过字段过滤、占位符或标记替换的故事明确拒绝输出虚假精确来源。未新增 WPS 格式兼容模式，不修改 CFB/CLX 安全边界。
+
+本轮已在 Linux/Python3.13 标准库环境，对独立 CP 范围算法运行 **5 项隔离单元测试，全部通过**。仓库分支另新增 8 项 MS-DOC/CFB 合成集成测试，**尚未执行 WPS 全量回归、目标宿主 CLI 自检或项目严格结构检查**；不得把原有 424 项历史通过记录当成本轮测试结果。没有真实 WPS 原生全文及独立段落位置预期，本次不宣称实际生产兼容性提升已被验证。分支审查完成前保持候选状态。
 
 ## 当前验证范围
 
