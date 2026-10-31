@@ -55,3 +55,7 @@ python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p "test_*.py"
 ## 历史证据
 
 旧版环境、计数、描述字符数和默认策略仅保留在证据history (`<skill-root>/references/reading-enhancement-evidence.json`)及仓库维护记录，避免与当前契约混用。历史记录中的依赖工具或验证方法不授权当前标准库流程调用外部软件。业务读取只按当前入口和实际结果处理，不必先阅读维护历史。
+
+## 公开 .wps 候选样本（非生产来源认证）
+
+候选公开文件的来源、固定 sha256、上游 5 个原始测试断言、另一套标准库 MS-DOC 正文解码与 24 段全文一致性已记录于 `<skill-root>/references/wps-public-candidate-evidence.json`。维护 CI 是独立 job，只在运行时按固定提交取样本，保持生产 WPS Skill 不联网、零第三方依赖。它提高了公开文件的**文本算法交叉验证**证据，但没有证明原始创建软件版本或 WPS 可视化语义，不能改写原有“真实原生 WPS 验收未完成”的结论。样本含对象标记时 CP 与最终转换文本无法可靠一一对齐，保留 `unavailable_after_text_transform` 和 `partial`，不伪造格式证据。
