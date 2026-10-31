@@ -133,7 +133,10 @@ def inspect(item, read_bytes):
         except Exception as exc:
             result.update({'read_status': 'reader_rejected',
                            'error_type': type(exc).__name__,
-                           'error_status': getattr(exc, 'status', 'unknown')})
+                           'error_status': getattr(exc, 'status', 'unknown'),
+                           'error_message': str(exc)[:160],
+                           'error_location': {key: val for key, val in getattr(exc, 'location', {}).items()
+                                              if key in ('stream', 'offset', 'stage') and isinstance(val, (str, int))}})
             return result
         status, fmt = doc.get('status'), doc.get('format')
         body = doc.get('text')
