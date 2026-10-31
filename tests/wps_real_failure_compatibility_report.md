@@ -70,3 +70,13 @@
 - 本轮只读诊断：GitHub Actions `41184963914`、job `124489928317`；`tests/wps_real_failure_deep_probe.py`，只输出边界元数据与字符代码，不输出正文。
 - 机器结果：`tests/wps_real_failure_forensics_evidence.json`，记录固定 SHA、CFB 头、绘图对象 CP/形状锚点、非对齐尾部及 FAT 取证结论。
 - 公开规范：Microsoft `MS-CFB` Header、`MS-DOC` Character Properties、`MS-DOC` PlcfSpa。
+
+## 六、本轮代码修复结果（2026-10-31）
+
+**已修复政府原件的显式占位读取**：新增 `wps_binary_shapes.py`，按规范验证主正文 `PlcfSpa` 的 26 字节 SPA 记录、真实 CP 严格递增、存储字符 `U+0008`、主故事范围及 Table Stream 区间。最后一个 CP 是未定义终止值，只检查它大于前一个 CP，不将其误判成正文位置。默认 `object_policy=reject` 不变；仅在 `--object-policy placeholder` 明确请求时以 `U+FFFC` 代表已验证的主正文形状锚点，报告 `drawn_shape_anchor_not_rendered`、来源偏移和 `partial`。对于原件 `3ccedb9e...`，真实 Linux CI 证实默认 `unsupported`，显式占位 `partial`、主正文 **36 段**（回归运行 `41185814978`、`41185919275`）。这不表示形状绘制或 `sprmCFSpec` 最终生效属性已被还原。
+
+**已修复农行样本的失败定位，但没有不安全地“修复”文件内容**：`wps_cfb.py` 区分保留头字节、物理扇区不对齐和最小扇区缺失；`wps_access.py` 在异常位置增加 `reason_code=cfb_unaligned_physical_length`，针对无物理存储的 FAT 分配增加 `cfb_fat_unbacked_allocation`。当前真实农行原件仍按 `invalid_or_unsupported` 明确拒绝。独立取证表明非对齐尾部 51 字节之外仍有 FAT 越界问题，不能通过裁剪、补零或跳过安全检查来认定已恢复。
+
+**回归覆盖**：新增主正文 shape 正反用例与 CFB 失败诊断单测共 8 项；GitHub Actions Linux Python 3.11 与 3.13 各 **451/451** 项通过，严格 Skill 结构检查通过（中间代码快照 `41185919368`）；本报告与最终文档提交后以 PR Checks 最新结果为准。业务运行时仍标准库、离线、只读，且不调用 WPS、LibreOffice 或第三方接口。
+
+**仍未完成**：绘图对象实际内容及生效字体/位置、农行非标准 CFB 的可信无损恢复、工行 OCR/图片文档的独立图像语义验证、建设银行官网 TLS 问题。不得将上述失败样本现有的部分读取范围宣称为完整 WPS 格式认证。
