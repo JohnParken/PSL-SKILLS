@@ -66,7 +66,7 @@ class ParagraphSourceTests(unittest.TestCase):
             {'index': 0, 'cp_start': 2, 'cp_end': 4, 'text_cp_end': 3}])
 
     def test_noop_transform_policies_preserve_exact_cp_sources(self):
-        original = document([('甲😀\\r乙\\r'.encode('utf-16le'), False)])
+        original = document([('甲😀\r乙\r'.encode('utf-16le'), False)])
         for policy in ({'field_policy': 'cached_result'},
                        {'object_policy': 'placeholder'}):
             with self.subTest(policy=policy):
