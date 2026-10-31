@@ -668,11 +668,41 @@ def _validate_run(value: Any, label: str) -> dict:
 
 def _validate_spec(spec: Any, base_dir: Path) -> dict:
     source = _object(spec, "spec", {
-        "page", "styles", "table_format", "header", "footer", "page_numbers", "blocks", "theme", "deduplicate_images",
+        "page", "styles", "table_format", "header", "footer", "page_numbers", "blocks", "theme", "deduplicate_images", "office_preset", "pagination_preset",
     }, {"blocks"})
+    from copy import deepcopy
+    source = deepcopy(source)
+    preset = source.pop('office_preset', None)
+    if preset not in (None, 'bank_report', 'bank_letter'):
+        raise ValueError('office_preset must be bank_report or bank_letter')
+    pagination = source.pop('pagination_preset', None)
+    if pagination not in (None, 'stable'):
+        raise ValueError('pagination_preset must be stable')
+    if preset is not None:
+        source.setdefault('theme', 'business')
+        styles = source.setdefault('styles', {})
+        if not isinstance(styles, dict):
+            raise ValueError('styles must be an object')
+        for name in ('body', 'table_body', 'table_header'):
+            current = styles.setdefault(name, {})
+            if not isinstance(current, dict):
+                raise ValueError('style must be an object')
+            defaults = {'size_pt': 11 if name == 'body' else 10.5}
+            for key, value in defaults.items(): current.setdefault(key, value)
+        source.setdefault('table_format', {'preset':'zebra' if preset == 'bank_report' else 'grid'})
+    if pagination == 'stable':
+        styles = source.setdefault('styles', {})
+        if not isinstance(styles, dict): raise ValueError('styles must be an object')
+        for name in ('title','subtitle','heading1','heading2','heading3','heading4'):
+            layer = styles.setdefault(name,{})
+            if not isinstance(layer, dict): raise ValueError('style must be an object')
+            layer.setdefault('keep_with_next', True)
+        layer = styles.setdefault('body',{})
+        if not isinstance(layer, dict): raise ValueError('style must be an object')
+        layer.setdefault('widow_control', True)
     page = _object(source.get("page", {}), "page", {
         "width_mm", "height_mm", "margin_mm", "margin_top_mm", "margin_bottom_mm",
-        "margin_left_mm", "margin_right_mm",
+        "margin_left_mm", "margin_right_mm", "header_distance_mm", "footer_distance_mm",
     })
     width = _number(page.get("width_mm", 210), "page.width_mm", 1, _MAX_PAGE_MM)
     height = _number(page.get("height_mm", 297), "page.height_mm", 1, _MAX_PAGE_MM)
@@ -691,6 +721,13 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
         "width": _twips(width), "height": _twips(height),
         **{side: _twips(value) for side, value in margins.items()},
     }
+    for side, edge in (('header','top'),('footer','bottom')):
+        key = side + '_distance_mm'
+        if key in page:
+            distance = _twips(_number(page[key], 'page.'+key, 0, _MAX_PAGE_MM, allow_zero=True))
+            if distance > page_twips[edge]:
+                raise ValueError('Header/footer distance must not exceed its page margin')
+            page_twips[side] = distance
     available_width = page_twips["width"] - page_twips["left"] - page_twips["right"]
     available_height = page_twips["height"] - page_twips["top"] - page_twips["bottom"]
     if available_width <= 0 or available_height <= 0:
@@ -797,7 +834,7 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                            "list_id": list_id, "level": level})
         elif kind == "table":
             block = _object(value, label, {
-                "type", "rows", "widths_mm", "header", "header_rows", "format", "body_format", "header_format",
+                "type", "rows", "widths_mm", "header", "header_rows", "format", "body_format", "header_format", "column_formats",
             }, {"type", "rows"})
             if not isinstance(block["rows"], list) or not block["rows"]:
                 raise ValueError(f"{label}.rows must be a non-empty array")
@@ -821,6 +858,14 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                 raise ValueError(f"{label}.header and header_rows conflict; choose one header declaration")
             layout_overrides = _validate_table_layout(block["format"], f"{label}.format") \
                 if "format" in block else {}
+            column_formats = block.get('column_formats', {})
+            if not isinstance(column_formats, dict): raise ValueError('column_formats must be an object')
+            parsed_columns = {}
+            for key, formatting in column_formats.items():
+                if not isinstance(key, str) or not re.fullmatch(r'[1-9][0-9]*', key) or int(key) > len(rows[0]):
+                    raise ValueError('column_formats keys must be existing 1-based column numbers')
+                fields = _object(formatting, label+'.column_formats.'+key, {'body','header'})
+                parsed_columns[key] = {scope:_validate_table_text_fields(value,label+'.column_formats.'+key+'.'+scope) for scope,value in fields.items()}
             body_overrides = _validate_table_text_fields(block["body_format"], f"{label}.body_format") \
                 if "body_format" in block else {}
             header_overrides = _validate_table_text_fields(block["header_format"], f"{label}.header_format") \
@@ -888,7 +933,7 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                         })
             blocks.append({"type": kind, "rows": parsed_rows, "widths_twips": widths_twips,
                            "header": header_rows > 0, "header_rows": header_rows, "format": resolved_layout,
-                           "body_format": body_overrides, "header_format": header_overrides})
+                           "body_format": body_overrides, "header_format": header_overrides, "column_formats": parsed_columns})
         elif kind == "image":
             block = _object(value, label, {"type", "path", "width_mm", "height_mm", "alt"},
                             {"type", "path", "alt"})
@@ -1264,7 +1309,7 @@ def _table(parent: ET.Element, block: dict, next_drawing_id: int,
                 ET.SubElement(row_props, _q(W, "cantSplit"), {_q(W, "val"): "true"})
             if repeat_header:
                 ET.SubElement(row_props, _q(W, "tblHeader"), {_q(W, "val"): "true"})
-        for content, width in zip(values, block["widths_twips"]):
+        for column_index, (content, width) in enumerate(zip(values, block["widths_twips"]), 1):
             cell = ET.SubElement(row, _q(W, "tc"))
             cell_props = ET.SubElement(cell, _q(W, "tcPr"))
             ET.SubElement(cell_props, _q(W, "tcW"), {
@@ -1282,6 +1327,8 @@ def _table(parent: ET.Element, block: dict, next_drawing_id: int,
             ET.SubElement(cell_props, _q(W, "vAlign"), {_q(W, "val"): layout["vertical_align"]})
             style_name = "TableHeader" if is_header else "TableBody"
             text_format = block["header_format"] if is_header else block["body_format"]
+            column_layer = block.get('column_formats', {}).get(str(column_index), {}).get('header' if is_header else 'body', {})
+            text_format = _merge_table_text_format(text_format, column_layer)
             text = content if isinstance(content, str) else content["text"]
             inherited_format = style_formats["table_header" if is_header else "table_body"]
             paragraph = _paragraph(cell, text=text, style=style_name, formatting=text_format,
@@ -1428,7 +1475,7 @@ def _document_xml(spec: dict) -> tuple[bytes, list[dict], list[dict]]:
     ET.SubElement(section, _q(W, "pgMar"), {
         _q(W, "top"): str(page["top"]), _q(W, "right"): str(page["right"]),
         _q(W, "bottom"): str(page["bottom"]), _q(W, "left"): str(page["left"]),
-        _q(W, "header"): str(min(720, page["top"])), _q(W, "footer"): str(min(720, page["bottom"])),
+        _q(W, "header"): str(page.get("header", min(720, page["top"]))), _q(W, "footer"): str(page.get("footer", min(720, page["bottom"]))),
         _q(W, "gutter"): "0",
     })
     return ET.tostring(root, encoding="UTF-8", xml_declaration=True), image_blocks, instances

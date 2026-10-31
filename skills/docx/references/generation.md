@@ -469,3 +469,23 @@ ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受�
 用户选择其他主题时，如实说明实际采用的排版，并介绍其余可选主题；存在样式覆盖时说明已按其格式要求生成，不将其描述为未经修改的默认公文格式。上述选项都是 DOCX 内的排版方式，不代表新增 PDF 等文件格式导出能力。用户明确要求只返回文件或不再提示时省略引导。
 
 引导仅出现在交付回复，不写入文档正文、页眉页脚或输入内容，不为展示选项自动生成多份文件，也不要求用户先确认才能拿到已完成的文件。预检、环境自检、生成失败、等待修正或已有文档的读取/受控编辑不触发该新建引导。主题选择及样式范围见 主题与文档标题（`<skill-root>/references/generation.md#主题与文档标题`）。
+
+## 可选银行办公排版
+
+仅新建适用，不应用于已有文档编辑；所有新字段均可省略，省略时原排版不变。
+
+- `office_preset: "bank_report"`：默认business主题，正文11pt、表格10.5pt、斑马纹表；`bank_letter`为同等字体组合和网格表。它们是排版组合，不代表银行制度或公文标准认证，不自动填充标题、单位或正文。
+- `pagination_preset: "stable"`：标题/副标题/四级标题默认keep_with_next，正文默认widow_control。不对全部正文加keep_together或强制分页，不保证实际同页。显式样式字段优先。
+- 显式theme优先于office_preset的默认主题；显式styles字段优先于预设对应字段。显式table_format存在时整体采用用户配置，不补造预设外观。用户要求仍优先，不在默认公文任务中自动选择银行预设。
+- `page.header_distance_mm`、`page.footer_distance_mm`：距纸边距离，允许0，不能超过对应上下页边距；不设时保留原默认。仍为单节、简单文字页眉页脚及PAGE字段，不新增目录、NUMPAGES、多节或奇偶页布局。
+- table块增加`column_formats`，键为现有列的1起始十进制字符串，每列可有body/header格式对象，字段沿用表格文字格式；覆盖顺序为主题样式→表格body_format/header_format→列对应格式。不猜数据类型、不改数值/精度或单元格内容。表头不会自动采用正文列右对齐。
+
+```json
+{"office_preset":"bank_report","pagination_preset":"stable","page":{"header_distance_mm":10,"footer_distance_mm":10},"blocks":[{"type":"title","text":"经营分析"},{"type":"table","header":true,"rows":[["项目","金额"],["示例","00123"]],"column_formats":{"1":{"body":{"align":"left"}},"2":{"body":{"align":"right"},"header":{"align":"center"}}}}]}
+```
+
+生成验收核对列级有效属性及页眉页脚距离；非阻断排版诊断亦使用列级覆盖后的字号、行距和缩进。不改变既有风险的非阻断性质；不引入字体度量、真实分页或视觉效果认证。实际字体替换、换行及分页仍需阅读器验收。
+
+长报告额外非阻断提示：`KEEP_CHAIN_RISK` 在连续至少8个有内容段落都显式或继承keep_with_next时提示一次，建议检查过大同页链；8是诊断阈值而非页容量。`TRAILING_HEADING_RISK` 在最后一个有内容文本块为标题/副标题/章节且后无正文或表格时提示，可能是有意留待补充，不自动删改。提示不包含正文，不改变XML、不触发重试；沿用100项上限和截断标记。它们不能判断实际留白、孤页或字形换行。
+
+维护验证补充：仓库内`<skill-root>/scripts/test_bank_layout_verification.py`比较三种主题默认部件与提交6fcd827的生成器；银行预设组合检查最终XML，并篡改列格式、页边距及分页属性验证拒绝。基线依赖仓库Git历史，独立包无Git时仅该项明确跳过；其余测试独立执行。基线对照范围是固定合成规格，不是全输入空间兼容证明。

@@ -11,8 +11,12 @@ LAYOUT_TRUNCATION_NOTICE = (
 
 FIXED_LINE_HEIGHT_RISK = "FIXED_LINE_HEIGHT_RISK"
 PARAGRAPH_WIDTH_RISK = "PARAGRAPH_WIDTH_RISK"
+KEEP_CHAIN_RISK = "KEEP_CHAIN_RISK"
+TRAILING_HEADING_RISK = "TRAILING_HEADING_RISK"
 
 _MESSAGES = {
+    KEEP_CHAIN_RISK: 'Eight or more adjacent content paragraphs request keep-with-next; a large linked block may create whitespace. No pagination was measured.',
+    TRAILING_HEADING_RISK: 'The document ends with a title or heading without following substantive content; check the intended report structure.',
     FIXED_LINE_HEIGHT_RISK:
         "Serialized text size exceeds fixed line spacing; rendered text may be clipped.",
     PARAGRAPH_WIDTH_RISK:
@@ -115,7 +119,7 @@ def _check_paragraph(issues: list[dict[str, str]], seen: set[tuple[str, str]],
 
 
 def diagnose_layout(validated: dict[str, Any]) -> tuple[list[dict[str, str]], bool]:
-    """Diagnose two known layout risks without changing the normalized spec.
+    """Diagnose bounded static layout risks without changing the normalized spec.
 
     The input must be the result of ``create_docx._validate_spec``. This function
     uses only normalized fields, never reopens resources, and caps returned
@@ -125,6 +129,26 @@ def diagnose_layout(validated: dict[str, Any]) -> tuple[list[dict[str, str]], bo
     seen: set[tuple[str, str]] = set()
     available_width_twips = validated["available_width_twips"]
     styles = validated["styles"]
+
+    chain = 0
+    last_substantive = None
+    for block_index, block in enumerate(validated["blocks"]):
+        kind = block['type']
+        if kind in ('title','subtitle','heading','paragraph') and _paragraph_has_content(block):
+            name = 'heading'+str(block['level']) if kind == 'heading' else 'body' if kind == 'paragraph' else kind
+            effective = _merge_format(styles[name], block['format'])
+            chain = chain + 1 if effective.get('keep_with_next', False) else 0
+            if chain == 8 and _add_issue(issues, seen, KEEP_CHAIN_RISK, f'blocks[{block_index}]'):
+                return issues, True
+            last_substantive = (kind, block_index)
+        elif kind == 'table':
+            chain = 0
+            last_substantive = (kind, block_index)
+        else:
+            chain = 0
+    if last_substantive and last_substantive[0] in ('title','subtitle','heading'):
+        if _add_issue(issues, seen, TRAILING_HEADING_RISK, f'blocks[{last_substantive[1]}]'):
+            return issues, True
 
     for block_index, block in enumerate(validated["blocks"]):
         kind = block["type"]
@@ -170,6 +194,7 @@ def diagnose_layout(validated: dict[str, Any]) -> tuple[list[dict[str, str]], bo
                     style_name = "table_header" if is_header else "table_body"
                     override_name = "header_format" if is_header else "body_format"
                     formatting = _merge_format(styles[style_name], block[override_name])
+                    formatting = _merge_format(formatting, block.get('column_formats', {}).get(str(column_index + 1), {}).get('header' if is_header else 'body', {}))
                     location = (f"blocks[{block_index}].rows[{row_index}]"
                                 f"[{column_index}]")
                     font_sizes = (

@@ -278,7 +278,13 @@ def _table(node, block, location, check_image, style_formats):
             picture = value.get("image") if isinstance(value, dict) else None
             paragraphs = cell.findall(w("p"))
             _expect(len(paragraphs), 1, cell_location + ".paragraphs")
-            formatting = block["header_format"] if is_header else block["body_format"]
+            formatting = dict(block["header_format"] if is_header else block["body_format"])
+            layer = block.get('column_formats', {}).get(str(column + 1), {}).get('header' if is_header else 'body', {})
+            if 'line_spacing_pt' in layer: formatting.pop('line_spacing_multiple', None)
+            if 'line_spacing_multiple' in layer: formatting.pop('line_spacing_pt', None)
+            if 'hanging_indent_pt' in layer and 'first_line_chars' not in layer: formatting.pop('first_line_chars', None)
+            if 'first_line_chars' in layer and 'hanging_indent_pt' not in layer: formatting.pop('hanging_indent_pt', None)
+            formatting.update(layer)
             drawing = _paragraph(paragraphs[0], [(text, formatting)], "TableHeader" if is_header else "TableBody",
                                  formatting, cell_location, image=picture,
                                  inherited_format=style_formats["table_header" if is_header else "table_body"])
@@ -301,7 +307,7 @@ def verify_generation(spec, validator):
         size[w("orient")] = "landscape"
     _expect(_attrs(section, w("pgSz")), size, "page.size")
     margins = {w(side): str(page[side]) for side in ("top", "right", "bottom", "left")}
-    margins.update({w("header"): str(min(720, page["top"])), w("footer"): str(min(720, page["bottom"])),
+    margins.update({w("header"): str(page.get("header", min(720, page["top"]))), w("footer"): str(page.get("footer", min(720, page["bottom"]))),
                     w("gutter"): "0"})
     _expect(_attrs(section, w("pgMar")), margins, "page.margins")
     for key, part, style in (("header", "word/header1.xml", "Header"), ("footer", "word/footer1.xml", "Footer")):

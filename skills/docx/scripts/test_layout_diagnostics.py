@@ -143,6 +143,7 @@ class LayoutDiagnosticsTests(unittest.TestCase):
         self.assertEqual(
             [(item["code"], item["location"]) for item in result["layout_issues"]],
             [
+                ("TRAILING_HEADING_RISK", "blocks[2]"),
                 (FIXED_LINE_HEIGHT_RISK, "blocks[0]"),
                 (FIXED_LINE_HEIGHT_RISK, "blocks[1]"),
                 (FIXED_LINE_HEIGHT_RISK, "blocks[2]"),
