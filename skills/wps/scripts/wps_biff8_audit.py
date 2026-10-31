@@ -152,13 +152,21 @@ def audit_biff8(result):
             or len(result.get('shared_string_formatting', ())) > MAX_RICH_ENTRIES
             or len(result.get('styles', ())) > MAX_AUDIT_XFS):
         raise ValueError('BIFF8 audit source budget exceeded')
+    from wps_biff8_audit_sources import (font_sources, rich_font_references,
+                                        calculation_metadata, xf_ancestry)
+    fonts = font_sources(result)
+    rich = _rich_sources(result)
     return {'schema_version': 'biff8_stored_evidence_audit_v1',
             'source_schema_version': 'biff8_readonly_v1',
             'source_read_status': result.get('status'),
             'source_partial_preserved': bool(result.get('partial') or result.get('issues')),
-            'rich_format_runs': _rich_sources(result),
+            'rich_format_runs': rich,
+            'font_sources': fonts,
+            'rich_font_references': rich_font_references(rich, fonts),
             'formula_caches': _formula_cache_summary(result),
+            'calculation_metadata': calculation_metadata(result),
             'xf_sources': _xf_sources(result),
+            'xf_ancestry': xf_ancestry(result),
             'effective_styles_verified': False,
             'native_et_ett_producer_verified': False,
             'full_format_verified': False,
