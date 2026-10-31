@@ -48,8 +48,8 @@ CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupport
 默认读取返回值、状态和退出码**保持不变**。仅实际识别为 CFB + MS-DOC 的文档，显式使用 `--binary-paragraph-sources` 或 Python 的 `read_bytes(data, binary_paragraph_sources=True)` 才会尝试增加下列字段；CLI 必须使用默认 JSON 输出，`--format text` 与此来源选项组合会以参数错误退出 2，防止悄悄丢失来源字段；对 OOXML 或 BIFF8 使用此二进制专用参数会拒绝，而不是根据 `.wps` 后缀猜测格式。
 
 - `paragraph_sources`：与**未转换的存储段落**一一对应的数组。每项仅包含 `index`、`cp_start`、`cp_end`、`text_cp_end`；其中 `[cp_start, cp_end)` 包含原存储段落结束符 CR（若有），`text_cp_end` 不包含该 CR。CP 坐标按 UTF-16 码元计数，补充平面字符占两个 CP，不是 Python 字符索引、物理字节偏移或页码。
-- `paragraph_source_status=exact_stored_cp`：表示当前故事未被字段结果过滤、对象占位或注释标记替换改变输出文本，段落范围可以按存储段落顺序关联；这仍不证明页面布局、字符格式或生产软件来源。
-- `paragraph_source_status=unavailable_after_text_transform`：如果执行了会改变文本的转换策略，`paragraph_sources=[]`，同时返回 `binary_paragraph_source_alignment_unavailable` 诊断并标记 partial。**不得把空数组当成没有段落**；原始 `text`、`paragraphs` 和其他诊断仍按既有契约返回。
+- `paragraph_source_status=exact_stored_cp`：表示当前故事的最终文本与存储文字相同（即使选择了但没有实际触发的转换策略），段落范围可以按存储段落顺序关联；这仍不证明页面布局、字符格式或生产软件来源。
+- `paragraph_source_status=unavailable_after_text_transform`：如果文本转换**实际改变存储文字**，`paragraph_sources=[]`，同时返回 `binary_paragraph_source_alignment_unavailable` 诊断并标记 partial。**不得把空数组当成没有段落**；原始 `text`、`paragraphs` 和其他诊断仍按既有契约返回。
 - 显式 `--include-related` 时，附加故事自身的 `related_stories[].paragraph_sources` 以对应故事起始 CP 为基准，各故事独立编号；不能把页眉、脚注和主正文来源混成一条扁平页序列。
 - 每个故事最多 100000 个段落来源、8 Mi UTF-16 单位；仍受总体文本及 16 MiB JSON 输出预算约束。请求超出预算时按既有资源失败契约返回，不偷偷截断来源。
 
