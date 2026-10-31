@@ -65,6 +65,20 @@ class ParagraphSourceTests(unittest.TestCase):
         self.assertEqual(story['paragraph_sources'], [
             {'index': 0, 'cp_start': 2, 'cp_end': 4, 'text_cp_end': 3}])
 
+    def test_noop_transform_policies_preserve_exact_cp_sources(self):
+        original = document([('甲😀\\r乙\\r'.encode('utf-16le'), False)])
+        for policy in ({'field_policy': 'cached_result'},
+                       {'object_policy': 'placeholder'}):
+            with self.subTest(policy=policy):
+                result = parse_streams(
+                    original, binary_paragraph_sources=True, **policy)
+                self.assertEqual(result['paragraph_source_status'],
+                                 'exact_stored_cp')
+                self.assertEqual(result['paragraph_sources'], [
+                    {'index': 0, 'cp_start': 0, 'cp_end': 4, 'text_cp_end': 3},
+                    {'index': 1, 'cp_start': 4, 'cp_end': 6, 'text_cp_end': 5},
+                ])
+
     def test_transformed_field_output_cannot_claim_original_alignment(self):
         data = document([(b'A\x13 FORMULA \x14B\x15\r', True)])
         result = parse_streams(data, field_policy='cached_result',
