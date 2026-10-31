@@ -193,6 +193,21 @@ def main():
             row["cfb_header"]=_cfb_header(data)
             if item["id"] == "agricultural_bank_nda_doc":
                 row["aligned_prefix_forensics"] = _cfb_prefix_forensic_only(data)
+                sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills" / "wps" / "scripts"))
+                from read_wps import read_bytes
+                try:
+                    read_bytes(data)
+                    raise ValueError("unsafe acceptance of malformed Agricultural Bank CFB")
+                except ValueError as exc:
+                    if getattr(exc, "status", None) != "invalid_or_unsupported":
+                        raise
+                    reason = getattr(exc, "location", {}).get("reason_code")
+                    if reason != "cfb_unaligned_physical_length":
+                        raise ValueError("expected precise nonaligned CFB failure")
+                    row["actual_reader_default"] = {
+                        "status": "rejected", "reason_code": reason,
+                        "message": str(exc)[:130]
+                    }
             if "error_offset_word_stream" in item:
                 row["failing_character"] = _locate_msdoc_code(data,item["error_offset_word_stream"])
                 if row["failing_character"].get("status") == "mapped":
@@ -214,6 +229,12 @@ def main():
                             "status": "rejected", "error_status": getattr(exc, "status", None),
                             "error_type": type(exc).__name__,
                             "error_message": str(exc)[:120]}
+                if (row["actual_reader_reject"].get("error_status") != "unsupported"
+                        or row["actual_reader_placeholder"].get("status") != "partial"
+                        or row["actual_reader_placeholder"].get("paragraph_count") != 36
+                        or "drawn_shape_anchor_not_rendered"
+                        not in row["actual_reader_placeholder"].get("issues", ())):
+                    raise ValueError("government shape sample did not achieve validated partial extraction")
         except Exception as exc:
             row.update({"download":"failed","error_type":type(exc).__name__,
                         "error_summary":str(exc)[:120]})
