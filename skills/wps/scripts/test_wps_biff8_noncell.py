@@ -65,6 +65,10 @@ def prepend_sheet_record(book, extra):
 class NonCellRecordsTests(unittest.TestCase):
     def setUp(self):
         self.original = workbook()
+        # Single-sheet fixture lets the inline worksheet record be inserted
+        # without rebuilding unrelated subsequent BoundSheet8 offsets.
+        self.single = workbook(sheet_records=[
+            formula(3, 1, struct.pack('<d', 42))], strings=[])
 
     def test_first_writeprotect_retained_without_changing_saved_values(self):
         incoming = prepend_global_record(self.original, rec(0x0086))
@@ -72,8 +76,13 @@ class NonCellRecordsTests(unittest.TestCase):
             parse_stream(incoming, compatibility='strict')
         before = parse_stream(self.original, compatibility='data')
         after = parse_stream(incoming, compatibility='data')
-        self.assertEqual(before['sheets'], after['sheets'])
+        self.assertEqual([x['cells'] for x in before['sheets']],
+                         [x['cells'] for x in after['sheets']])
+        self.assertEqual([x['merges'] for x in before['sheets']],
+                         [x['merges'] for x in after['sheets']])
         self.assertEqual(before['cell_count'], after['cell_count'])
+        self.assertEqual(after['sheets'][0]['offset'] - before['sheets'][0]['offset'],
+                         len(rec(0x0086)))
         self.assertEqual(after['status'], 'partial')
         saved = [m for m in after['uninterpreted_metadata'] if m['record_id'] == '0x86']
         self.assertEqual(len(saved), 1)
@@ -90,8 +99,8 @@ class NonCellRecordsTests(unittest.TestCase):
                     parse_stream(item, compatibility='data')
 
     def test_uncalced_readable_without_recomputing_formula(self):
-        incoming = prepend_sheet_record(self.original, rec(0x005e, b'\0\0'))
-        before = parse_stream(self.original, compatibility='data')
+        incoming = prepend_sheet_record(self.single, rec(0x005e, b'\0\0'))
+        before = parse_stream(self.single, compatibility='data')
         after = parse_stream(incoming, compatibility='data')
         self.assertEqual(before['sheets'], after['sheets'])
         self.assertEqual(after['status'], 'partial')
@@ -106,7 +115,7 @@ class NonCellRecordsTests(unittest.TestCase):
         self.assertEqual(value['value'], 42)
 
     def test_uncalced_invalid_reserved_length_order_or_duplicate_rejected(self):
-        base = self.original
+        base = self.single
         valid = rec(0x005e, b'\0\0')
         malformed = [rec(0x005e), rec(0x005e, b'\x01\0'),
                      rec(0x005e, b'\0\0\0'), valid + valid]
