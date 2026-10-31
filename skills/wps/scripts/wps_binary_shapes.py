@@ -31,8 +31,10 @@ def main_shape_anchors(word, table, main_count, read_unit, table_ranges=()):
     cps = struct.unpack('<' + 'I' * (count + 1), region.view(0, (count + 1) * 4))
     require(all(a < b for a, b in zip(cps, cps[1:])),
             region.location(), 'PlcfSpa CPs must be strictly increasing')
-    require(cps[-1] <= main_count, region.location(4 * count),
-            'PlcfSpa outside declared main document story')
+    # MS-DOC: the final CP is undefined and MUST be ignored, except it
+    # must be greater than the previous CP. Only actual anchors are bounded.
+    require(all(cp < main_count for cp in cps[:-1]), region.location(),
+            'PlcfSpa shape anchor outside declared main document story')
     results = {}
     for index, cp in enumerate(cps[:-1]):
         require(read_unit(cp) == 8, region.location(4 * index, shape=index, cp=cp),
