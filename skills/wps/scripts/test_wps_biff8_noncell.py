@@ -62,6 +62,20 @@ def prepend_sheet_record(book, extra):
     raise AssertionError('Fixture has no worksheet')
 
 
+def cell_semantics(result):
+    # Adding a record necessarily changes later physical BIFF source offsets.
+    # Exclude ONLY those expected physical locations, not typed cells/caches.
+    return [{address: {key: value for key, value in cell.items()
+                       if key not in ('record_offset', 'cache_record_offset')}
+             for address, cell in sheet['cells'].items()}
+            for sheet in result['sheets']]
+
+
+def merge_semantics(result):
+    return [[{key: val for key, val in item.items() if key != 'record_offset'}
+             for item in sheet['merges']] for sheet in result['sheets']]
+
+
 class NonCellRecordsTests(unittest.TestCase):
     def setUp(self):
         self.original = workbook()
@@ -76,10 +90,11 @@ class NonCellRecordsTests(unittest.TestCase):
             parse_stream(incoming, compatibility='strict')
         before = parse_stream(self.original, compatibility='data')
         after = parse_stream(incoming, compatibility='data')
-        self.assertEqual([x['cells'] for x in before['sheets']],
-                         [x['cells'] for x in after['sheets']])
-        self.assertEqual([x['merges'] for x in before['sheets']],
-                         [x['merges'] for x in after['sheets']])
+        self.assertEqual(cell_semantics(before), cell_semantics(after))
+        self.assertEqual(merge_semantics(before), merge_semantics(after))
+        self.assertEqual(after['sheets'][0]['cells']['A1']['record_offset']
+                         - before['sheets'][0]['cells']['A1']['record_offset'],
+                         len(rec(0x0086)))
         self.assertEqual(before['cell_count'], after['cell_count'])
         self.assertEqual(after['sheets'][0]['offset'] - before['sheets'][0]['offset'],
                          len(rec(0x0086)))
@@ -102,7 +117,11 @@ class NonCellRecordsTests(unittest.TestCase):
         incoming = prepend_sheet_record(self.single, rec(0x005e, b'\0\0'))
         before = parse_stream(self.single, compatibility='data')
         after = parse_stream(incoming, compatibility='data')
-        self.assertEqual(before['sheets'], after['sheets'])
+        self.assertEqual(cell_semantics(before), cell_semantics(after))
+        self.assertEqual(merge_semantics(before), merge_semantics(after))
+        self.assertEqual(after['sheets'][0]['cells']['B4']['record_offset']
+                         - before['sheets'][0]['cells']['B4']['record_offset'],
+                         len(rec(0x005e, b'\0\0')))
         self.assertEqual(after['status'], 'partial')
         self.assertTrue(any(x['code'] == 'saved_formula_recalculation_pending'
                             for x in after['issues']))
