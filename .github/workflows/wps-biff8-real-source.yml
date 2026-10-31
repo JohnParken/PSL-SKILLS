@@ -1,0 +1,27 @@
+name: WPS BIFF8 pinned ET ETT real-source audit
+on:
+  pull_request:
+    paths:
+      - 'tests/wps_biff8_audit_real_samples.py'
+      - 'skills/wps/scripts/wps_biff8_audit.py'
+      - 'skills/wps/scripts/wps_biff8_audit_sources.py'
+      - 'skills/wps/references/et-real-samples.json'
+      - '.github/workflows/wps-biff8-real-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-real-et-ett:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: WPS source self-check
+        run: |
+          python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: Pinned public ET ETT sources and exact saved values (maintenance)
+        run: |
+          python -I -S -B tests/wps_biff8_audit_real_samples.py
