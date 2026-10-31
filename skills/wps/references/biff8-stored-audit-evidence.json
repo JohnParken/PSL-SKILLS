@@ -1,0 +1,62 @@
+{
+  "schema_version": "wps_biff8_audit_evidence_v1",
+  "status": "synthetic_ci_passed_native_wps_semantics_not_run",
+  "date": "2026-10-31",
+  "scope": "standalone_readonly_BIFF8_saved_evidence_audit",
+  "source_base": "main",
+  "implementation": "skills/wps/scripts/wps_biff8_audit.py",
+  "tests": "skills/wps/scripts/test_wps_biff8_audit.py",
+  "new_unit_tests": 10,
+  "ci": {
+    "run_id": 41185200301,
+    "commit_sha": "00aaa0f4dd3051a1723e6a5482b6247830ac7868",
+    "python_3_11": {
+      "job_id": 124490612462,
+      "new_tests": {
+        "passed": 10,
+        "failed": 0
+      },
+      "full_wps_suite": {
+        "passed": 434,
+        "failed": 0
+      },
+      "selfcheck": "environment-ok",
+      "strict_skill": "OK skills/wps"
+    },
+    "python_3_13": {
+      "job_id": 124490612370,
+      "new_tests": {
+        "passed": 10,
+        "failed": 0
+      },
+      "full_wps_suite": {
+        "passed": 434,
+        "failed": 0
+      },
+      "selfcheck": "environment-ok",
+      "strict_skill": "OK skills/wps"
+    },
+    "initial_cli_issue": "Python -I removed script directory from sys.path; standalone module import corrected and rerun passed"
+  },
+  "contracts": {
+    "default_wps_word_reader_modified": false,
+    "existing_biff8_parser_modified": false,
+    "default_read_wps_output_modified": false,
+    "formula_calculation": false,
+    "font_rendering": false,
+    "style_inheritance_resolution": false,
+    "input_file_writes": false,
+    "network_requests": false,
+    "third_party_runtime_packages": false
+  },
+  "independently_verified_native_et_ett_rich_format_sample": false,
+  "independently_verified_native_et_ett_formula_cache_sample": false,
+  "independently_verified_native_et_ett_effective_complex_format_sample": false,
+  "known_limits": [
+    "Only audit observed SST FormatRun locations when exact referenced cell text is available",
+    "No final applied font or rich rendering is inferred",
+    "Formula cache freshness, expression meaning and recomputation remain unknown",
+    "XF source bytes are not applied/effective cell styles",
+    "Synthetic tests do not prove WPS Office producer/version compatibility"
+  ]
+}
