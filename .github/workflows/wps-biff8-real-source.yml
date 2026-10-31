@@ -4,6 +4,10 @@ on:
     paths:
       - 'tests/wps_biff8_audit_real_samples.py'
       - 'skills/wps/scripts/wps_biff8_audit.py'
+      - 'skills/wps/scripts/wps_biff8.py'
+      - 'skills/wps/scripts/wps_biff8_noncell.py'
+      - 'skills/wps/scripts/test_wps_biff8_noncell.py'
+      - 'skills/wps/references/et-noncell-compatibility.md'
       - 'skills/wps/scripts/wps_biff8_audit_sources.py'
       - 'skills/wps/references/et-real-samples.json'
       - '.github/workflows/wps-biff8-real-source.yml'
