@@ -120,6 +120,30 @@ def inspect(item, read_bytes):
                                          for anchor in item['anchors']},
                        'diagnostic_codes': [issue.get('code') for issue in doc.get('issues', [])[:15]
                                             if isinstance(issue, dict)]})
+        if result['ms_doc_binary'] and isinstance(body, str):
+            # Independent FIB/CLX/Pcdt algorithm; reuse only the bounded CFB
+            # container implementation, never the target MS-DOC text parser.
+            try:
+                sys.path.insert(0, str(Path(__file__).resolve().parent))
+                from wps_public_story_oracle import independently_decode_main
+                independent = independently_decode_main(
+                    data, Path(__file__).resolve().parents[1] / 'skills' / 'wps' / 'scripts')
+                text_match = hashlib.sha256(body.encode('utf-8')).hexdigest() == independent['text_sha256']
+                paragraphs = doc.get('paragraphs', [])
+                paragraph_hash = hashlib.sha256(json.dumps(
+                    paragraphs, ensure_ascii=False, separators=(',', ':')).encode('utf-8')).hexdigest()
+                paragraphs_match = paragraph_hash == independent['paragraphs_sha256']
+                result['independent_story_comparison'] = {
+                    'status': 'matched' if text_match and paragraphs_match else 'mismatch',
+                    'text_equal': text_match, 'paragraphs_equal': paragraphs_match,
+                    'main_units': independent['main_units'],
+                    'piece_count': independent['piece_count'],
+                    'independent_paragraph_count': independent['paragraph_count']}
+            except (ValueError, KeyError, UnicodeError, IndexError, OSError) as exc:
+                result['independent_story_comparison'] = {
+                    'status': 'not_supported_by_independent_checker',
+                    'error_type': type(exc).__name__}
+
     except Exception as exc:
         result.update({'retrieval': 'failed', 'error_type': type(exc).__name__,
                        'error_summary': str(exc)[:120]})
@@ -139,13 +163,15 @@ def main():
         'cfb_count': sum(r.get('magic') == 'CFB_OLE' for r in findings),
         'ms_doc_binary_count': sum(r.get('ms_doc_binary') is True for r in findings),
         'successful_partial_or_full': sum(r.get('read_status') in ('ok','partial') for r in findings),
+        'independent_story_matches': sum(r.get('independent_story_comparison', {}).get('status') == 'matched' for r in findings),
         'full_format_verified': False,
         'native_wps_producer_verified': False,
         'real_full_text_semantic_acceptance': False,
         'samples': findings,
     }
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if report['downloaded'] else 1
+    mismatches = any(r.get('independent_story_comparison', {}).get('status') == 'mismatch' for r in findings)
+    return 0 if report['downloaded'] and not mismatches else 1
 
 
 if __name__ == '__main__':
