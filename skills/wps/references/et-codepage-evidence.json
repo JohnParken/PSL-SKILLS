@@ -1,0 +1,67 @@
+{
+  "schema_version": "wps_biff8_codepage_declaration_evidence_v1",
+  "recorded_at": "2026-11-01",
+  "branch": "codex/wps-biff8-codepage-20261101",
+  "base_branch": "codex/wps-biff8-noncell-guard-20261031",
+  "status": "synthetic_codepage_coverage_passed_real_saved_values_unchanged",
+  "changes": {
+    "mode": "data_only",
+    "prior_values": [
+      1200,
+      932,
+      936,
+      1252
+    ],
+    "newly_accepted_values": [
+      874,
+      949,
+      950,
+      1250,
+      1251
+    ],
+    "interpretation": "known_CODEPG_declaration_only",
+    "original_unicode_string_rules_unchanged": true,
+    "date1904_missing_remains_rejected": true,
+    "strict_and_legacy_1200_only": true,
+    "unknown_codepages_remain_rejected": true,
+    "no_formula_execution": true,
+    "no_legacy_encoded_bytes_decoded": true
+  },
+  "tests": {
+    "workflow_run_id": 41253516735,
+    "python_3_11": {
+      "job_id": 124691757020,
+      "full_suite_passed": 452,
+      "failed": 0,
+      "strict_skill": "OK skills/wps",
+      "environment": "environment-ok"
+    },
+    "python_3_13": {
+      "job_id": 124691756847,
+      "full_suite_passed": 452,
+      "failed": 0,
+      "strict_skill": "OK skills/wps",
+      "environment": "environment-ok"
+    },
+    "new_codepage_synthetic_cases": 7,
+    "pinned_real_samples_run_id": 41253516759,
+    "pinned_real_samples_job_id": 124691756728,
+    "real_et_ett_originals_verified": 4,
+    "independently_frozen_saved_values_matched": 198,
+    "frozen_formula_caches_retained_unverified": 33
+  },
+  "independence": {
+    "word_msdoc_reader_code_changed": false,
+    "biff8_style_audit_changed": false,
+    "default_word_output_changed": false,
+    "no_new_runtime_dependencies": true,
+    "originals_redistributed": false,
+    "original_wps_producer_versions_known": false
+  },
+  "known_gaps": [
+    "No pinned original exercising one of the five newly permitted CodePage values",
+    "Standard BIFF8 requires Date1904; missing mandatory date metadata still fails",
+    "No support for unknown code-page byte decoding or BIFF5",
+    "No independently verified WPS Office rendering or formula recomputation"
+  ]
+}
