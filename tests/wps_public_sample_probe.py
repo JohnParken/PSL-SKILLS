@@ -19,7 +19,7 @@ SOURCE_URL = (
 )
 EXPECTED_GIT_BLOB = '140d30603be830b7ec95226e6dd8103a106938cd'
 EXPECTED_SIZE = 125952
-EXPECTED_SHA256 = ''  # Frozen after one source-check run; a missing SHA fails closed.
+EXPECTED_SHA256 = '59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d'
 KNOWN_ANCHORS = (
     '春季露营活动指南',
     '一、活动筹备清单',
