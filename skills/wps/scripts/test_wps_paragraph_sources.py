@@ -53,6 +53,23 @@ class ParagraphSourceTests(unittest.TestCase):
             {'index': 1, 'cp_start': 4, 'cp_end': 6, 'text_cp_end': 5},
         ])
 
+    def test_fragmented_surrogate_pair_and_empty_main_story(self):
+        original = document([
+            ('甲'.encode('utf-16le'), False),
+            (b'\\x3d\\xd8', False),
+            (b'\\x00\\xde', False),
+            ('\\r乙\\r'.encode('utf-16le'), False),
+        ])
+        result = parse_streams(original, binary_paragraph_sources=True)
+        self.assertEqual(result['paragraphs'], ['甲😀', '乙'])
+        self.assertEqual(result['paragraph_sources'], [
+            {'index': 0, 'cp_start': 0, 'cp_end': 4, 'text_cp_end': 3},
+            {'index': 1, 'cp_start': 4, 'cp_end': 6, 'text_cp_end': 5},
+        ])
+        empty = parse_streams(document([]), binary_paragraph_sources=True)
+        self.assertEqual(empty['paragraph_sources'], [])
+        self.assertEqual(empty['paragraph_source_status'], 'exact_stored_cp')
+
     def test_requested_related_story_has_own_cp_start(self):
         main = '甲\r'.encode('utf-16le')
         note = '注\r'.encode('utf-16le')
