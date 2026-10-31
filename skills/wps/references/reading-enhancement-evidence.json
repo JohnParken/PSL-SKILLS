@@ -87,12 +87,15 @@
       }
     },
     "ci": {
-      "run_id": 41188139777,
-      "python_3_11_job": 124499158176,
-      "python_3_13_job": 124499157982,
-      "government_baseline_run": 41188139800,
-      "resource_profile_run": 41188139921,
-      "validation_status": "passed on code stage; final documentation commit pending CI rerun"
+      "run_id": 41188295396,
+      "python_3_11_job": 124499614497,
+      "python_3_13_job": 124499614646,
+      "government_baseline_run": 41188295437,
+      "resource_profile_run": 41188295281,
+      "code_and_documentation_ci": "passed: 454/454 on Python 3.11 and 3.13; strict Skill validation passed",
+      "frozen_baselines": "passed: 7/7, 0 mismatches, six independent story matches",
+      "resource_profile": "passed: synthetic bounded measurements only",
+      "metadata_followup_note": "this metadata-only commit itself requires a normal PR CI rerun"
     },
     "description": {
       "characters": 141,
