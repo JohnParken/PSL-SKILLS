@@ -4,6 +4,7 @@
 
 ## 目录
 
+- 读取质量基线与资源测量 (`<skill-root>/references/validation.md#读取质量基线与资源测量`)
 - 当前验证范围 (`<skill-root>/references/validation.md#当前验证范围`)
 - 真实失败样本的受限修复 (`<skill-root>/references/validation.md#真实失败样本的受限修复`)
 - 分支增量：MS-DOC 段落来源范围 (`<skill-root>/references/validation.md#分支增量ms-doc-段落来源范围`)
@@ -49,6 +50,14 @@
 中国农业银行广西南宁分行 .doc 文件已明确具备两个异常证据：总长度对 512 字节扇区余 51 字节且尾部非零、扇区对齐前缀 FAT 仍宣称物理范围之外的分配。本轮补充 `cfb_unaligned_physical_length` 和 `cfb_fat_unbacked_allocation` 定位，真实原件**继续被安全拒绝**。禁止自动裁剪、补零或忽略 FAT 约束；只有获得可靠原件生产和独立打开/内容预期证据后才可研究兼容读取。
 
 GitHub Actions Linux Python3.11/3.13 全量 WPS **451 项测试均通过**、入口自检及严格 Skill 检查通过（本次开发分支的中间运行 `41185919368`）；真实失败源专项验证运行 `41185919275`。新逻辑为只读且基于证据的增加，不扩展原生格式兼容承诺，不启动 WPS/LibreOffice 或联网执行用户任务。
+
+## 读取质量基线与资源测量
+
+本轮不增加文件格式和新的解析功能，仅修正 `wps_diagnostics.py` 的对象覆盖摘要：`drawn_shape_anchor_not_rendered` 被正确归入 `objects.not_decoded`，保留原 `issues`、`partial`、来源 CP/SPA 偏移及受控记录，禁止在摘要泄露任意原文。新增三项诊断回归（图片与绘图混合、附加故事、原始位置与隐私保护），完整 WPS 单测由 451 增至 **454 项**。GitHub Actions Linux Python 3.11/3.13 已各 **454/454** 通过、`--check` 和严格 Skill 结构检查通过（代码阶段运行 `41188139777`）。
+
+对政府官网已经取得的 7 份 CFB/OLE `.wps`，维护脚本 `tests/wps_government_attachment_probe.py`（仓库根目录，不在 Skill 分发包中）固定每份 SHA-256、受限正文 `partial` 状态、段落数量与已有的 6 份独立正文算法比对；新增 `frozen_baseline_verified` / `unavailable` / `mismatches`，**下载失败明确为本次未验**，不拿旧结果充当当前通过。Linux CI `41188139800` 实测 **7/7 可用且基线一致、0 不一致**，并非 WPS Office 人工独立全文/排版认证；之前的 6 可读 + 1 拒绝只对应旧版取证。
+
+针对已支持的 MS-DOC 主正文，另外仅通过**仓库维护级合成脚本** `tests/wps_read_quality_profile.py` 和 Linux CI `41188139921` 记录资源曲线：1024/4096/16384 段默认分别约 75/299/1195 ms、峰值 `tracemalloc` 0.13/0.51/2.02 MiB；16384 段启用可选 CP 来源时约 1558 ms、峰值 7.01 MiB。该结果只反映当前 runner 和 Python 分配跟踪，**不是 RSS、用户真实文件性能或 SLA**。来源定位额外内存显著，暂不据合成数据冒险修改现有 CP 范围或正文解码算法；保留功能、预算与错误策略不变。
 
 ## 当前验证范围
 
