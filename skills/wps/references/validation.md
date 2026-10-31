@@ -5,6 +5,7 @@
 ## 目录
 
 - 当前验证范围 (`<skill-root>/references/validation.md#当前验证范围`)
+- 真实失败样本的受限修复 (`<skill-root>/references/validation.md#真实失败样本的受限修复`)
 - 分支增量：MS-DOC 段落来源范围 (`<skill-root>/references/validation.md#分支增量ms-doc-段落来源范围`)
 - 分支增量：CHPX/PAPX 观测来源关联 (`<skill-root>/references/validation.md#分支增量chpxpapx-观测来源关联`)
 - 农业银行官网公开 DOC/PDF 实测 (`<skill-root>/references/validation.md#农业银行官网公开-docpdf-实测`)
@@ -40,6 +41,14 @@
 维护 CI 在三家银行官方公告中的 10 个办公附件直链上分别执行**受限真实下载与文件内容签名识别**：中行 2 份 .docx 均下载、识别 OOXML 且以 ok 提取 16/14 个段落；工行 2 份下载，其中 1 份 .docx 为 OOXML/partial（1 段，报价标题锚点缺失），1 份 .doc 为 CFB/MS-DOC/partial（1 段，另一个独立 FIB/CLX 算法的全文和段落数组一致）；建行两处官网的 6 份 .doc/.docx 均因 `UNSAFE_LEGACY_RENEGOTIATION_DISABLED` 下载失败，无文件字节可解析，**不计入解析成功或失败**。CI 运行 `41183896639`，精确 URL/SHA-256、锚点及受限结论见三行实测报告（`<skill-root>/references/wps-three-banks-official-validation.md`）和机器证据（`<skill-root>/references/wps-three-banks-official-evidence.json`）。不禁用 TLS 证书验证或降低协议安全条件，不从第三方副本替代原件。
 
 四份已读取文件均非已验证的原生 .wps，包含 3 份 OOXML 和 1 份 CFB/MS-DOC；不能以 4/4 推论 WPS 专有格式兼容，也不能将算法一致当成 Office 应用人工逐段验证。生产读取器、安全边界及公共 `partial` 契约未因该维护测试修改。
+
+## 真实失败样本的受限修复
+
+本次基于中山市政府实际公开的“佐证材料.wps”（原件 SHA-256 `3ccedb9e26d89410796508531912169559c0a0258303a085075e69829762375c`），确认 WordDocument 偏移 2546、CP249 的 `U+0008` 对应主故事 `PlcfSpa` 形状锚点。实现只读且显式的 `object_policy=placeholder`：保守替换该绘图标记后，真实文件返回 **partial、36 个段落**，保留图形资源、sprmCFSpec 生效状态及表格结构未知；默认 reject 仍返回 unsupported。真实对照通过本次维护 CI 只读原件哈希确认，不代表 WPS Office 独立图形语义验收；详见 绘图对象锚点（`<skill-root>/references/binary-shapes.md`）。
+
+中国农业银行广西南宁分行 .doc 文件已明确具备两个异常证据：总长度对 512 字节扇区余 51 字节且尾部非零、扇区对齐前缀 FAT 仍宣称物理范围之外的分配。本轮补充 `cfb_unaligned_physical_length` 和 `cfb_fat_unbacked_allocation` 定位，真实原件**继续被安全拒绝**。禁止自动裁剪、补零或忽略 FAT 约束；只有获得可靠原件生产和独立打开/内容预期证据后才可研究兼容读取。
+
+GitHub Actions Linux Python3.11/3.13 全量 WPS **451 项测试均通过**、入口自检及严格 Skill 检查通过（本次开发分支的中间运行 `41185919368`）；真实失败源专项验证运行 `41185919275`。新逻辑为只读且基于证据的增加，不扩展原生格式兼容承诺，不启动 WPS/LibreOffice 或联网执行用户任务。
 
 ## 当前验证范围
 
