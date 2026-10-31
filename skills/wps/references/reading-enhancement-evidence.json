@@ -7,7 +7,8 @@
     "changes": [
       "Opt-in UTF-16 stored paragraph CP source ranges in MS-DOC branch",
       "No-op field/object policies preserve exact stored CP provenance",
-      "JSON-only metadata output; transformed stories report partial without fabricated source positions"
+      "JSON-only metadata output; transformed stories report partial without fabricated source positions",
+      "Added explicit coverage check against stored story CP end and regression for fragmented surrogate-pair pieces/empty story"
     ],
     "tests": {
       "isolated_helper": {
@@ -16,7 +17,7 @@
         "command": "python -I -S -B -m unittest discover -s . -p 'test_*.py' -v (isolated helper prototype)"
       },
       "new_wps_integration": {
-        "defined": 10,
+        "defined": 11,
         "executed": false,
         "status": "not_run"
       },
