@@ -90,13 +90,18 @@ issues; it still requires explicit cached-formula opt-in and rejects missing cac
 
 ## Pure-table Unicode compatibility
 
-Data mode additionally accepts the explicit CodePage declarations 932, 936 and 1252
-alongside 1200. It preserves `code_page_raw` and reports non1200 declarations as
+Data mode accepts explicit CodePage declarations 874, 932, 936, 949, 950, 1200,
+1250, 1251 and 1252 only. The additional 874/949/950/1250/1251 entries are
+metadata-only compatibility; no bytes are decoded using these code pages. It preserves `code_page_raw` and reports non1200 declarations as
 partial; unknown IDs, wrong payload lengths and conflicting declarations still fail.
 This is not a byte-encoding fallback. Supported BIFF8 string fields carry their own
 Unicode fHighByte flag: compressed bytes are U+0000..U+00FF low bytes, never GBK,
 CP1252 or UTF-8 decoding. Numeric cells remain exact Decimal stored values.
 Strict and explicit legacy modes retain the previous 1200-only constraint.
+The mandatory Date1904 record remains required in every mode; missing it is not
+recovered by guessing 1900 or 1904, even if the CodePage declaration is recognized.
+The documented expanded code-page values are Microsoft CODEPG identifiers,
+not evidence of producer-specific `.et/.ett` encoding or complete WPS support.
 
 For plain XLUnicodeString in inline Label, formula String caches and Format, data
 uses only fHighByte and ignores the seven reserved bits as the field requires. Raw
@@ -195,7 +200,7 @@ bounds but never expanded; non-anchor data is retained, not silently erased. Bui
 format IDs remain IDs; fonts/styles/layout are not rendered or reconstructed.
 
 Known metadata records are explicitly retained as offset/type/raw payload hex: global
-CodePage (strict/legacy 1200; data also 932/936/1252), Window1, Font, Style; worksheet Dimensions, Row, Index,
+CodePage (strict/legacy 1200; data also 874/932/936/949/950/1250/1251/1252), Window1, Font, Style; worksheet Dimensions, Row, Index,
 DBCell and Window2. Their internal semantics are not validated or applied. Other records
 fail with ID and offset. This is a strict data-record subset, not full MS-XLS grammar or
 workbook validity certification; many genuine XLS/ET files will be outside this subset.
