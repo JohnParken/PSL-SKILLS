@@ -273,6 +273,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             raise ParseError('corrupt', text_location(cp_start + exc.start // 2), 'Invalid UTF-16 story text') from exc
         require(story_type != 'main' or not text or text.endswith('\r'), text_location(cp_end - 1) if cp_end > cp_start else word.location(76),
                 'Missing terminal paragraph')
+        stored_story_text = text
         # Opt-in delimiter interpretation only: no instructions are executed and
         # sprmCFSpec/Plcfld semantics are not decoded. Cached output is partial.
         cp = cp_start
@@ -373,7 +374,9 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         if table_structure is not None:
             story_result['binary_table_structure'] = table_structure
         if binary_paragraph_sources:
-            if rendered is None:
+            # Selecting a filtering policy does not itself alter stored text.
+            # Only preserve exact CP alignment when the resulting text is identical.
+            if text == stored_story_text:
                 sources = paragraph_cp_ranges(text, cp_start)
                 require(len(sources) == len(paragraphs), word.location(76),
                         'Stored paragraph source count mismatch')
