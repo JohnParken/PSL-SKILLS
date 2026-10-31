@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1435.5095"
+version: "20261031.1459.1079"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -61,7 +61,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 | 隐藏文字或修订视图 | 先读 隐藏与修订策略 (`<skill-root>/references/word-visibility.md`)。OOXML 默认 include/accepted；二进制不能过滤隐藏或修订。未知状态保留并说明，不能作为脱敏保证。 |
 | 文档表格 | OOXML JSON `tables` 提供逻辑网格和来源，见 结构化表格 (`<skill-root>/references/ooxml-tables.md`)。MS-DOC 仅提供有直接属性证据的一级行/单元格，合并与表格归组未知，见 二进制表格边界 (`<skill-root>/references/binary-tables.md`)。 |
 
-**MS-DOC 段落来源定位（可选）**：需要核对二进制 `.wps` 正文中的段落来源范围时，显式添加 `--binary-paragraph-sources`。仅对实际内容识别为 CFB + MS-DOC 的分支生效；返回各存储段落的 UTF-16 码元 CP 半开区间，不是 WordDocument 物理字节偏移或页面位置。字段结果过滤、对象占位或注释替换导致输出与存储文本无法可靠对齐时，不返回伪精确的段落来源，明确标记 partial 与诊断。默认读取不新增来源字段；选项、范围与错误契约详见 结果契约 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)。无真实 WPS 全文来源对照，不把该元数据当作生产兼容认证。
+**MS-DOC 段落来源定位（可选）**：需要核对二进制 `.wps` 正文中的段落来源范围时，显式添加 `--binary-paragraph-sources`。仅对实际内容识别为 CFB + MS-DOC 的分支生效；返回各存储段落的 UTF-16 码元 CP 半开区间，不是 WordDocument 物理字节偏移或页面位置。字段结果过滤、对象占位或注释替换导致输出与存储文本无法可靠对齐时，不返回伪精确的段落来源，明确标记 partial 与诊断。同时显式指定 `--hidden-text annotate` 时，可将已有 CHPX 片段与段落 CP 做非生效属性的来源关联；若二进制表格解析已观察到 PAPX 一级行结束标记，也可仅关联该标记所属段落。来源关联不等于完整段落格式或表格布局恢复。默认读取不新增来源字段；选项、范围与错误契约详见 结果契约 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)。无真实 WPS 全文来源对照，不把该元数据当作生产兼容认证。
 
 ## 结果与按需验收
 
