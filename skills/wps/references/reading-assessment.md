@@ -6,6 +6,8 @@
 
 - 入口与失败行为 (`<skill-root>/references/reading-assessment.md#入口与失败行为`)
 - 结果字段与范围评估 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)
+- MS-DOC 段落 CP 来源（可选） (`<skill-root>/references/reading-assessment.md#ms-doc-段落-cp-来源可选`)
+- MS-DOC 段落 CHPX/PAPX 原始证据关联 (`<skill-root>/references/reading-assessment.md#ms-doc-段落-chpxpapx-原始证据关联`)
 - 消费电子表格 JSON (`<skill-root>/references/reading-assessment.md#消费电子表格-json`)
 - 可运行的契约示例 (`<skill-root>/references/reading-assessment.md#可运行的契约示例`)
 
@@ -39,8 +41,35 @@ CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupport
 - `regions` 仅汇总附加区域类型、状态、来源、空状态与引用状态，不复制正文或被排除文字。
 - `visibility` 按部件统计已记录 run 的 action/state，保留策略；精确路径见原 `visibility.runs`。计数不是字符覆盖率，未记录 run 不推断可见性。
 - `full_format_verified` 始终 false。原始诊断仍是完整依据，摘要不是隐私或安全认证。
+- 已有绘图锚点未渲染 `drawn_shape_anchor_not_rendered` 与 `picture_or_data_marker_not_decoded` 同属 `coverage.objects.state=not_decoded`；摘要按已有对象来源位置/CP 计数，允许保留 `shape_index`、`spa_record_offset`、`plcf_offset` 等受控定位字段，不读取、复制或展示对象正文。嵌套附加故事中出现的对象诊断同样参与覆盖统计；这些是未解码证据，不能视为对象渲染能力。
+
+本轮二进制主正文新增保守绘图标记：`--object-policy placeholder` 可以在 `PlcfSpa` CP/存储字符全部经过校验的情况下，将 `U+0008` 替换成 `U+FFFC` 并返回 `drawn_shape_anchor_not_rendered`，保留 CP、WordDocument 偏移与 SPA 源偏移；默认 reject 不变。该诊断不是图像、文字、字体或绘制结果的还原。具体边界见 绘图锚点（`<skill-root>/references/binary-shapes.md`）。
+
+CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 `location.reason_code=cfb_unaligned_physical_length` 区分；FAT 宣告分配未具备物理存储扇区时为 `cfb_fat_unbacked_allocation`。两类错误均属于 `invalid_or_unsupported`，不补齐缺失扇区，不忽略非零尾随数据。错误分层并非损坏文件读取成功。
 
 内部格式解析器、历史低层 CLI 可能没有此摘要或使用不同状态/退出码。合成回归验证范围限定、部分区域定位和隐藏文字不进入摘要，不构成真实文件语义对照。
+
+## MS-DOC 段落 CP 来源（可选）
+
+默认读取返回值、状态和退出码**保持不变**。仅实际识别为 CFB + MS-DOC 的文档，显式使用 `--binary-paragraph-sources` 或 Python 的 `read_bytes(data, binary_paragraph_sources=True)` 才会尝试增加下列字段；CLI 必须使用默认 JSON 输出，`--format text` 与此来源选项组合会以参数错误退出 2，防止悄悄丢失来源字段；对 OOXML 或 BIFF8 使用此二进制专用参数会拒绝，而不是根据 `.wps` 后缀猜测格式。
+
+- `paragraph_sources`：与**未转换的存储段落**一一对应的数组。每项仅包含 `index`、`cp_start`、`cp_end`、`text_cp_end`；其中 `[cp_start, cp_end)` 包含原存储段落结束符 CR（若有），`text_cp_end` 不包含该 CR。CP 坐标按 UTF-16 码元计数，补充平面字符占两个 CP，不是 Python 字符索引、物理字节偏移或页码。
+- `paragraph_source_status=exact_stored_cp`：表示当前故事的最终文本与存储文字相同（即使选择了但没有实际触发的转换策略），段落范围可以按存储段落顺序关联；这仍不证明页面布局、字符格式或生产软件来源。
+- `paragraph_source_status=unavailable_after_text_transform`：如果文本转换**实际改变存储文字**，`paragraph_sources=[]`，同时返回 `binary_paragraph_source_alignment_unavailable` 诊断并标记 partial。**不得把空数组当成没有段落**；原始 `text`、`paragraphs` 和其他诊断仍按既有契约返回。
+- 显式 `--include-related` 时，附加故事自身的 `related_stories[].paragraph_sources` 以对应故事起始 CP 为基准，各故事独立编号；不能把页眉、脚注和主正文来源混成一条扁平页序列。
+- 每个故事最多 100000 个段落来源、8 Mi UTF-16 单位；仍受总体文本及 16 MiB JSON 输出预算约束。请求超出预算时按既有资源失败契约返回，不偷偷截断来源。
+
+示例：存储文字 `甲😀\r乙\r` 在 `cp_start=5` 时，分别对应 `[5,9)` 与 `[9,11)`。这一示例是独立的 UTF-16 CP 算术，不是 WPS 真机输出或已验证的文档位置。
+
+## MS-DOC 段落 CHPX/PAPX 原始证据关联
+
+显式使用 `--binary-paragraph-sources` 时，在已取得准确存储 CP 来源的 MS-DOC 故事上，额外提供 `paragraph_evidence`（`schema_version=ms_doc_paragraph_evidence_v1`），将**已有的直接读取证据**按 CP 位置与段落关联。它不解析新的私有格式，不能据此声称有效样式、可见性、修订后文字、页码、完整表格结构或 Word/WPS 原生兼容。
+
+- `character_status`：默认 `not_requested`。同时显式指定 `--hidden-text annotate`，且 CHPX 读取器产生合法且无相互重叠的 CP 段时，才给出 `direct_chpx_overlaps_only` 和 `character_links`。每条链接只保存 `paragraph_index`、原始 `character_properties.runs` 中的 `run_index`、交集 `cp_start/cp_end`；原始 run 的属性、操作数和 `effective_visibility=unknown` 仍需从源结果查询。CP 段歧义时返回 `ambiguous_source_ranges`、不输出链接，不猜测哪个格式生效。
+- `papx_row_status`：仅在二进制表格读取器已经观察到明确的一级行结束标记时提供 `direct_row_end_markers_only`，`papx_row_end_links` 指明结束符 `row_mark_cp` 位于哪个已确认的段落。**这不是普通段落 PAPX 全量属性、行合并网格、列格式或表格分组恢复**。来源缺失、坐标不一致时保持空链接或标记歧义。
+- `effective_formatting` 与 `table_grid` 固定为 `unknown`。`character_status=no_observed_runs`、`papx_row_status=no_observed_row_ends` 只说明没有在本次声明的受控范围中观察到对应证据，不等于文件中不存在相应格式。
+- 已经过字段存储结果过滤或对象标记替换的故事，如果无法保持存储 CP 精确对齐，则不生成 `paragraph_evidence`，沿用 `paragraph_source_status=unavailable_after_text_transform`。需要关联 CHPX 时，必须显式组合 `--binary-paragraph-sources --hidden-text annotate`，二者均不会执行隐藏文字过滤。
+- 输出链接最多 100000 条/类型；超出时使用 `resource_limited` 并清空相应链接，不截断后声称完整。依然受 16 MiB JSON 输出预算。即使运行成功，也只说明“带来源的原始证据关联”，不表示最终样式已生效。
 
 ## 消费电子表格 JSON
 

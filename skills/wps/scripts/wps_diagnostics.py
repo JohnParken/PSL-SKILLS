@@ -11,7 +11,7 @@ COVERAGE_LOCATION_KEYS = (
     'type', 'source', 'cp_units', 'status', 'table_index', 'marker', 'index', 'kind',
     'code', 'source_field', 'stream', 'part', 'offset', 'record_offset',
     'payload_offset', 'cp', 'cp_start', 'cp_end', 'sheet', 'cell', 'path',
-    'location', 'stage',
+    'location', 'stage', 'shape_index', 'spa_record_offset', 'plcf_offset',
 )
 SOURCE_LOCATION_KEYS = (
     'stream', 'part', 'offset', 'record_offset', 'payload_offset', 'cp',
@@ -119,6 +119,8 @@ def _diagnostic_event(item, source_field):
 def _unread_state(code):
     if not isinstance(code, str):
         return None
+    if code == 'drawn_shape_anchor_not_rendered':
+        return 'not_decoded'
     tokens = set(code.lower().replace('-', '_').replace('.', '_').split('_'))
     if tokens.intersection({'omitted', 'unrequested', 'not_requested'}):
         return 'not_requested'
@@ -200,7 +202,8 @@ def _coverage(result, diagnostic_records):
         source_field = record['source_field']
         code = item.get('code', 'reader_diagnostic')
         code_text = code if isinstance(code, str) else ''
-        if code_text == 'picture_or_data_marker_not_decoded':
+        if code_text in ('picture_or_data_marker_not_decoded',
+                         'drawn_shape_anchor_not_rendered'):
             objects.state = 'not_decoded'
             locations = _sequence(item.get('locations'))
             if locations:

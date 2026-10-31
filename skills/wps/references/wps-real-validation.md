@@ -39,4 +39,12 @@ python -I -S -B "<skill-root>/scripts/verify_wps_sample.py" ./samples/original.w
 
 `provenance_status=declared_requires_human_review` 始终提醒：脚本不能证明声明真实、确认生产软件或辨别一个文件是否曾被改后缀。`full_format_verified=false`，即使通过也不代表完整 WPS 兼容。附加故事不在当前预期字段中，不能因 `include_related=true` 就声称脚注/页眉等内容已逐项验收。
 
-验证器的合成测试只验收工具行为。当前真实 `.wps` 正文及二进制表格仍缺来源可核实原件与独立完整内容/结构预期，不能报告真实验收已补齐。既有四份 ET/ETT 的真实保存值验收另见 记录 (`<skill-root>/references/et-real-validation.md`)，不可用它们替代 `.wps` 正文验收。
+验证器的合成测试只验收工具行为。已从政府官网公开附件实际下载 7 份 CFB/OLE `.wps` 文件；其中 6 份 MS-DOC 子集的主正文及段落数组与独立解码算法一致，另 1 份按现有安全边界拒绝。详见政府公开附件实测 (`<skill-root>/references/wps-government-validation.md`)。这些文件的**官方网站发布来源**有据可查，但 WPS Office 实际生成软件及版本仍不能自动确认，亦没有经软件/人工独立验证的完整内容、复杂表格及页面预期，所以严格原生生产来源验收仍未完成。既有四份 ET/ETT 的真实保存值验收另见 记录 (`<skill-root>/references/et-real-validation.md`)，不可用它们替代 `.wps` 正文验收。
+
+## 公开候选样本的独立算法交叉核对（2026-10-31）
+
+已在维护 CI 中使用 `listeng/wps2md` 的公开测试文件 `tests/sample.wps`（固定提交 `c4ae028156e44ed8b57ef879dc7bd1d14750c0f1`、SHA-256 `59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d`）。测试时临时下载，经 Git blob SHA-1、SHA-256 和 125952 字节长度核对后，读取器返回 `partial` / 24 个主正文段落；上游测试文件明确给出的 5 个正文文字锚点全部出现。
+
+另外，维护脚本 `tests/wps_public_story_oracle.py` 使用与生产段落解析器分离的 `struct` 逻辑独立解析 FIB/CLX/Pcdt；只复用 WPS Skill 的有界 CFB 容器层。对上述样本的 608 个 UTF-16 码元、24 个段落，**目标读取器输出正文与独立算法结果全文和段落数组均一致**；固定哈希、来源声明、CI 与缺口见候选样本证据 (`<skill-root>/references/wps-public-candidate-evidence.json`)。未将公共二进制样本纳入 Skill 分发包，运行时不联网、不安装或调用外部软件。
+
+**这不是经证实的 WPS Office 生产来源或真实软件人工完整语义验收。** GitHub 公开仓库只能证明文件的公开可追踪性，不能自动证明具体创建工具/版本；两个独立文本算法一致也不能证明它们与 WPS 显示完全一致。表格合并、字体/段落最终格式、分页、批注及 CHPX/PAPX 关联均缺独立原生样本对照。符合本文件的“真实原件 + 独立人工/软件内容预期”级别验收依然**未完成**，不能将此候选验证替代 `verify_wps_sample.py` 的严格原生样本验收。

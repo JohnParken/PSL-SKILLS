@@ -1,53 +1,1072 @@
 {
   "schema_version": "wps_validation_evidence_v1",
   "current": {
-    "version": "20261029.1850.4782",
-    "platform": "Darwin arm64; Linux target not available (docker/podman absent)",
-    "python": "3.12.14",
-    "expat": "2.8.3",
+    "version": "20261031.1719.1010",
+    "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
     "stdlib_only": true,
     "changes": [
-      "Default data selects exact existing legacy Word CFB header profile",
-      "Data and legacy file entrypoints accept observed CFB minor 0x003B with diagnostics",
-      "Global DXF 0x088D structurally parsed and retained without applying formatting",
-      "Explicit data policy accepted by WPS sample verifier"
+      "Optional stored paragraph CP spans remain default-off",
+      "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+      "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+      "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+      "Bounded links and fail-safe partial diagnostic on unresolvable association",
+      "Maintenance-only government website attachment inventory: 10 links, 7 real downloaded CFB/OLE, 6 MS-DOC partial reads and independent decoder whole-text/paragraph matches, one safely rejected",
+      "ABC official DOC/PDF maintenance validation: 8 downloaded, 3 mislabelled DOC ZIP/OOXML read OK, 1 DOC CFB read partial, 1 DOC CFB rejected, 3 PDF controls",
+      "Maintenance-only BOC CCB ICBC official document checks: 10 candidate direct bank URLs, 4 real downloaded, 2 OOXML ok and 2 partial, one CFB/MS-DOC independent story match, 6 CCB TLS failures",
+      "Main-story PlcfSpa U+0008 opt-in draw-object placeholder requires checked CP/stream anchors; default reject unchanged",
+      "MS-DOC PlcfSpa final CP is undefined; validate actual anchor CPs only, with monotonic PLC order",
+      "Specific CFB physical alignment and unbacked FAT diagnostics; strict rejection and no truncation/padding",
+      "Diagnostic object coverage now counts existing drawn_shape_anchor_not_rendered alongside picture/data markers, with bounded location metadata and no object text leakage",
+      "Seven official CFB .wps bytes have fixed SHA-256 and subset status/paragraph expectations; six independent MS-DOC story comparisons rechecked",
+      "Measured existing MS-DOC parsing resource curve on synthetic examples without changing the parser or extending its supported formats"
     ],
-    "wps_tests": {
-      "passed": 424,
-      "failed": 0,
-      "skipped": 0,
-      "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p test_*.py"
+    "tests": {
+      "full_wps_suite": {
+        "executed": true,
+        "status": "passed",
+        "python_3_11": {
+          "passed": 454,
+          "failed": 0,
+          "skipped": 0
+        },
+        "python_3_13": {
+          "passed": 454,
+          "failed": 0,
+          "skipped": 0
+        },
+        "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+      },
+      "strict_skill_check": {
+        "executed": true,
+        "status": "passed",
+        "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+        "python_3_11": "OK skills/wps",
+        "python_3_13": "OK skills/wps"
+      },
+      "environment_selfcheck": {
+        "executed": true,
+        "status": "passed",
+        "python_3_11": true,
+        "python_3_13": true
+      },
+      "new_tests": {
+        "paragraph_sources": 11,
+        "paragraph_evidence": 8,
+        "executed_in_full_suite": true,
+        "shape_anchors": 5,
+        "cfb_failure_diagnostics": 3
+      },
+      "diagnostic_quality_tests": {
+        "added": 3,
+        "executed_in_full_suite": true
+      },
+      "frozen_government_baselines": {
+        "run_id": 41188139800,
+        "total": 7,
+        "verified": 7,
+        "unavailable": 0,
+        "mismatches": 0,
+        "independent_story_matches": 6
+      },
+      "resource_profile": {
+        "run_id": 41188139921,
+        "platform": "Linux GitHub Actions Python 3.13",
+        "timing_approx_ms": {
+          "paragraphs_1024": 75.382,
+          "paragraphs_4096": 299.088,
+          "paragraphs_16384": 1194.52,
+          "paragraphs_16384_with_cp_sources": 1557.861
+        },
+        "peak_tracemalloc_bytes": {
+          "paragraphs_1024": 138275,
+          "paragraphs_4096": 530611,
+          "paragraphs_16384": 2114083,
+          "paragraphs_16384_with_cp_sources": 7351926
+        },
+        "interpretation": "one runner/synthetic contents only; not RSS or SLA"
+      }
     },
-    "related_current_tests": {
-      "repository_et_pipeline": 2,
-      "failed": 0,
-      "skipped": 0,
-      "command": "python -I -S -B -m unittest discover -s tests -p test_wps_et_pipeline.py -v"
+    "ci": {
+      "run_id": 41188295396,
+      "python_3_11_job": 124499614497,
+      "python_3_13_job": 124499614646,
+      "government_baseline_run": 41188295437,
+      "resource_profile_run": 41188295281,
+      "code_and_documentation_ci": "passed: 454/454 on Python 3.11 and 3.13; strict Skill validation passed",
+      "frozen_baselines": "passed: 7/7, 0 mismatches, six independent story matches",
+      "resource_profile": "passed: synthetic bounded measurements only",
+      "metadata_followup_note": "this metadata-only commit itself requires a normal PR CI rerun"
     },
     "description": {
       "characters": 141,
       "changed_this_batch": false,
       "scope_manually_reviewed": true
     },
-    "validation_kind": "Synthetic structural and behavior regressions; no real failed user file available",
-    "real_samples_rerun": false,
-    "dedicated_naming_linter": "Not installed; not run. Changed identifiers manually reviewed.",
-    "package": "Existing ZIP files unchanged; no release package generated in this batch",
+    "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+    "word_wps_visual_validation": "not_run",
+    "true_production_host_integration": "not_run",
+    "dedicated_naming_linter": "not_run_no_tool_available",
+    "branch": "codex/wps-paragraph-source-cp-20261031",
+    "pr": 1,
+    "package": "no_package_generated_draft_pr_only",
     "limits": [
-      "No Linux/Windows execution",
-      "No new real WPS/ET sample semantic acceptance",
-      "DXF property payload semantics and effective styles remain uninterpreted",
-      "Unknown private records and containers still refused; no complete native WPS conformance claim",
-      "No host attachment auto-selection end-to-end test"
+      "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+      "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+      "No independently verified native WPS producers and expected content/format",
+      "GitHub Actions Linux runner not a production harness integration test",
+      "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification",
+      "Government publication proves public hosting, not WPS Office creator/version",
+      "6 independent MS-DOC story agreement cases do not prove full binary table grids, applied styles or layout",
+      "3 gov attachments TLS download errors; 1 CFB rejected due unsupported field/object/control subset",
+      "ABC publicly hosted DOC/PDF testing is not native .wps format or creator certification",
+      "BOC/CCB/ICBC public attachments are DOCX/DOC only; no verified native .wps",
+      "Six CCB attachment downloads failed TLS negotiation; neither format nor reader was tested for them",
+      "ICBC Jinan OOXML partial 1 paragraph did not contain the expected quote anchor; not a full semantic check",
+      "Shape anchor placeholders do not prove applied sprmCFSpec or actual object drawing content",
+      "ABC malformed CFB remains rejected: no safe repair of 51-byte trailer and FAT allocation established",
+      "No independent Word/WPS application UI full-text / visual-layout oracle for recovered sample",
+      "Seven frozen government sample regression expectations are historical subset outputs, not independently certified WPS Office text/layout",
+      "Resource profile uses generated text and tracemalloc; memory and performance on real files not established",
+      "No change to default parser behavior, no new format branch or file-writing feature"
     ],
-    "structure_check": {
-      "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
-      "exit_code": 0,
-      "result": "OK skills/wps"
+    "public_candidate": {
+      "evidence_path": "references/wps-public-candidate-evidence.json",
+      "status": "passed_limited_smoke_and_independent_algorithms",
+      "full_text_and_paragraph_algorithmic_match": true,
+      "manual_golden_text_or_kingsoft_producer_certification": false,
+      "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
     },
-    "diff_whitespace_check": "git diff --check passed"
+    "government_attachment_validation": {
+      "evidence_file": "references/wps-government-evidence.json",
+      "reference_file": "references/wps-government-validation.md",
+      "workflow_run_id": 41181030181,
+      "linux_python": "3.13",
+      "official_urls_checked": 10,
+      "files_downloaded": 7,
+      "cfb_ole_files": 7,
+      "msdoc_partial_reads": 6,
+      "separate_text_and_paragraph_algorithms_matched": 6,
+      "unsupported_real_cfb": 1,
+      "unavailable_tls_downloads": 3,
+      "real_wps_office_creator_version_verified": false,
+      "complete_native_wps_semantic_acceptance": false,
+      "actual_wps_visual_layout_verified": false
+    },
+    "abc_official_attachment_validation": {
+      "evidence_file": "references/wps-abc-official-evidence.json",
+      "reference_file": "references/wps-abc-official-validation.md",
+      "ci_run_id": 41181769821,
+      "linux_python": "3.13",
+      "files_downloaded": 8,
+      "zip_ooxml_misnamed_doc": 3,
+      "cfb_doc": 2,
+      "cfb_partial": 1,
+      "cfb_rejected": 1,
+      "pdf_controls": 3,
+      "real_native_wps_file_verified": false,
+      "independent_full_text_verified": false
+    },
+    "three_banks_official_validation": {
+      "evidence_file": "references/wps-three-banks-official-evidence.json",
+      "reference_file": "references/wps-three-banks-official-validation.md",
+      "ci_run_id": 41183896639,
+      "code_commit": "52b431b9ec42170fc0155773331bce078efb3b9f",
+      "documented_banks": [
+        "BOC",
+        "CCB",
+        "ICBC"
+      ],
+      "candidates": 10,
+      "downloaded": 4,
+      "ccb_download_failures_tls": 6,
+      "read_ok": 2,
+      "read_partial": 2,
+      "cfb": 1,
+      "ooxml": 3,
+      "independent_story_matches": 1,
+      "actual_native_wps_samples": 0,
+      "full_wps_format_validation": false
+    },
+    "current_real_failures": {
+      "government_supporting_wps": {
+        "sha256": "3ccedb9e26d89410796508531912169559c0a0258303a085075e69829762375c",
+        "cp": 249,
+        "char": "U+0008",
+        "plcf_spa_shapes": 2,
+        "default_read": "unsupported",
+        "explicit_placeholder": "partial",
+        "paragraphs": 36,
+        "issue": "drawn_shape_anchor_not_rendered",
+        "real_shape_rendering_verified": false
+      },
+      "abc_guangxi_doc": {
+        "sha256": "a3be79ad74fa0a810215ab477116fdba687aac628b0ab9477fbce7936e20ae1a",
+        "byte_length": 862771,
+        "sector_size": 512,
+        "non_aligned_remainder": 51,
+        "still_rejected": true,
+        "reason_code": "cfb_unaligned_physical_length",
+        "forensic_aligned_prefix_rejected": "FAT allocates sectors beyond physical input",
+        "safe_normalization_proven": false
+      }
+    }
   },
   "history": [
+    {
+      "version": "20261031.1646.5261",
+      "note": "Prior shape recovery/CFB diagnostics; subsequent stage only improved reporting, frozen regression and resource measurements",
+      "evidence": {
+        "version": "20261031.1646.5261",
+        "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
+        "stdlib_only": true,
+        "changes": [
+          "Optional stored paragraph CP spans remain default-off",
+          "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+          "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+          "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+          "Bounded links and fail-safe partial diagnostic on unresolvable association",
+          "Maintenance-only government website attachment inventory: 10 links, 7 real downloaded CFB/OLE, 6 MS-DOC partial reads and independent decoder whole-text/paragraph matches, one safely rejected",
+          "ABC official DOC/PDF maintenance validation: 8 downloaded, 3 mislabelled DOC ZIP/OOXML read OK, 1 DOC CFB read partial, 1 DOC CFB rejected, 3 PDF controls",
+          "Maintenance-only BOC CCB ICBC official document checks: 10 candidate direct bank URLs, 4 real downloaded, 2 OOXML ok and 2 partial, one CFB/MS-DOC independent story match, 6 CCB TLS failures",
+          "Main-story PlcfSpa U+0008 opt-in draw-object placeholder requires checked CP/stream anchors; default reject unchanged",
+          "MS-DOC PlcfSpa final CP is undefined; validate actual anchor CPs only, with monotonic PLC order",
+          "Specific CFB physical alignment and unbacked FAT diagnostics; strict rejection and no truncation/padding"
+        ],
+        "tests": {
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 451,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 451,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          },
+          "new_tests": {
+            "paragraph_sources": 11,
+            "paragraph_evidence": 8,
+            "executed_in_full_suite": true,
+            "shape_anchors": 5,
+            "cfb_failure_diagnostics": 3
+          }
+        },
+        "ci": {
+          "run_id": 41185919368,
+          "job_ids": {
+            "python_3_11": 124492700278,
+            "python_3_13": 124492700338
+          },
+          "real_failure_run_id": 41185919275,
+          "note": "Linux GitHub Actions successful; final post-documentation commit pending recheck"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+        "word_wps_visual_validation": "not_run",
+        "true_production_host_integration": "not_run",
+        "dedicated_naming_linter": "not_run_no_tool_available",
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "limits": [
+          "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+          "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+          "No independently verified native WPS producers and expected content/format",
+          "GitHub Actions Linux runner not a production harness integration test",
+          "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification",
+          "Government publication proves public hosting, not WPS Office creator/version",
+          "6 independent MS-DOC story agreement cases do not prove full binary table grids, applied styles or layout",
+          "3 gov attachments TLS download errors; 1 CFB rejected due unsupported field/object/control subset",
+          "ABC publicly hosted DOC/PDF testing is not native .wps format or creator certification",
+          "BOC/CCB/ICBC public attachments are DOCX/DOC only; no verified native .wps",
+          "Six CCB attachment downloads failed TLS negotiation; neither format nor reader was tested for them",
+          "ICBC Jinan OOXML partial 1 paragraph did not contain the expected quote anchor; not a full semantic check",
+          "Shape anchor placeholders do not prove applied sprmCFSpec or actual object drawing content",
+          "ABC malformed CFB remains rejected: no safe repair of 51-byte trailer and FAT allocation established",
+          "No independent Word/WPS application UI full-text / visual-layout oracle for recovered sample"
+        ],
+        "public_candidate": {
+          "evidence_path": "references/wps-public-candidate-evidence.json",
+          "status": "passed_limited_smoke_and_independent_algorithms",
+          "full_text_and_paragraph_algorithmic_match": true,
+          "manual_golden_text_or_kingsoft_producer_certification": false,
+          "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+        },
+        "government_attachment_validation": {
+          "evidence_file": "references/wps-government-evidence.json",
+          "reference_file": "references/wps-government-validation.md",
+          "workflow_run_id": 41181030181,
+          "linux_python": "3.13",
+          "official_urls_checked": 10,
+          "files_downloaded": 7,
+          "cfb_ole_files": 7,
+          "msdoc_partial_reads": 6,
+          "separate_text_and_paragraph_algorithms_matched": 6,
+          "unsupported_real_cfb": 1,
+          "unavailable_tls_downloads": 3,
+          "real_wps_office_creator_version_verified": false,
+          "complete_native_wps_semantic_acceptance": false,
+          "actual_wps_visual_layout_verified": false
+        },
+        "abc_official_attachment_validation": {
+          "evidence_file": "references/wps-abc-official-evidence.json",
+          "reference_file": "references/wps-abc-official-validation.md",
+          "ci_run_id": 41181769821,
+          "linux_python": "3.13",
+          "files_downloaded": 8,
+          "zip_ooxml_misnamed_doc": 3,
+          "cfb_doc": 2,
+          "cfb_partial": 1,
+          "cfb_rejected": 1,
+          "pdf_controls": 3,
+          "real_native_wps_file_verified": false,
+          "independent_full_text_verified": false
+        },
+        "three_banks_official_validation": {
+          "evidence_file": "references/wps-three-banks-official-evidence.json",
+          "reference_file": "references/wps-three-banks-official-validation.md",
+          "ci_run_id": 41183896639,
+          "code_commit": "52b431b9ec42170fc0155773331bce078efb3b9f",
+          "documented_banks": [
+            "BOC",
+            "CCB",
+            "ICBC"
+          ],
+          "candidates": 10,
+          "downloaded": 4,
+          "ccb_download_failures_tls": 6,
+          "read_ok": 2,
+          "read_partial": 2,
+          "cfb": 1,
+          "ooxml": 3,
+          "independent_story_matches": 1,
+          "actual_native_wps_samples": 0,
+          "full_wps_format_validation": false
+        },
+        "current_real_failures": {
+          "government_supporting_wps": {
+            "sha256": "3ccedb9e26d89410796508531912169559c0a0258303a085075e69829762375c",
+            "cp": 249,
+            "char": "U+0008",
+            "plcf_spa_shapes": 2,
+            "default_read": "unsupported",
+            "explicit_placeholder": "partial",
+            "paragraphs": 36,
+            "issue": "drawn_shape_anchor_not_rendered",
+            "real_shape_rendering_verified": false
+          },
+          "abc_guangxi_doc": {
+            "sha256": "a3be79ad74fa0a810215ab477116fdba687aac628b0ab9477fbce7936e20ae1a",
+            "byte_length": 862771,
+            "sector_size": 512,
+            "non_aligned_remainder": 51,
+            "still_rejected": true,
+            "reason_code": "cfb_unaligned_physical_length",
+            "forensic_aligned_prefix_rejected": "FAT allocates sectors beyond physical input",
+            "safe_normalization_proven": false
+          }
+        }
+      }
+    },
+    {
+      "version": "20261031.1617.5405",
+      "note": "Previous real government and three-bank document validation stage",
+      "evidence": {
+        "version": "20261031.1617.5405",
+        "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
+        "stdlib_only": true,
+        "changes": [
+          "Optional stored paragraph CP spans remain default-off",
+          "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+          "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+          "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+          "Bounded links and fail-safe partial diagnostic on unresolvable association",
+          "Maintenance-only government website attachment inventory: 10 links, 7 real downloaded CFB/OLE, 6 MS-DOC partial reads and independent decoder whole-text/paragraph matches, one safely rejected",
+          "ABC official DOC/PDF maintenance validation: 8 downloaded, 3 mislabelled DOC ZIP/OOXML read OK, 1 DOC CFB read partial, 1 DOC CFB rejected, 3 PDF controls",
+          "Maintenance-only BOC CCB ICBC official document checks: 10 candidate direct bank URLs, 4 real downloaded, 2 OOXML ok and 2 partial, one CFB/MS-DOC independent story match, 6 CCB TLS failures"
+        ],
+        "tests": {
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          },
+          "new_tests": {
+            "paragraph_sources": 11,
+            "paragraph_evidence": 8,
+            "executed_in_full_suite": true
+          }
+        },
+        "ci": {
+          "run_id": 41178785301,
+          "commit_sha": "1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab",
+          "job_ids": {
+            "python_3_11": 124471737217,
+            "python_3_13": 124471737020
+          },
+          "source": "GitHub Actions actual job logs"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+        "word_wps_visual_validation": "not_run",
+        "true_production_host_integration": "not_run",
+        "dedicated_naming_linter": "not_run_no_tool_available",
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "limits": [
+          "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+          "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+          "No independently verified native WPS producers and expected content/format",
+          "GitHub Actions Linux runner not a production harness integration test",
+          "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification",
+          "Government publication proves public hosting, not WPS Office creator/version",
+          "6 independent MS-DOC story agreement cases do not prove full binary table grids, applied styles or layout",
+          "3 gov attachments TLS download errors; 1 CFB rejected due unsupported field/object/control subset",
+          "ABC publicly hosted DOC/PDF testing is not native .wps format or creator certification",
+          "BOC/CCB/ICBC public attachments are DOCX/DOC only; no verified native .wps",
+          "Six CCB attachment downloads failed TLS negotiation; neither format nor reader was tested for them",
+          "ICBC Jinan OOXML partial 1 paragraph did not contain the expected quote anchor; not a full semantic check"
+        ],
+        "public_candidate": {
+          "evidence_path": "references/wps-public-candidate-evidence.json",
+          "status": "passed_limited_smoke_and_independent_algorithms",
+          "full_text_and_paragraph_algorithmic_match": true,
+          "manual_golden_text_or_kingsoft_producer_certification": false,
+          "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+        },
+        "government_attachment_validation": {
+          "evidence_file": "references/wps-government-evidence.json",
+          "reference_file": "references/wps-government-validation.md",
+          "workflow_run_id": 41181030181,
+          "linux_python": "3.13",
+          "official_urls_checked": 10,
+          "files_downloaded": 7,
+          "cfb_ole_files": 7,
+          "msdoc_partial_reads": 6,
+          "separate_text_and_paragraph_algorithms_matched": 6,
+          "unsupported_real_cfb": 1,
+          "unavailable_tls_downloads": 3,
+          "real_wps_office_creator_version_verified": false,
+          "complete_native_wps_semantic_acceptance": false,
+          "actual_wps_visual_layout_verified": false
+        },
+        "abc_official_attachment_validation": {
+          "evidence_file": "references/wps-abc-official-evidence.json",
+          "reference_file": "references/wps-abc-official-validation.md",
+          "ci_run_id": 41181769821,
+          "linux_python": "3.13",
+          "files_downloaded": 8,
+          "zip_ooxml_misnamed_doc": 3,
+          "cfb_doc": 2,
+          "cfb_partial": 1,
+          "cfb_rejected": 1,
+          "pdf_controls": 3,
+          "real_native_wps_file_verified": false,
+          "independent_full_text_verified": false
+        },
+        "three_banks_official_validation": {
+          "evidence_file": "references/wps-three-banks-official-evidence.json",
+          "reference_file": "references/wps-three-banks-official-validation.md",
+          "ci_run_id": 41183896639,
+          "code_commit": "52b431b9ec42170fc0155773331bce078efb3b9f",
+          "documented_banks": [
+            "BOC",
+            "CCB",
+            "ICBC"
+          ],
+          "candidates": 10,
+          "downloaded": 4,
+          "ccb_download_failures_tls": 6,
+          "read_ok": 2,
+          "read_partial": 2,
+          "cfb": 1,
+          "ooxml": 3,
+          "independent_story_matches": 1,
+          "actual_native_wps_samples": 0,
+          "full_wps_format_validation": false
+        }
+      }
+    },
+    {
+      "version": "20261031.1546.1688",
+      "note": "Prior Agricultural Bank official DOC/PDF validation stage",
+      "evidence": {
+        "version": "20261031.1546.1688",
+        "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
+        "stdlib_only": true,
+        "changes": [
+          "Optional stored paragraph CP spans remain default-off",
+          "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+          "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+          "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+          "Bounded links and fail-safe partial diagnostic on unresolvable association",
+          "Maintenance-only government website attachment inventory: 10 links, 7 real downloaded CFB/OLE, 6 MS-DOC partial reads and independent decoder whole-text/paragraph matches, one safely rejected",
+          "ABC official DOC/PDF maintenance validation: 8 downloaded, 3 mislabelled DOC ZIP/OOXML read OK, 1 DOC CFB read partial, 1 DOC CFB rejected, 3 PDF controls"
+        ],
+        "tests": {
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          },
+          "new_tests": {
+            "paragraph_sources": 11,
+            "paragraph_evidence": 8,
+            "executed_in_full_suite": true
+          }
+        },
+        "ci": {
+          "run_id": 41178785301,
+          "commit_sha": "1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab",
+          "job_ids": {
+            "python_3_11": 124471737217,
+            "python_3_13": 124471737020
+          },
+          "source": "GitHub Actions actual job logs"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+        "word_wps_visual_validation": "not_run",
+        "true_production_host_integration": "not_run",
+        "dedicated_naming_linter": "not_run_no_tool_available",
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "limits": [
+          "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+          "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+          "No independently verified native WPS producers and expected content/format",
+          "GitHub Actions Linux runner not a production harness integration test",
+          "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification",
+          "Government publication proves public hosting, not WPS Office creator/version",
+          "6 independent MS-DOC story agreement cases do not prove full binary table grids, applied styles or layout",
+          "3 gov attachments TLS download errors; 1 CFB rejected due unsupported field/object/control subset",
+          "ABC publicly hosted DOC/PDF testing is not native .wps format or creator certification"
+        ],
+        "public_candidate": {
+          "evidence_path": "references/wps-public-candidate-evidence.json",
+          "status": "passed_limited_smoke_and_independent_algorithms",
+          "full_text_and_paragraph_algorithmic_match": true,
+          "manual_golden_text_or_kingsoft_producer_certification": false,
+          "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+        },
+        "government_attachment_validation": {
+          "evidence_file": "references/wps-government-evidence.json",
+          "reference_file": "references/wps-government-validation.md",
+          "workflow_run_id": 41181030181,
+          "linux_python": "3.13",
+          "official_urls_checked": 10,
+          "files_downloaded": 7,
+          "cfb_ole_files": 7,
+          "msdoc_partial_reads": 6,
+          "separate_text_and_paragraph_algorithms_matched": 6,
+          "unsupported_real_cfb": 1,
+          "unavailable_tls_downloads": 3,
+          "real_wps_office_creator_version_verified": false,
+          "complete_native_wps_semantic_acceptance": false,
+          "actual_wps_visual_layout_verified": false
+        },
+        "abc_official_attachment_validation": {
+          "evidence_file": "references/wps-abc-official-evidence.json",
+          "reference_file": "references/wps-abc-official-validation.md",
+          "ci_run_id": 41181769821,
+          "linux_python": "3.13",
+          "files_downloaded": 8,
+          "zip_ooxml_misnamed_doc": 3,
+          "cfb_doc": 2,
+          "cfb_partial": 1,
+          "cfb_rejected": 1,
+          "pdf_controls": 3,
+          "real_native_wps_file_verified": false,
+          "independent_full_text_verified": false
+        }
+      }
+    },
+    {
+      "version": "20261031.1533.5060",
+      "note": "Prior government CFB/WPS checks before Agricultural Bank DOC/PDF evidence",
+      "evidence": {
+        "version": "20261031.1533.5060",
+        "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
+        "stdlib_only": true,
+        "changes": [
+          "Optional stored paragraph CP spans remain default-off",
+          "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+          "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+          "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+          "Bounded links and fail-safe partial diagnostic on unresolvable association",
+          "Maintenance-only government website attachment inventory: 10 links, 7 real downloaded CFB/OLE, 6 MS-DOC partial reads and independent decoder whole-text/paragraph matches, one safely rejected"
+        ],
+        "tests": {
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          },
+          "new_tests": {
+            "paragraph_sources": 11,
+            "paragraph_evidence": 8,
+            "executed_in_full_suite": true
+          }
+        },
+        "ci": {
+          "run_id": 41178785301,
+          "commit_sha": "1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab",
+          "job_ids": {
+            "python_3_11": 124471737217,
+            "python_3_13": 124471737020
+          },
+          "source": "GitHub Actions actual job logs"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+        "word_wps_visual_validation": "not_run",
+        "true_production_host_integration": "not_run",
+        "dedicated_naming_linter": "not_run_no_tool_available",
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "limits": [
+          "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+          "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+          "No independently verified native WPS producers and expected content/format",
+          "GitHub Actions Linux runner not a production harness integration test",
+          "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification",
+          "Government publication proves public hosting, not WPS Office creator/version",
+          "6 independent MS-DOC story agreement cases do not prove full binary table grids, applied styles or layout",
+          "3 gov attachments TLS download errors; 1 CFB rejected due unsupported field/object/control subset"
+        ],
+        "public_candidate": {
+          "evidence_path": "references/wps-public-candidate-evidence.json",
+          "status": "passed_limited_smoke_and_independent_algorithms",
+          "full_text_and_paragraph_algorithmic_match": true,
+          "manual_golden_text_or_kingsoft_producer_certification": false,
+          "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+        },
+        "government_attachment_validation": {
+          "evidence_file": "references/wps-government-evidence.json",
+          "reference_file": "references/wps-government-validation.md",
+          "workflow_run_id": 41181030181,
+          "linux_python": "3.13",
+          "official_urls_checked": 10,
+          "files_downloaded": 7,
+          "cfb_ole_files": 7,
+          "msdoc_partial_reads": 6,
+          "separate_text_and_paragraph_algorithms_matched": 6,
+          "unsupported_real_cfb": 1,
+          "unavailable_tls_downloads": 3,
+          "real_wps_office_creator_version_verified": false,
+          "complete_native_wps_semantic_acceptance": false,
+          "actual_wps_visual_layout_verified": false
+        }
+      }
+    },
+    {
+      "version": "20261031.1510.1186",
+      "note": "Prior public candidate validation stage before real gov-hosted samples",
+      "evidence": {
+        "version": "20261031.1510.1186",
+        "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
+        "stdlib_only": true,
+        "changes": [
+          "Optional stored paragraph CP spans remain default-off",
+          "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+          "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+          "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+          "Bounded links and fail-safe partial diagnostic on unresolvable association"
+        ],
+        "tests": {
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          },
+          "new_tests": {
+            "paragraph_sources": 11,
+            "paragraph_evidence": 8,
+            "executed_in_full_suite": true
+          }
+        },
+        "ci": {
+          "run_id": 41178785301,
+          "commit_sha": "1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab",
+          "job_ids": {
+            "python_3_11": 124471737217,
+            "python_3_13": 124471737020
+          },
+          "source": "GitHub Actions actual job logs"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+        "word_wps_visual_validation": "not_run",
+        "true_production_host_integration": "not_run",
+        "dedicated_naming_linter": "not_run_no_tool_available",
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "limits": [
+          "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+          "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+          "No independently verified native WPS producers and expected content/format",
+          "GitHub Actions Linux runner not a production harness integration test",
+          "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification"
+        ],
+        "public_candidate": {
+          "evidence_path": "references/wps-public-candidate-evidence.json",
+          "status": "passed_limited_smoke_and_independent_algorithms",
+          "full_text_and_paragraph_algorithmic_match": true,
+          "manual_golden_text_or_kingsoft_producer_certification": false,
+          "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+        }
+      }
+    },
+    {
+      "version": "20261031.1459.1079",
+      "note": "Prior CHPX/PAPX branch stage; public candidate crosscheck added separately",
+      "evidence": {
+        "version": "20261031.1510.1186",
+        "platform": "GitHub Actions ubuntu-latest, Python 3.11 and 3.13",
+        "stdlib_only": true,
+        "changes": [
+          "Optional stored paragraph CP spans remain default-off",
+          "Optional CHPX run intersections linked by CP only for hidden_text=annotate",
+          "Only PAPX-backed depth-one table row-end marker CPs are associated; no generic paragraph style resolution",
+          "Ambiguous/overlapping evidence never yields fabricated links; effective formatting and table grid remain unknown",
+          "Bounded links and fail-safe partial diagnostic on unresolvable association"
+        ],
+        "tests": {
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 443,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          },
+          "new_tests": {
+            "paragraph_sources": 11,
+            "paragraph_evidence": 8,
+            "executed_in_full_suite": true
+          }
+        },
+        "ci": {
+          "run_id": 41178785301,
+          "commit_sha": "1e5fd08c70d30b33b1b3e415eebbdac75f51a4ab",
+          "job_ids": {
+            "python_3_11": 124471737217,
+            "python_3_13": 124471737020
+          },
+          "source": "GitHub Actions actual job logs"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_source_and_independent_expectations",
+        "word_wps_visual_validation": "not_run",
+        "true_production_host_integration": "not_run",
+        "dedicated_naming_linter": "not_run_no_tool_available",
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "limits": [
+          "CHPX links are CP intersections only, not effective properties or hidden/revision decisions",
+          "PAPX links expose only independently observed row-end markers, not full PAPX or table grid",
+          "No independently verified native WPS producers and expected content/format",
+          "GitHub Actions Linux runner not a production harness integration test",
+          "Public fixture algorithmic equality is not independent WPS Office GUI/text transcript certification"
+        ],
+        "public_candidate": {
+          "evidence_path": "references/wps-public-candidate-evidence.json",
+          "status": "passed_limited_smoke_and_independent_algorithms",
+          "full_text_and_paragraph_algorithmic_match": true,
+          "manual_golden_text_or_kingsoft_producer_certification": false,
+          "fixture_sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d"
+        }
+      }
+    },
+    {
+      "version": "20261031.1435.5095",
+      "note": "Previous CP-source-only branch stage, GitHub CI 435 passing; preserved as history after CHPX/PAPX association.",
+      "evidence": {
+        "version": "20261031.1435.5095",
+        "platform": "GitHub Actions ubuntu-latest x86_64; Python 3.11 and 3.13 (separate jobs)",
+        "stdlib_only": true,
+        "changes": [
+          "Opt-in UTF-16 stored paragraph CP source ranges in MS-DOC branch",
+          "No-op field/object policies preserve exact stored CP provenance",
+          "JSON-only metadata output; transformed stories report partial without fabricated source positions",
+          "Added explicit coverage check against stored story CP end and regression for fragmented surrogate-pair pieces/empty story"
+        ],
+        "tests": {
+          "isolated_helper": {
+            "passed": 5,
+            "failed": 0,
+            "command": "python -I -S -B -m unittest discover -s . -p 'test_*.py' -v (isolated helper prototype)"
+          },
+          "new_wps_integration": {
+            "defined": 11,
+            "executed": true,
+            "status": "passed_in_full_suite"
+          },
+          "full_wps_suite": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": {
+              "passed": 435,
+              "failed": 0,
+              "skipped": 0
+            },
+            "python_3_13": {
+              "passed": 435,
+              "failed": 0,
+              "skipped": 0
+            },
+            "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v"
+          },
+          "strict_skill_check": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": "OK skills/wps",
+            "python_3_13": "OK skills/wps",
+            "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict"
+          },
+          "environment_selfcheck": {
+            "executed": true,
+            "status": "passed",
+            "python_3_11": true,
+            "python_3_13": true
+          }
+        },
+        "real_wps_producer_validation": "not_run_no_verifiable_native_sample_and_independent_paragraph_expectations",
+        "host_automatic_trigger": "not_run",
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "limits": [
+          "Full synthetic/automated regression passed; real WPS producer semantic acceptance not run",
+          "No Word/WPS application output validation",
+          "No external office conversion or writing enabled",
+          "CI runner is Linux GitHub Actions, not actual production harness end-to-end host"
+        ],
+        "branch": "codex/wps-paragraph-source-cp-20261031",
+        "pr": 1,
+        "package": "no_package_generated_draft_pr_only",
+        "ci": {
+          "run_id": 41178515332,
+          "job_ids": {
+            "python_3_11": 124470941320,
+            "python_3_13": 124470941266
+          },
+          "commit_sha": "859106446b74f34e3d3b50dc287a2b42dbcd198d",
+          "source": "GitHub Actions log; both jobs completed success"
+        }
+      }
+    },
+    {
+      "version": "20261029.1850.4782",
+      "note": "Prior current evidence moved into history; not rerun in optional paragraph CP source branch.",
+      "evidence": {
+        "version": "20261029.1850.4782",
+        "platform": "Darwin arm64; Linux target not available (docker/podman absent)",
+        "python": "3.12.14",
+        "expat": "2.8.3",
+        "stdlib_only": true,
+        "changes": [
+          "Default data selects exact existing legacy Word CFB header profile",
+          "Data and legacy file entrypoints accept observed CFB minor 0x003B with diagnostics",
+          "Global DXF 0x088D structurally parsed and retained without applying formatting",
+          "Explicit data policy accepted by WPS sample verifier"
+        ],
+        "wps_tests": {
+          "passed": 424,
+          "failed": 0,
+          "skipped": 0,
+          "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p test_*.py"
+        },
+        "related_current_tests": {
+          "repository_et_pipeline": 2,
+          "failed": 0,
+          "skipped": 0,
+          "command": "python -I -S -B -m unittest discover -s tests -p test_wps_et_pipeline.py -v"
+        },
+        "description": {
+          "characters": 141,
+          "changed_this_batch": false,
+          "scope_manually_reviewed": true
+        },
+        "validation_kind": "Synthetic structural and behavior regressions; no real failed user file available",
+        "real_samples_rerun": false,
+        "dedicated_naming_linter": "Not installed; not run. Changed identifiers manually reviewed.",
+        "package": "Existing ZIP files unchanged; no release package generated in this batch",
+        "limits": [
+          "No Linux/Windows execution",
+          "No new real WPS/ET sample semantic acceptance",
+          "DXF property payload semantics and effective styles remain uninterpreted",
+          "Unknown private records and containers still refused; no complete native WPS conformance claim",
+          "No host attachment auto-selection end-to-end test"
+        ],
+        "structure_check": {
+          "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+          "exit_code": 0,
+          "result": "OK skills/wps"
+        },
+        "diff_whitespace_check": "git diff --check passed"
+      }
+    },
     {
       "version": "20261027.2320.5486",
       "note": "Prior current summary retained as history; not rerun in the CFB/DXF implementation batch.",

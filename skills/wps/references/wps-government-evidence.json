@@ -1,0 +1,256 @@
+{
+  "schema_version": "wps_official_attachment_evidence_v1",
+  "observed_date": "2026-10-31",
+  "provenance_level": "published_as_.wps_on_official_gov_cn_websites",
+  "ci": {
+    "run_id": 41181030181,
+    "job_id": 124478287311,
+    "source_branch_commit": "183e1ccdf163e9c17d8c6897c7473a8a660ca858",
+    "platform": "GitHub Actions Ubuntu Linux Python 3.13"
+  },
+  "results": {
+    "searched": 10,
+    "downloaded": 7,
+    "ole_cfb": 7,
+    "ms_doc_binary": 6,
+    "partial_usable": 6,
+    "independent_story_text_and_paragraphs_matched": 6,
+    "unsupported_binary": 1,
+    "download_failed": 3
+  },
+  "boundaries": {
+    "official_publication_confirmed": true,
+    "filename_is_not_producer_proof": true,
+    "real_wps_office_producer_verified": false,
+    "independent_decoder_reuses_cfb_container": true,
+    "independent_exact_human_transcript": false,
+    "full_wps_format_verified": false,
+    "table_grid_merges_and_pagination_verified": false,
+    "semantics": "full-text algorithmic agreement on supported stored main-story subset only"
+  },
+  "samples": [
+    {
+      "id": "luohu_contract",
+      "official_page": "https://www.szlh.gov.cn/lhrlzyj/gkmlpt/content/10/10445/post_10445513.html",
+      "official_attachment_url": "https://www.szlh.gov.cn/lhrlzyj/attachment/1/1249/1249495/10445513.wps",
+      "retrieval": "failed",
+      "download_error_type": "URLError",
+      "download_error_summary": "<urlopen error [SSL: BAD_ECPOINT] bad ecpoint (_ssl.c:1032)>",
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "luohu_simple_contract",
+      "official_page": "https://www.szlh.gov.cn/lhrlzyj/gkmlpt/content/10/10445/post_10445513.html",
+      "official_attachment_url": "https://www.szlh.gov.cn/lhrlzyj/attachment/1/1249/1249497/10445513.wps",
+      "retrieval": "failed",
+      "download_error_type": "URLError",
+      "download_error_summary": "<urlopen error [SSL: BAD_ECPOINT] bad ecpoint (_ssl.c:1032)>",
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "zhongshan_construction_form",
+      "official_page": "https://jsj.zs.gov.cn/gkmlpt/content/2/2656/post_2656565.html",
+      "official_attachment_url": "https://jsj.zs.gov.cn/attachment/0/579/579834/2656565.wps",
+      "retrieval": "downloaded",
+      "bytes": 22528,
+      "sha256": "ed84dcf9415e2d388d4e335dbcf301f2173137928bd0ecfee4f3f5c6e20895ee",
+      "magic": "CFB_OLE",
+      "format": "ms_doc_subset",
+      "read_status": "partial",
+      "paragraph_count": 10,
+      "official_title_anchor_checks": {
+        "智能建造": true,
+        "申报表": true
+      },
+      "algorithmic_compare": {
+        "status": "matched",
+        "text_equal": true,
+        "paragraphs_equal": true,
+        "main_units": 376,
+        "piece_count": 1,
+        "independent_paragraph_count": 10
+      },
+      "diagnostic_codes": [
+        "binary_table_structure_incomplete",
+        "related_content_not_requested"
+      ],
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "zhongshan_construction_summary",
+      "official_page": "https://jsj.zs.gov.cn/gkmlpt/content/2/2656/post_2656565.html",
+      "official_attachment_url": "https://jsj.zs.gov.cn/attachment/0/579/579835/2656565.wps",
+      "retrieval": "downloaded",
+      "bytes": 17920,
+      "sha256": "7c21746d3d3d022aafd4aee80da0504f1f2b94663eedaf872c815c779d1404d8",
+      "magic": "CFB_OLE",
+      "format": "ms_doc_subset",
+      "read_status": "partial",
+      "paragraph_count": 3,
+      "official_title_anchor_checks": {
+        "汇总表": true
+      },
+      "algorithmic_compare": {
+        "status": "matched",
+        "text_equal": true,
+        "paragraphs_equal": true,
+        "main_units": 100,
+        "piece_count": 1,
+        "independent_paragraph_count": 3
+      },
+      "diagnostic_codes": [
+        "binary_table_structure_incomplete",
+        "related_content_not_requested",
+        "nonstandard_header_clsid"
+      ],
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "zhongshan_environment_disclosure",
+      "official_page": "https://zsepb.zs.gov.cn/gkmlpt/content/2/2629/post_2629998.html",
+      "official_attachment_url": "https://zsepb.zs.gov.cn/attachment/0/571/571979/2629998.wps",
+      "retrieval": "downloaded",
+      "bytes": 35840,
+      "sha256": "13564403b0b1b4ebc3911fb87e94b526f88f2db0ccfeb43fa513d87a85b5a87e",
+      "magic": "CFB_OLE",
+      "format": "ms_doc_subset",
+      "read_status": "partial",
+      "paragraph_count": 40,
+      "official_title_anchor_checks": {
+        "清洁生产": true,
+        "信息公开": true
+      },
+      "algorithmic_compare": {
+        "status": "matched",
+        "text_equal": true,
+        "paragraphs_equal": true,
+        "main_units": 1045,
+        "piece_count": 1,
+        "independent_paragraph_count": 40
+      },
+      "diagnostic_codes": [
+        "binary_table_structure_incomplete"
+      ],
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "zhongshan_construction_supporting_material",
+      "official_page": "https://jsj.zs.gov.cn/gkmlpt/content/2/2656/post_2656565.html",
+      "official_attachment_url": "https://jsj.zs.gov.cn/attachment/0/579/579836/2656565.wps",
+      "retrieval": "downloaded",
+      "bytes": 24576,
+      "sha256": "3ccedb9e26d89410796508531912169559c0a0258303a085075e69829762375c",
+      "magic": "CFB_OLE",
+      "read_status": "reader_rejected",
+      "reader_error_status": "unsupported",
+      "reader_error_message": "Fields/objects/C0 control codes outside plain-text subset",
+      "reader_error_location": {
+        "stream": "WordDocument",
+        "offset": 2546
+      },
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "zhongshan_environment_company_list",
+      "official_page": "https://zsepb.zs.gov.cn/gkmlpt/content/2/2629/post_2629998.html",
+      "official_attachment_url": "https://zsepb.zs.gov.cn/attachment/0/571/571978/2629998.wps",
+      "retrieval": "downloaded",
+      "bytes": 43520,
+      "sha256": "28b509c9032dc45cf2c14f55075f53abaff5989ad9c5fe740dc06771098b2be6",
+      "magic": "CFB_OLE",
+      "format": "ms_doc_subset",
+      "read_status": "partial",
+      "paragraph_count": 4,
+      "official_title_anchor_checks": {
+        "清洁生产": true
+      },
+      "algorithmic_compare": {
+        "status": "matched",
+        "text_equal": true,
+        "paragraphs_equal": true,
+        "main_units": 1078,
+        "piece_count": 1,
+        "independent_paragraph_count": 4
+      },
+      "diagnostic_codes": [
+        "binary_table_structure_incomplete",
+        "related_content_not_requested",
+        "nonstandard_header_clsid"
+      ],
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "zhongshan_environment_commitment",
+      "official_page": "https://zsepb.zs.gov.cn/gkmlpt/content/2/2629/post_2629998.html",
+      "official_attachment_url": "https://zsepb.zs.gov.cn/attachment/0/571/571980/2629998.wps",
+      "retrieval": "downloaded",
+      "bytes": 11776,
+      "sha256": "4149d510b0e41c28b439b58880112ea42c821f13cb29ddddc2df9566de7ebb70",
+      "magic": "CFB_OLE",
+      "format": "ms_doc_subset",
+      "read_status": "partial",
+      "paragraph_count": 12,
+      "official_title_anchor_checks": {
+        "承诺": true
+      },
+      "algorithmic_compare": {
+        "status": "matched",
+        "text_equal": true,
+        "paragraphs_equal": true,
+        "main_units": 210,
+        "piece_count": 1,
+        "independent_paragraph_count": 12
+      },
+      "diagnostic_codes": [
+        "nonstandard_header_clsid"
+      ],
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "zhongshan_environment_authorization",
+      "official_page": "https://zsepb.zs.gov.cn/gkmlpt/content/2/2629/post_2629998.html",
+      "official_attachment_url": "https://zsepb.zs.gov.cn/attachment/0/571/571981/2629998.wps",
+      "retrieval": "downloaded",
+      "bytes": 11264,
+      "sha256": "29b2f1683b2ae97c9c6b9a2febbca0d36e6436f339b59aacf776dedc66308ba4",
+      "magic": "CFB_OLE",
+      "format": "ms_doc_subset",
+      "read_status": "partial",
+      "paragraph_count": 10,
+      "official_title_anchor_checks": {
+        "委托": true
+      },
+      "algorithmic_compare": {
+        "status": "matched",
+        "text_equal": true,
+        "paragraphs_equal": true,
+        "main_units": 101,
+        "piece_count": 1,
+        "independent_paragraph_count": 10
+      },
+      "diagnostic_codes": [
+        "nonstandard_header_clsid"
+      ],
+      "producer_verified": false,
+      "full_format_verified": false
+    },
+    {
+      "id": "shenzhen_finance_request",
+      "official_page": "https://szfb.sz.gov.cn/gkmlpt/mguide",
+      "official_attachment_url": "https://szfb.sz.gov.cn/attachment/1/1661/1661793/12555364.wps",
+      "retrieval": "failed",
+      "download_error_type": "URLError",
+      "download_error_summary": "<urlopen error [SSL: BAD_ECPOINT] bad ecpoint (_ssl.c:1032)>",
+      "producer_verified": false,
+      "full_format_verified": false
+    }
+  ]
+}

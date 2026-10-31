@@ -69,7 +69,13 @@ def load_compound(data, compatibility):
     try:
         compound = CompoundFile(data, compatibility=container_mode(data, compatibility))
     except ValueError as exc:
-        raise ParseError('invalid_or_unsupported', {'stage': 'CFB'}, str(exc)) from exc
+        message = str(exc)
+        location = {'stage': 'CFB'}
+        if message.startswith('CFB physical length is not sector aligned'):
+            location['reason_code'] = 'cfb_unaligned_physical_length'
+        elif message.startswith('FAT allocates sectors beyond physical input'):
+            location['reason_code'] = 'cfb_fat_unbacked_allocation'
+        raise ParseError('invalid_or_unsupported', location, message) from exc
     if legacy_minor:
         compound.issues.append({'code': 'legacy_cfb_minor_version',
                                 'stream': 'CFB header', 'offset': 24,

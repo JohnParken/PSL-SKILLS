@@ -1,0 +1,22 @@
+name: WPS real failure compatibility diagnostics
+on:
+  pull_request:
+    paths:
+      - 'tests/wps_real_failure_deep_probe.py'
+      - '.github/workflows/wps-real-failure-diagnostics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-failure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate WPS reader environment
+        run: python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: Inspect pinned public failed sample bytes without printing contents
+        run: python -I -S -B tests/wps_real_failure_deep_probe.py

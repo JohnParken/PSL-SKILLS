@@ -1,0 +1,31 @@
+name: WPS read-only regression
+on:
+  pull_request:
+    paths:
+      - 'skills/wps/**'
+      - 'skills/skill-development-standards/**'
+      - '.github/workflows/wps-readonly-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  wps-reader:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Environment self-check
+        run: |
+          python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: WPS complete unit regression
+        run: |
+          python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v
+      - name: Strict Skill structure
+        run: |
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict

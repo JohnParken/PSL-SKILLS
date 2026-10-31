@@ -43,8 +43,13 @@ class CompoundFile:
                 raise ValueError("Nonzero CFB header CLSID outside strict subset; only an explicit exact legacy Excel/Word profile accepts its observed GUID in v3")
             self.issues.append({"code":"nonstandard_header_clsid","raw_hex":self.header_clsid.hex(),
                                 "message":"Observed exact legacy header GUID; violates MS-CFB zero-header-CLSID rule. Not proof of WPS producer or record format."})
-        if data[34:40]!=bytes(6) or len(data)%self.sector_size or self.sector_count<2:
-            raise ValueError('Invalid CFB reserved header fields/alignment/minimum size')
+        if data[34:40]!=bytes(6):
+            raise ValueError('Nonzero reserved CFB header bytes')
+        if len(data)%self.sector_size:
+            raise ValueError('CFB physical length is not sector aligned: remainder {} bytes'.format(
+                len(data)%self.sector_size))
+        if self.sector_count<2:
+            raise ValueError('CFB file lacks required header, FAT and directory sectors')
         if any(data[512:self.sector_size]): raise ValueError('Nonzero version-4 header padding')
         if self.u32(56)!=4096: raise ValueError('Unsupported mini-stream cutoff')
         directory_count=self.u32(40); fat_count=self.u32(44); difat_count=self.u32(72)
@@ -64,7 +69,12 @@ class CompoundFile:
         self.fat=[]
         for identifier in fat_ids: self.fat.extend(struct.unpack('<'+'I'*(self.sector_size//4),self.sector(identifier)))
         if len(self.fat)<self.sector_count: raise ValueError('FAT does not cover physical sectors')
-        if any(value!=FREE for value in self.fat[self.sector_count:]): raise ValueError('FAT allocates sectors beyond physical input')
+        unbacked = next((self.sector_count + i
+                         for i, value in enumerate(self.fat[self.sector_count:])
+                         if value != FREE), None)
+        if unbacked is not None:
+            raise ValueError('FAT allocates sectors beyond physical input (first unbacked sector {})'.format(
+                unbacked))
         if any(self.fat[identifier]!=FAT_SECTOR for identifier in fat_ids) or any(self.fat[identifier]!=DIFAT_SECTOR for identifier in difat_ids):
             raise ValueError('FAT/DIFAT sector type marker mismatch')
         directory=self.regular(self.u32(48),None,'directory',MAX_DIRECTORY_ENTRIES*128)

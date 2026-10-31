@@ -38,6 +38,7 @@ COMPRESSED_MAPPING = dict(zip(
 
 
 from wps_access import ParseError, read_input, load_compound, resolve_chart_policy
+from wps_paragraph_sources import paragraph_cp_ranges
 
 def require(condition, location, message, status='corrupt'):
     if not condition:
@@ -67,13 +68,15 @@ class Region:
         return Region(self.view(offset, size), self.stream, self.base + offset)
 
 
-def parse_streams(streams, *, field_policy='reject', object_policy='reject', include_related=False, hidden_text='include'):
+def parse_streams(streams, *, field_policy='reject', object_policy='reject', include_related=False, hidden_text='include', binary_paragraph_sources=False):
     require(field_policy in ('reject', 'cached_result'), {'stage': 'options'},
             'Unknown MS-DOC field policy', 'unsupported')
     require(object_policy in ('reject', 'placeholder'), {'stage': 'options'},
             'Unknown MS-DOC object policy', 'unsupported')
     require(hidden_text in ('include', 'annotate'), {'stage': 'options'},
             'Effective binary visibility is unknown; exclude unsupported', 'unsupported')
+    require(type(binary_paragraph_sources) is bool, {'stage': 'options'},
+            'binary_paragraph_sources must be boolean', 'unsupported')
     # CFB applies these budgets before materializing streams. Repeat at this
     # internal seam so direct tests/callers cannot bypass the parser budgets.
     require(len(streams) <= 4096, {'stage': 'streams'}, 'Stream count budget exceeded', 'resource_limit')
@@ -216,6 +219,14 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             require(all(offset + size <= left or right <= offset for left, right in table_spans),
                     table.location(offset), 'Overlapping decoded table/CLX ranges')
             table_spans.append((offset, offset + size))
+    shape_anchors = {}
+    if object_policy == 'placeholder':
+        from wps_binary_shapes import main_shape_anchors
+        shape_anchors = main_shape_anchors(word, table, main_count, read_unit, table_spans)
+        if shape_anchors:
+            pair = FC_LCB_START + 40 * 8
+            start, size = word.number(pair), word.number(pair + 4)
+            table_spans.append((start, start + size))
     header_mapping = None
     note_mappings = {}
     automatic_note_markers = set()
@@ -270,6 +281,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             raise ParseError('corrupt', text_location(cp_start + exc.start // 2), 'Invalid UTF-16 story text') from exc
         require(story_type != 'main' or not text or text.endswith('\r'), text_location(cp_end - 1) if cp_end > cp_start else word.location(76),
                 'Missing terminal paragraph')
+        stored_story_text = text
         # Opt-in delimiter interpretation only: no instructions are executed and
         # sprmCFSpec/Plcfld semantics are not decoded. Cached output is partial.
         cp = cp_start
@@ -277,6 +289,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         field_count = 0
         hidden = 0
         object_locations = []
+        shape_locations = []
         note_marker_locations = []
         rendered = [] if field_policy == 'cached_result' or object_policy == 'placeholder' or automatic_note_markers or comment_markers else None
         for char in text:
@@ -314,6 +327,16 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 object_locations.append({**text_location(cp), 'placeholder_emitted': not bool(hidden)})
                 if not hidden:
                     rendered.append('\ufffc')
+            elif char == '\x08' and object_policy == 'placeholder' and story_type == 'main':
+                require(cp in shape_anchors, text_location(cp),
+                        'Drawn object marker lacks validated main-story PlcfSpa anchor', 'unsupported')
+                require(remaining_objects > 0, text_location(cp),
+                        'Drawn object marker budget exceeded', 'resource_limit')
+                remaining_objects -= 1
+                shape_locations.append({**text_location(cp), **shape_anchors[cp],
+                                        'placeholder_emitted': not bool(hidden)})
+                if not hidden:
+                    rendered.append('\ufffc')
             else:
                 if ord(char) < 32 and char not in '\t\r\x07\x0b\x0c':
                     raise ParseError('unsupported', text_location(cp),
@@ -334,6 +357,11 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                            'field_count': field_count,
                            'message': 'Field instructions omitted; cached results retained without execution, '
                                       'freshness checks or sprmCFSpec/Plcfld validation'})
+        if shape_locations:
+            issues.append({'code': 'drawn_shape_anchor_not_rendered',
+                           'count': len(shape_locations), 'locations': shape_locations,
+                           'message': 'Validated main-story PlcfSpa CP and U+0008 anchor replaced '
+                                      'by U+FFFC; sprmCFSpec, SPA properties and shape rendering unverified'})
         if object_locations:
             issues.append({'code': 'picture_or_data_marker_not_decoded',
                            'count': len(object_locations), 'locations': object_locations,
@@ -369,6 +397,25 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 'scope': 'stored_main_story_only', 'producer_verified': False}
         if table_structure is not None:
             story_result['binary_table_structure'] = table_structure
+        if binary_paragraph_sources:
+            # Selecting a filtering policy does not itself alter stored text.
+            # Only preserve exact CP alignment when the resulting text is identical.
+            if text == stored_story_text:
+                sources = paragraph_cp_ranges(text, cp_start)
+                require(len(sources) == len(paragraphs), word.location(76),
+                        'Stored paragraph source count mismatch')
+                require((sources[-1]['cp_end'] if sources else cp_start) == cp_end,
+                        word.location(76), 'Stored paragraph CP coverage mismatch')
+                story_result['paragraph_sources'] = sources
+                story_result['paragraph_source_status'] = 'exact_stored_cp'
+            else:
+                story_result['paragraph_sources'] = []
+                story_result['paragraph_source_status'] = 'unavailable_after_text_transform'
+                story_result['issues'].append({'code': 'binary_paragraph_source_alignment_unavailable',
+                    'stream': 'WordDocument', 'cp_start': cp_start, 'cp_end': cp_end,
+                    'message': 'Stored CP ranges cannot be aligned with transformed text; no ranges emitted'})
+                story_result['partial'] = True
+                story_result['status'] = 'partial'
         return story_result
 
     result = render_story(0, main_count, 'main')
@@ -417,6 +464,9 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 'status': 'partial' if story_issues else 'ok', 'issues': story_issues}
             if 'binary_table_structure' in story:
                 region['binary_table_structure'] = story['binary_table_structure']
+            if binary_paragraph_sources:
+                region['paragraph_sources'] = story['paragraph_sources']
+                region['paragraph_source_status'] = story['paragraph_source_status']
             if story_type == 'headers_footers' and header_mapping is not None:
                 region['section_mapping'] = header_mapping
                 header_issue = {'code': 'section_header_properties_uninterpreted',
@@ -461,6 +511,28 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             'stream': table_name, 'message': 'CHPX evidence only; styles, piece PRMs and effective visibility/revisions unresolved. No text filtered.'})
         result['partial'] = True
         result['status'] = 'partial'
+    if binary_paragraph_sources:
+        from wps_paragraph_evidence import link_evidence
+        for story in [result, *result.get('related_stories', ())]:
+            if story.get('paragraph_source_status') != 'exact_stored_cp':
+                continue
+            char_runs = result.get('character_properties', {}).get('runs', ())
+            table_rows = story.get('binary_table_structure', {}).get('rows', ())
+            try:
+                story['paragraph_evidence'] = link_evidence(
+                    story['paragraph_sources'], character_runs=char_runs,
+                    table_rows=table_rows, character_requested=hidden_text == 'annotate')
+            except (KeyError, TypeError, ValueError):
+                # Optional evidence must not invalidate already extracted text.
+                issue = {'code': 'binary_paragraph_evidence_unresolved', 'stream': 'WordDocument',
+                         'message': 'Paragraph-to-CHPX/PAPX association is ambiguous; no links claimed'}
+                if story is not result:
+                    story['issues'].append(issue)
+                    story['partial'] = True
+                    story['status'] = 'partial'
+                result['issues'].append(issue)
+                result['partial'] = True
+                result['status'] = 'partial'
     return result
 
 
@@ -470,17 +542,22 @@ def failure(status, location, message):
 
 
 def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
-               field_policy='reject', object_policy='reject', revisions=None, include_related=False, hidden_text="include"):
+               field_policy='reject', object_policy='reject', revisions=None, include_related=False,
+               hidden_text="include", binary_paragraph_sources=False):
     """Identify content first; the suffix is provenance, never a format selector."""
     require(isinstance(data, bytes) and len(data) <= MAX_FILE_BYTES,
             {'stage': 'input'}, 'Input exceeds byte budget or is not bytes', 'resource_limit')
     require(compatibility in ('strict', 'legacy_excel_clsid', 'legacy_word_clsid', 'data'), {'stage': 'options'},
             'Unknown compatibility mode', 'unsupported')
+    require(type(binary_paragraph_sources) is bool, {'stage': 'options'},
+            'binary_paragraph_sources must be boolean', 'unsupported')
     requested_chart_policy = chart_policy
     chart_policy = resolve_chart_policy(chart_policy, 'strict')
     require(revisions in (None, 'accepted', 'original', 'all'), {'stage': 'options'},
             'Unknown revisions policy', 'unsupported')
     if data.startswith((b'PK\x03\x04', b'PK\x05\x06')):
+        require(not binary_paragraph_sources, {'stage': 'options'},
+                'Binary paragraph sources do not apply to OOXML', 'unsupported')
         require(compatibility in ('strict', 'data') and chart_policy == 'reject' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
                 'Binary compatibility/field/chart options do not apply to OOXML', 'unsupported')
         from wps_ooxml_sheet import package_kind, read_bytes as read_sheet_bytes
@@ -507,7 +584,9 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                 'BIFF compatibility/chart options do not apply to MS-DOC', 'unsupported')
         require(revisions in (None, 'all'), {'stage': 'options'},
                 'MS-DOC reads stored text; revision filtering unsupported', 'unsupported')
-        result = parse_streams(compound.streams, field_policy=field_policy, object_policy=object_policy, include_related=include_related, hidden_text=hidden_text)
+        result = parse_streams(compound.streams, field_policy=field_policy, object_policy=object_policy,
+                               include_related=include_related, hidden_text=hidden_text,
+                               binary_paragraph_sources=binary_paragraph_sources)
         result['compatibility_mode'] = compatibility
         result['container_compatibility'] = compound.compatibility
         result['container_issues'] = compound.issues
@@ -516,6 +595,8 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
             result['status'] = 'partial'
             result['partial'] = True
         return result
+    require(not binary_paragraph_sources, {'stage': 'options'},
+            'Binary paragraph sources only apply to MS-DOC', 'unsupported')
     require(len(workbooks) == 1, {'stage': 'routing'},
             'Require exactly one supported document or workbook payload', 'unsupported')
     require(revisions is None and not include_related and hidden_text == 'include' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
@@ -587,11 +668,14 @@ def main():
     parser.add_argument('--field-policy', choices=('reject', 'cached_result'), default='reject')
     parser.add_argument('--revisions', choices=('accepted', 'original', 'all'))
     parser.add_argument('--include-related', action='store_true')
+    parser.add_argument('--binary-paragraph-sources', action='store_true')
     parser.add_argument('--hidden-text', choices=('include','exclude','annotate'), default='include')
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args()
     if args.include_related and args.format == 'text':
         parser.error('--include-related requires --format json to preserve separate story regions')
+    if args.binary_paragraph_sources and args.format == 'text':
+        parser.error('--binary-paragraph-sources requires --format json to retain provenance ranges')
     if args.check:
         return check_environment()
     if sys.version_info < (3, 9):
@@ -599,7 +683,9 @@ def main():
     if not args.input:
         parser.error('input required')
     result = read(args.input, compatibility=args.compatibility, chart_policy=args.chart_policy,
-                  field_policy=args.field_policy, object_policy=args.object_policy, revisions=args.revisions, include_related=args.include_related, hidden_text=args.hidden_text)
+                  field_policy=args.field_policy, object_policy=args.object_policy, revisions=args.revisions,
+                  include_related=args.include_related, hidden_text=args.hidden_text,
+                  binary_paragraph_sources=args.binary_paragraph_sources)
     if args.format == 'text' and result['status'] in ('ok', 'partial') and 'text' not in result:
         result = failure('unsupported', {'stage': 'output'}, 'Spreadsheet extraction requires JSON output')
     if args.format == 'text' and result['status'] in ('ok', 'partial'):

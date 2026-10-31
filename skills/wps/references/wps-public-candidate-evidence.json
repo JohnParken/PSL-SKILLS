@@ -1,0 +1,53 @@
+{
+  "schema_version": "wps_public_sample_validation_v1",
+  "status": "passed_algorithmic_crosscheck_only",
+  "checked_on": "2026-10-31",
+  "fixture": {
+    "source_repository": "https://github.com/listeng/wps2md",
+    "pinned_revision": "c4ae028156e44ed8b57ef879dc7bd1d14750c0f1",
+    "source_path": "tests/sample.wps",
+    "upstream_git_blob_sha1": "140d30603be830b7ec95226e6dd8103a106938cd",
+    "sha256": "59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d",
+    "bytes": 125952,
+    "origin_declaration": "third-party public WPS Writer test fixture; producer/version not independently certified",
+    "license_note": "Upstream repository declares MIT license; sample not vendored in PSL-SKILLS"
+  },
+  "independent_upstream_assertions": {
+    "source": "https://github.com/listeng/wps2md/blob/c4ae028156e44ed8b57ef879dc7bd1d14750c0f1/tests/test_parse.py",
+    "recorded_anchors": 5,
+    "matched": 5
+  },
+  "independent_story_decoder": {
+    "code_path": "tests/wps_public_story_oracle.py",
+    "method": "separate FIB/CLX/Pcdt decoding via struct, reuses existing bounded CFB container reader only",
+    "full_text_equal": true,
+    "paragraphs_equal": true,
+    "main_utf16_units": 608,
+    "piece_count": 1,
+    "paragraph_count": 24,
+    "text_utf8_sha256": "54d875f79e02cac659a5298e78593773639f51d858e9a0daacb63652a940140f",
+    "paragraph_json_sha256": "27b13210fe44425ed6158738804f581538c4313e7cfab661434112346232f95f",
+    "manual_transcript_verification": false
+  },
+  "target_wps_reader": {
+    "result_status": "partial",
+    "exit_code": 3,
+    "main_paragraphs": 24,
+    "paragraph_source_status": "unavailable_after_text_transform",
+    "full_format_verified": false
+  },
+  "ci": {
+    "first_pass_run_id": 41179433885,
+    "platform": "GitHub Actions ubuntu-latest / Python 3.13",
+    "validation": "public candidate source identity, anchors and independently decoded full main text",
+    "fixture_committed_to_repository": false
+  },
+  "boundaries": {
+    "producer_and_version_verified": false,
+    "real_kingsoft_wps_native_origin_certified": false,
+    "format_and_display_verified": false,
+    "chpx_papx_semantic_formatting_independently_verified": false,
+    "independent_human_verified_full_text": false,
+    "purpose": "third-party public sample algorithmic cross-check, NOT native producer certified acceptance"
+  }
+}

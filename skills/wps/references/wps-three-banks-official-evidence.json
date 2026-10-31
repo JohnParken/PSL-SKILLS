@@ -1,0 +1,226 @@
+{
+  "schema_version": "wps_boc_ccb_icbc_official_evidence_v1",
+  "recorded_on": "2026-10-31",
+  "type": "maintenance_only_direct_bank_official_attachment_reads",
+  "repo": "JohnParken/PSL-SKILLS",
+  "ci": {
+    "workflow": "WPS BOC CCB ICBC official attachment probe",
+    "run_id": 41183896639,
+    "job_id": 124486751731,
+    "linux": "ubuntu-latest",
+    "python": "3.13",
+    "tested_commit": "52b431b9ec42170fc0155773331bce078efb3b9f"
+  },
+  "results": {
+    "tested": 10,
+    "downloaded": 4,
+    "cfb": 1,
+    "ooxml_candidate": 3,
+    "read_ok": 2,
+    "read_partial": 2,
+    "read_rejected": 0,
+    "independent_story_matches": 1,
+    "bank_breakdown": [
+      {
+        "bank": "BOC",
+        "candidates": 2,
+        "downloaded": 2
+      },
+      {
+        "bank": "CCB",
+        "candidates": 6,
+        "downloaded": 0
+      },
+      {
+        "bank": "ICBC",
+        "candidates": 2,
+        "downloaded": 2
+      }
+    ]
+  },
+  "samples": [
+    {
+      "id": "boc_pension_2025_confirm",
+      "bank": "BOC",
+      "official_page": "https://www.bankofchina.com/cbservice/bi2/202510/t20251009_25521263.html",
+      "official_attachment_url": "https://www.bankofchina.com/cbservice/bi2/202510/P020251009612975299059.docx",
+      "advertised_suffix": ".docx",
+      "download": "ok",
+      "size": 11414,
+      "sha256": "7f811616288d4652fba62219bf163f9632a35c96ab4ae8e37736dd081ee8efdd",
+      "magic": "ZIP_OOXML_CANDIDATE",
+      "reader_format": "ooxml-word",
+      "read_status": "ok",
+      "paragraph_count": 16,
+      "weak_title_anchor_checks": {
+        "参评": true,
+        "确认": true
+      },
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "boc_career_pension_2025_confirm",
+      "bank": "BOC",
+      "official_page": "https://www.bankofchina.com/cbservice/bi2/202511/t20251114_25569711.html",
+      "official_attachment_url": "https://www.bankofchina.com/cbservice/bi2/202511/P020251114543200001855.docx",
+      "advertised_suffix": ".docx",
+      "download": "ok",
+      "size": 11056,
+      "sha256": "15aeedc1aa714d88f2e77e8f6122bc3133f0773850d3fdae2593a7f91a04eb40",
+      "magic": "ZIP_OOXML_CANDIDATE",
+      "reader_format": "ooxml-word",
+      "read_status": "ok",
+      "paragraph_count": 14,
+      "weak_title_anchor_checks": {
+        "报名": true,
+        "确认": true
+      },
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "ccb_xiamen_2026_requirement",
+      "bank": "CCB",
+      "official_page": "https://www1.ccb.com/chn/2026-04/16/article_2026041608483476352.shtml",
+      "official_attachment_url": "https://www1.ccb.com/chn/attachDir/2026/04/2026041608475854919.doc",
+      "advertised_suffix": ".doc",
+      "download": "failed",
+      "download_failure_type": "URLError",
+      "download_failure_reason": "<urlopen error [SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1032)>",
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "ccb_xiamen_2026_interest",
+      "bank": "CCB",
+      "official_page": "https://www1.ccb.com/chn/2026-04/16/article_2026041608483476352.shtml",
+      "official_attachment_url": "https://www1.ccb.com/chn/attachDir/2026/04/2026041608480724515.docx",
+      "advertised_suffix": ".docx",
+      "download": "failed",
+      "download_failure_type": "URLError",
+      "download_failure_reason": "<urlopen error [SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1032)>",
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "ccb_xiamen_2026_commitment",
+      "bank": "CCB",
+      "official_page": "https://www1.ccb.com/chn/2026-04/16/article_2026041608483476352.shtml",
+      "official_attachment_url": "https://www1.ccb.com/chn/attachDir/2026/04/2026041608481632298.docx",
+      "advertised_suffix": ".docx",
+      "download": "failed",
+      "download_failure_type": "URLError",
+      "download_failure_reason": "<urlopen error [SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1032)>",
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "ccb_xiamen_2026_signage_requirement",
+      "bank": "CCB",
+      "official_page": "https://www.ccb.com/chn/2026-03/05/article_2026030510470824252.shtml",
+      "official_attachment_url": "https://www.ccb.com/chn/attachDir/2026/03/2026030510460593110.doc",
+      "advertised_suffix": ".doc",
+      "download": "failed",
+      "download_failure_type": "URLError",
+      "download_failure_reason": "<urlopen error [SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1032)>",
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "ccb_xiamen_2026_signage_interest",
+      "bank": "CCB",
+      "official_page": "https://www.ccb.com/chn/2026-03/05/article_2026030510470824252.shtml",
+      "official_attachment_url": "https://www.ccb.com/chn/attachDir/2026/03/2026030510463131206.docx",
+      "advertised_suffix": ".docx",
+      "download": "failed",
+      "download_failure_type": "URLError",
+      "download_failure_reason": "<urlopen error [SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1032)>",
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "ccb_xiamen_2026_signage_commitment",
+      "bank": "CCB",
+      "official_page": "https://www.ccb.com/chn/2026-03/05/article_2026030510470824252.shtml",
+      "official_attachment_url": "https://www.ccb.com/chn/attachDir/2026/03/2026030510464514614.docx",
+      "advertised_suffix": ".docx",
+      "download": "failed",
+      "download_failure_type": "URLError",
+      "download_failure_reason": "<urlopen error [SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1032)>",
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "icbc_jinan_2024_price",
+      "bank": "ICBC",
+      "official_page": "https://www.sh.icbc.com.cn/shandong/page/1008706621704302592.html",
+      "official_attachment_url": "https://media.icbc.com.cn/pcms-default/purchase/announcement/PCMS1002396320240914111652?filename=%E4%B8%AD%E5%9B%BD%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%E6%B5%8E%E5%8D%97%E5%88%86%E8%A1%8C%E7%BD%91%E7%82%B9%E6%AC%BE%E7%AE%B1%E5%AF%84%E5%BA%93%E5%8F%8A%E7%A6%BB%E8%A1%8C%E5%BC%8F%E8%87%AA%E5%8A%A8%E6%9F%9C%E5%91%98%E6%9C%BA%E9%9B%86%E4%B8%AD%E8%A3%85%E5%8D%B8%E9%92%9E%E4%B8%9A%E5%8A%A1%E5%A4%96%E5%8C%85%E9%A1%B9%E7%9B%AE%E6%9C%80%E7%BB%88%E6%8A%A5%E4%BB%B7%E8%A1%A8%EF%BC%88%E6%89%AB%E6%8F%8F%EF%BC%89.docx",
+      "advertised_suffix": ".docx",
+      "download": "ok",
+      "size": 288557,
+      "sha256": "977d453d8a48527c863705001a5208090168993beb22bcfd2819f4aed80b42f4",
+      "magic": "ZIP_OOXML_CANDIDATE",
+      "reader_format": "ooxml-word",
+      "read_status": "partial",
+      "paragraph_count": 1,
+      "weak_title_anchor_checks": {
+        "报价": false
+      },
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    },
+    {
+      "id": "icbc_dalian_2023_price",
+      "bank": "ICBC",
+      "official_page": "https://www.sh.icbc.com.cn/dalian/page/887367093941452800.html",
+      "official_attachment_url": "https://media.icbc.com.cn/pcms-default/purchase/announcement/PCMS0012555820231016141404?filename=%E9%87%87%E8%B4%AD%E4%BB%B7%E6%A0%BC.doc",
+      "advertised_suffix": ".doc",
+      "download": "ok",
+      "size": 14336,
+      "sha256": "99f9d1ebdce7e9cdbc031bed780853b15c57f71883498357053f8770c5f59224",
+      "magic": "CFB_OLE",
+      "reader_format": "ms_doc_subset",
+      "read_status": "partial",
+      "paragraph_count": 1,
+      "weak_title_anchor_checks": {
+        "采购": true,
+        "价格": false
+      },
+      "issue_codes": [
+        "binary_table_structure_incomplete",
+        "nonstandard_header_clsid"
+      ],
+      "algorithmic_story_crosscheck": {
+        "text_equal": true,
+        "paragraphs_equal": true,
+        "paragraph_count": 1
+      },
+      "native_wps_verified": false,
+      "producer_software_verified": false,
+      "full_semantic_format_verified": false
+    }
+  ],
+  "boundaries": {
+    "direct_official_bank_urls": true,
+    "confined_https_hosts": true,
+    "max_document_bytes": 33554432,
+    "real_wps_native_samples": 0,
+    "document_name_is_not_format_proof": true,
+    "one_independent_story_matches_but_shared_cfb_container": true,
+    "no_word_wps_gui_rendering": true,
+    "no_independent_full_text_or_table_semantics": true,
+    "ccb_tls_failures_are_network_not_reader_failures": true,
+    "no_runtime_network_or_office_dependency_added": true,
+    "no_public_document_binaries_vendored": true
+  }
+}

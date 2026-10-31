@@ -28,6 +28,7 @@
 | 精确legacy_word_clsid v3 | data自动或显式策略接受观察GUID，partial | 历史真实样本及合成；默认路径新增覆盖仅合成，不推广任意CLSID |
 | 字段存储结果 | 显式cached_result、nested delimiter、partial | 仅合成；不验证sprmCFSpec/Plcfld、结果新鲜度或真实显示 |
 | U+0001图片/数据标记 | 显式placeholder为U+FFFC，partial | 真实sample有1个；不读取/解释对象类型或内容 |
+| U+0008绘图对象标记 | 显式placeholder，先验证主正文 PlcfSpa CP 与实际 U+0008，再替换为 U+FFFC，partial | 政府官网真实 WPS 原件回归：36 段；不验证有效 sprmCFSpec、SPA 全属性或绘图渲染，见 绘图锚点 (`<skill-root>/references/binary-shapes.md`) |
 | MS-DOC附加故事 | 显式六类CP分区，正文保持独立 | 合成分区/脚尾注/批注作者CP映射和节页眉槽；真实六区为空未验；不能称有效编号或某页页眉恢复 |
 | Strict/Transitional OOXML Word | 正文、表格文字、修订视图、显式关系/引用ID关联文字 | 合成；未知namespace/MC/绘图/字段等partial，需Expat>=2.6 |
 | OOXML逻辑表格 | tables坐标/gridSpan/vMerge/空单元格/嵌套来源 | 仅合成；缺网格坐标unknown/partial，默认文字契约保持，不渲染页面 |
@@ -61,7 +62,7 @@ csw14、cslw22、Windows envr0，nFibBack允许BF/C1。由cswNew决定使用base
 
 CLX取fc/lcb索引33，按标志选0Table/1Table；Prc有界跳过，复杂Prm检查零基索引后不应用格式。唯一末尾Pcdt必须长度/边界正确。压缩片段按FcCompressed映射，UTF16按逻辑片段拼接，严格代理对解码。默认仅读CP0,ccpText)，其他故事仅边界检查。显式include-related按公开FIB顺序输出六区及CP半开范围；最后额外CP不输出；每区独立代理对/字段闭合，不能借下一故事修复。有界脚注尾注引用表见[CP映射 (`<skill-root>/references/binary-note-references.md`)，批注见作者/引用 (`<skill-root>/references/binary-comments.md`)，节与页眉存储槽见分节 (`<skill-root>/references/binary-headers.md`)，其他引用未知partial，见存储故事 (`<skill-root>/references/ms-doc-stories.md`)。
 
-CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。字段默认拒绝；cached_result只按13/14/15分隔符与有界嵌套保留存储结果，隐藏指令不输出；缺损字段为corrupt。无分隔字段省略并记录partial，不执行任何指令。U+0001仅在placeholder模式替换U+FFFC，保留CP/偏移诊断，不能推断是图片还是其他二进制数据；其他未支持控制符仍拒绝。
+CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。字段默认拒绝；cached_result只按13/14/15分隔符与有界嵌套保留存储结果，隐藏指令不输出；缺损字段为corrupt。无分隔字段省略并记录partial，不执行任何指令。U+0001仅在placeholder模式替换U+FFFC，保留CP/偏移诊断，不能推断是图片还是其他二进制数据；U+0008仅在显式placeholder且已验证主正文PlcfSpa锚点时替换为U+FFFC，记录partial且不恢复图形属性；其他未支持控制符仍拒绝。
 
 ## 兼容策略和来源
 

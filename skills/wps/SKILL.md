@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261030.1033.3653"
+version: "20261031.1719.1010"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -57,9 +57,20 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 | 用户任务 | 操作与按需参考 |
 |---|---|
 | 正文或字段/对象边界 | 默认读取；具体容器、字段与对象策略见 格式边界 (`<skill-root>/references/format.md`)。 |
+| 二进制绘图对象 U+0008 | 明确选择 `--object-policy placeholder`，且存在合法主正文 PlcfSpa CP 锚点时保守以 U+FFFC 代替、返回 partial。原对象、sprmCFSpec 生效状态及图形布局不解码，详见 绘图对象锚点 (`<skill-root>/references/binary-shapes.md`)。 |
 | 脚注、尾注、批注或页眉页脚 | 加 `--include-related`，仅 JSON；`related_stories` 与正文分开。按容器读 MS-DOC 存储区域 (`<skill-root>/references/ms-doc-stories.md`) 或 OOXML 引用 (`<skill-root>/references/ooxml-related-stories.md`)，不推断有效页码或页眉继承。 |
 | 隐藏文字或修订视图 | 先读 隐藏与修订策略 (`<skill-root>/references/word-visibility.md`)。OOXML 默认 include/accepted；二进制不能过滤隐藏或修订。未知状态保留并说明，不能作为脱敏保证。 |
 | 文档表格 | OOXML JSON `tables` 提供逻辑网格和来源，见 结构化表格 (`<skill-root>/references/ooxml-tables.md`)。MS-DOC 仅提供有直接属性证据的一级行/单元格，合并与表格归组未知，见 二进制表格边界 (`<skill-root>/references/binary-tables.md`)。 |
+
+**MS-DOC 段落来源定位（可选）**：需要核对二进制 `.wps` 正文中的段落来源范围时，显式添加 `--binary-paragraph-sources`。仅对实际内容识别为 CFB + MS-DOC 的分支生效；返回各存储段落的 UTF-16 码元 CP 半开区间，不是 WordDocument 物理字节偏移或页面位置。字段结果过滤、对象占位或注释替换导致输出与存储文本无法可靠对齐时，不返回伪精确的段落来源，明确标记 partial 与诊断。同时显式指定 `--hidden-text annotate` 时，可将已有 CHPX 片段与段落 CP 做非生效属性的来源关联；若二进制表格解析已观察到 PAPX 一级行结束标记，也可仅关联该标记所属段落。来源关联不等于完整段落格式或表格布局恢复。默认读取不新增来源字段；选项、范围与错误契约详见 结果契约 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)。无真实 WPS 全文来源对照，不把该元数据当作生产兼容认证。
+
+公开候选 `.wps` 文件已获得一次固定哈希与独立算法的全文/段落对照，但来源声明不能证明创建工具或版本，且尚缺 WPS 软件导出的独立完整预期；具体见真实验收 (`<skill-root>/references/wps-real-validation.md`)。 政府官网公开附件中已有 7 份 CFB 文件下载并核实签名，其中 6 份正文在受控 MS-DOC 子集内返回 partial 并与另一套算法逐段一致；仍不能据此证明 WPS Office 制作版本或完整显示兼容。详情见政府文件实测 (`<skill-root>/references/wps-government-validation.md`)。不得将其视为已完成原生格式兼容认证。
+
+中国农业银行官网公开附件的只读实测中，五份 `.doc` 有三份为 ZIP/OOXML、一份为受限可读 MS-DOC CFB（partial）、一份 CFB 被严格容器校验拒绝；另三份总行附件实际为 PDF。它们并非已验证的原生 `.wps`，不得用其成功数宣称 WPS 专有格式兼容。详细结果见农业银行官方附件验收（`<skill-root>/references/wps-abc-official-validation.md`）。
+
+中国银行/建设银行/工商银行官网公开附件的受限维护验收已记录：10 个官方链接中 4 份实际下载，2 份中行 OOXML 返回 ok，工商银行 1 份 OOXML 和 1 份 CFB/MS-DOC 返回 partial（其中 CFB 的正文算法交叉核对一致）；建行 6 份因官网 TLS 旧版重协商要求未能安全下载。**这不是原生 `.wps` 的验收通过率**，详见三行官网实测（`<skill-root>/references/wps-three-banks-official-validation.md`），禁止将下载失败统计为解析失败。
+
+本轮只优化**现有结果质量和验收**：`drawn_shape_anchor_not_rendered` 与图片标记共同计入 `reading_assessment.coverage.objects=not_decoded`；保留绘图对象 CP、SPA 原始偏移等受控来源数据，不复制未渲染对象中的原文。维护 CI 已对 7 份政府官网真实 CFB 文件固定 SHA-256、现有 partial/段落数及 6 份独立正文算法比较；生产 Skill 不下载这些文件。相关证据见 验证记录（`<skill-root>/references/validation.md#读取质量基线与资源测量`）。
 
 ## 结果与按需验收
 
