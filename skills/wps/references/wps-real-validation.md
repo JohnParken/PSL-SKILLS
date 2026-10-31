@@ -39,7 +39,7 @@ python -I -S -B "<skill-root>/scripts/verify_wps_sample.py" ./samples/original.w
 
 `provenance_status=declared_requires_human_review` 始终提醒：脚本不能证明声明真实、确认生产软件或辨别一个文件是否曾被改后缀。`full_format_verified=false`，即使通过也不代表完整 WPS 兼容。附加故事不在当前预期字段中，不能因 `include_related=true` 就声称脚注/页眉等内容已逐项验收。
 
-验证器的合成测试只验收工具行为。当前真实 `.wps` 正文及二进制表格仍缺来源可核实原件与独立完整内容/结构预期，不能报告真实验收已补齐。既有四份 ET/ETT 的真实保存值验收另见 记录 (`<skill-root>/references/et-real-validation.md`)，不可用它们替代 `.wps` 正文验收。
+验证器的合成测试只验收工具行为。已从政府官网公开附件实际下载 7 份 CFB/OLE `.wps` 文件；其中 6 份 MS-DOC 子集的主正文及段落数组与独立解码算法一致，另 1 份按现有安全边界拒绝。详见政府公开附件实测 (`<skill-root>/references/wps-government-validation.md`)。这些文件的**官方网站发布来源**有据可查，但 WPS Office 实际生成软件及版本仍不能自动确认，亦没有经软件/人工独立验证的完整内容、复杂表格及页面预期，所以严格原生生产来源验收仍未完成。既有四份 ET/ETT 的真实保存值验收另见 记录 (`<skill-root>/references/et-real-validation.md`)，不可用它们替代 `.wps` 正文验收。
 
 ## 公开候选样本的独立算法交叉核对（2026-10-31）
 
