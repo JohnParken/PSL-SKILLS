@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1617.5405"
+version: "20261031.1646.5261"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -57,6 +57,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 | 用户任务 | 操作与按需参考 |
 |---|---|
 | 正文或字段/对象边界 | 默认读取；具体容器、字段与对象策略见 格式边界 (`<skill-root>/references/format.md`)。 |
+| 二进制绘图对象 U+0008 | 明确选择 `--object-policy placeholder`，且存在合法主正文 PlcfSpa CP 锚点时保守以 U+FFFC 代替、返回 partial。原对象、sprmCFSpec 生效状态及图形布局不解码，详见 绘图对象锚点 (`<skill-root>/references/binary-shapes.md`)。 |
 | 脚注、尾注、批注或页眉页脚 | 加 `--include-related`，仅 JSON；`related_stories` 与正文分开。按容器读 MS-DOC 存储区域 (`<skill-root>/references/ms-doc-stories.md`) 或 OOXML 引用 (`<skill-root>/references/ooxml-related-stories.md`)，不推断有效页码或页眉继承。 |
 | 隐藏文字或修订视图 | 先读 隐藏与修订策略 (`<skill-root>/references/word-visibility.md`)。OOXML 默认 include/accepted；二进制不能过滤隐藏或修订。未知状态保留并说明，不能作为脱敏保证。 |
 | 文档表格 | OOXML JSON `tables` 提供逻辑网格和来源，见 结构化表格 (`<skill-root>/references/ooxml-tables.md`)。MS-DOC 仅提供有直接属性证据的一级行/单元格，合并与表格归组未知，见 二进制表格边界 (`<skill-root>/references/binary-tables.md`)。 |
