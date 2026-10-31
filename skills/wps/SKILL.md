@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1533.5060"
+version: "20261031.1546.1688"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -64,6 +64,8 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 **MS-DOC 段落来源定位（可选）**：需要核对二进制 `.wps` 正文中的段落来源范围时，显式添加 `--binary-paragraph-sources`。仅对实际内容识别为 CFB + MS-DOC 的分支生效；返回各存储段落的 UTF-16 码元 CP 半开区间，不是 WordDocument 物理字节偏移或页面位置。字段结果过滤、对象占位或注释替换导致输出与存储文本无法可靠对齐时，不返回伪精确的段落来源，明确标记 partial 与诊断。同时显式指定 `--hidden-text annotate` 时，可将已有 CHPX 片段与段落 CP 做非生效属性的来源关联；若二进制表格解析已观察到 PAPX 一级行结束标记，也可仅关联该标记所属段落。来源关联不等于完整段落格式或表格布局恢复。默认读取不新增来源字段；选项、范围与错误契约详见 结果契约 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)。无真实 WPS 全文来源对照，不把该元数据当作生产兼容认证。
 
 公开候选 `.wps` 文件已获得一次固定哈希与独立算法的全文/段落对照，但来源声明不能证明创建工具或版本，且尚缺 WPS 软件导出的独立完整预期；具体见真实验收 (`<skill-root>/references/wps-real-validation.md`)。 政府官网公开附件中已有 7 份 CFB 文件下载并核实签名，其中 6 份正文在受控 MS-DOC 子集内返回 partial 并与另一套算法逐段一致；仍不能据此证明 WPS Office 制作版本或完整显示兼容。详情见政府文件实测 (`<skill-root>/references/wps-government-validation.md`)。不得将其视为已完成原生格式兼容认证。
+
+中国农业银行官网公开附件的只读实测中，五份 `.doc` 有三份为 ZIP/OOXML、一份为受限可读 MS-DOC CFB（partial）、一份 CFB 被严格容器校验拒绝；另三份总行附件实际为 PDF。它们并非已验证的原生 `.wps`，不得用其成功数宣称 WPS 专有格式兼容。详细结果见农业银行官方附件验收（`<skill-root>/references/wps-abc-official-validation.md`）。
 
 ## 结果与按需验收
 
