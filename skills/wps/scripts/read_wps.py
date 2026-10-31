@@ -487,6 +487,28 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             'stream': table_name, 'message': 'CHPX evidence only; styles, piece PRMs and effective visibility/revisions unresolved. No text filtered.'})
         result['partial'] = True
         result['status'] = 'partial'
+    if binary_paragraph_sources:
+        from wps_paragraph_evidence import link_evidence
+        for story in [result, *result.get('related_stories', ())]:
+            if story.get('paragraph_source_status') != 'exact_stored_cp':
+                continue
+            char_runs = result.get('character_properties', {}).get('runs', ())
+            table_rows = story.get('binary_table_structure', {}).get('rows', ())
+            try:
+                story['paragraph_evidence'] = link_evidence(
+                    story['paragraph_sources'], character_runs=char_runs,
+                    table_rows=table_rows, character_requested=hidden_text == 'annotate')
+            except (KeyError, TypeError, ValueError):
+                # Optional evidence must not invalidate already extracted text.
+                issue = {'code': 'binary_paragraph_evidence_unresolved', 'stream': 'WordDocument',
+                         'message': 'Paragraph-to-CHPX/PAPX association is ambiguous; no links claimed'}
+                if story is not result:
+                    story['issues'].append(issue)
+                    story['partial'] = True
+                    story['status'] = 'partial'
+                result['issues'].append(issue)
+                result['partial'] = True
+                result['status'] = 'partial'
     return result
 
 
