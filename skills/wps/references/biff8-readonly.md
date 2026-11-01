@@ -181,6 +181,16 @@ found in original public ETT templates, even when their CFB header CLSID is alre
 
 These additions do not allow external workbook/add-in/DDE links, arbitrary names,
 private records or embedded chart substreams by default.
+
+The default BIFF8 `data` reader has a separate, newer **ordinary non-macro Name**
+subset: one fully bounded Unicode name with exactly one self-linked absolute
+`PtgArea3d` and a final BoundSheet8 scope consistency check. It retains original
+bytes and marks partial; it never evaluates defined-name expressions or changes
+saved cells. Complex functions, macros, external XTI, other built-in names, and
+relative name areas are refused even in experimental salvage mode. Strict and
+explicit `legacy_excel_clsid` keep their historical Print_Area-only subset.
+See defined-name acceptance (`<skill-root>/references/biff8-defined-names.md`)
+and pinned real evidence (`<skill-root>/references/biff8-defined-names-evidence.json`).
 The explicit opaque chart policy (`<skill-root>/references/embedded-charts.md`) adds bounded framing/raw retention
 for a supported embedded-chart subset without decoding or rendering charts. Record bytes are retained for diagnosis;
 metadata retention is not full semantic or layout validation. Strict mode is unchanged.
