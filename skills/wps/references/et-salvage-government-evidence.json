@@ -58,7 +58,8 @@
         "omissions_affect_cell_values": false
       },
       "same_extracted_cells": true,
-      "newly_recovered": false
+      "newly_recovered": false,
+      "source_sha256_matches_pinned": true
     },
     {
       "id": "zhongshan_2026_pollution_project_summary",
@@ -98,7 +99,8 @@
         "omissions_affect_cell_values": false
       },
       "same_extracted_cells": true,
-      "newly_recovered": false
+      "newly_recovered": false,
+      "source_sha256_matches_pinned": true
     },
     {
       "id": "zhongshan_2026_performance_target",
@@ -140,7 +142,8 @@
         "omissions_affect_cell_values": false
       },
       "same_extracted_cells": true,
-      "newly_recovered": false
+      "newly_recovered": false,
+      "source_sha256_matches_pinned": true
     },
     {
       "id": "shantou_2026_project_application",
@@ -180,7 +183,8 @@
         "omissions_affect_cell_values": false
       },
       "same_extracted_cells": true,
-      "newly_recovered": false
+      "newly_recovered": false,
+      "source_sha256_matches_pinned": true
     },
     {
       "id": "shantou_2026_project_summary",
@@ -218,7 +222,8 @@
         "omissions_affect_cell_values": false
       },
       "same_extracted_cells": true,
-      "newly_recovered": false
+      "newly_recovered": false,
+      "source_sha256_matches_pinned": true
     },
     {
       "id": "zhongshan_low_altitude_supply_demand",
@@ -249,7 +254,19 @@
           "scope": "globals"
         }
       },
-      "newly_recovered": false
+      "newly_recovered": false,
+      "source_sha256_matches_pinned": true,
+      "name_record_source_evidence": {
+        "status": "bounded_source_name_record",
+        "record_offset": 13817,
+        "record_id": "0x18",
+        "payload_length": 50,
+        "first_14_header_bytes_hex": "0000000c0b000000010000000000",
+        "record_payload_sha256": "40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167",
+        "complete_name_or_formula_text_read": false,
+        "external_reference_semantics_verified": false,
+        "macro_semantics_verified": false
+      }
     },
     {
       "id": "shenzhen_mediation_application_form",
@@ -276,5 +293,25 @@
     "Shenzhen TLS BAD_ECPOINT is a download failure, not parser failure",
     "Unknown Name records may carry executable or externally referenced semantics; no relaxation without evidence",
     "No document contents or personally identifying cell data included in CI logs or this evidence"
-  ]
+  ],
+  "revalidation": {
+    "run_id": 41261297979,
+    "job_id": 124714945685,
+    "pinned_bytes_rechecked": 6,
+    "pinned_sha256_matched": 6,
+    "new_recoveries": 0,
+    "name_record_source_observation": {
+      "status": "bounded_source_name_record",
+      "record_offset": 13817,
+      "record_id": "0x18",
+      "payload_length": 50,
+      "first_14_header_bytes_hex": "0000000c0b000000010000000000",
+      "record_payload_sha256": "40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167",
+      "complete_name_or_formula_text_read": false,
+      "external_reference_semantics_verified": false,
+      "macro_semantics_verified": false
+    },
+    "identity_verification_only": true,
+    "no_full_cell_or_formula_semantic_certification": true
+  }
 }
