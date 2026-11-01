@@ -21,7 +21,6 @@ def _refuse(message):
 
 
 PTG_UNION = 0x10
-MAX_DIRECT_AREA_REGIONS = 2
 
 
 def _area3d_record(token, sheet_count, internal_refs, itab):
