@@ -18,6 +18,8 @@
 
 新方案在**默认 BIFF8 data 模式**下返回 `partial`，提取 2 个工作表、126 个已识别单元格；独立于目标 BIFF 解析器的维护级记录帧计数器，确认 2 张表分别有 66 和 60 个**已识别单元格记录**，合计 126 个。普通与显式 salvage 结果相同，真实新增接受行为并不依赖跳过未知记录。这仍不构成全量未知记录或 WPS Office 应用级格式语义认证，也不证明名称的最终 Excel 显示或任何公式计算。
 
+GitHub Actions Linux Python 3.11 和 3.13 均已完成 **486/486** WPS 全量回归及严格 Skill 检查；固定来源的四份历史 ET/ETT 样本仍与独立冻结的 **198 项**保存值（其中 33 项未验证时效性的公式缓存）一致。该新增 Name 子集由 **12 项**合成单测覆盖，包括宏、外链和非法名称拒绝；真实政府来源的受限接受证据、记录 SHA、独立 126 单元格记录统计及各项 CI 见机器验证报告（`<skill-root>/references/biff8-defined-names-evidence.json`）。新代码未修改 `.wps/MS-DOC` 文字读取器，仍不执行公式或外链。
+
 验收入口是仓库根目录下的维护程序 `tests/wps_biff8_salvage_government_probe.py`（真实官方 HTTPS 下载、严格域名白名单、16MiB 上限、固定源哈希；**生产 Skill 运行时不联网**），独立记录数检查 `tests/wps_biff8_name_oracle.py`；单测为 `<skill-root>/scripts/test_wps_biff8_names.py`。维护报告只输出原件哈希、数量、来源、是否安全分类及诊断，**不打印名称正文、表格单元格原值或原始名称公式内容**。
 
 ## 使用与限制
