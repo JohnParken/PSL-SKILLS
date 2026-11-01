@@ -15,6 +15,10 @@
 
 这两种记录原先没有被读取器列入白名单，即使其出现不一定改变单元格保存值也会阻止整簿提取。现在仅在精准验证成功时保留为 `uninterpreted_metadata`，结构见各记录的 `structure` 子段。低层严格 `strict` 和显式旧版 `legacy_excel_clsid` 的原有拒绝边界不变；不在任何失败后自动重试 `data`。
 
+## 真实非单元格格式拒绝治理：TableStyle 系列
+
+新增实测不是 CodePage 缺省问题。中山市交通运输局两份 `.et` 都声明 CodePage 1200；其中一份在 `0x088F` TableStyle 处拒绝。经过独立 MS-XLS 规范对照，新增在 `data` 模式对 TableStyle + 紧邻 TableStyleElement 元数据组进行严格边界验证，保留原始来源与 `partial` 诊断。若缺失前置 TableStyles、元素数量/顺序不符、索引引用了未验证的 DXF、future record header/UTF-16 非法，仍拒绝；不忽略通用未知记录。具体实测来源和独立保存值对照见 `<skill-root>/references/biff8-gov-real-et-validation.md`。
+
 ## CodePage 声明的受控扩展（下一批）
 
 仅在 `data` 模式，对有明确微软编码标识的 CodePage (0x0042) 元数据另接受 `874`、`949`、`950`、`1250`、`1251`。保留以前的 `1200`、`932`、`936`、`1252`。这些数值仅作为 **Workbook 声明**保存并输出 `code_page_raw`；BIFF8 的 SST/Label/Formula String 等依各自 Unicode fHighByte 读取，**不使用声明的 CodePage 重新解释压缩 Unicode 字节**。非 1200 返回 `partial` 与 `codepage_metadata_not_applied`，提示字节编码并未应用。既有合法文本、数字、缓存和错误值不改变。
