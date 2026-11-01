@@ -21,6 +21,10 @@ def _refuse(message):
 
 
 PTG_UNION = 0x10
+PTG_PAREN = 0x15
+# MS-XLS PtgMemFunc PtgDataType reference/value/array variants. The cce
+# field gives the exact size of the binary reference expression that follows.
+PTG_MEMFUNC = frozenset((0x29, 0x49, 0x69))
 
 
 def _area3d_record(token, sheet_count, internal_refs, itab):
@@ -68,6 +72,28 @@ def _static_area_expression(formula, sheet_count, internal_refs, itab,
     return areas, True
 
 
+def _unframe_print_title_memfunc(formula):
+    """Only exact MemFunc[Area3d Area3d Union][Paren] is supported.
+
+    PtgParen is a display token outside PtgMemFunc.cce. A falsely declared
+    cce, extra token, nested expression or dangling presentation opcode is
+    never silently dropped.
+    """
+    if not formula or formula[0] not in PTG_MEMFUNC:
+        return formula, False, False
+    if len(formula) < 3:
+        _refuse('Truncated Print_Titles PtgMemFunc header')
+    count = struct.unpack_from('<H', formula, 1)[0]
+    if count != 23:
+        _refuse('Print_Titles PtgMemFunc cce must equal two-area Union length')
+    if len(formula) not in (3 + count, 3 + count + 1):
+        _refuse('Print_Titles PtgMemFunc formula boundary mismatch')
+    has_paren = len(formula) == 3 + count + 1
+    if has_paren and formula[-1] != PTG_PAREN:
+        _refuse('Only a trailing presentation PtgParen is supported')
+    return formula[3:3+count], True, has_paren
+
+
 def _lbl_header(payload, sheet_count):
     if len(payload) < 15:
         _refuse('Name header truncated or variable fields outside supported subset')
@@ -103,9 +129,16 @@ def classify_static_builtin_name(payload, sheet_count, internal_refs):
     builtin_id = payload[15]
     if builtin_id not in (0x07, 0x0D):
         _refuse('Unsupported built-in Name; only Print_Titles/_FilterDatabase')
+    # Real producers can wrap the two-area Print_Titles Union in PtgMemFunc
+    # and append a PtgParen outside cce. No generic token interpretation.
+    formula, wrapped_memfunc, display_paren = (
+        _unframe_print_title_memfunc(payload[end_name:])
+        if builtin_id == 0x07 else (payload[end_name:], False, False))
     areas, is_union = _static_area_expression(
-        payload[end_name:], sheet_count, internal_refs, itab,
+        formula, sheet_count, internal_refs, itab,
         allow_union=builtin_id == 0x07)
+    if wrapped_memfunc and not is_union:
+        _refuse('Print_Titles PtgMemFunc only supports two-area Union')
     kinds = []
     for area in areas:
         r1, r2, c1, c2 = area['bounds_zero_based']
@@ -136,6 +169,8 @@ def classify_static_builtin_name(payload, sheet_count, internal_refs):
         'regions_zero_based': [x['bounds_zero_based'] for x in areas],
         'regions_kind': kinds,
         'ptg_union_raw_present': is_union,
+        'ptg_memfunc_wrapper_present': wrapped_memfunc,
+        'ptg_paren_display_token_present': display_paren,
         'formula_executed': False,
         'print_settings_applied': False,
         'filter_applied': False,
