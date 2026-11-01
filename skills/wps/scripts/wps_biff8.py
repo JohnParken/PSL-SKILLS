@@ -554,7 +554,7 @@ class Reader:
                     if self.compatibility == 'data':
                         if code_page not in SUPPORTED_BIFF8_CODE_PAGES:
                             if not self.salvage_unknown_metadata:
-                                raise UnsupportedError('Unsupported BIFF8 code-page declaration')
+                                require(False, 'Unsupported BIFF8 code-page declaration')
                             self.salvage_data_uncertain = True
                             self.issue({'code':'unknown_codepage_decl_salvaged',
                                         'record_id':hex(kind), 'offset':offset,
