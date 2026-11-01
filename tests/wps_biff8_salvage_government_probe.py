@@ -300,9 +300,20 @@ def main():
         'all_cell_values_independently_verified': False,
         'results': results,
     }
+    target = next((x for x in results
+                   if x['id'] == 'zhongshan_low_altitude_supply_demand'), None)
+    target_accepted = bool(
+        target and target.get('download') == 'success'
+        and target.get('source_sha256_matches_pinned') is True
+        and target.get('historical_name_failure_now_readable') is True)
+    response['pinned_real_static_name_gate'] = (
+        'passed' if target_accepted else
+        'not_run_download_failed' if target and target.get('download') == 'failed'
+        else 'failed')
     print(json.dumps(response, ensure_ascii=False, indent=2))
-    # Network availability is measured distinctly from parser support.
-    return 0 if response['downloaded'] else 1
+    # Fail CI if this pinned target cannot be downloaded or if it regresses.
+    # Other optional sources retain distinct download/parser diagnostics.
+    return 0 if target_accepted else 1
 
 
 if __name__ == '__main__':
