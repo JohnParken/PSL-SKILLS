@@ -17,10 +17,14 @@ TARGET_HOST = 'jt.zs.gov.cn'
 SAMPLES = (
     {'id': 'zs_2026_transport_rental',
      'page': 'https://jt.zs.gov.cn/xxml/zwgk/czxx/zbggxx/content/post_2632463.html',
-     'url': 'https://jt.zs.gov.cn/attachment/0/572/572379/2632463.et'},
+     'url': 'https://jt.zs.gov.cn/attachment/0/572/572379/2632463.et',
+     'sha256': 'fec59f9e22694cba7403bd96505225a45075f7f5c1a9801472e20ac8e39e280a',
+     'expected_cells': 32, 'expected_table_style_elements': []},
     {'id': 'zs_2026_vehicle_purchase',
      'page': 'https://jt.zs.gov.cn/xxml/zwgk/czxx/zbggxx/content/post_2603613.html',
-     'url': 'https://jt.zs.gov.cn/attachment/0/564/564802/2603613.et'},
+     'url': 'https://jt.zs.gov.cn/attachment/0/564/564802/2603613.et',
+     'sha256': 'ae032129a2d67b383abc391c17820769537936e8d97487ec2fdf8465cbe2e9b2',
+     'expected_cells': 43, 'expected_table_style_elements': [7, 10]},
 )
 
 
@@ -103,6 +107,8 @@ def _probe(item):
     except (OSError, ValueError) as exc:
         return {**result, 'download': 'failed', 'reason_type': type(exc).__name__,
                 'reason': str(exc)[:160]}
+    if hashlib.sha256(data).hexdigest() != item['sha256']:
+        raise ValueError('Official attachment hash changed; frozen expectations not applicable')
     kind = _container_kind(data)
     result.update(download='ok', bytes=len(data),
                   sha256=hashlib.sha256(data).hexdigest(), actual_container=kind)
@@ -122,6 +128,9 @@ def _probe(item):
                       format=extracted.get('format'),
                       sheet_count=len(extracted.get('sheets', ())),
                       cell_count=extracted.get('cell_count'),
+                      observed_table_style_element_counts=[
+                          group['declared_elements']
+                          for group in extracted.get('table_style_sources', ())],
                       issue_codes=[issue.get('code') for issue in extracted.get('issues', ())[:12]
                                    if isinstance(issue, dict)])
     except (OSError, ValueError, struct.error) as exc:
@@ -129,6 +138,18 @@ def _probe(item):
                       reader_error_type=type(exc).__name__,
                       reader_error=str(exc)[:160],
                       reader_location=getattr(exc, 'location', {}))
+    # A maintenance-only, source-specific assertion. A changed attachment or
+    # source format must be reviewed; it cannot silently pass a new baseline.
+    if (result.get('reader_status') != 'partial'
+            or result.get('actual_container') != 'CFB_OLE'
+            or result.get('cell_count') != item['expected_cells']
+            or result.get('observed_table_style_element_counts')
+               != item['expected_table_style_elements']
+            or result.get('inventory', {}).get('declared_codepages')
+               != [{'record_offset': 152, 'raw_length': 2, 'declared_codepage': 1200}]):
+        result['frozen_subset_acceptance'] = 'mismatch'
+    else:
+        result['frozen_subset_acceptance'] = 'matched'
     return result
 
 
@@ -140,10 +161,11 @@ def main():
               'cfb_files': sum(x.get('actual_container') == 'CFB_OLE' for x in items),
               'supported_reads': sum(x.get('reader_status') in ('ok','partial') for x in items),
               'codepage_evidence_only': True,
+              'frozen_subset_matches': sum(x.get('frozen_subset_acceptance') == 'matched' for x in items),
               'complete_native_compatibility_verified': False,
               'samples': items}
     print(json.dumps(report, ensure_ascii=False))
-    return 0 if report['downloaded'] else 1
+    return 0 if report['frozen_subset_matches'] == len(SAMPLES) else 1
 
 
 if __name__ == '__main__':
