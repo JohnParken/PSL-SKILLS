@@ -5,6 +5,8 @@ on:
       - 'tests/wps_biff8_audit_real_samples.py'
       - 'skills/wps/scripts/wps_biff8_audit.py'
       - 'skills/wps/scripts/wps_biff8.py'
+      - 'skills/wps/scripts/wps_biff8_names.py'
+      - 'skills/wps/scripts/test_wps_biff8_print_titles_memfunc.py'
       - 'skills/wps/scripts/wps_biff8_noncell.py'
       - 'skills/wps/scripts/test_wps_biff8_noncell.py'
       - 'skills/wps/references/et-noncell-compatibility.md'
