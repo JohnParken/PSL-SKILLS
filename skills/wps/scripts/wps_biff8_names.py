@@ -81,6 +81,7 @@ def classify_static_name(payload, sheet_count, internal_refs):
         'classification': 'ordinary_static_internal_area_only',
         'name_character_count': name_length,
         'name_sha256': hashlib.sha256(name.encode('utf-16le')).hexdigest(),
+        'name_folded_sha256': hashlib.sha256(name.casefold().encode('utf-16le')).hexdigest(),
         'scope': 'local' if itab else 'workbook',
         'local_sheet_ordinal_raw': itab,
         'formula_token_raw': hex(token),
