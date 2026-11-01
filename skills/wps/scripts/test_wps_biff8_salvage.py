@@ -76,6 +76,20 @@ class Biff8SalvageTests(unittest.TestCase):
         self.assertEqual(record['payload_hex'], b'metadata-not-cell'.hex())
         self.assertTrue(record['may_affect_cell_values'])
 
+    def test_default_json_excludes_salvage_fields(self):
+        original = parse_stream(workbook(), compatibility='data')
+        for name in ('salvage_requested', 'salvage_unknown_record_count',
+                     'saved_value_completeness_certified'):
+            self.assertNotIn(name, original)
+        self.assertEqual(original['cell_value_coverage'],
+                         'complete_within_declared_sheets')
+        self.assertIn('Fail closed', original['policies']['unknown_records'])
+        optin = parse_stream(workbook(), compatibility='data',
+                             salvage_unknown_metadata=True)
+        self.assertTrue(optin['salvage_requested'])
+        self.assertFalse(optin['saved_value_completeness_certified'])
+        self.assertEqual(optin['salvage_unknown_record_count'], 0)
+
     def test_optin_sheet_unknown_and_original_cells(self):
         sheet=rec(0x7777, b'opaque')+rec(0x0203, cell(2,3)+struct.pack('<d', 2.5))
         raw=workbook(sheet_records=[sheet], strings=[])
