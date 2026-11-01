@@ -5,6 +5,7 @@
 ## 目录
 
 - 读取质量基线与资源测量 (`<skill-root>/references/validation.md#读取质量基线与资源测量`)
+- 真实大型 WPS 测量和无转换快速路径 (`<skill-root>/references/validation.md#真实大型-wps-测量和无转换快速路径`)
 - 当前验证范围 (`<skill-root>/references/validation.md#当前验证范围`)
 - 真实失败样本的受限修复 (`<skill-root>/references/validation.md#真实失败样本的受限修复`)
 - 分支增量：MS-DOC 段落来源范围 (`<skill-root>/references/validation.md#分支增量ms-doc-段落来源范围`)
@@ -59,6 +60,17 @@ GitHub Actions Linux Python3.11/3.13 全量 WPS **451 项测试均通过**、入
 
 针对已支持的 MS-DOC 主正文，另外仅通过**仓库维护级合成脚本** `tests/wps_read_quality_profile.py` 和 Linux CI `41188139921` 记录资源曲线：1024/4096/16384 段默认分别约 75/299/1195 ms、峰值 `tracemalloc` 0.13/0.51/2.02 MiB；16384 段启用可选 CP 来源时约 1558 ms、峰值 7.01 MiB。该结果只反映当前 runner 和 Python 分配跟踪，**不是 RSS、用户真实文件性能或 SLA**。来源定位额外内存显著，暂不据合成数据冒险修改现有 CP 范围或正文解码算法；保留功能、预算与错误策略不变。
 
+## 真实大型 WPS 测量和无转换快速路径
+
+2026-11-01，维护任务从国家市场监督管理总局官网公开通知中下载 3 份实际 CFB/OLE `.wps`（2,453,504 / 23,040 / 149,504 字节），与已固定 SHA 的农业银行 621,568 字节二进制 `.doc`、中山市政府 43,520 字节 `.wps` 一起执行 `read_bytes(..., object_policy='placeholder')` 和显式 CP 来源定位的真实性能与输出校验。所有官方 HTTPS 来源限制域名与 32 MiB 大小，并冻结原件 SHA-256。维护脚本为仓库根目录 `tests/wps_real_resource_profile.py`，对应工作流 `.github/workflows/wps-real-resource-profile.yml`；业务 WPS Skill 不联网或写入这些样本。
+
+真实大样本为国家标准委 2026 年推荐性国家标准计划附件，原件 SHA-256 `d07786795608fb919849e6e67a25073ce88f1bd0b264915b83576192ef35d493`。文件总长 2,453,504 字节，现有 MS-DOC 子集返回 `partial`、11 段、约 221,605 字节 UTF-8 正文，保留 `binary_table_structure_incomplete` 和 `nonstandard_header_clsid`。没有对象/字段实际替换时，此前即使使用 placeholder，也会构造整段逐字符复制列表。本次仅在**没有可能需要转换的存储标记**时取消这份中间列表；有实际标记则走原转换路径，继续保留对象、字段、批注和安全拒绝契约。
+
+未优化代码快照的真实 CI `41286055996` 上，大型文件默认读取的 Python `tracemalloc` 跟踪峰值为 10,998,875 字节（10.49 MiB）；快速路径后的 CI `41286288182` 为 7,563,524 字节（7.21 MiB），**约降低 31%**。显式 CP 来源后的峰值由 10,794,032 降至 7,067,678 字节。这两个数据来自不同 CI 工作流程的实际执行，不能认为是完整进程 RSS 或所有文件的普遍收益。其他四份真实文件均核对 `partial`、段落数、冻结的正文 SHA-256，并验证 CP 开关不改变正文及段落哈希；其中农业银行对象占位实际发生转换，原有 `unavailable_after_text_transform` 仍保持。
+
+新增 4 项合成回归分别覆盖仅选择策略但没有转换标记、真实 U+0001 对象替换、存储字段缓存和未知控制字符严格拒绝。代码阶段 GitHub Actions Linux Python 3.11/3.13 完整运行各 **458 项**且严格 Skill 检查通过（run `41286288142`）。对 2.45 MB 文件的读取耗时，在 CI 负载下存在波动，**没有证明稳定加速**，不把单次时延差解释为 SLA 变化。2.45 MB 文件只有 11 段，也不能替代之前 16,384 段的合成 CP 压测；当前没有调整 CP 来源字典结构、输出字段、缓存保留或解析资源预算。
+
+原生 WPS Office 制作者软件/版本、可视化完整文档和业务宿主端到端调用仍没有独立认证。当前只是实际公开文件在既有支持子集内的资源与内容契约回归。
 ## 当前验证范围
 
 历史基线 `20261029.1850.4782` 新增全局 DXF（0x088D）的结构读取与原始属性保留；data 自动选择已有精确 Word 头兼容路径，data/legacy 接受已观察的 CFB minor 0x003B 并诊断。strict 仍要求 minor 003E 与零头 GUID。未知私有记录不跳过，格式属性不应用于保存值，不宣称完整 WPS 私有格式支持。共用文件有界读取、加密/歧义流及资源门禁，不在失败后扫描或轮换策略。
