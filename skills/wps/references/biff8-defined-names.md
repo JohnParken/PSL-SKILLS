@@ -28,11 +28,11 @@ MS-XLS 规范依据（只用于维护研究，运行时不联网）：`Lbl`（�
 
 在既有纯 `PtgArea3d + PtgUnion` 子集之外，新增一个有证据支持的**打印标题专用、非执行** token 形态：`PtgMemFunc(0x29/0x49/0x69)` 的两个字节 `cce` 必须恰为 **23**，内层严格为 **两条各 11 字节 `PtgArea3d` + 唯一 1 字节 `PtgUnion(0x10)`**；其后可以没有其他字节，也可恰有一个**不计入 cce** 的显示用 `PtgParen(0x15)`。任何不匹配 `cce`、截断、嵌套、非 Union 运算符、第二个尾随 token 均拒绝；`_FilterDatabase` 和普通名称仍**不接受**此新包裹，也不会启动公式或打印引擎。
 
-独立参考是 [ExaDev documents.js 的 LibreOffice BIFF8 `.xls` 原始 Print_Titles Lbl 测试向量](https://github.com/ExaDev/documents.js/blob/main/packages/xls-codec/src/workbook/print-names.test.ts)。该仓库公开了一条 **47 字节**的真实生产者 `Lbl(0x0018)` 记录（43 字节负载），源文件中的打印标题是 **重复 A 列、重复第 1–2 行**；尾端精确为 `PtgMemFunc cce=23`、两区域 `PtgUnion` 和可选 `PtgParen`。我们的维护测试以这条**独立公开的原始记录字节**构建测试向量，核对绝对区域 `[0,65535,0,0]` 与 `[0,1,0,255]`，并增加 **8 项**恶意长度/尾部/外链/宏语义边界测试。这里只证明 **LibreOffice 所保存 BIFF8 的一类真实记录布局**，**不是**原生 WPS Office `.et/.ett` 文件，也没有整份 LibreOffice 原件的独立完整内容验收。
+独立参考是 ExaDev documents.js 所提供的独立 LibreOffice BIFF8 `.xls` 原始 Print_Titles Lbl 测试向量（`https://github.com/ExaDev/documents.js/blob/main/packages/xls-codec/src/workbook/print-names.test.ts`）。该仓库公开了一条 **47 字节**的真实生产者 `Lbl(0x0018)` 记录（43 字节负载），源文件中的打印标题是 **重复 A 列、重复第 1–2 行**；尾端精确为 `PtgMemFunc cce=23`、两区域 `PtgUnion` 和可选 `PtgParen`。我们的维护测试以这条**独立公开的原始记录字节**构建测试向量，核对绝对区域 `[0,65535,0,0]` 与 `[0,1,0,255]`，并增加 **8 项**恶意长度/尾部/外链/宏语义边界测试。这里只证明 **LibreOffice 所保存 BIFF8 的一类真实记录布局**，**不是**原生 WPS Office `.et/.ett` 文件，也没有整份 LibreOffice 原件的独立完整内容验收。
 
 同时从中山市、汕头市、吉林省财政厅和杭州海事局等官网公告新增采样 **9 份 ET 原件**：每份均获取到实际 CFB/OLE、校验唯一 SHA-256；独立遍历 BIFF8 Globals 后发现这 **9 份全部没有 Name (0x0018)**，所以新增的三类 Name 实际 ET 生产者验证仍待补齐。维护测试只读取公开原件、在 GitHub Actions 中留存原件身份与 Name 固定字段证据，不保留原件、不打印单元格值，生产运行时不联网。来源网址、固定哈希、已观察记录和真实/非真实验收的分界见机器证据（`<skill-root>/references/biff8-print-title-real-evidence.json`）。
 
-格式依据：[MS-XLS PtgMemFunc](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/e4f8e3b4-0bb7-4100-99ee-1ac53acc9161)、[MS-XLS Rgce](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/6cdf7d38-d08c-4e56-bd2f-6c82b8da752e)。
+格式依据：MS-XLS PtgMemFunc（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/e4f8e3b4-0bb7-4100-99ee-1ac53acc9161`）、MS-XLS Rgce（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/6cdf7d38-d08c-4e56-bd2f-6c82b8da752e`）。
 
 ## 真实官方 ET 验收
 
