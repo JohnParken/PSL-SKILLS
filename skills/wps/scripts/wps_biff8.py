@@ -20,7 +20,8 @@ from wps_numeric import interpret_cell_number
 from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
 from wps_dxf import validate_dxf
 from wps_biff8_noncell import inspect_noncell
-from wps_biff8_names import classify_static_name, MAX_STATIC_NAMES
+from wps_biff8_names import (classify_static_name, classify_static_builtin_name,
+                            MAX_STATIC_NAMES)
 
 READING_MODES = COMPATIBILITY_MODES + ("data",)
 # Standalone opt-in salvage is explicitly not an MS-XLS conformance claim.
@@ -433,7 +434,7 @@ class Reader:
         if self.compatibility=="legacy_excel_clsid":
             self.issue({"code":"known_metadata_retained_uninterpreted","message":"Explicit compatibility mode retains only allowlisted MS-XLS metadata bytes. Internal metadata semantics, protection, style extensions and calculation settings are not validated or applied; unknown/data extension records still fail."})
         bounds=[]; names=set(); date_system=None; seen_sst=False; global_end=None
-        template_seen=False; self_link=False; internal_refs=[]; print_areas=set(); safe_name_keys=set(); safe_name_sheets=[]
+        template_seen=False; self_link=False; internal_refs=[]; print_areas=set(); safe_name_keys=set(); safe_name_sheets=[]; static_builtin_keys=set()
         consumed_until = 0
         for index,record in enumerate(self.records[1:],1):
             if index < consumed_until:
@@ -524,8 +525,8 @@ class Reader:
                 self.metadata_record(record,{kind:'ExternSheetInternal'},'globals')
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0018:
                 # Keep the historically verified built-in Print_Area behavior.
-                # New ordinary names are limited to one non-executable, direct
-                # internal, absolute 3-D area token and are data-mode only.
+                # New ordinary and selected built-in names require entirely static,
+                # self-linked, absolute area tokens and are data-mode only.
                 static_print_area = (
                     len(payload)==27 and
                     payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00' and
@@ -541,19 +542,37 @@ class Reader:
                     print_areas.add(sheet)
                     self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
                 elif self.compatibility == 'data':
-                    if len(safe_name_keys)>=MAX_STATIC_NAMES:
+                    if len(safe_name_keys)+len(static_builtin_keys)>=MAX_STATIC_NAMES:
                         raise ResourceLimitError('Static defined name budget exceeded')
-                    structure = classify_static_name(
-                        payload, 128, internal_refs)
-                    safe_name_sheets.append((structure['local_sheet_ordinal_raw'],
-                                             structure['internal_sheet_index_zero_based']))
-                    key = (structure['local_sheet_ordinal_raw'],
-                           structure['name_folded_sha256'])
-                    require(key not in safe_name_keys,
-                            'Duplicate ordinary static name in workbook/sheet scope')
-                    safe_name_keys.add(key)
-                    self.metadata_record(record,
-                                         {kind:'OrdinaryStaticInternalAreaName'}, 'globals')
+                    # Only 0x20/0x21 built-in Lbl flag, cch=1 and the precisely
+                    # supported 0x07 Print_Titles / 0x0D _FilterDatabase
+                    # enter the special built-in parser. All other built-in
+                    # and all macro names still fail closed.
+                    builtin = len(payload)>=16 and payload[0] in (0x20,0x21)
+                    if builtin:
+                        structure = classify_static_builtin_name(
+                            payload, 128, internal_refs)
+                        key = (structure['local_sheet_ordinal_raw'],
+                               structure['builtin_name_id_raw'])
+                        require(key not in static_builtin_keys,
+                                'Duplicate built-in static Name in worksheet scope')
+                        static_builtin_keys.add(key)
+                        source_name = ('PrintTitlesStatic'
+                                       if structure['builtin_name_id_raw']==0x07
+                                       else 'FilterDatabaseStatic')
+                    else:
+                        structure = classify_static_name(
+                            payload, 128, internal_refs)
+                        key = (structure['local_sheet_ordinal_raw'],
+                               structure['name_folded_sha256'])
+                        require(key not in safe_name_keys,
+                                'Duplicate ordinary static name in workbook/sheet scope')
+                        safe_name_keys.add(key)
+                        source_name = 'OrdinaryStaticInternalAreaName'
+                    safe_name_sheets.append((
+                        structure['local_sheet_ordinal_raw'],
+                        structure['internal_sheet_index_zero_based']))
+                    self.metadata_record(record, {kind:source_name}, 'globals')
                     self.metadata[-1]['structure']=structure
                 else:
                     require(False,
