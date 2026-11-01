@@ -1,0 +1,43 @@
+name: Repository Skill quality gate
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'tests/**'
+      - '.github/workflows/skills-quality-gate.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  skill-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Standard library skill-checker self-check
+        run: |
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py --help
+      - name: Strict check all installed skills
+        run: |
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/artifact-lifecycle --strict
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/bank-writing --strict
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/ofd --strict
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/skill-development-standards --strict
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/xlsx --strict
+      - name: Skill-checker regression
+        run: python -I -S -B -m unittest discover -s skills/skill-development-standards/scripts -p test_check_skill.py -v
+      - name: Artifact lifecycle parity tests
+        run: python -I -S -B -m unittest discover -s tests -p test_artifact_lifecycle_parity.py -v
+      - name: WPS full regression
+        run: python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v
