@@ -6,6 +6,7 @@ observation is not independent formula, value, style or WPS producer validation.
 """
 import hashlib
 import json
+import struct
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -19,31 +20,37 @@ ALLOWED_HOSTS = frozenset({
 SAMPLES = [
     {
         'id': 'zhongshan_2027_area_adjustment',
+        'expected_sha256': '472f8852375710b64539640868bdee9f0c6cf72d72e6e625406c57462b4089f0',
         'official_page': 'https://nync.zs.gov.cn/zwgk/tzgg/content/post_2641174.html',
         'url': 'https://nync.zs.gov.cn/attachment/0/575/575053/2641174.et',
     },
     {
         'id': 'zhongshan_2026_pollution_project_summary',
+        'expected_sha256': '35fb708c95f2f957b72aad5514827b9a29a6fd16d994f42e51e6015288302d89',
         'official_page': 'https://nync.zs.gov.cn/zwgk/tzgg/content/post_2645850.html',
         'url': 'https://nync.zs.gov.cn/attachment/0/576/576489/2645850.et',
     },
     {
         'id': 'zhongshan_2026_performance_target',
+        'expected_sha256': 'ea9e7bca553415d632dd931726f2b88ae7a474b1f6b62df9facb54c4ce358690',
         'official_page': 'https://nync.zs.gov.cn/zwgk/tzgg/content/post_2645850.html',
         'url': 'https://nync.zs.gov.cn/attachment/0/576/576490/2645850.et',
     },
     {
         'id': 'shantou_2026_project_application',
+        'expected_sha256': 'c4e9aa6284f25465e875f9ead6f23211b5e575f87e025abba69234406debecfd',
         'official_page': 'https://www.shantou.gov.cn/stsswbj/gkmlpt/content/2/2485/post_2485187.html',
         'url': 'https://www.shantou.gov.cn/stsswbj/attachment/0/143/143275/2485187.et',
     },
     {
         'id': 'shantou_2026_project_summary',
+        'expected_sha256': 'ff0408b950ce22f598196cc342fce64b08fbd7ba3d596c8fbdaed6ee99881ac2',
         'official_page': 'https://www.shantou.gov.cn/stsswbj/gkmlpt/content/2/2485/post_2485187.html',
         'url': 'https://www.shantou.gov.cn/stsswbj/attachment/0/143/143277/2485187.et',
     },
     {
         'id': 'zhongshan_low_altitude_supply_demand',
+        'expected_sha256': '2ccc6cca516b5936a3330d634536ed3fab71cf762616cf018b5b42ff84161cad',
         'official_page': 'https://www.zs.gov.cn/zsfgj/gkmlpt/content/2/2632/post_2632406.html',
         'url': 'https://www.zs.gov.cn/zsfgj/attachment/0/572/572365/2632406.et',
     },
@@ -113,6 +120,35 @@ def _read_summary(container, salvage):
                  'error_location': getattr(exc, 'location', {})}, None)
 
 
+def _record_header_evidence(container, stream_name, location):
+    """One independently bounded BIFF Name header; never print the name text.
+
+    The first 14 Name payload bytes are header fields, not the variable-length
+    user-defined name or formula expression. Retain only structure and digest.
+    """
+    if not isinstance(location, dict):
+        return None
+    position = location.get('record_offset')
+    if type(position) is not int or position < 0:
+        return None
+    data = container.read_stream(stream_name)
+    if position + 4 > len(data):
+        return {'status': 'record_outside_source'}
+    identifier, length = struct.unpack_from('<HH', data, position)
+    if identifier != 0x0018 or length > 8224 or position + 4 + length > len(data):
+        return {'status': 'not_bounded_name_record'}
+    raw = data[position+4:position+4+length]
+    return {'status': 'bounded_source_name_record',
+            'record_offset': position,
+            'record_id': '0x18',
+            'payload_length': length,
+            'first_14_header_bytes_hex': raw[:14].hex(),
+            'record_payload_sha256': hashlib.sha256(raw).hexdigest(),
+            'complete_name_or_formula_text_read': False,
+            'external_reference_semantics_verified': False,
+            'macro_semantics_verified': False}
+
+
 def main():
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills' / 'wps' / 'scripts'))
     from wps_access import load_compound
@@ -127,6 +163,14 @@ def main():
             report.update(download='success', bytes=len(data),
                           sha256=hashlib.sha256(data).hexdigest(),
                           magic=_magic(data))
+            expected = sample.get('expected_sha256')
+            if expected:
+                report['source_sha256_matches_pinned'] = (
+                    report['sha256'] == expected)
+                if not report['source_sha256_matches_pinned']:
+                    report['read_scope'] = 'source_changed_from_pinned'
+                    results.append(report)
+                    continue
             if report['magic'] == 'CFB_OLE':
                 try:
                     compound = load_compound(data, 'data')
@@ -139,6 +183,12 @@ def main():
                         salvage, salvage_cells = _read_summary(compound, True)
                         report.update(read_scope='biff8_candidate',
                                       normal=normal, salvage=salvage)
+                        if (normal.get('status') == 'rejected'
+                                and normal.get('error_location', {}).get('record_id') == '0x18'):
+                            report['name_record_source_evidence'] = (
+                                _record_header_evidence(
+                                    compound, candidates[0],
+                                    normal.get('error_location')))
                         if normal_cells is not None and salvage_cells is not None:
                             report['saved_cell_values_equal'] = normal_cells == salvage_cells
                         report['newly_recovered_rejection'] = (
