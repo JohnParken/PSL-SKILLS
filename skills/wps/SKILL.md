@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261101.1046.5726"
+version: "20261101.1244.4058"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -50,7 +50,7 @@ BIFF8 `data` 模式额外接受有明确编码编号的 CodePage 874、949、950
 
 ## BIFF8 静态命名区域与部分内置名称（默认 data 可读）
 
-对 `.et/.ett` 内的 `Name (0x0018)`，仅当 Lbl 头、名称、内部 `SupBook/ExternSheet`、最终 `BoundSheet8` 作用域和静态公式结构均已验证时才受限保留：普通名称支持单个绝对 `PtgArea3d` 或同一内部表上至多两个区域的 `PtgUnion`；内置 `Print_Titles` 仅支持完整行/列区域，`_FilterDatabase` 仅支持一个静态区域，历史内置 `Print_Area` 的窄子集继续保留。结果为来源元数据并报告 `partial`，**不计算名称公式、不应用打印/筛选设置**。其他内置宏/函数名称、外链和无法确认语义的 Name 仍拒绝，即使开启临时 salvage 也不能绕过。已用中山市政府官网固定哈希原件验证此前被 Name 拒绝的 1 份 ET 现在可受限读取：2 张工作表、126 个已识别单元格，并有独立 BIFF 已知记录计数 `66+60` 对照；不等于独立逐格真值或 WPS 软件兼容认证。详细范围见静态内部名称边界（`<skill-root>/references/biff8-defined-names.md`）。
+对 `.et/.ett` 内的 `Name (0x0018)`，仅当 Lbl 头、名称、内部 `SupBook/ExternSheet`、最终 `BoundSheet8` 作用域和静态公式结构均已验证时才受限保留：普通名称支持单个绝对 `PtgArea3d` 或同一内部表上至多两个区域的 `PtgUnion`；内置 `Print_Titles` 仅支持完整行/列区域，`_FilterDatabase` 仅支持一个静态区域，历史内置 `Print_Area` 的窄子集继续保留。结果为来源元数据并报告 `partial`，**不计算名称公式、不应用打印/筛选设置**。其他内置宏/函数名称、外链和无法确认语义的 Name 仍拒绝，即使开启临时 salvage 也不能绕过。已用中山市政府官网固定哈希原件验证此前被 Name 拒绝的 1 份 ET 现在可受限读取：2 张工作表、126 个已识别单元格，并有独立 BIFF 已知记录计数 `66+60` 对照；不等于独立逐格真值或 WPS 软件兼容认证。针对 `Print_Titles` 的另一种真实 BIFF8 编码，本轮已增加严格界定的 `PtgMemFunc(cce=23)` 双区域联合、以及尾随显示用 `PtgParen`，不增加通用公式解码。原始记录验证来自独立 LibreOffice 生成的 `.xls`，**不是 WPS Office 原生 `.et`**；新增九份政府 ET 原件也未观察到该类 Name。详细范围见静态内部名称边界（`<skill-root>/references/biff8-defined-names.md`）和独立生产者记录证据（`<skill-root>/references/biff8-print-title-real-evidence.json`）。
 
 ## BIFF8 临时最大兼容（仅显式低层入口）
 
