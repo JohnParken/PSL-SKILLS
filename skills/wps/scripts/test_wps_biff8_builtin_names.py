@@ -205,9 +205,10 @@ class StaticBuiltInNameTests(unittest.TestCase):
         # collection has one sheet. Deferred post-Globals check must fail.
         sup=rec(0x01AE,b'\x01\x00\x01\x04')
         extra=rec(0x0017,struct.pack('<H H h h',1,0,1,1))
-        raw=workbook(extra_global=sup+extra+rec(0x0018,
-                      built_in_name(sheet=2,formula=area(
-                          (0,4),(0,255)))))
+        raw=workbook(sheet_records=[b''], strings=[],
+                     extra_global=sup+extra+rec(0x0018,
+                         built_in_name(sheet=2,formula=area(
+                             (0,4),(0,255)))))
         with self.assertRaises(ValueError):
             parse_stream(raw,compatibility='data')
 
