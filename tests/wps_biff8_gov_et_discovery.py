@@ -70,10 +70,17 @@ def _codepage_inventory(data):
     bof(items[0], 5)
     pages = []
     counts = {}
+    table_style_headers = []
     for offset, kind, payload in items[1:]:
         if kind == 0x000A:
             break
         counts[hex(kind)] = counts.get(hex(kind), 0) + 1
+        if kind in (0x088F, 0x0890) and len(table_style_headers) < 8:
+            # Non-secret, bounded structural prefix for comparison with MS-XLS:
+            # FrtHeader, style flags/count, table-element type/size/index.
+            table_style_headers.append({'record_offset': offset, 'record_id': hex(kind),
+                                        'payload_bytes': len(payload),
+                                        'header_prefix_hex': payload[:24].hex()})
         if kind == 0x0042:
             pages.append({'record_offset': offset,
                           'raw_length': len(payload),
@@ -81,6 +88,7 @@ def _codepage_inventory(data):
                                                if len(payload) == 2 else None})
     return {'workbook_stream_sha256': hashlib.sha256(stream).hexdigest(),
             'declared_codepages': pages,
+            'table_style_record_headers': table_style_headers,
             'global_record_ids': counts,
             'global_record_count': sum(counts.values())}
 
