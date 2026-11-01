@@ -22,6 +22,7 @@ python -I -S -B "<skill-root>/scripts/wps_biff8.py" ./input.et --compatibility d
 ## 在宽松模式下会发生什么
 
 - 对未识别、但外层 BIFF 记录长度、偏移和累计配额已经校验成功的 Global/Worksheet Record，保留 `offset`、`scope`、`record_id`、`payload_hex`。按记录种类和子流分组诊断 `unknown_biff_record_salvaged`，记录原始条数。此记录内容**可能**代表未解析的单元格，因此将保存值覆盖范围标成未知，并非安全忽略。
+- **未知 CodePage 声明**：仅在负载恰好 2 字节时保留其原始编码页数值，附 `unknown_codepage_decl_salvaged` 和数据覆盖不确定标记；绝不将其当作实际压缩字符串的解码器。冲突的多个 CodePage 声明、损坏的长度仍继续拒绝。
 - 原本拒绝的**缺少必需 Date1904**：临时允许继续读取保存的原始数值，`date_system=unknown`，禁止 `numeric_interpretation` 日期推断；`date_system_missing_salvage` 会明确保留规范缺口。这不是宣布此缺失符合 MS-XLS。
 - 原本拒绝的**缺少 Worksheet WsBool**：仅在该表 BOF/EOF 和其他记录结构可完整解析时返回 `partial`，附加 `wsbool_missing_salvage`，不保证工作表实际类型与保存视图。
 - 普通 Formula 的数字、布尔、错误和文本缓存按已有有界逻辑原样读取，**不重算、不推断是否最新**；未知记录可能改变其业务语义，不能把缓存当作经过验真的实际计算结果。
