@@ -600,16 +600,13 @@ class Reader:
                 if cell['type'] == 'number' and date_system != 'unknown':
                     cell['numeric_interpretation'] = interpret_cell_number(cell['value'], cell['number_format_id_raw'], cell['custom_format_raw'], date_system, self.styles[cell['xf_index']]['raw_hex'])
                     cell['numeric_interpretation']['cache_status'] = cell['cache_status']
-        return {'status':('partial' if self.issues else 'ok') if self.compatibility == 'data' else ('read_biff8_subset_with_diagnostics' if self.issues else 'read_biff8_subset'),
+        result = {'status':('partial' if self.issues else 'ok') if self.compatibility == 'data' else ('read_biff8_subset_with_diagnostics' if self.issues else 'read_biff8_subset'),
                 'schema_version':'biff8_readonly_v1','compatibility_mode':self.compatibility,'support_level':'biff8_stored_data_subset' if self.compatibility == 'data' else 'biff8_strict_record_subset',
                 'cell_value_coverage': ('unverified_due_to_best_effort_salvage' if self.salvage_data_uncertain else
                       'missing_formula_caches' if any(i.get('code') == 'missing_formula_string_cache' for i in self.issues)
                       else 'complete_within_declared_sheets'),
                 'omissions_affect_cell_values': (self.salvage_data_uncertain or
                                       any(i.get('code') == 'missing_formula_string_cache' for i in self.issues)),
-                'salvage_requested':self.salvage_unknown_metadata,
-                'salvage_unknown_record_count':self.salvage_skipped_records,
-                'stored_values_verified_complete':not self.salvage_data_uncertain,
                 'biff_parsed':True,
                 'chart_policy':self.chart_policy,'charts_decoded':False,'embedded_charts':self.embedded_charts,
                 'native_et_ett_parsed':False,'wps_compatibility_verified':False,'formulas_executed':False,'external_links_followed':False,
@@ -624,6 +621,14 @@ class Reader:
                             'formulas':'Opaque tokens/ancillary bytes only, never decompiled or executed; every present cache is unverified and may be stale',
                             'unknown_records':'Fail closed; known metadata is explicitly retained, not silently discarded',
                             'scope':'Record-subset extraction, not full MS-XLS grammar conformance or real ET/ETT acceptance'}}
+        if self.salvage_unknown_metadata:
+            result.update(salvage_requested=True,
+                          salvage_unknown_record_count=self.salvage_skipped_records,
+                          saved_value_completeness_certified=False)
+            result['policies']['unknown_records'] = (
+                'Experimental best-effort unknown records stored raw with uncertain '
+                'cell value coverage; not a certified MS-XLS or ET read')
+        return result
 
     def sheet(self,index,bound):
         self.current_location = {'record_offset': self.records[index][0],
