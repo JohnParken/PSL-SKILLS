@@ -138,12 +138,41 @@ def _record_header_evidence(container, stream_name, location):
     if identifier != 0x0018 or length > 8224 or position + 4 + length > len(data):
         return {'status': 'not_bounded_name_record'}
     raw = data[position+4:position+4+length]
+    layout = {'status':'not_yet_bounded'}
+    if len(raw) >= 15:
+        flags, key, name_length, formula_length, reserved, sheet = struct.unpack_from(
+            '<HBBHHH', raw, 0)
+        name_options = raw[14]
+        if name_options in (0, 1):
+            name_byte_count = name_length * (2 if name_options else 1)
+            end_name = 15 + name_byte_count
+            if end_name + formula_length == len(raw):
+                formula = raw[end_name:]
+                layout = {
+                    'status':'fixed_layout_complete',
+                    'grbit_raw':flags,
+                    'macro_flag_set':bool(flags & 0x000e),
+                    'name_character_count':name_length,
+                    'utf16_name_flag':bool(name_options),
+                    'formula_length':formula_length,
+                    'local_sheet_ordinal':sheet,
+                    'reserved_fields_zero':reserved == 0 and raw[10:14] == bytes(4),
+                    'formula_first_token_raw':hex(formula[0]) if formula else None,
+                    'formula_token_11_byte_area3d_candidate':
+                        len(formula) == 11 and formula[0] in (0x3b, 0x5b, 0x7b),
+                    'formula_ref_index_raw':
+                        struct.unpack_from('<H',formula,1)[0] if len(formula) == 11
+                        and formula[0] in (0x3b, 0x5b, 0x7b) else None,
+                }
+    # The name's actual Unicode text and the formula's full bytes are never
+    # logged; output only bounded arithmetic and an independent hash.
     return {'status': 'bounded_source_name_record',
             'record_offset': position,
             'record_id': '0x18',
             'payload_length': length,
             'first_14_header_bytes_hex': raw[:14].hex(),
             'record_payload_sha256': hashlib.sha256(raw).hexdigest(),
+            'bounded_name_layout':layout,
             'complete_name_or_formula_text_read': False,
             'external_reference_semantics_verified': False,
             'macro_semantics_verified': False}
