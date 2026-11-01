@@ -107,6 +107,9 @@ def _read_summary(container, salvage):
                  'formula_cache_count': sum(
                      bool(cell.get('formula')) for sheet in result['sheets']
                      for cell in sheet['cells'].values()),
+                 'ordinary_static_name_count': sum(
+                     x.get('name') == 'OrdinaryStaticInternalAreaName'
+                     for x in result.get('uninterpreted_metadata', [])),
                  'issue_codes': sorted({item.get('code') for item in result.get('issues', [])
                                         if isinstance(item, dict) and item.get('code')}),
                  'salvage_unknown_record_count': result.get('salvage_unknown_record_count'),
@@ -191,6 +194,8 @@ def _record_header_evidence(container, stream_name, location):
 
 
 def main():
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from wps_biff8_name_oracle import count_known_cell_records
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills' / 'wps' / 'scripts'))
     from wps_access import load_compound
     results = []
@@ -224,12 +229,20 @@ def main():
                         salvage, salvage_cells = _read_summary(compound, True)
                         report.update(read_scope='biff8_candidate',
                                       normal=normal, salvage=salvage)
-                        if (normal.get('status') == 'rejected'
-                                and normal.get('error_location', {}).get('record_id') == '0x18'):
+                        if sample['id'] == 'zhongshan_low_altitude_supply_demand':
                             report['name_record_source_evidence'] = (
                                 _record_header_evidence(
-                                    compound, candidates[0],
-                                    normal.get('error_location')))
+                                    compound, candidates[0], {'record_offset':13817}))
+                            try:
+                                census=count_known_cell_records(
+                                    compound.read_stream(candidates[0]))
+                                report['independent_known_record_census']=census
+                                report['independent_census_matches_reader_count']=(
+                                    normal.get('status') in ('partial','ok') and
+                                    normal.get('cell_count') == census['known_record_cell_count'])
+                            except ValueError as exc:
+                                report['independent_census_error_type'] = type(exc).__name__
+                                report['independent_census_error'] = str(exc)[:130]
                         if normal_cells is not None and salvage_cells is not None:
                             report['saved_cell_values_equal'] = normal_cells == salvage_cells
                         report['newly_recovered_rejection'] = (
