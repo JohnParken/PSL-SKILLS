@@ -133,7 +133,7 @@ class SalvageHardeningTests(unittest.TestCase):
         for salvage in (False, True):
             with self.subTest(salvage=salvage):
                 with self.assertRaisesRegex(ValueError,
-                                            'Only static built-in Print_Area'):
+                                            'ordinary Name|Print_Area|Name header'):
                     parse_stream(raw, compatibility='data',
                                  salvage_unknown_metadata=salvage)
 
