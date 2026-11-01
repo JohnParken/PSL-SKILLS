@@ -6,6 +6,7 @@ network I/O outside the runtime WPS Skill. Never change source document bytes.
 """
 import hashlib
 import json
+from decimal import Decimal
 import struct
 import sys
 from pathlib import Path
@@ -97,6 +98,34 @@ def _codepage_inventory(data):
             'global_record_count': sum(counts.values())}
 
 
+def _independent_values(data, parsed):
+    # This is the pre-existing maintenance oracle, not a second BIFF8 Skill
+    # reader: it separately frames CFB and plain scalar source records.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from wps_source_oracle import oracle
+    try:
+        observed = oracle(data)
+    except (AssertionError, ValueError, KeyError, IndexError, struct.error) as exc:
+        return {'status': 'outside_oracle_subset', 'reason': type(exc).__name__}
+    sheets = {entry['name']: entry['cells'] for entry in parsed.get('sheets', ())}
+    checked, cached = 0, 0
+    for name, expected in observed['expected'].items():
+        if name not in sheets:
+            return {'status': 'mismatch', 'reason': 'missing_expected_sheet'}
+        for address, value in expected.items():
+            cell = sheets[name].get(address)
+            if cell is None or cell.get('type') != value['type']:
+                return {'status': 'mismatch', 'reason': 'missing_or_wrong_type'}
+            truth = Decimal(value['value']) if value['type'] == 'number' else value['value']
+            if cell.get('value') != truth:
+                return {'status': 'mismatch', 'reason': 'different_saved_value'}
+            checked += 1
+            if value.get('formula'):
+                cached += 1
+    return {'status': 'matched' if checked else 'no_scalar_values_observed',
+            'checked': checked, 'numeric_formula_caches': cached}
+
+
 def _probe(item):
     result = {
         'id': item['id'], 'source_page': item['page'],
@@ -131,6 +160,9 @@ def _probe(item):
                       observed_table_style_element_counts=[
                           group['declared_elements']
                           for group in extracted.get('table_style_sources', ())],
+                      independent_source_values=(_independent_values(data, extracted)
+                                                 if kind == 'CFB_OLE' and extracted.get('format') == 'biff8_subset'
+                                                 else {'status': 'not_applicable'}),
                       issue_codes=[issue.get('code') for issue in extracted.get('issues', ())[:12]
                                    if isinstance(issue, dict)])
     except (OSError, ValueError, struct.error) as exc:
@@ -162,10 +194,14 @@ def main():
               'supported_reads': sum(x.get('reader_status') in ('ok','partial') for x in items),
               'codepage_evidence_only': True,
               'frozen_subset_matches': sum(x.get('frozen_subset_acceptance') == 'matched' for x in items),
+              'independent_source_matches': sum(x.get('independent_source_values', {}).get('status') == 'matched'
+                                                for x in items),
               'complete_native_compatibility_verified': False,
               'samples': items}
     print(json.dumps(report, ensure_ascii=False))
-    return 0 if report['frozen_subset_matches'] == len(SAMPLES) else 1
+    contradictions = any(x.get('independent_source_values', {}).get('status') == 'mismatch'
+                         for x in items)
+    return 0 if report['frozen_subset_matches'] == len(SAMPLES) and not contradictions else 1
 
 
 if __name__ == '__main__':
