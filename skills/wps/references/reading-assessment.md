@@ -49,6 +49,8 @@ CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 
 
 内部格式解析器、历史低层 CLI 可能没有此摘要或使用不同状态/退出码。合成回归验证范围限定、部分区域定位和隐藏文字不进入摘要，不构成真实文件语义对照。
 
+选中 `object_policy=placeholder` 或 `field_policy=cached_result` **不代表实际发生文本转换**。当存储故事没有需要替换的对象/字段/注释标记时，原文保持原样，可取得精确 CP 来源；内部不再为无转换内容构造逐字符复制列表。只有实际替换或过滤导致内容变化时才按 `unavailable_after_text_transform` 保守返回。此优化不改变任何输入选项、状态或文档格式支持范围。
+
 ## MS-DOC 段落 CP 来源（可选）
 
 默认读取返回值、状态和退出码**保持不变**。仅实际识别为 CFB + MS-DOC 的文档，显式使用 `--binary-paragraph-sources` 或 Python 的 `read_bytes(data, binary_paragraph_sources=True)` 才会尝试增加下列字段；CLI 必须使用默认 JSON 输出，`--format text` 与此来源选项组合会以参数错误退出 2，防止悄悄丢失来源字段；对 OOXML 或 BIFF8 使用此二进制专用参数会拒绝，而不是根据 `.wps` 后缀猜测格式。
