@@ -6,11 +6,23 @@
 
 这是现有 WPS 文字 Skill 下独立的 **BIFF8 `.et/.ett` 只读 Name 兼容子集**。依据 MS-XLS Lbl、XLUnicodeStringNoCch、NameParsedFormula、PtgArea3d、RgceAreaRel 和 XtiIndex 规范，明确区分非宏的普通静态区域、内置打印区域、宏以及外部引用。新增能力在默认 `compatibility=data` 下可用，不需要启用临时 `--salvage-unknown-metadata`；显式 strict/legacy 仍保留原 Name 接受范围，BIFF8 核心安全校验不变。只消费 Workbook 内部保存的字节，不计算名称/公式、不打开外部链接、不执行宏。
 
-当前明确支持 **普通非宏命名区域的单个内部绝对 `PtgArea3d`**：先验证 14 字节 Lbl 头、`fHidden/fFunc/fOB/fProc/fCalcExp/fBuiltin` 等标志为 0、键盘快捷键为 0、保留字段为 0、名称为受限的纯 Unicode 字符串（1–255 字符、合法首字符和安全的字母/数字/下划线/句点后缀）；仅允许 11 字节单个 `PtgArea3d`（`0x3B/0x5B/0x7B`），内部 `ExternSheet` 的 `ixti` 必须指向已被前置检查证实的 self SupBook 之单个工作表，矩形行列与绝对标志合法。名称实际内容只在内存中校验；输出只给名称哈希、作用域、原始 token 和有限区域信息；原始负载仍按已存在的 `uninterpreted_metadata.payload_hex` 机制保存。
+当前支持 **普通非宏命名区域的单个内部绝对 `PtgArea3d`，或同一内部工作表最多两个绝对 `PtgArea3d` 由唯一 `PtgUnion (0x10)` 连接**：先验证 14 字节 Lbl 头、`fHidden/fFunc/fOB/fProc/fCalcExp/fBuiltin` 等标志为 0、键盘快捷键为 0、保留字段为 0、名称为受限的纯 Unicode 字符串（1–255 字符、合法首字符和安全的字母/数字/下划线/句点后缀）；仅允许 11 字节单个 `PtgArea3d`（`0x3B/0x5B/0x7B`），内部 `ExternSheet` 的 `ixti` 必须指向已被前置检查证实的 self SupBook 之单个工作表，矩形行列与绝对标志合法。名称实际内容只在内存中校验；输出只给名称哈希、作用域、原始 token 和有限区域信息；原始负载仍按已存在的 `uninterpreted_metadata.payload_hex` 机制保存。
 
 **两阶段交叉校验**：Name 可以在 BoundSheet8 列表之前出现，因此读取记录时只验证名称、公式 token 与已出现的内部 ExternSheet 证据，并将 `itab` /区域所属工作表暂存；Globals EOF 时再与完整 BoundSheet8 数量核对，防止提前拒绝真实文档或接受越界索引。每簿最多 256 个此类名称；相同工作簿/工作表作用域下同名（忽略大小写）拒绝。所有实际记录仍受 BIFF 8204/8224 记录长度、1 MiB 原始元数据和总输出预算约束。
 
-保留旧有 **built-in Print_Area (0x06)** 的确切兼容规则，不把任意 built-in name 视为普通名称。`Print_Titles`、`_FilterDatabase` 或其他内置命名区域在完成独立规则验证之前依然不自动扩大。宏名称、函数名称、`fOB/fProc`、快捷键、非零/未知标志、`PtgFunc`、`PtgNameX`、外部 SupBook、跨多个工作表的 XTI、相对单元格范围、复杂公式/附加字节、未支持的名称字符及非法保留字段均**明确拒绝**。此模式不对未知 Name 执行静默 continue 或将其归为普通的 `unknown_biff_record_salvaged`；即使用户启用了临时 salvage 也保持拒绝。
+保留旧有 **built-in Print_Area (0x06)** 的确切兼容规则，不把任意 built-in name 视为普通名称。新增有限的 **Print_Titles (0x07)** 和 **_FilterDatabase (0x0D)**（见下节），其余内置名称仍拒绝。宏名称、函数名称、`fOB/fProc`、快捷键、非零/未知标志、`PtgFunc`、`PtgNameX`、外部 SupBook、跨多个工作表的 XTI、相对单元格范围、复杂公式/附加字节、未支持的名称字符及非法保留字段均**明确拒绝**。此模式不对未知 Name 执行静默 continue 或将其归为普通的 `unknown_biff_record_salvaged`；即使用户启用了临时 salvage 也保持拒绝。
+
+## 扩展：打印标题、筛选区域与双区域联合（仅 data 模式）
+
+- **Print_Titles（`0x07`）**：只接受 `Lbl.fBuiltin=1`、非宏、局部作用域、`cch=1`，且名称字节恰为内置标识 `0x07`；保留原生 `fHidden`（0 或 1）。`NameParsedFormula` 仅允许一个绝对的自引用 `PtgArea3d`，范围必须是完整行（列 0–255）或完整列（行 0–65535）；或两条同一内部工作表区域引用加一个尾部 `PtgUnion (0x10)`，分别对应完整行、完整列。整张表、两个完整行或两个完整列的组合不在本阶段接受范围。
+- **_FilterDatabase（`0x0D`）**：同样要求非宏 `Lbl`、局部作用域、合法单个内部 `PtgArea3d`，至少跨两行以区分标题行和数据行；不接受任何联合 token、复杂函数或相对区域。只保存原始区域信息，**不执行筛选、隐藏行或覆盖用户的 `cell.value`**。
+- **普通双区域 Name**：仅允许两条同一 `ixti` 和同一内部工作表的完整绝对 `PtgArea3d`，末尾唯一 `PtgUnion`，`cce=23`；不接受第三条区域或其它公式运算符。原有单区域结构字段 `bounds_zero_based` 保持不变；双区域的详细来源在 `regions_zero_based`，并把单矩形字段标成 `null`，防止错误缩并为单个区域。
+- **属性级完整验证**：仍核验 `SupBook/ExternSheet` 是已识别的自工作簿内部引用，作用域 `itab` 与最终 BoundSheet8 一致，列高 6 位保留字段与相对引用标志合法；名称、区域和公式 token 数量都受资源预算限制。记录字节原样进入现有 `uninterpreted_metadata.payload_hex`。新增结构标明 `print_settings_applied=false`、`filter_applied=false`、`formula_executed=false`、`external_link_followed=false`；**不能据此宣称已恢复打印页面、实际筛选视图或公式计算结果**。
+- **不可放宽**：其他内置 ID（如 Auto_Open/Auto_Close）、宏/函数标志、`PtgNameX` 和外链、任意多 token 公式、未知可选负载、非法布局/重复内置名称继续拒绝；显式 `strict/legacy` 模式与历史 `Print_Area` 的处理不变，显式 salvage 也不绕过这些拒绝。
+
+这三类新行为现阶段主要通过 **14 项合成测试** 验证。现有四份固定 ET/ETT 以及六份可读取的政府 ET 重新审计，均未出现 `Print_Titles`、`_FilterDatabase` 或普通双区域 `PtgUnion` 记录。它们对原有保存值和此前恢复的静态 Name 原件可提供**无回归**证据，但不能作为新增三类名称的真实文件兼容率。新的实际样本应固定原件哈希与独立完整预期，再追加应用级验收。
+
+MS-XLS 规范依据（只用于维护研究，运行时不联网）：`Lbl`（见下文链接）、<https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/665bd564-4677-4ea7-bf6b-89f27edb0788>（AutoFilter / _FilterDatabase）和 <https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/90d54742-4776-4271-a08c-39bd73b7b8fc>（PtgUnion）。
 
 ## 真实官方 ET 验收
 
