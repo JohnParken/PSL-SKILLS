@@ -19,7 +19,9 @@ def require(condition, location, message, status="corrupt"):
 
 
 def read_input(path):
-    descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0))
+    if not getattr(os, 'O_NOFOLLOW', 0):
+        raise ParseError('unsupported', {'stage': 'input'}, 'O_NOFOLLOW required for safe file reads')
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, 'O_NONBLOCK', 0))
     try:
         with os.fdopen(descriptor, 'rb') as handle:
             descriptor = None
