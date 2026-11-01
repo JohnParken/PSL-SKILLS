@@ -1,0 +1,123 @@
+{
+  "schema_version": "wps_abc_official_validation_v1",
+  "checked_on": "2026-10-31",
+  "source": "Agricultural Bank of China official public attachment URLs",
+  "verified_by": "GitHub Actions read-only Linux Python 3.13",
+  "run_id": 41181769821,
+  "job_id": 124480463829,
+  "commit_sha": "4257d1a581eb2d6f3042b3019659e0f44e1b9123",
+  "summary": {
+    "total": 8,
+    "downloaded": 8,
+    "zip_ooxml_misnamed_doc": 3,
+    "cfb_ole_doc": 2,
+    "pdf": 3,
+    "read_ok": 3,
+    "read_partial": 1,
+    "read_rejected": 1,
+    "actual_native_wps_extension_samples": 0,
+    "actual_wps_producer_verified": false,
+    "full_wps_semantic_certification": false
+  },
+  "samples": [
+    {
+      "id": "gd_authorization",
+      "page": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/t20240407_2412719.htm",
+      "url": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/W020240407540325949009.doc",
+      "size": 11241,
+      "sha256": "9ef884da24c675707894e2830c245c26d7a2f424791df7c67090235a13fb13b4",
+      "magic": "ZIP_OOXML",
+      "status": "ok",
+      "format": "ooxml-word",
+      "paragraphs": 16,
+      "anchor": "授权"
+    },
+    {
+      "id": "gd_registration",
+      "page": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/t20240407_2412719.htm",
+      "url": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/W020240407540326257571.doc",
+      "size": 11700,
+      "sha256": "84e96cbb8c2a6a9d6404f6eff1d3fbe7460642267fdf034748f183a0b502ba08",
+      "magic": "ZIP_OOXML",
+      "status": "ok",
+      "format": "ooxml-word",
+      "paragraphs": 9,
+      "anchor": "报名"
+    },
+    {
+      "id": "gd_supplier_guide",
+      "page": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/t20240407_2412719.htm",
+      "url": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/W020240407540326417400.doc",
+      "size": 13284,
+      "sha256": "f02017cf4c9c3dfbe4b49c2da6cb97fa537d6aa9ecb91b0a9d85879adf5bdd9d",
+      "magic": "ZIP_OOXML",
+      "status": "ok",
+      "format": "ooxml-word",
+      "paragraphs": 12,
+      "anchor": "供应商"
+    },
+    {
+      "id": "gx_nda_commitment",
+      "page": "https://www.abchina.com/cn/branch/gx/cg/bm/202404/t20240425_2415781.htm",
+      "url": "https://www.abchina.com/cn/branch/gx/cg/bm/202404/W020240425607944480483.doc",
+      "size": 862771,
+      "sha256": "a3be79ad74fa0a810215ab477116fdba687aac628b0ab9477fbce7936e20ae1a",
+      "magic": "CFB_OLE",
+      "status": "unsupported_subset",
+      "error": "Invalid CFB reserved header fields/alignment/minimum size"
+    },
+    {
+      "id": "gx_smart_park",
+      "page": "https://www.abchina.com/cn/branch/gx/cg/bm/202402/t20240218_2396189.htm",
+      "url": "https://www.abchina.com/cn/branch/gx/cg/bm/202402/W020240218572546885319.doc",
+      "size": 621568,
+      "sha256": "3277c3ad20464f5197c3b86836ee9f8feeeaa2ff1f5c5728c37fd8c98528a58d",
+      "magic": "CFB_OLE",
+      "status": "partial",
+      "format": "ms_doc_subset",
+      "paragraphs": 76,
+      "anchors": {
+        "授权": true,
+        "承诺": true
+      },
+      "issues": [
+        "picture_or_data_marker_not_decoded"
+      ]
+    },
+    {
+      "id": "headquarters_2026_requirement",
+      "page": "https://www.abchina.com/cn/aboutabc/cg/BM/202610/t20261023_2689689.htm",
+      "url": "https://www.abchina.com/cn/aboutabc/cg/BM/202610/W020261023680086170794.pdf",
+      "size": 180237,
+      "sha256": "46c96ca397a0dc9b515853e019a6d5fa7bb86a9a0777298bf4cbe5f843b11e92",
+      "magic": "PDF",
+      "status": "not_applicable"
+    },
+    {
+      "id": "headquarters_2026_registration",
+      "page": "https://www.abchina.com/cn/aboutabc/cg/BM/202610/t20261023_2689689.htm",
+      "url": "https://www.abchina.com/cn/aboutabc/cg/BM/202610/W020261023680086634584.pdf",
+      "size": 107000,
+      "sha256": "c0621c78d6d835796269b24be8cc31db4a276af71a6546201ee829e6b01343da",
+      "magic": "PDF",
+      "status": "not_applicable"
+    },
+    {
+      "id": "headquarters_2026_response",
+      "page": "https://www.abchina.com/cn/aboutabc/cg/BM/202610/t20261023_2689689.htm",
+      "url": "https://www.abchina.com/cn/aboutabc/cg/BM/202610/W020261023680086881485.pdf",
+      "size": 84056,
+      "sha256": "d415a483f9ff0d91b653123f0b0d0567ab8bfddf0c604663d4e34d8fade5d62c",
+      "magic": "PDF",
+      "status": "not_applicable"
+    }
+  ],
+  "limits": [
+    "Content signatures rather than extensions determine reader branch",
+    "Three .doc files contain OOXML rather than classic MS-DOC; not evidence for native .wps",
+    "One CFB .doc fails strict container validation; no bypass or fallback",
+    "Three headquarters files are PDF, not WPS",
+    "No full independent WPS Office exported text or visual oracle",
+    "File hosting at bank official website does not establish editor used to author file"
+  ]
+}

@@ -19,10 +19,24 @@ from wps_biff8_charts import CHART_POLICIES, drawing_frame, chart_end
 from wps_numeric import interpret_cell_number
 from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
 from wps_dxf import validate_dxf
+from wps_biff8_noncell import inspect_noncell
+from wps_biff8_tablestyles import table_style_group
+from wps_biff8_names import (classify_static_name, classify_static_builtin_name,
+                            MAX_STATIC_NAMES)
 
 READING_MODES = COMPATIBILITY_MODES + ("data",)
+# Standalone opt-in salvage is explicitly not an MS-XLS conformance claim.
+# Unknown record IDs may carry cell values, so nothing salvaged is certified.
+SALVAGE_FORBIDDEN_RECORDS = frozenset({
+    0x000A, 0x0809, 0x002F, 0x003C, 0x00FC, 0x00FD, 0x0204, 0x0207,
+    0x0006, 0x0201, 0x0203, 0x0205, 0x027E, 0x00BD, 0x00BE,
+    0x04BC, 0x0221, 0x0085, 0x00E0, 0x041E, 0x00E5, 0x0022,
+})
 
-SUPPORTED_BIFF8_CODE_PAGES = {1200, 932, 936, 1252}
+# Accepted BIFF8 workbook declarations, not byte-decoder selections.
+# These identifiers appear in Microsoft CODEPG; all supported BIFF8 cell text
+# continues to use each XLUnicodeString's own fHighByte representation.
+SUPPORTED_BIFF8_CODE_PAGES = {874, 932, 936, 949, 950, 1200, 1250, 1251, 1252}
 
 MAX_RECORDS=100000
 MAX_CELLS=200000
@@ -312,14 +326,24 @@ def bof(record,expected):
 
 
 class Reader:
-    def __init__(self,data,*,compatibility="strict",chart_policy="reject"):
+    def __init__(self,data,*,compatibility="strict",chart_policy="reject", salvage_unknown_metadata=False):
         require(compatibility in READING_MODES,"Unknown BIFF compatibility mode")
+        require(type(salvage_unknown_metadata) is bool, 'Salvage option must be boolean')
+        require(not salvage_unknown_metadata or compatibility == 'data',
+                'Best-effort salvage requires compatibility=data')
         require(chart_policy in CHART_POLICIES,"Unknown chart policy")
         require(chart_policy=="reject" or compatibility in ("legacy_excel_clsid", "data"),"Opaque chart retention requires data or explicit compatibility mode")
+        self.salvage_unknown_metadata=salvage_unknown_metadata
+        self.salvage_data_uncertain=False
+        self.salvage_skipped_records=0
+        self.salvage_issues={}
         self.chart_policy=chart_policy; self.embedded_charts=[]; self.drawing_group_seen=False
         self.compatibility=compatibility
         self.passive_issues = {}
         self.dxf_property_count = 0
+        self.dxf_record_count = 0
+        self.table_styles_collection_seen = False
+        self.table_style_sources = []
         self.global_metadata={**GLOBAL_METADATA,**(LEGACY_GLOBAL_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
         self.sheet_metadata={**SHEET_METADATA,**(LEGACY_SHEET_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
         self.code_page = None
@@ -359,6 +383,35 @@ class Reader:
             event['records'] += 1
 
 
+    def salvage_record(self, record, scope):
+        """Preserve a bounded unknown BIFF record without claiming complete values.
+
+        BIFF framing/CFB container, encryption and core value record validation
+        have already run or will run. This is NOT a generic BIFF interpreter.
+        """
+        offset, kind, payload = record
+        if not self.salvage_unknown_metadata or kind in SALVAGE_FORBIDDEN_RECORDS:
+            raise UnsupportedError('Unrecoverable or non-salvage BIFF record '
+                                   + hex(kind) + ' at ' + str(offset))
+        if len(self.metadata) >= 4096 or len(payload) > MAX_METADATA_BYTES-self.metadata_bytes:
+            raise ResourceLimitError('Salvaged raw metadata budget exceeded')
+        self.metadata_bytes += len(payload)
+        self.metadata.append({'scope':scope,'offset':offset,'record_id':hex(kind),
+                              'name':'UnknownBIFFSalvaged','payload_hex':payload.hex(),
+                              'semantics_verified':False,
+                              'may_affect_cell_values':True})
+        self.salvage_data_uncertain=True
+        self.salvage_skipped_records+=1
+        key=(scope, kind)
+        if key not in self.salvage_issues:
+            item={'code':'unknown_biff_record_salvaged',
+                  'record_id':hex(kind), 'offset':offset, 'scope':scope,
+                  'count':0, 'cell_value_impact':'unknown',
+                  'message':'Unknown record stored raw; may alter saved values, formulas or interpretation. Not a certified full read.'}
+            self.issue(item)
+            self.salvage_issues[key]=item
+        self.salvage_issues[key]['count']+=1
+
     def issue(self,issue):
         if len(self.issues) >= 1000:
             raise ResourceLimitError('Diagnostic count exceeds 1000')
@@ -385,7 +438,7 @@ class Reader:
         if self.compatibility=="legacy_excel_clsid":
             self.issue({"code":"known_metadata_retained_uninterpreted","message":"Explicit compatibility mode retains only allowlisted MS-XLS metadata bytes. Internal metadata semantics, protection, style extensions and calculation settings are not validated or applied; unknown/data extension records still fail."})
         bounds=[]; names=set(); date_system=None; seen_sst=False; global_end=None
-        template_seen=False; self_link=False; internal_refs=[]; print_areas=set()
+        template_seen=False; self_link=False; internal_refs=[]; print_areas=set(); safe_name_keys=set(); safe_name_sheets=[]; static_builtin_keys=set()
         consumed_until = 0
         for index,record in enumerate(self.records[1:],1):
             if index < consumed_until:
@@ -394,7 +447,14 @@ class Reader:
             self.current_location = {'record_offset': offset, 'record_id': hex(kind), 'scope': 'globals'}
             if kind==0x000A:
                 require(not payload,'EOF payload must be empty'); global_end=index+1; break
-            if kind==0x0085:
+            if self.compatibility == 'data' and kind == 0x0086:
+                # MS-XLS Globals Substream: optional WriteProtect must be first.
+                # Its presence does not authorize editing or skipping protection.
+                require(index == 1, 'WriteProtect must be first after global BOF')
+                evidence = inspect_noncell(kind, payload, 'globals')
+                self.metadata_record(record, {kind: 'WriteProtectValidated'}, 'globals')
+                self.metadata[-1]['structure'] = evidence
+            elif kind==0x0085:
                 require(len(payload)>=8,'Truncated BoundSheet8')
                 position=struct.unpack_from('<I',payload)[0]; hidden=payload[4]&3; sheet_type=payload[5]
                 require(hidden in (0,1,2) and sheet_type==0,'Macro/chart/VBA BoundSheet8 types unsupported')
@@ -449,6 +509,19 @@ class Reader:
                     raise ResourceLimitError('DXF aggregate property count exceeds budget')
                 self.metadata_record(record, {kind: 'DXF'}, 'globals')
                 self.metadata[-1]['structure'] = structure
+                self.dxf_record_count += 1
+            elif self.compatibility == 'data' and kind == 0x088F:
+                require(self.table_styles_collection_seen,
+                        'TableStyle requires preceding TableStyles collection')
+                if len(self.table_style_sources) >= 128:
+                    raise ResourceLimitError('TableStyle collection exceeds 128')
+                next_index, source, components = table_style_group(
+                    self.records, index, self.dxf_record_count)
+                for component in components:
+                    name = 'TableStyle' if component[1] == 0x088F else 'TableStyleElement'
+                    self.metadata_record(component, {component[1]: name}, 'globals')
+                self.table_style_sources.append(source)
+                consumed_until = next_index
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0060:
                 require(not template_seen and not payload,'Duplicate/malformed Template marker')
                 template_seen=True
@@ -468,17 +541,59 @@ class Reader:
                     internal_refs.append((first,last))
                 self.metadata_record(record,{kind:'ExternSheetInternal'},'globals')
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0018:
-                # Retain only a static built-in Print_Area, never an executable name.
-                require(len(payload)==27 and payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00'
-                        and payload[10:16]==b'\x00\x00\x00\x00\x00\x06' and payload[16]==0x3B,
-                        'Only static built-in Print_Area names supported; macros/other names refused')
-                sheet=struct.unpack_from('<H',payload,8)[0]
-                ref,r1,r2,c1,c2=struct.unpack_from('<5H',payload,17)
-                require(1<=sheet<=128 and sheet not in print_areas and ref<len(internal_refs)
-                        and internal_refs[ref]==(sheet-1,sheet-1) and r1<=r2 and c1<=c2<256,
-                        'Invalid/duplicate/nonlocal Print_Area reference')
-                print_areas.add(sheet)
-                self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
+                # Keep the historically verified built-in Print_Area behavior.
+                # New ordinary and selected built-in names require entirely static,
+                # self-linked, absolute area tokens and are data-mode only.
+                static_print_area = (
+                    len(payload)==27 and
+                    payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00' and
+                    payload[10:16]==b'\x00\x00\x00\x00\x00\x06' and
+                    payload[16]==0x3B)
+                if static_print_area:
+                    sheet=struct.unpack_from('<H',payload,8)[0]
+                    ref,r1,r2,c1,c2=struct.unpack_from('<5H',payload,17)
+                    require(1<=sheet<=128 and sheet not in print_areas and ref<len(internal_refs)
+                            and internal_refs[ref]==(sheet-1,sheet-1)
+                            and r1<=r2 and c1<=c2<256,
+                            'Invalid/duplicate/nonlocal Print_Area reference')
+                    print_areas.add(sheet)
+                    self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
+                elif self.compatibility == 'data':
+                    if len(safe_name_keys)+len(static_builtin_keys)>=MAX_STATIC_NAMES:
+                        raise ResourceLimitError('Static defined name budget exceeded')
+                    # Only 0x20/0x21 built-in Lbl flag, cch=1 and the precisely
+                    # supported 0x07 Print_Titles / 0x0D _FilterDatabase
+                    # enter the special built-in parser. All other built-in
+                    # and all macro names still fail closed.
+                    builtin = len(payload)>=16 and payload[0] in (0x20,0x21)
+                    if builtin:
+                        structure = classify_static_builtin_name(
+                            payload, 128, internal_refs)
+                        key = (structure['local_sheet_ordinal_raw'],
+                               structure['builtin_name_id_raw'])
+                        require(key not in static_builtin_keys,
+                                'Duplicate built-in static Name in worksheet scope')
+                        static_builtin_keys.add(key)
+                        source_name = ('PrintTitlesStatic'
+                                       if structure['builtin_name_id_raw']==0x07
+                                       else 'FilterDatabaseStatic')
+                    else:
+                        structure = classify_static_name(
+                            payload, 128, internal_refs)
+                        key = (structure['local_sheet_ordinal_raw'],
+                               structure['name_folded_sha256'])
+                        require(key not in safe_name_keys,
+                                'Duplicate ordinary static name in workbook/sheet scope')
+                        safe_name_keys.add(key)
+                        source_name = 'OrdinaryStaticInternalAreaName'
+                    safe_name_sheets.append((
+                        structure['local_sheet_ordinal_raw'],
+                        structure['internal_sheet_index_zero_based']))
+                    self.metadata_record(record, {kind:source_name}, 'globals')
+                    self.metadata[-1]['structure']=structure
+                else:
+                    require(False,
+                            'Only static built-in Print_Area names supported; macros/other names refused')
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind in LEGACY_VALIDATED_GLOBAL_METADATA:
                 if kind==0x0092:
                     require(len(payload)==2+4*PALETTE_COLOR_COUNT,
@@ -494,11 +609,20 @@ class Reader:
             elif kind in self.global_metadata:
                 if kind == 0x0031:
                     self.font_count += 1
+                if kind == 0x088E and self.compatibility == 'data':
+                    self.table_styles_collection_seen = True
                 if kind==0x0042:
                     require(len(payload)==2, 'CodePage payload must be two bytes')
                     code_page = struct.unpack('<H', payload)[0]
                     if self.compatibility == 'data':
-                        require(code_page in SUPPORTED_BIFF8_CODE_PAGES, 'Unsupported BIFF8 code-page declaration')
+                        if code_page not in SUPPORTED_BIFF8_CODE_PAGES:
+                            if not self.salvage_unknown_metadata:
+                                require(False, 'Unsupported BIFF8 code-page declaration')
+                            self.salvage_data_uncertain = True
+                            self.issue({'code':'unknown_codepage_decl_salvaged',
+                                        'record_id':hex(kind), 'offset':offset,
+                                        'code_page_raw':code_page,
+                                        'message':'Unknown code-page declaration retained; BIFF8 Unicode fields are decoded by their own flags only.'})
                         require(self.code_page is None or self.code_page == code_page, 'Conflicting CodePage declarations')
                         if code_page != 1200 and self.code_page is None:
                             self.issue({'code': 'codepage_metadata_not_applied', 'offset': offset,
@@ -508,10 +632,22 @@ class Reader:
                         require(code_page == 1200, 'Only Unicode CodePage 1200 accepted')
                     self.code_page = code_page
                 self.metadata_record(record,self.global_metadata,'globals')
+            elif self.salvage_unknown_metadata:
+                self.salvage_record(record, 'globals')
             else: raise UnsupportedError('Unsupported global record '+hex(kind)+' at '+str(offset))
-        require(global_end is not None and bounds and self.styles and date_system is not None,'Require complete globals, at least one worksheet/XF and explicit Date1904')
+        require(global_end is not None and bounds and self.styles and
+                (date_system is not None or self.salvage_unknown_metadata),
+                'Require complete globals, at least one worksheet/XF and explicit Date1904')
+        if date_system is None:
+            date_system = 'unknown'
+            self.salvage_data_uncertain = True
+            self.issue({'code':'date_system_missing_salvage',
+                        'message':'Mandatory BIFF8 Date1904 absent; saved numeric serials retained without date interpretation.'})
         require(all(last<len(bounds) for first,last in internal_refs) and all(sheet<=len(bounds) for sheet in print_areas),
                 'Internal/Print_Area reference exceeds actual worksheet count')
+        require(all((itab == 0 or itab <= len(bounds)) and sheet < len(bounds)
+                    for itab, sheet in safe_name_sheets),
+                'Static Name scope or internal sheet reference exceeds BoundSheet8 count')
         if self.rich_strings:
             for rich in self.rich_strings:
                 for at in range(0, len(rich['runs_bytes']), 4):
@@ -534,30 +670,45 @@ class Reader:
         require(not self.drawing_group_seen or self.embedded_charts,'Drawing group without supported embedded chart')
         for sheet in sheets.values():
             for cell in sheet['cells'].values():
-                if cell['type'] == 'number':
+                if cell['type'] == 'number' and date_system != 'unknown':
                     cell['numeric_interpretation'] = interpret_cell_number(cell['value'], cell['number_format_id_raw'], cell['custom_format_raw'], date_system, self.styles[cell['xf_index']]['raw_hex'])
                     cell['numeric_interpretation']['cache_status'] = cell['cache_status']
-        return {'status':('partial' if self.issues else 'ok') if self.compatibility == 'data' else ('read_biff8_subset_with_diagnostics' if self.issues else 'read_biff8_subset'),
+        result = {'status':('partial' if self.issues else 'ok') if self.compatibility == 'data' else ('read_biff8_subset_with_diagnostics' if self.issues else 'read_biff8_subset'),
                 'schema_version':'biff8_readonly_v1','compatibility_mode':self.compatibility,'support_level':'biff8_stored_data_subset' if self.compatibility == 'data' else 'biff8_strict_record_subset',
-                'cell_value_coverage': 'missing_formula_caches' if any(i.get('code') == 'missing_formula_string_cache' for i in self.issues) else 'complete_within_declared_sheets',
-                'omissions_affect_cell_values': any(i.get('code') == 'missing_formula_string_cache' for i in self.issues),'biff_parsed':True,
+                'cell_value_coverage': ('unverified_due_to_best_effort_salvage' if self.salvage_data_uncertain else
+                      'missing_formula_caches' if any(i.get('code') == 'missing_formula_string_cache' for i in self.issues)
+                      else 'complete_within_declared_sheets'),
+                'omissions_affect_cell_values': (self.salvage_data_uncertain or
+                                      any(i.get('code') == 'missing_formula_string_cache' for i in self.issues)),
+                'biff_parsed':True,
                 'chart_policy':self.chart_policy,'charts_decoded':False,'embedded_charts':self.embedded_charts,
                 'native_et_ett_parsed':False,'wps_compatibility_verified':False,'formulas_executed':False,'external_links_followed':False,
                 'date_system':date_system,'code_page_raw':self.code_page,
                 'format_string_header_flags':self.format_string_flags,'sheets':[sheets[item['name']] for item in bounds],
                 'shared_string_formatting':[dict((key, value) for key, value in rich.items() if key != 'runs_bytes') | {'runs_raw_hex': rich['runs_bytes'].hex()} for rich in self.rich_strings],
                 'shared_string_phonetics':[dict((key, value) for key, value in phonetic.items() if key != 'ext_bytes') | {'raw_ext_hex': phonetic['ext_bytes'].hex()} for phonetic in self.phonetic_strings],
-                'styles':self.styles,'custom_number_formats':{str(key):value for key,value in self.formats.items()},
+                'styles':self.styles,
+                **({'table_style_sources':self.table_style_sources} if self.table_style_sources else {}),
+                'custom_number_formats':{str(key):value for key,value in self.formats.items()},
                 'uninterpreted_metadata':self.metadata,'issues':self.issues,'record_count':len(self.records),'cell_count':self.cell_count,
                 'policies':{'numbers':'Exact Decimal representation of stored IEEE754; raw bytes retained; no text coercion',
                             'dates':'All stored numeric serials remain numbers; raw XF/format IDs and custom strings retained; no ISO conversion or effective-style inheritance inference',
                             'formulas':'Opaque tokens/ancillary bytes only, never decompiled or executed; every present cache is unverified and may be stale',
                             'unknown_records':'Fail closed; known metadata is explicitly retained, not silently discarded',
                             'scope':'Record-subset extraction, not full MS-XLS grammar conformance or real ET/ETT acceptance'}}
+        if self.salvage_unknown_metadata:
+            result.update(salvage_requested=True,
+                          salvage_unknown_record_count=self.salvage_skipped_records,
+                          saved_value_completeness_certified=False)
+            result['policies']['unknown_records'] = (
+                'Experimental best-effort unknown records stored raw with uncertain '
+                'cell value coverage; not a certified MS-XLS or ET read')
+        return result
 
     def sheet(self,index,bound):
         self.current_location = {'record_offset': self.records[index][0],
                                  'record_id': hex(self.records[index][1]), 'sheet': bound['name']}
+        sheet_bof_index = index
         bof_raw=bof(self.records[index],0x0010); index+=1; cells={}; merges=[]; ws_bool=False; pending=None
         drawing_pending=False; chart_pending=None; object_ids=set()
         page_break_last_key={0x001B:None,0x001A:None}
@@ -616,7 +767,12 @@ class Reader:
                 drawing_pending=True
                 continue
             if kind==0x000A:
-                require(not payload and ws_bool,'Require empty EOF and exactly one non-dialog WsBool')
+                require(not payload and (ws_bool or self.salvage_unknown_metadata),
+                        'Require empty EOF and exactly one non-dialog WsBool')
+                if not ws_bool:
+                    self.salvage_data_uncertain=True
+                    self.issue({'sheet':bound['name'],'code':'wsbool_missing_salvage',
+                                'message':'Mandatory worksheet WsBool absent; sheet semantics unverified.'})
                 try:
                     validate_merge_ranges([item['bounds_zero_based'] for item in merges])
                 except MergeOverlapError as exc:
@@ -641,7 +797,17 @@ class Reader:
                     group['observed_members'] = counts[anchor]
                 return {**bound,'bof_raw_hex':bof_raw,'cells':cells,'merges':merges,
                         'formula_groups':list(formula_groups.values()), 'visibility':visibility.report()},index
-            if kind==0x0081:
+            if self.compatibility == 'data' and kind == 0x005E:
+                # MS-XLS Worksheet Substream: Uncalced can only precede Index
+                # and all other worksheet records. The cached values remain raw.
+                require(index == sheet_bof_index + 2, 'Uncalced must immediately follow worksheet BOF')
+                evidence = inspect_noncell(kind, payload, 'worksheet')
+                self.metadata_record(record, {kind: 'UncalcedValidated'}, bound['name'])
+                self.metadata[-1]['structure'] = evidence
+                self.issue({'sheet': bound['name'], 'offset': offset,
+                            'code': 'saved_formula_recalculation_pending',
+                            'message': 'Uncalced signals saved formulas were pending recalculation; cached values remain unverified.'})
+            elif kind==0x0081:
                 require(not ws_bool and len(payload)==2 and not struct.unpack('<H',payload)[0]&0x0010,'Duplicate/malformed/dialog WsBool unsupported')
                 ws_bool=True
             elif kind in (0x0203,0x027E,0x0205,0x0201,0x00FD,0x0204,0x0006):
@@ -796,12 +962,15 @@ class Reader:
                         page_break_end_by_axis[kind][axis]=interval_end
                 self.metadata_record(record,LEGACY_VALIDATED_SHEET_METADATA,bound['name'])
             elif kind in self.sheet_metadata: self.metadata_record(record,self.sheet_metadata,bound['name'])
+            elif self.salvage_unknown_metadata:
+                self.salvage_record(record, bound['name'])
             else: raise UnsupportedError('Unsupported worksheet record '+hex(kind)+' at '+str(offset))
         raise ValueError('Truncated worksheet without EOF')
 
 
-def parse_stream(data,*,compatibility="strict",chart_policy="reject"):
-    reader = Reader(data, compatibility=compatibility, chart_policy=chart_policy)
+def parse_stream(data,*,compatibility="strict",chart_policy="reject",salvage_unknown_metadata=False):
+    reader = Reader(data, compatibility=compatibility, chart_policy=chart_policy,
+                    salvage_unknown_metadata=salvage_unknown_metadata)
     try:
         return reader.parse()
     except ValueError as exc:
@@ -824,8 +993,10 @@ def normalize_result(result):
     return result
 
 
-def read_file(path, *, compatibility="data", chart_policy=None):
+def read_file(path, *, compatibility="data", chart_policy=None, salvage_unknown_metadata=False):
     require(compatibility in READING_MODES, 'Unknown BIFF compatibility mode')
+    require(not salvage_unknown_metadata or compatibility == 'data',
+            'Best-effort salvage requires data mode')
     try:
         container = load_compound(read_input(path), compatibility)
     except ParseError as exc:
@@ -834,21 +1005,24 @@ def read_file(path, *, compatibility="data", chart_policy=None):
         error = error_types.get(exc.status, ValueError)(str(exc))
         error.status, error.location = exc.status, exc.location
         raise error from exc
-    result = read_container(container, path, compatibility=compatibility, chart_policy=chart_policy)
+    result = read_container(container, path, compatibility=compatibility,
+                            chart_policy=chart_policy, salvage_unknown_metadata=salvage_unknown_metadata)
     if compatibility == 'data':
         from wps_diagnostics import summarize
         return summarize(normalize_result(result))
     return result
 
 
-def read_container(container, path=None, *, compatibility='data', chart_policy=None):
+def read_container(container, path=None, *, compatibility='data', chart_policy=None, salvage_unknown_metadata=False):
     chart_policy = resolve_chart_policy(chart_policy, compatibility)
     if container.encrypted:
         raise EncryptedError('Encrypted compound workbook unsupported')
     require(not any(part.casefold() in ('vba','_vba_project_cur','macros') for stream in container.paths for part in stream),'Macro storage unsupported')
     candidates=[stream for stream in container.streams if len(stream)==1 and stream[0].casefold() in ('workbook','book')]
     require(len(candidates)==1,'Require exactly one root Workbook/Book stream; name is only a candidate until BOF validation')
-    content=container.read_stream(candidates[0]); result=parse_stream(content,compatibility=compatibility,chart_policy=chart_policy)
+    content=container.read_stream(candidates[0]); result=parse_stream(
+        content, compatibility=compatibility, chart_policy=chart_policy,
+        salvage_unknown_metadata=salvage_unknown_metadata)
     output = {**result,'source':{'file':str(path) if path is not None else None,'extension':Path(path).suffix.lower() if path is not None else '','stream_path':list(candidates[0]),
                              'stream_sha256':hashlib.sha256(content).hexdigest(),'container_version':container.major,'container_compatibility':container.compatibility,'container_issues':container.issues},
             'other_container_streams_not_decoded':[item for item in container.report()['streams'] if item['path']!=list(candidates[0])]}
@@ -897,9 +1071,13 @@ def main():
     parser.add_argument('--sheet'); parser.add_argument('--range',dest='cell_range'); parser.add_argument('--header-rows')
     parser.add_argument('--header-formulas',choices=('reject','cached'),default='reject')
     parser.add_argument('--compatibility',choices=READING_MODES,default='data')
-    parser.add_argument('--chart-policy',choices=CHART_POLICIES,default=None); args=parser.parse_args()
+    parser.add_argument('--chart-policy',choices=CHART_POLICIES,default=None)
+    parser.add_argument('--salvage-unknown-metadata',action='store_true',
+                        help='Experimental BIFF8 only: retain unrecognized records raw; never certify saved values')
+    args=parser.parse_args()
     try:
-        result=read_file(args.input,compatibility=args.compatibility,chart_policy=args.chart_policy)
+        result=read_file(args.input,compatibility=args.compatibility,chart_policy=args.chart_policy,
+                         salvage_unknown_metadata=args.salvage_unknown_metadata)
         if args.header_rows is not None:
             require(args.sheet is not None and args.cell_range is not None,'Header reconstruction requires explicit sheet/range/header-rows')
             result['header_schema']=reconstruct_headers(result,args.sheet,args.cell_range,args.header_rows,args.header_formulas)

@@ -1,0 +1,121 @@
+{
+  "schema_version": "wps_biff8_explicit_best_effort_evidence_v1",
+  "recorded_on": "2026-11-01",
+  "mode": "experimental_explicit_opt_in_low_level_biff8_only",
+  "status": "synthetic_ci_passed_existing_real_values_unchanged",
+  "test_ref": "7e5036a994f64e4f65b1c369c83373f6293bf922",
+  "validated_options": [
+    "--salvage-unknown-metadata",
+    "--compatibility data"
+  ],
+  "not_default": true,
+  "new_synthetic_tests": 11,
+  "ci": {
+    "workflow_run_id": 41260410169,
+    "python_3_11": {
+      "job_id": 124712315357,
+      "all_wps_tests_passed": 463,
+      "strict_skill": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "python_3_13": {
+      "job_id": 124712315209,
+      "all_wps_tests_passed": 463,
+      "strict_skill": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "pinned_real_samples_run_id": 41260410154,
+    "pinned_real_samples_job_id": 124712314997,
+    "pinned_et_ett_originals": 4,
+    "independently_frozen_cell_values_matched": 198,
+    "saved_formula_caches_observed_unverified": 33
+  },
+  "supported_best_effort_behaviors": [
+    "unknown fully framed global/worksheet records retained as bounded raw bytes with scope and record ID",
+    "unknown well-framed CodePage declarations stored without selecting any text decoding",
+    "missing mandatory Date1904 -> date_system unknown, no numeric date interpretation",
+    "missing mandatory WsBool -> partial, worksheet provenance unverified",
+    "default JSON field set unchanged when option omitted",
+    "all skipped unknown records labeled as potentially containing missing cell values",
+    "explicit CLI returns partial exit 3; original file preserved"
+  ],
+  "hard_refusals": [
+    "encrypted FILEPASS and macro storages",
+    "invalid CFB layout or BIFF framing, allocation loops and resource caps",
+    "core saved-cell records, SST/Continue, formulas, duplicate cells and worksheet offsets",
+    "conflicting CodePage declarations or unsupported Word/OOXML format routing"
+  ],
+  "limits": {
+    "actual_native_wps_et_producer_verified": false,
+    "new_salvage_behavior_verified_on_real_rejected_sample": false,
+    "real_et_ett_stored_values_are_regression_only": true,
+    "missing_cells_due_to_skipped_unknown_records_possible": true,
+    "complete_sheet_coverage_certified": false,
+    "business_reconciliation_approved": false,
+    "formula_calculated": false,
+    "no_third_party_packages": true,
+    "no_writes_to_source": true,
+    "no_run_time_network": true,
+    "no_read_wps_or_ms_doc_source_modifications": true
+  },
+  "continued_test_20261101": {
+    "category": "additional_real_and_adversarial_testing",
+    "deterministic_adversarial_seed": 20261101,
+    "deterministic_unknown_record_variants": 72,
+    "additional_python_test_cases": 11,
+    "synthetic_test_module": "skills/wps/scripts/test_wps_biff8_salvage_hardening.py",
+    "full_regression": {
+      "run_id": 41261297990,
+      "ubuntu_python_3_11": {
+        "job_id": 124714945669,
+        "total_tests_passed": 474,
+        "errors": 0,
+        "strict_skill": "OK skills/wps",
+        "environment": "environment-ok"
+      },
+      "ubuntu_python_3_13": {
+        "job_id": 124714945689,
+        "total_tests_passed": 474,
+        "errors": 0,
+        "strict_skill": "OK skills/wps",
+        "environment": "environment-ok"
+      }
+    },
+    "real_pinned_et_ett": {
+      "run_id": 41261297993,
+      "job_id": 124714945602,
+      "original_count": 4,
+      "normal_vs_explicit_optin_same_saved_values": true,
+      "independently_frozen_saved_values_matched": 198,
+      "formula_caches_matched": 33,
+      "newly_recovered_real_rejections": 0
+    },
+    "real_government_et": {
+      "initial_run_id": 41261077112,
+      "pinned_recheck_run_id": 41261297979,
+      "candidate_count": 7,
+      "downloaded_cfb": 6,
+      "pinned_byte_hash_matches": 6,
+      "normal_and_optin_cell_matches": 5,
+      "extracted_cells_across_matching_five": 849,
+      "real_failed_name_record": {
+        "id": "zhongshan_low_altitude_supply_demand",
+        "record_id": "0x18",
+        "offset": 13817,
+        "payload_bytes": 50,
+        "ordinary_rejected": true,
+        "salvage_rejected": true
+      },
+      "new_recoveries": 0,
+      "network_download_failures": 1,
+      "independent_all_cell_truth_verified": false
+    },
+    "constraints": {
+      "no_changes_to_wps_word_reader": true,
+      "no_loss_of_default_return_contract": true,
+      "no_unknown_core_record_or_encryption_skip": true,
+      "no_reencoding_or_formula_execution": true,
+      "no_native_wps_producer_certification": true
+    }
+  }
+}

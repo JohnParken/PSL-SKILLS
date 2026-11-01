@@ -1,0 +1,33 @@
+name: WPS BIFF8 isolated audit regression
+on:
+  pull_request:
+    paths:
+      - 'skills/wps/**'
+      - '.github/workflows/wps-biff8-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  biff8-audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Read-only WPS self-check
+        run: |
+          python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: Isolated BIFF8 audit tests
+        run: |
+          python -I -S -B -m unittest discover -s skills/wps/scripts -p test_wps_biff8_audit.py -v
+      - name: WPS full regression including word reader
+        run: |
+          python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v
+      - name: Strict Skill structure
+        run: |
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict

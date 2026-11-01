@@ -22,6 +22,7 @@ only; no macro/formula execution, network requests, Office tools or dependency i
 
 - Evidence and input (`<skill-root>/references/biff8-readonly.md#evidence-and-input`)
 - Pure-table Unicode compatibility (`<skill-root>/references/biff8-readonly.md#pure-table-unicode-compatibility`)
+- TableStyle source evidence (`<skill-root>/references/biff8-readonly.md#tablestyle-source-evidence`)
 - Default data policy (`<skill-root>/references/biff8-readonly.md#default-data-policy`)
 - Observed legacy compatibility (`<skill-root>/references/biff8-readonly.md#observed-legacy-compatibility`)
 - Real-template compatibility additions (`<skill-root>/references/biff8-readonly.md#real-template-compatibility-additions`)
@@ -57,6 +58,12 @@ macro/VBA and dialog sheets, recognized macro storages and encryption are refuse
 ET/ETT names may be inspected by content but native_et_ett_parsed and
 wps_compatibility_verified always remain false, even after successful BIFF extraction.
 
+## TableStyle source evidence
+
+在 `data` 模式中，已观察到政府真实 `.et` 文件的 `TableStyle(0x088F)` 和连续 `TableStyleElement(0x0890)`。通过 `wps_biff8_tablestyles.py` 对前置 TableStyles 集合、FrtHeader、名称、1–28 个元素/类型/条纹大小、源 DXF 索引及完整连续记录进行结构校验，再保留原始 record bytes 与 `table_style_sources` 证据，标记 `effective_formatting=unknown`。该源字段仅对实际含有效组的 BIFF8 结果出现；无该记录的既有输出字段保持不变。
+
+只有受控记录子集才会被保留；严格、legacy 模式继续拒绝新增组，分组未完成、FrtHeader 非法、元素错位、非法 DXF 或未知后续记录仍拒绝，不能扫描恢复或跳过。两份真实政府文件的 32/43 个受限保存单元格已通过，独立记录观察器分别核对 18/19 项可观测保存值；样本哈希、原件来源与未验收范围见政府 ET 实测（`<skill-root>/references/biff8-gov-real-et-validation.md`）。该增强不计算或验证字体、边框、条纹格式、页面渲染，也不声称 WPS Office 生产者版本已确认。
+
 ## Default data policy
 
 File APIs `read_wps.read`, `read_bytes`, `wps_biff8.read_file` and both reading CLIs
@@ -90,13 +97,18 @@ issues; it still requires explicit cached-formula opt-in and rejects missing cac
 
 ## Pure-table Unicode compatibility
 
-Data mode additionally accepts the explicit CodePage declarations 932, 936 and 1252
-alongside 1200. It preserves `code_page_raw` and reports non1200 declarations as
+Data mode accepts explicit CodePage declarations 874, 932, 936, 949, 950, 1200,
+1250, 1251 and 1252 only. The additional 874/949/950/1250/1251 entries are
+metadata-only compatibility; no bytes are decoded using these code pages. It preserves `code_page_raw` and reports non1200 declarations as
 partial; unknown IDs, wrong payload lengths and conflicting declarations still fail.
 This is not a byte-encoding fallback. Supported BIFF8 string fields carry their own
 Unicode fHighByte flag: compressed bytes are U+0000..U+00FF low bytes, never GBK,
 CP1252 or UTF-8 decoding. Numeric cells remain exact Decimal stored values.
 Strict and explicit legacy modes retain the previous 1200-only constraint.
+The mandatory Date1904 record remains required in every mode; missing it is not
+recovered by guessing 1900 or 1904, even if the CodePage declaration is recognized.
+The documented expanded code-page values are Microsoft CODEPG identifiers,
+not evidence of producer-specific `.et/.ett` encoding or complete WPS support.
 
 For plain XLUnicodeString in inline Label, formula String caches and Format, data
 uses only fHighByte and ignores the seven reserved bits as the field requires. Raw
@@ -176,6 +188,20 @@ found in original public ETT templates, even when their CFB header CLSID is alre
 
 These additions do not allow external workbook/add-in/DDE links, arbitrary names,
 private records or embedded chart substreams by default.
+
+The default BIFF8 `data` reader has a separate **non-macro static Name** subset:
+one fully bounded ordinary Unicode name with one internal absolute `PtgArea3d`,
+or a two-area same-sheet `PtgUnion` with strict framing; selected built-in
+`Print_Titles` (full-row/full-column areas) and `_FilterDatabase` (one
+single-sheet region) have their own equally narrow checks. All are validated
+against a self-linked ExternSheet and final BoundSheet8 scope. It retains original
+bytes and marks partial; it never evaluates defined-name expressions or changes
+saved cells, print settings or filtered rows. Complex functions, macros,
+external XTI, other built-in names, and relative name areas remain refused
+(including experimental salvage mode). Strict and
+explicit `legacy_excel_clsid` keep their historical Print_Area-only subset.
+See defined-name acceptance (`<skill-root>/references/biff8-defined-names.md`)
+and pinned real evidence (`<skill-root>/references/biff8-defined-names-evidence.json`).
 The explicit opaque chart policy (`<skill-root>/references/embedded-charts.md`) adds bounded framing/raw retention
 for a supported embedded-chart subset without decoding or rendering charts. Record bytes are retained for diagnosis;
 metadata retention is not full semantic or layout validation. Strict mode is unchanged.
@@ -195,7 +221,7 @@ bounds but never expanded; non-anchor data is retained, not silently erased. Bui
 format IDs remain IDs; fonts/styles/layout are not rendered or reconstructed.
 
 Known metadata records are explicitly retained as offset/type/raw payload hex: global
-CodePage (strict/legacy 1200; data also 932/936/1252), Window1, Font, Style; worksheet Dimensions, Row, Index,
+CodePage (strict/legacy 1200; data also 874/932/936/949/950/1250/1251/1252), Window1, Font, Style; worksheet Dimensions, Row, Index,
 DBCell and Window2. Their internal semantics are not validated or applied. Other records
 fail with ID and offset. This is a strict data-record subset, not full MS-XLS grammar or
 workbook validity certification; many genuine XLS/ET files will be outside this subset.

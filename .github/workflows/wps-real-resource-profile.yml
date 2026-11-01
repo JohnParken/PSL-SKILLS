@@ -1,0 +1,24 @@
+name: WPS real official resource profile
+on:
+  pull_request:
+    paths:
+      - 'tests/wps_real_resource_profile.py'
+      - 'skills/wps/scripts/wps_paragraph_sources.py'
+      - 'skills/wps/scripts/read_wps.py'
+      - '.github/workflows/wps-real-resource-profile.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-resource:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Reader environment self-check
+        run: python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: Pinned government and public-bank files, no raw text output
+        run: python -I -S -B tests/wps_real_resource_profile.py
