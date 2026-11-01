@@ -16,6 +16,19 @@ from urllib.request import Request, urlopen
 MAX_BYTES = 8 * 1024 * 1024
 MAX_RECORDS = 100000
 MAX_NAMES = 512
+# Original identities first obtained from official pages; never silently
+# treat an altered attachment as the same independent validation sample.
+PINNED_SHA256 = {
+    'zhongshan_2026_grain_form': '9633e7dff8e74afa2662b074b97477925d92114b861a5dd2a117ac622f73175a',
+    'zhongshan_2025_seed_application': '81f6898330ec161f934089076f07a70b9ae708ca481c00769e5a9675ad30855a',
+    'zhongshan_2025_seed_summary': '6158a191ae9d30e7eaec5d5f0d99ef8f9ffef646c0a2d7b37769f7bf841d0c9d',
+    'zhongshan_2025_seed_implementation': 'b8cc3efe264efe792db016e0b319620646853422cc97ba03f15047f774219f66',
+    'zhongshan_2026_land_adjustment': 'dacf6889a4c701beaca859e9874a51320f4a8747b075a1b695b59c13eec0a620',
+    'zhongshan_2025_potato_registration': '27cb219ebec0a371c6af9ea7ace0520ce0ae2c4e698a193c89ad04cdeb23bc57',
+    'shantou_2026_digital_product_form': '068c45ef82b698eee7642803fcc378d828cf9965b05efef3a0ff4d0d0fd52aef',
+    'jilin_2026_intangible_heritage_targets': '22fbce711375701fca9713565c7a8b0c6b66929bf5ea4a1a9044d8c953fe6206',
+    'hangzhou_2026_vessel_maintenance': '2c97cc505ce3746f4ce13995dae0161baea3594d9600d6ae5d8c8a611569bfc1',
+}
 APPROVED_HOSTS = frozenset((
     'nync.zs.gov.cn',
     'www.shantou.gov.cn',
@@ -183,6 +196,12 @@ def main():
             item['download_status'] = 'downloaded'
             item['byte_count'] = len(data)
             item['sha256'] = hashlib.sha256(data).hexdigest()
+            item['matches_pinned_sha256'] = (
+                item['sha256'] == PINNED_SHA256[name])
+            if not item['matches_pinned_sha256']:
+                item['parse_scope'] = 'changed_public_original_not_tested'
+                observations.append(item)
+                continue
             item['magic'] = ('CFB_OLE' if data.startswith(bytes.fromhex('d0cf11e0a1b11ae1'))
                              else 'ZIP' if data.startswith(b'PK\x03\x04') else 'other')
             if item['magic'] == 'CFB_OLE':
@@ -220,6 +239,10 @@ def main():
                'downloaded': sum(item.get('download_status') == 'downloaded'
                                  for item in observations),
                'cfb_count': sum(item.get('magic') == 'CFB_OLE' for item in observations),
+               'pinned_sha256_matches': sum(item.get('matches_pinned_sha256') is True
+                                             for item in observations),
+               'source_sha256_mismatches': sum(item.get('matches_pinned_sha256') is False
+                                               for item in observations),
                'files_with_name_records': sum(item.get('name_count', 0) > 0
                                               for item in observations),
                'files_with_Print_Titles': sum(any(
@@ -235,7 +258,7 @@ def main():
                'producer_software_verified': False,
                'results': observations}
     print(json.dumps(summary, ensure_ascii=False, indent=2))
-    return 0 if summary['downloaded'] else 1
+    return 0 if summary['downloaded'] and not summary['source_sha256_mismatches'] else 1
 
 
 if __name__ == '__main__':
