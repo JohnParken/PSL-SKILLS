@@ -1,0 +1,61 @@
+{
+  "schema_version": "wps_biff8_explicit_best_effort_evidence_v1",
+  "recorded_on": "2026-11-01",
+  "mode": "experimental_explicit_opt_in_low_level_biff8_only",
+  "status": "synthetic_ci_passed_existing_real_values_unchanged",
+  "test_ref": "7e5036a994f64e4f65b1c369c83373f6293bf922",
+  "validated_options": [
+    "--salvage-unknown-metadata",
+    "--compatibility data"
+  ],
+  "not_default": true,
+  "new_synthetic_tests": 11,
+  "ci": {
+    "workflow_run_id": 41260410169,
+    "python_3_11": {
+      "job_id": 124712315357,
+      "all_wps_tests_passed": 463,
+      "strict_skill": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "python_3_13": {
+      "job_id": 124712315209,
+      "all_wps_tests_passed": 463,
+      "strict_skill": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "pinned_real_samples_run_id": 41260410154,
+    "pinned_real_samples_job_id": 124712314997,
+    "pinned_et_ett_originals": 4,
+    "independently_frozen_cell_values_matched": 198,
+    "saved_formula_caches_observed_unverified": 33
+  },
+  "supported_best_effort_behaviors": [
+    "unknown fully framed global/worksheet records retained as bounded raw bytes with scope and record ID",
+    "unknown well-framed CodePage declarations stored without selecting any text decoding",
+    "missing mandatory Date1904 -> date_system unknown, no numeric date interpretation",
+    "missing mandatory WsBool -> partial, worksheet provenance unverified",
+    "default JSON field set unchanged when option omitted",
+    "all skipped unknown records labeled as potentially containing missing cell values",
+    "explicit CLI returns partial exit 3; original file preserved"
+  ],
+  "hard_refusals": [
+    "encrypted FILEPASS and macro storages",
+    "invalid CFB layout or BIFF framing, allocation loops and resource caps",
+    "core saved-cell records, SST/Continue, formulas, duplicate cells and worksheet offsets",
+    "conflicting CodePage declarations or unsupported Word/OOXML format routing"
+  ],
+  "limits": {
+    "actual_native_wps_et_producer_verified": false,
+    "new_salvage_behavior_verified_on_real_rejected_sample": false,
+    "real_et_ett_stored_values_are_regression_only": true,
+    "missing_cells_due_to_skipped_unknown_records_possible": true,
+    "complete_sheet_coverage_certified": false,
+    "business_reconciliation_approved": false,
+    "formula_calculated": false,
+    "no_third_party_packages": true,
+    "no_writes_to_source": true,
+    "no_run_time_network": true,
+    "no_read_wps_or_ms_doc_source_modifications": true
+  }
+}
