@@ -291,7 +291,16 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         object_locations = []
         shape_locations = []
         note_marker_locations = []
-        rendered = [] if field_policy == 'cached_result' or object_policy == 'placeholder' or automatic_note_markers or comment_markers else None
+        # Only build a character-by-character replacement list when the
+        # stored story actually contains a marker that might need rewriting.
+        # A requested policy by itself must not copy a large unmodified story.
+        needs_render = (
+            (field_policy == 'cached_result' and any(char in text for char in '\x13\x14\x15'))
+            or (object_policy == 'placeholder' and
+                ('\x01' in text or (story_type == 'main' and '\x08' in text)))
+            or (bool(automatic_note_markers) and '\x02' in text)
+            or (bool(comment_markers) and '\x05' in text))
+        rendered = [] if needs_render else None
         for char in text:
             if field_policy == 'cached_result' and char in '\x13\x14\x15':
                 location = text_location(cp)
