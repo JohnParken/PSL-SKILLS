@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261101.0739.5401"
+version: "20261101.0915.3532"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -45,6 +45,8 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
 BIFF8 `data` 模式额外接受有明确编码编号的 CodePage 874、949、950、1250、1251，作为声明元数据保留，不重新编码或转换任何保存值；`strict/legacy` 仍只接受 1200，缺少必需的 Date1904 仍拒绝。详细边界见非单元格拒绝分类（`<skill-root>/references/et-noncell-compatibility.md`）。
 
 仅 BIFF8 data 模式新增精准非单元格规则：Globals 首位空负载 `WriteProtect` 和 Worksheet 首位零保留字段 `Uncalced`，均验证位置/唯一性后保留源字节并返回 partial；缺损、错位、其他未知记录保持拒绝。公式缓存新鲜度仍未验证；依据与反向安全样例见 电子表格非单元格拒绝分类（`<skill-root>/references/et-noncell-compatibility.md`）。
+
+已在中山市交通运输局两份公开 `.et` 文件上补齐 BIFF8 `TableStyle (0x088F)` 与相邻 `TableStyleElement (0x0890)` 的严格格式证据读取：仅 `data` 模式校验完整样式组及 DXF 索引后原样保留，返回 `partial`，不应用视觉样式。真实文件核验分别读取 32/43 个单元格，独立 MS-XLS 记录观察器共对照 37 项保存值；详见真实 ET 实测（`<skill-root>/references/biff8-gov-real-et-validation.md`）。两份的 CodePage 都为 1200，不证明其他 CodePage 的生产兼容性。
 
 默认 data 对有证据的非单元格元数据及受支持图表保留原始记录并报告 partial；包括结构校验后的 DXF（`0x088D`）差异格式属性，格式不应用到保存值。未知记录、加密、结构与资源错误仍停止，不在失败后轮换策略。只有任务明确要求更窄子集才加 `--compatibility strict`；单独拒绝图表可加 `--chart-policy reject`。需排查格式时按结果读 BIFF8 边界与高级策略 (`<skill-root>/references/biff8-readonly.md`) 或 OOXML 保存值 (`<skill-root>/references/ooxml-spreadsheet.md`)；编码、容量及失败定位按需读 解析增强边界 (`<skill-root>/references/et-parser-stability.md`)，容器检查另见 CFB 调查 (`<skill-root>/references/et-ett-readonly.md`)。
 
