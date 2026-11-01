@@ -108,6 +108,22 @@ class Biff8SalvageTests(unittest.TestCase):
         self.assertEqual(len(event),1)
         self.assertEqual(event[0]['count'],2)
 
+    def test_unknown_codepage_declaration_salvaged_without_recoding_text(self):
+        # The CodePage is only raw metadata in BIFF8: no legacy decoder.
+        codepage = 65001
+        incoming = workbook(extra_global=rec(0x0042, struct.pack('<H', codepage)))
+        with self.assertRaises(ValueError):
+            parse_stream(incoming, compatibility='data')
+        got = parse_stream(incoming, compatibility='data',
+                           salvage_unknown_metadata=True)
+        before = parse_stream(workbook(), compatibility='data')
+        self.assertEqual(values(got), values(before))
+        self.assertEqual(got['code_page_raw'], codepage)
+        self.assertEqual(got['cell_value_coverage'],
+                         'unverified_due_to_best_effort_salvage')
+        self.assertTrue(any(x['code']=='unknown_codepage_decl_salvaged'
+                            for x in got['issues']))
+
     def test_missing_mandatory_date_only_optin_and_no_fake_date(self):
         normal=workbook()
         without=remove_global_date_marker(normal)
