@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261031.1719.1010"
+version: "20261101.1450.0626"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -72,6 +72,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 
 本轮只优化**现有结果质量和验收**：`drawn_shape_anchor_not_rendered` 与图片标记共同计入 `reading_assessment.coverage.objects=not_decoded`；保留绘图对象 CP、SPA 原始偏移等受控来源数据，不复制未渲染对象中的原文。维护 CI 已对 7 份政府官网真实 CFB 文件固定 SHA-256、现有 partial/段落数及 6 份独立正文算法比较；生产 Skill 不下载这些文件。相关证据见 验证记录（`<skill-root>/references/validation.md#读取质量基线与资源测量`）。
 
+本轮对现有 MS-DOC 文本转换流程进行了**不改变结果契约的内存优化**：`--object-policy placeholder` 或 `--field-policy cached_result` 虽被选中，但文档实际没有需要转换的标记时，不再逐字符另建一份文本列表。存在实际转换标记时仍使用既有处理路径及 `partial`/拒绝规则，不放宽对象、字段、表格或 CFB 安全检查。真实官网文件的资源测量见 验证记录（`<skill-root>/references/validation.md#真实大型-wps-测量和无转换快速路径`）。
 ## 结果与按需验收
 
 - 按实际容器和失败阶段说明范围。CFB 是容器，本包能读取其中受支持的 MS-DOC/BIFF8 子集；不能把某个 CFB 文件被拒绝概括为“只支持 OOXML”。同样，`.wps`、`.et/.ett` 后缀不证明内部结构或生成软件。
