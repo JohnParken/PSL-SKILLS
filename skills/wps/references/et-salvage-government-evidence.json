@@ -9,13 +9,15 @@
     "official_candidates": 7,
     "downloaded": 6,
     "real_cfb": 6,
-    "normal_readable": 5,
-    "experimental_salvage_readable": 5,
+    "normal_readable": 6,
+    "experimental_salvage_readable": 6,
     "newly_recovered": 0,
-    "downloaded_samples_with_matching_normal_and_salvage_cells": 5,
+    "downloaded_samples_with_matching_normal_and_salvage_cells": 6,
     "strict_original_full_semantics_certified": false,
     "native_wps_producer_software_verified": false,
-    "real_government_attachments_bundled": false
+    "real_government_attachments_bundled": false,
+    "historical_rejections_resolved": 1,
+    "newly_recovered_in_same_build_comparison": 0
   },
   "cases": [
     {
@@ -235,24 +237,36 @@
       "magic": "CFB_OLE",
       "read_scope": "biff8_candidate",
       "ordinary_read": {
-        "status": "rejected",
-        "error_type": "ValueError",
-        "error_message": "Only static built-in Print_Area names supported; macros/other names refused",
-        "error_location": {
-          "record_offset": 13817,
-          "record_id": "0x18",
-          "scope": "globals"
-        }
+        "status": "partial",
+        "cell_count": 126,
+        "sheet_count": 2,
+        "formula_cache_count": 0,
+        "ordinary_static_name_count": 1,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": null,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
       },
       "explicit_salvage_read": {
-        "status": "rejected",
-        "error_type": "ValueError",
-        "error_message": "Only static built-in Print_Area names supported; macros/other names refused",
-        "error_location": {
-          "record_offset": 13817,
-          "record_id": "0x18",
-          "scope": "globals"
-        }
+        "status": "partial",
+        "cell_count": 126,
+        "sheet_count": 2,
+        "formula_cache_count": 0,
+        "ordinary_static_name_count": 1,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": 0,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
       },
       "newly_recovered": false,
       "source_sha256_matches_pinned": true,
@@ -263,9 +277,39 @@
         "payload_length": 50,
         "first_14_header_bytes_hex": "0000000c0b000000010000000000",
         "record_payload_sha256": "40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167",
+        "bounded_name_layout": {
+          "status": "fixed_layout_complete",
+          "grbit_raw": 0,
+          "macro_flag_set": false,
+          "name_character_count": 12,
+          "utf16_name_flag": true,
+          "formula_length": 11,
+          "local_sheet_ordinal": 1,
+          "reserved_fields_zero": true,
+          "formula_first_token_raw": "0x3b",
+          "formula_token_11_byte_area3d_candidate": true,
+          "formula_ref_index_raw": 0,
+          "name_identifier_like": true,
+          "relative_coordinate_flags_clear": true
+        },
         "complete_name_or_formula_text_read": false,
         "external_reference_semantics_verified": false,
         "macro_semantics_verified": false
+      },
+      "historical_ordinary_status": "rejected",
+      "historical_salvage_status": "rejected",
+      "same_extracted_cells": true,
+      "historical_name_failure_now_readable": true,
+      "independent_known_record_census": {
+        "source_kind": "independent_known_cell_record_census",
+        "sheets": 2,
+        "known_record_cell_count": 126,
+        "per_sheet_known_record_cell_counts": [
+          66,
+          60
+        ],
+        "all_possible_other_cell_records_excluded": false,
+        "cell_values_and_format_verified": false
       }
     },
     {
@@ -292,7 +336,8 @@
     "Five successfully parsed files were already readable normally; zero real rejections newly recovered",
     "Shenzhen TLS BAD_ECPOINT is a download failure, not parser failure",
     "Unknown Name records may carry executable or externally referenced semantics; no relaxation without evidence",
-    "No document contents or personally identifying cell data included in CI logs or this evidence"
+    "No document contents or personally identifying cell data included in CI logs or this evidence",
+    "The new 126-cell recovered government file passes independent known-record count only, not full source-value or WPS GUI equivalence"
   ],
   "revalidation": {
     "run_id": 41261297979,
@@ -312,6 +357,95 @@
       "macro_semantics_verified": false
     },
     "identity_verification_only": true,
-    "no_full_cell_or_formula_semantic_certification": true
+    "no_full_cell_or_formula_semantic_certification": true,
+    "name_ordinary_static_recovered": true,
+    "source_run_id": 41264344270,
+    "source_name_payload_hash": "40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167"
+  },
+  "previous_source_snapshot": {
+    "run_id": 41261077112,
+    "description": "Historical 2026-11-01 before static ordinary Name support",
+    "measurements": {
+      "official_candidates": 7,
+      "downloaded": 6,
+      "real_cfb": 6,
+      "normal_readable": 5,
+      "experimental_salvage_readable": 5,
+      "newly_recovered": 0,
+      "downloaded_samples_with_matching_normal_and_salvage_cells": 5,
+      "strict_original_full_semantics_certified": false,
+      "native_wps_producer_software_verified": false,
+      "real_government_attachments_bundled": false
+    },
+    "negative_real_sample": {
+      "id": "zhongshan_low_altitude_supply_demand",
+      "original_name_record_id": "0x18",
+      "record_offset": 13817,
+      "error": "Only static built-in Print_Area names supported; macros/other names refused",
+      "ordinary_status": "rejected",
+      "explicit_salvage_status": "rejected",
+      "handling": "Preserve rejection until Name record semantics/macro/external bindings are demonstrated safe; never blindly skip"
+    }
+  },
+  "current_source_snapshot": {
+    "run_id": 41264344270,
+    "exact_source_commit": "6885d9d4365b66632a205e3eec06fad86922e42a",
+    "candidates": 7,
+    "downloaded": 6,
+    "cfb": 6,
+    "normal_readable": 6,
+    "explicit_salvage_readable": 6,
+    "same_extracted_cells": 6,
+    "historical_rejections_resolved": 1,
+    "direct_static_name_recovered_real_sample": {
+      "id": "zhongshan_low_altitude_supply_demand",
+      "original_sha256": "2ccc6cca516b5936a3330d634536ed3fab71cf762616cf018b5b42ff84161cad",
+      "original_bytes": 36864,
+      "former_error_at_workbook_offset": 13817,
+      "name_record_source": {
+        "status": "bounded_source_name_record",
+        "record_offset": 13817,
+        "record_id": "0x18",
+        "payload_length": 50,
+        "first_14_header_bytes_hex": "0000000c0b000000010000000000",
+        "record_payload_sha256": "40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167",
+        "bounded_name_layout": {
+          "status": "fixed_layout_complete",
+          "grbit_raw": 0,
+          "macro_flag_set": false,
+          "name_character_count": 12,
+          "utf16_name_flag": true,
+          "formula_length": 11,
+          "local_sheet_ordinal": 1,
+          "reserved_fields_zero": true,
+          "formula_first_token_raw": "0x3b",
+          "formula_token_11_byte_area3d_candidate": true,
+          "formula_ref_index_raw": 0,
+          "name_identifier_like": true,
+          "relative_coordinate_flags_clear": true
+        },
+        "complete_name_or_formula_text_read": false,
+        "external_reference_semantics_verified": false,
+        "macro_semantics_verified": false
+      },
+      "accepted_named_ranges": 1,
+      "reader_cell_count": 126,
+      "reader_sheet_count": 2,
+      "independent_known_record_census": {
+        "source_kind": "independent_known_cell_record_census",
+        "sheets": 2,
+        "known_record_cell_count": 126,
+        "per_sheet_known_record_cell_counts": [
+          66,
+          60
+        ],
+        "all_possible_other_cell_records_excluded": false,
+        "cell_values_and_format_verified": false
+      },
+      "independent_count_matches": true,
+      "ordinary_and_optin_same_extracted_cells": true,
+      "name_formula_executed": false,
+      "full_cell_values_independently_verified": false
+    }
   }
 }
