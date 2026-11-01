@@ -123,6 +123,20 @@ class SalvageHardeningTests(unittest.TestCase):
             parse_stream(raw, compatibility='data',
                          salvage_unknown_metadata=True)
 
+    def test_non_static_defined_name_does_not_bypass_current_safety_gate(self):
+        # A real official .et candidate exposed Name (0x0018) at a fixed
+        # workbook offset. Name can describe macros/external names; the current
+        # reader only supports its exact static built-in Print_Area subset.
+        # No fabricated partial success is allowed for other Name payloads.
+        name_record = rec(0x0018, bytes(27))
+        raw = workbook(extra_global=name_record)
+        for salvage in (False, True):
+            with self.subTest(salvage=salvage):
+                with self.assertRaisesRegex(ValueError,
+                                            'Only static built-in Print_Area'):
+                    parse_stream(raw, compatibility='data',
+                                 salvage_unknown_metadata=salvage)
+
     def test_unknown_codepage_conflict_with_missing_date_stays_rejected(self):
         raw = workbook(extra_global=rec(0x0042, struct.pack('<H', 65001)) +
                        rec(0x0042, struct.pack('<H', 1200)))
