@@ -69,7 +69,7 @@ class Biff8SalvageTests(unittest.TestCase):
         self.assertEqual(got['status'], 'partial')
         self.assertEqual(got['cell_value_coverage'], 'unverified_due_to_best_effort_salvage')
         self.assertTrue(got['omissions_affect_cell_values'])
-        self.assertFalse(got['stored_values_verified_complete'])
+        self.assertFalse(got['saved_value_completeness_certified'])
         self.assertEqual(got['salvage_unknown_record_count'], 1)
         self.assertEqual(got['issues'][0]['code'], 'unknown_biff_record_salvaged')
         record = next(x for x in got['uninterpreted_metadata'] if x['record_id']=='0x7777')
