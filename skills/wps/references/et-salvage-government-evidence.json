@@ -1,0 +1,280 @@
+{
+  "schema_version": "government_et_best_effort_real_evidence_v1",
+  "date": "2026-11-01",
+  "evaluation": "bounded, non-executing, official-public-attachment",
+  "source_run_id": 41261077112,
+  "job_id": 124714286431,
+  "commit_sha": "424c9bb937c918ebd26927f026232afc0a6345b3",
+  "measurements": {
+    "official_candidates": 7,
+    "downloaded": 6,
+    "real_cfb": 6,
+    "normal_readable": 5,
+    "experimental_salvage_readable": 5,
+    "newly_recovered": 0,
+    "downloaded_samples_with_matching_normal_and_salvage_cells": 5,
+    "strict_original_full_semantics_certified": false,
+    "native_wps_producer_software_verified": false,
+    "real_government_attachments_bundled": false
+  },
+  "cases": [
+    {
+      "id": "zhongshan_2027_area_adjustment",
+      "official_page": "https://nync.zs.gov.cn/zwgk/tzgg/content/post_2641174.html",
+      "official_attachment_url": "https://nync.zs.gov.cn/attachment/0/575/575053/2641174.et",
+      "download": "success",
+      "bytes": 26112,
+      "sha256": "472f8852375710b64539640868bdee9f0c6cf72d72e6e625406c57462b4089f0",
+      "magic": "CFB_OLE",
+      "read_scope": "biff8_candidate",
+      "ordinary_read": {
+        "status": "partial",
+        "cell_count": 109,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": null,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "explicit_salvage_read": {
+        "status": "partial",
+        "cell_count": 109,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": 0,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "same_extracted_cells": true,
+      "newly_recovered": false
+    },
+    {
+      "id": "zhongshan_2026_pollution_project_summary",
+      "official_page": "https://nync.zs.gov.cn/zwgk/tzgg/content/post_2645850.html",
+      "official_attachment_url": "https://nync.zs.gov.cn/attachment/0/576/576489/2645850.et",
+      "download": "success",
+      "bytes": 26624,
+      "sha256": "35fb708c95f2f957b72aad5514827b9a29a6fd16d994f42e51e6015288302d89",
+      "magic": "CFB_OLE",
+      "read_scope": "biff8_candidate",
+      "ordinary_read": {
+        "status": "partial",
+        "cell_count": 298,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded"
+        ],
+        "salvage_unknown_record_count": null,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "explicit_salvage_read": {
+        "status": "partial",
+        "cell_count": 298,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded"
+        ],
+        "salvage_unknown_record_count": 0,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "same_extracted_cells": true,
+      "newly_recovered": false
+    },
+    {
+      "id": "zhongshan_2026_performance_target",
+      "official_page": "https://nync.zs.gov.cn/zwgk/tzgg/content/post_2645850.html",
+      "official_attachment_url": "https://nync.zs.gov.cn/attachment/0/576/576490/2645850.et",
+      "download": "success",
+      "bytes": 26112,
+      "sha256": "ea9e7bca553415d632dd931726f2b88ae7a474b1f6b62df9facb54c4ce358690",
+      "magic": "CFB_OLE",
+      "read_scope": "biff8_candidate",
+      "ordinary_read": {
+        "status": "partial",
+        "cell_count": 127,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": null,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "explicit_salvage_read": {
+        "status": "partial",
+        "cell_count": 127,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "nonstandard_header_clsid",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": 0,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "same_extracted_cells": true,
+      "newly_recovered": false
+    },
+    {
+      "id": "shantou_2026_project_application",
+      "official_page": "https://www.shantou.gov.cn/stsswbj/gkmlpt/content/2/2485/post_2485187.html",
+      "official_attachment_url": "https://www.shantou.gov.cn/stsswbj/attachment/0/143/143275/2485187.et",
+      "download": "success",
+      "bytes": 24064,
+      "sha256": "c4e9aa6284f25465e875f9ead6f23211b5e575f87e025abba69234406debecfd",
+      "magic": "CFB_OLE",
+      "read_scope": "biff8_candidate",
+      "ordinary_read": {
+        "status": "partial",
+        "cell_count": 251,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": null,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "explicit_salvage_read": {
+        "status": "partial",
+        "cell_count": 251,
+        "sheet_count": 3,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "other_container_streams_not_decoded",
+          "rich_string_formatting_not_applied"
+        ],
+        "salvage_unknown_record_count": 0,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "same_extracted_cells": true,
+      "newly_recovered": false
+    },
+    {
+      "id": "shantou_2026_project_summary",
+      "official_page": "https://www.shantou.gov.cn/stsswbj/gkmlpt/content/2/2485/post_2485187.html",
+      "official_attachment_url": "https://www.shantou.gov.cn/stsswbj/attachment/0/143/143277/2485187.et",
+      "download": "success",
+      "bytes": 16896,
+      "sha256": "ff0408b950ce22f598196cc342fce64b08fbd7ba3d596c8fbdaed6ee99881ac2",
+      "magic": "CFB_OLE",
+      "read_scope": "biff8_candidate",
+      "ordinary_read": {
+        "status": "partial",
+        "cell_count": 64,
+        "sheet_count": 2,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "other_container_streams_not_decoded"
+        ],
+        "salvage_unknown_record_count": null,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "explicit_salvage_read": {
+        "status": "partial",
+        "cell_count": 64,
+        "sheet_count": 2,
+        "formula_cache_count": 0,
+        "issue_codes": [
+          "non_cell_metadata_not_decoded",
+          "other_container_streams_not_decoded"
+        ],
+        "salvage_unknown_record_count": 0,
+        "cell_value_coverage": "complete_within_declared_sheets",
+        "omissions_affect_cell_values": false
+      },
+      "same_extracted_cells": true,
+      "newly_recovered": false
+    },
+    {
+      "id": "zhongshan_low_altitude_supply_demand",
+      "official_page": "https://www.zs.gov.cn/zsfgj/gkmlpt/content/2/2632/post_2632406.html",
+      "official_attachment_url": "https://www.zs.gov.cn/zsfgj/attachment/0/572/572365/2632406.et",
+      "download": "success",
+      "bytes": 36864,
+      "sha256": "2ccc6cca516b5936a3330d634536ed3fab71cf762616cf018b5b42ff84161cad",
+      "magic": "CFB_OLE",
+      "read_scope": "biff8_candidate",
+      "ordinary_read": {
+        "status": "rejected",
+        "error_type": "ValueError",
+        "error_message": "Only static built-in Print_Area names supported; macros/other names refused",
+        "error_location": {
+          "record_offset": 13817,
+          "record_id": "0x18",
+          "scope": "globals"
+        }
+      },
+      "explicit_salvage_read": {
+        "status": "rejected",
+        "error_type": "ValueError",
+        "error_message": "Only static built-in Print_Area names supported; macros/other names refused",
+        "error_location": {
+          "record_offset": 13817,
+          "record_id": "0x18",
+          "scope": "globals"
+        }
+      },
+      "newly_recovered": false
+    },
+    {
+      "id": "shenzhen_mediation_application_form",
+      "official_page": "https://sf.sz.gov.cn/xxgk/xxgkml/gsgg/content/post_12990789.html",
+      "official_attachment_url": "https://sf.sz.gov.cn/attachment/1/1750/1750176/12990789.et",
+      "download": "failed",
+      "network_error": "<urlopen error [SSL: BAD_ECPOINT] bad ecpoint (_ssl.c:1032)>",
+      "network_error_type": "URLError"
+    }
+  ],
+  "negative_real_sample": {
+    "id": "zhongshan_low_altitude_supply_demand",
+    "original_name_record_id": "0x18",
+    "record_offset": 13817,
+    "error": "Only static built-in Print_Area names supported; macros/other names refused",
+    "ordinary_status": "rejected",
+    "explicit_salvage_status": "rejected",
+    "handling": "Preserve rejection until Name record semantics/macro/external bindings are demonstrated safe; never blindly skip"
+  },
+  "limits": [
+    "Official domain publication proves provenance of downloaded ET attachment, not producing WPS Office version",
+    "No independent full spreadsheet WPS/Excel rendering or full cell by cell truth oracle for these six government files",
+    "Five successfully parsed files were already readable normally; zero real rejections newly recovered",
+    "Shenzhen TLS BAD_ECPOINT is a download failure, not parser failure",
+    "Unknown Name records may carry executable or externally referenced semantics; no relaxation without evidence",
+    "No document contents or personally identifying cell data included in CI logs or this evidence"
+  ]
+}
