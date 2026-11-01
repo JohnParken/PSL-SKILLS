@@ -113,6 +113,16 @@ def main():
                 'font_source_count': len(audit['font_sources']),
                 'calc_record_count': len(audit['calculation_metadata']['records']),
                 'xf_source_count': len(audit['xf_ancestry']),
+                'static_print_titles_count': sum(
+                    item.get('name') == 'PrintTitlesStatic'
+                    for item in book.get('uninterpreted_metadata', [])),
+                'static_filter_database_count': sum(
+                    item.get('name') == 'FilterDatabaseStatic'
+                    for item in book.get('uninterpreted_metadata', [])),
+                'ordinary_two_area_union_count': sum(
+                    item.get('name') == 'OrdinaryStaticInternalAreaName'
+                    and item.get('structure', {}).get('ptg_union_raw_present') is True
+                    for item in book.get('uninterpreted_metadata', [])),
                 'producer_verified': False, 'effective_styles_verified': False,
                 'best_effort_salvage_opt_in_checked': True,
                 'best_effort_unknown_records_encountered': 0,
