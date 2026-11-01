@@ -433,7 +433,7 @@ class Reader:
         if self.compatibility=="legacy_excel_clsid":
             self.issue({"code":"known_metadata_retained_uninterpreted","message":"Explicit compatibility mode retains only allowlisted MS-XLS metadata bytes. Internal metadata semantics, protection, style extensions and calculation settings are not validated or applied; unknown/data extension records still fail."})
         bounds=[]; names=set(); date_system=None; seen_sst=False; global_end=None
-        template_seen=False; self_link=False; internal_refs=[]; print_areas=set(); safe_name_keys=set()
+        template_seen=False; self_link=False; internal_refs=[]; print_areas=set(); safe_name_keys=set(); safe_name_sheets=[]
         consumed_until = 0
         for index,record in enumerate(self.records[1:],1):
             if index < consumed_until:
@@ -544,7 +544,9 @@ class Reader:
                     if len(safe_name_keys)>=MAX_STATIC_NAMES:
                         raise ResourceLimitError('Static defined name budget exceeded')
                     structure = classify_static_name(
-                        payload, len(bounds), internal_refs)
+                        payload, 128, internal_refs)
+                    safe_name_sheets.append((structure['local_sheet_ordinal_raw'],
+                                             structure['internal_sheet_index_zero_based']))
                     key = (structure['local_sheet_ordinal_raw'],
                            structure['name_folded_sha256'])
                     require(key not in safe_name_keys,
@@ -605,6 +607,9 @@ class Reader:
                         'message':'Mandatory BIFF8 Date1904 absent; saved numeric serials retained without date interpretation.'})
         require(all(last<len(bounds) for first,last in internal_refs) and all(sheet<=len(bounds) for sheet in print_areas),
                 'Internal/Print_Area reference exceeds actual worksheet count')
+        require(all((itab == 0 or itab <= len(bounds)) and sheet < len(bounds)
+                    for itab, sheet in safe_name_sheets),
+                'Static Name scope or internal sheet reference exceeds BoundSheet8 count')
         if self.rich_strings:
             for rich in self.rich_strings:
                 for at in range(0, len(rich['runs_bytes']), 4):
