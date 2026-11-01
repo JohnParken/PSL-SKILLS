@@ -245,6 +245,31 @@ def main():
                                 report['independent_census_error'] = str(exc)[:130]
                         if normal_cells is not None and salvage_cells is not None:
                             report['saved_cell_values_equal'] = normal_cells == salvage_cells
+                        if sample['id'] == 'zhongshan_low_altitude_supply_demand':
+                            # The exact pinned file failed on Name 0x18 in
+                            # previous production-compatible builds. This is a
+                            # mandatory regression gate only after SHA matches:
+                            # two sheets, 126 known cell source records, one
+                            # non-executed ordinary static internal name.
+                            evidence=report.get('name_record_source_evidence', {})
+                            layout=evidence.get('bounded_name_layout', {})
+                            report['historical_name_failure_now_readable'] = (
+                                normal.get('status') == 'partial'
+                                and normal.get('cell_count') == 126
+                                and normal.get('sheet_count') == 2
+                                and normal.get('ordinary_static_name_count') == 1
+                                and salvage.get('status') == 'partial'
+                                and report.get('saved_cell_values_equal') is True
+                                and report.get('independent_census_matches_reader_count') is True
+                                and evidence.get('record_payload_sha256') ==
+                                    '40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167'
+                                and layout.get('formula_first_token_raw') == '0x3b'
+                                and layout.get('relative_coordinate_flags_clear') is True
+                                and layout.get('macro_flag_set') is False
+                                and layout.get('name_identifier_like') is True)
+                            if not report['historical_name_failure_now_readable']:
+                                raise ValueError('Pinned real nonmacro static Name acceptance or '
+                                                 'independent cell census regressed')
                         report['newly_recovered_rejection'] = (
                             normal['status'] == 'rejected'
                             and salvage['status'] in ('ok', 'partial'))
@@ -270,6 +295,8 @@ def main():
                                 for x in results),
         'newly_recovered_rejections': sum(x.get('newly_recovered_rejection') is True
                                            for x in results),
+        'historical_name_rejection_now_readable': sum(
+            x.get('historical_name_failure_now_readable') is True for x in results),
         'all_cell_values_independently_verified': False,
         'results': results,
     }
