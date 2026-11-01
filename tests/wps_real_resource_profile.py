@@ -164,11 +164,24 @@ def main():
               'unmodified_reader': True, 'true_producer_verified': False,
               'independent_full_text_acceptance': False,
               'samples': results}
-    print(json.dumps(output, ensure_ascii=False))
+    # Print after computing both success and any pinned regression failures.
     # A transport failure is never counted as a format failure, but the
     # maintenance job should succeed only if pinned source data was measured.
-    return 0 if any(x.get('default', {}).get('status') in ('ok', 'partial')
-                    for x in results) else 1
+    success = any(x.get('default', {}).get('status') in ('ok', 'partial')
+                  for x in results)
+    broken_baselines = [
+        x['id'] for x in results
+        if x.get('probe_failure_detail', '').startswith((
+            'Pinned official attachment has changed identity',
+            'Pinned known supported-subset result changed',
+            'Text changed between default and opt-in modes',
+            'Paragraphs changed between default and opt-in modes'))
+    ]
+    # Unavailable official servers stay "not checked"; changed pinned bytes
+    # or changed text must fail, even if another public sample still passes.
+    output['pinned_baseline_mismatches'] = broken_baselines
+    print(json.dumps(output, ensure_ascii=False))
+    return 0 if success and not broken_baselines else 1
 
 
 if __name__ == '__main__':
