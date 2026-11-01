@@ -127,7 +127,9 @@ class CompoundFile:
 
     @classmethod
     def load(cls,path,*,compatibility="strict"):
-        descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0))
+        if not getattr(os, 'O_NOFOLLOW', 0):
+            raise ValueError('O_NOFOLLOW required for safe CFB file reads')
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, 'O_NONBLOCK', 0))
         try:
             before = os.fstat(descriptor)
             if not stat.S_ISREG(before.st_mode):

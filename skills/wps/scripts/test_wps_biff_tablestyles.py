@@ -80,6 +80,12 @@ class TableStylesTests(unittest.TestCase):
             with self.subTest(rawlen=len(raw)), self.assertRaises(ValueError):
                 parse_stream(workbook(extra_global=raw),compatibility='data')
 
+    def test_zero_element_declared_table_style_rejected(self):
+        source = (rec(0x088d, EMPTY_DXF) + rec(0x088e, bytes(20))
+                  + table_style('Empty', 0))
+        with self.assertRaisesRegex(ValueError, 'TableStyle element count'):
+            parse_stream(workbook(extra_global=source), compatibility='data')
+
     def test_malformed_group_headers_name_count_and_flags_refused(self):
         standard=frt(0x088f)+struct.pack('<HIH',4,1,1)+b'A\0'
         mutations=[

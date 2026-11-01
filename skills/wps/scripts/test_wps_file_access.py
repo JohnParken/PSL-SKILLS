@@ -52,6 +52,36 @@ class FileAccessTests(unittest.TestCase):
                             self.assertNotIn('sheets', report)
             self.assertEqual(path.read_bytes(), data)
 
+    @unittest.skipUnless(hasattr(os, 'O_NOFOLLOW') and os.O_NOFOLLOW and hasattr(os, 'symlink'),
+                         'requires no-follow file open and symlink support')
+    def test_symlink_input_denied_in_unified_and_low_level_readers(self):
+        data = synthetic_cfb({'Workbook': workbook()})
+        with tempfile.TemporaryDirectory(dir='.') as directory:
+            root = Path(directory)
+            real = root / 'real.et'
+            link = root / 'alias.et'
+            real.write_bytes(data)
+            link.symlink_to(real.name)
+            result = read(link)
+            self.assertNotIn(result['status'], ('ok', 'partial'))
+            with self.assertRaises(OSError):
+                read_file(link)
+            for script in SCRIPTS:
+                execution = self.cli(script, link)
+                self.assertEqual(execution.returncode, 1)
+            self.assertEqual(real.read_bytes(), data)
+
+    def test_missing_nofollow_support_fails_closed_without_open(self):
+        with patch('wps_access.os.O_NOFOLLOW', 0, create=True):
+            with patch('wps_access.os.open', side_effect=AssertionError('unexpected open')):
+                result = read('ordinary.et')
+                self.assertEqual(result['status'], 'unsupported')
+        from wps_cfb import CompoundFile
+        with patch('wps_cfb.os.O_NOFOLLOW', 0, create=True):
+            with patch('wps_cfb.os.open', side_effect=AssertionError('unexpected open')):
+                with self.assertRaisesRegex(ValueError, 'O_NOFOLLOW required'):
+                    CompoundFile.load('ordinary.et')
+
     def test_minor_zero_refused_by_all_file_apis_and_clis(self):
         data = bytearray(synthetic_cfb({'Workbook': workbook()}))
         struct.pack_into('<H', data, 24, 0)
