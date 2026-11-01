@@ -46,10 +46,13 @@ def main():
     sys.path.insert(0, str(scripts))
     from wps_biff8 import read_file
     from wps_biff8_audit import audit_biff8
-    from verify_et_samples import verify
+    from verify_et_samples import verify, check_fixed_values
 
     manifest = root / 'skills' / 'wps' / 'references' / 'et-real-samples.json'
     entries = json.loads(manifest.read_text(encoding='utf-8'))['samples']
+    frozen_expectations = json.loads(
+        manifest.with_name('real-value-expectations.json').read_text(
+            encoding='utf-8'))['samples']
     if len(entries) != 4:
         raise ValueError('Expected four already-known pinned ET/ETT samples')
     with tempfile.TemporaryDirectory(prefix='wps-biff8-real-') as temp:
@@ -66,6 +69,34 @@ def main():
         for entry, path in zip(entries, paths):
             original_sha = entry['sha256']
             book = read_file(path, compatibility='data')
+            # The experimental mode must also be tested on actual bytes. Each
+            # historical original already passes the normal reader; agreement
+            # proves *non-regression*, not recovery of newly unsupported files.
+            salvage = read_file(path, compatibility='data',
+                                salvage_unknown_metadata=True)
+            if not salvage.get('salvage_requested'):
+                raise ValueError('Real sample opt-in was not acknowledged')
+            if salvage.get('saved_value_completeness_certified') is not False:
+                raise ValueError('Experimental salvage must not certify completeness')
+            if salvage.get('salvage_unknown_record_count') != 0:
+                raise ValueError('Pinned sample changed: unexpected unknown records')
+            if (salvage['sheets'] != book['sheets']
+                    or salvage['date_system'] != book['date_system']
+                    or salvage['cell_count'] != book['cell_count']
+                    or salvage['cell_value_coverage'] != book['cell_value_coverage']
+                    or salvage['omissions_affect_cell_values']
+                       != book['omissions_affect_cell_values']):
+                raise ValueError('Opt-in changed source values, cached formula status, '
+                                 'or baseline sheet semantics')
+            # Frozen expectations were created by the independent source
+            # record oracle rather than computed by the candidate reader.
+            expected = frozen_expectations[entry['filename']]
+            if expected['sha256'] != original_sha:
+                raise ValueError('Frozen expectation hash mismatched pinned source')
+            original_values = check_fixed_values(book, expected)
+            salvage_values = check_fixed_values(salvage, expected)
+            if original_values != salvage_values:
+                raise ValueError('Opt-in stored-value expectations differ')
             audit = audit_biff8(book)
             assert audit['schema_version'] == 'biff8_stored_evidence_audit_v1'
             assert audit['native_et_ett_producer_verified'] is False
@@ -83,12 +114,22 @@ def main():
                 'calc_record_count': len(audit['calculation_metadata']['records']),
                 'xf_source_count': len(audit['xf_ancestry']),
                 'producer_verified': False, 'effective_styles_verified': False,
+                'best_effort_salvage_opt_in_checked': True,
+                'best_effort_unknown_records_encountered': 0,
+                'frozen_values_checked_with_salvage': salvage_values['semantic_values_checked'],
+                'frozen_formula_caches_checked_with_salvage': salvage_values['formula_caches_checked'],
             })
     print(json.dumps({
         'status': 'passed_stored_value_and_audit_subset',
         'sample_count': len(entries),
         'independent_saved_values_checked': total_values,
         'unverified_formula_caches_checked': total_caches,
+        'salvage_opt_in_real_originals_checked': len(reports),
+        'salvage_opt_in_frozen_values_matched': sum(
+            x['frozen_values_checked_with_salvage'] for x in reports),
+        'salvage_opt_in_formula_caches_matched': sum(
+            x['frozen_formula_caches_checked_with_salvage'] for x in reports),
+        'salvage_newly_recovered_real_rejections': 0,
         'real_office_producer_version_confirmed': False,
         'formula_recalculation_performed': False,
         'effective_format_visual_validation': False,
