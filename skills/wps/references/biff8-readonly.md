@@ -57,6 +57,12 @@ macro/VBA and dialog sheets, recognized macro storages and encryption are refuse
 ET/ETT names may be inspected by content but native_et_ett_parsed and
 wps_compatibility_verified always remain false, even after successful BIFF extraction.
 
+## TableStyle 和 TableStyleElement：有界直接来源（2026-11-01）
+
+在 `data` 模式中，已观察到政府真实 `.et` 文件的 `TableStyle(0x088F)` 和连续 `TableStyleElement(0x0890)`。通过 `wps_biff8_tablestyles.py` 对前置 TableStyles 集合、FrtHeader、名称、1–28 个元素/类型/条纹大小、源 DXF 索引及完整连续记录进行结构校验，再保留原始 record bytes 与 `table_style_sources` 证据，标记 `effective_formatting=unknown`。该源字段仅对实际含有效组的 BIFF8 结果出现；无该记录的既有输出字段保持不变。
+
+只有受控记录子集才会被保留；严格、legacy 模式继续拒绝新增组，分组未完成、FrtHeader 非法、元素错位、非法 DXF 或未知后续记录仍拒绝，不能扫描恢复或跳过。两份真实政府文件的 32/43 个受限保存单元格已通过，独立记录观察器分别核对 18/19 项可观测保存值；样本哈希、原件来源与未验收范围见政府 ET 实测（`<skill-root>/references/biff8-gov-real-et-validation.md`）。该增强不计算或验证字体、边框、条纹格式、页面渲染，也不声称 WPS Office 生产者版本已确认。
+
 ## Default data policy
 
 File APIs `read_wps.read`, `read_bytes`, `wps_biff8.read_file` and both reading CLIs
