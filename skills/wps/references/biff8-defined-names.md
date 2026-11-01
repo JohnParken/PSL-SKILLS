@@ -20,7 +20,7 @@
 - **属性级完整验证**：仍核验 `SupBook/ExternSheet` 是已识别的自工作簿内部引用，作用域 `itab` 与最终 BoundSheet8 一致，列高 6 位保留字段与相对引用标志合法；名称、区域和公式 token 数量都受资源预算限制。记录字节原样进入现有 `uninterpreted_metadata.payload_hex`。新增结构标明 `print_settings_applied=false`、`filter_applied=false`、`formula_executed=false`、`external_link_followed=false`；**不能据此宣称已恢复打印页面、实际筛选视图或公式计算结果**。
 - **不可放宽**：其他内置 ID（如 Auto_Open/Auto_Close）、宏/函数标志、`PtgNameX` 和外链、任意多 token 公式、未知可选负载、非法布局/重复内置名称继续拒绝；显式 `strict/legacy` 模式与历史 `Print_Area` 的处理不变，显式 salvage 也不绕过这些拒绝。
 
-这三类新行为现阶段主要通过 **14 项合成测试** 验证。现有四份固定 ET/ETT 以及六份可读取的政府 ET 重新审计，均未出现 `Print_Titles`、`_FilterDatabase` 或普通双区域 `PtgUnion` 记录。它们对原有保存值和此前恢复的静态 Name 原件可提供**无回归**证据，但不能作为新增三类名称的真实文件兼容率。新的实际样本应固定原件哈希与独立完整预期，再追加应用级验收。
+这三类新行为现阶段主要通过 **14 项合成测试** 验证。现有四份固定 ET/ETT 以及六份可读取的政府 ET 重新审计，均未出现 `Print_Titles`、`_FilterDatabase` 或普通双区域 `PtgUnion` 记录。它们对原有保存值和此前恢复的静态 Name 原件可提供**无回归**证据，但不能作为新增三类名称的真实文件兼容率。新的实际样本应固定原件哈希与独立完整预期，再追加应用级验收。本轮实际 Linux CI 已完成：Python 3.11/3.13 各 **500/500** WPS 回归、严格 Skill 自检通过；四份固定 ET/ETT 的 198 项保存值及 33 个未验证公式缓存保持一致，六份政府原件此前恢复的 126 单元格 Name 个案仍通过。规范子集、具体 CI 编号、零条真实新增 Name 记录的覆盖缺口见机器证据（`<skill-root>/references/biff8-builtins-union-evidence.json`）。
 
 MS-XLS 规范依据（只用于维护研究，运行时不联网）：`Lbl`（见下文链接）、<https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/665bd564-4677-4ea7-bf6b-89f27edb0788>（AutoFilter / _FilterDatabase）和 <https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/90d54742-4776-4271-a08c-39bd73b7b8fc>（PtgUnion）。
 
