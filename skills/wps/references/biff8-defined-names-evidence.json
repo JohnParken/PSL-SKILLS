@@ -1,0 +1,112 @@
+{
+  "schema_version": "biff8_defined_name_subset_evidence_v1",
+  "recorded_on": "2026-11-01",
+  "scope": "MS-XLS Lbl Name 0x18 only, nonmacro static internal PtgArea3d",
+  "source_code": "skills/wps/scripts/wps_biff8_names.py",
+  "tests_file": "skills/wps/scripts/test_wps_biff8_names.py",
+  "new_synthetic_unit_cases": 12,
+  "provenance": {
+    "official_page": "https://www.zs.gov.cn/zsfgj/gkmlpt/content/2/2632/post_2632406.html",
+    "official_attachment_url": "https://www.zs.gov.cn/zsfgj/attachment/0/572/572365/2632406.et",
+    "original_sha256": "2ccc6cca516b5936a3330d634536ed3fab71cf762616cf018b5b42ff84161cad",
+    "original_bytes": 36864,
+    "original_wordprocessing_or_WPS_producer_verified": false
+  },
+  "observations": {
+    "former_normal_status": "rejected",
+    "former_error": "Only static built-in Print_Area names supported; macros/other names refused",
+    "original_record_offset": 13817,
+    "record_id": "0x18",
+    "name_record": {
+      "status": "bounded_source_name_record",
+      "record_offset": 13817,
+      "record_id": "0x18",
+      "payload_length": 50,
+      "first_14_header_bytes_hex": "0000000c0b000000010000000000",
+      "record_payload_sha256": "40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167",
+      "bounded_name_layout": {
+        "status": "fixed_layout_complete",
+        "grbit_raw": 0,
+        "macro_flag_set": false,
+        "name_character_count": 12,
+        "utf16_name_flag": true,
+        "formula_length": 11,
+        "local_sheet_ordinal": 1,
+        "reserved_fields_zero": true,
+        "formula_first_token_raw": "0x3b",
+        "formula_token_11_byte_area3d_candidate": true,
+        "formula_ref_index_raw": 0,
+        "name_identifier_like": true,
+        "relative_coordinate_flags_clear": true
+      },
+      "complete_name_or_formula_text_read": false,
+      "external_reference_semantics_verified": false,
+      "macro_semantics_verified": false
+    },
+    "current_default_data_status": "partial",
+    "current_explicit_salvage_status": "partial",
+    "ordinary_static_internal_name_count": 1,
+    "workbook_sheets": 2,
+    "extracted_known_cell_count": 126,
+    "independent_known_record_census": {
+      "source_kind": "independent_known_cell_record_census",
+      "sheets": 2,
+      "known_record_cell_count": 126,
+      "per_sheet_known_record_cell_counts": [
+        66,
+        60
+      ],
+      "all_possible_other_cell_records_excluded": false,
+      "cell_values_and_format_verified": false
+    },
+    "independent_count_matches": true,
+    "default_and_explicit_optin_extracted_cells_match": true,
+    "historical_rejection_now_readable": true,
+    "full_cell_value_semantics_independently_validated": false,
+    "formula_or_name_evaluation_performed": false
+  },
+  "real_gov_probe": {
+    "run_id": 41264498901,
+    "candidate_count": 7,
+    "actual_downloads": 6,
+    "normal_partial_readable": 6,
+    "optin_partial_readable": 6,
+    "historical_rejections_resolved": 1
+  },
+  "ci": {
+    "full_regression_run_id": 41264498904,
+    "python_3_11": {
+      "job_id": 124724368496,
+      "full_suite_tests_passed": 486,
+      "strict_skill": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "python_3_13": {
+      "job_id": 124724368589,
+      "full_suite_tests_passed": 486,
+      "strict_skill": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "original_et_ett_run_id": 41264498974,
+    "original_et_ett_job_id": 124724368631,
+    "original_samples_pinned": 4,
+    "frozen_values_matched": 198,
+    "saved_formula_caches_unverified": 33
+  },
+  "refusals_retained": [
+    "macro flag fFunc/fOB/fProc and shortcut flag",
+    "any complex NameParsedFormula or PtgNameX/external references",
+    "unrecognized built-in names; legacy only static Print_Area",
+    "incomplete name Unicode, invalid header/reserved bits or unsupported lexical forms",
+    "relative area coordinates, invalid row/column and missing self ExternSheet/XTI",
+    "duplicate same-scope names and resource quota",
+    "corrupt BOF/EOF/CFB, FILEPASS, VBA and malformed core records"
+  ],
+  "limits": [
+    "This one official .et confirms a particular Name grammar case, not all named ranges",
+    "The independent checker counts known cell record locations; it does not independently verify every cell value",
+    "This was not rendered or recalculated in WPS Office/Excel",
+    "The historical rejection baseline and current 6-of-6 BIFF subset extraction are separate measurements",
+    "No document body or name text is included in CI logs and this evidence"
+  ]
+}
