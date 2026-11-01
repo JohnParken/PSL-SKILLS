@@ -110,6 +110,16 @@ def _read_summary(container, salvage):
                  'ordinary_static_name_count': sum(
                      x.get('name') == 'OrdinaryStaticInternalAreaName'
                      for x in result.get('uninterpreted_metadata', [])),
+                 'ordinary_two_area_union_count': sum(
+                     x.get('name') == 'OrdinaryStaticInternalAreaName'
+                     and x.get('structure', {}).get('ptg_union_raw_present') is True
+                     for x in result.get('uninterpreted_metadata', [])),
+                 'print_titles_static_count': sum(
+                     x.get('name') == 'PrintTitlesStatic'
+                     for x in result.get('uninterpreted_metadata', [])),
+                 'filter_database_static_count': sum(
+                     x.get('name') == 'FilterDatabaseStatic'
+                     for x in result.get('uninterpreted_metadata', [])),
                  'issue_codes': sorted({item.get('code') for item in result.get('issues', [])
                                         if isinstance(item, dict) and item.get('code')}),
                  'salvage_unknown_record_count': result.get('salvage_unknown_record_count'),
