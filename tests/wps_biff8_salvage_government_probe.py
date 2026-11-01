@@ -163,6 +163,18 @@ def _record_header_evidence(container, stream_name, location):
                     'formula_ref_index_raw':
                         struct.unpack_from('<H',formula,1)[0] if len(formula) == 11
                         and formula[0] in (0x3b, 0x5b, 0x7b) else None,
+                    'name_identifier_like': (
+                        (lambda value: (bool(value) and
+                            (value[0].isalpha() or value[0] == '_') and
+                            all(char.isalnum() or char in '._' for char in value)))(
+                                raw[15:end_name].decode(
+                                    'utf-16le' if name_options else 'latin1'))
+                        if name_length else False),
+                    'relative_coordinate_flags_clear': (
+                        not (struct.unpack_from('<H',formula,7)[0] & 0xC000
+                             or struct.unpack_from('<H',formula,9)[0] & 0xC000)
+                        if len(formula) == 11 and formula[0] in (0x3b, 0x5b, 0x7b)
+                        else None),
                 }
     # The name's actual Unicode text and the formula's full bytes are never
     # logged; output only bounded arithmetic and an independent hash.
