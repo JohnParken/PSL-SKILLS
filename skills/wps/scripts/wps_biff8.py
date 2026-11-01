@@ -552,7 +552,14 @@ class Reader:
                     require(len(payload)==2, 'CodePage payload must be two bytes')
                     code_page = struct.unpack('<H', payload)[0]
                     if self.compatibility == 'data':
-                        require(code_page in SUPPORTED_BIFF8_CODE_PAGES, 'Unsupported BIFF8 code-page declaration')
+                        if code_page not in SUPPORTED_BIFF8_CODE_PAGES:
+                            if not self.salvage_unknown_metadata:
+                                raise UnsupportedError('Unsupported BIFF8 code-page declaration')
+                            self.salvage_data_uncertain = True
+                            self.issue({'code':'unknown_codepage_decl_salvaged',
+                                        'record_id':hex(kind), 'offset':offset,
+                                        'code_page_raw':code_page,
+                                        'message':'Unknown code-page declaration retained; BIFF8 Unicode fields are decoded by their own flags only.'})
                         require(self.code_page is None or self.code_page == code_page, 'Conflicting CodePage declarations')
                         if code_page != 1200 and self.code_page is None:
                             self.issue({'code': 'codepage_metadata_not_applied', 'offset': offset,
