@@ -55,6 +55,9 @@ def _container_kind(data):
 
 
 def _codepage_inventory(data):
+    # Python -I omits the repository from import search paths.
+    scripts = Path(__file__).resolve().parents[1] / 'skills' / 'wps' / 'scripts'
+    sys.path.insert(0, str(scripts))
     from wps_access import load_compound
     from wps_biff8 import records, bof
     compound = load_compound(data, 'data')
