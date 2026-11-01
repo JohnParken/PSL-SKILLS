@@ -13,7 +13,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_wps_biff8 import workbook, rec, cell
 from test_wps_cfb import synthetic_cfb
-from wps_biff8 import parse_stream, UnsupportedError, EncryptedError, ResourceLimitError
+from wps_biff8 import parse_stream, read_file, UnsupportedError, EncryptedError, ResourceLimitError
 
 
 def values(result):
@@ -147,6 +147,16 @@ class Biff8SalvageTests(unittest.TestCase):
         with unittest.mock.patch('wps_biff8.MAX_METADATA_BYTES', 30):
             with self.assertRaises(ResourceLimitError):
                 parse_stream(raw,compatibility='data',salvage_unknown_metadata=True)
+
+    def test_macro_storage_still_rejected_by_salvage_cli(self):
+        raw = synthetic_cfb({'Workbook': workbook(), 'VBA': b'not-executed'})
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'malicious.et'
+            path.write_bytes(raw)
+            with self.assertRaisesRegex(ValueError, 'Macro'):
+                read_file(path, compatibility='data',
+                          salvage_unknown_metadata=True)
+            self.assertEqual(path.read_bytes(), raw)
 
     def test_standalone_cli_explicit_only_and_original_bytes_unchanged(self):
         raw=synthetic_cfb({'Workbook':workbook(extra_global=rec(0x7777,b'X'))})
