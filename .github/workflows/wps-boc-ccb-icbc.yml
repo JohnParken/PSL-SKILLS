@@ -1,0 +1,24 @@
+name: WPS BOC CCB ICBC official attachment probe
+on:
+  pull_request:
+    paths:
+      - 'tests/wps_boc_ccb_icbc_probe.py'
+      - '.github/workflows/wps-boc-ccb-icbc.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bank-public-doc-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: WPS Skill environment check
+        run: |
+          python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: Bounded direct BOC CCB ICBC office attachment probe
+        run: |
+          python -I -S -B tests/wps_boc_ccb_icbc_probe.py

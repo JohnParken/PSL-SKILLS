@@ -1,0 +1,24 @@
+name: WPS Agricultural Bank official attachment probe
+on:
+  pull_request:
+    paths:
+      - 'tests/wps_abc_official_probe.py'
+      - '.github/workflows/wps-abc-official-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  abc-official-doc-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: WPS Skill read-only self-check
+        run: |
+          python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: Fetch bounded ABC official DOC and PDF, inspect actual signatures
+        run: |
+          python -I -S -B tests/wps_abc_official_probe.py

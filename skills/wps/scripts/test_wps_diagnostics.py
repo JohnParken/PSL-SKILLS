@@ -76,6 +76,53 @@ class DiagnosticsTests(unittest.TestCase):
                          [('not_decoded',2)])
         self.assertNotIn('SECRET',str(summary))
 
+    def test_drawn_shape_is_reported_as_unrendered_object(self):
+        source = {'stream': 'WordDocument', 'offset': 2546, 'cp': 249,
+                  'shape_index': 0, 'spa_record_offset': 7612}
+        output = summarize({'status': 'partial', 'issues': [
+            {'code': 'drawn_shape_anchor_not_rendered', 'count': 1,
+             'locations': [dict(source, text='PRIVATE', message='PRIVATE')],
+             'message': 'Source text must not be copied'}]})
+        coverage = next(item for item in output['reading_assessment']['coverage']
+                        if item['category'] == 'objects')
+        self.assertEqual(coverage['state'], 'not_decoded')
+        self.assertEqual(coverage['evidence_count'], 1)
+        self.assertEqual(coverage['locations'][0]['cp'], 249)
+        self.assertEqual(coverage['locations'][0]['spa_record_offset'], 7612)
+        self.assertNotIn('PRIVATE', str(output['reading_assessment']))
+        self.assertNotIn('Source text must not be copied',
+                         str(output['reading_assessment']))
+
+    def test_shape_and_picture_diagnostics_accumulate_without_double_count(self):
+        output = summarize({'status': 'partial', 'issues': [
+            {'code': 'picture_or_data_marker_not_decoded', 'count': 1,
+             'locations': [{'stream': 'WordDocument', 'cp': 4}]},
+            {'code': 'drawn_shape_anchor_not_rendered', 'count': 2,
+             'locations': [{'stream': 'WordDocument', 'cp': 9},
+                           {'stream': 'WordDocument', 'cp': 11}]}]})
+        summary = output['reading_assessment']
+        objects = next(item for item in summary['coverage']
+                       if item['category'] == 'objects')
+        self.assertEqual(objects['evidence_count'], 3)
+        self.assertEqual([r['cp'] for r in objects['locations']], [4, 9, 11])
+        self.assertEqual([e['code'] for e in summary['events']],
+                         ['picture_or_data_marker_not_decoded',
+                          'drawn_shape_anchor_not_rendered'])
+        self.assertEqual(output['status'], 'partial')
+
+    def test_related_shape_diagnostic_is_not_misclassified_as_complete(self):
+        output = summarize({'status': 'partial', 'related_stories': [
+            {'type': 'footnotes', 'status': 'partial', 'issues': [
+                {'code': 'drawn_shape_anchor_not_rendered', 'count': 1,
+                 'locations': [{'stream': 'WordDocument', 'cp': 18}]}]}]})
+        summary = output['reading_assessment']
+        objects = next(item for item in summary['coverage']
+                       if item['category'] == 'objects')
+        self.assertEqual(objects['state'], 'not_decoded')
+        self.assertEqual(objects['evidence_count'], 1)
+        self.assertEqual(objects['locations'][0]['cp'], 18)
+        self.assertEqual(summary['completeness'], 'partial')
+
     def test_coverage_states_use_only_present_recorded_evidence(self):
         absent=summarize({'status':'ok'})['reading_assessment']['coverage']
         self.assertEqual([(item['category'],item['state']) for item in absent],

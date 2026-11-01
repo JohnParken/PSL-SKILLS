@@ -1,0 +1,98 @@
+{
+  "schema_version": "wps_biff8_builtin_names_and_union_evidence_v1",
+  "recorded_on": "2026-11-01",
+  "status": "bounded_synthetic_grammar_passed_real_originals_no_regressions_new_semantics_unverified",
+  "branch": "codex/wps-biff8-builtins-union-20261101",
+  "based_on": "codex/wps-biff8-name-safe-20261101",
+  "modules": [
+    "skills/wps/scripts/wps_biff8_names.py",
+    "skills/wps/scripts/wps_biff8.py"
+  ],
+  "tests": "skills/wps/scripts/test_wps_biff8_builtin_names.py",
+  "new_synthetic_tests": 14,
+  "supported_subsets": [
+    {
+      "name": "Print_Titles",
+      "builtin_id": "0x07",
+      "allow": "single full row/column or exactly one same-sheet full-row/full-column pair joined by PtgUnion",
+      "applies_print_layout": false
+    },
+    {
+      "name": "_FilterDatabase",
+      "builtin_id": "0x0d",
+      "allow": "one local absolute self-linked PtgArea3d with >=2 rows",
+      "applies_filters": false
+    },
+    {
+      "name": "ordinary nonmacro Name",
+      "allow": "one direct area or two same-XTI same-sheet absolute PtgArea3d with final PtgUnion",
+      "evaluates_formula": false
+    }
+  ],
+  "strict_refusals": [
+    "unknown builtin IDs including macro names",
+    "fFunc/fOB/fProc and unexpected Name flag bits",
+    "function or external PtgNameX tokens",
+    "unmatched SupBook/ExternSheet and external XTI references",
+    "relative or out-of-bounds area",
+    "Print_Titles with non-whole row/column or multiple same-kind regions",
+    "FilterDatabase unions or header-only row",
+    "missing/extra expression bytes or more than two union operands",
+    "duplicate builtin name in the same local sheet",
+    "shared 256-name resource budget and metadata budget",
+    "legacy/strict mode still keep original narrow subset",
+    "CFB/FILEPASS/VBA/core cell structure errors"
+  ],
+  "ci": {
+    "run_id": 41266606649,
+    "python_3_11": {
+      "job_id": 124730600844,
+      "full_wps_tests_passed": 500,
+      "strict_skill_check": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "python_3_13": {
+      "job_id": 124730601081,
+      "full_wps_tests_passed": 500,
+      "strict_skill_check": "OK skills/wps",
+      "selfcheck": "environment-ok"
+    },
+    "pinned_et_ett_run_id": 41266606634,
+    "pinned_et_ett_job_id": 124730600736,
+    "frozen_et_ett_originals": 4,
+    "frozen_saved_values_checked": 198,
+    "frozen_formula_caches_unverified": 33,
+    "government_et_run_id": 41266606647,
+    "government_et_job_id": 124730600861,
+    "government_et_candidates": 7,
+    "government_et_downloaded_and_hashed": 6,
+    "government_et_readable_partial": 6,
+    "historical_real_static_name_recovery_gate": "passed"
+  },
+  "observed_new_name_records": {
+    "fixed_et_ett_print_titles": 0,
+    "fixed_et_ett_filter_database": 0,
+    "fixed_et_ett_ordinary_two_area_union": 0,
+    "downloaded_government_et_print_titles": 0,
+    "downloaded_government_et_filter_database": 0,
+    "downloaded_government_et_ordinary_two_area_union": 0
+  },
+  "boundaries": {
+    "compiled_and_ci_validated_synthetic_structures": true,
+    "real_WPS_producer_builtin_names_verified": false,
+    "real_PtgUnion_originals_verified": false,
+    "independent_formula_result_validation": false,
+    "actual_filter_or_print_visual_validation": false,
+    "original_word_reader_modified": false,
+    "no_runtime_network": true,
+    "no_formula_execution": true,
+    "no_external_links_followed": true,
+    "no_writeback": true,
+    "python_stdlib_only": true
+  },
+  "references": [
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d148e898-4504-4841-a793-ee85f3ea9eef",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/665bd564-4677-4ea7-bf6b-89f27edb0788",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/90d54742-4776-4271-a08c-39bd73b7b8fc"
+  ]
+}

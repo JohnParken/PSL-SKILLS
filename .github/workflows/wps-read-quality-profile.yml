@@ -1,0 +1,24 @@
+name: WPS read quality resource profile
+on:
+  pull_request:
+    paths:
+      - 'tests/wps_read_quality_profile.py'
+      - 'skills/wps/scripts/read_wps.py'
+      - 'skills/wps/scripts/wps_diagnostics.py'
+      - '.github/workflows/wps-read-quality-profile.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bounded-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Environment self-check
+        run: python -I -S -B skills/wps/scripts/read_wps.py --check
+      - name: Synthetic bounded peak-memory and latency observation
+        run: python -I -S -B tests/wps_read_quality_profile.py
