@@ -23,19 +23,19 @@ SAMPLES = (
         'id': 'samr_recommendation_plan_2026',
         'page': 'https://www.samr.gov.cn/bzjss/tzgg/art/2026/art_cb801d915d77425e8b522f77a7f9d8da.html',
         'url': 'https://www.samr.gov.cn/cms_files/filemanager/1647978232/attach/20261/760b5a7619124d4c971893b9d6e4fe22.wps',
-        'sha256': None,
+        'sha256': 'd07786795608fb919849e6e67a25073ce88f1bd0b264915b83576192ef35d493',
     },
     {
         'id': 'samr_compulsory_standards_method_2026',
         'page': 'https://www.samr.gov.cn/bzjss/tzgg/art/2026/art_6a4a689ef68a45afa5b93f638ef1a7ae.html',
         'url': 'https://www.samr.gov.cn/cms_files/filemanager/1647978232/attach/20267/e23ded4e14854c34811ea7aee1d8875f.wps',
-        'sha256': None,
+        'sha256': 'c8b8e6fe40b1d3cb1f77d1289980eddf50f071e3042d77d9283f8be5e4959d8f',
     },
     {
         'id': 'samr_compulsory_standards_report_2026',
         'page': 'https://www.samr.gov.cn/bzjss/tzgg/art/2026/art_6a4a689ef68a45afa5b93f638ef1a7ae.html',
         'url': 'https://www.samr.gov.cn/cms_files/filemanager/1647978232/attach/20267/3a63f651b33e4c16b31eb46eb6a9cb63.wps',
-        'sha256': None,
+        'sha256': 'ca3e4b14939e3c4e4c025fee3939256680dfe4da13164532ad4a6aaf79a0d081',
     },
     {
         'id': 'abc_guangxi_smart_park_doc',
@@ -50,6 +50,21 @@ SAMPLES = (
         'sha256': '28b509c9032dc45cf2c14f55075f53abaff5989ad9c5fe740dc06771098b2be6',
     },
 )
+
+
+# Immutable observed *subset* result, not a WPS Office independent oracle.
+PINNED_SUBSET = {
+    'samr_recommendation_plan_2026': (
+        11, '9f7e07a5360981d2f23a46577cc7fba067c5269f706e04544be42356ea8db67c'),
+    'samr_compulsory_standards_method_2026': (
+        58, '41d85ce778b21c011e5bea40a24c489187ac8b8e95cf0596daf1aafcc7d0b130'),
+    'samr_compulsory_standards_report_2026': (
+        80, 'f98d91a15e25765040730d31c5c7e3bd2e32e82913d5b3d6995f18a5e3eef4b2'),
+    'abc_guangxi_smart_park_doc': (
+        76, 'b240d6e6c881b1f03199fa23899603b0489e756360aceb3b4a1c04d6e3504cb2'),
+    'zhongshan_government_company_list': (
+        4, '3b9015bbfe914ae02910145a0bee770953877fb8208ce478e5f1da572851f468'),
+}
 
 
 def _approved(url):
@@ -93,6 +108,9 @@ def _measure(data, **options):
         'paragraphs': len(parsed.get('paragraphs', [])),
         'cp_status': parsed.get('paragraph_source_status', 'not_requested'),
         'cp_count': len(parsed.get('paragraph_sources', [])),
+        'utf8_text_bytes': len(parsed.get('text', '').encode('utf-8')),
+        'issue_codes': [issue.get('code') for issue in parsed.get('issues', [])[:15]
+                        if isinstance(issue, dict)],
         'result_text_sha256': hashlib.sha256(parsed.get('text', '').encode('utf-8')).hexdigest(),
         'result_paragraphs_sha256': hashlib.sha256(json.dumps(
             parsed.get('paragraphs', []), ensure_ascii=False,
@@ -124,6 +142,11 @@ def _inspect(item):
                     'error_status': getattr(exc, 'status', 'unknown'),
                     'error_message': str(exc)[:120],
                 }
+        expected = PINNED_SUBSET.get(item['id'])
+        if expected and (result['default'].get('paragraphs') != expected[0] or
+                         result['default'].get('result_text_sha256') != expected[1] or
+                         result['default'].get('status') != 'partial'):
+            raise ValueError('Pinned known supported-subset result changed')
         if result['default'].get('result_text_sha256') != result['with_cp'].get('result_text_sha256'):
             raise ValueError('Text changed between default and opt-in modes')
         if result['default'].get('result_paragraphs_sha256') != result['with_cp'].get('result_paragraphs_sha256'):
