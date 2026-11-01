@@ -20,6 +20,7 @@ from wps_numeric import interpret_cell_number
 from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
 from wps_dxf import validate_dxf
 from wps_biff8_noncell import inspect_noncell
+from wps_biff8_names import classify_static_name, MAX_STATIC_NAMES
 
 READING_MODES = COMPATIBILITY_MODES + ("data",)
 # Standalone opt-in salvage is explicitly not an MS-XLS conformance claim.
@@ -432,7 +433,7 @@ class Reader:
         if self.compatibility=="legacy_excel_clsid":
             self.issue({"code":"known_metadata_retained_uninterpreted","message":"Explicit compatibility mode retains only allowlisted MS-XLS metadata bytes. Internal metadata semantics, protection, style extensions and calculation settings are not validated or applied; unknown/data extension records still fail."})
         bounds=[]; names=set(); date_system=None; seen_sst=False; global_end=None
-        template_seen=False; self_link=False; internal_refs=[]; print_areas=set()
+        template_seen=False; self_link=False; internal_refs=[]; print_areas=set(); safe_name_keys=set()
         consumed_until = 0
         for index,record in enumerate(self.records[1:],1):
             if index < consumed_until:
@@ -522,17 +523,39 @@ class Reader:
                     internal_refs.append((first,last))
                 self.metadata_record(record,{kind:'ExternSheetInternal'},'globals')
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0018:
-                # Retain only a static built-in Print_Area, never an executable name.
-                require(len(payload)==27 and payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00'
-                        and payload[10:16]==b'\x00\x00\x00\x00\x00\x06' and payload[16]==0x3B,
-                        'Only static built-in Print_Area names supported; macros/other names refused')
-                sheet=struct.unpack_from('<H',payload,8)[0]
-                ref,r1,r2,c1,c2=struct.unpack_from('<5H',payload,17)
-                require(1<=sheet<=128 and sheet not in print_areas and ref<len(internal_refs)
-                        and internal_refs[ref]==(sheet-1,sheet-1) and r1<=r2 and c1<=c2<256,
-                        'Invalid/duplicate/nonlocal Print_Area reference')
-                print_areas.add(sheet)
-                self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
+                # Keep the historically verified built-in Print_Area behavior.
+                # New ordinary names are limited to one non-executable, direct
+                # internal, absolute 3-D area token and are data-mode only.
+                static_print_area = (
+                    len(payload)==27 and
+                    payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00' and
+                    payload[10:16]==b'\x00\x00\x00\x00\x00\x06' and
+                    payload[16]==0x3B)
+                if static_print_area:
+                    sheet=struct.unpack_from('<H',payload,8)[0]
+                    ref,r1,r2,c1,c2=struct.unpack_from('<5H',payload,17)
+                    require(1<=sheet<=128 and sheet not in print_areas and ref<len(internal_refs)
+                            and internal_refs[ref]==(sheet-1,sheet-1)
+                            and r1<=r2 and c1<=c2<256,
+                            'Invalid/duplicate/nonlocal Print_Area reference')
+                    print_areas.add(sheet)
+                    self.metadata_record(record,{kind:'PrintAreaStatic'},'globals')
+                elif self.compatibility == 'data':
+                    if len(safe_name_keys)>=MAX_STATIC_NAMES:
+                        raise ResourceLimitError('Static defined name budget exceeded')
+                    structure = classify_static_name(
+                        payload, len(bounds), internal_refs)
+                    key = (structure['local_sheet_ordinal_raw'],
+                           structure['name_folded_sha256'])
+                    require(key not in safe_name_keys,
+                            'Duplicate ordinary static name in workbook/sheet scope')
+                    safe_name_keys.add(key)
+                    self.metadata_record(record,
+                                         {kind:'OrdinaryStaticInternalAreaName'}, 'globals')
+                    self.metadata[-1]['structure']=structure
+                else:
+                    require(False,
+                            'Only static built-in Print_Area names supported; macros/other names refused')
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind in LEGACY_VALIDATED_GLOBAL_METADATA:
                 if kind==0x0092:
                     require(len(payload)==2+4*PALETTE_COLOR_COUNT,
