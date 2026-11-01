@@ -10,7 +10,7 @@
 
 **两阶段交叉校验**：Name 可以在 BoundSheet8 列表之前出现，因此读取记录时只验证名称、公式 token 与已出现的内部 ExternSheet 证据，并将 `itab` /区域所属工作表暂存；Globals EOF 时再与完整 BoundSheet8 数量核对，防止提前拒绝真实文档或接受越界索引。每簿最多 256 个此类名称；相同工作簿/工作表作用域下同名（忽略大小写）拒绝。所有实际记录仍受 BIFF 8204/8224 记录长度、1 MiB 原始元数据和总输出预算约束。
 
-保留旧有 **built-in Print_Area (0x06)** 的确切兼容规则，不把任意 built-in name 视为普通名称。新增有限的 **Print_Titles (0x07)** 和 **_FilterDatabase (0x0D)**（见下节），其余内置名称仍拒绝。宏名称、函数名称、`fOB/fProc`、快捷键、非零/未知标志、`PtgFunc`、`PtgNameX`、外部 SupBook、跨多个工作表的 XTI、相对单元格范围、复杂公式/附加字节、未支持的名称字符及非法保留字段均**明确拒绝**。此模式不对未知 Name 执行静默 continue 或将其归为普通的 `unknown_biff_record_salvaged`；即使用户启用了临时 salvage 也保持拒绝。
+保留旧有 **built-in Print_Area (0x06)** 的确切兼容规则，不把任意 built-in name 视为普通名称。新增有限的 **Print_Titles (0x07)** 和 **_FilterDatabase (0x0D)**（见下节），其余内置名称仍拒绝。宏名称、函数名称、`fOB/fProc`、快捷键、未在受控子集中允许的标志、`PtgFunc`、`PtgNameX`、外部 SupBook、跨多个工作表的 XTI、相对单元格范围、复杂公式/附加字节、未支持的名称字符及非法保留字段均**明确拒绝**。此模式不对未知 Name 执行静默 continue 或将其归为普通的 `unknown_biff_record_salvaged`；即使用户启用了临时 salvage 也保持拒绝。
 
 ## 扩展：打印标题、筛选区域与双区域联合（仅 data 模式）
 
