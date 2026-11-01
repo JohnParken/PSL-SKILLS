@@ -20,6 +20,7 @@ from wps_numeric import interpret_cell_number
 from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
 from wps_dxf import validate_dxf
 from wps_biff8_noncell import inspect_noncell
+from wps_biff8_tablestyles import table_style_group
 
 READING_MODES = COMPATIBILITY_MODES + ("data",)
 
@@ -324,6 +325,9 @@ class Reader:
         self.compatibility=compatibility
         self.passive_issues = {}
         self.dxf_property_count = 0
+        self.dxf_record_count = 0
+        self.table_styles_collection_seen = False
+        self.table_style_sources = []
         self.global_metadata={**GLOBAL_METADATA,**(LEGACY_GLOBAL_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
         self.sheet_metadata={**SHEET_METADATA,**(LEGACY_SHEET_METADATA if compatibility in ("legacy_excel_clsid", "data") else {})}
         self.code_page = None
@@ -460,6 +464,21 @@ class Reader:
                     raise ResourceLimitError('DXF aggregate property count exceeds budget')
                 self.metadata_record(record, {kind: 'DXF'}, 'globals')
                 self.metadata[-1]['structure'] = structure
+                self.dxf_record_count += 1
+            elif self.compatibility == 'data' and kind == 0x088F:
+                # MS-XLS Globals TableStyle / immediately following Elements:
+                # all referenced DXFs must already be validated and observed.
+                require(self.table_styles_collection_seen,
+                        'TableStyle requires preceding TableStyles collection')
+                if len(self.table_style_sources) >= 128:
+                    raise ResourceLimitError('TableStyle collection exceeds 128')
+                next_index, source, components = table_style_group(
+                    self.records, index, self.dxf_record_count)
+                for component in components:
+                    name = 'TableStyle' if component[1] == 0x088F else 'TableStyleElement'
+                    self.metadata_record(component, {component[1]: name}, 'globals')
+                self.table_style_sources.append(source)
+                consumed_until = next_index
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0060:
                 require(not template_seen and not payload,'Duplicate/malformed Template marker')
                 template_seen=True
@@ -505,6 +524,8 @@ class Reader:
             elif kind in self.global_metadata:
                 if kind == 0x0031:
                     self.font_count += 1
+                if kind == 0x088E and self.compatibility == 'data':
+                    self.table_styles_collection_seen = True
                 if kind==0x0042:
                     require(len(payload)==2, 'CodePage payload must be two bytes')
                     code_page = struct.unpack('<H', payload)[0]
@@ -558,7 +579,8 @@ class Reader:
                 'format_string_header_flags':self.format_string_flags,'sheets':[sheets[item['name']] for item in bounds],
                 'shared_string_formatting':[dict((key, value) for key, value in rich.items() if key != 'runs_bytes') | {'runs_raw_hex': rich['runs_bytes'].hex()} for rich in self.rich_strings],
                 'shared_string_phonetics':[dict((key, value) for key, value in phonetic.items() if key != 'ext_bytes') | {'raw_ext_hex': phonetic['ext_bytes'].hex()} for phonetic in self.phonetic_strings],
-                'styles':self.styles,'custom_number_formats':{str(key):value for key,value in self.formats.items()},
+                'styles':self.styles,'table_style_sources':self.table_style_sources,
+                'custom_number_formats':{str(key):value for key,value in self.formats.items()},
                 'uninterpreted_metadata':self.metadata,'issues':self.issues,'record_count':len(self.records),'cell_count':self.cell_count,
                 'policies':{'numbers':'Exact Decimal representation of stored IEEE754; raw bytes retained; no text coercion',
                             'dates':'All stored numeric serials remain numbers; raw XF/format IDs and custom strings retained; no ISO conversion or effective-style inheritance inference',
