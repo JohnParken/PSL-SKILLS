@@ -22,6 +22,7 @@ only; no macro/formula execution, network requests, Office tools or dependency i
 
 - Evidence and input (`<skill-root>/references/biff8-readonly.md#evidence-and-input`)
 - Pure-table Unicode compatibility (`<skill-root>/references/biff8-readonly.md#pure-table-unicode-compatibility`)
+- TableStyle source evidence (`<skill-root>/references/biff8-readonly.md#tablestyle-source-evidence`)
 - Default data policy (`<skill-root>/references/biff8-readonly.md#default-data-policy`)
 - Observed legacy compatibility (`<skill-root>/references/biff8-readonly.md#observed-legacy-compatibility`)
 - Real-template compatibility additions (`<skill-root>/references/biff8-readonly.md#real-template-compatibility-additions`)
@@ -41,9 +42,11 @@ Implementation follows the Microsoft MS-XLS online record/structure sections che
 2026-10-22: Record, BOF, BoundSheet8, SST/Unicode strings, Number/RK/MulRk, Blank,
 LabelSst, BoolErr, MergeCells, Date1904, XF/Format, Formula/FormulaValue and String.
 Exact official source URLs are bibliographic entries in
-et-format-evidence.json (`<skill-root>/references/et-format-evidence.json`), not runtime dependencies. No third-party
-parser code or binary samples were incorporated. All tests are synthetic MS-XLS record
-fixtures, with manual typed expectations and container fixtures; they are not WPS files.
+et-format-evidence.json (`<skill-root>/references/et-format-evidence.json`), not runtime dependencies. No third-party parser code or binary samples are incorporated in the Skill.
+Unit tests are synthetic MS-XLS fixtures; separate maintenance-only government
+ET downloads are checked by SHA-256 and stored-value source comparisons as
+recorded in government validation (`<skill-root>/references/biff8-gov-real-et-validation.md`).
+These source observations are not WPS producer/version or visual-format certification.
 
 ```console
 python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
@@ -57,7 +60,7 @@ macro/VBA and dialog sheets, recognized macro storages and encryption are refuse
 ET/ETT names may be inspected by content but native_et_ett_parsed and
 wps_compatibility_verified always remain false, even after successful BIFF extraction.
 
-## TableStyle 和 TableStyleElement：有界直接来源（2026-11-01）
+## TableStyle source evidence
 
 在 `data` 模式中，已观察到政府真实 `.et` 文件的 `TableStyle(0x088F)` 和连续 `TableStyleElement(0x0890)`。通过 `wps_biff8_tablestyles.py` 对前置 TableStyles 集合、FrtHeader、名称、1–28 个元素/类型/条纹大小、源 DXF 索引及完整连续记录进行结构校验，再保留原始 record bytes 与 `table_style_sources` 证据，标记 `effective_formatting=unknown`。该源字段仅对实际含有效组的 BIFF8 结果出现；无该记录的既有输出字段保持不变。
 
