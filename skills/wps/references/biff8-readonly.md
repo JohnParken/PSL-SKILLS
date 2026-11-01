@@ -182,12 +182,16 @@ found in original public ETT templates, even when their CFB header CLSID is alre
 These additions do not allow external workbook/add-in/DDE links, arbitrary names,
 private records or embedded chart substreams by default.
 
-The default BIFF8 `data` reader has a separate, newer **ordinary non-macro Name**
-subset: one fully bounded Unicode name with exactly one self-linked absolute
-`PtgArea3d` and a final BoundSheet8 scope consistency check. It retains original
+The default BIFF8 `data` reader has a separate **non-macro static Name** subset:
+one fully bounded ordinary Unicode name with one internal absolute `PtgArea3d`,
+or a two-area same-sheet `PtgUnion` with strict framing; selected built-in
+`Print_Titles` (full-row/full-column areas) and `_FilterDatabase` (one
+single-sheet region) have their own equally narrow checks. All are validated
+against a self-linked ExternSheet and final BoundSheet8 scope. It retains original
 bytes and marks partial; it never evaluates defined-name expressions or changes
-saved cells. Complex functions, macros, external XTI, other built-in names, and
-relative name areas are refused even in experimental salvage mode. Strict and
+saved cells, print settings or filtered rows. Complex functions, macros,
+external XTI, other built-in names, and relative name areas remain refused
+(including experimental salvage mode). Strict and
 explicit `legacy_excel_clsid` keep their historical Print_Area-only subset.
 See defined-name acceptance (`<skill-root>/references/biff8-defined-names.md`)
 and pinned real evidence (`<skill-root>/references/biff8-defined-names-evidence.json`).
