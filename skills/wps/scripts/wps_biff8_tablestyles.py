@@ -37,7 +37,7 @@ def table_style_group(records, index, dxf_count):
     flags, count, name_units = struct.unpack_from('<HIH', payload, 12)
     if flags & ~0x0006:
         raise ValueError('TableStyle reserved flags nonzero')
-    if count > MAX_TABLE_STYLE_ELEMENTS:
+    if not 1 <= count <= MAX_TABLE_STYLE_ELEMENTS:
         raise ValueError('TableStyle element count beyond spec')
     if not 1 <= name_units <= 255 or len(payload) != 20 + name_units * 2:
         raise ValueError('TableStyle name length mismatch')
