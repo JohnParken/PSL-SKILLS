@@ -1,8 +1,8 @@
 """MS-XLS Print_Titles real-producer PtgMemFunc regression.
 
-A bounded 47-byte Lbl test vector is independently published in the MIT/
-Apache open-source ExaDev documents.js print-names.test.ts as bytes from a
-LibreOffice-produced BIFF8 .xls. This is not a WPS-origin .et/.ett sample.
+A bounded 47-byte Lbl test vector is independently published in ExaDev
+ documents.js print-names.test.ts as bytes from a LibreOffice-produced BIFF8
+.xls. This is not a WPS-origin .et/.ett sample.
 No third-party parser or Office executable is imported or executed.
 """
 import struct
