@@ -4,7 +4,7 @@
 
 `python -I -S -B "<skill-root>/scripts/read_ofd.py" --check` 检查解释器、Expat、zlib 压缩解压往返，以及受限输入必需的 dir_fd / O_NOFOLLOW / O_DIRECTORY 平台能力，成功输出固定前缀 `environment-ok` 并退出 0。缺少受限读取能力时 unsupported/4，不安装组件或自动降级。`--check` 不读取业务文件。
 
-默认命令接受一个相对输入参数及可选 --version-policy known|compatible，输出一个 UTF-8 JSON 对象到 stdout，无磁盘产物。只接受任务目录内路径，拒绝绝对路径、父目录段和所有层级的符号链接（包括指向任务内的链接）。以可信任务根的目录描述符逐级打开，并在同一文件描述符上核对普通文件、大小和读取期间变化；不是针对特权并发写者的完整文件系统沙箱。无纯文本模式，避免丢失诊断和来源。`--help` 为 argparse 帮助。参数错误退出 2，帮助与参数错误采用 argparse 常规通道，不保证 JSON。
+默认命令接受一个相对输入参数及可选 --version-policy known|compatible，输出一个 UTF-8 JSON 对象到 stdout，无磁盘产物。只接受任务目录内路径，拒绝绝对路径、父目录段和所有层级的符号链接（包括指向任务内的链接）。以可信任务根的目录描述符逐级打开，并在同一文件描述符上核对普通文件、大小和读取期间变化；不是针对特权并发写者的完整文件系统沙箱。无丢弃诊断的纯文本模式；新增可选JSON概况/单页视图见 `<skill-root>/references/output-views.md`，默认完整结果不变。`--help` 为 argparse 帮助。参数错误退出 2，帮助与参数错误采用 argparse 常规通道，不保证 JSON。
 
 | status | 退出码 | 含义 |
 |---|---:|---|

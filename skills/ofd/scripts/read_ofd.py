@@ -983,12 +983,79 @@ KNOWN_ELEMENTS = set((
 ).split())
 
 
+def project_output(result, mode, *, document=None, page=None, max_chars=12000, source_sha256=None):
+    """Return an explicit bounded view, retaining the full source outcome/diagnostics."""
+    if mode == 'full':
+        return result
+    if mode not in ('summary', 'page-text'):
+        raise ReadError('unknown output view')
+    if type(max_chars) is not int or not 512 <= max_chars <= 2 * 1024 * 1024:
+        raise ReadError('view budget must be 512..2097152 characters')
+    if result.get('status') not in ('complete', 'partial'):
+        return result
+    if source_sha256 is not None and (not isinstance(source_sha256, str) or not re.fullmatch(r'[0-9a-fA-F]{64}', source_sha256, re.ASCII)):
+        raise ReadError('source fingerprint must contain exactly 64 hexadecimal digits')
+    if source_sha256 is not None and source_sha256.lower() != result['sha256']:
+        raise ReadError('source fingerprint changed; restart the scoped read')
+    documents = result['documents']
+    if document is not None and (type(document) is not int or not 1 <= document <= len(documents)):
+        raise ReadError('document index outside available documents')
+    if mode == 'page-text' and (document is None or page is None):
+        raise ReadError('page-text requires explicit document and page indices')
+    if mode == 'summary' and page is not None:
+        raise ReadError('page index requires page-text view')
+    if mode == 'page-text' and (type(page) is not int or page < 1):
+        raise ReadError('page index must be a positive integer')
+    view = {key: result[key] for key in ('status', 'diagnostics', 'format', 'text_assessment', 'signature_verification')}
+    view.update(schema_version='ofd-view-1', source_schema_version=result['schema_version'], source_sha256=result['sha256'],
+                mode=mode, scope=dict(document=document, page=page, indices='1-based storage order'),
+                coverage='overview_only_no_text' if mode == 'summary' else 'selected_page_occurrences_only',
+                source_assessment_scope='entire source; not a completeness claim for selected text',
+                structure_status=result['structure']['status'], namespace_resolution=result['structure']['namespace_resolution'],
+                omitted_top_level_fields=[key for key in result if key not in
+                                          ('status', 'diagnostics', 'format', 'text_assessment', 'signature_verification', 'documents')],
+                documents=[])
+    for index, doc in enumerate(documents, 1):
+        if document is not None and index != document:
+            continue
+        entry = dict(index=index, source=doc['source'], page_count=len(doc['pages']),
+                     omitted_fields=[key for key in doc if key not in ('source', 'pages')])
+        if mode == 'summary':
+            entry.update(page_text_runs=sum(len(item['text_runs']) for item in doc['pages']),
+                         images=sum(len(item['images']) for item in doc['pages']))
+        else:
+            if not 1 <= page <= len(doc['pages']):
+                raise ReadError('page index outside selected document')
+            selected = doc['pages'][page - 1]
+            entry['pages'] = [{key: selected[key] for key in ('number', 'id', 'source', 'text_runs')}]
+            entry['pages'][0]['omitted_fields'] = [key for key in selected if key not in ('number', 'id', 'source', 'text_runs')]
+        view['documents'].append(entry)
+    if len(json.dumps(view, ensure_ascii=False, allow_nan=False)) + 1 > max_chars:
+        raise ReadError('view or diagnostics exceed output budget; increase max-output-chars or request full output')
+    return view
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--version-policy', choices=('known', 'compatible'), default='known')
+    parser.add_argument('--view', choices=('full', 'summary', 'page-text'), default='full')
+    parser.add_argument('--document', type=int)
+    parser.add_argument('--page', type=int)
+    parser.add_argument('--max-output-chars', type=int)
+    parser.add_argument('--source-sha256')
     args = parser.parse_args(argv)
+    scoped = args.view != 'full'
+    extra_view_options = any(value is not None for value in (args.document, args.page, args.max_output_chars, args.source_sha256))
+    if (not scoped and extra_view_options) or (args.check and (scoped or extra_view_options)):
+        parser.error('view options require a non-full view and cannot be used with --check')
+    if args.view == 'page-text' and (args.document is None or args.page is None):
+        parser.error('page-text requires --document and --page')
+    if args.view == 'summary' and args.page is not None:
+        parser.error('--page requires page-text')
+    if args.source_sha256 is not None and not re.fullmatch(r'[0-9a-fA-F]{64}', args.source_sha256, re.ASCII):
+        parser.error('source-sha256 must contain exactly 64 hexadecimal digits')
     try:
         environment()
         confined_environment()
@@ -1000,6 +1067,10 @@ def main(argv=None):
             parser.error('input required unless --check')
         # Root '.' is opened once; every relative component is nofollow-opened.
         result = read_ofd(args.input, task_root='.', version_policy=args.version_policy)
+        if scoped:
+            result = project_output(result, args.view, document=args.document, page=args.page,
+                                    max_chars=12000 if args.max_output_chars is None else args.max_output_chars,
+                                    source_sha256=args.source_sha256)
         print(json.dumps(result, ensure_ascii=False, allow_nan=False))
         return 0 if result['status'] == 'complete' else 3
     except (ReadError, OSError, zipfile.BadZipFile, expat.ExpatError, RuntimeError, ValueError, ZLIB_ERROR, struct.error) as exc:
