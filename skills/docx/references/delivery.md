@@ -1,6 +1,6 @@
 # 当轮交付物与统一归档
 
-路径占位符说明：`<skill-root>` 是 DOCX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 DOCX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
 ## 目录
 
@@ -18,9 +18,9 @@
 
 每轮只归档当次实际新建或修改、已完成相应验收并准备交付给用户的文件。新建 DOCX、编辑后的 DOCX/DOTX，以及用户要求交付的文本、JSON 等文件均适用。读取 stdout、查询批注、预检不产生交付文件，不归档。输入原件、操作 JSON、恢复备份、临时图片、验收日志和历史交付物不因存在于工作目录就归档。
 
-新建 `<skill-root>/scripts/create_docx.py` 及五个编辑 CLI（`<skill-root>/scripts/edit_docx.py`、`<skill-root>/scripts/edit_structure.py`、`<skill-root>/scripts/edit_tables.py`、`<skill-root>/scripts/replace_image.py`、`<skill-root>/scripts/manage_comments.py` 的写操作）成功发布主文件后自动归档各自本次输出。编辑命令保留现有相对输出路径参数，按 交付文件命名（`<skill-root>/references/generation.md#交付文件命名`） 确定有业务含义的名称，例如 `./采购管理办法_修订版.docx`，不覆盖输入。公开交付 API 同样在主文件成功后自动归档，接口见下节；低层 Python API 保持不自动归档，仅用于中间处理。多步编辑中的中间文件使用低层 API 处理，最后一步调用公开交付 API，或在最终验收后只将已完成的最终文件交给显式清单入口；不要把会自动归档的 CLI 输出当作无需归档的临时步骤。读取保存结果和低层 API 等其他方式产生的最终文件，使用下方显式清单入口完成归档；它只复制文件，不代替格式或内容验收。
+新建 `<skill-root>/scripts/create_docx.py` 及五个编辑 CLI（`<skill-root>/scripts/edit_docx.py`、`<skill-root>/scripts/edit_structure.py`、`<skill-root>/scripts/edit_tables.py`、`<skill-root>/scripts/replace_image.py`、`<skill-root>/scripts/manage_comments.py` 的写操作）成功发布主文件后自动归档各自本次输出。编辑命令保留现有相对输出路径参数，按 交付文件命名（`<skill-root>/references/generation-runtime.md#交付文件命名`） 确定有业务含义的名称，例如 `./采购管理办法_修订版.docx`，不覆盖输入。公开交付 API 同样在主文件成功后自动归档，接口见下节；低层 Python API 保持不自动归档，仅用于中间处理。多步编辑中的中间文件使用低层 API 处理，最后一步调用公开交付 API，或在最终验收后只将已完成的最终文件交给显式清单入口；不要把会自动归档的 CLI 输出当作无需归档的临时步骤。读取保存结果和低层 API 等其他方式产生的最终文件，使用下方显式清单入口完成归档；它只复制文件，不代替格式或内容验收。
 
-归档处理必须执行；“附加步骤”只表示失败不影响主文件，不表示可以省略。CLI 和公开交付 API 共用 `archive_outputs()`；`--check` 只执行自检，不能代替归档。探针和归档复制暂存文件均直接位于任务根目录 `./`；归档目录自检仅核对路径及访问权限（`access-only`），真实写入以复制结果为准。跨文件系统替换失败时保留主文件和已有副本并报告，不改用归档目录暂存。每轮交付前核对本轮清单，确认每个交付物的归档结果；跳过或失败仅作为警告报告，不阻止已完成主文件的交付。多轮不维护全目录累计清单，不扫描目录，不自动搬迁旧布局文件。按 命名规则（`<skill-root>/references/generation.md#交付文件命名`） 在写入前处理已知同名冲突；脚本不判断业务归属，相同归档文件名表示更新该副本；需要保留多个版本时，给当轮交付物使用不同文件名。
+归档处理必须执行；“附加步骤”只表示失败不影响主文件，不表示可以省略。CLI 和公开交付 API 共用 `archive_outputs()`；`--check` 只执行自检，不能代替归档。探针和归档复制暂存文件均直接位于任务根目录 `./`；归档目录自检仅核对路径及访问权限（`access-only`），真实写入以复制结果为准。跨文件系统替换失败时保留主文件和已有副本并报告，不改用归档目录暂存。每轮交付前核对本轮清单，确认每个交付物的归档结果；跳过或失败仅作为警告报告，不阻止已完成主文件的交付。多轮不维护全目录累计清单，不扫描目录，不自动搬迁旧布局文件。按 命名规则（`<skill-root>/references/generation-runtime.md#交付文件命名`） 在写入前处理已知同名冲突；脚本不判断业务归属，相同归档文件名表示更新该副本；需要保留多个版本时，给当轮交付物使用不同文件名。
 
 ## 用户展示与机器元信息
 
@@ -117,7 +117,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_deliverables.py\
 
 ## 路径、保护和状态
 
-每次调用从 `ROUTER_CONFIG_VARIABLES` 外层参数列表提取唯一 `name="commonParam"` 项的 `value`，将其解析为内层参数列表，再提取唯一 `name="questionId"` 项的 `value`；兼容原直接字典外层配置，规则见 配置约定（`<skill-root>/references/generation.md#输出目录与文件名`）。有效配置归档到 `./output/{questionId}/原文件名`；配置缺失或无效则跳过并给出固定原因码。保护输入和其他本轮交付物，拒绝符号链接、硬链接别名冲突、目录输出、父目录或绝对输出路径。已在目标归档路径的交付物标为 `already_archived`，不会复制自身；它仍不能与受保护输入同源。
+每次调用从 `ROUTER_CONFIG_VARIABLES` 外层参数列表提取唯一 `name="commonParam"` 项的 `value`，将其解析为内层参数列表，再提取唯一 `name="questionId"` 项的 `value`；兼容原直接字典外层配置，规则见 配置约定（`<skill-root>/references/generation-runtime.md#输出目录与文件名`）。有效配置归档到 `./output/{questionId}/原文件名`；配置缺失或无效则跳过并给出固定原因码。保护输入和其他本轮交付物，拒绝符号链接、硬链接别名冲突、目录输出、父目录或绝对输出路径。已在目标归档路径的交付物标为 `already_archived`，不会复制自身；它仍不能与受保护输入同源。
 
 归档采用任务根目录./内独占临时文件，完整复制、同步、设置权限后，以原子独占硬链接发布并删除临时链接；不在归档目录暂存。目标已存在时返回archive_conflict，旧归档字节和权限不变。硬链接不可用或跨文件系统时归档失败，不回退覆盖。主文件仍保持成功；清理失败同时返回temporary_residuals，自动runner报告cleanup_incomplete。仅显式授权更新时使用原子replace并保留旧归档权限。路径、输入及内容验证继续执行；并发目录改写仍须宿主隔离，多文件不构成整批事务。
 
@@ -127,7 +127,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_deliverables.py\
 
 编辑成功的原结果放在 `result`，顶层 `output` 是本次编辑文件；批注只读查询保持原输出格式。主文件生成/编辑本身失败仍维持原非零返回，不归档旧输出。参数用法错误仍非零退出，不属于归档步骤警告。
 
-新建生成器保留单文件摘要字段，并包含统一入口的 `files` 明细，见 生成说明（`<skill-root>/references/generation.md#输出目录与文件名`）。不要混用摘要结构，也不要仅凭退出码 0 把 `skipped` 或 `failed` 宣称为已归档。交付已成功的主文件并单独报告归档警告，不把归档失败当成主文件失败，不隐藏未完成副本或清理残留。
+新建生成器保留单文件摘要字段，并包含统一入口的 `files` 明细，见 生成说明（`<skill-root>/references/generation-runtime.md#输出目录与文件名`）。不要混用摘要结构，也不要仅凭退出码 0 把 `skipped` 或 `failed` 宣称为已归档。交付已成功的主文件并单独报告归档警告，不把归档失败当成主文件失败，不隐藏未完成副本或清理残留。
 
 ## 维护与复用模块边界
 

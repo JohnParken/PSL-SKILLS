@@ -18,6 +18,7 @@ import unicodedata
 import zipfile
 import zlib
 from pathlib import Path
+from xml.sax.saxutils import quoteattr
 from typing import Any
 from xml.etree import ElementTree as ET
 
@@ -28,12 +29,13 @@ from artifact_files import (_check_delivery_path, _prepare_delivery_directory,
                             _paths_alias, _archive_output_path, _copy_main_to_archive)
 
 from office import xmlio
-from office.layout_diagnostics import (
-    LAYOUT_TRUNCATION_NOTICE,
-    diagnose_layout,
-    layout_warning_messages,
-)
 from office.runtime import check_runtime
+from office.formatting.profiles import apply_profile
+from office.formatting.sections import parse_section, SECTION_KEYS, BREAK_TYPES
+from office.formatting.tables import normalize_merged_grid
+from office.formatting.paragraphs import (
+    PARAGRAPH_FORMAT_FIELDS, append_paragraph_properties,
+)
 from output_location import OutputLocation, resolve_output_location, read_router_config_from_environment
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -56,6 +58,7 @@ _CONTENT_TYPES = {
     "document": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
     "styles": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml",
     "numbering": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml",
+    "settings": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml",
     "header": "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml",
     "footer": "application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml",
 }
@@ -63,6 +66,7 @@ _REL_TYPES = {
     "officeDocument": f"{R}/officeDocument",
     "styles": f"{R}/styles",
     "numbering": f"{R}/numbering",
+    "settings": f"{R}/settings",
     "header": f"{R}/header",
     "footer": f"{R}/footer",
     "image": f"{R}/image",
@@ -77,10 +81,9 @@ _COLOR_RE = re.compile(r"^[0-9A-Fa-f]{6}$")
 _ALIGNMENTS = {"left", "center", "right", "justify"}
 _STYLE_FIELDS = {
     "font_east_asia", "font_latin", "size_pt", "bold", "align",
-    "first_line_chars", "left_indent_pt", "right_indent_pt", "hanging_indent_pt",
-    "line_spacing_pt", "space_before_pt", "space_after_pt", "line_spacing_multiple", "color",
-    "keep_with_next", "keep_together", "widow_control", "page_break_before", "tab_stops",
-}
+    "first_line_chars", "line_spacing_pt", "space_before_pt", "space_after_pt",
+    "line_spacing_multiple", "color",
+} | PARAGRAPH_FORMAT_FIELDS
 _STYLE_DEFAULTS = {
     "body": {
         "font_east_asia": "仿宋", "font_latin": "Times New Roman", "size_pt": 16,
@@ -182,6 +185,8 @@ def _validate_style_fields(value: Any, label: str) -> dict:
     fields = _object(value, label, _STYLE_FIELDS)
     if "line_spacing_pt" in fields and "line_spacing_multiple" in fields:
         raise ValueError(f"{label} cannot set both line_spacing_pt and line_spacing_multiple")
+    if len(set(fields) & {"first_line_chars", "first_line_indent_pt", "hanging_indent_pt"}) > 1:
+        raise ValueError(f"{label} cannot mix first-line character, first-line point, and hanging indents")
     result: dict[str, Any] = {}
     for key, field_value in fields.items():
         field_label = f"{label}.{key}"
@@ -189,7 +194,7 @@ def _validate_style_fields(value: Any, label: str) -> dict:
             result[key] = _single_line_text(field_value, field_label)
         elif key == "size_pt":
             result[key] = _number(field_value, field_label, 1, 200)
-        elif key == "bold":
+        elif key in {"bold", "keep_with_next", "keep_together", "widow_control", "page_break_before"}:
             if not isinstance(field_value, bool):
                 raise ValueError(f"{field_label} must be a boolean")
             result[key] = field_value
@@ -199,8 +204,6 @@ def _validate_style_fields(value: Any, label: str) -> dict:
             result[key] = field_value
         elif key == "first_line_chars":
             result[key] = _number(field_value, field_label, 0, 20, allow_zero=True)
-        elif key in {"left_indent_pt", "right_indent_pt", "hanging_indent_pt"}:
-            result[key] = _number(field_value, field_label, 0, 1584, allow_zero=True)
         elif key == "line_spacing_pt":
             result[key] = _number(field_value, field_label, 1, 400)
         elif key == "line_spacing_multiple":
@@ -210,46 +213,27 @@ def _validate_style_fields(value: Any, label: str) -> dict:
             if not _COLOR_RE.fullmatch(color):
                 raise ValueError(f"{field_label} must be six hexadecimal RGB characters without #")
             result[key] = color.upper()
-        elif key in ("space_before_pt", "space_after_pt"):
+        elif key in ("space_before_pt", "space_after_pt",
+                     "left_indent_pt", "right_indent_pt", "first_line_indent_pt", "hanging_indent_pt"):
             result[key] = _number(field_value, field_label, 0, 400, allow_zero=True)
-        elif key in {"keep_with_next", "keep_together", "widow_control", "page_break_before"}:
-            if not isinstance(field_value, bool):
-                raise ValueError(f"{field_label} must be a boolean")
-            result[key] = field_value
         elif key == "tab_stops":
-            result[key] = _validate_tab_stops(field_value, field_label)
-    if result.get("first_line_chars", 0) > 0 and result.get("hanging_indent_pt", 0) > 0:
-        raise ValueError(f"{label} cannot set nonzero first_line_chars and hanging_indent_pt together")
+            if not isinstance(field_value, list) or len(field_value) > 32:
+                raise ValueError(f"{field_label} must be a list of at most 32 tab stops")
+            stops = []
+            previous = -1.0
+            for index, stop in enumerate(field_value):
+                prefix = f"{field_label}[{index}]"
+                stop = _object(stop, prefix, {"position_pt", "align"}, {"position_pt", "align"})
+                position = _number(stop["position_pt"], prefix + ".position_pt", 0, 1000, allow_zero=True)
+                if position <= previous:
+                    raise ValueError(f"{field_label} positions must be strictly increasing")
+                align = stop["align"]
+                if not isinstance(align, str) or align not in {"left", "right", "center", "decimal"}:
+                    raise ValueError(f"{prefix}.align must be left, right, center or decimal")
+                previous = position
+                stops.append({"position_pt": position, "align": align})
+            result[key] = stops
     return result
-
-
-def _validate_tab_stops(value: Any, label: str) -> list[dict]:
-    if not isinstance(value, list) or not 1 <= len(value) <= 64:
-        raise ValueError(f"{label} must be an array of 1 to 64 tab stops")
-    stops = []
-    positions = set()
-    alignments = {"left", "center", "right", "decimal", "clear"}
-    leaders = {"none", "dot", "hyphen", "underscore"}
-    for index, value in enumerate(value):
-        stop_label = f"{label}[{index}]"
-        fields = _object(value, stop_label, {"position_pt", "align", "leader"},
-                         {"position_pt", "align"})
-        position = _number(fields["position_pt"], f"{stop_label}.position_pt", 0, 1584,
-                           allow_zero=True)
-        align = fields["align"]
-        if not isinstance(align, str) or align not in alignments:
-            raise ValueError(f"{stop_label}.align must be left, center, right, decimal, or clear")
-        if align == "clear" and "leader" in fields:
-            raise ValueError(f"{stop_label}.leader is not allowed when align is clear")
-        leader = fields.get("leader", "none")
-        if not isinstance(leader, str) or leader not in leaders:
-            raise ValueError(f"{stop_label}.leader must be none, dot, hyphen, or underscore")
-        position_twips = _points_to_twips(position)
-        if position_twips in positions:
-            raise ValueError(f"{label} contains duplicate positions after twips rounding")
-        positions.add(position_twips)
-        stops.append({"position_pt": position, "align": align, "leader": leader})
-    return sorted(stops, key=lambda stop: int(_points_to_twips(stop["position_pt"])))
 
 
 def _merge_table_text_format(base: dict, layer: dict) -> dict:
@@ -258,10 +242,11 @@ def _merge_table_text_format(base: dict, layer: dict) -> dict:
         result.pop("line_spacing_multiple", None)
     elif "line_spacing_multiple" in layer:
         result.pop("line_spacing_pt", None)
-    if "hanging_indent_pt" in layer and "first_line_chars" not in layer:
-        result.pop("first_line_chars", None)
-    elif "first_line_chars" in layer and "hanging_indent_pt" not in layer:
-        result.pop("hanging_indent_pt", None)
+    for key in ("first_line_chars", "first_line_indent_pt", "hanging_indent_pt"):
+        if key in layer:
+            for previous in ("first_line_chars", "first_line_indent_pt", "hanging_indent_pt"):
+                if previous != key:
+                    result.pop(previous, None)
     result.update(layer)
     return result
 
@@ -466,15 +451,13 @@ def _normalize_run_fonts(run: dict) -> dict:
     return normalized
 
 
-def _text(value: Any, label: str, *, allow_empty: bool = True, allow_tab: bool = False) -> str:
+def _text(value: Any, label: str, *, allow_empty: bool = True) -> str:
     if not isinstance(value, str):
         raise ValueError(f"{label} must be a string")
     if not allow_empty and not value:
         raise ValueError(f"{label} must not be empty")
     for index, char in enumerate(value):
         point = ord(char)
-        if char == "\t" and allow_tab:
-            continue
         if unicodedata.category(char) == "Cc" or not (
             point in (0x9, 0xA, 0xD)
             or 0x20 <= point <= 0xD7FF
@@ -644,10 +627,13 @@ def _prepare_image(fields: dict, base_dir: Path, label: str, max_width: int, max
 
 def _validate_run(value: Any, label: str) -> dict:
     run = _object(value, label,
-                  {"text", "bold", "italic", "underline", "font", "font_east_asia",
-                   "font_latin", "size_pt", "color"},
-                  {"text"})
-    result = {"text": _text(run["text"], f"{label}.text", allow_tab=True)}
+                  {"text", "tab", "bold", "italic", "underline", "font", "font_east_asia",
+                   "font_latin", "size_pt", "color"})
+    if ("text" in run) == ("tab" in run):
+        raise ValueError(f"{label} must contain exactly one of text or tab")
+    if "tab" in run and run["tab"] is not True:
+        raise ValueError(f"{label}.tab must be true")
+    result = {"tab": True} if "tab" in run else {"text": _text(run["text"], f"{label}.text")}
     for key in ("bold", "italic", "underline"):
         if key in run:
             if not isinstance(run[key], bool):
@@ -667,85 +653,37 @@ def _validate_run(value: Any, label: str) -> dict:
 
 
 def _validate_spec(spec: Any, base_dir: Path) -> dict:
-    source = _object(spec, "spec", {
-        "page", "styles", "table_format", "header", "footer", "page_numbers", "blocks", "theme", "deduplicate_images", "office_preset", "pagination_preset",
+    source = _object(apply_profile(spec), "spec", {
+        "page", "styles", "table_format", "header", "footer", "headers", "footers",
+        "page_numbers", "different_first_page", "first_page_numbers",
+        "odd_even_headers", "page_number_start", "page_number_format",
+        "blocks", "theme", "profile", "deduplicate_images", "heading_numbering",
     }, {"blocks"})
-    from copy import deepcopy
-    source = deepcopy(source)
-    preset = source.pop('office_preset', None)
-    if preset not in (None, 'bank_report', 'bank_letter'):
-        raise ValueError('office_preset must be bank_report or bank_letter')
-    pagination = source.pop('pagination_preset', None)
-    if pagination not in (None, 'stable'):
-        raise ValueError('pagination_preset must be stable')
-    if preset is not None:
-        source.setdefault('theme', 'business')
-        styles = source.setdefault('styles', {})
-        if not isinstance(styles, dict):
-            raise ValueError('styles must be an object')
-        for name in ('body', 'table_body', 'table_header'):
-            current = styles.setdefault(name, {})
-            if not isinstance(current, dict):
-                raise ValueError('style must be an object')
-            defaults = {'size_pt': 11 if name == 'body' else 10.5}
-            for key, value in defaults.items(): current.setdefault(key, value)
-        source.setdefault('table_format', {'preset':'zebra' if preset == 'bank_report' else 'grid'})
-    if pagination == 'stable':
-        styles = source.setdefault('styles', {})
-        if not isinstance(styles, dict): raise ValueError('styles must be an object')
-        for name in ('title','subtitle','heading1','heading2','heading3','heading4'):
-            layer = styles.setdefault(name,{})
-            if not isinstance(layer, dict): raise ValueError('style must be an object')
-            layer.setdefault('keep_with_next', True)
-        layer = styles.setdefault('body',{})
-        if not isinstance(layer, dict): raise ValueError('style must be an object')
-        layer.setdefault('widow_control', True)
-    page = _object(source.get("page", {}), "page", {
-        "width_mm", "height_mm", "margin_mm", "margin_top_mm", "margin_bottom_mm",
-        "margin_left_mm", "margin_right_mm", "header_distance_mm", "footer_distance_mm",
-    })
-    width = _number(page.get("width_mm", 210), "page.width_mm", 1, _MAX_PAGE_MM)
-    height = _number(page.get("height_mm", 297), "page.height_mm", 1, _MAX_PAGE_MM)
-    legacy_margin = _number(page["margin_mm"], "page.margin_mm", 0, _MAX_MARGIN_MM, allow_zero=True) \
-        if "margin_mm" in page else None
-    margin_defaults = {"top": 25.4, "bottom": 25.4, "left": 31.8, "right": 31.8}
-    margins = {}
-    for side in ("top", "bottom", "left", "right"):
-        key = f"margin_{side}_mm"
-        if key in page:
-            supplied = _number(page[key], f"page.{key}", 0, _MAX_MARGIN_MM, allow_zero=True)
-        else:
-            supplied = legacy_margin if legacy_margin is not None else margin_defaults[side]
-        margins[side] = supplied
-    page_twips = {
-        "width": _twips(width), "height": _twips(height),
-        **{side: _twips(value) for side, value in margins.items()},
-    }
-    for side, edge in (('header','top'),('footer','bottom')):
-        key = side + '_distance_mm'
-        if key in page:
-            distance = _twips(_number(page[key], 'page.'+key, 0, _MAX_PAGE_MM, allow_zero=True))
-            if distance > page_twips[edge]:
-                raise ValueError('Header/footer distance must not exceed its page margin')
-            page_twips[side] = distance
-    available_width = page_twips["width"] - page_twips["left"] - page_twips["right"]
-    available_height = page_twips["height"] - page_twips["top"] - page_twips["bottom"]
-    if available_width <= 0 or available_height <= 0:
-        raise ValueError("page margins must leave positive width and height for content after rounding")
+    odd_even_headers = source.get("odd_even_headers", False)
+    if type(odd_even_headers) is not bool:
+        raise ValueError("odd_even_headers must be a boolean")
+    initial_options = {key: source[key] for key in SECTION_KEYS if key in source}
+    section = parse_section(initial_options, None, "spec", twips=_twips,
+                            text_validator=_text, odd_even_headers=odd_even_headers)
+    sections = [section]
+    page_twips = section["page_twips"]
+    available_width = section["available_width_twips"]
+    available_height = section["available_height_twips"]
     theme = source.get("theme", "official")
     if not isinstance(theme, str) or theme not in {"official", "business", "academic"}:
         raise ValueError("theme must be official, business, or academic")
+    heading_numbering = source.get("heading_numbering", "none")
+    if heading_numbering not in {"none", "decimal", "chinese"} or not isinstance(heading_numbering, str):
+        raise ValueError("heading_numbering must be none, decimal, or chinese")
     styles = _validated_styles(source.get("styles", {}), theme)
     table_layout = _merge_table_layout(
         _TABLE_LAYOUT_DEFAULTS,
         _validate_table_layout(source["table_format"], "table_format") if "table_format" in source else {},
     )
 
-    header = _text(source["header"], "header") if "header" in source else None
-    footer = _text(source["footer"], "footer") if "footer" in source else None
-    page_numbers = source.get("page_numbers", False)
-    if not isinstance(page_numbers, bool):
-        raise ValueError("page_numbers must be a boolean")
+    header = section["headers"]["default"]
+    footer = section["footers"]["default"]
+    page_numbers = section["page_numbers"]
     deduplicate_images = source.get("deduplicate_images", False)
     if not isinstance(deduplicate_images, bool):
         raise ValueError("deduplicate_images must be a boolean")
@@ -757,6 +695,8 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
     blocks: list[dict] = []
     image_paths: list[Path] = []
     shared_lists = {}
+    bookmarks = set()
+    references = []
     for index, value in enumerate(blocks_value):
         label = f"blocks[{index}]"
         if not isinstance(value, dict):
@@ -771,7 +711,7 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                 formatting.update(_validate_style_fields({"align": block["align"]}, f"{label}.format"))
             blocks.append({"type": kind, "text": _text(block["text"], f"{label}.text"), "format": formatting})
         elif kind == "heading":
-            block = _object(value, label, {"type", "text", "level", "format", "align"},
+            block = _object(value, label, {"type", "text", "level", "format", "align", "bookmark"},
                             {"type", "text", "level"})
             level = block["level"]
             if isinstance(level, bool) or not isinstance(level, int) or level not in (1, 2, 3, 4):
@@ -781,8 +721,24 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
             align = block.get("align")
             if "align" in block and (not isinstance(align, str) or align not in _ALIGNMENTS):
                 raise ValueError(f"{label}.align must be left, center, right, or justify")
+            bookmark = None
+            if "bookmark" in block:
+                bookmark = _text(block["bookmark"], f"{label}.bookmark", allow_empty=False)
+                if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,39}", bookmark):
+                    raise ValueError(f"{label}.bookmark must be 1-40 ASCII letters, digits or underscores, starting with a letter")
+                if bookmark.lower() in bookmarks:
+                    raise ValueError(f"{label}.bookmark must be unique (case-insensitive)")
+                bookmarks.add(bookmark.lower())
             blocks.append({"type": kind, "text": _text(block["text"], f"{label}.text"),
-                           "level": level, "format": block_format, "align": align})
+                           "level": level, "format": block_format, "align": align,
+                           "bookmark": bookmark, "bookmark_id": len(bookmarks) if bookmark else None})
+        elif kind == "toc":
+            block = _object(value, label, {"type", "title", "depth"}, {"type"})
+            depth = block.get("depth", 3)
+            if type(depth) is not int or not 1 <= depth <= 4:
+                raise ValueError(f"{label}.depth must be an integer from 1 to 4")
+            title = _single_line_text(block.get("title", "目录"), f"{label}.title")
+            blocks.append({"type": kind, "title": title, "depth": depth})
         elif kind == "paragraph":
             block = _object(value, label, {"type", "text", "runs", "format", "align"}, {"type"})
             if ("text" in block) == ("runs" in block):
@@ -793,7 +749,7 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
             block_format = _validate_style_fields(block["format"], f"{label}.format") \
                 if "format" in block else {}
             if "text" in block:
-                content: Any = _text(block["text"], f"{label}.text", allow_tab=True)
+                content: Any = _text(block["text"], f"{label}.text")
             else:
                 if not isinstance(block["runs"], list):
                     raise ValueError(f"{label}.runs must be an array")
@@ -834,7 +790,7 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                            "list_id": list_id, "level": level})
         elif kind == "table":
             block = _object(value, label, {
-                "type", "rows", "widths_mm", "header", "header_rows", "format", "body_format", "header_format", "column_formats",
+                "type", "rows", "widths_mm", "header", "header_rows", "format", "body_format", "header_format", "caption",
             }, {"type", "rows"})
             if not isinstance(block["rows"], list) or not block["rows"]:
                 raise ValueError(f"{label}.rows must be a non-empty array")
@@ -849,6 +805,7 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                     raise ValueError(f"{label}.rows must be rectangular")
                 rows.append(list(row))
             assert columns is not None
+            rows, has_merges = normalize_merged_grid(rows, label)
             if "header" in block and not isinstance(block["header"], bool):
                 raise ValueError(f"{label}.header must be a boolean")
             header_rows = block.get("header_rows", 1 if block.get("header", False) else 0)
@@ -856,16 +813,14 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                 raise ValueError(f"{label}.header_rows must be an integer from 0 to the row count")
             if "header" in block and "header_rows" in block and header_rows != int(block["header"]):
                 raise ValueError(f"{label}.header and header_rows conflict; choose one header declaration")
+            if has_merges and any(
+                isinstance(cell, dict) and cell.get("row_span", 1) > 1 and
+                row_index < header_rows < row_index + cell["row_span"]
+                for row_index, row in enumerate(rows) for cell in row
+            ):
+                raise ValueError(f"{label}: vertically merged cells cannot cross the repeating-header boundary")
             layout_overrides = _validate_table_layout(block["format"], f"{label}.format") \
                 if "format" in block else {}
-            column_formats = block.get('column_formats', {})
-            if not isinstance(column_formats, dict): raise ValueError('column_formats must be an object')
-            parsed_columns = {}
-            for key, formatting in column_formats.items():
-                if not isinstance(key, str) or not re.fullmatch(r'[1-9][0-9]*', key) or int(key) > len(rows[0]):
-                    raise ValueError('column_formats keys must be existing 1-based column numbers')
-                fields = _object(formatting, label+'.column_formats.'+key, {'body','header'})
-                parsed_columns[key] = {scope:_validate_table_text_fields(value,label+'.column_formats.'+key+'.'+scope) for scope,value in fields.items()}
             body_overrides = _validate_table_text_fields(block["body_format"], f"{label}.body_format") \
                 if "body_format" in block else {}
             header_overrides = _validate_table_text_fields(block["header_format"], f"{label}.header_format") \
@@ -897,14 +852,26 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                 parsed = []
                 for column, cell in enumerate(row):
                     cell_label = f"{label}.rows[{row_index}][{column}]"
+                    if cell is None:
+                        parsed.append(None)
+                        continue
+                    if isinstance(cell, dict) and cell.get("v_merge") == "continue":
+                        parsed.append(cell)
+                        continue
                     if isinstance(cell, str):
                         parsed.append(_text(cell, cell_label))
                         continue
-                    fields = _object(cell, cell_label, {"text", "image", "borders"})
+                    fields = _object(cell, cell_label, {"text", "image", "borders", "col_span", "row_span", "v_merge"})
                     if not ({"text", "image"} & fields.keys()):
                         raise ValueError(f"{cell_label} must contain text and/or image")
                     text = _text(fields.get("text", ""), f"{cell_label}.text")
                     normalized = {"text": text, "image": None}
+                    if "col_span" in fields:
+                        normalized["col_span"] = fields["col_span"]
+                    if "row_span" in fields:
+                        normalized["row_span"] = fields["row_span"]
+                        if fields["row_span"] > 1:
+                            normalized["v_merge"] = "restart"
                     if "borders" in fields:
                         _object(fields["borders"], f"{cell_label}.borders", {"top", "left", "bottom", "right"})
                         normalized["borders"] = _validate_borders(fields["borders"], f"{cell_label}.borders")
@@ -914,14 +881,15 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                                                {"path", "width_mm", "height_mm", "alt"},
                                                {"path", "alt"})
                         image = _prepare_image(image_fields, base_dir, image_label,
-                                               (widths_twips[column] - horizontal_padding) * 635,
+                                               (sum(widths_twips[column:column + normalized.get("col_span", 1)]) - horizontal_padding) * 635,
                                                (available_height - vertical_padding) * 635, resources)
                         image_paths.append(image["image_path"])
                         normalized["image"] = image
                     parsed.append(normalized)
                 parsed_rows.append(parsed)
-            _cell_borders(parsed_rows, resolved_layout, label)
-            if resolved_layout["preset"] == "three_line" and 0 < header_rows < len(parsed_rows):
+            if not has_merges:
+                _cell_borders(parsed_rows, resolved_layout, label)
+            if not has_merges and resolved_layout["preset"] == "three_line" and 0 < header_rows < len(parsed_rows):
                 for column in range(columns):
                     for row_index, edge in ((header_rows - 1, "bottom"), (header_rows, "top")):
                         cell = parsed_rows[row_index][column]
@@ -931,9 +899,22 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                         cell.setdefault("borders", {}).setdefault(edge, {
                             "style": "single", "width_pt": 0.75, "color": resolved_layout["border_color"],
                         })
-            blocks.append({"type": kind, "rows": parsed_rows, "widths_twips": widths_twips,
+            if has_merges and resolved_layout["preset"] == "three_line" and 0 < header_rows < len(parsed_rows):
+                for row_index, edge in ((header_rows - 1, "bottom"), (header_rows, "top")):
+                    for column, cell in enumerate(parsed_rows[row_index]):
+                        if cell is None:
+                            continue
+                        if isinstance(cell, str):
+                            cell = {"text": cell, "image": None}
+                            parsed_rows[row_index][column] = cell
+                        cell.setdefault("borders", {}).setdefault(edge, {
+                            "style": "single", "width_pt": 0.75, "color": resolved_layout["border_color"],
+                        })
+            caption = _text(block["caption"], f"{label}.caption", allow_empty=False) if "caption" in block else None
+            blocks.append({"type": kind, "caption": caption, "rows": parsed_rows, "widths_twips": widths_twips,
                            "header": header_rows > 0, "header_rows": header_rows, "format": resolved_layout,
-                           "body_format": body_overrides, "header_format": header_overrides, "column_formats": parsed_columns})
+                           "body_format": body_overrides, "header_format": header_overrides,
+                           "has_merges": has_merges})
         elif kind == "image":
             block = _object(value, label, {"type", "path", "width_mm", "height_mm", "alt"},
                             {"type", "path", "alt"})
@@ -941,12 +922,46 @@ def _validate_spec(spec: Any, base_dir: Path) -> dict:
                                    resources)
             image_paths.append(image["image_path"])
             blocks.append(image)
+        elif kind == "section_break":
+            block = _object(value, label, {"type", "break_type"} | SECTION_KEYS, {"type"})
+            if not blocks or blocks[-1]["type"] == "section_break":
+                raise ValueError(f"{label} cannot start a document or immediately follow another section break")
+            break_type = block.get("break_type", "next_page")
+            if type(break_type) is not str or break_type not in BREAK_TYPES:
+                raise ValueError(f"{label}.break_type must be one of {sorted(BREAK_TYPES)}")
+            section = parse_section({key: val for key, val in block.items() if key in SECTION_KEYS},
+                                    section, label, twips=_twips, text_validator=_text,
+                                    odd_even_headers=odd_even_headers)
+            section["break_type"] = BREAK_TYPES[break_type]
+            sections.append(section)
+            available_width = section["available_width_twips"]
+            available_height = section["available_height_twips"]
+            blocks.append({"type": kind, "section_index": len(sections) - 1})
+        elif kind == "reference":
+            block = _object(value, label, {"type", "bookmark", "kind", "prefix", "suffix"}, {"type", "bookmark"})
+            bookmark = _text(block["bookmark"], f"{label}.bookmark", allow_empty=False)
+            if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,39}", bookmark):
+                raise ValueError(f"{label}.bookmark must be a valid ASCII bookmark name")
+            ref_kind = block.get("kind", "text")
+            if type(ref_kind) is not str or ref_kind not in {"text", "page"}:
+                raise ValueError(f"{label}.kind must be text or page")
+            references.append((bookmark.lower(), label))
+            blocks.append({"type": kind, "bookmark": bookmark, "kind": ref_kind,
+                           "prefix": _text(block.get("prefix", ""), f"{label}.prefix"),
+                           "suffix": _text(block.get("suffix", ""), f"{label}.suffix")})
         elif kind == "page_break":
             _object(value, label, {"type"}, {"type"})
             blocks.append({"type": kind})
         else:
             raise ValueError(f"{label}.type has unsupported value {kind!r}")
+    if blocks and blocks[-1]["type"] == "section_break":
+        raise ValueError("document must not end with section_break")
+    for bookmark, location in references:
+        if bookmark not in bookmarks:
+            raise ValueError(f"{location}.bookmark refers to an undefined heading bookmark")
     return {
+        "sections": sections, "odd_even_headers": odd_even_headers,
+        "heading_numbering": heading_numbering,
         "page_twips": page_twips, "available_width_twips": available_width,
         "available_height_twips": available_height, "styles": styles, "table_format": table_layout,
         "blocks": blocks,
@@ -1007,105 +1022,33 @@ def _add_text_run(parent: ET.Element, text: str, formatting: dict | None = None)
         _append_character_properties(props, formatting)
         if len(props):
             run.append(props)
-    segments = text.split("\t")
-    for index, segment in enumerate(segments):
-        if segment or not text:
-            text_element = ET.SubElement(run, _q(W, "t"))
-            if segment[:1].isspace() or segment[-1:].isspace():
-                text_element.set(_q(XML, "space"), "preserve")
-            text_element.text = segment
-        if index < len(segments) - 1:
-            ET.SubElement(run, _q(W, "tab"))
+    text_element = ET.SubElement(run, _q(W, "t"))
+    if text[:1].isspace() or text[-1:].isspace():
+        text_element.set(_q(XML, "space"), "preserve")
+    text_element.text = text
 
 
-def _append_paragraph_properties(props: ET.Element, formatting: dict, *, style: str | None = None,
-                                 num_id: int | None = None, list_level: int = 0,
-                                 outline_level: int | None = None,
-                                 keep_next_default: bool = False,
-                                 numbering_tab: dict | None = None,
-                                 numbering_indent: dict | None = None) -> None:
-    if style:
-        ET.SubElement(props, _q(W, "pStyle"), {_q(W, "val"): style})
-    for key, tag in (("keep_with_next", "keepNext"), ("keep_together", "keepLines"),
-                     ("page_break_before", "pageBreakBefore"), ("widow_control", "widowControl")):
-        if key in formatting:
-            ET.SubElement(props, _q(W, tag), {_q(W, "val"): "1" if formatting[key] else "0"})
-        elif key == "keep_with_next" and keep_next_default:
-            ET.SubElement(props, _q(W, tag))
-    if num_id is not None:
-        num_props = ET.SubElement(props, _q(W, "numPr"))
-        ET.SubElement(num_props, _q(W, "ilvl"), {_q(W, "val"): str(list_level)})
-        ET.SubElement(num_props, _q(W, "numId"), {_q(W, "val"): str(num_id)})
-    tab_stops = formatting.get("tab_stops")
-    if tab_stops or numbering_tab is not None:
-        tabs = ET.SubElement(props, _q(W, "tabs"))
-        stops = []
-        if tab_stops:
-            for stop in tab_stops:
-                attributes = {
-                    _q(W, "val"): stop["align"],
-                    _q(W, "pos"): _points_to_twips(stop["position_pt"]),
-                }
-                if stop["align"] != "clear" and stop["leader"] != "none":
-                    attributes[_q(W, "leader")] = stop["leader"]
-                stops.append((int(attributes[_q(W, "pos")]), attributes))
-        if numbering_tab is not None:
-            stops.append((int(numbering_tab["pos"]), {
-                _q(W, "val"): numbering_tab["val"],
-                _q(W, "pos"): numbering_tab["pos"],
-            }))
-        for _, attributes in sorted(stops, key=lambda item: item[0]):
-            ET.SubElement(tabs, _q(W, "tab"), attributes)
-    if "space_before_pt" in formatting or "space_after_pt" in formatting \
-            or "line_spacing_pt" in formatting or "line_spacing_multiple" in formatting:
-        attrs = {}
-        if "space_before_pt" in formatting:
-            attrs[_q(W, "before")] = _points_to_twips(formatting["space_before_pt"])
-        if "space_after_pt" in formatting:
-            attrs[_q(W, "after")] = _points_to_twips(formatting["space_after_pt"])
-        if "line_spacing_pt" in formatting:
-            attrs[_q(W, "line")] = _points_to_twips(formatting["line_spacing_pt"])
-            attrs[_q(W, "lineRule")] = "exact"
-        elif "line_spacing_multiple" in formatting:
-            attrs[_q(W, "line")] = str(int(formatting["line_spacing_multiple"] * 240 + 0.5))
-            attrs[_q(W, "lineRule")] = "auto"
-        ET.SubElement(props, _q(W, "spacing"), attrs)
-    indent_attrs = {}
-    for key, attr in (("left_indent_pt", "left"), ("right_indent_pt", "right"),
-                      ("hanging_indent_pt", "hanging")):
-        if key in formatting:
-            indent_attrs[_q(W, attr)] = _points_to_twips(formatting[key])
-    if "first_line_chars" in formatting:
-        indent_attrs[_q(W, "firstLineChars")] = _characters_to_hundredths(formatting["first_line_chars"])
-    if numbering_indent is not None:
-        indent_attrs.update({_q(W, key): value for key, value in numbering_indent.items()})
-    if indent_attrs:
-        ET.SubElement(props, _q(W, "ind"), indent_attrs)
-    if "align" in formatting:
-        value = "both" if formatting["align"] == "justify" else formatting["align"]
-        ET.SubElement(props, _q(W, "jc"), {_q(W, "val"): value})
-    if outline_level is not None:
-        ET.SubElement(props, _q(W, "outlineLvl"), {_q(W, "val"): str(outline_level)})
+def _append_paragraph_properties(props: ET.Element, formatting: dict, *, outline_level: int | None = None,
+                                 keep_next: bool = False) -> None:
+    append_paragraph_properties(props, formatting, outline_level=outline_level, keep_next=keep_next)
 
 
 def _paragraph(parent: ET.Element, *, text: str | None = None, runs: list[dict] | None = None,
                style: str | None = None, formatting: dict | None = None,
                num_id: int | None = None, bold: bool = False,
-               inherited_format: dict | None = None,
-               outline_level: int | None = None, list_level: int = 0) -> ET.Element:
+               outline_level: int | None = None, keep_next: bool = False,
+               list_level: int = 0, bookmark: tuple[int, str] | None = None) -> ET.Element:
     paragraph = ET.SubElement(parent, _q(W, "p"))
-    if style or formatting or num_id is not None or outline_level is not None:
+    if style or formatting or num_id is not None or outline_level is not None or keep_next:
         props = ET.SubElement(paragraph, _q(W, "pPr"))
-        resolved_format = dict(formatting or {})
-        inherited_format = inherited_format or {}
-        if "hanging_indent_pt" in resolved_format and "first_line_chars" not in resolved_format \
-                and "first_line_chars" in inherited_format:
-            resolved_format["first_line_chars"] = 0
-        elif "first_line_chars" in resolved_format and "hanging_indent_pt" not in resolved_format \
-                and "hanging_indent_pt" in inherited_format:
-            resolved_format["hanging_indent_pt"] = 0
-        _append_paragraph_properties(props, resolved_format, style=style, num_id=num_id,
-                                     list_level=list_level, outline_level=outline_level)
+        if style:
+            ET.SubElement(props, _q(W, "pStyle"), {_q(W, "val"): style})
+        append_paragraph_properties(props, formatting or {}, keep_next=keep_next,
+                                    outline_level=outline_level, num_id=num_id, list_level=list_level)
+    if bookmark is not None:
+        ET.SubElement(paragraph, _q(W, "bookmarkStart"), {
+            _q(W, "id"): str(bookmark[0]), _q(W, "name"): bookmark[1],
+        })
     if text is not None:
         _add_text_run(paragraph, text, formatting if formatting is not None else ({"bold": True} if bold else None))
     elif runs is not None:
@@ -1113,9 +1056,18 @@ def _paragraph(parent: ET.Element, *, text: str | None = None, runs: list[dict] 
             run_format = dict(formatting or {})
             run_format.update(_normalize_run_fonts(run))
             run_format.pop("text", None)
-            _add_text_run(paragraph, run["text"], run_format)
+            if run.get("tab"):
+                tab_run = ET.SubElement(paragraph, _q(W, "r"))
+                props = ET.Element(_q(W, "rPr"))
+                _append_character_properties(props, run_format)
+                if len(props):
+                    tab_run.append(props)
+                ET.SubElement(tab_run, _q(W, "tab"))
+            else:
+                _add_text_run(paragraph, run["text"], run_format)
+    if bookmark is not None:
+        ET.SubElement(paragraph, _q(W, "bookmarkEnd"), {_q(W, "id"): str(bookmark[0])})
     return paragraph
-
 
 def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = None,
                 list_format: dict | None = None) -> bytes:
@@ -1141,11 +1093,12 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
     ET.SubElement(normal, _q(W, "qFormat"))
     normal_ppr = ET.SubElement(normal, _q(W, "pPr"))
     _append_paragraph_properties(normal_ppr, {
-        "space_before_pt": 0, "space_after_pt": 0, "align": "left",
+        "space_before_pt": 0, "space_after_pt": 0,
     })
     normal_spacing = normal_ppr.find(_q(W, "spacing"))
     normal_spacing.set(_q(W, "line"), "276")
     normal_spacing.set(_q(W, "lineRule"), "auto")
+    normal_ppr.append(ET.Element(_q(W, "jc"), {_q(W, "val"): "left"}))
     normal_rpr = ET.SubElement(normal, _q(W, "rPr"))
     _append_character_properties(normal_rpr, normal_format)
 
@@ -1195,6 +1148,18 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
         table_rpr = ET.SubElement(table_style, _q(W, "rPr"))
         _append_character_properties(table_rpr, style_formats[style_key])
 
+    caption_style = ET.SubElement(styles, _q(W, "style"), {
+        _q(W, "type"): "paragraph", _q(W, "styleId"): "TableCaption",
+    })
+    ET.SubElement(caption_style, _q(W, "name"), {_q(W, "val"): "Table Caption"})
+    ET.SubElement(caption_style, _q(W, "basedOn"), {_q(W, "val"): "Normal"})
+    _append_paragraph_properties(ET.SubElement(caption_style, _q(W, "pPr")), {
+        "align": "center", "keep_with_next": True, "space_after_pt": 6,
+    })
+    _append_character_properties(ET.SubElement(caption_style, _q(W, "rPr")), {
+        "size_pt": 12, "bold": False,
+    })
+
     for key, style_id in (("title", "Title"), ("subtitle", "Subtitle")):
         style = ET.SubElement(styles, _q(W, "style"), {
             _q(W, "type"): "paragraph", _q(W, "styleId"): style_id,
@@ -1202,8 +1167,7 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
         ET.SubElement(style, _q(W, "name"), {_q(W, "val"): style_id})
         ET.SubElement(style, _q(W, "basedOn"), {_q(W, "val"): "Normal"})
         ET.SubElement(style, _q(W, "next"), {_q(W, "val"): "BodyText"})
-        _append_paragraph_properties(ET.SubElement(style, _q(W, "pPr")), style_formats[key],
-                                     keep_next_default=True)
+        _append_paragraph_properties(ET.SubElement(style, _q(W, "pPr")), style_formats[key], keep_next=True)
         _append_character_properties(ET.SubElement(style, _q(W, "rPr")), style_formats[key])
 
     for level in range(1, 5):
@@ -1218,7 +1182,7 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
         ET.SubElement(heading, _q(W, "qFormat"))
         ppr = ET.SubElement(heading, _q(W, "pPr"))
         _append_paragraph_properties(ppr, style_formats[format_name],
-                                     outline_level=level - 1, keep_next_default=True)
+                                     outline_level=level - 1, keep_next=True)
         rpr = ET.SubElement(heading, _q(W, "rPr"))
         _append_character_properties(rpr, style_formats[format_name])
 
@@ -1236,7 +1200,7 @@ def _styles_xml(style_formats: dict[str, dict], related_format: dict | None = No
     return ET.tostring(styles, encoding="UTF-8", xml_declaration=True)
 
 
-def _numbering_xml(instances: list[dict]) -> bytes:
+def _numbering_xml(instances: list[dict], heading_numbering: str = "none") -> bytes:
     numbering = ET.Element(_q(W, "numbering"))
     definitions = [(0, False, False), (1, True, False)]
     for ordered in (False, True):
@@ -1260,21 +1224,40 @@ def _numbering_xml(instances: list[dict]) -> bytes:
             label = ".".join(f"%{position + 1}" for position in range(index + 1)) + "." if ordered else "•"
             ET.SubElement(level, _q(W, "lvlText"), {_q(W, "val"): label})
             ET.SubElement(level, _q(W, "lvlJc"), {_q(W, "val"): "left"})
-            left = str(720 * (index + 1))
             ppr = ET.SubElement(level, _q(W, "pPr"))
-            _append_paragraph_properties(
-                ppr, {}, numbering_tab={"val": "num", "pos": left},
-                numbering_indent={"left": left, "hanging": "360"},
-            )
-    for num_id, instance in enumerate(instances, start=1):
+            tabs = ET.SubElement(ppr, _q(W, "tabs"))
+            left = str(720 * (index + 1))
+            ET.SubElement(tabs, _q(W, "tab"), {_q(W, "val"): "num", _q(W, "pos"): left})
+            ET.SubElement(ppr, _q(W, "ind"), {_q(W, "left"): left, _q(W, "hanging"): "360"})
+    if heading_numbering != "none":
+        abstract = ET.SubElement(numbering, _q(W, "abstractNum"), {
+            _q(W, "abstractNumId"): "4",
+        })
+        ET.SubElement(abstract, _q(W, "multiLevelType"), {_q(W, "val"): "multilevel"})
+        for index in range(4):
+            level = ET.SubElement(abstract, _q(W, "lvl"), {_q(W, "ilvl"): str(index)})
+            ET.SubElement(level, _q(W, "start"), {_q(W, "val"): "1"})
+            if heading_numbering == "decimal":
+                fmt = "decimal"
+                label = ".".join(f"%{n}" for n in range(1, index + 2)) + " "
+            else:
+                fmt = "chineseCounting" if index in (0, 1) else "decimal"
+                label = ("%1、", "（%2）", "%3.", "（%4）")[index]
+            ET.SubElement(level, _q(W, "numFmt"), {_q(W, "val"): fmt})
+            ET.SubElement(level, _q(W, "suff"), {_q(W, "val"): "nothing"})
+            ET.SubElement(level, _q(W, "lvlText"), {_q(W, "val"): label})
+            ET.SubElement(level, _q(W, "lvlJc"), {_q(W, "val"): "left"})
+        num = ET.SubElement(numbering, _q(W, "num"), {_q(W, "numId"): "1"})
+        ET.SubElement(num, _q(W, "abstractNumId"), {_q(W, "val"): "4"})
+    offset = 1 if heading_numbering != "none" else 0
+    for num_id, instance in enumerate(instances, start=1 + offset):
         num = ET.SubElement(numbering, _q(W, "num"), {_q(W, "numId"): str(num_id)})
         abstract_id = int(instance["ordered"]) + (2 if instance["multilevel"] else 0)
         ET.SubElement(num, _q(W, "abstractNumId"), {_q(W, "val"): str(abstract_id)})
     return ET.tostring(numbering, encoding="UTF-8", xml_declaration=True)
 
 
-def _table(parent: ET.Element, block: dict, next_drawing_id: int,
-           style_formats: dict[str, dict]) -> list[dict]:
+def _table(parent: ET.Element, block: dict, next_drawing_id: int) -> list[dict]:
     table = ET.SubElement(parent, _q(W, "tbl"))
     props = ET.SubElement(table, _q(W, "tblPr"))
     layout = block["format"]
@@ -1309,12 +1292,20 @@ def _table(parent: ET.Element, block: dict, next_drawing_id: int,
                 ET.SubElement(row_props, _q(W, "cantSplit"), {_q(W, "val"): "true"})
             if repeat_header:
                 ET.SubElement(row_props, _q(W, "tblHeader"), {_q(W, "val"): "true"})
-        for column_index, (content, width) in enumerate(zip(values, block["widths_twips"]), 1):
+        for column, content in enumerate(values):
+            if content is None:
+                continue
+            span = content.get("col_span", 1) if isinstance(content, dict) else 1
+            width = sum(block["widths_twips"][column:column + span])
             cell = ET.SubElement(row, _q(W, "tc"))
             cell_props = ET.SubElement(cell, _q(W, "tcPr"))
             ET.SubElement(cell_props, _q(W, "tcW"), {
                 _q(W, "w"): str(width), _q(W, "type"): "dxa",
             })
+            if span > 1:
+                ET.SubElement(cell_props, _q(W, "gridSpan"), {_q(W, "val"): str(span)})
+            if isinstance(content, dict) and content.get("v_merge"):
+                ET.SubElement(cell_props, _q(W, "vMerge"), {_q(W, "val"): content["v_merge"]})
             if isinstance(content, dict) and content.get("borders"):
                 cell_edges = ET.SubElement(cell_props, _q(W, "tcBorders"))
                 for edge in ("top", "left", "bottom", "right"):
@@ -1327,12 +1318,11 @@ def _table(parent: ET.Element, block: dict, next_drawing_id: int,
             ET.SubElement(cell_props, _q(W, "vAlign"), {_q(W, "val"): layout["vertical_align"]})
             style_name = "TableHeader" if is_header else "TableBody"
             text_format = block["header_format"] if is_header else block["body_format"]
-            column_layer = block.get('column_formats', {}).get(str(column_index), {}).get('header' if is_header else 'body', {})
-            text_format = _merge_table_text_format(text_format, column_layer)
             text = content if isinstance(content, str) else content["text"]
-            inherited_format = style_formats["table_header" if is_header else "table_body"]
-            paragraph = _paragraph(cell, text=text, style=style_name, formatting=text_format,
-                                   inherited_format=inherited_format)
+            if isinstance(content, dict) and content.get("v_merge") == "continue":
+                paragraph = _paragraph(cell, runs=[], style=style_name, formatting=text_format)
+            else:
+                paragraph = _paragraph(cell, text=text, style=style_name, formatting=text_format)
             if isinstance(content, dict) and content["image"] is not None:
                 image = content["image"]
                 _add_picture(paragraph, image, next_drawing_id)
@@ -1398,37 +1388,101 @@ def _related_text_xml(root_name: str, text: str, *, page_numbers: bool = False,
     return ET.tostring(root, encoding="UTF-8", xml_declaration=True)
 
 
+_CROSSREF_PLACEHOLDER = "（请在 Word/WPS 中更新交叉引用域）"
+
+
+def _append_cross_reference(paragraph: ET.Element, bookmark: str, kind: str) -> None:
+    """Emit a real dirty REF/PAGEREF field; layout needs application-side updates."""
+    ET.SubElement(ET.SubElement(paragraph, _q(W, "r")), _q(W, "fldChar"),
+                  {_q(W, "fldCharType"): "begin", _q(W, "dirty"): "true"})
+    instruction = ET.SubElement(ET.SubElement(paragraph, _q(W, "r")), _q(W, "instrText"))
+    instruction.set(_q(XML, "space"), "preserve")
+    instruction.text = f" {'REF' if kind == 'text' else 'PAGEREF'} {bookmark} \\h "
+    ET.SubElement(ET.SubElement(paragraph, _q(W, "r")), _q(W, "fldChar"),
+                  {_q(W, "fldCharType"): "separate"})
+    _add_text_run(paragraph, _CROSSREF_PLACEHOLDER)
+    ET.SubElement(ET.SubElement(paragraph, _q(W, "r")), _q(W, "fldChar"),
+                  {_q(W, "fldCharType"): "end"})
+
+
+def _section_xml(section: ET.Element, options: dict) -> None:
+    # OOXML CT_SectPr ordering: header/footer references, type, pgSz, pgMar,
+    # pgNumType, then titlePg. The last section belongs directly to w:body.
+    for kind in ("header", "footer"):
+        for variant in ("default", "first", "even"):
+            rel_id = options.get(kind + "_rids", {}).get(variant)
+            if rel_id is not None:
+                ET.SubElement(section, _q(W, kind + "Reference"), {
+                    _q(W, "type"): variant, _q(R, "id"): rel_id,
+                })
+    if options.get("break_type"):
+        ET.SubElement(section, _q(W, "type"), {_q(W, "val"): options["break_type"]})
+    page = options["page_twips"]
+    width, height = page["width"], page["height"]
+    size = {_q(W, "w"): str(width), _q(W, "h"): str(height)}
+    if width > height:
+        size[_q(W, "orient")] = "landscape"
+    ET.SubElement(section, _q(W, "pgSz"), size)
+    ET.SubElement(section, _q(W, "pgMar"), {
+        _q(W, "top"): str(page["top"]), _q(W, "right"): str(page["right"]),
+        _q(W, "bottom"): str(page["bottom"]), _q(W, "left"): str(page["left"]),
+        _q(W, "header"): str(min(720, page["top"])),
+        _q(W, "footer"): str(min(720, page["bottom"])), _q(W, "gutter"): "0",
+    })
+    if options["page_number_start"] is not None or options["page_number_format"] != "decimal":
+        attributes = {_q(W, "fmt"): options["page_number_format"]}
+        if options["page_number_start"] is not None:
+            attributes[_q(W, "start")] = str(options["page_number_start"])
+        ET.SubElement(section, _q(W, "pgNumType"), attributes)
+    if options["different_first_page"]:
+        ET.SubElement(section, _q(W, "titlePg"))
+
+
 def _document_xml(spec: dict) -> tuple[bytes, list[dict], list[dict]]:
     root = ET.Element(_q(W, "document"))
     body = ET.SubElement(root, _q(W, "body"))
     instances: list[dict] = []
     image_blocks: list[dict] = []
-    next_num_id = 1
+    next_num_id = 2 if spec["heading_numbering"] != "none" else 1
     next_drawing_id = 1
     shared_ids = {}
+    current_section = 0
     for block in spec["blocks"]:
         kind = block["type"]
         if kind in {"title", "subtitle"}:
-            style_key = kind
             _paragraph(body, text=block["text"], style="Title" if kind == "title" else "Subtitle",
-                       formatting=block["format"], inherited_format=spec["styles"][style_key])
+                       formatting=block["format"])
         elif kind == "heading":
             formatting = block["format"].copy()
             if block["align"] is not None:
                 formatting["align"] = block["align"]
             _paragraph(body, text=block["text"], style=f"Heading{block['level']}",
                        formatting=formatting,
-                       inherited_format=spec["styles"][f"heading{block['level']}"])
+                       num_id=1 if spec["heading_numbering"] != "none" else None,
+                       list_level=block["level"] - 1,
+                       bookmark=(block["bookmark_id"], block["bookmark"]) if block["bookmark"] else None)
+        elif kind == "toc":
+            _paragraph(body, text=block["title"], style="Title")
+            paragraph = ET.SubElement(body, _q(W, "p"))
+            ET.SubElement(ET.SubElement(paragraph, _q(W, "r")), _q(W, "fldChar"),
+                          {_q(W, "fldCharType"): "begin"})
+            run = ET.SubElement(paragraph, _q(W, "r"))
+            instruction = ET.SubElement(run, _q(W, "instrText"))
+            instruction.set(_q(XML, "space"), "preserve")
+            instruction.text = f' TOC \\o "1-{block["depth"]}" \\u '
+            ET.SubElement(ET.SubElement(paragraph, _q(W, "r")), _q(W, "fldChar"),
+                          {_q(W, "fldCharType"): "separate"})
+            _add_text_run(paragraph, "（请在 Word/WPS 中更新目录域）")
+            ET.SubElement(ET.SubElement(paragraph, _q(W, "r")), _q(W, "fldChar"),
+                          {_q(W, "fldCharType"): "end"})
         elif kind == "paragraph":
             formatting = block["format"].copy()
             if block["align"] is not None:
                 formatting["align"] = block["align"]
             if isinstance(block["content"], str):
-                _paragraph(body, text=block["content"], style="BodyText", formatting=formatting,
-                           inherited_format=spec["styles"]["body"])
+                _paragraph(body, text=block["content"], style="BodyText", formatting=formatting)
             else:
-                _paragraph(body, runs=block["content"], style="BodyText", formatting=formatting,
-                           inherited_format=spec["styles"]["body"])
+                _paragraph(body, runs=block["content"], style="BodyText", formatting=formatting)
         elif kind == "list":
             identifier = block["list_id"]
             if identifier is None or identifier not in shared_ids:
@@ -1443,7 +1497,9 @@ def _document_xml(spec: dict) -> tuple[bytes, list[dict], list[dict]]:
                 _paragraph(body, text=item, num_id=block["num_id"], list_level=block["level"],
                            style="ListParagraph" if spec["list_format"] is not None else None)
         elif kind == "table":
-            images = _table(body, block, next_drawing_id, spec["styles"])
+            if block["caption"] is not None:
+                _paragraph(body, text=block["caption"], style="TableCaption")
+            images = _table(body, block, next_drawing_id)
             image_blocks.extend(images)
             next_drawing_id += len(images)
         elif kind == "image":
@@ -1452,42 +1508,44 @@ def _document_xml(spec: dict) -> tuple[bytes, list[dict], list[dict]]:
             block["drawing_id"] = next_drawing_id
             image_blocks.append(block)
             next_drawing_id += 1
+        elif kind == "reference":
+            paragraph = ET.SubElement(body, _q(W, "p"))
+            if block["prefix"]:
+                _add_text_run(paragraph, block["prefix"])
+            _append_cross_reference(paragraph, block["bookmark"], block["kind"])
+            if block["suffix"]:
+                _add_text_run(paragraph, block["suffix"])
+        elif kind == "section_break":
+            # Empty section-break paragraph owns the preceding section's properties.
+            paragraph = ET.SubElement(body, _q(W, "p"))
+            props = ET.SubElement(paragraph, _q(W, "pPr"))
+            _section_xml(ET.SubElement(props, _q(W, "sectPr")), spec["sections"][current_section])
+            current_section = block["section_index"]
         elif kind == "page_break":
             paragraph = ET.SubElement(body, _q(W, "p"))
             run = ET.SubElement(paragraph, _q(W, "r"))
             ET.SubElement(run, _q(W, "br"), {_q(W, "type"): "page"})
 
-    section = ET.SubElement(body, _q(W, "sectPr"))
-    if spec["header"] is not None:
-        ET.SubElement(section, _q(W, "headerReference"), {
-            _q(W, "type"): "default", _q(R, "id"): spec["header_rid"],
-        })
-    if spec["footer"] is not None or spec["page_numbers"]:
-        ET.SubElement(section, _q(W, "footerReference"), {
-            _q(W, "type"): "default", _q(R, "id"): spec["footer_rid"],
-        })
-    page = spec["page_twips"]
-    width, height = page["width"], page["height"]
-    size_attrs = {_q(W, "w"): str(width), _q(W, "h"): str(height)}
-    if width > height:
-        size_attrs[_q(W, "orient")] = "landscape"
-    ET.SubElement(section, _q(W, "pgSz"), size_attrs)
-    ET.SubElement(section, _q(W, "pgMar"), {
-        _q(W, "top"): str(page["top"]), _q(W, "right"): str(page["right"]),
-        _q(W, "bottom"): str(page["bottom"]), _q(W, "left"): str(page["left"]),
-        _q(W, "header"): str(page.get("header", min(720, page["top"]))), _q(W, "footer"): str(page.get("footer", min(720, page["bottom"]))),
-        _q(W, "gutter"): "0",
-    })
+    _section_xml(ET.SubElement(body, _q(W, "sectPr")), spec["sections"][current_section])
     return ET.tostring(root, encoding="UTF-8", xml_declaration=True), image_blocks, instances
 
 
 def _relationship_xml(relationships: list[tuple[str, str, str]]) -> bytes:
-    root = ET.Element(_q(REL, "Relationships"))
+    """Write OPC relationships with a *default* namespace, not ``ns0``.
+
+    Both forms are XML-namespace equivalent, but some LibreOffice importers
+    reject the prefixed-root form. ElementTree's global namespace registry is
+    process-wide, so changing it temporarily would race concurrent builders.
+    This tiny fixed-vocabulary writer uses standard-library escaping instead.
+    """
+    lines = [f'<?xml version="1.0" encoding="UTF-8"?>',
+             f'<Relationships xmlns={quoteattr(REL)}>']
     for rel_id, rel_type, target in relationships:
-        ET.SubElement(root, _q(REL, "Relationship"), {
-            "Id": rel_id, "Type": rel_type, "Target": target,
-        })
-    return ET.tostring(root, encoding="UTF-8", xml_declaration=True)
+        lines.append('<Relationship Id=' + quoteattr(rel_id) +
+                     ' Type=' + quoteattr(rel_type) +
+                     ' Target=' + quoteattr(target) + '/>')
+    lines.append('</Relationships>')
+    return ''.join(lines).encode('utf-8')
 
 
 def _content_types_xml(extensions: set[str], overrides: list[tuple[str, str]]) -> bytes:
@@ -1528,10 +1586,44 @@ def _package_parts(spec: dict) -> dict[str, bytes]:
 
     add_relationship("styles", "styles.xml")
     add_relationship("numbering", "numbering.xml")
-    if spec["header"] is not None:
-        spec["header_rid"] = add_relationship("header", "header1.xml")
-    if spec["footer"] is not None or spec["page_numbers"]:
-        spec["footer_rid"] = add_relationship("footer", "footer1.xml")
+    has_toc = any(block["type"] == "toc" for block in spec["blocks"])
+    has_ref = any(block["type"] == "reference" for block in spec["blocks"])
+    has_settings = has_toc or has_ref or spec["odd_even_headers"]
+    if has_settings:
+        add_relationship("settings", "settings.xml")
+
+    # Reuse identical header/footer parts across sections (preserves legacy names).
+    related_parts = {}
+    related_ids = {}
+    for section in spec["sections"]:
+        for kind in ("header", "footer"):
+            refs = {}
+            choices = section[kind + "s"]
+            for variant in ("default", "first", "even"):
+                if variant == "first" and not section["different_first_page"]:
+                    continue
+                if variant == "even" and not spec["odd_even_headers"]:
+                    continue
+                # Even variants default to odd-page text; first variants default to blank.
+                text = choices[variant]
+                if variant == "even" and text is None:
+                    text = choices["default"]
+                page_field = (kind == "footer" and section["page_numbers"] and
+                              (variant != "first" or section["first_page_numbers"]))
+                if text is None and not page_field:
+                    # For subsequent sections, explicitly use an empty part to prevent
+                    # Word inheriting a previous section's unrelated variant.
+                    if variant == "default" and all(s[kind+'s']["default"] is None for s in spec["sections"]):
+                        continue
+                    text = ""
+                key = (kind, text or "", page_field)
+                if key not in related_ids:
+                    number = 1 + len([p for p in related_parts if p.startswith('word/'+kind)])
+                    part_name = f"word/{kind}{number}.xml"
+                    related_ids[key] = (part_name, add_relationship(kind, part_name.removeprefix('word/')))
+                    related_parts[part_name] = (kind, text or "", page_field)
+                refs[variant] = related_ids[key][1]
+            section[kind+"_rids"] = refs
 
     for index, block in enumerate(spec["blocks"], start=1):
         if block["type"] == "image":
@@ -1547,46 +1639,35 @@ def _package_parts(spec: dict) -> dict[str, bytes]:
                     add_image(image, name)
 
     document_xml, image_blocks, instances = _document_xml(spec)
+    overrides = [("word/document.xml", _CONTENT_TYPES["document"]),
+                 ("word/styles.xml", _CONTENT_TYPES["styles"]),
+                 ("word/numbering.xml", _CONTENT_TYPES["numbering"])]
+    if has_settings:
+        overrides.append(("word/settings.xml", _CONTENT_TYPES["settings"]))
+    overrides.extend((name, _CONTENT_TYPES[kind]) for name, (kind, _, _) in related_parts.items())
     parts = {
         "[Content_Types].xml": _content_types_xml(
-            {block["extension"] for block in image_blocks},
-            [("word/document.xml", _CONTENT_TYPES["document"]),
-             ("word/styles.xml", _CONTENT_TYPES["styles"]),
-             ("word/numbering.xml", _CONTENT_TYPES["numbering"])],
-        ),
-        "_rels/.rels": _relationship_xml([
-            ("rId1", _REL_TYPES["officeDocument"], "word/document.xml"),
-        ]),
+            {block["extension"] for block in image_blocks}, overrides),
+        "_rels/.rels": _relationship_xml([("rId1", _REL_TYPES["officeDocument"], "word/document.xml")]),
         "word/document.xml": document_xml,
         "word/_rels/document.xml.rels": _relationship_xml(relationships),
         "word/styles.xml": _styles_xml(spec["styles"], spec["related_format"], spec["list_format"]),
-        "word/numbering.xml": _numbering_xml(instances),
+        "word/numbering.xml": _numbering_xml(instances, spec["heading_numbering"]),
     }
-    if spec["header"] is not None:
-        parts["word/header1.xml"] = _related_text_xml(
-            "hdr", spec["header"], style="Header" if spec["related_format"] is not None else None,
+    if has_settings:
+        settings = ET.Element(_q(W, "settings"))
+        if spec["odd_even_headers"]:
+            ET.SubElement(settings, _q(W, "evenAndOddHeaders"))
+        if has_toc or has_ref:
+            ET.SubElement(settings, _q(W, "updateFields"), {_q(W, "val"): "true"})
+        parts["word/settings.xml"] = ET.tostring(settings, encoding="UTF-8", xml_declaration=True)
+    for name, (kind, value, page_field) in related_parts.items():
+        parts[name] = _related_text_xml(
+            "hdr" if kind == "header" else "ftr", value,
+            page_numbers=page_field,
+            style=("Header" if kind == "header" else "Footer") if spec["related_format"] is not None else None,
         )
-        parts["[Content_Types].xml"] = _content_types_xml(
-            {block["extension"] for block in image_blocks},
-            [("word/document.xml", _CONTENT_TYPES["document"]),
-             ("word/styles.xml", _CONTENT_TYPES["styles"]),
-             ("word/numbering.xml", _CONTENT_TYPES["numbering"]),
-             ("word/header1.xml", _CONTENT_TYPES["header"])],
-        )
-    if spec["footer"] is not None or spec["page_numbers"]:
-        parts["word/footer1.xml"] = _related_text_xml(
-            "ftr", spec["footer"] or "", page_numbers=spec["page_numbers"],
-            style="Footer" if spec["related_format"] is not None else None,
-        )
-        overrides = [("word/document.xml", _CONTENT_TYPES["document"]),
-                     ("word/styles.xml", _CONTENT_TYPES["styles"]),
-                     ("word/numbering.xml", _CONTENT_TYPES["numbering"])]
-        if spec["header"] is not None:
-            overrides.append(("word/header1.xml", _CONTENT_TYPES["header"]))
-        overrides.append(("word/footer1.xml", _CONTENT_TYPES["footer"]))
-        parts["[Content_Types].xml"] = _content_types_xml(
-            {block["extension"] for block in image_blocks}, overrides,
-        )
+    spec["related_parts"] = related_parts
     for block in image_blocks:
         parts[f"word/media/{block['media_name']}"] = block["image_data"]
     if len(parts) > _MAX_PACKAGE_PARTS:
@@ -1612,60 +1693,55 @@ def _check_generated_budget(parts: dict[str, bytes]) -> None:
 def preflight_document(spec: dict, base_dir: str | Path | None = None) -> dict:
     """Check the full specification and generated XML budgets without writing."""
     validated = _validate_spec(spec, Path(base_dir) if base_dir is not None else Path.cwd())
-    layout_issues, layout_issues_truncated = diagnose_layout(validated)
     parts = _package_parts(validated)
     _check_generated_budget(parts)
     return {"status": "preflight-ok", "blocks": len(validated["blocks"]),
             "parts": len(parts), "uncompressed_bytes": sum(map(len, parts.values())),
-            "layout_issues": layout_issues,
-            "layout_issues_truncated": layout_issues_truncated,
-            "warnings": layout_warning_messages(layout_issues),
             "visual_validation": False, "xsd_validation": False}
 
 
 def _verify_content(spec: dict, roots: dict) -> None:
     expected = []
     images = tables = 0
-
-    def add_text(value: str, *, paragraph_text: bool = False) -> None:
-        if paragraph_text and "\t" in value:
-            expected.extend(segment for segment in value.split("\t") if segment)
-        else:
-            expected.append(value)
-
     for block in spec["blocks"]:
         kind = block["type"]
         if kind in {"title", "subtitle", "heading"}:
-            add_text(block["text"])
+            expected.append(block["text"])
+        elif kind == "toc":
+            expected.extend([block["title"], "（请在 Word/WPS 中更新目录域）"])
         elif kind == "paragraph":
-            if isinstance(block["content"], str):
-                add_text(block["content"], paragraph_text=True)
-            else:
-                for run in block["content"]:
-                    add_text(run["text"], paragraph_text=True)
+            expected.extend([block["content"]] if isinstance(block["content"], str)
+                            else [run["text"] for run in block["content"] if "text" in run])
         elif kind == "list":
-            for item in block["items"]:
-                add_text(item)
+            expected.extend(block["items"])
         elif kind == "table":
             tables += 1
+            if block["caption"] is not None:
+                expected.append(block["caption"])
             for row in block["rows"]:
                 for cell in row:
-                    add_text(cell if isinstance(cell, str) else cell["text"])
+                    if cell is None or isinstance(cell, dict) and cell.get("v_merge") == "continue":
+                        continue
+                    expected.append(cell if isinstance(cell, str) else cell["text"])
                     images += int(isinstance(cell, dict) and cell["image"] is not None)
         elif kind == "image":
             images += 1
+        elif kind == "reference":
+            expected.append(block["prefix"] if block["prefix"] else None)
+            expected.append(_CROSSREF_PLACEHOLDER)
+            expected.append(block["suffix"] if block["suffix"] else None)
+    expected = [t for t in expected if t is not None]
     document = roots["word/document.xml"]
     actual = [node.text or "" for node in document.iter(_q(W, "t"))]
     if actual != expected:
         raise ValueError("Generated body text does not match input content coverage")
     if len(list(document.iter(_q(W, "tbl")))) != tables or len(list(document.iter(_q(W, "drawing")))) != images:
         raise ValueError("Generated table/image counts do not match input content coverage")
-    for key, name in (("header", "word/header1.xml"), ("footer", "word/footer1.xml")):
-        if name in roots:
-            actual_text = "".join(node.text or "" for node in roots[name].iter(_q(W, "t")))
-            expected_text = (spec[key] or "") + (" 1" if key == "footer" and spec["page_numbers"] else "")
-            if actual_text != expected_text:
-                raise ValueError(f"Generated {key} text does not match input content coverage")
+    for part, (kind, text, page_field) in spec["related_parts"].items():
+        actual_text = "".join(node.text or "" for node in roots[part].iter(_q(W, "t")))
+        expected_text = text + (" 1" if page_field else "")
+        if actual_text != expected_text:
+            raise ValueError(f"Generated {kind} text does not match input content coverage at {part}")
 
 
 def create_document(spec: dict, output: str | Path, base_dir: str | Path | None = None, *,
@@ -1678,19 +1754,8 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
         raise ValueError("output path must use the .docx extension")
     image_base = Path(base_dir) if base_dir is not None else Path.cwd()
     validated = _validate_spec(spec, image_base)
-    layout_issues, layout_issues_truncated = diagnose_layout(validated)
-    result = _create_validated_document(validated, output_path, verify=verify,
-                                        require_no_placeholders=require_no_placeholders)
-    try:
-        for warning in layout_warning_messages(layout_issues):
-            print(warning, file=sys.stderr)
-        if layout_issues_truncated:
-            print(LAYOUT_TRUNCATION_NOTICE, file=sys.stderr)
-    except (OSError, UnicodeError, ValueError):
-        # Diagnostics are best-effort after publication; a closed or non-UTF-8
-        # stderr must not turn a completed document into a failed API call.
-        pass
-    return result
+    return _create_validated_document(validated, output_path, verify=verify,
+                                      require_no_placeholders=require_no_placeholders)
 
 
 def validate_task_resources(spec, base_dir=None):
@@ -1734,7 +1799,6 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
     validate_output_path(output_path, protected_inputs=protected)
     validate_task_resources(spec, base_dir)
     validated = _validate_spec(spec, Path(base_dir) if base_dir is not None else Path.cwd())
-    layout_issues, layout_issues_truncated = diagnose_layout(validated)
     protected.extend(validated["image_paths"])
     verified = verify or require_no_placeholders
     _create_validated_document(validated, output_path, verify=verified,
@@ -1743,11 +1807,7 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
     summary = finalize_delivery(output_path, protected, status=status)
     files = summary.get("files", [])
     summary.update(generation_status=status, output_dir=".",
-                   archive_output=files[0]["archive_output"] if files else None,
-                   layout_issues=layout_issues,
-                   layout_issues_truncated=layout_issues_truncated,
-                   warnings=list(summary.get("warnings", []))
-                   + layout_warning_messages(layout_issues))
+                   archive_output=files[0]["archive_output"] if files else None)
     if verified:
         summary.update(blocks=len(spec["blocks"]), zip_crc=True, structure=True,
                        content_coverage=True, layout_intent=True,
@@ -1796,6 +1856,11 @@ def _create_validated_document(validated: dict, output_path: Path, *, verify: bo
                                      + "; ".join((validator.errors + validator.warnings)[:5]))
                 _verify_content(validated, validator.roots)
                 verify_generation(validated, validator)
+                from office.formatting.audit import audit_roots
+                layout_report = audit_roots(validator.roots)
+                errors = [item['message'] for item in layout_report['issues'] if item['level'] == 'error']
+                if errors:
+                    raise ValueError('Generated static layout validation failed: ' + '; '.join(errors[:5]))
         os.replace(temporary_name, output_path)
     except BaseException:
         try:
@@ -1937,10 +2002,7 @@ def main(argv: list[str] | None = None) -> int:
                 print("archive-location: skipped; reason=" + summary["fallback_reason"],
                       file=sys.stderr)
             for warning in summary["warnings"]:
-                if warning.startswith("layout-warning:"):
-                    print(warning, file=sys.stderr)
-                else:
-                    print("archive-warning: " + warning, file=sys.stderr)
+                print("archive-warning: " + warning, file=sys.stderr)
             print(json.dumps(summary, ensure_ascii=True))
     except (OSError, UnicodeError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         parser.error(str(exc))

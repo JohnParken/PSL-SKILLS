@@ -1,0 +1,10 @@
+{
+  "theme": "official",
+  "styles": {
+    "body": {"widow_control": true},
+    "heading1": {"keep_with_next": true, "keep_together": true},
+    "heading2": {"keep_with_next": true, "keep_together": true},
+    "heading3": {"keep_with_next": true, "keep_together": true},
+    "heading4": {"keep_with_next": true, "keep_together": true}
+  }
+}

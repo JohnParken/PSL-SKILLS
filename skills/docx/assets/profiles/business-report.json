@@ -1,0 +1,14 @@
+{
+  "theme": "business",
+  "page": {"margin_top_mm": 22, "margin_bottom_mm": 22, "margin_left_mm": 24, "margin_right_mm": 24},
+  "styles": {
+    "body": {"size_pt": 11, "line_spacing_multiple": 1.35, "space_after_pt": 6, "widow_control": true},
+    "heading1": {"space_before_pt": 18, "space_after_pt": 10, "keep_together": true},
+    "heading2": {"space_before_pt": 14, "space_after_pt": 7, "keep_together": true},
+    "heading3": {"space_before_pt": 10, "space_after_pt": 5, "keep_together": true},
+    "heading4": {"space_before_pt": 8, "space_after_pt": 4, "keep_together": true},
+    "table_body": {"size_pt": 10.5, "keep_together": true},
+    "table_header": {"size_pt": 10.5, "keep_together": true}
+  },
+  "table_format": {"preset": "three_line", "cell_margin_top_mm": 1.5, "cell_margin_bottom_mm": 1.5}
+}
