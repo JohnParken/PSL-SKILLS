@@ -5,7 +5,8 @@
 Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-Read Standard-library calculation and file contract (`<skill-root>/references/python-calculation.md`) for the JSON schema and CLI.
+Read Standard-library calculation and file contract (`<skill-root>/references/write-contract.md`) for the JSON schema and CLI.
+仅生成静态值时无需公式参考；包含公式才读公式计算（`<skill-root>/references/formula-calculation.md`）。
 Plan sheet names, input values, calculations and formatting first. Use `create` with
 an explicit JSON cell specification. The tool builds from the bundled XML template.
 The source assets use `content_types.xml` and `_rels/root.rels` to satisfy filename

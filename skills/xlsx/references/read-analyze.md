@@ -11,7 +11,7 @@ WPS family files are read by the separate `wps` skill. Native spreadsheet comman
 refuse `.wps`, `.et`, `.ett` and CFB data; no automatic conversion is performed.
 
 Use `python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx` as described in
-Standard-library calculation and file contract (`<skill-root>/references/python-calculation.md`). The JSON lists sheets and coordinate-keyed
+the main entry. Read-only inspection does not require the write/formula contract. The JSON lists sheets and coordinate-keyed
 cells containing type, raw value, style index, formula, formula attributes and cache status.
 Decimal values serialize as strings in the report to avoid binary-float precision loss.
 The read command does not calculate formulas or modify files. Existing formula caches

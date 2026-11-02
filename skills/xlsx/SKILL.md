@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261102.1614.4700"
+version: "20261102.1720.5289"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -32,9 +32,7 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
 6. Stop dependent operations if self-check fails, its result is uncertain, or the required marker is absent. Retry only after the environment issue is resolved, without lowering checks. After context compaction re-read this file if constraints are missing; retain confirmed task paths.
 7. Before delivery verify the actual file exists and is nonempty; use only a supported harness delivery mechanism, never guessed URLs or unverified log output. Self-check is not result acceptance. File-producing CLIs now append `delivery` archive results; stdout-only reads do not. For owned JSON task configs and cleanup, follow delivery lifecycle (`<skill-root>/references/delivery-lifecycle.md`).
 
-Self-check reporting: `check` keeps its single JSON stdout and original `ready`/`failed`/`unsupported` statuses and exit codes; it adds `check_kind: environment` and `artifact_validation: not_run` on handled outcomes. It does not create or accept a workbook. Creation/calculation reports keep their existing contract, and `ready` must never be treated as `output_written`.
-
-The harness must return this invocation's stdout, stderr and actual exit code together with an invocation identifier, including nonzero exits and empty channels. A library return or captured subprocess result is not a model-visible tool result until the harness returns it. Missing execution, timeout or signal termination must be explicit, with no invented normal exit code; truncation must identify the channel and known length. Missing or truncated evidence is unconfirmed, not success. Preserve JSON stdout without added prose; result acceptance still follows validation (`<skill-root>/references/validate.md`).
+自检的JSON与宿主结果缺失、截断或失败回传需要排查时，再读自检与回传（`<skill-root>/references/environment-results.md`）。自检不代表产物验收，非零退出或缺少ready时停止依赖操作；缺失/截断结果不得当作成功。
 
 ## 工具调用稳定性
 
@@ -54,7 +52,7 @@ Read only the selected reference. `read`, `create`, `edit` and `calculate` are s
 | Import/export CSV/TSV | `<skill-root>/scripts/run_xlsx_task.py` wrapping `xlsx_tabular.py import` / `export` | Tabular interchange (`<skill-root>/references/tabular-interchange.md`) |
 | Create a report | stdin task specification → `<skill-root>/scripts/run_xlsx_task.py`; existing `"<skill-root>/scripts/stdlib_xlsx.py" create` remains supported | Create (`<skill-root>/references/create.md`) |
 | Correct existing cells | `<skill-root>/scripts/run_xlsx_task.py` wrapping `stdlib_xlsx.py edit` | Edit and preservation (`<skill-root>/references/edit.md`) |
-| Compute supported formulas | `<skill-root>/scripts/run_xlsx_task.py` wrapping `stdlib_xlsx.py calculate` to a new file | Calculation contract (`<skill-root>/references/python-calculation.md`) |
+| Compute supported formulas | `<skill-root>/scripts/run_xlsx_task.py` wrapping `stdlib_xlsx.py calculate` to a new file | 写入与结果契约（`<skill-root>/references/write-contract.md`）及公式计算（`<skill-root>/references/formula-calculation.md`） |
 | Fix a known formula defect | Diagnose intent, then `edit` | Fix (`<skill-root>/references/fix.md`) |
 | Validate an output | Inspect stored data, calculation report and preserved content | Validation (`<skill-root>/references/validate.md`) |
 
@@ -64,26 +62,23 @@ For a first read after self-check:
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
 ```
 
-Before any writing or calculation, read the JSON/CLI contract (`<skill-root>/references/python-calculation.md`). New-table appearance is optional and creation-only: appearance presets (`<skill-root>/references/readable-appearance.md`); existing-file edits use existing style indices. Use financial formatting conventions (`<skill-root>/references/format.md`) only when requested. Banking reports, matching, grouping and multi-level headers route through the specialized analysis directory (`<skill-root>/references/data-analysis.md#specialized-task-directory`).
+大表读取先按需用概况、选表/区域及分页（`<skill-root>/references/bounded-reading.md`）；旧默认完整读取不变，新视图不是完整数据或旧分析schema。
 
-## Interpret results and keep boundaries
+写入前读取共同规格/结果（`<skill-root>/references/write-contract.md`）及对应任务说明；仅创建/修改公式、显式计算或排查公式issues时加载公式子集（`<skill-root>/references/formula-calculation.md`）。值编辑也会触发全簿公式计算，仍检查所有issues与退出码。仅读取/统计不加载写入或公式参考，引用不递归加载；宿主不支持章节读取时只读所选专项文件。 New-table appearance is optional and creation-only: appearance presets (`<skill-root>/references/readable-appearance.md`); existing-file edits use existing style indices. Use financial formatting conventions (`<skill-root>/references/format.md`) only when requested. Banking reports, matching, grouping and multi-level headers route through the specialized analysis directory (`<skill-root>/references/data-analysis.md#specialized-task-directory`).
 
-- 新建 XLSX 的 XML 部件统一使用双引号声明 `<?xml version="1.0" encoding="UTF-8"?>`，主元素使用对应的默认命名空间，工作表关系属性使用 `r:id`，不生成自动编号的 `ns0/ns1` 前缀。此为生成输出约定，不将其他合法前缀、单引号或编码名大小写作为输入非法依据。已有文件编辑继续保护原命名空间和未修改部件，不为格式统一重写整个包。
-- Inspect structure, cell types, missing values and user-selected ranges before analysis. Numeric strings with type tags are not text identifiers; use `Decimal` for known business rules and explicit rounding. Old formula caches are unverified; missing caches are never zero.
-- WPS JSON analysis accepts `biff8_readonly_v1` and `ooxml_spreadsheet_readonly_v1`, preserves exact values, source status/issues and optional source coverage/assessment. The source assessment describes extraction scope, not completeness of the selected analysis or cache freshness. See the source-result contract (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`).
-- Calculation is a Decimal formula subset, not Excel-equivalent recalculation. Editable reports use supported formulas; never accept caller-supplied caches. `create --values-only` evaluates everything first and refuses partial output; disclose that static values will not update.
-- Existing-file calculations remove unresolved stale caches and report incomplete/exit 2 as `部分公式未计算`. Known errors or cycles block output. Do not hide errors with zeros or change business rules to force success; see result codes (`<skill-root>/references/python-calculation.md#results-and-exit-codes`).
-- Never rebuild an existing workbook from extracted values. Edit only values, formulas and existing style indices; no row/column/sheet insertion, deletion or movement. Shared/array/specially attributed formula sheets are refused for edits. Untouched ZIP member content is preserved; changed XML is reserialized, formula caches and calculation-chain metadata may change. No full-file identity or arbitrary compatibility guarantee.
-- XLSM macros are retained, never executed; chart/pivot caches are retained, never refreshed. Dates remain stored serials or ISO text. Signed/encrypted files, chart sheets, strict OOXML and native XLS/XLSB are unsupported. The wps skill's documented read-only record subset does not enable generic binary spreadsheet editing.
-- Do not run legacy utilities or install their dependencies as fallbacks. Legacy limitations and disabled row-edit commands are documented under maintenance/legacy boundaries (`<skill-root>/references/validate.md#legacy-utilities`). Development tests and intermediate-file cleanup are also conditional sections there, not extra steps for a simple read.
+## 核心结果与安全边界
+
+- 缓存可能过时或缺失，不当作零或已重算；数字字符串与文本编号分开解释。分析前确认工作表、区域、类型及用户口径，不猜业务精度。
+- 公式仅为支持子集，不等同Excel；incomplete/退出2必须报告“部分公式未计算”，failed/退出1不能交付为计算成功。不用零值掩盖错误。
+- 编辑仅限指定单元格值、公式及现有样式，不重建既有工作簿、不进行任意行列或工作表结构编辑；未改ZIP部件保持内容字节，输入和非目标内容受保护。
+- 不支持签名/加密、图表工作表、Strict OOXML及XLS/XLSB；共享/数组/特殊属性公式工作表不用于编辑。不执行宏或刷新图表/透视缓存，不自动运行legacy工具、安装依赖或回退转换。不承诺完整OOXML、字体、视觉排版或公式等价性。
+- 写入/计算前按路由读取任务契约；涉及WPS提取JSON、日期、宏保留、XML生成约定或编辑兼容边界时，读结果解释（`<skill-root>/references/result-boundaries.md`）中对应条目，不默认加载其余部分。
 
 ## 文件交付与中间文件收尾
 
 所有受支持的写文件CLI在主产物写入后自动归档，新增 `delivery` 字段，原status、output、退出码和已有输出保护不变。先按原状态验收业务结果；部分计算仍为incomplete/退出2，归档完成不代表公式完整。只读stdout不创建归档或清理清单。
 
-所有文件交付优先使用 `<skill-root>/scripts/run_xlsx_task.py`：stdin提供原CLI参数和按需具名配置；runner生成前同时检查主路径和归档同名，保留主题并自动选择“_第2版”“_第3版”等后缀，以返回的实际output交付。归档默认拒绝覆盖旧文件；直接CLI不自动改名。创建前登记本轮专属JSON；子进程业务成功且归档步骤返回后自动seal/clean；归档失败或跳过也清理，核对后删除本次清单，临时JSON均平铺于任务根。业务失败、部分计算、子进程超时或退出异常也清理配置及清单，保留原退出码；不自动覆盖已有输出重跑。无临时配置时不建立无用清单。它不运行用户Python脚本，不认领旧CLI传入的既存JSON；其他自定义辅助文件仍须创建前通过 `"<skill-root>/scripts/xlsx_lifecycle.py" plan` 显式登记。完整命令、入口覆盖、恢复及限制见交付生命周期 (`<skill-root>/references/delivery-lifecycle.md`)。
-
-用户归档提示根据完整 `delivery` 结果按归档用户话术 (`<skill-root>/references/delivery-lifecycle.md#归档用户话术`)映射，保留原 `delivery.archive_message` 机器文案而不逐字转贴，不展示内部路径、目录、ID或原始配置日志；正常主文件链接保留。归档失败保留主产物，不为此重跑计算；归档、业务计算与清理状态分别报告。
+所有文件交付优先使用 `<skill-root>/scripts/run_xlsx_task.py`，写入前按任务路由读对应说明，并读取写文件收尾（`<skill-root>/references/task-delivery.md`）。以返回的实际output交付，归档失败不重算、不回滚主文件，业务、归档和清理状态分别报告。只读stdout不加载写入收尾说明。用户话术按实际delivery结果映射，不展示内部归档路径、ID或日志，不虚构下载能力。
 
 ## 最终清理原则
 

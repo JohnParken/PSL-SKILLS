@@ -144,7 +144,20 @@ class Workbook:
         with open(path, "rb") as probe:
             if probe.read(8) == bytes.fromhex("d0cf11e0a1b11ae1"):
                 raise UnsupportedInputError("不支持读取 CFB 二进制内容；它不是原生 XLSX/XLSM，请使用 wps skill 的 scripts/read_wps.py 识别其有限支持范围；CFB 签名不证明 WPS 来源。")
-        with zipfile.ZipFile(path) as archive:
+        return cls._load_archive(path)
+
+    @classmethod
+    def from_bytes(cls, data, source):
+        """Parse a caller-owned immutable snapshot with the same package checks."""
+        if Path(source).suffix.lower() not in (".xlsx", ".xlsm"):
+            raise ValueError("Read views support only native .xlsx/.xlsm")
+        if data[:8] == bytes.fromhex("d0cf11e0a1b11ae1"):
+            raise UnsupportedInputError("CFB is not a native XLSX/XLSM package")
+        return cls._load_archive(io.BytesIO(data))
+
+    @classmethod
+    def _load_archive(cls, source):
+        with zipfile.ZipFile(source) as archive:
             infos = archive.infolist()
             if len(infos) > MAX_MEMBERS or sum(i.file_size for i in infos) > MAX_BYTES:
                 raise ValueError("Workbook exceeds package limits")
@@ -669,6 +682,12 @@ def main():
     read = commands.add_parser("read")
     read.add_argument("input")
     read.add_argument("--encoding", default="utf-8-sig", help="CSV/TSV encoding")
+    read.add_argument("--summary", action="store_true")
+    read.add_argument("--sheet")
+    read.add_argument("--range", dest="cell_range")
+    read.add_argument("--page-size", type=int)
+    read.add_argument("--cursor")
+    read.add_argument("--max-output-chars", type=int)
     for name in ("create", "edit", "calculate"):
         sub = commands.add_parser(name)
         if name != "create":
@@ -695,7 +714,16 @@ def main():
             suffix = Path(args.input).suffix.lower()
             if suffix in (".wps", ".et", ".ett"):
                 raise UnsupportedInputError(WPS_UNSUPPORTED_MESSAGE)
-            if suffix in (".csv", ".tsv"):
+            view = any((args.summary, args.sheet is not None, args.cell_range is not None, args.page_size is not None, args.cursor is not None, args.max_output_chars is not None))
+            if view:
+                from xlsx_read_view import snapshot, read_view
+                if suffix not in (".xlsx", ".xlsm"):
+                    raise ValueError("Read view options require native XLSX/XLSM; CSV/TSV retain their full-read interface")
+                data = snapshot(args.input)
+                result = read_view(Workbook.from_bytes(data, args.input), data, summary=args.summary, sheet=args.sheet, cell_range=args.cell_range,
+                                   page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
+                                   max_chars=12000 if args.max_output_chars is None else args.max_output_chars)
+            elif suffix in (".csv", ".tsv"):
                 result = read_csv(args.input, args.encoding, "\t" if suffix == ".tsv" else ",")
             else:
                 result = Workbook.load(args.input).inspect()
@@ -713,7 +741,11 @@ def main():
                 result["output"] = args.output
         if args.command in ('create', 'edit', 'calculate') and result.get('output_written'):
             finish_delivery(result, args.output, [getattr(args, field, None) for field in ('input', 'spec', 'appearance')])
-        print(json.dumps(result, ensure_ascii=False, indent=2, default=str), flush=True)
+        if args.command == "read" and result.get("schema_version") == "xlsx_read_view_v1":
+            from xlsx_read_view import encode
+            print(encode(result), flush=True)
+        else:
+            print(json.dumps(result, ensure_ascii=False, indent=2, default=str), flush=True)
         return 1 if result.get("status") == "failed" else 2 if result.get("status") == "incomplete" else 0
     except UnsupportedInputError as exc:
         result = {"status": "unsupported", "output_written": False, "message": str(exc)}

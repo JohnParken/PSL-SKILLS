@@ -6,13 +6,15 @@ Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境�
 before using this reference; internal resources and task data have different path bases.
 
 Use `read` to inspect the actual sheet names, addresses, formulas, raw values and style
-indices. Follow Standard-library calculation and file contract (`<skill-root>/references/python-calculation.md`) to build a JSON patch and
+indices. Follow Standard-library calculation and file contract (`<skill-root>/references/write-contract.md`) to build a JSON patch and
 run `python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./output.xlsx`. The output must have a new filename.
 
 Only list intended cells. Existing styles remain when style is omitted. Writing null
 clears a cell's value/formula but retains its style. Write a merged region's top-left
 anchor only. A patch cannot add/rename sheets or insert/delete/move rows or columns.
 Sheets containing shared/array/specially attributed formulas cannot be edited by this API.
+
+若实际工作簿含公式或计算issues，按需读公式计算（`<skill-root>/references/formula-calculation.md`）；无公式的值编辑不加载公式语法。
 
 Changing input values can invalidate formula caches on other sheets. The tool calculates
 all formula cells using the supported subset, clears unresolved caches, and reports issues.
