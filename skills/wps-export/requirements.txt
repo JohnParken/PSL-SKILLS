@@ -1,0 +1,5 @@
+# Python standard library only; requires Python >= 3.10.
+# No third-party Python packages required for the Python export wrapper and validation scripts.
+#
+# External System Dependency:
+# - LibreOffice (soffice) executable with 'MS Word 97' export filter support.
