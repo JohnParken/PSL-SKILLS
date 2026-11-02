@@ -1,0 +1,324 @@
+{
+  "verification_date_utc": "2026-11-02",
+  "runtime": {
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "python": "3.12.14",
+    "pymupdf": "1.26.6",
+    "reportlab_fixture_dependency": "4.4.9",
+    "pillow_fixture_dependency": "12.3.0",
+    "uid": 0
+  },
+  "synthetic_acceptance": {
+    "status": "passed",
+    "suite": "tests/test_pdf_reader.py",
+    "initial_run": {
+      "tests": 31,
+      "passed": 30,
+      "errors": 1,
+      "failures": 0,
+      "seconds": 28.503,
+      "issue": "Test called len(None) for an intentionally omitted whole-page text result under max_chars. Test corrected to accept null as no returned text while still requiring partial status and explicit budget diagnostics."
+    },
+    "final_run": {
+      "command": "python -B -m unittest discover -s tests -p test_pdf_reader.py -v",
+      "working_directory": "repository root",
+      "tests": 36,
+      "passed": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 31.701,
+      "actual_exit_code": 0
+    },
+    "test_names": [
+      "test_environment_check_distinguishes_environment_from_artifact_validation",
+      "test_environment_check_honors_input_byte_budget_and_hard_limit",
+      "test_inspect_reads_metadata_and_outline_without_modifying_input",
+      "test_default_text_has_independent_chinese_english_and_numeric_oracles",
+      "test_text_spans_retain_source_page_coordinates_and_fonts",
+      "test_noncontiguous_page_selection_preserves_physical_page_numbers",
+      "test_page_range_and_json_configuration_agree",
+      "test_clip_filters_content_using_unrotated_top_left_points",
+      "test_rotation_keeps_source_coordinates_and_reports_rotation",
+      "test_ruled_table_cells_match_independently_authored_values",
+      "test_images_without_output_directory_are_metadata_only",
+      "test_export_json_markdown_images_and_previews_are_reopenable",
+      "test_markdown_only_export_has_explicit_summary",
+      "test_preview_without_output_directory_is_rejected",
+      "test_scanned_page_is_partial_and_does_not_invoke_ocr",
+      "test_mixed_scanned_and_native_text_reports_missing_scan_content",
+      "test_truly_blank_page_is_not_misreported_as_an_ocr_failure",
+      "test_encrypted_pdf_requires_correct_password_file_and_never_echoes_password",
+      "test_page_budget_returns_reliable_partial_coverage",
+      "test_character_budget_never_silently_claims_complete_text",
+      "test_input_byte_limit_rejects_before_export",
+      "test_image_pixel_budget_is_visible_partial_result",
+      "test_output_budget_rejects_without_publishing_truncated_json_or_partial_files",
+      "test_inspect_honors_output_byte_budget",
+      "test_markdown_export_summary_obeys_budget_before_creating_output",
+      "test_ancestor_task_directory_cannot_access_skill_installation_as_data",
+      "test_output_root_open_failure_is_cleaned_or_explicitly_reported",
+      "test_concurrent_exports_to_distinct_directories_are_isolated",
+      "test_existing_output_directory_and_files_are_protected",
+      "test_absolute_and_parent_input_paths_are_rejected",
+      "test_absolute_and_parent_output_paths_are_rejected",
+      "test_symlink_inputs_parent_directories_and_outputs_are_rejected",
+      "test_malformed_pdf_and_missing_file_report_errors_with_json",
+      "test_invalid_page_and_clip_arguments_reject_instead_of_silent_fallback",
+      "test_json_config_rejects_plaintext_password_unknown_options_and_invalid_json",
+      "test_repeated_reads_do_not_write_into_source_installation"
+    ],
+    "scope": [
+      "Independent ReportLab Chinese/English/numeric/text-coordinate and ruled-table oracles.",
+      "Physical page ranges, JSON task equivalence and unrotated clipping on rotated PDFs.",
+      "Metadata, outline, text blocks, image resource metadata, JSON/Markdown exports, reopenable PNG previews and image payloads.",
+      "Pure scans and mixed raster/native text are partial; blank pages and small decorative images are not misclassified as OCR failures.",
+      "Observable OCR-entry-point trap and empty external executable PATH on a scan input.",
+      "Password-file support and no password echo on success/failure.",
+      "Page, character, pixel, input-byte and serialized output-byte budgets, including inspect output budget regression.",
+      "No input mutation; source installation name/byte equality under repeated execution; distinct-directory concurrent exports.",
+      "Existing output protection, relative task paths, symlink rejection, malformed inputs/options and explicit error JSON."
+    ],
+    "prior_complete_runs": [
+      {
+        "command": "python -B -m unittest discover -s tests -p test_pdf_reader.py -v",
+        "working_directory": "repository root",
+        "tests": 32,
+        "passed": 32,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 28.86,
+        "actual_exit_code": 0
+      },
+      {
+        "command": "python -B -m unittest discover -s tests -p test_pdf_reader.py -v",
+        "working_directory": "repository root",
+        "tests": 35,
+        "passed": 35,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 35.912,
+        "actual_exit_code": 0
+      }
+    ],
+    "review_regression_run": {
+      "working_directory": "repository tests directory",
+      "test_names": [
+        "test_markdown_export_summary_obeys_budget_before_creating_output",
+        "test_ancestor_task_directory_cannot_access_skill_installation_as_data",
+        "test_output_root_open_failure_is_cleaned_or_explicitly_reported"
+      ],
+      "tests": 3,
+      "passed": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.692,
+      "actual_exit_code": 0,
+      "risks_verified": [
+        "A Markdown-only export with a 20000-character metadata title must reject its oversized stdout summary before creating output.",
+        "A task directory that is an ancestor of an installed Skill must reject all input/password/taskfile/output paths into that installation; copied installation contents remain unchanged.",
+        "Injected output-root open failure after mkdir must clean its owned empty directory or explicitly report cleanup_incomplete, preserving existing adjacent files."
+      ]
+    },
+    "final_environment_budget_regression": {
+      "test_name": "test_environment_check_honors_input_byte_budget_and_hard_limit",
+      "status": "passed",
+      "checks": [
+        "Input byte limit one byte below the existing small fixture is rejected.",
+        "Input byte limit equal to fixture size passes the environment check.",
+        "A configured limit greater than 512 MiB is rejected without allocating a large file.",
+        "Task file names and bytes are unchanged."
+      ]
+    }
+  },
+  "real_sample_acceptance": {
+    "status": "passed_selected_checks",
+    "oracle_file": "tests/pdf_real_sample_oracles.json",
+    "source_url": "https://www.pbc.gov.cn/goutongjiaoliu/113456/113469/5427706/2024080916563291755.pdf",
+    "sha256": "6859bb7e6d3b67c971c000d95093ad93838dbcd9d41b476b9864ea7bebeb6f1c",
+    "source_bytes": 1275941,
+    "command": "python -B <repo-root>/skills/pdf/scripts/read_pdf.py read pbc_2024_q2.pdf --pages 1-2,9 --extract text,tables,preview --output-dir acceptance --formats json,markdown",
+    "working_directory": "Isolated temporary task directory outside the repository; source PDF downloaded manually for development validation, never by the reader.",
+    "actual_exit_code": 0,
+    "actual_status": "ok",
+    "actual_page_count": 58,
+    "actual_coverage": {
+      "requested_pages": [
+        1,
+        2,
+        9
+      ],
+      "processed_pages": [
+        1,
+        2,
+        9
+      ],
+      "omitted_pages": [],
+      "complete": true
+    },
+    "actual_creator_metadata": "WPS 文字",
+    "checks": [
+      {
+        "kind": "text",
+        "page": 1,
+        "expected": "中国货币政策执行报告",
+        "passed": true
+      },
+      {
+        "kind": "text",
+        "page": 1,
+        "expected": "2024年第二季度",
+        "passed": true
+      },
+      {
+        "kind": "text",
+        "page": 2,
+        "expected": "长5.0%",
+        "passed": true
+      },
+      {
+        "kind": "text",
+        "page": 2,
+        "expected": "同比上涨0.1%",
+        "passed": true
+      },
+      {
+        "kind": "text",
+        "page": 9,
+        "expected": "2024年上半年人民币贷款结构",
+        "passed": true
+      },
+      {
+        "kind": "text",
+        "page": 9,
+        "expected": "2508527",
+        "passed": true
+      },
+      {
+        "kind": "text",
+        "page": 9,
+        "expected": "132654",
+        "passed": true
+      },
+      {
+        "kind": "text",
+        "page": 9,
+        "expected": "-138",
+        "passed": true
+      },
+      {
+        "kind": "table_row",
+        "page": 9,
+        "expected": [
+          "人民币各项贷款",
+          "2508527",
+          "8.8%",
+          "132654"
+        ],
+        "passed": true
+      },
+      {
+        "kind": "table_row",
+        "page": 9,
+        "expected": [
+          "境外贷款",
+          "17223",
+          "56.0%",
+          "4218"
+        ],
+        "passed": true
+      },
+      {
+        "kind": "table_row",
+        "page": 9,
+        "expected": [
+          "外资金融机构",
+          "-138"
+        ],
+        "passed": true
+      }
+    ],
+    "table_shapes_on_physical_page_9": [
+      [
+        6,
+        4
+      ],
+      [
+        5,
+        2
+      ]
+    ],
+    "exported_artifacts": [
+      "previews/page_00001.png",
+      "previews/page_00002.png",
+      "previews/page_00009.png",
+      "result.json",
+      "result.md"
+    ],
+    "source_unchanged": true,
+    "interpretation": "WPS creator metadata describes the input producer. No WPS application or UI was run. Passing these selected facts does not prove correctness of every paragraph, figure, or table in the 58-page document.",
+    "original_pdf_committed": false,
+    "preview_visual_review": {
+      "physical_page": 9,
+      "status": "passed_visual_spot_check",
+      "comparison": "Generated preview viewed alongside independently generated Poppler page; both loan tables, selected Chinese labels and numeric cells, notes, paragraph placement and page number were legible and consistent. Different DPI; no pixel-equality claim."
+    },
+    "post_review_rerun": {
+      "reason": "CLI output budget and installation-path I/O protections changed after independent review.",
+      "command": "python -B <repo-root>/skills/pdf/scripts/read_pdf.py read pbc_2024_q2.pdf --pages 1-2,9 --extract text,tables,preview --output-dir acceptance_reviewed --formats json,markdown",
+      "actual_exit_code": 0,
+      "actual_status": "ok",
+      "independent_checks_passed": 11,
+      "independent_checks_total": 11,
+      "source_unchanged": true,
+      "previews_byte_identical_to_visually_reviewed_first_export": true
+    }
+  },
+  "unverified": [
+    "Windows and macOS runtime execution.",
+    "WPS, Acrobat or another PDF GUI application.",
+    "OCR; phase one deliberately does not implement it.",
+    "General reading-order recovery for arbitrary multi-column layouts.",
+    "Arbitrary unruled/merged tables, malformed font encodings, or every image color space.",
+    "Enforced non-root denial of writes to a read-only installation; current uid is 0. A chmod 444/555 copied installation was exercised and names/bytes compared unchanged.",
+    "Production host separation of stdout and stderr. The subprocess suite captures them independently; the exec tool used here returns a combined output field."
+  ],
+  "static_checks": {
+    "test_file_ast_syntax": "passed",
+    "test_file_max_line_length_200": "passed",
+    "test_file_one_statement_per_line_ast": "passed",
+    "pylint": {
+      "status": "passed",
+      "version": "3.3.9",
+      "installed_for": "development validation in an isolated temporary location; not a Skill runtime dependency",
+      "enabled_checks": [
+        "C0103",
+        "C0301",
+        "C0321"
+      ],
+      "max_line_length": 200,
+      "scope": [
+        "skills/pdf/scripts/pdf_backend.py",
+        "skills/pdf/scripts/pdf_io.py",
+        "skills/pdf/scripts/pdf_outputs.py",
+        "skills/pdf/scripts/read_pdf.py",
+        "tests/test_pdf_reader.py"
+      ],
+      "actual_exit_code": 0,
+      "diagnostics": [],
+      "executed_and_verified_by": "root integration agent",
+      "interpretation": "Targeted naming, line-length and one-statement-per-line checks passed; this is not a claim that every Pylint rule passed.",
+      "post_review_rerun": "Passed again on the final 36-test code state: Pylint 3.3.9, C0103/C0301/C0321, max line length 200, four implementation scripts plus test_pdf_reader.py, exit 0 with no diagnostics; executed and confirmed by root integration agent."
+    }
+  },
+  "implementation_sha256_at_final_suite": {
+    "skills/pdf/scripts/pdf_backend.py": "cf5355b91d545fded39da4cda670ab18e513845f6f621f3580af1a2461cef6e7",
+    "skills/pdf/scripts/pdf_io.py": "c0e629440f3e92a7ec3a21062787845d2249a5073055922bb914d683b5dcc6d1",
+    "skills/pdf/scripts/pdf_outputs.py": "a879187ad068631accd6356645f764e8eadce9f0f3b4b0cc3c6fadffa91e6bad",
+    "skills/pdf/scripts/read_pdf.py": "b54d63c3caf85d951d1de5ac92bf54187f21ac60daf73c2f5fa0ab1a7f556724"
+  },
+  "note": "This JSON records completed checks. Future implementation edits require rerunning the affected tests before treating these hashes and counts as current."
+}

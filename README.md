@@ -1,6 +1,6 @@
 # PSL-SKILLS
 
-面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 家族（.wps/.et/.ett）只读内容识别、OFD 1.0/1.1/1.2 XML结构与存储文字只读提取、交付物原子归档与受控清理生命周期，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
+面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 家族（.wps/.et/.ett）只读内容识别、PDF 原生内容读取与预览、OFD 1.0/1.1/1.2 XML结构与存储文字只读提取、交付物原子归档与受控清理生命周期，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
 
 ## 收录内容
 
@@ -11,6 +11,7 @@
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261102.1954.3193 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 wps 提取的受支持电子表格 JSON；不支持直接读取 WPS 专有格式（.wps/.et/.ett），请使用 wps 技能 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261102.2122.4624 | .wps/.et/.ett 内容识别、MS-DOC/Strict 及 Transitional OOXML Word/OOXML 电子表格/BIFF8 子集只读；支持 MS-XLS 标准 DXF（0x088D）差异格式结构校验与属性保留；纯表格/文字分流，内联文字、日期与公式缓存提取，保留 partial 诊断；不生成、编辑、转换或重算 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261102.1954.3193 | OFD 1.0/1.1/1.2 XML 结构与存储文字；全量节点/字符/来源、页资源与复合引用；结构与文字覆盖分别报告；不做 OCR、验签或渲染 |
+| [pdf](skills/pdf/SKILL.md) | 独立 PyMuPDF 实现；参考公开 PDF Skill 的任务路由与验证原则 | 20261102.2154.5512 | 第一阶段只读：原生文字、页码/坐标/字体、常见表格、图像资源与页面预览、元信息/目录；按页或区域提取并导出 JSON/Markdown；扫描、乱码及预算缺口保留 partial；不做 OCR 或 PDF 写入 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261102.1954.3193 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
@@ -50,6 +51,7 @@ PSL-SKILLS/
     │   ├── scripts/               # 独立正文/表格读取、CFB、BIFF8、DXF 与合成回归
     │   └── references/            # 固定 FIB 范围、DXF 记录、来源与验证限制
     ├── ofd/                       # OFD 三版本 XML 结构与存储文字只读
+    ├── pdf/                       # PyMuPDF 原生内容读取、结构化结果及页面预览
     └── artifact-lifecycle/        # 交付物原子归档与受控临时文件清理公共技能
         ├── SKILL.md
         ├── requirements.txt
@@ -64,9 +66,10 @@ PSL-SKILLS/
 - **xlsx**：Python 3.9 及以上；维护中的主流程与生命周期 runner 仅依赖标准库。
 - **wps**：Python 3.9 及以上，全部 OOXML 分支另需 Expat >=2.6；仅标准库，独立包内读取，不转换文件。
 - **ofd**：仅 Python >=3.10 自带标准库（含 zlib、Expat >=2.6.0）；零第三方包、零外部软件。自带能力缺失则诊断并停止，不额外安装组件。
+- **pdf**：Python >=3.10、`PyMuPDF==1.26.6`，运行平台需支持目录描述符和不跟随符号链接的文件操作；已验证云端 Linux。使用 `-I -B`，不加会隐藏第三方包的 `-S`；依赖由宿主预先按 requirements.txt 配置，不自动安装。ReportLab 仅用于仓库合成测试，不是运行依赖。
 - **artifact-lifecycle**：Python 3.10 及以上标准库（需 POSIX 锁与文件描述符操作能力）；零第三方包、零外部软件。
 - **skill-development-standards**：Python 3.10 及以上标准库（需系统 IANA 时区支持以生成规范版本时间戳）；零第三方包依赖。
-- 上述办公格式处理与生命周期主流程均无需安装第三方 Python 包或办公软件，使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存；纯文本写作不需要 Python。
+- docx、xlsx、wps、ofd 与生命周期主流程使用各自声明的标准库环境，执行时使用 `-I -S -B`；pdf 使用其单独声明的 PyMuPDF 环境，执行时使用 `-I -B`。纯文本写作不需要 Python；不将一个 Skill 的依赖约束推广到其它 Skill。
 - XLSX 目录中保留的旧 legacy 工具可能依赖 pandas、openpyxl 或 LibreOffice，不属于推荐流程；不要据此为主流程安装依赖。
 
 ## 如何使用
@@ -166,6 +169,22 @@ python3 -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
 
 OFD 离线分发包沿用仓库现有位置 `skills/ofd-<version>.zip`；完整目录独立安装，不依赖相邻 wps/docx/xlsx。版本化 ZIP 按现有 `.gitignore` 规则不纳入版本控制，源目录和 README 是维护入口。
 
+### PDF（第一阶段：读取）
+
+独立入口见 [pdf](skills/pdf/SKILL.md)。从宿主确认的任务目录读取相对输入路径，先确认解释器、固定依赖版本和输入可访问；有文件输出时增加 `--write-check`。下列 `<skill-root>` 由实际读取的 PDF 主入口定位并整体替换，不切换到安装目录执行任务：
+
+```console
+python3 -I -B "<skill-root>/scripts/read_pdf.py" check --input "报告.pdf"
+python3 -I -B "<skill-root>/scripts/read_pdf.py" inspect "报告.pdf"
+python3 -I -B "<skill-root>/scripts/read_pdf.py" read "报告.pdf" --pages 1-3 --extract text,tables
+python3 -I -B "<skill-root>/scripts/read_pdf.py" check --input "报告.pdf" --write-check
+python3 -I -B "<skill-root>/scripts/read_pdf.py" read "报告.pdf" --pages 1-3 --extract text,tables,images,preview --output-dir "报告读取结果"
+```
+
+环境自检要求退出 0 且 `status=environment-ok`。读取退出 0 表示请求范围内完成，退出 2 表示可用的 `partial` 结果，退出 1 表示失败；宿主须保留真实 stdout、stderr 和退出码。输出目录必须尚不存在，父目录须已存在；输出 JSON 保留物理页码、坐标、覆盖与缺口诊断，Markdown 是阅读视图。预览不会修改输入 PDF。导出的显式文件清单按公共生命周期流程交接，读取器本身不声称已经归档。
+
+扫描或可疑乱码页只提示后续 OCR/视觉复核，不调用 OCR。表格结构由几何推断，不保证复杂合并表头、跨页表格或语义阅读顺序。验证范围与复现命令见 [PDF 验证记录](skills/pdf/references/validation.md)。
+
 ### 交付物归档与受控清理（artifact-lifecycle）
 
 独立入口见 [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md)。用于在任务生成业务交付物后，统一进行临时文件登记、交付物原子归档与安全清理。
@@ -210,6 +229,7 @@ python3 -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_check_s
 - **XLSX**：原生编辑仅支持受控单元格操作，不支持任意结构编辑；ET/ETT 的 CFB/BIFF8 引擎、样本清单与回归已迁至 wps。docx/xlsx 不支持直接读取 WPS 专有格式（.wps/.et/.ett），请使用 wps 技能；读取入口明确拒绝，不自动调用。四个既有 ET/ETT 真实样本可在显式兼容/opaque 策略下提取有限子集；详见 [真实样本记录](skills/wps/references/et-real-validation.md)。这不是通用 WPS 格式支持。
 - **WPS**：支持根据实际结构识别 MS-DOC、OOXML Word、OOXML 电子表格或 BIFF8 有限子集；对 MS-XLS 标准 DXF（`0x088D`）差异格式进行结构校验与属性保留，但格式不应用到保存值显示；未知私有记录、加密、损坏结构与资源错误明确拒绝并停止，不跳过未知记录后宣称成功。
 - **DOCX**：支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 家族读取能力由独立 wps 技能提供，不再由 docx 提供。
+- **PDF**：只读原生内容与预览，不生成或编辑 PDF、不执行 OCR、不验证数字签名；页码以文件中的物理页为准。图片显示实例与页资源分别返回，不猜测对应关系；裁剪读取不导出可能含区域外内容的原图资源。
 - **交付物归档与同名保护**：归档默认原子独占发布，同名拒绝覆盖并保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。
 - **失败立即清理**：生成或编辑失败、子进程超时同样立即清理本轮中间辅助文件与清单，不因待重试保留临时材料；重试需从原始输入重新发起。
 - 更详细的限制、错误处理、验收和中间文件清理规则以各 skill 的 `SKILL.md` 为准。
@@ -234,7 +254,7 @@ print(version)
 
 ## 开发验证
 
-本项目主流程保持纯 Python 标准库。每次更新内容时，必须人工核对 description、正文、引用说明、README、依赖和实际 CLI 行为是否一致，按需同步优化描述；结构检查不能替代能力与证据核对。
+本项目按每个 Skill 的真实契约声明依赖；现有标准库流程保持原限制，pdf 单独使用声明版本的 PyMuPDF。每次更新内容时，必须人工核对 description、正文、引用说明、README、依赖和实际 CLI 行为是否一致，按需同步优化描述；结构检查不能替代能力与证据核对。
 
 仓库维护约定见 [AGENTS.md](AGENTS.md)。新建、修改、导入、迁移或发布 skill 前，先读取 [Skill 开发规范](skills/skill-development-standards/SKILL.md)。规范附带标准库检查器和测试；`.agents/skills/skill-development-standards` 通过相对符号链接指向同一份规范。
 
@@ -280,10 +300,11 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
 | .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
 | .ofd | 1.0/1.1/1.2 XML 结构、存储文字、页资源与复合引用 | 不支持 | 已知版本统一判定；结构、命名空间与文字覆盖分开；不作全文/视觉或全规范认证 |
+| .pdf | 原生文字、坐标/字体、常见表格、图像资源、目录/元数据与预览 | 不支持；读取结果可导出 JSON/Markdown | 第一阶段，无 OCR；扫描、可疑乱码及资源遗漏明确标记；不保证语义顺序和跨页表格 |
 | .wps/.et/.ett | wps按实际结构读取有限子集；支持MS-XLS标准DXF（0x088D）差异格式校验与属性保留 | 不生成、不编辑、不转换 | 五真实原件仅partial；新增容器主要合成验证 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 
-仓库没有PDF、PPT/PPTX、ODT/ODS/ODP、RTF专用技能或通用转换器。旧DOC/XLS内部结构只能由wps识别其有限MS-DOC/BIFF子集，不能称完整支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。推荐下一步先补有合法来源的真实样本与独立内容预期，再按实际办公需求单独规划PDF/PPT等技能；不要通过后缀或依赖推断已支持。
+仓库没有 PPT/PPTX、ODT/ODS/ODP、RTF 专用技能或通用转换器。PDF 目前仅实现第一阶段读取；后续 OCR 与写入须单独设计和验收。旧 DOC/XLS 内部结构只能由 wps 识别其有限 MS-DOC/BIFF 子集，不能称完整支持。外部同名软件生成的真实 DOCX/XLSX 仍按原生格式处理。持续补充有合法来源的真实样本与独立内容预期，再按实际办公需求规划其它能力；不要通过后缀或依赖推断已支持。
 
 本批四技能任务选择的固定正反例见 `tests/skill_selection_cases.json`。20 项人工边界核对及未见标准答案的独立选择模拟均匹配预期；这是有限用例的选择评测，不是真实宿主自动触发验收。
 
