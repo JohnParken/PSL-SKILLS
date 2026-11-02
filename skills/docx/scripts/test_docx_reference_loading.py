@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import os
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -32,6 +33,37 @@ class ReferenceLoadingTests(unittest.TestCase):
         self.assertNotIn('references/generation-runtime.md', [x['file'] for x in o['files']])
         self.assertEqual(o['total_bytes'], sum(x['bytes'] for x in o['files']))
 
+    def test_failure_routes_are_separate_and_do_not_default_to_legacy_runtime(self):
+        expected = {'delivery-diagnostics': 'references/delivery.md', 'generation-error': 'references/controlled-flow.md',
+                    'cleanup-recovery': 'references/task-cleanup.md', 'legacy-runtime': 'references/generation-runtime.md'}
+        for task, reference in expected.items():
+            with self.subTest(task=task):
+                child = self.call('plan', '--task', task)
+                self.assertEqual(child.returncode, 0, child.stderr)
+                result = json.loads(child.stdout)
+                self.assertEqual([item['file'] for item in result['files']], ['SKILL.md', reference])
+                self.assertFalse(result['is_observed'])
+                self.assertTrue(all(len(item['source_sha256']) == 64 for item in result['files']))
+
+    def test_recorded_source_change_is_refused_without_touching_real_skill(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            scripts = root / 'fixture' / 'scripts'
+            scripts.mkdir(parents=True)
+            copied = scripts / 'reference_loading_audit.py'
+            shutil.copy2(SCRIPT, copied)
+            target = scripts.parent / 'SKILL.md'
+            target.write_text('first line\nsecond line\n', encoding='utf-8')
+            command = [sys.executable, '-I', '-S', '-B', str(copied)]
+            for args in [('init', '--trace', 'trace.jsonl'), ('read', '--file', 'SKILL.md', '--trace', 'trace.jsonl')]:
+                child = subprocess.run(command + list(args), cwd=root, capture_output=True, text=True)
+                self.assertEqual(child.returncode, 0, child.stderr)
+            target.write_text('changed line\nsecond line\n', encoding='utf-8')
+            child = subprocess.run(command + ['audit', '--trace', 'trace.jsonl'], cwd=root, capture_output=True, text=True)
+            self.assertEqual(child.returncode, 2)
+            self.assertIn('reference changed', child.stderr)
+            self.assertEqual(child.stdout, '')
+
     def test_init_read_range_and_duplicate_detection(self):
         with tempfile.TemporaryDirectory() as folder:
             p=self.call('init','--trace','session.jsonl',cwd=folder)
@@ -50,6 +82,8 @@ class ReferenceLoadingTests(unittest.TestCase):
             self.assertEqual(o['files'][0]['ranges'],[[1,2],[2,3]])
             self.assertGreater(o['totals']['repeated_bytes'],0)
             self.assertEqual(o['totals']['unique_bytes']+o['totals']['repeated_bytes'],o['totals']['read_bytes'])
+            self.assertEqual(o['fingerprint_verified_reads'], 2)
+            self.assertEqual(o['legacy_unverified_reads'], 0)
             self.assertEqual(o['reference_token_measurement'],'not_available')
             self.assertIsNone(o['provider_model_usage'])
 
@@ -67,6 +101,8 @@ class ReferenceLoadingTests(unittest.TestCase):
             self.assertEqual(o['provider_model_usage']['input_tokens'],123)
             self.assertEqual(o['totals']['measured_reference_tokens'],0)
             self.assertEqual(o['planned_but_not_observed'],[])
+            self.assertEqual(o['legacy_unverified_reads'], 1)
+            self.assertEqual(o['byte_measurement'], 'contains_legacy_current_file_estimates')
 
     def test_reject_unsafe_path_and_symlink_log(self):
         with tempfile.TemporaryDirectory() as folder:

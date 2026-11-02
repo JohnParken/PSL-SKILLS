@@ -6,6 +6,7 @@ through `read` or events supplied by the host to `audit` can be observed. Usage
 counts are reported as measured only when the host supplies them.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -39,7 +40,10 @@ TASKS = {
     "edit-table": ("SKILL.md", "references/table-media-editing.md"),
     # Broad requests still start with the core contract, then expand by need.
     "full-report": ("SKILL.md", "references/generation-core.md"),
-    "delivery-diagnostics": ("SKILL.md", "references/generation-runtime.md"),
+    "delivery-diagnostics": ("SKILL.md", "references/delivery.md"),
+    "generation-error": ("SKILL.md", "references/controlled-flow.md"),
+    "cleanup-recovery": ("SKILL.md", "references/task-cleanup.md"),
+    "legacy-runtime": ("SKILL.md", "references/generation-runtime.md"),
 }
 
 
@@ -88,7 +92,8 @@ def do_plan(args):
     refs = []
     for name in chosen:
         _, s, e, content = lines_and_bytes(name)
-        refs.append({"file": name, "lines": e - s + 1, "bytes": len(content)})
+        refs.append({"file": name, "lines": e - s + 1, "bytes": len(content),
+                     "source_sha256": hashlib.sha256(content).hexdigest()})
     json_result({"type": "planned_reference_set", "task": args.task,
                  "is_observed": False, "files": refs,
                  "total_bytes": sum(x['bytes'] for x in refs),
@@ -127,7 +132,9 @@ def do_read(args):
     # A failed trace write must not claim a read was audited. Write first; then print.
     if args.trace:
         append_trace(args.trace, {"type": "reference_read", "path": args.file,
-                                  "start_line": start, "end_line": end})
+                                  "start_line": start, "end_line": end,
+                                  "source_sha256": hashlib.sha256(b''.join(lines)).hexdigest(),
+                                  "range_sha256": hashlib.sha256(content).hexdigest(), "read_bytes": len(content)})
     # stdout is the same range as recorded in trace; no banner/JSON mixed in.
     sys.stdout.buffer.write(content)
 
@@ -156,6 +163,8 @@ def do_audit(args):
     by_file = {}
     usage = {'input_tokens': 0, 'output_tokens': 0, 'cached_tokens': 0, 'events': 0}
     measured_read_events = 0
+    verified_read_events = 0
+    legacy_read_events = 0
     for event in events:
         kind = event.get('type')
         if kind == 'trace_start':
@@ -176,6 +185,19 @@ def do_audit(args):
         if type(start) is not int or type(end) is not int:
             raise ValueError('reference_read must contain integer start_line and end_line')
         lines, start, end, content = lines_and_bytes(name, start, end)
+        fingerprint_keys = ('source_sha256', 'range_sha256', 'read_bytes')
+        present = [key in event for key in fingerprint_keys]
+        if any(present) and not all(present):
+            raise ValueError('incomplete reference fingerprint record')
+        if all(present):
+            if (event['source_sha256'] != hashlib.sha256(b''.join(lines)).hexdigest()
+                    or event['range_sha256'] != hashlib.sha256(content).hexdigest()
+                    or type(event['read_bytes']) is not int or event['read_bytes'] != len(content)):
+                raise ValueError('reference changed since recorded read or fingerprint mismatch; cannot verify byte totals')
+            verified_read_events += 1
+        else:
+            # Preserve old host event support, but never call reconstructed bytes observed.
+            legacy_read_events += 1
         entry = by_file.setdefault(name, {'file': name, 'reads': 0, 'read_bytes': 0,
                                           'unique_bytes': 0, 'repeated_bytes': 0,
                                           'ranges': [], '_seen': set()})
@@ -205,6 +227,8 @@ def do_audit(args):
     unexpected = sorted(set(by_file) - set(planned)) if planned is not None else []
     missing = sorted(set(planned) - set(by_file)) if planned is not None else []
     json_result({'type': 'observed_reference_trace', 'trace': path.name,
+                 'fingerprint_verified_reads': verified_read_events, 'legacy_unverified_reads': legacy_read_events,
+                 'byte_measurement': 'verified_source_snapshots' if not legacy_read_events else 'contains_legacy_current_file_estimates',
                  'task': args.task, 'totals': totals,
                  'reference_token_measurement': 'partial_or_full' if measured_read_events else 'not_available',
                  'measured_read_events': measured_read_events,

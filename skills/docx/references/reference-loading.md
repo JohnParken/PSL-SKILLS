@@ -15,7 +15,7 @@
 1. 从已确认位置读取 `SKILL.md`，依任务表直达所需专项 reference；**不默认读取 `generation.md`** 作为中间索引。
 2. 优先选相关章节范围，不支持范围读取的宿主再读取完整专项文件。避免在同一轮重复读取已读文件或相同行范围。
 3. 纯文本、常规标题、简易列表以及无合并基础二维表：只读 `SKILL.md`；无需加载列表与表格专项文档。普通新建交付时只用 `SKILL.md` 的简短格式提示，不为了提示去加载 `generation-runtime.md`。
-4. `generation-runtime.md` 只在预检、兼容 CLI、命名冲突、配置或归档诊断时读取需要的章节。
+4. 请求/规格错误用 `generation-error` → `<skill-root>/references/controlled-flow.md`；归档诊断用 `delivery-diagnostics` → `<skill-root>/references/delivery.md`；原清单恢复用 `cleanup-recovery` → `<skill-root>/references/task-cleanup.md`。仅旧CLI/命名配置用 `legacy-runtime` → `<skill-root>/references/generation-runtime.md`，不把三类故障参考都预读。
 5. 文档里出现其他 reference 链接并不意味着必须继续加载；缺少具体字段规范时再追加读取。
 
 ## 任务规划示例
@@ -62,3 +62,9 @@ python -I -S -B "<skill-root>/scripts/reference_loading_audit.py" audit --trace 
 - 默认无任何日志副作用；即使模型忽略路由指令，也不能声称获得了动态加载保证。
 - 该脚本不会追踪任意 Shell `cat`、外部阅读器或宿主直接文件注入；要覆盖这些操作，需在实际 Agent 工具调用层接入 `reference_read` 事件。
 - P0–P3 DOCX 生成器未改动；仍以完整回归测试和相同输入 OOXML 部件一致性作为兼容性依据。
+
+## 版本指纹与旧日志
+
+plan仅建议路径/字节和源文件SHA256，不自动注入。read事件现在记录完整源文件与实际行范围的SHA256和字节数；audit发现源或范围变化会明确失败，不按新文件重算旧读取量。旧宿主事件缺少指纹仍可读取，但byte_measurement标明contains_legacy_current_file_estimates，并统计legacy_unverified_reads；这部分是当前文件估计，不是已证实的历史读取字节。
+
+同一任务读取同一版本相同行范围可避免主动重读，但脚本不能获知未记录的宿主加载、缓存命中或模型注意力。文件量不能代替真实usage；跨任务的业务素材与授权不随参考复用自动继承。
