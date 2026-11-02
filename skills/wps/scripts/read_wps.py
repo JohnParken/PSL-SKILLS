@@ -613,6 +613,12 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
             return read_sheet_bytes(data)
         from wps_ooxml import read_bytes as read_ooxml_bytes
         return read_ooxml_bytes(data, revisions=revisions or 'accepted', include_related=include_related, hidden_text=hidden_text)
+    if data.lstrip().startswith(b'{\\rtf'):
+        from wps_rtf_read import parse_rtf_bytes
+        try:
+            return parse_rtf_bytes(data)
+        except Exception as exc:
+            raise ParseError('corrupt', {'stage': 'RTF stream'}, str(exc)) from exc
     require(data.startswith(SIGNATURE), {'stage': 'container'},
             'Unknown container; native private WPS/Works/ET formats unsupported', 'unsupported')
     require(hidden_text in ('include', 'annotate'), {'stage': 'options'}, 'Binary visibility is unknown; exclude unsupported', 'unsupported')
