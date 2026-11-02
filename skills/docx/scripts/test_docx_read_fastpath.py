@@ -30,7 +30,15 @@ class ReadFastpathTests(unittest.TestCase):
                 + f'<w:tbl>{table_rows}</w:tbl>' + para('相同标题', style='Heading2')
                 + para('第二段') + para('第二部分', style='Heading1') + para('结尾'))
         document = f'<w:document xmlns:w="{N}"><w:body>{body}<w:sectPr/></w:body></w:document>'
-        styles = f'''<w:styles xmlns:w="{N}"><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:pPr><w:outlineLvl w:val="0"/></w:pPr></w:style><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="标题 2"/><w:basedOn w:val="Heading1"/><w:pPr><w:outlineLvl w:val="1"/></w:pPr></w:style></w:styles>'''
+        styles = (
+            f'<w:styles xmlns:w="{N}">'
+            '<w:style w:type="paragraph" w:styleId="Heading1">'
+            '<w:name w:val="heading 1"/>'
+            '<w:pPr><w:outlineLvl w:val="0"/></w:pPr></w:style>'
+            '<w:style w:type="paragraph" w:styleId="Heading2">'
+            '<w:name w:val="标题 2"/><w:basedOn w:val="Heading1"/>'
+            '<w:pPr><w:outlineLvl w:val="1"/></w:pPr></w:style></w:styles>'
+        )
         with zipfile.ZipFile(self.path,'w',zipfile.ZIP_DEFLATED) as z:
             z.writestr('word/document.xml',document)
             z.writestr('word/styles.xml',styles)
@@ -104,7 +112,8 @@ class ReadFastpathTests(unittest.TestCase):
             self.assertEqual(data['start_block'],cursor)
             all_rows.extend(e['row_index'] for e in data['blocks'] if e['type']=='table_row')
             if data['next_block'] is None:
-                self.assertFalse(data['truncated']);break
+                self.assertFalse(data['truncated'])
+                break
             self.assertTrue(data['truncated'])
             self.assertGreater(data['next_block'],cursor)
             cursor=data['next_block']
@@ -193,4 +202,5 @@ class ReadFastpathTests(unittest.TestCase):
         self.assertNotEqual(r.returncode,0)
         self.assertIn('single block exceeds',r.stderr)
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

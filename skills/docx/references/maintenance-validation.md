@@ -10,6 +10,7 @@
 
 ## 目录
 
+- Pylint 行长与语句排版修复（2026-11-02）（`<skill-root>/references/maintenance-validation.md#pylint-行长与语句排版修复2026-11-02`）
 - DOCX路径统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#docx路径统一2026-10-29`）
 
 - 受控编辑清单收尾（2026-10-29）（`<skill-root>/references/maintenance-validation.md#受控编辑清单收尾2026-10-29`）
@@ -30,6 +31,18 @@
 - execute调用形式补充（2026-10-29）（`<skill-root>/references/maintenance-validation.md#execute调用形式补充2026-10-29`）
 - 常见环境与交付故障说明（2026-10-29）（`<skill-root>/references/maintenance-validation.md#常见环境与交付故障说明2026-10-29`）
 - Bash执行示例统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#bash执行示例统一2026-10-29`）
+
+## Pylint 行长与语句排版修复（2026-11-02）
+
+版本 `20261102.1355.3154`。仅调整三个测试文件的长行、分号串联语句及单行语句体；长 XML 和子进程命令使用括号内相邻字符串拼接，字符串值、语句执行顺序、断言及测试输入保持不变。仓库根 AGENTS.md 增加 Python 每行最多 200 字符、每行一条语句、格式修复保持语义、按真实配置复查及 Info 审阅规则。未修改生成器、读取器、依赖、归档清理或开发规范；description 人工核对仍准确，保留原文，版本与 README 同步。纽约时间 2026-11-02 01:55:31.549173 整体加 12 小时并截断到百分之一秒得到本版本。
+
+本轮仓库根目录为已确认维护基准。兼容解释器为宿主已确认的 Python 3.12.14，维护解释器与检查器 help 自检退出 0。当前环境未预装 Pylint，使用 uv 在创建前登记、确认不存在的本轮独占维护目录内获取 Pylint 4.1.3 / Astroid 4.3.4；未添加 Skill 运行时依赖。uv 默认共享工具目录受沙箱限制后，直接使用已定位到本轮临时环境中的 pylint 入口执行，不再访问共享工具目录；PYLINTHOME 及检查缓存均在本轮目录。获取工具时 uv 对依赖索引中的旧版本格式发出修正提示，工具安装/版本查询成功，非项目源码诊断。
+
+实际定点参数为 `--disable=all --enable=C0301,C0321 --max-line-length=200 --reports=n --score=n`，末尾为三个目标测试文件，Pylint 入口和 PYLINTHOME 使用本轮已确认的临时路径。对从 HEAD 读取、写入已登记维护目录的原始三个文件执行相同规则，输出 3 项 C0301 与 7 项 C0321、退出 16；这是原始基线的预期诊断，不是检查未执行。修复后的源码执行同一定点规则，退出 0、无诊断。原报告版本及严重等级映射未提供，不以此结果声称完整原报告或全仓库 Pylint 已通过；原清单列出 6 处但称 7 项，当前源码的额外同类问题一并修复。
+
+三个文件修改前后去除位置属性的 AST 摘要逐文件一致。使用上述 Python 加 `-I -S -B`，从仓库根执行 `-m unittest discover -s skills/docx/scripts -p '<筛选文件>' -q`：test_docx_controlled_flow.py 为 16 项、test_docx_read_fastpath.py 为 19 项、test_docx_output_channels.py 为 3 项，共 38 项通过，均退出 0，无跳过；未放宽断言或新增镜像实现的测试。审阅相关 Info：隔离启动前的 sys.path 初始化与后续导入有既定用途，未移动；未对测试方法文档字符串、函数复杂度及范围外默认编码进行批量重构，也不宣称 1220 项 Info 已清零。
+
+严格 Skill 检查、空白检查及本轮临时目录收尾以实际交付结果为准。仅为格式维护，未重复 DOCX 全量回归、Linux/Windows、Office 视觉或生产宿主验证；AST 一致不代表跨平台验收。未更新 ZIP、提交或推送。Main-agent work：主代理完成分析、修复、规范、实际 Pylint 与测试、差异审查及最终接受。Subagent execution record：本轮未调用子代理，工作范围较小。
 
 ## 运行条件与命令
 

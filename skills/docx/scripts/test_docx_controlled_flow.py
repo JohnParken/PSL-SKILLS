@@ -40,7 +40,8 @@ class ControlledTests(unittest.TestCase):
         self.assertEqual(runner.retry_task(manifest, SPEC)['status'], 'verified')
 
     def test_text_edit_cleans_owned_json_and_preserves_input(self):
-        source = self.source(); original = source.read_bytes()
+        source = self.source()
+        original = source.read_bytes()
         result = edit_task('text', source, 'edited.docx', {'replacements':[{'old':'ABC','new':'XYZ','count':1}]})
         self.assertEqual(result['status'], 'edited', result)
         self.assertTrue(result['cleanup']['cleanup_complete'])
@@ -69,7 +70,14 @@ class ControlledTests(unittest.TestCase):
             result = edit_task(kind, 'source.docx', kind+'.docx', spec)
             self.assertEqual(result['status'], 'edited', result)
         create_document({'blocks':[{'type':'table','rows':[['项目','金额'],['甲','10']], 'header':True}]}, 'table.docx')
-        result = edit_task('tables', 'table.docx', 'tables.docx', {'operation':{'type':'insert_row','table_index':0,'row_index':1,'expected_rows':2,'expected_text':['甲','10'],'position':'after','cells':['乙','20']}})
+        result = edit_task(
+            'tables', 'table.docx', 'tables.docx',
+            {'operation': {
+                'type': 'insert_row', 'table_index': 0, 'row_index': 1,
+                'expected_rows': 2, 'expected_text': ['甲', '10'],
+                'position': 'after', 'cells': ['乙', '20'],
+            }},
+        )
         self.assertEqual(result['status'], 'edited', result)
 
     def test_failed_edit_cleans_registered_spec(self):
@@ -206,7 +214,8 @@ class ControlledTests(unittest.TestCase):
         self.assertEqual(Path('read.txt').read_text(), '合同 ABC')
 
     def test_comments_list_does_not_create_helpers(self):
-        self.source(); before=set(Path('.').iterdir())
+        self.source()
+        before=set(Path('.').iterdir())
         result=edit_task('comments','source.docx','list.docx',{'action':'list'})
         self.assertEqual(result['error_code'],'edit_request_rejected')
         self.assertEqual(before,set(Path('.').iterdir()))
@@ -227,7 +236,13 @@ class ControlledTests(unittest.TestCase):
 
     def test_busy_task_lock_preserves_config_and_does_not_edit(self):
         self.source()
-        process=subprocess.Popen([sys.executable,'-I','-S','-B','-c','import os,fcntl,sys; f=os.open(".",os.O_RDONLY); fcntl.flock(f,fcntl.LOCK_EX); print("locked",flush=True); sys.stdin.readline()'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True)
+        process = subprocess.Popen(
+            [sys.executable, '-I', '-S', '-B', '-c',
+             'import os,fcntl,sys; f=os.open(".",os.O_RDONLY); '
+             'fcntl.flock(f,fcntl.LOCK_EX); print("locked",flush=True); '
+             'sys.stdin.readline()'],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
+        )
         try:
             self.assertEqual(process.stdout.readline().strip(),'locked')
             result=edit_task('text','source.docx','edited.docx',{'replacements':[{'old':'ABC','new':'XYZ'}]})

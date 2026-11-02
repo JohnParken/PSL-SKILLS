@@ -21,9 +21,13 @@ class OutputChannelTests(unittest.TestCase):
             stream.detach()
 
     def test_nontext_transport_keeps_original_bytes(self):
-        buffer=io.BytesIO(); stream=io.TextIOWrapper(buffer,encoding='utf-8',newline='')
-        with redirect_stderr(stream): _print_worker_diagnostics(b'error:\xff\n')
-        stream.flush(); self.assertEqual(buffer.getvalue(),b'error:\xff\n'); stream.detach()
+        buffer=io.BytesIO()
+        stream=io.TextIOWrapper(buffer,encoding='utf-8',newline='')
+        with redirect_stderr(stream):
+            _print_worker_diagnostics(b'error:\xff\n')
+        stream.flush()
+        self.assertEqual(buffer.getvalue(),b'error:\xff\n')
+        stream.detach()
 
     def test_string_capture_preserves_prior_replacement_semantics(self):
         with redirect_stderr(io.StringIO()) as error:
