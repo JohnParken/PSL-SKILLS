@@ -1,5 +1,7 @@
 # DOCX 业务验收与收尾
 
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入、输出和临时文件均在该目录及其子目录内，不写入 Skill 安装目录。
+
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
 本页仅包含业务执行时使用的现行验收、重试和收尾规则。归档参数仅为 `questionId`，原因码为 `missing_question_id`、`duplicate_question_id`、`invalid_question_id`；旧参数弃用规则见 归档配置（`<skill-root>/references/generation-runtime.md#输出目录与文件名`）。不为业务验收运行维护测试或读取历史验证记录。
@@ -92,4 +94,4 @@ clean 前后核对最终文件指纹；前置失败不删除，后置失败不�
 
 ## P1 排版结构验证
 
-新增标题编号实例、`w:gridSpan` / `w:vMerge`、书签和 TOC 字段的生成意图核对，并在静态审计中检查表格网格覆盖与非法垂直合并。专用用例位于 `scripts/test_docx_p1_layout.py`。这些检查只能说明生成 OOXML 与声明输入相符；不能代替 XSD 全面验证、字体测量或 Word/WPS 实际分页验收。参见 `<skill-root>/references/p1-layout.md`。
+新增标题编号实例、`w:gridSpan` / `w:vMerge`、书签和 TOC 字段的生成意图核对，并在静态审计中检查表格网格覆盖与非法垂直合并。专用用例位于 `<skill-root>/scripts/test_docx_p1_layout.py`。这些检查只能说明生成 OOXML 与声明输入相符；不能代替 XSD 全面验证、字体测量或 Word/WPS 实际分页验收。参见 `<skill-root>/references/p1-layout.md`。

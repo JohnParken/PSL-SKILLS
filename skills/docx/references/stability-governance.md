@@ -1,5 +1,7 @@
 # DOCX 稳定性治理：OPC 结构、兼容性与验收边界（2026-10-31）
 
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入、输出和临时文件均在该目录及其子目录内，不写入 Skill 安装目录。
+
 路径约定：`<skill-root>` 指本次实际读取 `SKILL.md` 的父目录。使用以下命令前必须由宿主确认该真实路径，并整体替换占位符；任务输入文件路径由实际任务目录提供。普通业务生成不会调用办公软件。
 
 ## 本次修复的真实兼容问题
@@ -12,7 +14,7 @@
 
 - 原有安全边界：ZIP 成员数/尺寸、路径穿越与别名、ZIP64 限制、CRC、XML 解析预算、DTD 和实体禁用、OPC 内容类型与 Relationship 目标、正文、样式、编号和复杂表格结构。
 - 本轮增强：已知 Word 专用部件的实际 Content Type 检查（避免错误降级为通用 `application/xml`）；`basedOn` 样式继承循环；节内 `pPr/sectPr` 必须位于段落属性结尾；节页眉与页脚的关系类型核对；前缀形式 `.rels` 的 LibreOffice 兼容性警告。
-- 本轮新增只读 `scripts/audit_package.py`：集中返回 `structure_valid`、错误和警告；明确 `xsd_validated=false`、`visual_validated=false`。不修改输入文件，不下载、转换或自动修复。默认文本输出，添加 `--json` 则输出 JSON，退出 0 表示已实现的结构检查通过，退出 1 表示失败。警告不等于彻底兼容；调用方必须阅读。
+- 本轮新增只读 `<skill-root>/scripts/audit_package.py`：集中返回 `structure_valid`、错误和警告；明确 `xsd_validated=false`、`visual_validated=false`。不修改输入文件，不下载、转换或自动修复。默认文本输出，添加 `--json` 则输出 JSON，退出 0 表示已实现的结构检查通过，退出 1 表示失败。警告不等于彻底兼容；调用方必须阅读。
 
 已有 DOCX 的独立检查示例（在任务目录执行）：
 
@@ -36,7 +38,7 @@ python -I -S -B "<skill-root>/scripts/office/validate.py" ./实际文件.docx
 | OPC 完整性 | 类型、关系、内部目标 | `test_docx_stability.py`、原 `structure.py` 测试 | 完整 ISO 29500 XSD 语义 |
 | 样式/节结构 | basedOn、section、heading/footer rel | `test_docx_stability.py` | 最终视觉页码与可用字体 |
 | 复杂内容 | 编号、目录字段、跨行列合并 | P1/P2 回归与综合样例 | Word/WPS 实际更新域结果 |
-| 独立来源样本 | LibreOffice 生成的对照 DOCX 不被误拒绝 | `assets/compatibility/libreoffice-control.docx` | 所有第三方生成器文件均兼容 |
+| 独立来源样本 | LibreOffice 生成的对照 DOCX 不被误拒绝 | `<skill-root>/assets/compatibility/libreoffice-control.docx` | 所有第三方生成器文件均兼容 |
 | 真正的应用兼容 | 在 Word/WPS 中打开、保存和重开 | **尚无自动化环境** | 不能据此宣称 Word/WPS 已验收 |
 
 ## 可重复的办公软件诊断（仅在独立维护环境，不进入 Skill 业务入口）

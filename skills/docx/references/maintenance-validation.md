@@ -1,5 +1,7 @@
 # DOCX 维护测试与历史验证记录
 
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入、输出和临时文件均在该目录及其子目录内，不写入 Skill 安装目录。
+
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
 本页仅在修改、审查、测试或发布 Skill，或用户明确要求追溯历史时读取。普通新建、编辑、读取、归档和清理任务不读取本页，也不执行这里的维护测试。
@@ -392,7 +394,7 @@ macOS/Python3.12.14：DOCX全量252项、公共生命周期15项、两个副本�
 
 ## P1 标题编号和复杂表格增强（2026-10-31）
 
-基于排版 P0 版本增补标准库的自动标题编号（中文/数字）、跨行跨列表格、显式书签、待更新的 TOC 字段和静态网格合并检查，新增 `scripts/office/formatting/tables.py` 与 `scripts/test_docx_p1_layout.py`。完整能力、输入示例和局限详见 `<skill-root>/references/p1-layout.md`。此处记录实现范围，不将生成时的结构验收等同于独立 Word/WPS 视觉兼容测试。
+基于排版 P0 版本增补标准库的自动标题编号（中文/数字）、跨行跨列表格、显式书签、待更新的 TOC 字段和静态网格合并检查，新增 `<skill-root>/scripts/office/formatting/tables.py` 与 `<skill-root>/scripts/test_docx_p1_layout.py`。完整能力、输入示例和局限详见 `<skill-root>/references/p1-layout.md`。此处记录实现范围，不将生成时的结构验收等同于独立 Word/WPS 视觉兼容测试。
 
 ## 2026-10-31 标准库高级版式增强（P2）
 
@@ -403,15 +405,31 @@ macOS/Python3.12.14：DOCX全量252项、公共生命周期15项、两个副本�
 
 ## 2026-10-31 P3 稳定性治理
 
-基于 P2 ZIP 修复 OPC `.rels` 前缀命名空间在当前 LibreOffice 下无法导入的可复现兼容问题：使用固定根 `Relationships` 默认命名空间生成关系 XML，保留正确转义，不修改全局 ElementTree 命名空间注册。新增 `scripts/audit_package.py`（只读、有界、机器可读）、检查 Word 专用部件内容类型、样式 `basedOn` 循环、分节属性位置、页眉页脚关系类型；对旧有效但 LibreOffice 兼容风险高的关系前缀只警告。增加独立 LibreOffice 生成的控制 DOCX fixture 和专项异常样本。具体规则见 `<skill-root>/references/stability-governance.md`。
+基于 P2 ZIP 修复 OPC `.rels` 前缀命名空间在当前 LibreOffice 下无法导入的可复现兼容问题：使用固定根 `Relationships` 默认命名空间生成关系 XML，保留正确转义，不修改全局 ElementTree 命名空间注册。新增 `<skill-root>/scripts/audit_package.py`（只读、有界、机器可读）、检查 Word 专用部件内容类型、样式 `basedOn` 循环、分节属性位置、页眉页脚关系类型；对旧有效但 LibreOffice 兼容风险高的关系前缀只警告。增加独立 LibreOffice 生成的控制 DOCX fixture 和专项异常样本。具体规则见 `<skill-root>/references/stability-governance.md`。
 
 不修改旧 P0/P1/P2 规格、归档与清理入口；不引入第三方 Python 运行依赖。原有验证能力仍限于有界 OPC/OOXML 结构与静态版式，不冒称 XSD、Word/WPS 实测。
 
 
 ## 2026-11-01 简单公文默认自然分页策略固化
 
-以 2026-11-01 简单文档 Fastpath 版为基线。将“用户没有明确要求时不主动创建 `page_break` / `section_break` / `page_break_before`”写入 `SKILL.md` 主入口、轻量生成规范和分页治理说明；标题仍由 Word 原生样式 `keepNext` 与下一段保持同页。**只优化模型执行指令与增加回归，不改变 DOCX 生成器、JSON Schema 或用户显式分页行为。** 新增 `scripts/test_docx_official_pagination_defaults.py`，检查默认样式、默认无强制分页、多级标题、显式段前分页及分节/分页合法保留。纯标准库全量测试与输入相同的 OOXML 新旧对照应在打包前执行；真实 Word/WPS 逐页排版仍是外部验收事项。
+以 2026-11-01 简单文档 Fastpath 版为基线。将“用户没有明确要求时不主动创建 `page_break` / `section_break` / `page_break_before`”写入 `SKILL.md` 主入口、轻量生成规范和分页治理说明；标题仍由 Word 原生样式 `keepNext` 与下一段保持同页。**只优化模型执行指令与增加回归，不改变 DOCX 生成器、JSON Schema 或用户显式分页行为。** 新增 `<skill-root>/scripts/test_docx_official_pagination_defaults.py`，检查默认样式、默认无强制分页、多级标题、显式段前分页及分节/分页合法保留。纯标准库全量测试与输入相同的 OOXML 新旧对照应在打包前执行；真实 Word/WPS 逐页排版仍是外部验收事项。
 
 ## 2026-10-31 P3 分页策略治理增量
 
 在已通过 Word/WPS 实机验收的 P3 稳定版基础上，仅增加标准库分页风险模块 `office/formatting/pagination.py`，并接入现有 `validate_layout.py`（`--strict-pagination` 仅为可选验收门禁）。检查首尾/重复分页、分页与非连续分节相邻、段前分页重复、标题与正文分离、标题保留策略和正文内嵌分页；标题属性识别考虑 `basedOn` 样式继承和段落显式覆盖。异常仅以警告输出，不自动修正生成 XML，不更改旧 JSON Schema、任务/归档/清理流程。测试 `test_docx_pagination_governance.py` 覆盖正反样本；实际页码与真实空白页仍需要 Word/WPS 人工验收，不将静态结果冒充视觉验证。详细使用见 `<skill-root>/references/pagination-governance.md`。
+
+
+## PR 13 严格规范修复（2026-11-02）
+
+版本 `20261102.1252.1764`：补全各 Markdown 独立路径定位说明，修正内部资源根路径和 P1/P2 回归命令，为生成运行说明增加目录；同步仓库 README 的 DOCX 版本及迁移后的章节链接。description 人工核对仍符合新建、按需读取及受控编辑的选择范围，保留原文；业务 Python、测试、依赖及其他 Skill 未修改，未更新分发 ZIP。
+
+实际平台 macOS / Python 3.12.14 / Expat 2.8.3，隔离参数为 `-I -S -B`。以下维护命令以已确认仓库根目录为基准，`python` 表示宿主已确认的兼容解释器：
+
+- `python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict`：通过，退出 0。
+- `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：最终 373 项通过，无跳过，退出 0。首轮 1 项失败是新增说明超过主入口 7000 字节预算；保留完整定位规则并压缩后修复，未修改断言。
+- `python -I -S -B -m unittest discover -s tests -p 'test_*.py' -q`：31 项通过，无跳过，退出 0，包含共享生命周期一致性、复杂 JSON 模板和自检回传契约。
+- `git diff --check`：通过，退出 0。
+
+未执行 Linux/Windows、Word/WPS 实机视觉验收、生产宿主云空间联调、专用命名 linter 或真实模型触发测试。本机回归不能替代这些验收。
+
+Main-agent work：规则读取、修复、测试证据解释、description 与路由核对、差异审查及最终验收。Subagent execution record：未调用子代理；本次为确定性文档修复，主代理直接完成。

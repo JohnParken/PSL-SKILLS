@@ -1,5 +1,7 @@
 # P2 原生高级版式：多节、分节页码、页眉页脚、交叉引用和表格标题
 
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入、输出和临时文件均在该目录及其子目录内，不写入 Skill 安装目录。
+
 路径说明：`<skill-root>` 是宿主本轮实际读取主入口 `SKILL.md` 的真实绝对目录；调用前必须替换，不得通过当前工作目录或历史运行环境推测。该扩展只作用于 **新建 DOCX**，使用 Python 标准库写入 WordprocessingML；不依赖 python-docx / LibreOffice / WPS，不适用于原文件复杂编辑或视觉渲染。
 
 ## 能力清单及限制
@@ -77,7 +79,7 @@
 
 `create_document(..., verify=True)` 在原结构、内容、编号与合并网格验收之外，逐节核验 `sectPr` 的页尺寸、页边距、页码、不同首页、页眉页脚关系及文字，校验交叉引用字段和表格标题样式。`validate_layout.py` 逐节估算表格及图片宽度，检查书签目标、页码起始值、节属性和相关结构。检查不等于 OOXML 全量 XSD 校验，亦不能证明 Word/WPS 视觉排版、字段求值、精确分页或字体实际存在。
 
-专项测试：`scripts/test_docx_p2_layout.py`；完整测试仍使用 `python -I -S -B -m unittest discover -s scripts -p 'test_*.py' -q`（仅限 Skill 维护验证）。
+专项测试：`<skill-root>/scripts/test_docx_p2_layout.py`；完整测试仍使用 `python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_*.py' -q`（仅限 Skill 维护验证）。
 
 ## 分页策略风险检查（P3 增量）
 
