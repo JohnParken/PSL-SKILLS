@@ -1,0 +1,2 @@
+# Runtime: Python >=3.10. Provision explicitly; the CLI never installs dependencies.
+PyMuPDF==1.26.6

@@ -1,0 +1,41 @@
+{
+  "sample_id": "pbc_monetary_policy_2024_q2",
+  "source_url": "https://www.pbc.gov.cn/goutongjiaoliu/113456/113469/5427706/2024080916563291755.pdf",
+  "publisher": "中国人民银行",
+  "title": "中国货币政策执行报告 2024年第二季度",
+  "publication_date": "2024-08-09",
+  "downloaded_on_utc": "2026-11-02",
+  "sha256": "6859bb7e6d3b67c971c000d95093ad93838dbcd9d41b476b9864ea7bebeb6f1c",
+  "bytes": 1275941,
+  "expected_page_count": 58,
+  "oracle_established_before_reader_execution": true,
+  "oracle_methods": [
+    "Official published PDF cover and abstract inspected through a separate web document retrieval.",
+    "Physical page 9 rendered independently with Poppler pdftoppm at 95 dpi and visually reviewed before running the implemented reader.",
+    "Expected table rows below were transcribed from the rendered page, not generated from the reader output."
+  ],
+  "text_checks": [
+    {"page": 1, "contains_after_whitespace_removal": "中国货币政策执行报告"},
+    {"page": 1, "contains_after_whitespace_removal": "2024年第二季度"},
+    {"page": 2, "contains_after_whitespace_removal": "长5.0%"},
+    {"page": 2, "contains_after_whitespace_removal": "同比上涨0.1%"},
+    {"page": 9, "contains_after_whitespace_removal": "2024年上半年人民币贷款结构"},
+    {"page": 9, "contains_after_whitespace_removal": "2508527"},
+    {"page": 9, "contains_after_whitespace_removal": "132654"},
+    {"page": 9, "contains_after_whitespace_removal": "-138"}
+  ],
+  "table_checks": [
+    {"page": 9, "expected_row_after_whitespace_removal": ["人民币各项贷款", "2508527", "8.8%", "132654"]},
+    {"page": 9, "expected_row_after_whitespace_removal": ["境外贷款", "17223", "56.0%", "4218"]},
+    {"page": 9, "expected_row_after_whitespace_removal": ["外资金融机构", "-138"]}
+  ],
+  "independent_visual_review_scope": "Only the selected facts on physical pages 1, 2 and 9; not a line-by-line review of all 58 pages.",
+  "original_pdf_committed": false,
+  "unverified": [
+    "WPS, Acrobat or other GUI application behavior",
+    "Windows and macOS runtime execution",
+    "Every paragraph, figure and table in this report",
+    "Other real-world scanned or encrypted documents",
+    "General correctness across arbitrary PDF producers and layouts"
+  ]
+}
