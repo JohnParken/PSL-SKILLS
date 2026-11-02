@@ -2,6 +2,7 @@
 
 from collections import Counter
 from pathlib import Path
+import re
 
 from .advanced import validate_numbering, validate_tables
 
@@ -39,6 +40,7 @@ class StructureValidator:
         self.relations = {}
         self.content_types = {}
         self.archive = None
+        self.compatibility_warnings = []
 
     @classmethod
     def from_archive(cls, archive, *, extension=None, require_no_placeholders=False):
@@ -65,9 +67,11 @@ class StructureValidator:
         self.files = set()
         self.relations = {}
         self.content_types = {}
+        self.compatibility_warnings = []
         try:
             self._load()
             if not self.errors:
+                self.warnings.extend(self.compatibility_warnings)
                 self._types()
                 self._relationships()
                 self._word()
@@ -112,6 +116,7 @@ class StructureValidator:
             self.files.add(name)
             if name.lower().endswith((".xml", ".rels")):
                 try:
+                    self._note_relationship_compatibility(name, path.read_bytes())
                     self.roots[name] = xmlio.parse(path, budget=xml_budget).getroot()
                 except ValueError as exc:
                     self.error(f"{name}: {exc}")
@@ -121,9 +126,21 @@ class StructureValidator:
         self.files.add(name)
         if name.lower().endswith((".xml", ".rels")):
             try:
+                self._note_relationship_compatibility(name, data)
                 self.roots[name] = xmlio.fromstring(data, budget=budget)
             except ValueError as exc:
                 self.error(f"{name}: {exc}")
+
+    def _note_relationship_compatibility(self, name, data):
+        # Namespace prefixes are valid XML but the known LibreOffice import
+        # regression rejects a prefixed Relationships root. Warn only: a
+        # third-party DOCX with a prefix is not inherently invalid OOXML.
+        if name.endswith('.rels') and re.search(
+            rb'<[A-Za-z_][A-Za-z_0-9.\-]*:Relationships(?:[\s>])', data
+        ):
+            self.compatibility_warnings.append(
+                f'{name}: prefixed Relationships root may fail in LibreOffice; use default OPC namespace'
+            )
 
     def _required(self):
         for name in REQUIRED:
@@ -162,6 +179,23 @@ class StructureValidator:
             self.content_types[name] = value
             if name.endswith(".rels") and value != "application/vnd.openxmlformats-package.relationships+xml":
                 self.error(f"Invalid relationships content type: {name}")
+        # Catch a common class of packages where a specific OOXML part
+        # accidentally falls back to application/xml. The XML can be parsed,
+        # yet Office readers may silently ignore the wrongly typed part.
+        expected_types = {
+            'word/styles.xml': 'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml',
+            'word/numbering.xml': 'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml',
+            'word/settings.xml': 'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml',
+            'word/comments.xml': 'application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml',
+        }
+        for part in self.files:
+            expected = expected_types.get(part)
+            if re.fullmatch(r'word/header[0-9]+\.xml', part):
+                expected = 'application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml'
+            elif re.fullmatch(r'word/footer[0-9]+\.xml', part):
+                expected = 'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml'
+            if expected is not None and self.content_types.get(part) != expected:
+                self.error(f'Incorrect content type for {part}: {self.content_types.get(part)}')
         main_type = self.content_types.get("word/document.xml")
         if self.extension:
             if main_type != MAIN_TYPES[self.extension]:
@@ -238,6 +272,27 @@ class StructureValidator:
                 if not sid or sid in style_ids:
                     self.error("Empty or duplicate style ID")
                 style_ids.add(sid)
+            # A basedOn cycle is invalid as a style inheritance graph even
+            # when all referenced IDs exist. Avoid recursive DFS on untrusted
+            # inputs; the already bounded style count limits traversal.
+            parents = {}
+            for style in styles.findall(w('style')):
+                sid = style.get(w('styleId'))
+                based = style.find(w('basedOn'))
+                if sid and based is not None:
+                    parents[sid] = based.get(w('val'))
+            checked = set()
+            for start in parents:
+                if start in checked:
+                    continue
+                current, visiting = start, set()
+                while current in parents and current not in checked:
+                    if current in visiting:
+                        self.error(f'Cyclic style inheritance basedOn: {current}')
+                        break
+                    visiting.add(current)
+                    current = parents[current]
+                checked.update(visiting)
         numbering = self.roots.get("word/numbering.xml")
         num_ids, abstract_ids = set(), set()
         if numbering is not None:
@@ -253,7 +308,22 @@ class StructureValidator:
                 abstract = num.find(w("abstractNumId"))
                 if abstract is None or abstract.get(w("val")) not in abstract_ids:
                     self.error("Numbering references missing abstractNum")
-        doc_rels = set(self.relations.get("word/document.xml", {}).values())
+        # Section breaks belong to the last child of a paragraph's pPr.
+        # The final section instead belongs at the end of w:body.
+        for index, paragraph in enumerate(root.iter(w('p')), 1):
+            props = paragraph.find(w('pPr'))
+            if props is not None:
+                section = props.find(w('sectPr'))
+                if section is not None and props[-1] is not section:
+                    self.error(f'Paragraph {index}: sectPr must be last in pPr')
+        doc_rel_ids = self.relations.get("word/document.xml", {})
+        for kind in ('header', 'footer'):
+            for node in root.iter(w(kind + 'Reference')):
+                rid = node.get(f'{{{R}}}id')
+                expected = R + '/' + kind
+                if rid in doc_rel_ids and doc_rel_ids[rid][0] != expected:
+                    self.error(f'Section {kind}Reference {rid} has wrong relationship type')
+        doc_rels = set(doc_rel_ids.values())
         for part, kind in (("word/styles.xml", "styles"), ("word/numbering.xml", "numbering"),
                            ("word/comments.xml", "comments")):
             if part in self.files and (R + "/" + kind, part) not in doc_rels:

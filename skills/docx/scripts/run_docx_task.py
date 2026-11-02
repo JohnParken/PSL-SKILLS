@@ -647,6 +647,32 @@ def worker_main(manifest):
         return 1
 
 
+def compact_success_receipt(result):
+    """Public stdout projection only: never hide errors or incomplete cleanup.
+
+    Archive/cleanup and validation are already completed before this is called;
+    the full task object is not mutated and the old CLI stdout is unchanged.
+    """
+    if result.get('status') != 'verified' or result.get('task_status') != 'completed':
+        return result
+    cleanup = result.get('cleanup')
+    if not isinstance(cleanup, dict) or not cleanup.get('cleanup_complete'):
+        return result
+    return {
+        'status': result['status'],
+        'task_status': result['task_status'],
+        'output': result.get('output'),
+        'archive_status': result.get('archive_status'),
+        'warnings': result.get('warnings', []),
+        'cleanup': {
+            'cleanup_complete': cleanup.get('cleanup_complete'),
+            'manifest_removed': cleanup.get('manifest_removed'),
+            'deliverables_unchanged': cleanup.get('deliverables_unchanged'),
+        },
+        'visual_validation': result.get('visual_validation', False),
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -654,8 +680,11 @@ def main(argv=None):
     create = commands.add_parser('create')
     create.add_argument('output')
     create.add_argument('--protect-input', action='append', default=[])
+    create.add_argument('--compact-receipt', action='store_true', help='brief successful result; errors remain complete')
     for name in ('retry', 'resume'):
-        commands.add_parser(name).add_argument('manifest')
+        command = commands.add_parser(name)
+        command.add_argument('manifest')
+        command.add_argument('--compact-receipt', action='store_true', help='brief successful result; errors remain complete')
     args = parser.parse_args(argv)
     try:
         if args.command == 'check':
@@ -668,7 +697,8 @@ def main(argv=None):
             result = create_task(spec, args.output, protected_inputs=args.protect_input) if args.command == 'create' else retry_task(args.manifest, spec)
         else:
             result = resume_task(args.manifest)
-        print(json.dumps(result, ensure_ascii=True))
+        visible = compact_success_receipt(result) if args.compact_receipt else result
+        print(json.dumps(visible, ensure_ascii=True))
         return 1 if result['status'] == 'failed' else 3 if result.get('task_status') == 'cleanup_incomplete' else 0
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as exc:
         print(json.dumps(failure('request_rejected', exc, action='inspect_request', task_status='not_started'), ensure_ascii=True))

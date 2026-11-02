@@ -14,10 +14,6 @@ A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 WP = "{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}"
 PIC = "{http://schemas.openxmlformats.org/drawingml/2006/picture}"
 XML_SPACE = "{http://www.w3.org/XML/1998/namespace}space"
-PARAGRAPH_PROPERTY_ORDER = tuple(w(name) for name in (
-    "pStyle", "keepNext", "keepLines", "pageBreakBefore", "widowControl", "numPr",
-    "tabs", "spacing", "ind", "jc", "outlineLvl",
-))
 
 
 def _expect(actual, expected, location):
@@ -33,18 +29,23 @@ def _attrs(parent, path):
 def _properties(parent, expected, location, skip=()):
     children = [child for child in parent if child.tag not in skip] if parent is not None else []
     _expect(len(children), len(expected), location)
-    _expect({child.tag: child.attrib for child in children}, expected, location)
-    _expect(any(len(child) for child in children), False, location)
-
+    _expect({child.tag: child.attrib for child in children},
+            {tag: ({} if isinstance(attrs, list) else attrs) for tag, attrs in expected.items()}, location)
+    for child in children:
+        nested = expected[child.tag]
+        if isinstance(nested, list):  # w:tabs has ordered child elements
+            _expect([(node.tag, node.attrib) for node in child],
+                    [(w('tab'), attrs) for attrs in nested], location + '.tabs')
+        else:
+            _expect(len(child), 0, location + '.children')
 
 def _value(value):
     return {w("val"): str(value)}
 
 
-def _format_maps(formatting, inherited_format=None):
+def _format_maps(formatting):
     """Translate supported input units to expected paragraph/run properties."""
     paragraph, run = {}, {}
-    inherited_format = inherited_format or {}
     fonts = {}
     if "font_east_asia" in formatting:
         fonts[w("eastAsia")] = formatting["font_east_asia"]
@@ -62,21 +63,17 @@ def _format_maps(formatting, inherited_format=None):
             run[w(tag)] = _value(int(formatting["size_pt"] * 2 + 0.5))
     if "color" in formatting:
         run[w("color")] = _value(formatting["color"])
-    for key, tag in (("keep_with_next", "keepNext"), ("keep_together", "keepLines"),
-                     ("page_break_before", "pageBreakBefore"), ("widow_control", "widowControl")):
+    for key, tag in (
+        ('keep_with_next', 'keepNext'), ('keep_together', 'keepLines'),
+        ('page_break_before', 'pageBreakBefore'), ('widow_control', 'widowControl'),
+    ):
         if key in formatting:
             paragraph[w(tag)] = _value(int(formatting[key]))
-    stops = formatting.get("tab_stops")
-    if stops:
-        expected_stops = []
-        for stop in stops:
-            attributes = {w("val"): stop["align"],
-                          w("pos"): str(int(stop["position_pt"] * 20 + 0.5))}
-            if stop["align"] != "clear" and stop["leader"] != "none":
-                attributes[w("leader")] = stop["leader"]
-            expected_stops.append(attributes)
-        expected_stops.sort(key=lambda attrs: int(attrs[w("pos")]))
-        paragraph[w("tabs")] = expected_stops
+    if 'tab_stops' in formatting and formatting['tab_stops']:
+        paragraph[w('tabs')] = [
+            {w('val'): stop['align'], w('pos'): str(int(stop['position_pt'] * 20 + 0.5))}
+            for stop in formatting['tab_stops']
+        ]
     spacing = {}
     for key, attr in (("space_before_pt", "before"), ("space_after_pt", "after")):
         if key in formatting:
@@ -90,52 +87,19 @@ def _format_maps(formatting, inherited_format=None):
     if spacing:
         paragraph[w("spacing")] = spacing
     indent = {}
-    if "hanging_indent_pt" in formatting and "first_line_chars" not in formatting \
-            and "first_line_chars" in inherited_format:
-        indent[w("firstLineChars")] = "0"
-    elif "first_line_chars" in formatting and "hanging_indent_pt" not in formatting \
-            and "hanging_indent_pt" in inherited_format:
-        indent[w("hanging")] = "0"
-    for key, attr in (("left_indent_pt", "left"), ("right_indent_pt", "right"),
-                      ("hanging_indent_pt", "hanging")):
+    for key, tag in (
+        ('left_indent_pt', 'left'), ('right_indent_pt', 'right'),
+        ('first_line_indent_pt', 'firstLine'), ('hanging_indent_pt', 'hanging'),
+    ):
         if key in formatting:
-            indent[w(attr)] = str(int(formatting[key] * 20 + 0.5))
-    if "first_line_chars" in formatting:
-        indent[w("firstLineChars")] = str(int(formatting["first_line_chars"] * 100 + 0.5))
+            indent[w(tag)] = str(int(formatting[key] * 20 + 0.5))
+    if 'first_line_chars' in formatting:
+        indent[w('firstLineChars')] = str(int(formatting['first_line_chars'] * 100 + 0.5))
     if indent:
-        paragraph[w("ind")] = indent
+        paragraph[w('ind')] = indent
     if "align" in formatting:
         paragraph[w("jc")] = _value("both" if formatting["align"] == "justify" else formatting["align"])
     return paragraph, run
-
-
-def _paragraph_properties(parent, expected, location):
-    children = list(parent) if parent is not None else []
-    tags = [child.tag for child in children]
-    ordered = [tag for tag in PARAGRAPH_PROPERTY_ORDER if tag in expected]
-    _expect(tags, ordered, location + ".order")
-    _expect(len(tags), len(set(tags)), location + ".unique")
-    _expect(set(tags), set(expected), location + ".fields")
-    for child in children:
-        wanted = expected[child.tag]
-        if child.tag == w("tabs"):
-            entries = list(child)
-            _expect([entry.tag for entry in entries], [w("tab")] * len(wanted), location + ".tabs.order")
-            _expect([entry.attrib for entry in entries], wanted, location + ".tabs")
-            _expect(any(len(entry) for entry in entries), False, location + ".tabs.children")
-            positions = [entry.get(w("pos")) for entry in entries]
-            _expect(len(positions), len(set(positions)), location + ".tabs.unique")
-        elif child.tag == w("numPr"):
-            expected_entries = wanted
-            entries = list(child)
-            _expect([entry.tag for entry in entries], [tag for tag, _ in expected_entries],
-                    location + ".numbering.order")
-            _expect([entry.attrib for entry in entries], [attrs for _, attrs in expected_entries],
-                    location + ".numbering")
-            _expect(any(len(entry) for entry in entries), False, location + ".numbering.children")
-        else:
-            _expect(child.attrib, wanted, location + "." + child.tag.rsplit("}", 1)[-1])
-            _expect(len(child), 0, location + ".children")
 
 
 def _styles(spec, root):
@@ -147,6 +111,8 @@ def _styles(spec, root):
                 "TableBody": spec["styles"]["table_body"], "TableHeader": spec["styles"]["table_header"],
                 "Title": spec["styles"]["title"], "Subtitle": spec["styles"]["subtitle"]}
     expected.update({f"Heading{level}": spec["styles"][f"heading{level}"] for level in range(1, 5)})
+    expected['TableCaption'] = {'align': 'center', 'keep_with_next': True,
+                                'space_after_pt': 6, 'size_pt': 12, 'bold': False}
     if spec["related_format"] is not None:
         expected.update({"Header": spec["related_format"], "Footer": spec["related_format"]})
     if spec["list_format"] is not None:
@@ -162,58 +128,52 @@ def _styles(spec, root):
         paragraph, run = _format_maps(formatting)
         if name.startswith("Heading"):
             paragraph[w("outlineLvl")] = _value(int(name[-1]) - 1)
-        if (name.startswith("Heading") or name in {"Title", "Subtitle"}) \
-                and "keep_with_next" not in formatting:
-            paragraph[w("keepNext")] = {}
-        _paragraph_properties(style.find(w("pPr")), paragraph, f"styles.{name}.paragraph")
+        if name.startswith("Heading") or name in {"Title", "Subtitle"}:
+            paragraph[w("keepNext")] = _value(int(formatting.get("keep_with_next", True)))
+        _properties(style.find(w("pPr")), paragraph, f"styles.{name}.paragraph")
         _properties(style.find(w("rPr")), run, f"styles.{name}.run")
     paragraph, run = _format_maps(normal)
     paragraph.pop(w("jc"))
-    _paragraph_properties(root.find(f"{w('docDefaults')}/{w('pPrDefault')}/{w('pPr')}"),
-                          paragraph, "defaults.paragraph")
+    _properties(root.find(f"{w('docDefaults')}/{w('pPrDefault')}/{w('pPr')}"), paragraph, "defaults.paragraph")
     _properties(root.find(f"{w('docDefaults')}/{w('rPrDefault')}/{w('rPr')}"), run, "defaults.run")
 
 
-def _paragraph(node, text_runs, style, formatting, location, numbering=None, image=None,
-               inherited_format=None):
+def _paragraph(node, text_runs, style, formatting, location, numbering=None, image=None, bookmark=None):
     _expect(node.tag, w("p"), location)
-    props, _ = _format_maps(formatting, inherited_format)
+    props, _ = _format_maps(formatting)
     if style is not None:
         props[w("pStyle")] = _value(style)
-    if numbering is not None:
-        props[w("numPr")] = [
-            (w("ilvl"), _value(numbering[1])),
-            (w("numId"), _value(numbering[0])),
-        ]
     ppr = node.find(w("pPr"))
-    _paragraph_properties(ppr, props, location + ".paragraph")
+    _properties(ppr, props, location + ".paragraph", skip=(w("numPr"),))
+    num_props = ppr.find(w("numPr")) if ppr is not None else None
+    expected_num = {} if numbering is None else {
+        w("numId"): _value(numbering[0]), w("ilvl"): _value(numbering[1]),
+    }
+    _properties(num_props, expected_num, location + ".numbering")
     runs = node.findall(w("r"))
     _expect(len(runs), len(text_runs) + int(image is not None), location + ".runs")
-    _expect(len(node), len(runs) + int(ppr is not None), location + ".children")
+    _expect(len(node), len(runs) + int(ppr is not None) + 2 * int(bookmark is not None), location + ".children")
+    if bookmark is not None:
+        start = node.find(w("bookmarkStart"))
+        end = node.find(w("bookmarkEnd"))
+        _expect(start.attrib if start is not None else None,
+                {w("id"): str(bookmark[0]), w("name"): bookmark[1]}, location + ".bookmark_start")
+        _expect(end.attrib if end is not None else None,
+                {w("id"): str(bookmark[0])}, location + ".bookmark_end")
+        children = [child.tag for child in node]
+        _expect(children[-1], w("bookmarkEnd"), location + ".bookmark_end_position")
+        _expect(children.index(w("bookmarkStart")), int(ppr is not None), location + ".bookmark_start_position")
     for index, ((text, run_format), run) in enumerate(zip(text_runs, runs)):
         _, expected_run = _format_maps(run_format)
         _properties(run.find(w("rPr")), expected_run, f"{location}.runs[{index}].format")
-        segments = text.split("\t")
-        expected_children = []
-        expected_text = []
-        expected_whitespace = []
-        for segment_index, segment in enumerate(segments):
-            if segment or not text:
-                expected_children.append(w("t"))
-                expected_text.append(segment)
-                expected_whitespace.append(
-                    {XML_SPACE: "preserve"} if segment[:1].isspace() or segment[-1:].isspace() else {}
-                )
-            if segment_index < len(segments) - 1:
-                expected_children.append(w("tab"))
-        content_children = [child for child in run if child.tag != w("rPr")]
-        _expect([child.tag for child in content_children], expected_children, location + ".text.order")
-        text_nodes = [child for child in content_children if child.tag == w("t")]
-        _expect([child.text or "" for child in text_nodes], expected_text, location + ".text")
-        _expect([child.attrib for child in text_nodes], expected_whitespace, location + ".whitespace")
-        _expect(any(len(child) for child in content_children), False, location + ".text.children")
-        _expect(any(child.attrib for child in content_children if child.tag == w("tab")),
-                False, location + ".tab.attributes")
+        if text is None:
+            _expect([child.tag for child in run if child.tag != w("rPr")], [w("tab")], location + ".tab")
+        else:
+            _expect([child.tag for child in run if child.tag != w("rPr")], [w("t")], location + ".text")
+            _expect(run.find(w("t")).text or "", text, location + ".text")
+            _expect(run.find(w("t")).attrib,
+                    {XML_SPACE: "preserve"} if text[:1].isspace() or text[-1:].isspace() else {},
+                    location + ".whitespace")
     if image is not None:
         _expect([child.tag for child in runs[-1]], [w("drawing")], location + ".image")
         return runs[-1].find(w("drawing"))
@@ -227,7 +187,7 @@ def _border(fields):
             w("space"): "0", w("color"): fields["color"]}
 
 
-def _table(node, block, location, check_image, style_formats):
+def _table(node, block, location, check_image):
     _expect(node.tag, w("tbl"), location)
     layout = block["format"]
     widths = block["widths_twips"]
@@ -262,12 +222,19 @@ def _table(node, block, location, check_image, style_formats):
             expected_row[w("tblHeader")] = _value("true")
         _properties(row.find(w("trPr")), expected_row, row_location + ".layout")
         cells = row.findall(w("tc"))
-        _expect(len(cells), len(values), row_location + ".columns")
-        for column, (cell, value, width) in enumerate(zip(cells, values, widths)):
+        active = [(column, value) for column, value in enumerate(values) if value is not None]
+        _expect(len(cells), len(active), row_location + ".columns")
+        for cell, (column, value) in zip(cells, active):
+            span = value.get("col_span", 1) if isinstance(value, dict) else 1
+            width = sum(widths[column:column + span])
             cell_location = f"{row_location}[{column}]"
             cell_props = cell.find(w("tcPr"))
             expected_cell = {w("tcW"): {w("w"): str(width), w("type"): "dxa"},
                              w("vAlign"): _value(layout["vertical_align"])}
+            if span > 1:
+                expected_cell[w("gridSpan")] = _value(span)
+            if isinstance(value, dict) and value.get("v_merge"):
+                expected_cell[w("vMerge")] = _value(value["v_merge"])
             if not is_header and (row_index - block["header_rows"]) % 2 == 1 and layout["band_fill"] != "none":
                 expected_cell[w("shd")] = {w("val"): "clear", w("fill"): layout["band_fill"]}
             _properties(cell_props, expected_cell, cell_location + ".layout", skip=(w("tcBorders"),))
@@ -278,16 +245,10 @@ def _table(node, block, location, check_image, style_formats):
             picture = value.get("image") if isinstance(value, dict) else None
             paragraphs = cell.findall(w("p"))
             _expect(len(paragraphs), 1, cell_location + ".paragraphs")
-            formatting = dict(block["header_format"] if is_header else block["body_format"])
-            layer = block.get('column_formats', {}).get(str(column + 1), {}).get('header' if is_header else 'body', {})
-            if 'line_spacing_pt' in layer: formatting.pop('line_spacing_multiple', None)
-            if 'line_spacing_multiple' in layer: formatting.pop('line_spacing_pt', None)
-            if 'hanging_indent_pt' in layer and 'first_line_chars' not in layer: formatting.pop('first_line_chars', None)
-            if 'first_line_chars' in layer and 'hanging_indent_pt' not in layer: formatting.pop('hanging_indent_pt', None)
-            formatting.update(layer)
-            drawing = _paragraph(paragraphs[0], [(text, formatting)], "TableHeader" if is_header else "TableBody",
-                                 formatting, cell_location, image=picture,
-                                 inherited_format=style_formats["table_header" if is_header else "table_body"])
+            formatting = block["header_format"] if is_header else block["body_format"]
+            runs = [] if isinstance(value, dict) and value.get("v_merge") == "continue" else [(text, formatting)]
+            drawing = _paragraph(paragraphs[0], runs, "TableHeader" if is_header else "TableBody",
+                                 formatting, cell_location, image=picture)
             if picture is not None:
                 check_image(drawing, picture, cell_location)
 
@@ -300,39 +261,56 @@ def verify_generation(spec, validator):
     document = roots["word/document.xml"]
     body = document.find(w("body"))
     _styles(spec, roots["word/styles.xml"])
-    page = spec["page_twips"]
-    section = body.find(w("sectPr"))
-    size = {w("w"): str(page["width"]), w("h"): str(page["height"])}
-    if page["width"] > page["height"]:
-        size[w("orient")] = "landscape"
-    _expect(_attrs(section, w("pgSz")), size, "page.size")
-    margins = {w(side): str(page[side]) for side in ("top", "right", "bottom", "left")}
-    margins.update({w("header"): str(page.get("header", min(720, page["top"]))), w("footer"): str(page.get("footer", min(720, page["bottom"]))),
-                    w("gutter"): "0"})
-    _expect(_attrs(section, w("pgMar")), margins, "page.margins")
-    for key, part, style in (("header", "word/header1.xml", "Header"), ("footer", "word/footer1.xml", "Footer")):
-        present = spec[key] is not None or key == "footer" and spec["page_numbers"]
-        _expect(part in roots, present, key)
-        if present:
-            expected_style = _value(style) if spec["related_format"] is not None else None
-            _expect(_attrs(roots[part], f"{w('p')}/{w('pPr')}/{w('pStyle')}"), expected_style, key + ".style")
-            references = section.findall(w(key + "Reference")) if section is not None else []
-            _expect(len(references), 1, key + ".reference")
-            relation = validator.relations["word/document.xml"].get(references[0].get("{" + R + "}id"))
-            _expect(relation, (R + "/" + key, part), key + ".reference")
-            paragraphs = roots[part].findall(w("p"))
-            _expect(len(paragraphs), 1, key + ".paragraphs")
-            _paragraph_properties(paragraphs[0].find(w("pPr")),
-                                  {w("pStyle"): expected_style} if expected_style is not None else {},
-                                  key + ".format")
-            for run in paragraphs[0].findall(w("r")):
-                _properties(run.find(w("rPr")), {}, key + ".run")
-    if "word/footer1.xml" in roots:
-        footer = roots["word/footer1.xml"]
-        _expect([node.text for node in footer.iter(w("instrText"))],
-                [" PAGE "] if spec["page_numbers"] else [], "footer.page_field")
-        _expect([node.get(w("fldCharType")) for node in footer.iter(w("fldChar"))],
-                ["begin", "separate", "end"] if spec["page_numbers"] else [], "footer.page_field")
+    section_nodes = [paragraph.find(f"{w('pPr')}/{w('sectPr')}")
+                     for paragraph in body.findall(w('p'))
+                     if paragraph.find(f"{w('pPr')}/{w('sectPr')}") is not None]
+    section_nodes.append(body.find(w('sectPr')))
+    _expect(len(section_nodes), len(spec['sections']), 'sections.count')
+    _expect(section_nodes[-1] is not None, True, 'sections.final')
+    for index, (section, options) in enumerate(zip(section_nodes, spec['sections'])):
+        location = f'sections[{index}]'
+        page = options['page_twips']
+        size = {w('w'): str(page['width']), w('h'): str(page['height'])}
+        if page['width'] > page['height']:
+            size[w('orient')] = 'landscape'
+        _expect(_attrs(section, w('pgSz')), size, location+'.size')
+        margins = {w(side): str(page[side]) for side in ('top', 'right', 'bottom', 'left')}
+        margins.update({w('header'): str(min(720, page['top'])),
+                        w('footer'): str(min(720, page['bottom'])), w('gutter'): '0'})
+        _expect(_attrs(section, w('pgMar')), margins, location+'.margins')
+        _expect(_attrs(section, w('type')),
+                _value(options['break_type']) if options.get('break_type') else None,
+                location+'.break_type')
+        _expect(section.find(w('titlePg')) is not None,
+                options['different_first_page'], location+'.title_page')
+        num_attrs = None
+        if options['page_number_start'] is not None or options['page_number_format'] != 'decimal':
+            num_attrs = {w('fmt'): options['page_number_format']}
+            if options['page_number_start'] is not None:
+                num_attrs[w('start')] = str(options['page_number_start'])
+        _expect(_attrs(section, w('pgNumType')), num_attrs, location+'.page_numbers')
+        for kind in ('header', 'footer'):
+            found = {ref.get(w('type')): ref.get('{'+R+'}id')
+                     for ref in section.findall(w(kind+'Reference'))}
+            _expect(len(found), len(section.findall(w(kind+'Reference'))), location+'.unique_'+kind)
+            _expect(found, options[kind+'_rids'], location+'.'+kind+'_references')
+            for rid in found.values():
+                relation = validator.relations['word/document.xml'].get(rid)
+                _expect(relation is not None and relation[0] == R+'/'+kind, True,
+                        location+'.'+kind+'_relation')
+    for part, (kind, value, page_field) in spec['related_parts'].items():
+        _expect(part in roots, True, part)
+        root = roots[part]
+        _expect(root.tag, w('hdr' if kind == 'header' else 'ftr'), part+'.root')
+        paragraph = root.find(w('p'))
+        _expect(paragraph is not None, True, part+'.paragraph')
+        expected_style = _value('Header' if kind == 'header' else 'Footer') if spec['related_format'] is not None else None
+        _expect(_attrs(paragraph, f"{w('pPr')}/{w('pStyle')}"), expected_style, part+'.style')
+        _expect([node.text for node in root.iter(w('instrText'))],
+                [' PAGE '] if page_field else [], part+'.page_field')
+        _expect([node.get(w('fldCharType')) for node in root.iter(w('fldChar'))],
+                ['begin', 'separate', 'end'] if page_field else [], part+'.page_markers')
+
 
     media_hashes, drawing_ids = {}, set()
 
@@ -360,23 +338,52 @@ def verify_generation(spec, validator):
             media_hashes[target] = hashlib.sha256(read_part(validator.archive, target)).digest()
         _expect(media_hashes[target], picture["image_digest"], location + ".media")
 
+    has_toc = any(block["type"] == "toc" for block in spec["blocks"])
+    has_ref = any(block["type"] == "reference" for block in spec["blocks"])
+    has_settings = has_toc or has_ref or spec['odd_even_headers']
+    _expect("word/settings.xml" in roots, has_settings, "fields.settings_part")
+    if has_settings:
+        settings = roots["word/settings.xml"]
+        _expect(_attrs(settings, w("updateFields")), _value("true") if has_toc or has_ref else None,
+                "fields.updateFields")
+        _expect(settings.find(w('evenAndOddHeaders')) is not None,
+                spec['odd_even_headers'], 'settings.odd_even_headers')
+        settings_refs = [pair for pair in validator.relations["word/document.xml"].values()
+                         if pair == (R + "/settings", "word/settings.xml")]
+        _expect(len(settings_refs), 1, "fields.settings_relation")
     children = [child for child in body if child.tag != w("sectPr")]
     cursor = 0
     shared_lists, instances = {}, []
+    heading_numbering = spec["heading_numbering"]
     numbering = roots["word/numbering.xml"]
     numbers = {node.get(w("numId")): node for node in numbering.findall(w("num"))}
     abstracts = {node.get(w("abstractNumId")): node for node in numbering.findall(w("abstractNum"))}
+    offset = 1 if heading_numbering != "none" else 0
+    if offset:
+        _expect(_attrs(numbers.get("1"), w("abstractNumId")), _value(4), "heading_numbering.instance")
+        abstract = abstracts.get("4")
+        _expect(abstract is not None, True, "heading_numbering.definition")
+        levels = abstract.findall(w("lvl"))
+        _expect(len(levels), 4, "heading_numbering.levels")
+        for n, level in enumerate(levels):
+            _expect(level.get(w("ilvl")), str(n), "heading_numbering.ilvl")
+            fmt = ("chineseCounting" if n < 2 else "decimal") if heading_numbering == "chinese" else "decimal"
+            text = (("%1、", "（%2）", "%3.", "（%4）")[n] if heading_numbering == "chinese"
+                    else ".".join(f"%{i}" for i in range(1, n + 2)) + " ")
+            _expect(_attrs(level, w("numFmt")), _value(fmt), "heading_numbering.numFmt")
+            _expect(_attrs(level, w("lvlText")), _value(text), "heading_numbering.lvlText")
     for index, block in enumerate(spec["blocks"]):
         location = f"blocks[{index}]"
         kind = block["type"]
-        count = len(block["items"]) if kind == "list" else 1
+        count = (len(block["items"]) if kind == "list" else 2 if kind == "toc"
+                 else 2 if kind == "table" and block["caption"] is not None else 1)
         _expect(cursor + count <= len(children), True, location + ".missing")
         nodes = children[cursor:cursor + count]
         cursor += count
         if kind == "list":
             identifier = block["list_id"]
             if identifier is None or identifier not in shared_lists:
-                number_id = len(instances) + 1
+                number_id = len(instances) + 1 + offset
                 instances.append(number_id)
                 if identifier is not None:
                     shared_lists[identifier] = number_id
@@ -397,18 +404,58 @@ def verify_generation(spec, validator):
                     {w("left"): indent, w("hanging"): "360"}, location + ".list_indent")
             _expect(_attrs(level, f"{w('pPr')}/{w('tabs')}/{w('tab')}"),
                     {w("val"): "num", w("pos"): indent}, location + ".list_tab")
-            _paragraph_properties(level.find(w("pPr")), {
-                w("tabs"): [{w("val"): "num", w("pos"): indent}],
-                w("ind"): {w("left"): indent, w("hanging"): "360"},
-            }, location + ".list_paragraph")
             _expect(_attrs(level, w("lvlRestart")),
                     _value(block["level"]) if block["level"] else None, location + ".list_restart")
             for node, text in zip(nodes, block["items"]):
                 _paragraph(node, [(text, {})], "ListParagraph" if spec["list_format"] is not None else None,
-                           {}, location, numbering=(number_id, block["level"]),
-                           inherited_format=spec["list_format"] or {})
+                           {}, location, numbering=(number_id, block["level"]))
+        elif kind == "toc":
+            _paragraph(nodes[0], [(block["title"], {})], "Title", {}, location + ".title")
+            field = nodes[1]
+            _expect(field.tag, w("p"), location + ".field_type")
+            runs = field.findall(w("r"))
+            _expect(len(field), 5, location + ".field_children")
+            _expect(len(runs), 5, location + ".field_runs")
+            _expect([run[0].tag if len(run) == 1 else None for run in runs],
+                    [w("fldChar"), w("instrText"), w("fldChar"), w("t"), w("fldChar")], location + ".field_structure")
+            _expect([runs[j][0].get(w("fldCharType")) for j in (0, 2, 4)],
+                    ["begin", "separate", "end"], location + ".field_markers")
+            _expect(runs[1][0].text, f' TOC \\o "1-{block["depth"]}" \\u ', location + ".field_instruction")
+            _expect(runs[1][0].get(XML_SPACE), "preserve", location + ".field_instruction_space")
+            _expect(runs[3][0].text, "（请在 Word/WPS 中更新目录域）", location + ".field_placeholder")
         elif kind == "table":
-            _table(nodes[0], block, location, check_image, spec["styles"])
+            if block["caption"] is not None:
+                _paragraph(nodes[0], [(block['caption'], {})], 'TableCaption', {}, location+'.caption')
+            _table(nodes[-1], block, location, check_image)
+        elif kind == 'section_break':
+            node = nodes[0]
+            _expect(node.tag, w('p'), location+'.type')
+            _expect([child.tag for child in node], [w('pPr')], location+'.structure')
+            _expect([child.tag for child in node[0]], [w('sectPr')], location+'.properties')
+            _expect(node[0][0] is section_nodes[block['section_index'] - 1], True,
+                    location+'.section_index')
+        elif kind == 'reference':
+            node = nodes[0]
+            _expect(node.tag, w('p'), location+'.type')
+            runs = node.findall(w('r'))
+            count = 5 + int(bool(block['prefix'])) + int(bool(block['suffix']))
+            _expect(len(runs), count, location+'.runs')
+            _expect(len(node), count, location+'.children')
+            begin = int(bool(block['prefix']))
+            field_runs = runs[begin:begin + 5]
+            _expect([r[0].tag for r in field_runs],
+                    [w('fldChar'), w('instrText'), w('fldChar'), w('t'), w('fldChar')],
+                    location+'.field_structure')
+            _expect([field_runs[j][0].get(w('fldCharType')) for j in (0, 2, 4)],
+                    ['begin','separate','end'], location+'.field_markers')
+            instruction = f" {'REF' if block['kind'] == 'text' else 'PAGEREF'} {block['bookmark']} \\h "
+            _expect(field_runs[1][0].text, instruction, location+'.instruction')
+            _expect(field_runs[3][0].text, '（请在 Word/WPS 中更新交叉引用域）',
+                    location+'.placeholder')
+            if block['prefix']:
+                _expect(runs[0][0].text, block['prefix'], location+'.prefix')
+            if block['suffix']:
+                _expect(runs[-1][0].text, block['suffix'], location+'.suffix')
         elif kind == "page_break":
             node = nodes[0]
             _expect(node.tag, w("p"), location)
@@ -426,10 +473,6 @@ def verify_generation(spec, validator):
             style = {"title": "Title", "subtitle": "Subtitle", "paragraph": "BodyText"}.get(kind)
             if kind == "heading":
                 style = f"Heading{block['level']}"
-            inherited = (spec["styles"][kind] if kind in {"title", "subtitle"}
-                         else spec["styles"]["body"] if kind == "paragraph"
-                         else spec["styles"][f"heading{block['level']}"] if kind == "heading"
-                         else {})
             content = block["content"] if kind == "paragraph" else block["text"]
             if isinstance(content, str):
                 text_runs = [(content, formatting)]
@@ -440,7 +483,10 @@ def verify_generation(spec, validator):
                     if "font" in run:
                         run_format.update({"font_east_asia": run.get("font_east_asia", run["font"]),
                                            "font_latin": run.get("font_latin", run["font"])})
-                    text_runs.append((run["text"], run_format))
-            _paragraph(nodes[0], text_runs, style, formatting, location, inherited_format=inherited)
+                    text_runs.append((None if run.get("tab") else run["text"], run_format))
+            numbering_expectation = (1, block["level"] - 1) if kind == "heading" and offset else None
+            bookmark = (block["bookmark_id"], block["bookmark"]) if kind == "heading" and block["bookmark"] else None
+            _paragraph(nodes[0], text_runs, style, formatting, location,
+                       numbering=numbering_expectation, bookmark=bookmark)
     _expect(cursor, len(children), "body.extra_blocks")
-    _expect(len(numbers), len(instances), "numbering.instances")
+    _expect(len(numbers), len(instances) + offset, "numbering.instances")

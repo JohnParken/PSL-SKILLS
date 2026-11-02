@@ -7,7 +7,7 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.2126.3558 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
-| [docx](skills/docx/SKILL.md) | `skills/skills/docx` | 20261031.0639.0063 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，提供字号/行距及段落宽度风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261102.1252.1764 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，提供字号/行距及段落宽度风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261029.2203.2365 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 wps 提取的受支持电子表格 JSON；不支持直接读取 WPS 专有格式（.wps/.et/.ett），请使用 wps 技能 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261029.2012.5682 | .wps/.et/.ett 内容识别、MS-DOC/Strict 及 Transitional OOXML Word/OOXML 电子表格/BIFF8 子集只读；支持 MS-XLS 标准 DXF（0x088D）差异格式结构校验与属性保留；纯表格/文字分流，内联文字、日期与公式缓存提取，保留 partial 诊断；不生成、编辑、转换或重算 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261029.2012.5682 | OFD 1.0 字面文字与元数据只读提取；保留页码、原始坐标与来源存储顺序；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
@@ -107,13 +107,13 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch
 
 当前平台的 Bash 执行示例统一使用 `execute(command="…")`；每条表示一次工具调用，JSON 输入与 Python API 源码保留各自格式。历史维护记录中的终端命令仅供追溯，不作为业务调用示例。
 
-普通生成按 [主入口四步流程](skills/docx/SKILL.md#新建与受控编辑) 执行。先核对宿主实际工具 schema：执行工具的参数与传给 Python stdin 的文档 JSON 分开；要求 `command` 时传完整非空命令。缺参且确认尚未执行才修正一次，断流或状态不明不盲目重发。工具接入、流式拼接和 Qwen/DeepSeek 排查按需见 [工具调用故障](skills/docx/references/tool-calling.md)；Skill 不自动配置宿主门禁或模型参数，未验证真实模型成功率改善。
+普通生成按 [主入口简单创建流程](skills/docx/SKILL.md#简单创建仅本入口) 执行。先核对宿主实际工具 schema：执行工具的参数与传给 Python stdin 的文档 JSON 分开；要求 `command` 时传完整非空命令。缺参且确认尚未执行才修正一次，断流或状态不明不盲目重发。工具接入、流式拼接和 Qwen/DeepSeek 排查按需见 [工具调用故障](skills/docx/references/tool-calling.md)；Skill 不自动配置宿主门禁或模型参数，未验证真实模型成功率改善。
 
 依赖、只读、工具间文件不可见、版本/长会话、断流及下载问题按需查 [环境与交付故障表](skills/docx/references/troubleshooting.md)。表中按当前标准库实现修正平台经验；不强制固定虚拟环境、不把 check 当下载验证、不在执行状态未知时直接重发。
 
 标准新建直接调用 `run_docx_task.py create`；代码自动检查 Python/Expat、实际文件锁、安全文件操作及任务根目录写入，必要条件失败在生成前返回退出 1 和具体原因。模型无需单独调用 check 或判断自检日志。缺少归档配置、归档不可用、复制或收尾清理失败只提示；已验收且指纹未变的主文件仍成功返回退出 0。`check` 仅保留为可选诊断命令。
 
-按照 [生成说明](skills/docx/references/generation.md) 组织 JSON，直接送入统一入口的 stdin，不另建临时 .py 或 document.json。未指定排版时显式使用 official；用户指定格式优先。命令示例：
+按照 [主入口](skills/docx/SKILL.md#简单创建仅本入口) 组织普通生成 JSON，复杂任务按需读取专项 reference，直接送入统一入口的 stdin，不另建临时 .py 或 document.json。未指定排版时显式使用 official；用户指定格式优先。命令示例：
 
 ```python
 execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'JSON'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程，提升客户服务质量。\"}]}\nJSON\n")
@@ -125,13 +125,13 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 归档目录 `./output/{questionId}/` 默认仅保存副本，不主动扫描或读取其文档内容；仅在用户明确要求时读取指定归档文件。必要的定点同名检查、输入保护与本轮副本验证仍保留，详见 [归档目录使用边界](skills/docx/references/delivery.md#归档目录使用边界)。
 
-示例文件名须按实际任务替换：优先采用用户指定名称，否则按文档标题或主题命名，避免默认使用 `output.docx`；详见 [交付文件命名](skills/docx/references/generation.md#交付文件命名)。
+示例文件名须按实际任务替换：优先采用用户指定名称，否则按文档标题或主题命名，避免默认使用 `output.docx`；详见 [交付文件命名](skills/docx/references/generation-runtime.md#交付文件命名)。
 
-新建命令只接收输出文件名，不带 `./` 或目录。新建主文件固定生成到任务工作目录 `./`，生成及所要求的验证成功后，Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得有效 `questionId`，复制一份到 `./output/{questionId}/`。标准新建与编辑入口自动定点检测同名主文件及归档副本，自动递增版本命名（如“_第2版.docx”），以实际返回的 `output` 路径交付。归档默认原子独占发布，同名保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。字符串参数取值后自动 strip 两端空白，再进行原有校验；内部内容及非字符串类型保持。配置缺失或无效时跳过归档并记录固定原因码；归档失败保留主文件、主流程成功状态和退出码 0，仅通过 `archive_status=failed` 与 `warnings` 报告归档警告。JSON 的 `output` 指向主文件，`archive_output` 和 `archive_status` 说明副本路径和归档结果。宿主配置为外层参数列表：提取 `name="commonParam"` 项的 `value`，解析内层列表后提取 `questionId`；兼容原字典外层配置，内层支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation.md#输出目录与文件名)。新建与五个编辑 CLI 均调用公开交付 API，再由同一个 `archive_outputs()` 自动归档。DOCX 所有新建临时文件直接平铺在宿主任务目录 `./`，不创建独立临时工作目录；生成辅助文件采用 `docx-task-<随机值>.*` 独占命名，包编辑和检查在内存处理。标准新建由 run_docx_task.py 包裹 `create_document_delivery()`，自定义交付或编辑使用对应 `*_delivery()`，接口见 [公开交付 API](skills/docx/references/delivery.md#公开交付-api)；底层 API 仅用于中间处理。归档处理必须执行，失败只警告；`--check` 不能代替归档。编辑命令仍接收相对输出路径；当轮其他最终交付物用显式清单归档，不扫描历史或临时文件，见 [统一归档](skills/docx/references/delivery.md)。
+新建命令只接收输出文件名，不带 `./` 或目录。新建主文件固定生成到任务工作目录 `./`，生成及所要求的验证成功后，Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得有效 `questionId`，复制一份到 `./output/{questionId}/`。标准新建与编辑入口自动定点检测同名主文件及归档副本，自动递增版本命名（如“_第2版.docx”），以实际返回的 `output` 路径交付。归档默认原子独占发布，同名保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。字符串参数取值后自动 strip 两端空白，再进行原有校验；内部内容及非字符串类型保持。配置缺失或无效时跳过归档并记录固定原因码；归档失败保留主文件、主流程成功状态和退出码 0，仅通过 `archive_status=failed` 与 `warnings` 报告归档警告。JSON 的 `output` 指向主文件，`archive_output` 和 `archive_status` 说明副本路径和归档结果。宿主配置为外层参数列表：提取 `name="commonParam"` 项的 `value`，解析内层列表后提取 `questionId`；兼容原字典外层配置，内层支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation-runtime.md#输出目录与文件名)。新建与五个编辑 CLI 均调用公开交付 API，再由同一个 `archive_outputs()` 自动归档。DOCX 所有新建临时文件直接平铺在宿主任务目录 `./`，不创建独立临时工作目录；生成辅助文件采用 `docx-task-<随机值>.*` 独占命名，包编辑和检查在内存处理。标准新建由 run_docx_task.py 包裹 `create_document_delivery()`，自定义交付或编辑使用对应 `*_delivery()`，接口见 [公开交付 API](skills/docx/references/delivery.md#公开交付-api)；底层 API 仅用于中间处理。归档处理必须执行，失败只警告；`--check` 不能代替归档。编辑命令仍接收相对输出路径；当轮其他最终交付物用显式清单归档，不扫描历史或临时文件，见 [统一归档](skills/docx/references/delivery.md)。
 
 `--verify` 核对生成子集的内容与 XML 排版意图，不等同于页面视觉验收；字体显示、实际分页和页码仍需在文档阅读器中检查。
 
-成功验收并核实文件后，在交付文件链接后简短提示“本次已按公文格式生成。还支持商务、学术排版，也可按需调整字体、字号和页边距。”用户指定主题或覆盖样式时按实际结果描述；提示不写入文档，用户要求只返回文件或不再提示时省略。完整规则见 [生成后格式引导](skills/docx/references/generation.md#生成后格式引导)。
+成功验收并核实文件后，在交付文件链接后简短提示“本次已按公文格式生成。还支持商务、学术排版，也可按需调整字体、字号和页边距。”用户指定主题或覆盖样式时按实际结果描述；提示不写入文档，用户要求只返回文件或不再提示时省略。完整规则见 [生成后格式引导](skills/docx/references/generation-runtime.md#生成后格式引导)。
 
 ### WPS（.wps/.et/.ett）
 

@@ -1,0 +1,11 @@
+{
+  "theme": "business",
+  "styles": {
+    "body": {"size_pt": 12, "line_spacing_multiple": 1.4, "space_after_pt": 8, "widow_control": true},
+    "heading1": {"size_pt": 19, "space_before_pt": 18, "space_after_pt": 10, "keep_together": true},
+    "heading2": {"size_pt": 15, "space_before_pt": 12, "space_after_pt": 8, "keep_together": true},
+    "table_body": {"size_pt": 10.5},
+    "table_header": {"size_pt": 10.5}
+  },
+  "table_format": {"preset": "zebra"}
+}

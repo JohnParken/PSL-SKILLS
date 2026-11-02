@@ -1,0 +1,10 @@
+{
+  "theme": "academic",
+  "styles": {
+    "body": {"size_pt": 12, "line_spacing_multiple": 1.5, "first_line_chars": 2, "widow_control": true},
+    "heading1": {"space_before_pt": 18, "space_after_pt": 12, "keep_together": true},
+    "heading2": {"space_before_pt": 12, "space_after_pt": 6, "keep_together": true},
+    "heading3": {"space_before_pt": 10, "space_after_pt": 4, "keep_together": true},
+    "heading4": {"space_before_pt": 8, "space_after_pt": 4, "keep_together": true}
+  }
+}
