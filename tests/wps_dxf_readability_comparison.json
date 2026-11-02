@@ -1,0 +1,106 @@
+{
+  "method": "Prior validator sources replayed on same synthetic DXF payloads; new complete reader invoked. Not full old-skill deployment or real-sample validation.",
+  "baseline_sha256": {
+    "remote_pre_enhancement": "0da501116fc40a995a6b4c0e24d3bbbea9c703a8e8dee4cebb5decdf5aec955b",
+    "previous_2109": "22cfee4d2bd98114c523953300ab0a1a84872e0b33fa4a99eee2412c718aa4af"
+  },
+  "cases": [
+    {
+      "case": "invalid_wrap_enum",
+      "validator_baselines": {
+        "remote_pre_enhancement": "framing_accepted",
+        "previous_2109": "rejected"
+      },
+      "new_default_status": "partial",
+      "stored_cells": 18,
+      "cached_formula_cells": 5,
+      "issues_retained": true,
+      "coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "case": "wrong_scalar_length",
+      "validator_baselines": {
+        "remote_pre_enhancement": "framing_accepted",
+        "previous_2109": "rejected"
+      },
+      "new_default_status": "partial",
+      "stored_cells": 18,
+      "cached_formula_cells": 5,
+      "issues_retained": true,
+      "coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "case": "invalid_font_length",
+      "validator_baselines": {
+        "remote_pre_enhancement": "framing_accepted",
+        "previous_2109": "rejected"
+      },
+      "new_default_status": "partial",
+      "stored_cells": 18,
+      "cached_formula_cells": 5,
+      "issues_retained": true,
+      "coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "case": "missing_alignment_dependency",
+      "validator_baselines": {
+        "remote_pre_enhancement": "framing_accepted",
+        "previous_2109": "rejected"
+      },
+      "new_default_status": "partial",
+      "stored_cells": 18,
+      "cached_formula_cells": 5,
+      "issues_retained": true,
+      "coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "case": "unknown_property_type",
+      "validator_baselines": {
+        "remote_pre_enhancement": "rejected",
+        "previous_2109": "rejected"
+      },
+      "new_default_status": "partial",
+      "stored_cells": 18,
+      "cached_formula_cells": 5,
+      "issues_retained": true,
+      "coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "case": "conflicting_fill_properties",
+      "validator_baselines": {
+        "remote_pre_enhancement": "rejected",
+        "previous_2109": "rejected"
+      },
+      "new_default_status": "partial",
+      "stored_cells": 18,
+      "cached_formula_cells": 5,
+      "issues_retained": true,
+      "coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "case": "internal_border_flag_clear",
+      "validator_baselines": {
+        "remote_pre_enhancement": "rejected",
+        "previous_2109": "rejected"
+      },
+      "new_default_status": "partial",
+      "stored_cells": 18,
+      "cached_formula_cells": 5,
+      "issues_retained": true,
+      "coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false
+    }
+  ],
+  "previous_rejections_now_readable": 7,
+  "remote_rejections_now_readable": 3,
+  "baseline_git_commit": "ebe6a93c13d9e3c449ce8a3f02cda2c31075cee4",
+  "previous_validator_package": "skills/wps-20261102.2109.5351.zip",
+  "current_reader_version": "20261102.2122.4624",
+  "real_sample_validation": "not_run; no accessible original in this environment; prior TLS failures unresolved"
+}

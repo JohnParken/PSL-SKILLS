@@ -10,7 +10,7 @@ ZERO_PROPERTIES = bytes.fromhex(
 
 MULTIPLE_PROPERTIES = bytes.fromhex(
     "8d 08 00 00 00 00 00 00 00 00 00 00 02 00 00 00 02 00 "
-    "01 00 06 00 aa bb 14 00 05 00 cc"
+    "01 00 06 00 aa bb 14 00 05 00 01"
 )
 
 
@@ -44,7 +44,7 @@ class DxfParserTests(unittest.TestCase):
         self.assertEqual(result["property_count"], 2)
         self.assertEqual(result["properties"], [
             {"property_id": 1, "payload_hex": "aabb", "offset": 18, "size": 6},
-            {"property_id": 0x14, "payload_hex": "cc", "offset": 24, "size": 5},
+            {"property_id": 0x14, "payload_hex": "01", "offset": 24, "size": 5},
         ])
         self.assertEqual(json.loads(json.dumps(result)), result)
 

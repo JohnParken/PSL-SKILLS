@@ -6,6 +6,9 @@ import re
 
 from wps_access import ParseError
 
+# Bump when projection ordering or interpretation changes; legacy cursors fail closed.
+PROJECTION_REVISION = 2
+
 
 def encoded(result):
     return json.dumps(result, ensure_ascii=False, default=str, allow_nan=False, separators=(',', ':'))
@@ -46,18 +49,20 @@ def project(result, data, options, *, summary=False, sheet=None, page_size=200, 
             if len(cursor) > 1024:
                 raise ValueError()
             token = json.loads(base64.b64decode(cursor.encode('ascii'), altchars=b'-_', validate=True))
-            if set(token) != {'source', 'scope', 'next'} or token['source'] != digest or token['scope'] != binding:
+            if (set(token) != {'source', 'scope', 'next', 'revision'} or type(token['revision']) is not int
+                    or token['revision'] != PROJECTION_REVISION
+                    or token['source'] != digest or token['scope'] != binding):
                 raise ValueError()
             start = token['next']
             if type(start) is not int or start < 0:
                 raise ValueError()
         except (ValueError, TypeError, UnicodeError, KeyError):
-            fail('Invalid cursor or source/options changed; restart the read')
+            fail('Invalid or legacy cursor, or source/options/projection changed; restart the read')
     retained = ('status', 'partial', 'issues', 'diagnostics', 'reading_assessment', 'date_system',
                 'cell_value_coverage', 'omissions_affect_cell_values', 'producer_verified', 'format')
     view = {key: result[key] for key in retained if key in result}
     view.update(schema_version='wps_read_view_v1', source_schema_version=result.get('schema_version'),
-                source_sha256=digest, scope=scope, mode='summary' if summary else 'cells' if is_sheet else 'main_text',
+                source_sha256=digest, projection_revision=PROJECTION_REVISION, scope=scope, mode='summary' if summary else 'cells' if is_sheet else 'main_text',
                 metadata_omitted=[key for key in result if key not in retained and key not in ('schema_version', 'sheets', 'text')])
     # Omitted metadata is named, never substituted with guessed defaults. These views
     # deliberately cannot be consumed by the existing full-schema XLSX adapter.
@@ -65,8 +70,7 @@ def project(result, data, options, *, summary=False, sheet=None, page_size=200, 
         selected = [item for item in sheets if sheet is None or item['name'] == sheet]
         view['sheets'] = [{'name': item['name'], 'stored_cells': len(item['cells']),
                            'metadata_omitted': [key for key in item if key not in ('name', 'cells')]} for item in selected]
-        entries = [(item['name'], ref, item['cells'][ref]) for item in selected for ref in sorted(item['cells'], key=position)]
-        total = len(entries)
+        total = sum(len(item['cells']) for item in selected)
     else:
         text = result.get('text')
         if not isinstance(text, str):
@@ -77,6 +81,8 @@ def project(result, data, options, *, summary=False, sheet=None, page_size=200, 
         if len(encoded(view)) + 1 > max_chars:
             fail('Summary/diagnostics exceed output budget; increase max-output-chars')
         return view
+    if is_sheet:
+        entries = [(item['name'], ref, item['cells'][ref]) for item in selected for ref in sorted(item['cells'], key=position)]
     if start > total:
         fail('Cursor exceeds selected content')
     view.update(coverage='selected_stored_cells_only' if is_sheet else 'main_text_only_no_layout_or_related_content',
@@ -88,22 +94,32 @@ def project(result, data, options, *, summary=False, sheet=None, page_size=200, 
         more = end < total
         view.update(returned_items=end - start, truncated=more, next_cursor=None)
         if more:
-            token = {'source': digest, 'scope': binding, 'next': end}
+            token = {'source': digest, 'scope': binding, 'next': end, 'revision': PROJECTION_REVISION}
             view['next_cursor'] = base64.urlsafe_b64encode(encoded(token).encode()).decode()
     finish(start)
-    if len(encoded(view)) + 1 > max_chars:
+    initial_length = len(encoded(view)) + 1
+    if initial_length > max_chars:
         fail('View diagnostics/metadata exceed output budget; increase max-output-chars')
     if is_sheet:
+        # Encode the stable envelope once; only counters/cursor and new cells vary.
+        def changing_length():
+            token = view['next_cursor']
+            return len(str(view['returned_items'])) + len('true' if view['truncated'] else 'false') + (4 if token is None else len(token) + 2)
+        envelope_length = initial_length - changing_length()
+        content_length = 0
         for index in range(start, min(total, start + page_size)):
             name, ref, value = entries[index]
-            view['items'].append({'sheet': name, 'cell': ref, 'data': value})
+            item = {'sheet': name, 'cell': ref, 'data': value}
+            item_length = len(encoded(item))
             finish(index + 1)
-            if len(encoded(view)) + 1 > max_chars:
-                view['items'].pop()
+            separators = max(0, index - start)
+            if envelope_length + changing_length() + content_length + item_length + separators > max_chars:
                 finish(index)
                 if index == start:
                     fail('Single cell exceeds output budget; increase max-output-chars')
                 break
+            view['items'].append(item)
+            content_length += item_length
     else:
         # Find the largest prefix fitting the JSON budget, including escapes and cursor.
         low, high = 0, min(page_size, total - start)
@@ -119,4 +135,6 @@ def project(result, data, options, *, summary=False, sheet=None, page_size=200, 
         finish(start + low)
         if low == 0 and start < total:
             fail('No text fits output budget; increase max-output-chars')
+    if len(encoded(view)) + 1 > max_chars:
+        fail('Final view exceeds output budget')
     return view

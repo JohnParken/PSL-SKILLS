@@ -6,3 +6,7 @@
 
 用户归档提示根据完整 `delivery` 结果按归档用户话术 (`<skill-root>/references/delivery-lifecycle.md#归档用户话术`)映射，保留原 `delivery.archive_message` 机器文案而不逐字转贴，不展示内部路径、目录、ID或原始配置日志；正常主文件链接保留。归档失败保留主产物，不为此重跑计算；归档、业务计算与清理状态分别报告。
 
+
+## 复杂写入规格的构造
+
+简单JSON（短文本、少量字段、浅层结构）可直接写；复杂JSON（长正文、多层对象或数组、表格批量数据、大量引号或反斜杠）必须用Python构造dict/list，再用json.dumps(..., ensure_ascii=False, allow_nan=False)序列化，不手工拼接JSON。Python语法与业务字段仍需核对，序列化成功不等于业务验收通过。 使用已验证的Python调用模板（`<skill-root>/references/complex-json.md`），默认源码及JSON均走stdin，不落盘额外文件。

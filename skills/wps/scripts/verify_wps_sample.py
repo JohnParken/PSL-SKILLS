@@ -22,6 +22,7 @@ PROVENANCE_FIELDS = ('source', 'original_filename', 'producer_evidence',
                      'independent_expectation_source')
 READ_OPTIONS = {
     'compatibility': {'data', 'strict', 'legacy_excel_clsid', 'legacy_word_clsid'},
+    'text_policy': {'strict', 'recover'},
     'field_policy': {'reject', 'cached_result'},
     'object_policy': {'reject', 'placeholder'},
     'hidden_text': {'include', 'exclude', 'annotate'},

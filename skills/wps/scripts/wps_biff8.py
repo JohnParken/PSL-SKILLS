@@ -503,12 +503,17 @@ class Reader:
                         self.phonetic_strings.append({**phonetic, 'sst_index': len(self.strings)-1})
                 consumed_until = strings.finish()
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x088D:
-                structure = validate_dxf(payload)
+                structure = validate_dxf(payload, formatting_policy="preserve")
                 self.dxf_property_count += structure['property_count']
                 if self.dxf_property_count > MAX_DXF_PROPERTIES:
                     raise ResourceLimitError('DXF aggregate property count exceeds budget')
                 self.metadata_record(record, {kind: 'DXF'}, 'globals')
                 self.metadata[-1]['structure'] = structure
+                if structure['formatting_issues']:
+                    self.issue({'code': 'dxf_formatting_issues_retained', 'record_id': hex(kind), 'record_offset': offset,
+                                'formatting_issue_count': len(structure['formatting_issues']),
+                                'metadata_index': len(self.metadata) - 1, 'cell_value_impact': 'none_within_parsed_cells',
+                                'message': 'Known DXF metadata retained without applying invalid or unsupported formatting; see structure.formatting_issues'})
                 self.dxf_record_count += 1
             elif self.compatibility == 'data' and kind == 0x088F:
                 require(self.table_styles_collection_seen,
@@ -975,7 +980,7 @@ def parse_stream(data,*,compatibility="strict",chart_policy="reject",salvage_unk
         return reader.parse()
     except ValueError as exc:
         # Preserve cursor-specific offsets when present; attach only known context.
-        exc.location = {**reader.current_location, **getattr(exc, 'location', {})}
+        exc.location = {**reader.current_location, 'compatibility_mode': compatibility, **getattr(exc, 'location', {})}
         raise
 
 
@@ -1087,7 +1092,9 @@ def main():
         encoded=encode_result(result)
         print(encoded); return 3 if result.get("status") == "partial" else 0
     except (ValueError,OSError,struct.error,OverflowError) as exc:
-        print(json.dumps({'status':getattr(exc, 'status', 'io_error' if isinstance(exc, OSError) else 'invalid_or_unsupported'),
+        from wps_access import diagnostic_context
+        error_status = getattr(exc, 'status', 'io_error' if isinstance(exc, OSError) else 'invalid_or_unsupported')
+        print(json.dumps({'status':error_status, 'diagnostic_context':diagnostic_context(error_status, getattr(exc, 'location', {})),
                           'location':getattr(exc, 'location', {}), 'message':str(exc),
                           'biff_parsed':False,'native_et_ett_parsed':False},ensure_ascii=False)); return 1
 

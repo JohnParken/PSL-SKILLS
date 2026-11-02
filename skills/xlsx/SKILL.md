@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261102.1720.5289"
+version: "20261102.1954.3193"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -36,9 +36,13 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
 
 ## 工具调用稳定性
 
-简单JSON（短文本、少量字段、浅层结构）可直接写；复杂JSON（长正文、多层对象或数组、表格批量数据、大量引号或反斜杠）必须用Python构造dict/list，再用json.dumps(..., ensure_ascii=False, allow_nan=False)序列化，不手工拼接JSON。Python语法与业务字段仍需核对，序列化成功不等于业务验收通过。 使用已验证的Python调用模板（`<skill-root>/references/complex-json.md`），默认源码及JSON均走stdin，不落盘额外文件。
+只读stdout不加载写入JSON模板。构造复杂写入规格时才读 `<skill-root>/references/complex-json.md`：用Python dict/list和标准JSON序列化，不手拼、不落盘额外脚本；业务字段与实际工具schema仍须核对。
 
-执行前核对真实工具schema、非空命令及完整JSON；语法错误改正后才重试，同一call_id重复错误不触发重发。临时配置只用任务根`./`，不写`/tmp`。退出3先读取完整结果，区分业务与清理，不重算掩盖残留。`/large_tool_results/`下的结果文件必须使用`read_file`工具读取，不当作execute可见路径。故障处理与宿主要求见工具调用与结果读取（`<skill-root>/references/tool-execution.md`）。
+执行前核对真实工具schema、非空命令及完整JSON；语法错误改正后才重试，同一call_id重复错误不触发重发。临时配置只用任务根`./`，不写`/tmp`。退出3先读取完整结果，区分业务与清理，不重算掩盖残留。`/large_tool_results/`下的结果文件必须使用`read_file`工具读取，不当作execute可见路径。故障处理与宿主要求见工具调用与结果读取（`<skill-root>/references/tool-execution.md`）。 read_file不可用或读取失败时停止依赖，不用execute/Python/Shell绕过；不得虚构参数名。
+
+## 按需加载与任务切换
+
+同一任务只复用已确认仍在上下文、且真实路径/版本或指纹未变的参考；不要因链接主动递归预读或重复读取。环境、任务或版本变化、上下文缺失时重新核对必要约束。宿主是否预加载、缓存、截断或计费由宿主决定，本说明不能强制去重；复用参考不等于复用其他任务的素材或授权。脚本按已知命令执行，不为调用而先读实现；只有维护或明确排障需要时读取源码。
 
 ## Route the task
 
@@ -62,7 +66,7 @@ For a first read after self-check:
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
 ```
 
-大表读取先按需用概况、选表/区域及分页（`<skill-root>/references/bounded-reading.md`）；旧默认完整读取不变，新视图不是完整数据或旧分析schema。
+概况用于选表，分页用于抽查；全量统计优先直接profile/summarize指定区域，不先逐页搬运整表。大表读取先按需用概况、选表/区域及分页（`<skill-root>/references/bounded-reading.md`）；旧默认完整读取不变，新视图不是完整数据或旧分析schema。
 
 写入前读取共同规格/结果（`<skill-root>/references/write-contract.md`）及对应任务说明；仅创建/修改公式、显式计算或排查公式issues时加载公式子集（`<skill-root>/references/formula-calculation.md`）。值编辑也会触发全簿公式计算，仍检查所有issues与退出码。仅读取/统计不加载写入或公式参考，引用不递归加载；宿主不支持章节读取时只读所选专项文件。 New-table appearance is optional and creation-only: appearance presets (`<skill-root>/references/readable-appearance.md`); existing-file edits use existing style indices. Use financial formatting conventions (`<skill-root>/references/format.md`) only when requested. Banking reports, matching, grouping and multi-level headers route through the specialized analysis directory (`<skill-root>/references/data-analysis.md#specialized-task-directory`).
 
@@ -83,5 +87,3 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
 ## 最终清理原则
 
 任务结束时必须清理本轮全部中间文件，包括脚本、配置、回读结果、日志、暂存、锁、回执和清单；仅将当前与历史交付物作为任务生成的留存文件。用户原件与其他任务文件仍受保护，不属于可删除中间文件。创建前完整登记，普通内部暂存由创建函数收尾；若删除失败、归属不明或强杀留下未确认残留，报告收尾未完成，不声称只剩交付物，也不扫描删除未知文件。生成或编辑失败同样立即清理本轮临时文件和清单，不因可能重试而保留；需要重试时从原始输入重新创建独占任务。删除受阻、锁仍被占用或归属无法确认时报告cleanup_incomplete，处理阻碍后继续清理，不能宣称已完成。
-
-若`read_file`不可用或读取失败，报告具体缺口并停止依赖该结果的操作；不得改用execute、Python或Shell读取`/large_tool_results/`，也不得猜测替代路径。工具参数遵循实际schema，不虚构参数名。

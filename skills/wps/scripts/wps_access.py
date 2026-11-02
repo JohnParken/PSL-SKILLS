@@ -18,6 +18,37 @@ def require(condition, location, message, status="corrupt"):
         raise ParseError(status, location, message)
 
 
+def diagnostic_context(status, location):
+    """Add a small layer distinction without guessing a failed payload's contents."""
+    location = location if isinstance(location, dict) else {}
+    stage, stream = location.get('stage', ''), location.get('stream', '')
+    if stream == 'CFB header' or stage == 'CFB' or stage == 'container':
+        layer = 'cfb_container'
+    elif stage == 'BIFF' or 'record_id' in location:
+        layer = 'biff_record'
+    elif stage == 'routing':
+        layer = 'payload_routing'
+    elif stream in ('WordDocument', '0Table', '1Table'):
+        layer = 'ms_doc_payload'
+    elif str(stage).startswith('OOXML') or 'part' in location:
+        layer = 'ooxml_payload'
+    elif stage in ('input', 'output', 'options'):
+        layer = stage
+    else:
+        layer = 'unknown'
+    context = dict(layer=layer, outcome=status, container_readable_does_not_prove_payload_support=True)
+    if location.get('reason_code') is not None:
+        context['reason_code'] = location['reason_code']
+    elif stream == 'CFB header' and status == 'unsupported' and location.get('offset') in (8, 24):
+        context['reason_code'] = 'cfb_clsid_policy_not_supported' if location['offset'] == 8 else 'cfb_minor_policy_not_supported'
+    if location.get('record_id') == '0x88d':
+        context.update(record_name='DXF', record_id='0x088D',
+                       policy_scope='data/legacy_excel_clsid retain validated DXF metadata; strict refuses; formatting not applied')
+    if location.get('compatibility_mode') is not None:
+        context['compatibility_mode'] = location['compatibility_mode']
+    return context
+
+
 def read_input(path):
     descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0))
     try:
@@ -75,6 +106,15 @@ def load_compound(data, compatibility):
             location['reason_code'] = 'cfb_unaligned_physical_length'
         elif message.startswith('FAT allocates sectors beyond physical input'):
             location['reason_code'] = 'cfb_fat_unbacked_allocation'
+        if 'reason_code' not in location:
+            if any(token in message for token in ('cycle', 'cross-link', 'duplicate allocation')):
+                location['reason_code'] = 'cfb_allocation_conflict'
+            elif 'Unreferenced' in message:
+                location['reason_code'] = 'cfb_unreferenced_allocation'
+            elif any(token in message for token in ('exceeds', 'limit')):
+                location['reason_code'] = 'cfb_resource_or_subset_limit'
+            else:
+                location['reason_code'] = 'cfb_validation_or_subset_rejection'
         raise ParseError('invalid_or_unsupported', location, message) from exc
     if legacy_minor:
         compound.issues.append({'code': 'legacy_cfb_minor_version',

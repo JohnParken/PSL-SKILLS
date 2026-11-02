@@ -26,6 +26,7 @@ only; no macro/formula execution, network requests, Office tools or dependency i
 - Default data policy (`<skill-root>/references/biff8-readonly.md#default-data-policy`)
 - Observed legacy compatibility (`<skill-root>/references/biff8-readonly.md#observed-legacy-compatibility`)
 - Real-template compatibility additions (`<skill-root>/references/biff8-readonly.md#real-template-compatibility-additions`)
+- DXF selected property interpretation (`<skill-root>/references/biff8-readonly.md#dxf-selected-property-interpretation`)
 - Supported records and retained values (`<skill-root>/references/biff8-readonly.md#supported-records-and-retained-values`)
 - Inline text and passive metadata (`<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata`)
 - Dates and formula caches (`<skill-root>/references/biff8-readonly.md#dates-and-formula-caches`)
@@ -386,3 +387,21 @@ Raw values and cache provenance remain unchanged. See number interpretation (`<s
 ## ET parser capacity and failure locations
 
 See current capacity and stability rules (`<skill-root>/references/et-parser-stability.md`) for bounded phonetic SST retention, expanded shared-string/merge counts, sweep-based merge validation and precise record failure locations. These capacities apply to BIFF8 only; they do not change OOXML limits. The WPS-only header adapter accepts the increased merge-list budget while preserving region/anchor rules; the neighboring XLSX implementation is unchanged.
+
+## DXF selected property interpretation
+
+`0x088D` is the standard MS-XLS DXF global record, not a CFB format or private WPS record. Default data and explicit legacy_excel_clsid preserve its validated framing, raw payload and partial diagnostics; explicit strict still refuses it. A worksheet-scoped DXF is refused. Existing `uninterpreted_metadata[].structure.properties` fields remain unchanged; additive `property_interpretations` refers to each property's original index and ID, never an effective cell style.
+
+The reader checks selected property values without making formatting a prerequisite for reading stored cells: boolean flags (0D/0E/14–17/1C–21/2B/2C) accept only 0/1; horizontal alignment 0F accepts 0–7 or FF, vertical 10 accepts 0–4, reading order 13 accepts 0–2; indentation 12 is unsigned 16-bit 0–15, relative indentation 2A is signed 16-bit -15..15 or 255; charset 22 is one byte, family 23 is 0–5, text size 24 is unsigned 32-bit 20..8191 twips. Font name 18 validates a two-byte UTF-16 length prefix, exact bytes, at most 32 UTF-16 units and strict decoding. justifyDistributed 15=1 requires an explicit horizontal alignment 0F=7. Duplicate properties are retained independently; their precedence is not inferred.
+
+`validation_scope=framing_and_selected_property_values`, `effective_formatting=unknown` and `uninterpreted_property_count` distinguish selected values from unimplemented legal complex properties. Colors, borders, gradients, number formats and other unimplemented property blobs remain raw, with partial status; their semantic validity, application, theme resolution and rendering are not certified. No style flag changes stored cell values, formula caches or merge ranges. In data and legacy_excel_clsid readers, `formatting_policy=preserve` isolates unsupported XFProp types, invalid scalar/font payload values or lengths, scope flags and formatting dependency conflicts inside an already bounded DXF record. Raw record/property bytes remain unchanged; `formatting_status=uninterpreted_due_to_issues` and `formatting_issues` identify property index/ID/offset and cause. Invalid properties are not interpreted or applied. The top-level `dxf_formatting_issues_retained` issue includes record offset, metadata_index and count; partial remains explicit. Reliable sheets/cells/caches/merges remain available; these formatting omissions do not alter stored cell values or certify their visual appearance.
+
+Outer BIFF and DXF/XFProp framing must still be readable and bounded: truncated headers, cb smaller than its header or beyond the record, count/size mismatch, trailing bytes, wrong inner record type, encryption and resource overflow still reject. Unknown BIFF data records are not covered by this exception. The direct `validate_dxf` helper retains its strict default for explicit validation; readers deliberately use preserve. BIFF compatibility=strict still refuses the DXF record itself; changing formatting interpretation does not silently retry or widen strict. No arbitrary record scan or value guessing.
+
+Failure JSON adds `diagnostic_context.layer` (container, routing, BIFF record, MS-DOC, OOXML, input/output/options or unknown) without replacing status/location/message/exit codes. For a known DXF failure it adds record_name=DXF, normalized record_id=0x088D and the data/strict scope; BIFF location retains the actual compatibility_mode. This distinguishes a valid container with unsupported records from a container rejection. It is diagnostic, not authorization to retry with weaker settings or treat damaged metadata as valid. CFB policy failures identify unsupported minor/CLSID profiles separately from allocation conflicts and bounded reader limits; unknown cause remains explicitly a validation-or-subset rejection.
+
+Primary maintenance references (runtime does not access the network):
+- DXF: `https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/ea2a96e1-5ec3-43d0-8b97-9fa0b7e9fc27`
+- XFProp: `https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/ff15a3cd-f2fb-4fc6-aa52-55f93c5ba121`
+- LPWideString: `https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/1f77dc80-3fec-4b4b-a55d-3a41292d1dc4`
+- Compound File Header: `https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/05060311-bfce-4b12-874d-71fd4ce63aea`

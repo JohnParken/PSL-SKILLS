@@ -1,0 +1,406 @@
+{
+  "label": "optimized-cli",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+  "baseline_ref": null,
+  "head": "6897ce3450bc31aa63ff8edc97ee568af8834f49",
+  "method": "Already-parsed synthetic result projections; per-page sorting/encoding included; parsing and subprocess startup excluded.",
+  "limits": "Not real WPS samples, model/host tokens, production acceptance or cross-platform guarantee. Complete traversal checked against independent values.",
+  "tokenizer_available": {
+    "tiktoken": false,
+    "tokenizers": false
+  },
+  "sources": {
+    "skills/xlsx/scripts/xlsx_read_view.py": "93952439443c9443a1eaddc767c1b6b3ad7fc8bc361369a64468d6a05b195b3f",
+    "skills/wps/scripts/wps_read_view.py": "9f531f48c152b6fb21b89c69d30f9c4c064daf59beb8e3855d6b25b91a8303e2"
+  },
+  "results": [
+    {
+      "skill": "xlsx",
+      "cells": 100,
+      "page_size": 100,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 16949,
+      "output_utf8_bytes": 16949,
+      "repeated_diagnostic_characters": 0,
+      "encoder_calls": 203,
+      "encoder_characters": 51557,
+      "coordinate_calls": 200,
+      "seconds_runs": [
+        0.0011304159997962415,
+        0.0010060410131700337,
+        0.0010038340114988387
+      ],
+      "seconds_median": 0.0010060410131700337,
+      "repeats": 3
+    },
+    {
+      "skill": "xlsx",
+      "cells": 200,
+      "page_size": 200,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 33449,
+      "output_utf8_bytes": 33449,
+      "repeated_diagnostic_characters": 0,
+      "encoder_calls": 403,
+      "encoder_characters": 102057,
+      "coordinate_calls": 400,
+      "seconds_runs": [
+        0.0019166659913025796,
+        0.0018850829801522195,
+        0.0018864169833250344
+      ],
+      "seconds_median": 0.0018864169833250344,
+      "repeats": 3
+    },
+    {
+      "skill": "xlsx",
+      "cells": 400,
+      "page_size": 400,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 66449,
+      "output_utf8_bytes": 66449,
+      "repeated_diagnostic_characters": 0,
+      "encoder_calls": 803,
+      "encoder_characters": 203057,
+      "coordinate_calls": 800,
+      "seconds_runs": [
+        0.0038319589802995324,
+        0.0038633749936707318,
+        0.0036697500036098063
+      ],
+      "seconds_median": 0.0038319589802995324,
+      "repeats": 3
+    },
+    {
+      "skill": "xlsx",
+      "cells": 40,
+      "page_size": 1,
+      "summary": false,
+      "pages": 40,
+      "output_characters": 37672,
+      "output_utf8_bytes": 37672,
+      "repeated_diagnostic_characters": 0,
+      "encoder_calls": 239,
+      "encoder_characters": 90939,
+      "coordinate_calls": 3200,
+      "seconds_runs": [
+        0.008439833007287234,
+        0.008363459026440978,
+        0.013911749992985278
+      ],
+      "seconds_median": 0.008439833007287234,
+      "repeats": 3
+    },
+    {
+      "skill": "xlsx",
+      "cells": 40,
+      "page_size": 10,
+      "summary": false,
+      "pages": 4,
+      "output_characters": 9465,
+      "output_utf8_bytes": 9465,
+      "repeated_diagnostic_characters": 0,
+      "encoder_calls": 95,
+      "encoder_characters": 26794,
+      "coordinate_calls": 320,
+      "seconds_runs": [
+        0.0010153749608434737,
+        0.0010226249578408897,
+        0.0012567079975269735
+      ],
+      "seconds_median": 0.0010226249578408897,
+      "repeats": 3
+    },
+    {
+      "skill": "xlsx",
+      "cells": 40,
+      "page_size": 40,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 7104,
+      "output_utf8_bytes": 7104,
+      "repeated_diagnostic_characters": 0,
+      "encoder_calls": 83,
+      "encoder_characters": 21427,
+      "coordinate_calls": 80,
+      "seconds_runs": [
+        0.0004242919967509806,
+        0.00042037502862513065,
+        0.0004307909985072911
+      ],
+      "seconds_median": 0.0004242919967509806,
+      "repeats": 3
+    },
+    {
+      "skill": "xlsx",
+      "cells": 400,
+      "page_size": 200,
+      "summary": true,
+      "pages": 1,
+      "output_characters": 502,
+      "output_utf8_bytes": 502,
+      "repeated_diagnostic_characters": 0,
+      "encoder_calls": 2,
+      "encoder_characters": 544,
+      "coordinate_calls": 0,
+      "seconds_runs": [
+        8.687499212101102e-05,
+        7.925002137199044e-05,
+        6.558297900483012e-05
+      ],
+      "seconds_median": 7.925002137199044e-05,
+      "repeats": 3
+    },
+    {
+      "skill": "wps",
+      "cells": 100,
+      "page_size": 100,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 9410,
+      "output_utf8_bytes": 9410,
+      "repeated_diagnostic_characters": 1153,
+      "encoder_calls": 203,
+      "encoder_characters": 36485,
+      "coordinate_calls": 100,
+      "seconds_runs": [
+        0.0008067089947871864,
+        0.0007975000189617276,
+        0.0007190000033006072
+      ],
+      "seconds_median": 0.0007975000189617276,
+      "repeats": 3
+    },
+    {
+      "skill": "wps",
+      "cells": 200,
+      "page_size": 200,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 17110,
+      "output_utf8_bytes": 17110,
+      "repeated_diagnostic_characters": 1153,
+      "encoder_calls": 403,
+      "encoder_characters": 69385,
+      "coordinate_calls": 200,
+      "seconds_runs": [
+        0.0013832910335622728,
+        0.0013375419657677412,
+        0.0013321669539436698
+      ],
+      "seconds_median": 0.0013375419657677412,
+      "repeats": 3
+    },
+    {
+      "skill": "wps",
+      "cells": 400,
+      "page_size": 400,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 32510,
+      "output_utf8_bytes": 32510,
+      "repeated_diagnostic_characters": 1153,
+      "encoder_calls": 803,
+      "encoder_characters": 135185,
+      "coordinate_calls": 400,
+      "seconds_runs": [
+        0.002793500025290996,
+        0.0026396249886602163,
+        0.002473625005222857
+      ],
+      "seconds_median": 0.0026396249886602163,
+      "repeats": 3
+    },
+    {
+      "skill": "wps",
+      "cells": 40,
+      "page_size": 1,
+      "summary": false,
+      "pages": 40,
+      "output_characters": 84592,
+      "output_utf8_bytes": 84592,
+      "repeated_diagnostic_characters": 46120,
+      "encoder_calls": 239,
+      "encoder_characters": 185019,
+      "coordinate_calls": 1600,
+      "seconds_runs": [
+        0.00504887499846518,
+        0.004932625044602901,
+        0.011827207985334098
+      ],
+      "seconds_median": 0.00504887499846518,
+      "repeats": 3
+    },
+    {
+      "skill": "wps",
+      "cells": 40,
+      "page_size": 10,
+      "summary": false,
+      "pages": 4,
+      "output_characters": 10989,
+      "output_utf8_bytes": 10989,
+      "repeated_diagnostic_characters": 4612,
+      "encoder_calls": 95,
+      "encoder_characters": 29866,
+      "coordinate_calls": 160,
+      "seconds_runs": [
+        0.0006977919838391244,
+        0.0006687910063192248,
+        0.0009602089994587004
+      ],
+      "seconds_median": 0.0006977919838391244,
+      "repeats": 3
+    },
+    {
+      "skill": "wps",
+      "cells": 40,
+      "page_size": 40,
+      "summary": false,
+      "pages": 1,
+      "output_characters": 4845,
+      "output_utf8_bytes": 4845,
+      "repeated_diagnostic_characters": 1153,
+      "encoder_calls": 83,
+      "encoder_characters": 16915,
+      "coordinate_calls": 40,
+      "seconds_runs": [
+        0.00031162495724856853,
+        0.0003053750260733068,
+        0.000321792031172663
+      ],
+      "seconds_median": 0.00031162495724856853,
+      "repeats": 3
+    },
+    {
+      "skill": "wps",
+      "cells": 400,
+      "page_size": 200,
+      "summary": true,
+      "pages": 1,
+      "output_characters": 1784,
+      "output_utf8_bytes": 1784,
+      "repeated_diagnostic_characters": 1153,
+      "encoder_calls": 2,
+      "encoder_characters": 1832,
+      "coordinate_calls": 0,
+      "seconds_runs": [
+        8.887500734999776e-05,
+        7.875001756474376e-05,
+        9.250000584870577e-05
+      ],
+      "seconds_median": 8.887500734999776e-05,
+      "repeats": 3
+    }
+  ],
+  "cli_results": [
+    {
+      "skill": "xlsx",
+      "page_size": 1,
+      "summary": false,
+      "calls": 40,
+      "seconds": 1.5845083330059424,
+      "output_characters": 37672,
+      "output_utf8_bytes": 37672,
+      "exit_codes": [
+        0
+      ],
+      "source_sha256": "945e0e35f429ea1d614c660095be886bb4dd003a78174ccfa8cbd3ec9def0d15"
+    },
+    {
+      "skill": "xlsx",
+      "page_size": 10,
+      "summary": false,
+      "calls": 4,
+      "seconds": 0.15928054205141962,
+      "output_characters": 9465,
+      "output_utf8_bytes": 9465,
+      "exit_codes": [
+        0
+      ],
+      "source_sha256": "945e0e35f429ea1d614c660095be886bb4dd003a78174ccfa8cbd3ec9def0d15"
+    },
+    {
+      "skill": "xlsx",
+      "page_size": 40,
+      "summary": false,
+      "calls": 1,
+      "seconds": 0.0391300410265103,
+      "output_characters": 7104,
+      "output_utf8_bytes": 7104,
+      "exit_codes": [
+        0
+      ],
+      "source_sha256": "945e0e35f429ea1d614c660095be886bb4dd003a78174ccfa8cbd3ec9def0d15"
+    },
+    {
+      "skill": "xlsx",
+      "page_size": null,
+      "summary": true,
+      "calls": 1,
+      "seconds": 0.03961608401732519,
+      "output_characters": 501,
+      "output_utf8_bytes": 501,
+      "exit_codes": [
+        0
+      ],
+      "source_sha256": "945e0e35f429ea1d614c660095be886bb4dd003a78174ccfa8cbd3ec9def0d15"
+    },
+    {
+      "skill": "wps",
+      "page_size": 1,
+      "summary": false,
+      "calls": 40,
+      "seconds": 1.5842706250259653,
+      "output_characters": 151063,
+      "output_utf8_bytes": 151543,
+      "exit_codes": [
+        3
+      ],
+      "source_sha256": "cacf7875a609c0d6e192f236a015fe799b6111710b72ca148574d9d4f8ab1541"
+    },
+    {
+      "skill": "wps",
+      "page_size": 10,
+      "summary": false,
+      "calls": 4,
+      "seconds": 0.15899724996415898,
+      "output_characters": 35520,
+      "output_utf8_bytes": 35784,
+      "exit_codes": [
+        3
+      ],
+      "source_sha256": "cacf7875a609c0d6e192f236a015fe799b6111710b72ca148574d9d4f8ab1541"
+    },
+    {
+      "skill": "wps",
+      "page_size": 40,
+      "summary": false,
+      "calls": 1,
+      "seconds": 0.04023904097266495,
+      "output_characters": 25881,
+      "output_utf8_bytes": 26127,
+      "exit_codes": [
+        3
+      ],
+      "source_sha256": "cacf7875a609c0d6e192f236a015fe799b6111710b72ca148574d9d4f8ab1541"
+    },
+    {
+      "skill": "wps",
+      "page_size": null,
+      "summary": true,
+      "calls": 1,
+      "seconds": 0.03935045801335946,
+      "output_characters": 2947,
+      "output_utf8_bytes": 2953,
+      "exit_codes": [
+        3
+      ],
+      "source_sha256": "cacf7875a609c0d6e192f236a015fe799b6111710b72ca148574d9d4f8ab1541"
+    }
+  ],
+  "cli_limits": "One timed traversal per case, 40 cells; synthetic inputs, startup/parsing included, install copy and fixture creation excluded."
+}

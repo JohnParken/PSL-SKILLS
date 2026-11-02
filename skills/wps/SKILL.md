@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261102.1720.5289"
+version: "20261102.2122.4624"
 description: 用于离线读取 WPS 文字（.wps）的正文和有限表格结构，以及 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不生成、编辑、转换或还原页面布局。WPS 软件保存的原生 DOCX/XLSX 使用对应技能。
 ---
 
@@ -30,6 +30,10 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" --check
 
 宿主须将每次调用的 stdout、stderr、真实退出码和调用标识一起返回模型，失败/partial也不丢 stdout，空通道明确为空字符串。未启动、超时、强杀或状态未知时不得伪造退出0；截断须注明通道与长度，不解析截断JSON。缺少工具回传时只能说明无法确认，print或本地捕获不证明模型收到。环境通过不代表任何原件、提取结果或缓存已验收。
 
+## 按需加载与任务切换
+
+同一任务只复用已确认仍在上下文、且真实路径/版本或指纹未变的参考；不要因链接主动递归预读或重复读取。环境、任务或版本变化、上下文缺失时重新核对必要约束。宿主是否预加载、缓存、截断或计费由宿主决定，本说明不能强制去重；复用参考不等于复用其他任务的素材或授权。脚本按已知命令执行，不为调用而先读实现；只有维护或明确排障需要时读取源码。
+
 ## 电子表格：读取 ET/ETT 保存值
 
 完成共同自检后，在任务目录运行；将文件名换成实际输入，保留默认 JSON 和 `data` 策略，不需要先选择兼容参数：
@@ -38,7 +42,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" --check
 python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
 ```
 
-只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其`wps_read_view_v1`是投影，不交给原schema分析器。需要程序汇总则用默认完整提取JSON，按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源partial与诊断。不加载文字证据、高级解析或维护材料，除非任务/诊断实际需要；宿主只能整文件读取时仍只读所选专项文件。
+只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其`wps_read_view_v1`是投影，不交给原schema分析器。分页用于抽查，不先遍历全部页做全量统计；每页仍重读解析输入，诊断会重复返回。需要程序汇总则用默认完整提取JSON，按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源partial与诊断。不加载文字证据、高级解析或维护材料，除非任务/诊断实际需要；宿主只能整文件读取时仍只读所选专项文件。
 
 1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认完整电子表格 `schema_version` 应为 `biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口；退出 1 或 2 停止后续分析，不把失败当空表。自动调用不要使用把退出 3 当失败丢弃的 `check=True`，见 标准库调用示例 (`<skill-root>/references/spreadsheet-consumption.md#消费电子表格-json`)。
 2. **解释保存值。** 按单元格 `type` 解释 `value`，保留数字字符串的精度和文本编号；`numeric_interpretation` 仅补充格式解释，不能替代原值。`formula` 存在时读取的是保存缓存，结合 `cache_status` 区分缺失、错误和未验证缓存，不能保证最新或重算。BIFF 的 `cell_value_coverage`、`omissions_affect_cell_values` 与原始 `issues` 区分缓存缺失和元数据遗漏，不能据此宣称完整格式支持；程序消费和保存值解释见电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）；仅需assessment细节才读完整结果契约。
@@ -58,26 +62,26 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et
 python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 ```
 
-同样按退出 0/3 保留结果、1/2 停止处理。仅需正文时可加 `--format text`；电子表格不支持 text。文字不代表页面布局或完整表格还原。按任务加载以下参考，不将文字选项用于电子表格：
+默认data对MS-DOC启用有界文字降级：保存域缓存、对象/未知控制符占位，返回partial及来源/遗漏；不执行域或猜关联内容。显式`--text-policy strict`保留原文字拒绝，显式field/object reject仍生效；损坏、加密和超限不降级。细节见 `<skill-root>/references/format.md#fib与正文规则`。同样按退出0/3保留结果、1/2停止处理。仅需正文时可加 `--format text`；电子表格不支持 text。文字不代表页面布局或完整表格还原。按任务加载以下参考，不将文字选项用于电子表格：
 
-默认 data 按精确头 GUID 自动选择已有的旧版 Word/Excel CFB 兼容路径，并接受旧版 minor `0x003B`；仍检查对应负载、版本、扇区链和边界，并报告 partial。显式 strict 保留零头 GUID 与 minor `0x003E` 要求。字段、对象及正文布局等独立限制继续按下表处理，容器可读不等于任意 MS-DOC 都能提取。
+CFB兼容头与显式strict差异按实际结果解释；需要时读 `<skill-root>/references/format.md#cfb兼容头与容器检查`，不通过轮换参数掩盖拒绝。
 
 | 用户任务 | 操作与按需参考 |
 |---|---|
 | 正文或字段/对象边界 | 默认读取；具体容器、字段与对象策略见 格式边界 (`<skill-root>/references/format.md`)。 |
-| 二进制绘图对象 U+0008 | 明确选择 `--object-policy placeholder`，且存在合法主正文 PlcfSpa CP 锚点时保守以 U+FFFC 代替、返回 partial。原对象、sprmCFSpec 生效状态及图形布局不解码，详见 绘图对象锚点 (`<skill-root>/references/binary-shapes.md`)。 |
+| 二进制绘图对象 U+0008 | data默认占位；有合法主正文PlcfSpa CP锚点时保留来源，无锚点仅报告未知标记、partial；strict文字策略须显式选`--object-policy placeholder`且验证锚点。原对象、sprmCFSpec 生效状态及图形布局不解码，详见 绘图对象锚点 (`<skill-root>/references/binary-shapes.md`)。 |
 | 脚注、尾注、批注或页眉页脚 | 加 `--include-related`，仅 JSON；`related_stories` 与正文分开。按容器读 MS-DOC 存储区域 (`<skill-root>/references/ms-doc-stories.md`) 或 OOXML 引用 (`<skill-root>/references/ooxml-related-stories.md`)，不推断有效页码或页眉继承。 |
 | 隐藏文字或修订视图 | 先读 隐藏与修订策略 (`<skill-root>/references/word-visibility.md`)。OOXML 默认 include/accepted；二进制不能过滤隐藏或修订。未知状态保留并说明，不能作为脱敏保证。 |
 | 文档表格 | OOXML JSON `tables` 提供逻辑网格和来源，见 结构化表格 (`<skill-root>/references/ooxml-tables.md`)。MS-DOC 仅提供有直接属性证据的一级行/单元格，合并与表格归组未知，见 二进制表格边界 (`<skill-root>/references/binary-tables.md`)。 |
 
-**MS-DOC 段落来源定位（可选）**：需要核对二进制 `.wps` 正文中的段落来源范围时，显式添加 `--binary-paragraph-sources`。仅对实际内容识别为 CFB + MS-DOC 的分支生效；返回各存储段落的 UTF-16 码元 CP 半开区间，不是 WordDocument 物理字节偏移或页面位置。字段结果过滤、对象占位或注释替换导致输出与存储文本无法可靠对齐时，不返回伪精确的段落来源，明确标记 partial 与诊断。同时显式指定 `--hidden-text annotate` 时，可将已有 CHPX 片段与段落 CP 做非生效属性的来源关联；若二进制表格解析已观察到 PAPX 一级行结束标记，也可仅关联该标记所属段落。来源关联不等于完整段落格式或表格布局恢复。默认读取不新增来源字段；选项、范围与错误契约详见 结果契约 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)。无真实 WPS 全文来源对照，不把该元数据当作生产兼容认证。
+**MS-DOC 段落来源（可选）**：仅此任务才显式用 `--binary-paragraph-sources`，先读 `<skill-root>/references/reading-assessment.md#ms-doc-段落-cp-来源可选` 及需要的证据关联节。CP不是页码或物理偏移，转换后可能无法对齐；不据此恢复布局或证明WPS生产兼容。普通ET/文字读取不加载该细节。
 
 仅在核对真实来源、政府/银行附件证据或资源优化时读文字证据路由（`<skill-root>/references/word-evidence-routing.md`）。默认任务不加载维护历史；真实后缀、来源声明或合成测试均不证明WPS原生软件兼容，partial必须保留诊断。
 
 ## 结果与按需验收
 
 - 按实际容器和失败阶段说明范围。CFB 是容器，本包能读取其中受支持的 MS-DOC/BIFF8 子集；不能把某个 CFB 文件被拒绝概括为“只支持 OOXML”。同样，`.wps`、`.et/.ett` 后缀不证明内部结构或生成软件。
-- `0x088D` 按 MS-XLS 标准 DXF 结构读取并保留属性，不认定为 WPS 私有记录。未支持的其他 BIFF 记录仍停止读取，不按记录 ID 猜测其语义，不跳过未知记录后宣称成功。某个 ET 文件读成功，仅证明该文件走到了支持范围内，不能证明已解析其他文件中的私有扩展；结合 `status`、`issues` 和范围摘要区分成功、部分读取和失败。
+- `0x088D` 按 MS-XLS 标准 DXF 结构读取并保留属性，所选属性可解释时才解释；有界DXF内未知/无效格式属性保留原始记录并报告partial，不阻断可靠单元格读取，最终样式仍未知，不认定为 WPS 私有记录。未支持的其他 BIFF 记录仍停止读取，不按记录 ID 猜测其语义，不跳过未知记录后宣称成功。某个 ET 文件读成功，仅证明该文件走到了支持范围内，不能证明已解析其他文件中的私有扩展；结合 `status`、`issues` 和范围摘要区分成功、部分读取和失败。
 - 用户报告的失败与本地结果不一致时，核对实际使用的 Skill 版本、原文件、完整调用参数、stdout/stderr 和退出码；缺少证据时明确待复现，不声称已修复该真实样本，也不反复换兼容参数掩盖拒绝。
 - `status=ok`、退出 0：声明范围内成功，允许空正文或空工作表，不等于完整格式认证。
 - `status=partial`、退出 3：保留提取结果并说明已知缺口。MS-DOC 默认省略非空附加区域或遇表格边界也可返回 partial；纯文本诊断另写 stderr。

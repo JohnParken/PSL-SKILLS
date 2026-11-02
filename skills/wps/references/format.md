@@ -17,6 +17,8 @@
 - 样式来源与关联部件 (`<skill-root>/references/format.md#样式来源与关联部件`)
 - 会计与条件数字格式 (`<skill-root>/references/format.md#会计与条件数字格式`)
 
+- CFB兼容头与容器检查（`<skill-root>/references/format.md#cfb兼容头与容器检查`）
+
 ## 能力与证据矩阵
 
 | 实际结构 | 当前结果范围 | 证据与缺口 |
@@ -62,7 +64,15 @@ csw14、cslw22、Windows envr0，nFibBack允许BF/C1。由cswNew决定使用base
 
 CLX取fc/lcb索引33，按标志选0Table/1Table；Prc有界跳过，复杂Prm检查零基索引后不应用格式。唯一末尾Pcdt必须长度/边界正确。压缩片段按FcCompressed映射，UTF16按逻辑片段拼接，严格代理对解码。默认仅读CP0,ccpText)，其他故事仅边界检查。显式include-related按公开FIB顺序输出六区及CP半开范围；最后额外CP不输出；每区独立代理对/字段闭合，不能借下一故事修复。有界脚注尾注引用表见[CP映射 (`<skill-root>/references/binary-note-references.md`)，批注见作者/引用 (`<skill-root>/references/binary-comments.md`)，节与页眉存储槽见分节 (`<skill-root>/references/binary-headers.md`)，其他引用未知partial，见存储故事 (`<skill-root>/references/ms-doc-stories.md`)。
 
-CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。字段默认拒绝；cached_result只按13/14/15分隔符与有界嵌套保留存储结果，隐藏指令不输出；缺损字段为corrupt。无分隔字段省略并记录partial，不执行任何指令。U+0001仅在placeholder模式替换U+FFFC，保留CP/偏移诊断，不能推断是图片还是其他二进制数据；U+0008仅在显式placeholder且已验证主正文PlcfSpa锚点时替换为U+FFFC，记录partial且不恢复图形属性；其他未支持控制符仍拒绝。
+CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。统一read/read_bytes/CLI的data模式默认对MS-DOC使用text_policy=recover：未指定的field_policy取cached_result、object_policy取placeholder；显式reject仍生效。strict/legacy兼容模式、底层parse_streams默认保持strict文字策略；显式text_policy=strict可在data模式保留原拒绝行为。--text-policy仅适用于MS-DOC，ET/OOXML显式传入会拒绝；不改变其默认行为。
+
+cached_result只按13/14/15分隔符和有界嵌套保留保存结果；隐藏指令不输出，缓存新鲜度和sprmCFSpec/Plcfld未验证，始终partial。不带结果的闭合域省略并报告；缺损、重复分隔、跨故事未闭合域仍corrupt，不用后续文字猜边界。显式field_policy=reject仍拒绝域。
+
+U+0001在placeholder模式替换U+FFFC，不推断图片/对象类型。U+0008有经校验的主正文PlcfSpa锚点时保留原形状来源；recover模式缺少锚点时仅作为未知标记占位，绝不伪造形状或读取其可能指向的字节。已有PlcfSpa结构损坏仍拒绝。其他未支持C0码元在recover模式替换U+FFFC，记录uninterpreted_control_markers_not_decoded、原marker、WordDocument物理偏移、piece和UTF-16 CP、placeholder_emitted；不复制控制符、不推断其关联内容。域指令内的标记不输出占位，诊断明确未输出。所有替换都partial，未知语义及可能关联内容未读取；损坏UTF-16、CLX/FIB/片段、加密与资源超限仍拒绝。
+
+新增控制符诊断最多1000个，绘图/对象标记沿用1000个预算；超限停止，不静默截去后续正文。域位置最多保留20个并给locations_truncated，数量和嵌套上限仍生效。转换后paragraph_sources为空且unavailable_after_text_transform，不把变化后的字符串位置冒充原始CP。
+
+普通文字不含需要转换的标记时结果正文不变；结果新增text_policy字段用于说明实际策略。CLI的0/3/1/2及read_bytes抛异常、read返回失败JSON等旧契约保留；调用者不得因partial有文字而认为全文/页面完整。
 
 ## 兼容策略和来源
 
@@ -117,3 +127,7 @@ reading_assessment (`<skill-root>/references/reading-assessment.md`)是统一入
 会计格式 (`<skill-root>/references/accounting-formats.md`)支持有限2–4位置段，保留Decimal原值与原格式；移除填充后的display_text不代表列宽或页面显示。纯数值条件 (`<skill-root>/references/conditional-number-formats.md`)仅支持至多两个常量比较与后备段；区域指令仅元数据，颜色及复杂混合语法仍unknown。批注保留单元格、作者、文本与关系来源，不并入单元格值，布局未解码partial。所有新增能力只作标准库合成测试；真实Balance格式字节可检查，不等于独立显示对照。
 
 默认 MS-DOC 检测到非空未选附加故事时，返回 `omitted_regions` 的类型/CP范围并标为 partial，不读取或复制其文字。已知表格标记但结构不完整时同样 partial。统一范围摘要另提供有界 coverage；见结果契约 (`<skill-root>/references/reading-assessment.md`)。
+
+## CFB兼容头与容器检查
+
+默认 data 按精确头 GUID 自动选择已有的旧版 Word/Excel CFB 兼容路径，并接受旧版 minor `0x003B`；仍检查对应负载、版本、扇区链和边界，并报告 partial。显式 strict 保留零头 GUID 与 minor `0x003E` 要求。字段、对象及正文布局等独立限制继续按下表处理，容器可读不等于任意 MS-DOC 都能提取。

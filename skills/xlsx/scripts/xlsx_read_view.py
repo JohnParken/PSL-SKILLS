@@ -8,6 +8,8 @@ import stat
 
 MAX_SOURCE_BYTES = 128 * 1024 * 1024
 MAX_OUTPUT_CHARS = 2 * 1024 * 1024
+# Bump when projection ordering or interpretation changes; legacy cursors fail closed.
+PROJECTION_REVISION = 2
 
 
 def snapshot(path):
@@ -75,15 +77,17 @@ def read_view(book, data, *, summary=False, sheet=None, cell_range=None, page_si
             if len(cursor) > 1024:
                 raise ValueError()
             token = json.loads(base64.b64decode(cursor.encode('ascii'), altchars=b'-_', validate=True))
-            if set(token) != {'sha256', 'scope', 'next'} or token['sha256'] != digest or token['scope'] != binding:
+            if (set(token) != {'sha256', 'scope', 'next', 'revision'} or type(token['revision']) is not int
+                    or token['revision'] != PROJECTION_REVISION
+                    or token['sha256'] != digest or token['scope'] != binding):
                 raise ValueError()
             start = token['next']
             if type(start) is not int or start < 0:
                 raise ValueError()
         except (ValueError, TypeError, UnicodeError, KeyError) as exc:
-            raise ValueError('Invalid cursor or source/options changed; restart the read') from exc
+            raise ValueError('Invalid or legacy cursor, or source/options/projection changed; restart the read') from exc
     result = {'schema_version': 'xlsx_read_view_v1', 'status': 'ok', 'mode': 'summary' if summary else 'cells',
-              'source_sha256': digest, 'scope': scope, 'date_system': book.inspect()['date_system'],
+              'source_sha256': digest, 'projection_revision': PROJECTION_REVISION, 'scope': scope, 'date_system': book.inspect()['date_system'],
               'formula_caches': 'stored and unverified; no calculation', 'implicit_cells': 'not materialized',
               'sheets': [{'name': item['name'], 'stored_cells': len(item['cells'])} for item in selected]}
     if summary:
@@ -105,18 +109,32 @@ def read_view(book, data, *, summary=False, sheet=None, cell_range=None, page_si
         more = end < len(entries)
         result.update(returned_items=end - start, truncated=more, next_cursor=None)
         if more:
-            raw = encode({'sha256': digest, 'scope': binding, 'next': end}).encode()
+            raw = encode({'sha256': digest, 'scope': binding, 'next': end, 'revision': PROJECTION_REVISION}).encode()
             result['next_cursor'] = base64.urlsafe_b64encode(raw).decode()
+    def variable_size():
+        # Cursor is generated URL-safe ASCII, so JSON adds exactly two quotes.
+        token_chars = 4 if result['next_cursor'] is None else len(result['next_cursor']) + 2
+        return len(str(result['returned_items'])) + (4 if result['truncated'] else 5) + token_chars
     finish(start)
-    if len(encode(result)) + 1 > max_chars:
+    initial_size = len(encode(result)) + 1
+    fixed_size = initial_size - variable_size()
+    if initial_size > max_chars:
         raise ValueError('View metadata exceeds output budget')
+    item_size = 0
     for index in range(start, min(len(entries), start + page_size)):
-        result['items'].append(entries[index])
+        entry = entries[index]
+        encoded_size = len(encode(entry))
         finish(index + 1)
-        if len(encode(result)) + 1 > max_chars:
-            result['items'].pop()
+        count = index + 1 - start
+        projected_size = fixed_size + variable_size() + item_size + encoded_size + max(0, count - 1)
+        if projected_size > max_chars:
             finish(index)
             if index == start:
                 raise ValueError('Single cell exceeds output budget; increase max-output-chars or narrow range')
             break
+        result['items'].append(entry)
+        item_size += encoded_size
+    # The actual canonical encoder remains the authoritative final budget check.
+    if len(encode(result)) + 1 > max_chars:
+        raise ValueError('Final view exceeds output budget')
     return result
