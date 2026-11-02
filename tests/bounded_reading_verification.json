@@ -1,0 +1,175 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+  "measurement": "stdout Unicode characters and UTF-8 bytes, complete local subprocess capture; not token or host measurement",
+  "baseline_commit": "8fec5f38734cbfc45932e978786542e6ef692dc2",
+  "cases": [
+    {
+      "skill": "xlsx",
+      "mode": "full",
+      "input_kind": "synthetic, not production WPS provenance",
+      "source_sha256": "3973e8d5d3d291d9708e3e8133af52dd0da0a86f4c6728077e8d4349e5656628",
+      "exit": 0,
+      "stdout_characters": 428832,
+      "stdout_bytes": 428832,
+      "stderr_characters": 0,
+      "status": null,
+      "returned_items": null,
+      "truncated": null
+    },
+    {
+      "skill": "xlsx",
+      "mode": "summary",
+      "input_kind": "synthetic, not production WPS provenance",
+      "source_sha256": "3973e8d5d3d291d9708e3e8133af52dd0da0a86f4c6728077e8d4349e5656628",
+      "exit": 0,
+      "stdout_characters": 445,
+      "stdout_bytes": 445,
+      "stderr_characters": 0,
+      "status": "ok",
+      "returned_items": null,
+      "truncated": false
+    },
+    {
+      "skill": "xlsx",
+      "mode": "page",
+      "input_kind": "synthetic, not production WPS provenance",
+      "source_sha256": "3973e8d5d3d291d9708e3e8133af52dd0da0a86f4c6728077e8d4349e5656628",
+      "exit": 0,
+      "stdout_characters": 11862,
+      "stdout_bytes": 11862,
+      "stderr_characters": 0,
+      "status": "ok",
+      "returned_items": 73,
+      "truncated": true
+    },
+    {
+      "skill": "wps",
+      "mode": "full",
+      "input_kind": "synthetic, not production WPS provenance",
+      "source_sha256": "c4e009f45bd98641be41c52d6e06d5541e63c7d382392073f31fd63b21ffca7c",
+      "exit": 0,
+      "stdout_characters": 590990,
+      "stdout_bytes": 590996,
+      "stderr_characters": 0,
+      "status": "ok",
+      "returned_items": null,
+      "truncated": null
+    },
+    {
+      "skill": "wps",
+      "mode": "summary",
+      "input_kind": "synthetic, not production WPS provenance",
+      "source_sha256": "c4e009f45bd98641be41c52d6e06d5541e63c7d382392073f31fd63b21ffca7c",
+      "exit": 0,
+      "stdout_characters": 2628,
+      "stdout_bytes": 2634,
+      "stderr_characters": 0,
+      "status": "ok",
+      "returned_items": null,
+      "truncated": false
+    },
+    {
+      "skill": "wps",
+      "mode": "page",
+      "input_kind": "synthetic, not production WPS provenance",
+      "source_sha256": "c4e009f45bd98641be41c52d6e06d5541e63c7d382392073f31fd63b21ffca7c",
+      "exit": 0,
+      "stdout_characters": 11451,
+      "stdout_bytes": 11547,
+      "stderr_characters": 0,
+      "status": "ok",
+      "returned_items": 15,
+      "truncated": true
+    }
+  ],
+  "source_sha256": {
+    "skills/xlsx/SKILL.md": "c082f305ab7774e2d8e76582f7c9ee87a120d1a2053a4c4cc6ca2ec6b1862dac",
+    "skills/xlsx/references/bounded-reading.md": "8b5ca12737a8cca0da6498139894163efccf8deb475773efad309bd3143bb034",
+    "skills/xlsx/scripts/stdlib_xlsx.py": "5299c6cb63dd2f1156172af2e134862ca3dcf55aa211b8c624467b45618a7561",
+    "skills/xlsx/scripts/test_xlsx_read_view.py": "9732bb170441baa507bc7e86ab691813f4d6e3f5816b925e7e0548ac18d13450",
+    "skills/xlsx/scripts/xlsx_read_view.py": "6134ccc9be71706e37bdf8c1ec2b2131e34f112cafdbfdd229fe41fc60d7778d",
+    "skills/wps/SKILL.md": "fbf4ffab4cd5bcebc6182ed8884d5d885b391cf3a7d7cfc224519a2c768a2ca7",
+    "skills/wps/references/bounded-reading.md": "858b33029c2bd016d23cd1f5286bfec9ae6ae560bd244cf7e7f89b227ef9b0a8",
+    "skills/wps/scripts/read_wps.py": "8fdee7a580c506e460fe9b5ab7ce04db0af98ad71c663a8376ed30b9d766899d",
+    "skills/wps/scripts/test_wps_read_view.py": "1ffc3f3f2d992555482ce4e143e3c16011463884995d9cbd9879392ebbdcda6f",
+    "skills/wps/scripts/wps_read_view.py": "10996b3c0f9fa63b612b782914b7139bb77f99679bc7e36efc86c925a089afa2"
+  },
+  "independent_directory": [
+    {
+      "skill": "xlsx",
+      "check_exit": 0,
+      "tests_exit": 0,
+      "tests_summary": [
+        "----------------------------------------------------------------------",
+        "Ran 10 tests in 0.355s",
+        "",
+        "OK"
+      ],
+      "readonly_files_unchanged": true
+    },
+    {
+      "skill": "wps",
+      "check_exit": 0,
+      "tests_exit": 0,
+      "tests_summary": [
+        "----------------------------------------------------------------------",
+        "Ran 8 tests in 0.300s",
+        "",
+        "OK"
+      ],
+      "readonly_files_unchanged": true
+    }
+  ],
+  "tests": {
+    "xlsx": {
+      "passed": 316,
+      "skipped": 0
+    },
+    "wps": {
+      "passed": 557,
+      "skipped": 0
+    },
+    "et_to_xlsx": {
+      "passed": 2,
+      "skipped": 0
+    },
+    "strict": "both passed",
+    "diff_check": "passed",
+    "syntax_and_200_character_line_check": "passed",
+    "pylint": "unavailable, not installed"
+  },
+  "limitations": [
+    "macOS/Python3.12.12 only; Linux and Windows not executed",
+    "No tokenizer or real host loading/callback trace; counts are characters/bytes only",
+    "Synthetic inputs only; no new real WPS provenance or production acceptance",
+    "Full parsing remains; no memory/time reduction claim",
+    "WPS views omit named global/sheet metadata and main-text related content; full extraction required for XLSX analysis adapter",
+    "XLSX CSV/TSV keep the old full-read contract; bounded options are native XLSX/XLSM only",
+    "Large single cells or diagnostics can exceed requested budget and explicitly fail; no silent truncation",
+    "Existing success receipt behavior retained; no new compact receipt mode"
+  ],
+  "fixture_recipe": {
+    "xlsx": "One Data sheet, A1:A1000 are 8-digit text identifiers; B1:B1000 are exact integers 1..1000. Workbook.create and save.",
+    "wps": "Synthetic CFB Workbook stream from existing BIFF fixture: 1000 NUMBER records at A1:A1000, values 1..1000. Not a real WPS producer sample."
+  },
+  "review_iterations": [
+    "Added snapshot-bound projections and kept default branches unchanged; initial 14 new tests passed.",
+    "Rejected empty XLSX cursor and check/read-view option mixtures; added actual CLI changed-input and partial exit tests. One test initially attempted protected overwrite, corrected to replace only test-owned input.",
+    "Full regression, strict, explicit budget checks, isolated readonly installation and package source comparison completed."
+  ],
+  "packages": [
+    {
+      "path": "skills/xlsx-20261102.1706.0641.zip",
+      "sha256": "759409755978199a3f7df80c7450da5c34d6e7329de97c8545600eca8b52627e",
+      "member_count": 146,
+      "crc_and_member_hashes": "passed"
+    },
+    {
+      "path": "skills/wps-20261102.1706.0641.zip",
+      "sha256": "04c9dc562e04b5ca1a105daeb61fd1033fb9b616c9a4871fb4f15dc9fbacce38",
+      "member_count": 184,
+      "crc_and_member_hashes": "passed"
+    }
+  ]
+}

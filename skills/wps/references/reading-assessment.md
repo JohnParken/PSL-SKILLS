@@ -24,7 +24,7 @@
 
 读取失败的 `status` 包括 `unsupported`、`encrypted`、`corrupt`、`resource_limit`、`io_error`、`invalid_or_unsupported`。失败正文为 `text=null`、`partial=false`，不交付部分单元格或文字；`invalid_or_unsupported` 不应被调用方擅自归类为必然损坏。参数解析错误不是上述失败字典。
 
-CLI 输出阶段还有两个例外：电子表格请求 text 时返回 unsupported；JSON 超过输出预算时返回 resource_limit。这两处重新生成的失败字典没有 `reading_assessment`。CLI 参数错误、自检输出和纯文本正文也不提供该字段；调用方必须先判断退出码、输出模式和字段是否存在。
+CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返回 unsupported；JSON 超过输出预算时返回 resource_limit。这两处重新生成的失败字典没有 `reading_assessment`。显式有界视图另用 `wps_read_view_v1`，输出投影失败可为 `output_view_error`/退出1且不带该摘要；其完整契约见有界输出（`<skill-root>/references/bounded-reading.md`）。CLI 参数错误、自检输出和纯文本正文也不提供该字段；调用方必须先判断退出码、输出模式和字段是否存在。
 
 ## 结果字段与范围评估
 
@@ -75,42 +75,7 @@ CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 
 
 ## 消费电子表格 JSON
 
-默认 data 读取从共同自检开始，不需要先了解 BIFF 记录或 legacy 参数。下例使用标准库调用统一 CLI：先将 `<skill-root>` 替换为已确认的真实 Skill 目录，再在任务目录执行；`./input.et` 可换成允许读取的 `.ett`。它不创建文件，退出 0/3 均接收完整 JSON；退出 3 的数据和原诊断一起交给后续处理。退出 1/2、JSON 无效、状态/退出码不符或 schema 不符均停止，不能把文档或失败字典送入表格分析。
-
-```sh
-python -I -S -B - "<skill-root>" ./input.et <<'PY'
-import json
-from pathlib import Path
-import subprocess
-import sys
-
-skill_dir = Path(sys.argv[1]).resolve()
-process = subprocess.run(
-    [sys.executable, '-I', '-S', '-B',
-     str(skill_dir / 'scripts' / 'read_wps.py'), sys.argv[2]],
-    capture_output=True, text=True, encoding='utf-8', check=False,
-)
-if process.returncode not in (0, 3):
-    raise SystemExit(process.stderr or process.stdout or 'Reading failed')
-result = json.loads(process.stdout)
-expected_status = 'ok' if process.returncode == 0 else 'partial'
-if result.get('status') != expected_status:
-    raise SystemExit('Unexpected status/exit-code combination')
-if result.get('schema_version') not in (
-    'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1',
-):
-    raise SystemExit('Spreadsheet schema required')
-# Pass this same result to the chosen consumer; do not rebuild a reduced schema.
-print(json.dumps(result, ensure_ascii=False, allow_nan=False))
-if process.returncode == 3:
-    print('Partial data retained; report the original issues and reading_assessment.',
-          file=sys.stderr)
-PY
-```
-
-表格消费者按 `type` 解释 `value`：JSON 中的数字字符串保持保存值精度，不与文本长编号混为一类，不先转换成 float。`numeric_interpretation` 是有限数字格式/日期解释的附加字段，不替换 `value`。有 `formula` 的值属于保存缓存；`cache_status=missing` 不能当空值或零，`unverified` 等状态不能证明缓存最新。使用缓存分析须显式选择 cached 政策，所选区域的缺失或错误缓存仍拒绝，禁止重算。
-
-BIFF `cell_value_coverage=complete_within_declared_sheets` 只表示已声明工作表的受支持单元格/缓存范围；`missing_formula_caches` 和 `omissions_affect_cell_values=true` 指出缓存缺口。它们不取代 `issues`，不证明私有流、有效格式或完整 ET 支持；OOXML 按其自身 schema/诊断解释，不假定具有全部 BIFF 字段。保留顶层 `reading_assessment` 和原始诊断，分析接入另见 表头与输出 (`<skill-root>/references/biff8-readonly.md#headers-and-output`)。
+电子表格的最小共同契约、完整结果/有界视图选择和可运行调用示例移至 `<skill-root>/references/spreadsheet-consumption.md`。普通ET消费无需加载本页的MS-DOC段落证据；旧锚点保留作为兼容路由。
 
 ## 可运行的契约示例
 

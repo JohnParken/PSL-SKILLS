@@ -1,0 +1,216 @@
+{
+  "platform": "macOS arm64; Python 3.12.12; no Linux/Windows or host loading validation",
+  "measurement": "UTF-8 bytes and Unicode characters, full files, deduplicated by path; not tokens",
+  "tokenizer_available": false,
+  "skills": {
+    "xlsx": {
+      "baseline": {
+        "bytes": 16510,
+        "characters": 12638
+      },
+      "current": {
+        "bytes": 13118,
+        "characters": 9204
+      },
+      "sha256": "c55cbd95ca6a8c108a71e021e9ff9b5e7b6d64ef9546c99d77d147fc6a6bef46",
+      "scenarios": {
+        "read": {
+          "references": [
+            "read-analyze.md"
+          ],
+          "baseline_characters": 15182,
+          "current_characters": 11748,
+          "change_characters": -3434
+        },
+        "write": {
+          "references": [
+            "create.md",
+            "python-calculation.md",
+            "task-delivery.md"
+          ],
+          "baseline_characters": 26981,
+          "current_characters": 24599,
+          "change_characters": -2382
+        },
+        "diagnose-host": {
+          "references": [
+            "environment-results.md"
+          ],
+          "baseline_characters": 12638,
+          "current_characters": 10569,
+          "change_characters": -2069
+        },
+        "detailed-results": {
+          "references": [
+            "result-boundaries.md"
+          ],
+          "baseline_characters": 12638,
+          "current_characters": 12189,
+          "change_characters": -449
+        }
+      }
+    },
+    "wps": {
+      "baseline": {
+        "bytes": 20995,
+        "characters": 10681
+      },
+      "current": {
+        "bytes": 14218,
+        "characters": 6928
+      },
+      "sha256": "634bccd43251ef1dc69f3b24e17224d99dc92ed40c7fe0dc324bb1d6262a37e4",
+      "scenarios": {
+        "default-et": {
+          "references": [],
+          "baseline_characters": 10681,
+          "current_characters": 6928,
+          "change_characters": -3753
+        },
+        "related-word": {
+          "references": [
+            "ms-doc-stories.md"
+          ],
+          "baseline_characters": 13113,
+          "current_characters": 9360,
+          "change_characters": -3753
+        },
+        "advanced-et": {
+          "references": [
+            "advanced-spreadsheet-routing.md"
+          ],
+          "baseline_characters": 10681,
+          "current_characters": 10373,
+          "change_characters": -308
+        },
+        "word-evidence": {
+          "references": [
+            "word-evidence-routing.md"
+          ],
+          "baseline_characters": 10681,
+          "current_characters": 8697,
+          "change_characters": -1984
+        }
+      }
+    }
+  },
+  "preservation": {
+    "xlsx/environment-results.md": {
+      "paragraphs": 2,
+      "verbatim_in_baseline": 2
+    },
+    "xlsx/result-boundaries.md": {
+      "paragraphs": 1,
+      "verbatim_in_baseline": 1
+    },
+    "xlsx/task-delivery.md": {
+      "paragraphs": 2,
+      "verbatim_in_baseline": 2
+    },
+    "wps/advanced-spreadsheet-routing.md": {
+      "paragraphs": 7,
+      "verbatim_in_baseline": 7
+    },
+    "wps/word-evidence-routing.md": {
+      "paragraphs": 5,
+      "verbatim_in_baseline": 5
+    }
+  },
+  "baseline_commit": "8fec5f38734cbfc45932e978786542e6ef692dc2",
+  "measurement_limitations": [
+    "Selected entry plus named references only; recursive references, runtime output and host caching are excluded.",
+    "Shared files counted once within each listed bundle, not across separate tasks.",
+    "Advanced tasks may require additional specialized references unchanged from baseline; figures are not full workflow totals.",
+    "Unicode character reductions are not token measurements. No tokenizer installed or host load trace accessible."
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "review": "Moved content preservation, always-visible safety and failure contracts",
+      "result": "All 17 moved paragraphs verbatim present in HEAD entry; unsupported/edit/cache/partial boundaries retained."
+    },
+    {
+      "round": 2,
+      "review": "Task routing and literal resource/anchor validation",
+      "fix": "WPS indirect same-route wording replaced with explicit salvage and audit section paths; README target version rows synchronized.",
+      "result": "Both strict checks passed, including literal resources and anchors."
+    },
+    {
+      "round": 3,
+      "review": "Runtime regression, self-check and missing-input probes",
+      "result": "WPS 549 passed; ET-to-XLSX 2 passed; XLSX final result recorded separately below."
+    }
+  ],
+  "task_route_review": {
+    "method": "Maintainer scenario walkthrough, not an independent model selection or actual host trigger test",
+    "cases": [
+      {
+        "request": "读取附件 ET 保存值",
+        "route": "wps default read_wps.py, data, JSON",
+        "check": "No advanced reference required; 0/3 preserve data/issues, 1/2 stop."
+      },
+      {
+        "request": "尽可能部分读取超出子集的 ET",
+        "route": "wps explicit salvage section then specialized reference",
+        "check": "Only explicit request; unknown coverage and no automatic reconciliation retained."
+      },
+      {
+        "request": "读取 WPS 批注与页眉",
+        "route": "wps --include-related with container-specific story reference",
+        "check": "Separate related stories and page/inheritance limitations retained."
+      },
+      {
+        "request": "读取原生 XLSX，包括 WPS 软件保存的 XLSX",
+        "route": "xlsx read-analyze",
+        "check": "Native format stays xlsx; no WPS advanced/history loading."
+      },
+      {
+        "request": "生成 XLSX 或导出 CSV",
+        "route": "xlsx task-specific reference, JSON contract and task-delivery",
+        "check": "Preferred runner, final output, archive/cleanup and failure states retained."
+      },
+      {
+        "request": "分析 partial WPS JSON",
+        "route": "xlsx data-analysis WPS section, result-boundaries when interpreting values",
+        "check": "Source partial, cache and numeric-string semantics preserved."
+      },
+      {
+        "request": "输入缺失、自检失败或工具结果截断",
+        "route": "Stop dependent operations; environment-results for host diagnosis",
+        "check": "Failure is not empty data or successful delivery."
+      },
+      {
+        "request": "编辑 ET、运行宏或重算 WPS 缓存",
+        "route": "Unsupported within wps; do not silently convert or execute",
+        "check": "Entry readonly boundary remains visible."
+      }
+    ]
+  },
+  "other_skills": {
+    "ofd": "Unchanged: compact routing and central safety/partial contract.",
+    "artifact-lifecycle": "Unchanged: compact ownership and deletion safety must remain visible.",
+    "bank-writing": "Concurrent task; untouched.",
+    "docx": "Existing progressive entry used as reference; no additional modification."
+  },
+  "tests": {
+    "wps": {
+      "passed": 549,
+      "skipped": 0
+    },
+    "xlsx": {
+      "passed": 306,
+      "skipped": 0
+    },
+    "et_xlsx_pipeline": {
+      "passed": 2,
+      "skipped": 0
+    },
+    "strict": [
+      "wps passed",
+      "xlsx passed"
+    ],
+    "self_checks": "both exit 0 with required markers",
+    "missing_input": "both exit 1 with failure JSON",
+    "git_diff_check": "passed"
+  }
+}

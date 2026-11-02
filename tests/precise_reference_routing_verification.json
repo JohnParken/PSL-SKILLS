@@ -1,0 +1,270 @@
+{
+  "baseline": "current uncommitted pre-route snapshot",
+  "method": "Unicode characters and UTF-8 bytes, entry plus named whole reference files, each counted once. Selected bundles only, not recursive host loading or tokens.",
+  "cases": [
+    {
+      "task": "static-xlsx-create",
+      "old_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/create.md",
+        "skills/xlsx/references/python-calculation.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "new_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/create.md",
+        "skills/xlsx/references/write-contract.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "before_characters": 24697,
+      "after_characters": 20192,
+      "before_bytes": 31131,
+      "after_bytes": 27700
+    },
+    {
+      "task": "formula-xlsx-create",
+      "old_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/create.md",
+        "skills/xlsx/references/python-calculation.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "new_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/create.md",
+        "skills/xlsx/references/write-contract.md",
+        "skills/xlsx/references/formula-calculation.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "before_characters": 24697,
+      "after_characters": 23146,
+      "before_bytes": 31131,
+      "after_bytes": 31538
+    },
+    {
+      "task": "value-edit-no-formulas",
+      "old_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/edit.md",
+        "skills/xlsx/references/python-calculation.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "new_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/edit.md",
+        "skills/xlsx/references/write-contract.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "before_characters": 24269,
+      "after_characters": 19782,
+      "before_bytes": 30703,
+      "after_bytes": 27312
+    },
+    {
+      "task": "formula-edit",
+      "old_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/edit.md",
+        "skills/xlsx/references/python-calculation.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "new_files": [
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/references/edit.md",
+        "skills/xlsx/references/write-contract.md",
+        "skills/xlsx/references/formula-calculation.md",
+        "skills/xlsx/references/task-delivery.md"
+      ],
+      "before_characters": 24269,
+      "after_characters": 22736,
+      "before_bytes": 30703,
+      "after_bytes": 31150
+    },
+    {
+      "task": "et-program-consumer-source-side",
+      "old_files": [
+        "skills/wps/SKILL.md",
+        "skills/wps/references/reading-assessment.md"
+      ],
+      "new_files": [
+        "skills/wps/SKILL.md",
+        "skills/wps/references/spreadsheet-consumption.md"
+      ],
+      "before_characters": 19722,
+      "after_characters": 10547,
+      "before_bytes": 33935,
+      "after_bytes": 20375
+    }
+  ],
+  "documented_consumer_execution": [
+    {
+      "input": "good.et",
+      "fixture": "synthetic independent NUMBER A1=7; partial CodePage936; invalid bytes",
+      "consumer_exit": 0,
+      "partial_notice": false
+    },
+    {
+      "input": "partial.et",
+      "fixture": "synthetic independent NUMBER A1=7; partial CodePage936; invalid bytes",
+      "consumer_exit": 0,
+      "partial_notice": true
+    },
+    {
+      "input": "bad.et",
+      "fixture": "synthetic independent NUMBER A1=7; partial CodePage936; invalid bytes",
+      "consumer_exit": 1,
+      "partial_notice": false
+    }
+  ],
+  "review": "Maintainer scenario walkthrough and actual documented snippet execution, not model selection or real host loading.",
+  "source_hashes": {
+    "skills/xlsx/SKILL.md": "7afc13aeddff04364c5434acaa5f745cbf9a345f0cd4037dbb5c92911a9e940d",
+    "skills/xlsx/references/write-contract.md": "dab75a7565c592e5c2c579e35413a3ac2332005c542e8d92409516f61e6af62f",
+    "skills/xlsx/references/formula-calculation.md": "2466927c286a310ded74b0709193e66ce646b3e99d44e504e298d17f7c24b2e0",
+    "skills/xlsx/references/python-calculation.md": "22d279ec0dbfac9798679c84cdb7cac8bdf992fe9e3cbb01947ff4c96d1ea95d",
+    "skills/xlsx/references/create.md": "7896cbc1dd04dc84ffd40cfb0baa7d159f7197cdcaccf3773170863b717e8d65",
+    "skills/xlsx/references/edit.md": "0901aa697494db93c61f2e742d10b25faf43756297bcdcdfb89f9fe439881051",
+    "skills/xlsx/references/fix.md": "595398249d3865279e6e832785c126cd0b50333a8bb6bd8e4eb7f0874dd37f49",
+    "skills/xlsx/references/read-analyze.md": "bd320149e4eb47e0bfdc3681ee7a53d0318beb39bbd69bf8a56c0dfb726c523f",
+    "skills/wps/SKILL.md": "006c937ee275b1dd267e479790c0419d3b1a7f85a77f2aa836cf58f8d03238c3",
+    "skills/wps/references/spreadsheet-consumption.md": "1ae675a9a02fa21dac749c26ebc28e0ebeaf42f9c09b0c154b550a4ea68db890",
+    "skills/wps/references/reading-assessment.md": "e1d24ff1d0828578a63fe5df74e10ee9c7dce4a52abb4b76d0402388c12ed3fe"
+  },
+  "content_preservation": [
+    {
+      "section": "## Commands",
+      "destination": "write-contract.md",
+      "original_paragraphs_preserved": true
+    },
+    {
+      "section": "## Input JSON",
+      "destination": "write-contract.md",
+      "original_paragraphs_preserved": true
+    },
+    {
+      "section": "## Formula subset",
+      "destination": "formula-calculation.md",
+      "original_paragraphs_preserved": true
+    },
+    {
+      "section": "## Results and exit codes",
+      "destination": "write-contract.md",
+      "original_paragraphs_preserved": true
+    },
+    {
+      "section": "消费电子表格 JSON",
+      "destination": "spreadsheet-consumption.md",
+      "original_paragraphs_preserved": true
+    }
+  ],
+  "version": "20261102.1720.5289",
+  "scenario_review": {
+    "method": "Maintainer scenario walkthrough, not an independent model or host test",
+    "cases": [
+      {
+        "task": "静态XLSX创建",
+        "references": [
+          "create",
+          "write-contract",
+          "task-delivery"
+        ],
+        "avoid": [
+          "formula-calculation",
+          "legacy API/maintenance"
+        ],
+        "required": "new output, input preservation, calculation exit/JSON, archive/cleanup separate"
+      },
+      {
+        "task": "公式XLSX创建/显式calculate",
+        "references": [
+          "write-contract",
+          "formula-calculation",
+          "task-delivery"
+        ],
+        "required": "subset/precision, unsupported/failed distinction, no guessed caches"
+      },
+      {
+        "task": "只改值但原文件有公式",
+        "references": [
+          "edit",
+          "write-contract",
+          "formula-calculation when formulas/issues observed",
+          "task-delivery"
+        ],
+        "required": "all formulas can recalculate; cannot skip incomplete or failed"
+      },
+      {
+        "task": "ET完整提取后分析",
+        "references": [
+          "spreadsheet-consumption",
+          "consumer skill actual WPS adapter contract when available"
+        ],
+        "required": "original schema and status, precision/cache/coverage/diagnostics; no inferred neighboring installation"
+      },
+      {
+        "task": "ET概况/分页后要求分析",
+        "references": [
+          "bounded-reading",
+          "spreadsheet-consumption"
+        ],
+        "required": "view not original schema; do not reconstruct fake original schema, obtain full extraction"
+      },
+      {
+        "task": "WPS文字修订/段落来源",
+        "references": [
+          "word-visibility or reading-assessment as task requires"
+        ],
+        "avoid": [
+          "spreadsheet consumption unless mixed task"
+        ],
+        "required": "CP not page/byte coordinates, transformations may invalidate alignment"
+      },
+      {
+        "task": "读取失败/截断/unknown schema",
+        "references": [
+          "selected common failure contract; API details only if needed"
+        ],
+        "required": "stop dependent analysis; no empty-data success"
+      },
+      {
+        "task": "重复/混合请求",
+        "references": [
+          "union of selected required contracts, deduplicated"
+        ],
+        "required": "do not recursively load hyperlinks or omit shared safety"
+      }
+    ]
+  },
+  "description_review": "Both descriptions retained: routing-only documentation maintenance, no capability/API change. Typical native XLSX vs ET and readonly/edit-negative boundaries reviewed, no real host trigger test.",
+  "tests": {
+    "xlsx_passed": 316,
+    "wps_passed": 557,
+    "et_xlsx_pipeline_passed": 2,
+    "skipped": 0,
+    "strict": "both passed including resource/anchor checks",
+    "diff_check": "passed",
+    "documented_consumer": "success, partial and refusal executed from literal new reference snippet"
+  },
+  "platform": "macOS arm64 / Python3.12.12; no Linux/Windows, real model route selection or host loading measurement",
+  "limitations": [
+    "Whole-file selected bundles only, not transitive total workflow or real tokens",
+    "Formula bundles can have slightly larger UTF-8 bytes because independent reference setup is repeated; task relevance prioritized over universal size reduction",
+    "Runtime code unchanged this round; API/defaults unchanged",
+    "No actual new real-sample acceptance or tokenizer/host traces",
+    "Bank-writing/OFD parallel changes left untouched"
+  ],
+  "packages": [
+    {
+      "path": "skills/xlsx-20261102.1720.5289.zip",
+      "sha256": "458617362761de3dc3d7e3b730080b0b95517d2c70004ec2de154d5758e7dd89",
+      "members": 148,
+      "crc_member_bytes_and_extracted_strict": "passed"
+    },
+    {
+      "path": "skills/wps-20261102.1720.5289.zip",
+      "sha256": "1a7cbe35fcf8384c9f4c580971a2e43563a8e31ea90d4bd0eb1433393dc23ff2",
+      "members": 185,
+      "crc_member_bytes_and_extracted_strict": "passed"
+    }
+  ]
+}

@@ -680,21 +680,43 @@ def main():
     parser.add_argument('--binary-paragraph-sources', action='store_true')
     parser.add_argument('--hidden-text', choices=('include','exclude','annotate'), default='include')
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--summary', action='store_true')
+    parser.add_argument('--sheet')
+    parser.add_argument('--page-size', type=int)
+    parser.add_argument('--cursor')
+    parser.add_argument('--max-output-chars', type=int)
     args = parser.parse_args()
     if args.include_related and args.format == 'text':
         parser.error('--include-related requires --format json to preserve separate story regions')
     if args.binary_paragraph_sources and args.format == 'text':
         parser.error('--binary-paragraph-sources requires --format json to retain provenance ranges')
     if args.check:
+        if any((args.summary, args.sheet is not None, args.page_size is not None, args.cursor is not None, args.max_output_chars is not None)):
+            parser.error('--check does not accept read-view options')
         return check_environment()
     if sys.version_info < (3, 9):
         parser.error('Python >=3.9 required')
     if not args.input:
         parser.error('input required')
-    result = read(args.input, compatibility=args.compatibility, chart_policy=args.chart_policy,
-                  field_policy=args.field_policy, object_policy=args.object_policy, revisions=args.revisions,
-                  include_related=args.include_related, hidden_text=args.hidden_text,
-                  binary_paragraph_sources=args.binary_paragraph_sources)
+    view_requested = any((args.summary, args.sheet is not None, args.page_size is not None, args.cursor is not None, args.max_output_chars is not None))
+    if view_requested and (args.format != 'json' or args.include_related or args.binary_paragraph_sources):
+        parser.error('Read views require JSON and main content only; use full reading for related stories or paragraph sources')
+    options = dict(compatibility=args.compatibility, chart_policy=args.chart_policy,
+                   field_policy=args.field_policy, object_policy=args.object_policy, revisions=args.revisions,
+                   include_related=args.include_related, hidden_text=args.hidden_text,
+                   binary_paragraph_sources=args.binary_paragraph_sources)
+    if view_requested:
+        from wps_read_view import project
+        try:
+            data = read_input(args.input)
+            result = read_bytes(data, source=str(args.input), **options)
+            result = project(result, data, options, summary=args.summary, sheet=args.sheet,
+                             page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
+                             max_chars=12000 if args.max_output_chars is None else args.max_output_chars)
+        except (ParseError, OSError) as exc:
+            result = failure(getattr(exc, 'status', 'io_error'), getattr(exc, 'location', {'stage': 'input'}), str(exc))
+    else:
+        result = read(args.input, **options)
     if args.format == 'text' and result['status'] in ('ok', 'partial') and 'text' not in result:
         result = failure('unsupported', {'stage': 'output'}, 'Spreadsheet extraction requires JSON output')
     if args.format == 'text' and result['status'] in ('ok', 'partial'):
@@ -703,7 +725,11 @@ def main():
             print(json.dumps({'status': 'partial', 'issues': result.get('issues', result.get('diagnostics', []))}, ensure_ascii=False), file=sys.stderr)
     else:
         try:
-            encoded = encode_result(result)
+            if result.get('schema_version') == 'wps_read_view_v1':
+                from wps_read_view import encoded as encode_view
+                encoded = encode_view(result)
+            else:
+                encoded = encode_result(result)
         except ParseError as exc:
             result = failure(exc.status, exc.location, str(exc))
             encoded = json.dumps(result, ensure_ascii=False)
