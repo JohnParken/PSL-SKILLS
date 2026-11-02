@@ -1613,7 +1613,9 @@ def _package_parts(spec: dict) -> dict[str, bytes]:
                 if text is None and not page_field:
                     # For subsequent sections, explicitly use an empty part to prevent
                     # Word inheriting a previous section's unrelated variant.
-                    if variant == "default" and all(s[kind+'s']["default"] is None for s in spec["sections"]):
+                    if (variant == "default"
+                            and all(s[kind+'s']["default"] is None for s in spec["sections"])
+                            and not (kind == "footer" and any(s["page_numbers"] for s in spec["sections"]))):
                         continue
                     text = ""
                 key = (kind, text or "", page_field)
@@ -1801,10 +1803,13 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
     validated = _validate_spec(spec, Path(base_dir) if base_dir is not None else Path.cwd())
     protected.extend(validated["image_paths"])
     verified = verify or require_no_placeholders
+    layout_warnings = []
     _create_validated_document(validated, output_path, verify=verified,
-                               require_no_placeholders=require_no_placeholders)
+                               require_no_placeholders=require_no_placeholders,
+                               layout_warnings=layout_warnings)
     status = "verified" if verified else "created"
     summary = finalize_delivery(output_path, protected, status=status)
+    summary["warnings"].extend(layout_warnings)
     files = summary.get("files", [])
     summary.update(generation_status=status, output_dir=".",
                    archive_output=files[0]["archive_output"] if files else None)
@@ -1815,8 +1820,23 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
     return summary
 
 
+_MAX_LAYOUT_WARNINGS = 100
+
+
+def _layout_warning_messages(report: dict) -> list[str]:
+    """Bound receipt diagnostics explicitly, without changing pagination intent."""
+    warnings = [item for item in report['issues'] if item['level'] == 'warning']
+    messages = [f"layout-warning: {item['code']} at {item['location']}: {item['message']}"
+                for item in warnings[:_MAX_LAYOUT_WARNINGS]]
+    remaining = len(warnings) - _MAX_LAYOUT_WARNINGS
+    if remaining > 0:
+        messages.append(f'layout-warning: {remaining} additional layout warnings omitted; '
+                        'run validate_layout.py for the complete report')
+    return messages
+
+
 def _create_validated_document(validated: dict, output_path: Path, *, verify: bool,
-                               require_no_placeholders: bool) -> Path:
+                               require_no_placeholders: bool, layout_warnings: list[str] | None = None) -> Path:
     """Publish once from validated input, retaining image identities for CLI archival."""
     if any(_paths_alias(output_path, path) for path in validated["image_paths"]):
         raise ValueError("output must not overwrite an image used by the document")
@@ -1861,6 +1881,8 @@ def _create_validated_document(validated: dict, output_path: Path, *, verify: bo
                 errors = [item['message'] for item in layout_report['issues'] if item['level'] == 'error']
                 if errors:
                     raise ValueError('Generated static layout validation failed: ' + '; '.join(errors[:5]))
+                if layout_warnings is not None:
+                    layout_warnings.extend(_layout_warning_messages(layout_report))
         os.replace(temporary_name, output_path)
     except BaseException:
         try:
@@ -2002,7 +2024,8 @@ def main(argv: list[str] | None = None) -> int:
                 print("archive-location: skipped; reason=" + summary["fallback_reason"],
                       file=sys.stderr)
             for warning in summary["warnings"]:
-                print("archive-warning: " + warning, file=sys.stderr)
+                print(warning if warning.startswith('layout-warning: ') else "archive-warning: " + warning,
+                      file=sys.stderr)
             print(json.dumps(summary, ensure_ascii=True))
     except (OSError, UnicodeError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         parser.error(str(exc))

@@ -25,6 +25,15 @@ style indices deliberately. For new-workbook pale-blue headers, row/category ban
 header merges, explicit widths and freezing, use Readable appearance for newly created workbooks (`<skill-root>/references/readable-appearance.md`).
 Charts, auto-fit and arbitrary layout editing remain unsupported.
 
+New reports use `<?xml version="1.0" encoding="UTF-8"?>` in every XML/relationship
+part, with double quotes and uppercase encoding. SpreadsheetML, package relationships
+and content types use their respective default namespaces; workbook sheet references
+use `r:id` bound to the Office document relationships namespace. Generated parts do
+not use automatic `ns0/ns1` prefixes. This is an output convention, not a claim that
+other correctly bound prefixes or single-quoted XML declarations are invalid.
+Do not strip prefixes with text replacement or rewrite existing input packages to
+enforce this convention. The standard-library writer remains the supported generator.
+
 Check the calculation report, reopen the output with `read`, verify expected sheet names,
 input values and independently known results. Explain static outputs and unresolved
 formulas. See Validate a standard-library output (`<skill-root>/references/validate.md`). No Office runtime or third-party packages are needed.

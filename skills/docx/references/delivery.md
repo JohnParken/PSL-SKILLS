@@ -44,6 +44,8 @@
 
 从已确认的 `<skill-root>/scripts/` 加载下列模块。在宿主确认的任务目录中调用；各类路径基准统一见 文件定位与读取规则（`<skill-root>/SKILL.md#文件定位与读取规则`）；文件命名、环境自检和归档读取边界与 CLI 相同。所有交付 API 均返回字典，主操作失败会抛出异常且不归档旧输出；主操作成功后自动调用统一归档入口，归档异常转换为 `archive_status=failed` 和 `warnings`，不抛出为主操作失败。API 不自动打印结果，调用方须记录返回摘要；CLI 将摘要写入 stdout，并把失败警告写入 stderr。
 
+新建交付验收产生的静态排版提示也保留在 `warnings`，以 `layout-warning:` 区别于归档诊断；最多保留 100 条及明确的省略数量。标准 runner 的完整和精简回执均回传，不影响 `archive_status`，不自动修改用户显式分页。只读审计和低层 Path 返回接口的诊断范围见 `<skill-root>/references/typography.md#静态排版检查`。
+
 | 模块与交付函数 | 位置参数及专用选项 |
 |---|---|
 | `create_docx.create_document_delivery` | `spec, output, base_dir=None`；`verify=True`, `require_no_placeholders=False` |

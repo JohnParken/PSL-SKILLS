@@ -180,8 +180,8 @@ class PaginationGovernanceTests(unittest.TestCase):
             with self.subTest(expected=expected):
                 self.create(blocks)
                 p = subprocess.run([sys.executable, '-I', '-S', '-B', str(self.audit_script),
-                                    str(self.path), '--strict-pagination'],
-                                   text=True, encoding='utf8', capture_output=True)
+                                    self.path.name, '--strict-pagination'],
+                                   cwd=self.path.parent, text=True, encoding='utf8', capture_output=True)
                 self.assertEqual(p.returncode, expected, p.stdout + p.stderr)
                 parsed = json.loads(p.stdout)
                 self.assertTrue(parsed['structure_valid'])

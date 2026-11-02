@@ -122,6 +122,62 @@ class P2LayoutTests(unittest.TestCase):
         self.assertIsNone(nodes[1].find(W+'pgNumType'))
         self.assertEqual([n for n in roots if n.startswith('word/footer')], ['word/footer1.xml'])
 
+    def test_disabled_page_numbers_break_footer_inheritance_and_can_resume(self):
+        roots = self.parts({'page_numbers': True, 'blocks': [
+            {'type': 'paragraph', 'text': '有页码'},
+            {'type': 'section_break', 'page_numbers': False},
+            {'type': 'paragraph', 'text': '无页码'},
+            {'type': 'section_break', 'page_numbers': True},
+            {'type': 'paragraph', 'text': '恢复页码'}]})
+        nodes = self.section_nodes(roots['word/document.xml'])
+        relations = {node.get('Id'): node.get('Target')
+                     for node in roots['word/_rels/document.xml.rels']}
+        reference_ids = []
+        for index, section in enumerate(nodes):
+            reference = section.find(W + 'footerReference')
+            self.assertIsNotNone(reference, f'section {index} must explicitly select its footer')
+            reference_ids.append(reference.get(R + 'id'))
+            footer = roots['word/' + relations[reference_ids[-1]]]
+            fields = [node.text for node in footer.iter(W + 'instrText')]
+            self.assertEqual(fields, [] if index == 1 else [' PAGE '])
+            if index == 1:
+                self.assertEqual(list(footer.iter(W + 't')), [])
+        self.assertEqual(reference_ids[0], reference_ids[2])
+        self.assertNotEqual(reference_ids[0], reference_ids[1])
+
+    def test_page_number_disable_preserves_footer_text_in_all_variants(self):
+        for footer_text in (None, '保留页脚'):
+            with self.subTest(footer_text=footer_text):
+                spec = {'page_numbers': True, 'odd_even_headers': True, 'different_first_page': True,
+                        'first_page_numbers': True, 'blocks': [
+                            {'type': 'paragraph', 'text': '有页码'},
+                            {'type': 'section_break', 'page_numbers': False},
+                            {'type': 'paragraph', 'text': '无页码'}]}
+                if footer_text is not None:
+                    spec['footers'] = {key: footer_text for key in ('default', 'first', 'even')}
+                roots = self.parts(spec)
+                nodes = self.section_nodes(roots['word/document.xml'])
+                relations = {node.get('Id'): node.get('Target')
+                             for node in roots['word/_rels/document.xml.rels']}
+                for index, section in enumerate(nodes):
+                    references = section.findall(W + 'footerReference')
+                    self.assertEqual({ref.get(W + 'type') for ref in references}, {'default', 'first', 'even'})
+                    for reference in references:
+                        footer = roots['word/' + relations[reference.get(R + 'id')]]
+                        self.assertEqual([node.text for node in footer.iter(W + 'instrText')],
+                                         [' PAGE '] if index == 0 else [])
+                        if index == 1:
+                            self.assertEqual([node.text for node in footer.iter(W + 't')],
+                                             [footer_text] if footer_text else [])
+
+    def test_documents_without_page_numbers_or_footer_keep_no_footer_parts(self):
+        roots = self.parts({'blocks': [{'type': 'paragraph', 'text': '甲'},
+                                      {'type': 'section_break', 'page_numbers': False},
+                                      {'type': 'paragraph', 'text': '乙'}]})
+        self.assertFalse([part for part in roots if part.startswith('word/footer')])
+        for section in self.section_nodes(roots['word/document.xml']):
+            self.assertEqual(section.findall(W + 'footerReference'), [])
+
     def test_forward_refs_and_toc_use_updatefields(self):
         roots = self.parts({'heading_numbering':'decimal', 'blocks':[
             {'type':'toc','depth':2},

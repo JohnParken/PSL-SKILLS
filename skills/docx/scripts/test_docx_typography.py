@@ -1,4 +1,5 @@
 """Golden OOXML contracts for the stdlib-only typography P0 extension."""
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,7 @@ import create_docx
 from read_docx import read_docx
 from validate_layout import validate_layout
 from office.formatting.audit import audit_roots
+from office.formatting.profiles import apply_profile
 
 W = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 
@@ -33,6 +35,11 @@ class TypographyTests(unittest.TestCase):
             xml = {k: ET.fromstring(archive.read(k)) for k in ('word/document.xml', 'word/styles.xml')}
         return file, xml
 
+    def _assert_page_margins(self, roots, **expected_mm):
+        margins = roots['word/document.xml'].find('.//' + W + 'pgMar')
+        for side, millimeters in expected_mm.items():
+            self.assertEqual(margins.get(W + side), str(create_docx._twips(millimeters)))
+
     def test_profile_applies_defaults_and_explicit_overrides(self):
         spec = {'profile': 'business-report', 'styles': {'body': {'size_pt': 13}},
                 'page': {'margin_left_mm': 30},
@@ -43,13 +50,48 @@ class TypographyTests(unittest.TestCase):
         body = next(x for x in styles.findall(W + 'style') if x.get(W + 'styleId') == 'BodyText')
         self.assertEqual(body.find(W + 'rPr/' + W + 'sz').get(W + 'val'), '26')
         self.assertEqual(body.find(W + 'pPr/' + W + 'widowControl').get(W + 'val'), '1')
-        mar = roots['word/document.xml'].find('.//' + W + 'pgMar')
-        self.assertEqual(mar.get(W + 'left'), str(create_docx._twips(30)))
-        self.assertEqual(mar.get(W + 'right'), str(create_docx._twips(24)))
+        self._assert_page_margins(roots, top=22, bottom=22, left=30, right=24)
         report = validate_layout(file)
         self.assertTrue(report['structure_valid'], report)
         self.assertEqual(report['visual_validation'], 'not_run')
         self.assertFalse([i for i in report['issues'] if i['level'] == 'error'])
+
+    def test_uniform_profile_margin_applies_to_every_side_without_mutating_source(self):
+        spec = {'profile': 'business-report', 'page': {'margin_mm': 20},
+                'blocks': [{'type': 'paragraph', 'text': '正文'}]}
+        original = deepcopy(spec)
+        file, roots = self._make(spec)
+        self.assertEqual(spec, original)
+        self.assertEqual(apply_profile(spec)['page'], {'margin_mm': 20})
+        self._assert_page_margins(roots, top=20, bottom=20, left=20, right=20)
+
+    def test_uniform_profile_margin_allows_explicit_side_override(self):
+        spec = {'profile': 'business-report',
+                'page': {'margin_mm': 20, 'margin_left_mm': 30},
+                'blocks': [{'type': 'paragraph', 'text': '正文'}]}
+        _, roots = self._make(spec)
+        self._assert_page_margins(roots, top=20, bottom=20, left=30, right=20)
+
+    def test_uniform_profile_margin_accepts_zero(self):
+        spec = {'profile': 'business-report', 'page': {'margin_mm': 0},
+                'blocks': [{'type': 'paragraph', 'text': '正文'}]}
+        _, roots = self._make(spec)
+        self._assert_page_margins(roots, top=0, bottom=0, left=0, right=0)
+
+    def test_profile_margin_values_are_validated_even_when_overridden(self):
+        invalid_pages = (
+            {'margin_mm': -1, 'margin_left_mm': 30},
+            {'margin_mm': 20, 'margin_left_mm': -1},
+        )
+        output = self.root / 'invalid.docx'
+        for page in invalid_pages:
+            with self.subTest(page=page):
+                with self.assertRaises(ValueError):
+                    create_docx.create_document(
+                        {'profile': 'business-report', 'page': page,
+                         'blocks': [{'type': 'paragraph', 'text': '正文'}]},
+                        output, verify=True)
+                self.assertFalse(output.exists())
 
     def test_all_profiles_generate_with_tables(self):
         for name in ('official-basic', 'business-report', 'academic', 'presentation-material'):
@@ -99,6 +141,7 @@ class TypographyTests(unittest.TestCase):
             {'type': 'heading', 'level': 2, 'text': '原标题'},
             {'type': 'paragraph', 'text': '正文'}]})
         self.assertEqual(roots['word/document.xml'].find('.//' + W + 'pgSz').get(W + 'w'), '11906')
+        self._assert_page_margins(roots, top=25.4, bottom=25.4, left=31.8, right=31.8)
         heading = next(x for x in roots['word/styles.xml'].findall(W + 'style')
                        if x.get(W + 'styleId') == 'Heading2')
         self.assertEqual(len(heading.findall(W + 'pPr/' + W + 'keepNext')), 1)
@@ -141,8 +184,8 @@ class TypographyTests(unittest.TestCase):
         file, _ = self._make({'profile': 'official-basic',
                               'blocks': [{'type': 'paragraph', 'text': 'x'}]})
         command = [sys.executable, '-I', '-S', '-B', str(Path(__file__).parent / 'validate_layout.py'),
-                   str(file)]
-        result = subprocess.run(command, capture_output=True, text=True)
+                   file.name]
+        result = subprocess.run(command, cwd=self.root, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(json.loads(result.stdout)['structure_valid'])
 

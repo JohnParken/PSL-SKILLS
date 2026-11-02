@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261030.1033.3653"
+version: "20261102.1614.4700"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -68,6 +68,7 @@ Before any writing or calculation, read the JSON/CLI contract (`<skill-root>/ref
 
 ## Interpret results and keep boundaries
 
+- 新建 XLSX 的 XML 部件统一使用双引号声明 `<?xml version="1.0" encoding="UTF-8"?>`，主元素使用对应的默认命名空间，工作表关系属性使用 `r:id`，不生成自动编号的 `ns0/ns1` 前缀。此为生成输出约定，不将其他合法前缀、单引号或编码名大小写作为输入非法依据。已有文件编辑继续保护原命名空间和未修改部件，不为格式统一重写整个包。
 - Inspect structure, cell types, missing values and user-selected ranges before analysis. Numeric strings with type tags are not text identifiers; use `Decimal` for known business rules and explicit rounding. Old formula caches are unverified; missing caches are never zero.
 - WPS JSON analysis accepts `biff8_readonly_v1` and `ooxml_spreadsheet_readonly_v1`, preserves exact values, source status/issues and optional source coverage/assessment. The source assessment describes extraction scope, not completeness of the selected analysis or cache freshness. See the source-result contract (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`).
 - Calculation is a Decimal formula subset, not Excel-equivalent recalculation. Editable reports use supported formulas; never accept caller-supplied caches. `create --values-only` evaluates everything first and refuses partial output; disclose that static values will not update.

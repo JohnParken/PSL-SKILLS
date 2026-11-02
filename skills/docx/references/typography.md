@@ -32,6 +32,8 @@
 
 不允许 Profile 自动填充正文、调用远端模板、推断合规认证或改变原文语义；只操作固定的四类排版默认值。
 
+显式 `page.margin_mm` 会覆盖 Profile 的四边默认值；同一次输入中的单边边距再覆盖该统一值。未提供统一边距时，仍保留其他未覆盖的 Profile 单边值。所有用户显式值均需通过校验，不因后续覆盖而跳过检查。
+
 ## 段落属性新增字段
 
 所有字段均适用于可指定 `format` 的段落、标题，或 `styles` 对应样式，表格正文/表头文字格式同样可用。
@@ -77,7 +79,9 @@
 execute(command="python -I -S -B \"<skill-root>/scripts/validate_layout.py\" ./报告.docx")
 ```
 
-输出 JSON 包括 `structure_valid`、`issues`、`layout_validation="static_only"`、`visual_validation="not_run"`。非零退出代表结构或静态错误；`warning` 提示表格/图片可能越过版心、标题可能孤立，但不是渲染确认。需要保存 JSON 时追加 `-o ./布局报告.json`，该文件需遵循当前任务产物登记、归档和清理规则；不要为普通生成任务再跑相同的检查。
+输出 JSON 包括 `structure_valid`、`issues`、`layout_validation="static_only"`、`visual_validation="not_run"`。默认退出 1 表示结构、静态或文件操作错误；可选 `--strict-pagination` 遇分页警告退出 2。`warning` 提示表格/图片可能越过版心、标题可能孤立，但不是渲染确认。需要保存 JSON 时追加 `-o ./布局报告.json`；输入、输出均须为任务目录内相对路径，输出必须是新文件，拒绝同源、硬链接别名、符号链接和已有文件。输出父目录须已存在，安全保存需要描述符相对操作及同文件系统硬链接能力，缺失则停止；报告保存上限 2 MiB，超限不写文件。该文件需遵循当前任务产物登记、归档和清理规则；只写 stdout 不创建报告或清单。不要为普通生成任务再跑相同的检查。
+
+公开交付 API 与标准 runner 将已检出的静态排版警告放入现有 `warnings` 字符串数组（`layout-warning:` 前缀）；完整及精简回执均保留。最多回传 100 条，再明确说明省略数量，完整诊断可按需运行 `<skill-root>/scripts/validate_layout.py`。警告不阻断生成、不自动调整分页；结构错误仍阻断。低层 `create_document()` 继续返回 Path，需诊断时调用独立审计入口。
 
 当前检查**不覆盖**完整 OOXML XSD、Word/WPS 的实际分页、字体可用性、目录页码更新、跨阅读器视觉一致性。多节文件现按各节可用宽度分别估算表格与图片溢出风险。排版检查错误不得通过关闭 verify 绕过。
 

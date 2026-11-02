@@ -35,10 +35,10 @@
 ## 只读分页风险审计
 
 ```bash
-python -I -S -B <skill-root>/scripts/validate_layout.py 文件.docx
+python -I -S -B "<skill-root>/scripts/validate_layout.py" 文件.docx
 # 仅在 CI/实机验收门禁中按需使用：有分页警告退出 2（结构错误退出 1）
-python -I -S -B <skill-root>/scripts/validate_layout.py 文件.docx --strict-pagination
-python -I -S -B <skill-root>/scripts/validate_layout.py 文件.docx -o 分页诊断.json
+python -I -S -B "<skill-root>/scripts/validate_layout.py" 文件.docx --strict-pagination
+python -I -S -B "<skill-root>/scripts/validate_layout.py" 文件.docx -o 分页诊断.json
 ```
 
 结果为 JSON：`structure_valid` 仅代表当前已覆盖的 OPC 与静态布局规则，无论是否含分页警告均不因此变为 false；`issues` 数组显示 `{level:"warning", code, location, message}`。`location` 中 `body[N]` 表示文档 `w:body` 下的 **0 基序号**，不等于原始 `blocks[N]`（某些 block 可以生成多段落）。默认 CLI 退出码 0 表示结构检查成功，**不会把分页警告当成生成失败**。指定 `--strict-pagination` 后，只要出现分页风险或标题孤立风险就退出 2；结构错误仍退出 1。审计完全只读，不改变源 DOCX。
@@ -61,6 +61,8 @@ python -I -S -B <skill-root>/scripts/validate_layout.py 文件.docx -o 分页诊
 检查的是**实际 OOXML 块序列**及标题 `pStyle`/`outlineLvl` 的样式继承和显式段落覆盖；不把 `w:lastRenderedPageBreak` 误判为用户设置的分页符；不把表格内部的段落当作文档顶层分页位置。输入来自 Word/WPS 的多种非标准嵌套结构未全部涵盖，风险不能等同于真实空白页。
 
 ## 兼容性约束与测试
+
+标准 runner 与 `create_document_delivery()` 将已检出的分页警告回传到 `warnings`，使用 `layout-warning:` 前缀并保留代码、位置和说明；完整及精简回执均保留。最多回传 100 条，超出时明确说明省略数量；只在需要完整诊断时再运行独立审计。检查报告 `-o` 只允许任务目录内的新文件，拒绝原件别名、已有文件及符号链接；安全保存条件与限制见 `<skill-root>/references/typography.md#静态排版检查`。
 
 - 不扩展输入 JSON Schema；不改变当前 `theme/profile` 或 `blocks` 语义，不改变 `.docx` 生成的 OOXML 和默认文件内容。
 - `create_document(...,verify=True)` 仍将 **错误**作为发布阻断，但分页 **警告不阻断**；不更改既有交付、归档、清理流程。

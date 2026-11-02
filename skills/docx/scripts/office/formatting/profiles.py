@@ -44,6 +44,9 @@ def apply_profile(source):
     for key, value in source.items():
         if key in {'page', 'styles', 'table_format'} and isinstance(result.get(key), dict) and isinstance(value, dict):
             merged = result[key].copy()
+            if key == 'page' and 'margin_mm' in value:
+                for side in ('top', 'bottom', 'left', 'right'):
+                    merged.pop('margin_' + side + '_mm', None)
             for subkey, subvalue in value.items():
                 if key == 'styles' and isinstance(merged.get(subkey), dict) and isinstance(subvalue, dict):
                     layer = merged[subkey].copy()

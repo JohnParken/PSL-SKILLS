@@ -5,6 +5,13 @@
 Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
+## 目录
+
+- 输出验收与结果状态（本节）
+- Task intermediate files（`<skill-root>/references/validate.md#task-intermediate-files`）
+- Legacy utilities（`<skill-root>/references/validate.md#legacy-utilities`）
+- Development verification（`<skill-root>/references/validate.md#development-verification`）
+
 Keep these findings separate:
 
 1. **Readable structure:** the ZIP and XML parse, expected sheets/cells exist, values,
@@ -21,6 +28,13 @@ Keep these findings separate:
 Reopen the output using `read` to verify stored formulas and caches. Reading old caches
 marks them unverified because an XLSX alone does not prove their freshness. Retain the
 calculation report as the evidence of this run. No third-party application is launched.
+
+For newly created reports, additionally inspect all `.xml` and `.rels` ZIP members:
+require the double-quoted `UTF-8` declaration, the correct default namespace for each
+root, no generated `ns0/ns1` prefixes, and correctly bound `r:id` references resolving
+to workbook relationships and worksheets. Reopen and verify text, formulas and saved
+values. These output conventions do not replace semantic or OOXML schema validation;
+do not apply them as rejection criteria to existing files with valid alternate prefixes.
 
 Exit 0 / calculated_subset means this engine completed its supported calculations; it
 is not full Excel compatibility. Exit 2 / incomplete produces an output with unsupported
@@ -81,3 +95,16 @@ this does not authorize business workflows to choose a different temporary root.
 ```console
 python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
 ```
+
+2026-11-02 XML output maintenance: synthetic creation/calculation/save/reopen tests
+cover preferred declarations across every XML/relationship member, default namespace
+URIs, `r:id`, Chinese text and XML escaping, plus no mutation of the input tree or
+process-global namespace registration. Existing preservation, template read-only,
+appearance and export regressions remain part of the suite. Description reviewed:
+the output convention does not change supported tasks, so description is unchanged.
+Validation environment: macOS, Python 3.9.6, standard library only. This is not target
+Linux, Windows, real customer workbook, Excel rendering or external importer acceptance.
+Python syntax and the 200-character line limit were checked for both changed Python
+files. Pylint is unavailable; naming/lint checks were not run. The required strict
+Skill structure check was not run because no usable Python 3.10+ was found; the local
+Python 3.12 launcher is a broken symlink. Do not count these missing checks as passes.

@@ -5,6 +5,7 @@
 Python 3.9+. See references/python-calculation.md for the JSON contract.
 """
 import argparse
+import copy
 import csv
 import io
 import json
@@ -79,7 +80,39 @@ def numeric(value):
 
 
 def encoded_xml(root):
-    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+    """Serialize generated trees with local, deterministic namespace bindings.
+
+    Do not mutate ElementTree's process-global namespace registry or the caller's
+    tree. Existing-file edits use their separate namespace-preserving DOM path.
+    """
+    root = copy.deepcopy(root)
+    default_uri = root.tag.split("}", 1)[0].lstrip("{")
+    prefixes = {MAIN: "x", REL: "r", PKG: "p", CT: "ct",
+                "http://www.w3.org/XML/1998/namespace": "xml"}
+    if default_uri not in (MAIN, PKG, CT):
+        raise ValueError("Unsupported generated XML root namespace")
+    bindings = {"": default_uri}
+
+    def qualified(name, attribute=False):
+        if not name.startswith("{"):
+            return name
+        uri, local = name[1:].split("}", 1)
+        if uri not in prefixes:
+            raise ValueError("Unsupported generated XML namespace: " + uri)
+        prefix = "" if uri == default_uri and not attribute else prefixes[uri]
+        if prefix != "xml":
+            bindings[prefix] = uri
+        return prefix + ":" + local if prefix else local
+
+    for node in root.iter():
+        node.tag = qualified(node.tag)
+        attributes = {}
+        for name, value in node.attrib.items():
+            attributes[qualified(name, attribute=True)] = value
+        node.attrib = attributes
+    for prefix, uri in bindings.items():
+        root.set("xmlns:" + prefix if prefix else "xmlns", uri)
+    return b'<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="utf-8")
 
 
 def relation_target(base, target):
@@ -161,7 +194,7 @@ class Workbook:
                 "Id": "s%d" % index, "Type": REL + "/worksheet", "Target": "worksheets/sheet%d.xml" % index})
             ET.SubElement(types, "{" + CT + "}Override", {
                 "PartName": "/" + part, "ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"})
-            parts[part] = ('<?xml version="1.0" encoding="utf-8"?><worksheet xmlns="%s"><sheetData/></worksheet>' % MAIN).encode()
+            parts[part] = ('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="%s"><sheetData/></worksheet>' % MAIN).encode()
         for name, kind in (("styles", "styles"), ("sharedStrings", "sharedStrings")):
             ET.SubElement(rels, "{" + PKG + "}Relationship", {
                 "Id": name, "Type": REL + "/" + kind, "Target": name + ".xml"})
@@ -483,6 +516,13 @@ class Workbook:
 
     def save(self, path):
         self.flush()
+        if getattr(self, "_created_here", False):
+            # DOM edits during calculation emit lowercase encoding names. Only
+            # normalize new reports; preserve existing-file parts as contracted.
+            for name, data in self.parts.items():
+                if name.endswith((".xml", ".rels")):
+                    data = re.sub(br'^<\?xml\s+[^?]*\?>\s*', b'', data, count=1)
+                    self.parts[name] = b'<?xml version="1.0" encoding="UTF-8"?>\n' + data
         path = Path(path)
         if path.exists():
             raise ValueError("Output already exists; choose a new filename")

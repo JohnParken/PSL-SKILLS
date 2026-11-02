@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261102.1355.3154"
+version: "20261102.1554.5614"
 description: 用 Python 标准库创建 DOCX 公文、报告、通知与简单表格，按需提取正文、章节和数据，或受控编辑现有文档。普通生成使用轻量入口，复杂排版、目录、批注与故障诊断才加载对应参考资料。保留原件、校验、归档和清理规则；不支持旧 DOC、WPS 专有格式转换及真实视觉分页验证。
 ---
 
@@ -8,7 +8,7 @@ description: 用 Python 标准库创建 DOCX 公文、报告、通知与简单�
 <!-- DO_NOT_MODIFY: Change only when authorized to maintain the Skill. -->
 # DOCX Skill｜最短常用路径
 
-**先分类再加载：** 简单创建/轻量读取只读本 `SKILL.md`；不经 `generation.md` 索引，不读其他参考或源码。缺字段才读专项 reference。
+**先分类：** 简单创建/轻量读取只读本入口，不预读参考或源码。缺字段才读专项 reference。
 
 ## 执行环境约束与首步自检
 
@@ -74,7 +74,7 @@ runner 自动自检、verify、归档尝试、清理；`--compact-receipt` 仅�
 
 ## 验收与收尾
 
-核对 `status=verified`、`task_status`、`output` 与非空主文件；`--verify` 不是 Word/WPS 实机验收。核对 `archive_status`（`copied`/`skipped`/`failed`），归档失败不否定主文件；不泄露归档路径/凭据。核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；`cleanup_incomplete`/退出 3 如实报告，不乱删或重发。链接必须真实；目录/页码字段需办公软件更新。`/large_tool_results/` 只由宿主 `read_file` 访问，不用 Shell/Python 绕过。
+核对 `status=verified`、`task_status`、`output` 与非空主文件；`--verify` 不是 Word/WPS 实机验收。核对 `warnings`，保留显式分页。核对 `archive_status`（`copied`/`skipped`/`failed`），归档失败不否定主文件；不泄露归档路径/凭据。核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；`cleanup_incomplete`/退出 3 如实报告，不乱删或重发。链接必须真实；目录/页码字段需办公软件更新。`/large_tool_results/` 只由宿主 `read_file` 访问，不用 Shell/Python 绕过。
 
 ## 维护资源
 

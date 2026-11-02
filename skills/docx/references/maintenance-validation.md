@@ -10,6 +10,7 @@
 
 ## 目录
 
+- 审查问题第一批修复（2026-11-02）（`<skill-root>/references/maintenance-validation.md#审查问题第一批修复2026-11-02`）
 - Pylint 行长与语句排版修复（2026-11-02）（`<skill-root>/references/maintenance-validation.md#pylint-行长与语句排版修复2026-11-02`）
 - DOCX路径统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#docx路径统一2026-10-29`）
 
@@ -31,6 +32,28 @@
 - execute调用形式补充（2026-10-29）（`<skill-root>/references/maintenance-validation.md#execute调用形式补充2026-10-29`）
 - 常见环境与交付故障说明（2026-10-29）（`<skill-root>/references/maintenance-validation.md#常见环境与交付故障说明2026-10-29`）
 - Bash执行示例统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#bash执行示例统一2026-10-29`）
+
+## 审查问题第一批修复（2026-11-02）
+
+版本 `20261102.1554.5614`，由宿主实际 America/New_York 时间 2026-11-02 03:54:56.148764 加 12 小时并截断至百分之一秒生成。本批仅修复四项：排版审计报告保护原件、Profile 统一边距覆盖默认值、分节关闭页码时切断页脚继承，以及生成回传已有静态排版警告。自然分页规则、用户显式分页和既有错误阻断不变；未实施后续的新增排版诊断、读取性能或 CI 改造。
+
+`<skill-root>/scripts/validate_layout.py` 的 CLI 输入/输出统一为任务内相对路径，报告只允许新文件；复用现有 TaskFiles 的 no-follow、描述符定位及独占原子发布，不复制或修改公共生命周期代码。已覆盖同源、硬链接、符号链接、已有报告、越界、竞争发布、写入失败和缺少平台能力。保存报告使用共享 2 MiB 上限及同文件系统硬链接；失败退出 1，不降级覆盖，stdout-only 保持不写文件。
+
+`business-report` 配合统一 20mm 实际四边均为 20mm；单边 30mm、零值、非法值及输入对象不变均检查。分节页脚回归核对实际关系和部件：开启→关闭→恢复、首页/奇偶页变体、保留页脚文字及无页脚默认文档。公开交付 `warnings` 保留 `layout-warning:`，完整/精简回执一致；警告最多 100 条，额外数量明确提示。归档警告继续保留，静态错误仍拒绝发布。
+
+验证平台为 macOS、Python 3.12.14 / Expat 2.8.3；解释器和结构检查器入口自检通过。以下命令的工作目录均为宿主确认的仓库根目录，`python` 为本轮已确认解释器，不依赖系统 Python：
+
+- `python -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -q`：最终 **393 项通过**，退出 0，无跳过（新增 20 项）。此前新测试误将独立分页段落的文本回读预期少计一个换行，依据既有读取语义和实际 XML 纠正；两次全量检查均发现主入口 7077 字节超预算，精简等义说明至 6980 字节后最终通过，未放宽断言或入口预算。
+- `python -I -S -B -m unittest discover -s tests -p 'test_artifact_lifecycle_parity.py' -v`：1 项通过，退出 0；共享源码和公共副本未变。
+- 五组修复前 HEAD 与当前代码的内存生成对照：短诗、多章节、显式分页、段前分页、横向分节，全部 ZIP 成员名称及内容逐字节一致。该证据验证这五组分页输出未变，不代表整份 DOCX ZIP 时间戳或任意输入都字节一致。
+- Pylint 4.1.3 对七个本次 Python 文件运行 `--disable=all --enable=E,F,C0103,C0301,C0321 --max-line-length=200 --reports=n --score=n`：退出 0，无诊断。实际通过隔离 Python 启动临时工具目录，加入本 Skill 的 scripts 导入目录后运行；首次未加入该目录导致 E0401，纠正检查环境后通过，未禁用导入检查。维护工具只装在本轮独占临时目录，未加入运行依赖。
+- 另审阅 C0413/C0116/R0912/R0914/R0915/W1514：检查状态为 24，共 108 条提示（导入位置 14、函数文档字符串 67、分支 9、局部变量 13、语句 5），无 W1514。隔离启动路径初始化后的导入保留；本批诊断收集使交付函数局部变量变为 16 个，人工审阅无控制流歧义，未为消除风格提示扩大重构。此结果不是全量 Pylint 通过。
+
+严格 Skill 检查及 `git diff --check` 通过，退出 0；本轮独占临时工具目录已清理。description 人工复核仍符合实际选择边界，138 字符，保留原文；入口、专项说明和 README 同步版本与行为。README 撤去当前尚未实现的字号/行距及段落宽度提示声明；并未借此实施第五项。运行依赖仍为标准库，未修改 AGENTS 既有改动或发布 ZIP，未提交/推送。
+
+以上为合成样本、故障注入和本机 CLI 回传检查，真实宿主生产集成、Linux/Windows、Word/WPS 视觉分页及新版本模型触发未验证。本地 subprocess 捕获 stdout/stderr/退出码不代表生产宿主链路已经验收。
+
+Main-agent work：主代理决定行为和安全边界，完成原件保护、页脚及警告修复、集成与故障测试、文档同步、差异审查和最终验收。Subagent execution record：一次 spawn `luna__profile_margins`（luna_worker / gpt-6-luna / max），仅修改 `<skill-root>/scripts/office/formatting/profiles.py` 与 `<skill-root>/scripts/test_docx_typography.py`；其专项 12 项测试、行长及差异空白检查通过，主代理审阅后纳入全量验收，无 followup 或其他子代理调用。
 
 ## Pylint 行长与语句排版修复（2026-11-02）
 

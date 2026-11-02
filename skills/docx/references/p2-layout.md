@@ -59,6 +59,7 @@
 ### 页眉、页脚与页码
 
 - 原有顶层 `header`、`footer`、`page_numbers` 语义保留；新节默认继承前节设置，`section_break` 可以用同名字段覆盖。
+- 新节显式 `page_numbers:false` 会移除该节各启用变体的 PAGE 字段，同时保留页脚文字；无文字时使用空页脚切断前节页码继承。后续节可重新启用。全文未启用页码且未指定页脚时，仍不生成默认页脚部件。
 - 顶层与每节均可声明 `headers` / `footers` 对象，支持 `default`、`first`、`even` 三种变体。字符串设置内容，`null` 显式清空；默认变体与旧 `header` / `footer` 并存时，新对象的 `default` 优先。设置首页变体须启用 `different_first_page`；设置偶数页变体须在顶层启用 `odd_even_headers`。
 - `different_first_page` 为该节开关，默认 `false`；开启后 `first` 不设置时自动为空白（不意外继承正常页页眉）。`first_page_numbers` 默认 `false`，如需首页页码，必须同时开启 `different_first_page`。
 - `odd_even_headers` 是**文档级开关**，不可在某一节单独启停；指定 `even` 文本优先，未指定时复制默认文本。页码字段默认写到普通页/偶数页的页脚；首页是否写入由 `first_page_numbers` 决定。

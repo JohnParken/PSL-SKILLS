@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / 'scripts'
 sys.path.insert(0, str(SCRIPTS))
-from stdlib_xlsx import Workbook, NS, read_spec
+from stdlib_xlsx import Workbook, NS, MAIN, REL, PKG, CT, encoded_xml, read_spec
 
 
 def spec(cells, name='Sales'):
@@ -21,6 +21,41 @@ def spec(cells, name='Sales'):
 
 
 class WorkbookTests(unittest.TestCase):
+    def test_generated_xml_uses_default_namespace_without_global_registration(self):
+        root = ET.Element(NS + 'workbook')
+        ET.SubElement(root, NS + 'sheet', {'{' + REL + '}id': 's1', 'name': '收支 & <统计>'})
+        before = ET.tostring(root)
+        with patch.object(ET, 'register_namespace', side_effect=AssertionError('global registry mutation')):
+            data = encoded_xml(root)
+        self.assertTrue(data.startswith(b'<?xml version="1.0" encoding="UTF-8"?>'))
+        self.assertIn(b'<workbook xmlns=', data)
+        self.assertIn(b'r:id="s1"', data)
+        self.assertNotRegex(data, br'\bns[0-9]+:')
+        self.assertEqual(ET.tostring(root), before)
+        self.assertEqual(ET.fromstring(data)[0].attrib, root[0].attrib)
+
+    def test_new_report_all_parts_use_preferred_xml_format(self):
+        with tempfile.TemporaryDirectory() as directory:
+            book = Workbook.create(spec({'A1': {'value': '收支 & <统计>'}, 'B1': {'formula': '1+2'}}))
+            book.calculate()
+            output = Path(directory) / 'report.xlsx'
+            book.save(output)
+            with zipfile.ZipFile(output) as archive:
+                for name in archive.namelist():
+                    if name.endswith(('.xml', '.rels')):
+                        data = archive.read(name)
+                        self.assertTrue(data.startswith(b'<?xml version="1.0" encoding="UTF-8"?>'), name)
+                        self.assertNotRegex(data, br'\bns[0-9]+:')
+                        root = ET.fromstring(data)
+                        uri = root.tag[1:].split('}', 1)[0]
+                        self.assertIn(uri, (MAIN, PKG, CT))
+                        self.assertIn(('xmlns="' + uri + '"').encode(), data)
+                workbook = ET.fromstring(archive.read('xl/workbook.xml'))
+                sheet = workbook.find(NS + 'sheets/' + NS + 'sheet')
+                self.assertEqual(sheet.get('{' + REL + '}id'), 's1')
+            reopened = Workbook.load(output)
+            self.assertEqual(reopened.cells['Sales']['A1']['value'], '收支 & <统计>')
+
     def test_source_aliases_create_standard_package_without_template_writes(self):
         template = SCRIPTS.parent / 'assets' / 'minimal_xlsx'
         with tempfile.TemporaryDirectory() as directory:

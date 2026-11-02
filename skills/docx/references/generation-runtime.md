@@ -55,6 +55,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./docum
 
 低层 `create_document()` 的 `verify=False` 保持兼容；最终交付使用默认 `verify=True` 的 `create_document_delivery()`，由代码自动归档。所有生成调用在写出前检查共享 XML 预算，避免输出自身校验器拒绝的超限文件。调用 `preflight_document(spec, base_dir=None)` 获取预检摘要，返回块数、部件数和未压缩大小。使用 Python 字典可直接调用 API，无需先写 JSON。CLI 拒绝重复 JSON 键，未知字段在可确定时提示相近字段名；非法字符诊断包含字段路径、从 1 起的字符位置和 Unicode 码位，不静默清洗内容。
 
+结构校验器的未验证警告仍阻断发布；静态排版审计的建议性 `warning` 不阻断。公开交付结果及标准 runner 的完整/精简回执保留 `warnings` 中的 `layout-warning:` 字符串，与归档警告并存；最多 100 条并明确报告其余数量。旧生成 CLI 将同一排版提示写入 stderr，保持 `layout-warning:` 前缀。警告不改写显式分页；完整诊断按需使用 `<skill-root>/scripts/validate_layout.py`，不为普通成功任务重复审计。
+
 生成失败时执行 生成失败修正与有限重试（`<skill-root>/references/validation.md#生成失败修正与有限重试`）：由助手按诊断修正可确定的输入或调用错误，首次之外最多重试 2 次，每次重新完整验收；脚本本身仍为单次执行。安全、资源、环境或能力边界受阻时停止，不绕过校验，也不将旧输出交付为本次结果。
 
 ## 交付文件命名
