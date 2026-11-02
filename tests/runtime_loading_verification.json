@@ -1,0 +1,168 @@
+{
+  "version": "20261102.1954.3193",
+  "platform": "darwin",
+  "python": "3.13.12 (main, Feb  4 2026, 00:05:32) [Clang 21.1.4 ]",
+  "method": "UTF-8 bytes and decoded Unicode characters; planned document sets, not host reads or tokens",
+  "entry_sizes": {
+    "docx": {
+      "before_chars": 4364,
+      "after_chars": 4374,
+      "before_bytes": 6980,
+      "after_bytes": 6944,
+      "sha256": "9e6732712156a71bd6ede93f20612da94966f43c972f27b61cac04d67fcaf495"
+    },
+    "xlsx": {
+      "before_chars": 9501,
+      "after_chars": 9482,
+      "before_bytes": 13839,
+      "after_bytes": 13952,
+      "sha256": "375b98b68e67d16603f1744302256bc084bb08e232770cac46d44f90b4b805e3"
+    },
+    "wps": {
+      "before_chars": 7248,
+      "after_chars": 7054,
+      "before_bytes": 14880,
+      "after_bytes": 14536,
+      "sha256": "5a0b2a88dc7e1be373f1a614c47cb11b6c6416c5522b665edb0b3d85cdadfe36"
+    },
+    "ofd": {
+      "before_chars": 4063,
+      "after_chars": 4409,
+      "before_bytes": 8935,
+      "after_bytes": 9711,
+      "sha256": "301f2c8f9a9a33d64da1ad37e7d8b77d5085dbc285bac3c4aeaea88421c16dd1"
+    },
+    "bank-writing": {
+      "before_chars": 5529,
+      "after_chars": 5591,
+      "before_bytes": 12907,
+      "after_bytes": 13091,
+      "sha256": "8e82075cebd7c96cc167920bee4f1fa6a8a5a768d180498712cf21fa44d497e2"
+    },
+    "artifact-lifecycle": {
+      "before_chars": 2891,
+      "after_chars": 3132,
+      "before_bytes": 6549,
+      "after_bytes": 7174,
+      "sha256": "2dceaf1830431d1f359109604c4a9f8d651812240e3d4928f74a9b15dd42da2f"
+    },
+    "skill-development-standards": {
+      "before_chars": 9911,
+      "after_chars": 9911,
+      "before_bytes": 23427,
+      "after_bytes": 23427,
+      "sha256": "1dd723b975a2ba375ecb6599a447bbb0707177502f2bdd4140880ca4ed967971"
+    }
+  },
+  "synthetic_ofd_output": {
+    "full": {
+      "stdout_chars": 56221,
+      "stdout_bytes": 152221,
+      "exit": 0,
+      "status": "complete",
+      "schema": "ofd-read-3"
+    },
+    "summary": {
+      "stdout_chars": 1453,
+      "stdout_bytes": 1453,
+      "exit": 0,
+      "status": "complete",
+      "schema": "ofd-view-1"
+    },
+    "page-text": {
+      "stdout_chars": 18153,
+      "stdout_bytes": 50153,
+      "exit": 0,
+      "status": "complete",
+      "schema": "ofd-view-1"
+    }
+  },
+  "unverified": [
+    "host loading/deduplication and actual token usage",
+    "Linux container and Windows runtime",
+    "real model skill selection",
+    "new real OFD/WPS sample acceptance"
+  ],
+  "packages": [
+    {
+      "path": "skills/docx-20261102.1954.3193.zip",
+      "sha256": "32c1ebed76c4d6c44e1865a1e64112b36287dbd9748ac69146efe568f9205296",
+      "members": 119,
+      "crc": "passed",
+      "member_source_identity": "passed",
+      "isolated_strict": "passed"
+    },
+    {
+      "path": "skills/xlsx-20261102.1954.3193.zip",
+      "sha256": "d8a043bd37235ac9c564efe10c2d193bdbbe0ed8891670cea7efa4e90ed920e6",
+      "members": 148,
+      "crc": "passed",
+      "member_source_identity": "passed",
+      "isolated_strict": "passed"
+    },
+    {
+      "path": "skills/wps-20261102.1954.3193.zip",
+      "sha256": "0ea9c35b1985b0a3418061eb69f6724746d986b6b2d6f975b1048ba463d0c38a",
+      "members": 185,
+      "crc": "passed",
+      "member_source_identity": "passed",
+      "isolated_strict": "passed"
+    },
+    {
+      "path": "skills/ofd-20261102.1954.3193.zip",
+      "sha256": "4662dfb53772d2cb952ead276e8d78695d5092afa181e08b5b2121dcaea32d57",
+      "members": 14,
+      "crc": "passed",
+      "member_source_identity": "passed",
+      "isolated_strict": "passed"
+    },
+    {
+      "path": "skills/bank-writing-20261102.1954.3193.zip",
+      "sha256": "05301b8548dee2aa16fb3a7405e8567668905ee880db978ae52647b29fd7aa77",
+      "members": 21,
+      "crc": "passed",
+      "member_source_identity": "passed",
+      "isolated_strict": "passed"
+    },
+    {
+      "path": "skills/artifact-lifecycle-20261102.1954.3193.zip",
+      "sha256": "693be37683b7258e863afa248519a351c49b8ee9585d732678b86301ae430ed8",
+      "members": 13,
+      "crc": "passed",
+      "member_source_identity": "passed",
+      "isolated_strict": "passed"
+    }
+  ],
+  "regressions": {
+    "docx": {
+      "passed": 395,
+      "skipped": 0
+    },
+    "xlsx": {
+      "passed": 316,
+      "skipped": 0
+    },
+    "wps": {
+      "passed": 557,
+      "skipped": 0
+    },
+    "ofd": {
+      "passed": 92,
+      "skipped": 0
+    },
+    "artifact_lifecycle": {
+      "passed": 16,
+      "skipped": 0
+    },
+    "repository_read_view_budget": 6,
+    "repository_et_pipeline": 2,
+    "repository_ofd_postfix_review": 6,
+    "repository_module_parity": 2
+  },
+  "checks": {
+    "six_source_and_extracted_package_strict": "passed",
+    "changed_python_ast_200_char_single_statement": "passed",
+    "pylint": "unavailable; not executed",
+    "git_diff_check": "passed"
+  }
+}

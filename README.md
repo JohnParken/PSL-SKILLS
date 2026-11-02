@@ -6,12 +6,12 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1734.3214 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261102.1554.5614 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261102.1720.5289 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 wps 提取的受支持电子表格 JSON；不支持直接读取 WPS 专有格式（.wps/.et/.ett），请使用 wps 技能 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261102.1720.5289 | .wps/.et/.ett 内容识别、MS-DOC/Strict 及 Transitional OOXML Word/OOXML 电子表格/BIFF8 子集只读；支持 MS-XLS 标准 DXF（0x088D）差异格式结构校验与属性保留；纯表格/文字分流，内联文字、日期与公式缓存提取，保留 partial 诊断；不生成、编辑、转换或重算 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261102.1832.4664 | OFD 1.0/1.1/1.2 XML 结构与存储文字；全量节点/字符/来源、页资源与复合引用；结构与文字覆盖分别报告；不做 OCR、验签或渲染 |
-| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261029.2203.2365 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1954.3193 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261102.1954.3193 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261102.1954.3193 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 wps 提取的受支持电子表格 JSON；不支持直接读取 WPS 专有格式（.wps/.et/.ett），请使用 wps 技能 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261102.2122.4624 | .wps/.et/.ett 内容识别、MS-DOC/Strict 及 Transitional OOXML Word/OOXML 电子表格/BIFF8 子集只读；支持 MS-XLS 标准 DXF（0x088D）差异格式结构校验与属性保留；纯表格/文字分流，内联文字、日期与公式缓存提取，保留 partial 诊断；不生成、编辑、转换或重算 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261102.1954.3193 | OFD 1.0/1.1/1.2 XML 结构与存储文字；全量节点/字符/来源、页资源与复合引用；结构与文字覆盖分别报告；不做 OCR、验签或渲染 |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261102.1954.3193 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构

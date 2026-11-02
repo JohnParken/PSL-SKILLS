@@ -1,0 +1,180 @@
+{
+  "method": "planned UTF-8 reference sizes, not host usage or tokens",
+  "profiles": {
+    "docx-simple": {
+      "files": [
+        {
+          "path": "docx/SKILL.md",
+          "chars": 4374,
+          "bytes": 6944,
+          "sha256": "9e6732712156a71bd6ede93f20612da94966f43c972f27b61cac04d67fcaf495"
+        }
+      ],
+      "chars": 4374,
+      "bytes": 6944
+    },
+    "docx-archive-failure": {
+      "files": [
+        {
+          "path": "docx/SKILL.md",
+          "chars": 4374,
+          "bytes": 6944,
+          "sha256": "9e6732712156a71bd6ede93f20612da94966f43c972f27b61cac04d67fcaf495"
+        },
+        {
+          "path": "docx/references/delivery.md",
+          "chars": 10962,
+          "bytes": 22175,
+          "sha256": "49be6e9ba8617f85b32d64d6b479f79aa4ec6da0b93cce0274c8130b35a23762"
+        }
+      ],
+      "chars": 15336,
+      "bytes": 29119
+    },
+    "docx-cleanup-recovery": {
+      "files": [
+        {
+          "path": "docx/SKILL.md",
+          "chars": 4374,
+          "bytes": 6944,
+          "sha256": "9e6732712156a71bd6ede93f20612da94966f43c972f27b61cac04d67fcaf495"
+        },
+        {
+          "path": "docx/references/task-cleanup.md",
+          "chars": 10193,
+          "bytes": 20887,
+          "sha256": "7bb60b2402677ea8409722a549265b35b5df4acfd8d98677cc8f5a5525e6d883"
+        }
+      ],
+      "chars": 14567,
+      "bytes": 27831
+    },
+    "xlsx-summary": {
+      "files": [
+        {
+          "path": "xlsx/SKILL.md",
+          "chars": 9482,
+          "bytes": 13952,
+          "sha256": "375b98b68e67d16603f1744302256bc084bb08e232770cac46d44f90b4b805e3"
+        },
+        {
+          "path": "xlsx/references/bounded-reading.md",
+          "chars": 2573,
+          "bytes": 5491,
+          "sha256": "ce459e3cbd43a4f9d5311ff6ab85b1588e4fe9ca9cd3d84b6b11cff42d80ba7c"
+        }
+      ],
+      "chars": 12055,
+      "bytes": 19443
+    },
+    "xlsx-wps-analysis": {
+      "files": [
+        {
+          "path": "xlsx/SKILL.md",
+          "chars": 9482,
+          "bytes": 13952,
+          "sha256": "375b98b68e67d16603f1744302256bc084bb08e232770cac46d44f90b4b805e3"
+        },
+        {
+          "path": "xlsx/references/data-analysis.md",
+          "chars": 11894,
+          "bytes": 12514,
+          "sha256": "f4882c9da4185c45bb0d65f2260c3b5bd0c075462b4e5ce8503eb41527078ab2"
+        }
+      ],
+      "chars": 21376,
+      "bytes": 26466
+    },
+    "wps-default-et": {
+      "files": [
+        {
+          "path": "wps/SKILL.md",
+          "chars": 7054,
+          "bytes": 14536,
+          "sha256": "5a0b2a88dc7e1be373f1a614c47cb11b6c6416c5522b665edb0b3d85cdadfe36"
+        }
+      ],
+      "chars": 7054,
+      "bytes": 14536
+    },
+    "wps-selected-cells": {
+      "files": [
+        {
+          "path": "wps/SKILL.md",
+          "chars": 7054,
+          "bytes": 14536,
+          "sha256": "5a0b2a88dc7e1be373f1a614c47cb11b6c6416c5522b665edb0b3d85cdadfe36"
+        },
+        {
+          "path": "wps/references/bounded-reading.md",
+          "chars": 2826,
+          "bytes": 5888,
+          "sha256": "1bd847c6b1ab5396c329a757ce0b998cb53be73ae95b3fc1e49868efdce564d5"
+        }
+      ],
+      "chars": 9880,
+      "bytes": 20424
+    },
+    "ofd-summary": {
+      "files": [
+        {
+          "path": "ofd/SKILL.md",
+          "chars": 4409,
+          "bytes": 9711,
+          "sha256": "301f2c8f9a9a33d64da1ad37e7d8b77d5085dbc285bac3c4aeaea88421c16dd1"
+        },
+        {
+          "path": "ofd/references/output-views.md",
+          "chars": 1602,
+          "bytes": 3388,
+          "sha256": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b"
+        }
+      ],
+      "chars": 6011,
+      "bytes": 13099
+    },
+    "bank-writing": {
+      "files": [
+        {
+          "path": "bank-writing/SKILL.md",
+          "chars": 5591,
+          "bytes": 13091,
+          "sha256": "8e82075cebd7c96cc167920bee4f1fa6a8a5a768d180498712cf21fa44d497e2"
+        }
+      ],
+      "chars": 5591,
+      "bytes": 13091
+    },
+    "artifact-independent": {
+      "files": [
+        {
+          "path": "artifact-lifecycle/SKILL.md",
+          "chars": 3132,
+          "bytes": 7174,
+          "sha256": "2dceaf1830431d1f359109604c4a9f8d651812240e3d4928f74a9b15dd42da2f"
+        },
+        {
+          "path": "artifact-lifecycle/references/contract.md",
+          "chars": 4048,
+          "bytes": 8571,
+          "sha256": "2488bbe2646692e7e81f05cd29539ab7d9a96965fe3d7950ed977dddbc169f1f"
+        }
+      ],
+      "chars": 7180,
+      "bytes": 15745
+    },
+    "maintenance-only": {
+      "files": [
+        {
+          "path": "skill-development-standards/SKILL.md",
+          "chars": 9911,
+          "bytes": 23427,
+          "sha256": "1dd723b975a2ba375ecb6599a447bbb0707177502f2bdd4140880ca4ed967971"
+        }
+      ],
+      "chars": 9911,
+      "bytes": 23427
+    }
+  },
+  "repeated_task_assumption": "Reuse is valid only if unchanged content remains in context; host behavior unverified"
+}
