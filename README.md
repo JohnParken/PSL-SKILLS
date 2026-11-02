@@ -1,16 +1,16 @@
 # PSL-SKILLS
 
-面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 家族（.wps/.et/.ett）只读内容识别、OFD 1.0 版式文档只读提取、交付物原子归档与受控清理生命周期，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
+面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 家族（.wps/.et/.ett）只读内容识别、OFD 1.0/1.1/1.2 XML结构与存储文字只读提取、交付物原子归档与受控清理生命周期，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
 
 ## 收录内容
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261029.2126.3558 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1734.3214 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261102.1554.5614 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；.wps/.et/.ett 使用 wps 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261029.2203.2365 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 wps 提取的受支持电子表格 JSON；不支持直接读取 WPS 专有格式（.wps/.et/.ett），请使用 wps 技能 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261029.2012.5682 | .wps/.et/.ett 内容识别、MS-DOC/Strict 及 Transitional OOXML Word/OOXML 电子表格/BIFF8 子集只读；支持 MS-XLS 标准 DXF（0x088D）差异格式结构校验与属性保留；纯表格/文字分流，内联文字、日期与公式缓存提取，保留 partial 诊断；不生成、编辑、转换或重算 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261029.2012.5682 | OFD 1.0 字面文字与元数据只读提取；保留页码、原始坐标与来源存储顺序；公开生产工具样例通过；政务原件验收未完成；不渲染、OCR、验签或转换 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261102.1720.5289 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 wps 提取的受支持电子表格 JSON；不支持直接读取 WPS 专有格式（.wps/.et/.ett），请使用 wps 技能 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；迁移既有 WPS 家族读取 | 20261102.1720.5289 | .wps/.et/.ett 内容识别、MS-DOC/Strict 及 Transitional OOXML Word/OOXML 电子表格/BIFF8 子集只读；支持 MS-XLS 标准 DXF（0x088D）差异格式结构校验与属性保留；纯表格/文字分流，内联文字、日期与公式缓存提取，保留 partial 诊断；不生成、编辑、转换或重算 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261102.1832.4664 | OFD 1.0/1.1/1.2 XML 结构与存储文字；全量节点/字符/来源、页资源与复合引用；结构与文字覆盖分别报告；不做 OCR、验签或渲染 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261029.2203.2365 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
@@ -49,7 +49,7 @@ PSL-SKILLS/
     │   ├── requirements.txt
     │   ├── scripts/               # 独立正文/表格读取、CFB、BIFF8、DXF 与合成回归
     │   └── references/            # 固定 FIB 范围、DXF 记录、来源与验证限制
-    ├── ofd/                       # OFD 1.0 文本与元数据安全只读提取
+    ├── ofd/                       # OFD 三版本 XML 结构与存储文字只读
     └── artifact-lifecycle/        # 交付物原子归档与受控临时文件清理公共技能
         ├── SKILL.md
         ├── requirements.txt
@@ -157,7 +157,7 @@ python3 -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
 
 ### OFD
 
-独立入口见 [ofd](skills/ofd/SKILL.md)。先运行自检，再在任务目录读取相对输入路径；结果保留文字来源和诊断，不恢复页面或语义阅读顺序：
+独立入口见 [ofd](skills/ofd/SKILL.md)。先运行自检，再在任务目录读取相对输入路径；结果分别返回 XML 结构、存储文字与页面出现记录及其诊断，不恢复页面或语义阅读顺序：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/read_ofd.py" --check
@@ -279,7 +279,7 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 | .xlsx | 原生读取与分析 | XLSX生成、受控编辑/公式子集；标准任务入口自动防同名覆盖递增命名，失败立即清理中间文件 | 不等于完整Excel引擎 |
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
 | .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
-| .ofd | ofd 提取 1.0 字面文字与元数据 | 不支持 | 合成回归及生产工具原始样例；政务 1.1 正确拒绝；无全文/视觉或全规范认证 |
+| .ofd | 1.0/1.1/1.2 XML 结构、存储文字、页资源与复合引用 | 不支持 | 已知版本统一判定；结构、命名空间与文字覆盖分开；不作全文/视觉或全规范认证 |
 | .wps/.et/.ett | wps按实际结构读取有限子集；支持MS-XLS标准DXF（0x088D）差异格式校验与属性保留 | 不生成、不编辑、不转换 | 五真实原件仅partial；新增容器主要合成验证 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 

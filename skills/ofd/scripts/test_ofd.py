@@ -29,7 +29,10 @@ def xml(tag, content='', attrs=''):
 def fixture(text='甲乙', page_extra='', common_extra='', extra=None):
     files = {'OFD.xml': xml('OFD', '<ofd:DocBody><ofd:DocRoot>Doc/Document.xml</ofd:DocRoot></ofd:DocBody>', 'Version="1.0" DocType="OFD"'),
              'Doc/Document.xml': xml('Document', '<ofd:CommonData>'+common_extra+'</ofd:CommonData><ofd:Pages><ofd:Page ID="1" BaseLoc="Pages/P.xml"/></ofd:Pages>'),
-             'Doc/Pages/P.xml': xml('Page', page_extra+'<ofd:Content><ofd:Layer ID="2"><ofd:TextObject ID="3" Boundary="1 2 30 4" Size="3"><ofd:TextCode X="0" Y="3">'+text+'</ofd:TextCode></ofd:TextObject></ofd:Layer></ofd:Content>')}
+             'Doc/Pages/P.xml': xml('Page', page_extra+(
+                 '<ofd:Content><ofd:Layer ID="2"><ofd:TextObject ID="3" Boundary="1 2 30'
+                 ' 4" Size="3"><ofd:TextCode X="0" Y="3">'
+                 )+text+'</ofd:TextCode></ofd:TextObject></ofd:Layer></ofd:Content>')}
     files.update(extra or {})
     return files
 
@@ -265,12 +268,22 @@ class ReaderTests(unittest.TestCase):
 
     def test_storage_order_not_coordinates(self):
         files = fixture()
-        files['Doc/Pages/P.xml'] = xml('Page', '<ofd:Content><ofd:Layer><ofd:TextObject><ofd:TextCode Y="99">后</ofd:TextCode><ofd:TextCode Y="1">前</ofd:TextCode></ofd:TextObject></ofd:Layer></ofd:Content>')
+        files['Doc/Pages/P.xml'] = xml('Page', (
+            '<ofd:Content><ofd:Layer><ofd:TextObject><ofd:TextCode Y="99">后</ofd:Te'
+            'xtCode><ofd:TextCode Y="1">前</ofd:TextCode></ofd:TextObject></ofd:Laye'
+            'r></ofd:Content>'
+            ))
         runs = self.read(files)['documents'][0]['pages'][0]['text_runs']
         self.assertEqual([r['text'] for r in runs], ['后', '前'])
 
     def test_template_dedup_and_nested_ignore(self):
-        files = fixture(page_extra='<ofd:Template TemplateID="9"/><ofd:Template TemplateID="9"/>', common_extra='<ofd:TemplatePage ID="9" BaseLoc="Templates/T.xml"/>', extra={'Doc/Templates/T.xml':xml('Page', '<ofd:Content><ofd:Layer><ofd:TextObject><ofd:TextCode>页眉</ofd:TextCode></ofd:TextObject></ofd:Layer></ofd:Content>')})
+        files = fixture(page_extra='<ofd:Template TemplateID="9"/><ofd:Template TemplateID="9"/>',
+             common_extra='<ofd:TemplatePage ID="9" BaseLoc="Templates/T.xml"/>',
+             extra={'Doc/Templates/T.xml':xml('Page',
+             (
+            '<ofd:Content><ofd:Layer><ofd:TextObject><ofd:TextCode>页眉</ofd:TextCode'
+            '></ofd:TextObject></ofd:Layer></ofd:Content>'
+            ))})
         result = self.read(files)
         self.assertEqual([r['text'] for r in result['documents'][0]['pages'][0]['text_runs']], ['页眉','甲乙'])
         self.assertEqual(result['status'], 'partial')
@@ -280,7 +293,7 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual([r['text'] for r in result['documents'][0]['pages'][0]['text_runs']], ['甲乙'])
 
     def test_empty_scan_unknown(self):
-        for content, code in [('', 'no_explainable_text'), ('<ofd:ImageObject ResourceID="1"/>','image_not_read'), ('<ofd:CompositeObject ID="9"/>','uninterpreted_object')]:
+        for content, code in [('', 'no_explainable_text'), ('<ofd:ImageObject ResourceID="1"/>','image_not_read'), ('<ofd:CompositeObject ID="9"/>','unresolved_composite_resource')]:
             files = fixture()
             files['Doc/Pages/P.xml'] = xml('Page', '<ofd:Content><ofd:Layer>'+content+'</ofd:Layer></ofd:Content>')
             result = self.read(files)
@@ -289,7 +302,16 @@ class ReaderTests(unittest.TestCase):
             self.assertEqual(result['tables'], [])
 
     def test_resources_metadata_and_signature(self):
-        files = fixture(common_extra='<ofd:PublicRes>Res.xml</ofd:PublicRes>',extra={'Doc/Res.xml':xml('Res','<ofd:Fonts><ofd:Font ID="7" FontName="example"><ofd:FontFile>font.dat</ofd:FontFile></ofd:Font></ofd:Fonts>','BaseLoc="Res"'),'Doc/Res/font.dat':b'font', 'Signs/Signatures.xml':xml('Signatures','<ofd:Signature ID="1" BaseLoc="S/Signature.xml"/>'),'Signs/S/Signature.xml':xml('Signature','<ofd:SignedInfo><ofd:SignatureDateTime>2020-01-01</ofd:SignatureDateTime></ofd:SignedInfo>')})
+        files = fixture(common_extra='<ofd:PublicRes>Res.xml</ofd:PublicRes>',extra={'Doc/Res.xml':xml('Res',(
+            '<ofd:Fonts><ofd:Font ID="7" FontName="example"><ofd:FontFile>font.dat<'
+            '/ofd:FontFile></ofd:Font></ofd:Fonts>'
+            ),
+                'BaseLoc="Res"'),
+                'Doc/Res/font.dat':b'font',
+                 'Signs/Signatures.xml':xml('Signatures',
+                '<ofd:Signature ID="1" BaseLoc="S/Signature.xml"/>'),
+                'Signs/S/Signature.xml':xml('Signature',
+                '<ofd:SignedInfo><ofd:SignatureDateTime>2020-01-01</ofd:SignatureDateTime></ofd:SignedInfo>')})
         files['OFD.xml'] = xml('OFD','<ofd:DocBody><ofd:DocRoot>Doc/Document.xml</ofd:DocRoot><ofd:Signatures>Signs/Signatures.xml</ofd:Signatures></ofd:DocBody>')
         result = self.read(files)
         self.assertEqual(result['signature_verification'], 'not_performed')
@@ -311,7 +333,7 @@ class ReaderTests(unittest.TestCase):
         with self.assertRaises(READER.ReadError):
             READER.resolve('Doc/Document.xml','/../OFD.xml')
         files=fixture()
-        files['OFD.xml']=xml('OFD','<ofd:DocBody><ofd:DocRoot>./Doc/Document.xml</ofd:DocRoot></ofd:DocBody>')
+        files['OFD.xml']=xml('OFD','<ofd:DocBody><ofd:DocRoot>./Doc/Document.xml</ofd:DocRoot></ofd:DocBody>', 'Version="1.0" DocType="OFD"')
         files['Doc/Document.xml']=xml('Document','<ofd:Pages><ofd:Page ID="1" BaseLoc="./Pages/../Pages/P.xml"/></ofd:Pages>')
         self.assertEqual(self.read(files)['status'],'complete')
 
@@ -336,7 +358,11 @@ class ReaderTests(unittest.TestCase):
         result=self.read(files)
         self.assertEqual(result['status'],'partial')
         self.assertIn('blank_page_no_content',[d['code'] for d in result['diagnostics']])
-        files=fixture(common_extra='<ofd:PublicRes>Res.xml</ofd:PublicRes>',extra={'Doc/Res.xml':xml('Res','<ofd:Fonts><ofd:Font ID="7"><ofd:FontFile>font.dat</ofd:FontFile></ofd:Font></ofd:Fonts>','BaseLoc="/"'),'font.dat':b'font'})
+        files=fixture(common_extra='<ofd:PublicRes>Res.xml</ofd:PublicRes>',
+            extra={'Doc/Res.xml':xml('Res',
+            '<ofd:Fonts><ofd:Font ID="7"><ofd:FontFile>font.dat</ofd:FontFile></ofd:Font></ofd:Fonts>',
+            'BaseLoc="/"'),
+            'font.dat':b'font'})
         result=self.read(files)
         self.assertEqual(result['documents'][0]['resources'][0]['files'],['font.dat'])
         files['Doc/Res.xml']=xml('Res','<ofd:Fonts><ofd:Font ID="7"><ofd:FontFile>../font.dat</ofd:FontFile></ofd:Font></ofd:Fonts>','BaseLoc="../Res/"')
@@ -354,7 +380,8 @@ class ReaderTests(unittest.TestCase):
 
     def test_dishonest_deflate_size(self):
         prefix=xml('OFD','<ofd:DocBody><ofd:DocRoot>Doc/Document.xml</ofd:DocRoot></ofd:DocBody>')
-        files=fixture();files['OFD.xml']=prefix+b' '*100000
+        files=fixture()
+        files['OFD.xml']=prefix+b' '*100000
         write_package(self.path,files,zipfile.ZIP_DEFLATED)
         data=bytearray(self.path.read_bytes())
         central=data.index(b'PK\x01\x02')
@@ -372,7 +399,10 @@ class ReaderTests(unittest.TestCase):
         result=self.read(files)
         self.assertEqual(result['status'],'partial')
         self.assertIn('foreign_namespace',[d['code'] for d in result['diagnostics']])
-        files=fixture(common_extra='<ofd:PublicRes>Res.xml</ofd:PublicRes>',extra={'Doc/Res.xml':xml('Res','<ofd:Fonts><x:Font xmlns:x="urn:foreign" ID="7"/><x:Wrapper xmlns:x="urn:foreign"><ofd:Font ID="8"/></x:Wrapper></ofd:Fonts>')})
+        files=fixture(common_extra='<ofd:PublicRes>Res.xml</ofd:PublicRes>',extra={'Doc/Res.xml':xml('Res',(
+            '<ofd:Fonts><x:Font xmlns:x="urn:foreign" ID="7"/><x:Wrapper xmlns:x="u'
+            'rn:foreign"><ofd:Font ID="8"/></x:Wrapper></ofd:Fonts>'
+            ))})
         result=self.read(files)
         self.assertEqual(result['status'],'partial')
         self.assertEqual(result['documents'][0]['resources'],[])
@@ -391,7 +421,8 @@ class ReaderTests(unittest.TestCase):
 
     def test_dishonest_stored_size(self):
         prefix=xml('OFD','<ofd:DocBody><ofd:DocRoot>Doc/Document.xml</ofd:DocRoot></ofd:DocBody>')
-        files=fixture();files['OFD.xml']=prefix+b'HIDDEN'*100
+        files=fixture()
+        files['OFD.xml']=prefix+b'HIDDEN'*100
         write_package(self.path,files,zipfile.ZIP_STORED)
         data=bytearray(self.path.read_bytes())
         central=data.index(b'PK\x01\x02')
@@ -428,7 +459,8 @@ class ReaderTests(unittest.TestCase):
 
     def test_entities_encodings_malformed(self):
         for payload in (b'<!DOCTYPE x [<!ENTITY x "abc">]><x>&x;</x>', '<!DOCTYPE x [<!ENTITY x SYSTEM "file:///etc/passwd">]><x>&x;</x>'.encode('utf-16'), b'<broken>'):
-            files=fixture(); files['OFD.xml']=payload
+            files=fixture()
+            files['OFD.xml']=payload
             with self.assertRaises((READER.ReadError,READER.expat.ExpatError)):
                 self.read(files)
 
@@ -450,13 +482,26 @@ class ReaderTests(unittest.TestCase):
         for data in (b'<OFD/>', xml('OFD','', 'Version="2.0"')):
             with self.assertRaises(READER.ReadError):
                 self.read({'OFD.xml':data})
-        files=fixture(); del files['Doc/Pages/P.xml']
+        files=fixture()
+        del files['Doc/Pages/P.xml']
         with self.assertRaisesRegex(READER.ReadError,'missing'):
             self.read(files)
 
     def test_attachment_annotation_and_no_execution(self):
-        files=fixture(extra={'Doc/Attachments.xml':xml('Attachments','<ofd:Attachment ID="8" Name="unsafe.py"><ofd:FileLoc>Payload/unsafe.py</ofd:FileLoc></ofd:Attachment>'),'Doc/Payload/unsafe.py':b'raise RuntimeError("must not execute")','Doc/Annotations.xml':xml('Annotations','<ofd:Page PageID="1"><ofd:FileLoc>Annots/A.xml</ofd:FileLoc></ofd:Page>'),'Doc/Annots/A.xml':xml('PageAnnot','<ofd:Annot ID="10"><ofd:Remark>note only</ofd:Remark></ofd:Annot>')})
-        files['Doc/Document.xml']=xml('Document','<ofd:Pages><ofd:Page ID="1" BaseLoc="Pages/P.xml"/></ofd:Pages><ofd:Attachments>Attachments.xml</ofd:Attachments><ofd:Annotations>Annotations.xml</ofd:Annotations>')
+        files=fixture(extra={'Doc/Attachments.xml':xml('Attachments',(
+            '<ofd:Attachment ID="8" Name="unsafe.py"><ofd:FileLoc>Payload/unsafe.py'
+            '</ofd:FileLoc></ofd:Attachment>'
+            )),
+                'Doc/Payload/unsafe.py':b'raise RuntimeError("must not execute")',
+                'Doc/Annotations.xml':xml('Annotations',
+                '<ofd:Page PageID="1"><ofd:FileLoc>Annots/A.xml</ofd:FileLoc></ofd:Page>'),
+                'Doc/Annots/A.xml':xml('PageAnnot',
+                '<ofd:Annot ID="10"><ofd:Remark>note only</ofd:Remark></ofd:Annot>')})
+        files['Doc/Document.xml']=xml('Document',(
+            '<ofd:Pages><ofd:Page ID="1" BaseLoc="Pages/P.xml"/></ofd:Pages><ofd:At'
+            'tachments>Attachments.xml</ofd:Attachments><ofd:Annotations>Annotation'
+            's.xml</ofd:Annotations>'
+            ))
         result=self.read(files)
         self.assertEqual(result['status'],'partial')
         self.assertEqual(len(result['documents'][0]['pages'][0]['text_runs']),1)
@@ -490,7 +535,7 @@ class ReaderTests(unittest.TestCase):
             self.assertEqual(completed.returncode,code,completed.stdout+completed.stderr)
             result=json.loads(completed.stdout)
             self.assertEqual(result['status'],status)
-            self.assertEqual(result['schema_version'],'ofd-read-2')
+            self.assertEqual(result['schema_version'],'ofd-read-3')
             if code==1:
                 self.assertNotIn('documents',result)
 
@@ -507,7 +552,12 @@ class ReaderTests(unittest.TestCase):
 
     def test_review_structure_and_namespace(self):
         files=fixture()
-        files['Doc/Pages/P.xml']=xml('Page','<ofd:TextCode>LOST</ofd:TextCode><f:TextObject xmlns:f="urn:foreign"><ofd:TextCode>FOREIGN</ofd:TextCode></f:TextObject><ofd:Content><ofd:Layer><ofd:TextObject><ofd:TextCode>A</ofd:TextCode></ofd:TextObject></ofd:Layer></ofd:Content>')
+        files['Doc/Pages/P.xml']=xml('Page',(
+            '<ofd:TextCode>LOST</ofd:TextCode><f:TextObject xmlns:f="urn:foreign"><'
+            'ofd:TextCode>FOREIGN</ofd:TextCode></f:TextObject><ofd:Content><ofd:La'
+            'yer><ofd:TextObject><ofd:TextCode>A</ofd:TextCode></ofd:TextObject></o'
+            'fd:Layer></ofd:Content>'
+            ))
         result=self.read(files)
         self.assertEqual(result['status'],'partial')
         self.assertIn('unexpected_textcode_parent',[d['code'] for d in result['diagnostics']])
@@ -531,7 +581,8 @@ class ReaderTests(unittest.TestCase):
         source=Path(__file__).with_name('read_ofd.py')
         target=installation/'read_ofd.py'
         shutil.copyfile(source,target)
-        target.chmod(0o444); installation.chmod(0o555)
+        target.chmod(0o444)
+        installation.chmod(0o555)
         write_package(self.path,fixture())
         before={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in installation.iterdir()}
         try:
@@ -539,14 +590,15 @@ class ReaderTests(unittest.TestCase):
                 completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'sample.ofd'],cwd=self.root,env={'PATH':''},capture_output=True,text=True)
                 self.assertEqual(completed.returncode,0,completed.stderr+completed.stdout)
                 self.assertEqual(json.loads(completed.stdout)['status'],'complete')
-                self.assertEqual(json.loads(completed.stdout)['schema_version'],'ofd-read-2')
+                self.assertEqual(json.loads(completed.stdout)['schema_version'],'ofd-read-3')
             for argument in ('../escape.ofd',str(self.path)):
                 completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),argument],cwd=self.root,capture_output=True,text=True)
                 self.assertEqual(completed.returncode,1)
             after={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in installation.iterdir()}
             self.assertEqual(before,after)
         finally:
-            installation.chmod(0o755); target.chmod(0o644)
+            installation.chmod(0o755)
+            target.chmod(0o644)
 
 
 if __name__=='__main__':

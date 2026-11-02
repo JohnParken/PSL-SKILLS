@@ -1,0 +1,83 @@
+{
+  "version": "20261102.1832.4664",
+  "reviewed_runtime_sha256": "dd84022c989426d92bacd2e20951d75f30f93005efee6c33a3da7c50b2946866",
+  "runtime_changed_by_review": false,
+  "reviewer_context": "Separate WPS/XLSX maintenance thread, not the OFD implementation agent; source inspected and independent synthetic fixtures constructed.",
+  "time_utc": "2026-11-02T11:32:46.655599+00:00",
+  "original_findings": [
+    {
+      "finding": "ZIP order affected attachment isolation",
+      "result": "closed in scoped independent checks; active indexed XML-suffix payload never opened across six ZIP permutations; unreferenced index cannot classify payload in either order"
+    },
+    {
+      "finding": "Same member accepted as parsed XML and opaque payload",
+      "result": "closed; page/attachment conflict rejected before opening the page in both ZIP arrangements"
+    },
+    {
+      "finding": "Unknown XML SignedValue hid another XML TextCode",
+      "result": "closed; unreferenced Unknown/Signature roots cannot assign opaque role; supplemental text retained"
+    }
+  ],
+  "tests": {
+    "ofd_existing_passed": 84,
+    "independent_postfix_passed": 6,
+    "synthetic_variants": 15,
+    "skipped": 0
+  },
+  "commands": [
+    "python3 -I -S -B skills/ofd/scripts/read_ofd.py --check",
+    "python3 -I -S -B -m unittest discover -s skills/ofd/scripts -p 'test_ofd*.py' -q",
+    "python3 -I -S -B tests/test_ofd_postfix_review.py",
+    "python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/ofd --strict"
+  ],
+  "platform": "macOS/Python3.13.12/Expat2.6.3; Linux and Windows not executed",
+  "sensitive_review": "OFD current source and public evidence only; no sample bytes/ZIP/tmp directories staged. Private Library identity/delivery metadata excluded; original technical evidence preserved. No restricted Library/NDRC input read or fetched.",
+  "limits": [
+    "Six independent tests close the three scoped review findings, not universal format/security certification",
+    "Original follow-up agent content-filter failure remains historical; it was not retried",
+    "No new real sample acceptance, OCR, rendering, signature verification or external dependencies",
+    "XLSX/WPS new optimization remains uncommitted and excluded from README version rows"
+  ],
+  "source_sha256": {
+    "skills/ofd/requirements.txt": "423841be34df23375c319889cc694b1fd76cfebc8cd5712a008356f4d44259c8",
+    "skills/ofd/SKILL.md": "716b82ccd073e416bf0ce5bd4835d2a8670d51c4e1c6298a40577df72e4450d7",
+    "skills/ofd/references/structure.md": "afbe5ef51c5873960da978739aab553176a5c27e47709545d935a39f6fb40732",
+    "skills/ofd/references/validation.md": "8e185695895f048c322e4c5f186efbc45997bedf5277cb0d3b5c9ed13b8c5796",
+    "skills/ofd/references/real-samples.json": "92001dcde07d3b4ab9dae67d61a117f9fec5c966b0bff045ccc5010fa493b35a",
+    "skills/ofd/references/contract.md": "87e6b2d34ef1a07a5b5138301ab13753e35387b27a664a799800d9fc5d00e93d",
+    "skills/ofd/references/boundaries.md": "ed8fd63e759eaa9492a8ece28425662d449ba031a50f6be443c6ad72a9cd38cb",
+    "skills/ofd/references/compatibility.md": "cfaa2fbcb9072b9f13bbb7c11218a98eba43fdc758d5936007af9bcebb48f6ac",
+    "skills/ofd/scripts/read_ofd.py": "dd84022c989426d92bacd2e20951d75f30f93005efee6c33a3da7c50b2946866",
+    "skills/ofd/scripts/test_ofd_compat.py": "73ea4a11cf2b3a71ebedc05491d71314cb3cd7ee944c45eaff41b3caa4fbc4d1",
+    "skills/ofd/scripts/test_ofd.py": "858f0873a262d6001b18bbca271d4c68194723d78c08a65046f56ca60b198bda",
+    "skills/ofd/scripts/test_ofd_structure.py": "33499b069079b53243c37a3462a2516d7980b256c92f1c251dfcde2ccc5c99cb"
+  },
+  "independent_readonly_package": {
+    "path": "skills/ofd-20261102.1832.4664.zip",
+    "sha256": "349ba897a75e30fd8c4c5a4f7fb65c63b2250c80f2c3b23e8ed9ed788e1aac70",
+    "members": 12,
+    "crc_and_member_bytes": "passed",
+    "empty_path": true,
+    "outcomes": [
+      {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "----------------------------------------------------------------------\nRan 84 tests in 0.388s\n\nOK\n"
+      },
+      {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.014s\n\nOK\n"
+      },
+      {
+        "exit": 0,
+        "stdout": "check_kind=environment artifact_validation=not_run\nenvironment-ok Python>=3.10 Expat>=2.6.0 stdlib-only\n",
+        "stderr": ""
+      }
+    ],
+    "install_hashes_unchanged": true
+  },
+  "strict": "passed",
+  "static": "AST, line length <=200 and statement separators passed; Pylint unavailable",
+  "scope_note": "No new XLSX/WPS code or metadata versions included; README describes only their already-pushed 1720 versions."
+}

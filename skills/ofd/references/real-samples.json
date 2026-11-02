@@ -1,8 +1,8 @@
 {
   "schema_version": "ofd_public_sample_expectations_v1",
-  "checked_on": "2026-10-26",
-  "runtime": "Python 3.12.12 / Expat 2.6.3, standard library only; no OCR, Office, PDF/text converter or rendering oracle",
-  "scope": "One producer-published OFD 1.0 test sample literal/provenance acceptance only; government real-sample acceptance remains incomplete; no broad OFD or visual conformance.",
+  "checked_on": "2026-11-02",
+  "runtime": "macOS-27.2-arm64-arm-64bit-Mach-O; Python 3.13.12; standard library only",
+  "scope": "Historical and current producer-test evidence only; full stored XML/character models are distinct from semantic, visible-text, government and universal-format certification.",
   "samples": [
     {
       "filename": "producer_helloworld.ofd",
@@ -26,5 +26,498 @@
       "independent_expected": "Upstream getPageContent/extractAll assertions and README HelloWorld literal; XML properties inspected independently before target execution. No Java or OFDRW code executed.",
       "content_acceptance": true
     }
-  ]
+  ],
+  "compatibility_run": [
+    {
+      "upstream": "ofdrw-reader/src/test/resources/helloworld.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld.ofd",
+      "sha256": "edaf7b227ebff5d7621e05fefc251e572bffa6cb24e9ab1485988b39ba8d4429",
+      "bytes": 1652,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "complete",
+        "pages": 1,
+        "runs": 1,
+        "characters": 22,
+        "diagnostics": {},
+        "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494"
+      },
+      "independent_text_check": "passed",
+      "cli": {
+        "exit_code": 0,
+        "status": "complete",
+        "stdout_chars": 3492,
+        "stderr": ""
+      },
+      "classification": "unmodified producer-published test input; no upstream code executed",
+      "independent_expected": "HelloWorld literal from upstream ContentExtractorTest.java, frozen before target run",
+      "content_acceptance": true,
+      "source_tree": "c633a61fb37d300392a51f67b101f46738866c83",
+      "expected_text": "你好呀，OFD Reader&Writer！",
+      "expected_source": "https://github.com/ofdrw/ofdrw/blob/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java"
+    },
+    {
+      "upstream": "ofdrw-reader/src/test/resources/helloworld_with_pageblock.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld_with_pageblock.ofd",
+      "sha256": "8b122bd9de7647b911189ca99212e07f7db151b58482b22495c35534d129c91e",
+      "bytes": 1974,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "complete",
+        "pages": 1,
+        "runs": 1,
+        "characters": 22,
+        "diagnostics": {},
+        "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494"
+      },
+      "independent_text_check": "passed",
+      "cli": {
+        "exit_code": 0,
+        "status": "complete",
+        "stdout_chars": 3584,
+        "stderr": ""
+      },
+      "classification": "unmodified producer-published test input; no upstream code executed",
+      "independent_expected": "HelloWorld literal from upstream ContentExtractorTest.java, frozen before target run",
+      "content_acceptance": true,
+      "source_tree": "c633a61fb37d300392a51f67b101f46738866c83",
+      "expected_text": "你好呀，OFD Reader&Writer！",
+      "expected_source": "https://github.com/ofdrw/ofdrw/blob/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java"
+    },
+    {
+      "upstream": "ofdrw-layout/src/test/resources/Page5.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/Page5.ofd",
+      "sha256": "ad57abde3dafc7fd0d2845e42b3767ba0eb900514148e1cce2205da2d97b89c0",
+      "bytes": 4110,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "failed": "missing package reference: Doc_0/PublicRes.xml"
+      },
+      "cli": {
+        "exit_code": 1,
+        "status": "failed",
+        "stdout_chars": 154,
+        "stderr": ""
+      },
+      "classification": "unmodified producer-published test input; no upstream code executed",
+      "independent_expected": "No independent full-text oracle; structural/version smoke only",
+      "content_acceptance": false,
+      "source_tree": "c633a61fb37d300392a51f67b101f46738866c83"
+    },
+    {
+      "upstream": "ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+      "sha256": "09cff60df3e503a25f8f9c008ba72596051b0e91264211ba8a0123c59d826a02",
+      "bytes": 2310,
+      "root": {
+        "Version": "1.2",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "partial",
+        "pages": 1,
+        "runs": 2,
+        "characters": 4,
+        "diagnostics": {
+          "version_common_subset": 1,
+          "vector_not_interpreted": 13,
+          "unparsed_xml_member": 1
+        },
+        "text_sha256": "2573807d9856cc8e535c9a1a8894ee4ff0870bc34a090cfe4d2c400ad3923286"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 3,
+        "status": "partial",
+        "stdout_chars": 8055,
+        "stderr": ""
+      },
+      "classification": "unmodified producer-published test input; no upstream code executed",
+      "independent_expected": "No independent full-text oracle; structural/version smoke only",
+      "content_acceptance": false,
+      "source_tree": "c633a61fb37d300392a51f67b101f46738866c83"
+    },
+    {
+      "upstream": "ofdrw-archive/src/test/resources/test-ofda.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-archive/src/test/resources/test-ofda.ofd",
+      "sha256": "48493a64c5cd63d36e793e7f7c31524322df4342e7746b700c3617b0a0a066c9",
+      "bytes": 1629,
+      "root": {
+        "Version": "1.2",
+        "DocType": "OFD-A"
+      },
+      "actual": {
+        "status": "partial",
+        "pages": 1,
+        "runs": 1,
+        "characters": 11,
+        "diagnostics": {
+          "version_common_subset": 1,
+          "archival_profile_not_validated": 1
+        },
+        "text_sha256": "3982a08300bbac302528669fd1d07840bd08a991c8cda816499bf6edecce8df6"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 3,
+        "status": "partial",
+        "stdout_chars": 3672,
+        "stderr": ""
+      },
+      "classification": "unmodified producer-published test input; no upstream code executed",
+      "independent_expected": "No independent full-text oracle; structural/version smoke only",
+      "content_acceptance": false,
+      "source_tree": "c633a61fb37d300392a51f67b101f46738866c83"
+    },
+    {
+      "upstream": "ofdrw-converter/src/test/resources/helloworld.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-converter/src/test/resources/helloworld.ofd",
+      "sha256": "a7b6f9eceb7ca4eafc73a318ac06f5476af6010d0dbcc99337912049748e141e",
+      "bytes": 1651,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "complete",
+        "pages": 1,
+        "runs": 1,
+        "characters": 22,
+        "diagnostics": {},
+        "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 0,
+        "status": "complete",
+        "stdout_chars": 3493,
+        "stderr": ""
+      },
+      "classification": "unmodified producer-published test input; no upstream code executed",
+      "independent_expected": "No independent full-text oracle; structural/version smoke only",
+      "content_acceptance": false,
+      "source_tree": "c633a61fb37d300392a51f67b101f46738866c83"
+    },
+    {
+      "upstream": "ofdrw-layout/src/test/resources/keyword2.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/keyword2.ofd",
+      "sha256": "bff244b1133ad553648537c395db97baa4f35d9a959afc7c938735a3f8b2b8a1",
+      "bytes": 14095,
+      "root": {
+        "DocType": "OFD",
+        "Version": "1.1"
+      },
+      "actual": {
+        "status": "partial",
+        "pages": 1,
+        "runs": 63,
+        "characters": 541,
+        "diagnostics": {
+          "version_common_subset": 1,
+          "metadata_only": 3,
+          "signatures_not_verified": 1,
+          "vector_not_interpreted": 23,
+          "image_not_read": 1,
+          "foreign_namespace": 2,
+          "unparsed_xml_member": 2
+        },
+        "text_sha256": "d50d2e0fc6e6b36d54d34f2ffd699ef847140a1fe507bb708d6e98bde2f648cc"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 3,
+        "status": "partial",
+        "stdout_chars": 74361,
+        "stderr": ""
+      },
+      "classification": "unmodified producer-published test input; no upstream code executed",
+      "independent_expected": "No independent full-text oracle; structural/version smoke only",
+      "content_acceptance": false,
+      "source_tree": "c633a61fb37d300392a51f67b101f46738866c83"
+    }
+  ],
+  "structure_run": {
+    "version": "20261102.1800.4775",
+    "schema_version": "ofd-read-3",
+    "samples": [
+      {
+        "upstream": "ofdrw-reader/src/test/resources/helloworld.ofd",
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld.ofd",
+        "sha256": "edaf7b227ebff5d7621e05fefc251e572bffa6cb24e9ab1485988b39ba8d4429",
+        "bytes": 1652,
+        "root": {
+          "Version": "1.0",
+          "DocType": "OFD"
+        },
+        "actual": {
+          "status": "complete",
+          "exit_code": 0,
+          "schema_version": "ofd-read-3",
+          "structure_status": "complete",
+          "namespace_resolution": "complete",
+          "xml_parts": 4,
+          "xml_nodes": 25,
+          "xml_character_fields": 10,
+          "storage_textcodes": 1,
+          "page_occurrences": 1,
+          "body_characters": 22,
+          "text_assessment": {
+            "status": "complete",
+            "gap_codes": [],
+            "stored_textcode_count": 1,
+            "page_occurrence_count": 1,
+            "xml_character_field_count": 10,
+            "scope": "Stored OFD TextCode interpretation; other character data is in structure; no OCR, glyph inference or visible reading order"
+          },
+          "diagnostics": {},
+          "stdout_chars": 14728,
+          "stderr": ""
+        },
+        "independent_text_check": "passed",
+        "hash_verified_utc": "2026-11-02T11:06:26.584017+00:00",
+        "classification": "unmodified public producer test input; no upstream code executed",
+        "content_acceptance": true
+      },
+      {
+        "upstream": "ofdrw-reader/src/test/resources/helloworld_with_pageblock.ofd",
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld_with_pageblock.ofd",
+        "sha256": "8b122bd9de7647b911189ca99212e07f7db151b58482b22495c35534d129c91e",
+        "bytes": 1974,
+        "root": {
+          "Version": "1.0",
+          "DocType": "OFD"
+        },
+        "actual": {
+          "status": "complete",
+          "exit_code": 0,
+          "schema_version": "ofd-read-3",
+          "structure_status": "complete",
+          "namespace_resolution": "complete",
+          "xml_parts": 4,
+          "xml_nodes": 26,
+          "xml_character_fields": 42,
+          "storage_textcodes": 1,
+          "page_occurrences": 1,
+          "body_characters": 22,
+          "text_assessment": {
+            "status": "complete",
+            "gap_codes": [],
+            "stored_textcode_count": 1,
+            "page_occurrence_count": 1,
+            "xml_character_field_count": 42,
+            "scope": "Stored OFD TextCode interpretation; other character data is in structure; no OCR, glyph inference or visible reading order"
+          },
+          "diagnostics": {},
+          "stdout_chars": 17171,
+          "stderr": ""
+        },
+        "independent_text_check": "passed",
+        "hash_verified_utc": "2026-11-02T11:06:26.611309+00:00",
+        "classification": "unmodified public producer test input; no upstream code executed",
+        "content_acceptance": true
+      },
+      {
+        "upstream": "ofdrw-layout/src/test/resources/Page5.ofd",
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/Page5.ofd",
+        "sha256": "ad57abde3dafc7fd0d2845e42b3767ba0eb900514148e1cce2205da2d97b89c0",
+        "bytes": 4110,
+        "root": {
+          "Version": "1.0",
+          "DocType": "OFD"
+        },
+        "actual": {
+          "status": "failed",
+          "exit_code": 1,
+          "diagnostics": [
+            {
+              "code": "read_error",
+              "detail": "missing package reference: Doc_0/PublicRes.xml"
+            }
+          ]
+        },
+        "classification": "unmodified public producer test input; no upstream code executed",
+        "content_acceptance": false
+      },
+      {
+        "upstream": "ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+        "sha256": "09cff60df3e503a25f8f9c008ba72596051b0e91264211ba8a0123c59d826a02",
+        "bytes": 2310,
+        "root": {
+          "Version": "1.2",
+          "DocType": "OFD"
+        },
+        "actual": {
+          "status": "partial",
+          "exit_code": 3,
+          "schema_version": "ofd-read-3",
+          "structure_status": "complete",
+          "namespace_resolution": "complete",
+          "xml_parts": 5,
+          "xml_nodes": 73,
+          "xml_character_fields": 26,
+          "storage_textcodes": 2,
+          "page_occurrences": 2,
+          "body_characters": 4,
+          "text_assessment": {
+            "status": "partial",
+            "gap_codes": [
+              "vector_not_interpreted"
+            ],
+            "stored_textcode_count": 2,
+            "page_occurrence_count": 2,
+            "xml_character_field_count": 26,
+            "scope": "Stored OFD TextCode interpretation; other character data is in structure; no OCR, glyph inference or visible reading order"
+          },
+          "diagnostics": {
+            "vector_not_interpreted": 13,
+            "additional_xml_part_catalogued": 1
+          },
+          "stdout_chars": 34226,
+          "stderr": ""
+        },
+        "independent_text_check": "not performed; storage/structure smoke only",
+        "hash_verified_utc": "2026-11-02T11:06:26.664042+00:00",
+        "classification": "unmodified public producer test input; no upstream code executed",
+        "content_acceptance": false
+      },
+      {
+        "upstream": "ofdrw-archive/src/test/resources/test-ofda.ofd",
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-archive/src/test/resources/test-ofda.ofd",
+        "sha256": "48493a64c5cd63d36e793e7f7c31524322df4342e7746b700c3617b0a0a066c9",
+        "bytes": 1629,
+        "root": {
+          "Version": "1.2",
+          "DocType": "OFD-A"
+        },
+        "actual": {
+          "status": "partial",
+          "exit_code": 3,
+          "schema_version": "ofd-read-3",
+          "structure_status": "complete",
+          "namespace_resolution": "complete",
+          "xml_parts": 4,
+          "xml_nodes": 25,
+          "xml_character_fields": 10,
+          "storage_textcodes": 1,
+          "page_occurrences": 1,
+          "body_characters": 11,
+          "text_assessment": {
+            "status": "complete",
+            "gap_codes": [],
+            "stored_textcode_count": 1,
+            "page_occurrence_count": 1,
+            "xml_character_field_count": 10,
+            "scope": "Stored OFD TextCode interpretation; other character data is in structure; no OCR, glyph inference or visible reading order"
+          },
+          "diagnostics": {
+            "archival_profile_not_validated": 1
+          },
+          "stdout_chars": 14793,
+          "stderr": ""
+        },
+        "independent_text_check": "not performed; storage/structure smoke only",
+        "hash_verified_utc": "2026-11-02T11:06:26.689941+00:00",
+        "classification": "unmodified public producer test input; no upstream code executed",
+        "content_acceptance": false
+      },
+      {
+        "upstream": "ofdrw-converter/src/test/resources/helloworld.ofd",
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-converter/src/test/resources/helloworld.ofd",
+        "sha256": "a7b6f9eceb7ca4eafc73a318ac06f5476af6010d0dbcc99337912049748e141e",
+        "bytes": 1651,
+        "root": {
+          "Version": "1.0",
+          "DocType": "OFD"
+        },
+        "actual": {
+          "status": "complete",
+          "exit_code": 0,
+          "schema_version": "ofd-read-3",
+          "structure_status": "complete",
+          "namespace_resolution": "complete",
+          "xml_parts": 4,
+          "xml_nodes": 25,
+          "xml_character_fields": 10,
+          "storage_textcodes": 1,
+          "page_occurrences": 1,
+          "body_characters": 22,
+          "text_assessment": {
+            "status": "complete",
+            "gap_codes": [],
+            "stored_textcode_count": 1,
+            "page_occurrence_count": 1,
+            "xml_character_field_count": 10,
+            "scope": "Stored OFD TextCode interpretation; other character data is in structure; no OCR, glyph inference or visible reading order"
+          },
+          "diagnostics": {},
+          "stdout_chars": 14731,
+          "stderr": ""
+        },
+        "independent_text_check": "not performed; storage/structure smoke only",
+        "hash_verified_utc": "2026-11-02T11:06:26.716143+00:00",
+        "classification": "unmodified public producer test input; no upstream code executed",
+        "content_acceptance": false
+      },
+      {
+        "upstream": "ofdrw-layout/src/test/resources/keyword2.ofd",
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/keyword2.ofd",
+        "sha256": "bff244b1133ad553648537c395db97baa4f35d9a959afc7c938735a3f8b2b8a1",
+        "bytes": 14095,
+        "root": {
+          "DocType": "OFD",
+          "Version": "1.1"
+        },
+        "actual": {
+          "status": "partial",
+          "exit_code": 3,
+          "schema_version": "ofd-read-3",
+          "structure_status": "complete",
+          "namespace_resolution": "partial",
+          "xml_parts": 13,
+          "xml_nodes": 449,
+          "xml_character_fields": 161,
+          "storage_textcodes": 63,
+          "page_occurrences": 63,
+          "body_characters": 541,
+          "text_assessment": {
+            "status": "partial",
+            "gap_codes": [
+              "image_not_read",
+              "vector_not_interpreted",
+              "foreign_namespace"
+            ],
+            "stored_textcode_count": 63,
+            "page_occurrence_count": 63,
+            "xml_character_field_count": 161,
+            "scope": "Stored OFD TextCode interpretation; other character data is in structure; no OCR, glyph inference or visible reading order"
+          },
+          "diagnostics": {
+            "metadata_only": 3,
+            "signatures_not_verified": 1,
+            "vector_not_interpreted": 23,
+            "image_not_read": 1,
+            "xml_namespace_unresolved": 1,
+            "foreign_namespace": 35
+          },
+          "stdout_chars": 272752,
+          "stderr": ""
+        },
+        "independent_text_check": "not performed; storage/structure smoke only",
+        "hash_verified_utc": "2026-11-02T11:06:26.749051+00:00",
+        "classification": "unmodified public producer test input; no upstream code executed",
+        "content_acceptance": false
+      }
+    ]
+  },
+  "compatibility_run_schema_version": "ofd-read-2 (historical run)"
 }

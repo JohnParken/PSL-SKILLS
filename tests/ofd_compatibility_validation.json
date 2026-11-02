@@ -1,0 +1,260 @@
+{
+  "temporary_root": ".ofd-compat-20261102",
+  "registered_before_creation": [
+    ".ofd-compat-20261102/tree.json",
+    ".ofd-compat-20261102/helloworld.ofd",
+    ".ofd-compat-20261102/release",
+    ".ofd-compat-20261102/sample_0.ofd",
+    ".ofd-compat-20261102/sample_1.ofd",
+    ".ofd-compat-20261102/sample_2.ofd",
+    ".ofd-compat-20261102/sample_3.ofd",
+    ".ofd-compat-20261102/sample_4.ofd",
+    ".ofd-compat-20261102/sample_5.ofd",
+    ".ofd-compat-20261102/sample_6.ofd",
+    ".ofd-compat-20261102/evidence_0.java",
+    ".ofd-compat-20261102/evidence_1.java",
+    ".ofd-compat-20261102/release/ofd/SKILL.md",
+    ".ofd-compat-20261102/release/ofd/references/boundaries.md",
+    ".ofd-compat-20261102/release/ofd/references/compatibility.md",
+    ".ofd-compat-20261102/release/ofd/references/contract.md",
+    ".ofd-compat-20261102/release/ofd/references/real-samples.json",
+    ".ofd-compat-20261102/release/ofd/references/validation.md",
+    ".ofd-compat-20261102/release/ofd/requirements.txt",
+    ".ofd-compat-20261102/release/ofd/scripts/read_ofd.py",
+    ".ofd-compat-20261102/release/ofd/scripts/test_ofd.py",
+    ".ofd-compat-20261102/release/ofd/scripts/test_ofd_compat.py",
+    ".ofd-compat-20261102/library-helper/library_file_transfer.py",
+    ".ofd-compat-20261102/library-helper/library_hosted_apps.py"
+  ],
+  "purpose": "OFD compatibility maintenance only",
+  "cleanup": "completed; only registered maintenance temporary files removed",
+  "public_samples": [
+    {
+      "path": ".ofd-compat-20261102/sample_0.ofd",
+      "upstream": "ofdrw-reader/src/test/resources/helloworld.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld.ofd",
+      "sha256": "edaf7b227ebff5d7621e05fefc251e572bffa6cb24e9ab1485988b39ba8d4429",
+      "bytes": 1652,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "complete",
+        "pages": 1,
+        "runs": 1,
+        "characters": 22,
+        "diagnostics": {},
+        "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494"
+      },
+      "independent_text_check": "passed",
+      "cli": {
+        "exit_code": 0,
+        "status": "complete",
+        "stdout_chars": 3492,
+        "stderr": ""
+      }
+    },
+    {
+      "path": ".ofd-compat-20261102/sample_1.ofd",
+      "upstream": "ofdrw-reader/src/test/resources/helloworld_with_pageblock.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld_with_pageblock.ofd",
+      "sha256": "8b122bd9de7647b911189ca99212e07f7db151b58482b22495c35534d129c91e",
+      "bytes": 1974,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "complete",
+        "pages": 1,
+        "runs": 1,
+        "characters": 22,
+        "diagnostics": {},
+        "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494"
+      },
+      "independent_text_check": "passed",
+      "cli": {
+        "exit_code": 0,
+        "status": "complete",
+        "stdout_chars": 3584,
+        "stderr": ""
+      }
+    },
+    {
+      "path": ".ofd-compat-20261102/sample_2.ofd",
+      "upstream": "ofdrw-layout/src/test/resources/Page5.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/Page5.ofd",
+      "sha256": "ad57abde3dafc7fd0d2845e42b3767ba0eb900514148e1cce2205da2d97b89c0",
+      "bytes": 4110,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "failed": "missing package reference: Doc_0/PublicRes.xml"
+      },
+      "cli": {
+        "exit_code": 1,
+        "status": "failed",
+        "stdout_chars": 154,
+        "stderr": ""
+      }
+    },
+    {
+      "path": ".ofd-compat-20261102/sample_3.ofd",
+      "upstream": "ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+      "sha256": "09cff60df3e503a25f8f9c008ba72596051b0e91264211ba8a0123c59d826a02",
+      "bytes": 2310,
+      "root": {
+        "Version": "1.2",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "partial",
+        "pages": 1,
+        "runs": 2,
+        "characters": 4,
+        "diagnostics": {
+          "version_common_subset": 1,
+          "vector_not_interpreted": 13,
+          "unparsed_xml_member": 1
+        },
+        "text_sha256": "2573807d9856cc8e535c9a1a8894ee4ff0870bc34a090cfe4d2c400ad3923286"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 3,
+        "status": "partial",
+        "stdout_chars": 8055,
+        "stderr": ""
+      }
+    },
+    {
+      "path": ".ofd-compat-20261102/sample_4.ofd",
+      "upstream": "ofdrw-archive/src/test/resources/test-ofda.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-archive/src/test/resources/test-ofda.ofd",
+      "sha256": "48493a64c5cd63d36e793e7f7c31524322df4342e7746b700c3617b0a0a066c9",
+      "bytes": 1629,
+      "root": {
+        "Version": "1.2",
+        "DocType": "OFD-A"
+      },
+      "actual": {
+        "status": "partial",
+        "pages": 1,
+        "runs": 1,
+        "characters": 11,
+        "diagnostics": {
+          "version_common_subset": 1,
+          "archival_profile_not_validated": 1
+        },
+        "text_sha256": "3982a08300bbac302528669fd1d07840bd08a991c8cda816499bf6edecce8df6"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 3,
+        "status": "partial",
+        "stdout_chars": 3672,
+        "stderr": ""
+      }
+    },
+    {
+      "path": ".ofd-compat-20261102/sample_5.ofd",
+      "upstream": "ofdrw-converter/src/test/resources/helloworld.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-converter/src/test/resources/helloworld.ofd",
+      "sha256": "a7b6f9eceb7ca4eafc73a318ac06f5476af6010d0dbcc99337912049748e141e",
+      "bytes": 1651,
+      "root": {
+        "Version": "1.0",
+        "DocType": "OFD"
+      },
+      "actual": {
+        "status": "complete",
+        "pages": 1,
+        "runs": 1,
+        "characters": 22,
+        "diagnostics": {},
+        "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 0,
+        "status": "complete",
+        "stdout_chars": 3493,
+        "stderr": ""
+      }
+    },
+    {
+      "path": ".ofd-compat-20261102/sample_6.ofd",
+      "upstream": "ofdrw-layout/src/test/resources/keyword2.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/keyword2.ofd",
+      "sha256": "bff244b1133ad553648537c395db97baa4f35d9a959afc7c938735a3f8b2b8a1",
+      "bytes": 14095,
+      "root": {
+        "DocType": "OFD",
+        "Version": "1.1"
+      },
+      "actual": {
+        "status": "partial",
+        "pages": 1,
+        "runs": 63,
+        "characters": 541,
+        "diagnostics": {
+          "version_common_subset": 1,
+          "metadata_only": 3,
+          "signatures_not_verified": 1,
+          "vector_not_interpreted": 23,
+          "image_not_read": 1,
+          "foreign_namespace": 2,
+          "unparsed_xml_member": 2
+        },
+        "text_sha256": "d50d2e0fc6e6b36d54d34f2ffd699ef847140a1fe507bb708d6e98bde2f648cc"
+      },
+      "independent_text_check": "not_performed; structural/version smoke only",
+      "cli": {
+        "exit_code": 3,
+        "status": "partial",
+        "stdout_chars": 74361,
+        "stderr": ""
+      }
+    }
+  ],
+  "frozen_expected": {
+    "sample_0": "你好呀，OFD Reader&Writer！",
+    "sample_1": "你好呀，OFD Reader&Writer！",
+    "other_samples": "version, container and diagnostic smoke only; no independent whole-text oracle"
+  },
+  "version": "20261102.1709.0216",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12 (main, Feb  4 2026, 00:05:32) [Clang 21.1.4 ]",
+  "expat": "expat_2.6.3",
+  "linux": "not_verified; no target Linux executor available",
+  "windows": "not_verified",
+  "synthetic_tests": 54,
+  "host_output_verification": "CLI subprocess stdout/stderr/exit captured; model received summaries via exec; full model-visible JSON relay not separately certified",
+  "package": "skills/ofd-20261102.1709.0216.zip",
+  "package_bytes": 39783,
+  "package_sha256": "6a32fdd81bc9f1b66542c9ed76ac4fc5ae0b8e5170ef9b564e74c15089291348",
+  "members": {
+    "SKILL.md": "226a8ec570e757a3df5dbe0ba1da1481d5228bcf1e2e3c407554935d2dedf2c5",
+    "references/boundaries.md": "04c1a974534056e04adca8ce2ac14ac0959b357127dc8cb18fb35788e39c5e94",
+    "references/compatibility.md": "1c3eb4f12820122257f171715204e8f55d54d8b016c6cd6f9162a594faf2955f",
+    "references/contract.md": "08c3be2cac74174b36c154349f9449534fe34030b310886557898fb570ad4af6",
+    "references/real-samples.json": "d7af2f32d3faba05e679c08edc4760ab93ebd9f4de74c37efb1fcab1c04f021a",
+    "references/validation.md": "b53d81a0135939ceb304686a26f24177d8514b7c9e06b45e44ac037b8d93bc47",
+    "requirements.txt": "423841be34df23375c319889cc694b1fd76cfebc8cd5712a008356f4d44259c8",
+    "scripts/read_ofd.py": "280e45d4d6fe7b4897cd9a68521b87242b264dea8e98e7203ad9eff1dafe1d67",
+    "scripts/test_ofd.py": "852c1568633b27de5181b869c80baa5c510818ba8623b3ad4c88d5b9bdaeb0e8",
+    "scripts/test_ofd_compat.py": "6b1978055778d44c1f1ebd643ab513ca9e84c2fe0e5913bd1c572338750e5b88"
+  },
+  "readonly_repeated_package_tests": "passed twice, 54 tests each",
+  "source_package_consistency": "passed",
+  "stdlib_ast_token_checks": "passed",
+  "pylint": "not_available; not_installed",
+  "strict": "passed",
+  "public_evidence_note": "Private Library identity/delivery-session metadata excluded from this public evidence copy; technical results retained.",
+  "postfix_review_record": "tests/ofd_postfix_review_verification.json",
+  "postfix_review_status": "completed in separate maintenance thread; historical initial/follow-up results above are retained"
+}
