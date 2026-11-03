@@ -1,0 +1,2 @@
+# Python >=3.9; standard library only; no third-party dependencies.
+# All OOXML reading additionally requires bundled Expat >=2.6.0.

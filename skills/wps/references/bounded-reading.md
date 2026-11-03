@@ -5,8 +5,6 @@
 旧CLI/API默认仍输出完整读取结果。大ET/ETT只需结构时先概况，逐格任务按需分页；文字可分页读取主正文。以下均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不写结果文件、不自动归档、不执行公式、宏或外链。
 
 ```console
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et --summary
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.et --sheet "Data" --page-size 100 --max-output-chars 12000
 python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --page-size 2000 --max-output-chars 12000
 ```
 
@@ -26,7 +24,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --page-size 2000 
 
 概况用于确定所需表或内容，分页用于抽查或精确局部核对；页越小，工具调用、游标和共同诊断的累计回传可能越多。若必须取完全部内容，不据首屏较小就宣称整个任务节省token。每次CLI续读仍读取并解析完整输入，再生成输出视图；没有跨调用快照缓存，也没有降低解析资源或安全校验。
 
-全量统计先按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）取得同一个原完整提取JSON，交给实际可用的分析器；不拼造原schema、不省略partial/源诊断，不推测相邻技能目录。按需落盘的原结果仍只是本轮受控中间数据，不自动当最终交付物归档。单独概况仅统计输出层单元格数量，不再排序，但格式验证和诊断仍来自完整解析。
+文字统计与全文分析使用原完整提取 JSON，不省略 partial/源诊断。按需落盘的原结果仍只是本轮受控中间数据，不自动当最终交付物归档。单独概况仅统计输出层字符数量，格式验证和诊断仍来自完整解析。
 
 ## 游标投影版本
 

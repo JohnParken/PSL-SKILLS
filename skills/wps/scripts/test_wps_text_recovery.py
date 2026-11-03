@@ -12,7 +12,6 @@ from read_wps import ParseError, parse_streams, read_bytes
 from test_wps import document, replace_word
 from test_wps_cfb import synthetic_cfb
 from test_wps_binary_shapes import shaped_document
-from test_wps_biff8 import workbook
 
 
 def streams(text):
@@ -94,11 +93,9 @@ class TextRecoveryTests(unittest.TestCase):
         result = read_bytes(package('正文\r'))
         self.assertEqual(result['text'], '正文\n')
         self.assertNotIn('uninterpreted_control_markers_not_decoded', [issue['code'] for issue in result['issues']])
-        data = synthetic_cfb({'Workbook': workbook()})
-        result = read_bytes(data)
-        self.assertEqual(result['schema_version'], 'biff8_readonly_v1')
+        data = synthetic_cfb({'Workbook': b'\t\x08\x10\x00\x00\x06\x05\x00\xbb\x01\xcc\x0c\x00\x00\x00\x00'})
         with self.assertRaises(ParseError):
-            read_bytes(data, text_policy='recover')
+            read_bytes(data)
 
     def test_cli_partial_json_text_and_strict_failure(self):
         with tempfile.TemporaryDirectory() as temporary:

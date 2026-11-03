@@ -602,16 +602,14 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                 'Binary paragraph sources do not apply to OOXML', 'unsupported')
         require(compatibility in ('strict', 'data') and chart_policy == 'reject' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
                 'Binary compatibility/field/chart options do not apply to OOXML', 'unsupported')
-        from wps_ooxml_sheet import package_kind, read_bytes as read_sheet_bytes
+        from wps_ooxml import package_kind, read_bytes as read_ooxml_bytes
         try:
             family = package_kind(data)
         except (ValueError, KeyError, zipfile.BadZipFile, zlib.error) as exc:
             raise ParseError('invalid_or_unsupported', {'stage': 'OOXML package'}, str(exc)) from exc
         if family == 'spreadsheet':
-            require(revisions is None and not include_related and hidden_text == 'include',
-                    {'stage': 'options'}, 'Document options do not apply to spreadsheets', 'unsupported')
-            return read_sheet_bytes(data)
-        from wps_ooxml import read_bytes as read_ooxml_bytes
+            raise ParseError('unsupported', {'stage': 'OOXML package'},
+                             'Spreadsheets (.et/.ett) have migrated to the et skill; use skills/et/scripts/read_et.py')
         return read_ooxml_bytes(data, revisions=revisions or 'accepted', include_related=include_related, hidden_text=hidden_text)
     if data.lstrip().startswith(b'{\\rtf'):
         from wps_rtf_read import parse_rtf_bytes
@@ -647,24 +645,11 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
             result['status'] = 'partial'
             result['partial'] = True
         return result
-    require(text_policy is None, {'stage': 'options'}, 'Binary text policy only applies to MS-DOC', 'unsupported')
-    require(not binary_paragraph_sources, {'stage': 'options'},
-            'Binary paragraph sources only apply to MS-DOC', 'unsupported')
-    require(len(workbooks) == 1, {'stage': 'routing'},
-            'Require exactly one supported document or workbook payload', 'unsupported')
-    require(revisions is None and not include_related and hidden_text == 'include' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
-            'Document revision/related-story options do not apply to BIFF', 'unsupported')
-    from wps_biff8 import read_container
-    try:
-        result = read_container(compound, path=source, compatibility=compatibility,
-                                chart_policy=resolve_chart_policy(requested_chart_policy, compatibility))
-    except ValueError as exc:
-        location = {'stage': 'BIFF', 'stream': workbooks[0][0], 'compatibility_mode': compatibility}
-        location.update(getattr(exc, 'location', {}))
-        raise ParseError(getattr(exc, 'status', 'invalid_or_unsupported'),
-                         location, str(exc)) from exc
-    from wps_biff8 import normalize_result
-    return normalize_result(result)
+    if workbooks:
+        raise ParseError('unsupported', {'stage': 'routing'},
+                         'Spreadsheets (.et/.ett) have migrated to the et skill; use skills/et/scripts/read_et.py')
+    raise ParseError('unsupported', {'stage': 'routing'},
+                     'Require WordDocument payload; no supported document found')
 
 
 def read_bytes(data, **options):
@@ -697,7 +682,7 @@ def check_environment():
     try:
         if sys.version_info < (3, 9):
             raise RuntimeError('Python >=3.9 required')
-        import wps_biff8
+        import wps_cfb
         import wps_ooxml
         from xml.parsers import expat
     except (ImportError, OSError, RuntimeError) as exc:
@@ -726,6 +711,9 @@ def main():
     parser.add_argument('--hidden-text', choices=('include','exclude','annotate'), default='include')
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--summary', action='store_true')
+    parser.add_argument('--heading-only', action='store_true')
+    parser.add_argument('--paragraph-range', type=str)
+    parser.add_argument('--section', type=str)
     parser.add_argument('--sheet')
     parser.add_argument('--page-size', type=int)
     parser.add_argument('--cursor')
@@ -736,7 +724,9 @@ def main():
     if args.binary_paragraph_sources and args.format == 'text':
         parser.error('--binary-paragraph-sources requires --format json to retain provenance ranges')
     if args.check:
-        if any((args.summary, args.sheet is not None, args.page_size is not None, args.cursor is not None, args.max_output_chars is not None)):
+        if any((args.summary, args.heading_only, args.paragraph_range is not None, args.section is not None,
+                args.sheet is not None, args.page_size is not None, args.cursor is not None,
+                args.max_output_chars is not None)):
             parser.error('--check does not accept read-view options')
         return check_environment()
     if sys.version_info < (3, 9):
@@ -762,6 +752,18 @@ def main():
             result = failure(getattr(exc, 'status', 'io_error'), getattr(exc, 'location', {'stage': 'input'}), str(exc))
     else:
         result = read(args.input, **options)
+    selective_requested = any((args.heading_only, args.paragraph_range is not None, args.section is not None))
+    if selective_requested and result.get('status') in ('ok', 'partial'):
+        from wps_selective import project_headings, project_paragraph_range, project_section
+        try:
+            if args.heading_only:
+                result = project_headings(result)
+            elif args.paragraph_range is not None:
+                result = project_paragraph_range(result, args.paragraph_range)
+            elif args.section is not None:
+                result = project_section(result, args.section)
+        except ValueError as exc:
+            result = failure('invalid_argument', {'stage': 'selective_reading'}, str(exc))
     if args.format == 'text' and result['status'] in ('ok', 'partial') and 'text' not in result:
         result = failure('unsupported', {'stage': 'output'}, 'Spreadsheet extraction requires JSON output')
     if args.format == 'text' and result['status'] in ('ok', 'partial'):

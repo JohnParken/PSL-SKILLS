@@ -1,0 +1,133 @@
+# ET/ETT investigation and bounded compound-container reading
+
+路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+
+Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
+before using this reference; internal resources and task data have different path bases.
+
+The main `"<skill-root>/scripts/read_et.py" input.et` / `"<skill-root>/scripts/read_et.py" input.ett` commands now dispatch to
+the separate BIFF8 subset reader, defaulting to data policy. Explicit strict and legacy
+policies remain available; see current reading policy (`<skill-root>/references/biff8-readonly.md#default-data-policy`).
+This does not change the CFB-only inspector or add WPS private-record semantics. Real-file BIFF8 subset checks now include original ET and ETT downloads;
+see real sample validation (`<skill-root>/references/et-real-validation.md`). Native WPS private-record semantics
+and general ET/ETT compatibility remain unverified.
+
+Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) and require exit 0,
+environment-ok. Confirm the input is authorized and readable in the task directory. This
+reader writes no files; no write probe is needed for inspection. Resolve `<skill-root>`
+from the actual SKILL.md and replace it before running commands with task-relative input.
+Python 3.9+, standard library only; no Office launch, network calls or installations at runtime.
+
+## Contents
+
+- Evidence and provenance (`<skill-root>/references/et-ett-readonly.md#evidence-and-provenance`)
+- CLI and support levels (`<skill-root>/references/et-ett-readonly.md#cli-and-support-levels`)
+- Container subset and safety (`<skill-root>/references/et-ett-readonly.md#container-subset-and-safety`)
+- Tests and remaining work (`<skill-root>/references/et-ett-readonly.md#tests-and-remaining-work`)
+
+## Evidence and provenance
+
+Initial research checked 2026-10-22; real-template follow-up checked 2026-10-23. Sources were read for specifications/support/licensing; no
+third-party parser code or test files were copied, installed or bundled. Exact source URLs
+are recorded in the evidence manifest (`<skill-root>/references/et-format-evidence.json`) as bibliographic provenance,
+not runtime resources or downloadable dependencies.
+
+| Source | Finding and implementation use |
+|---|---|
+| Microsoft MS-CFB, published revision 12.0, 2024-04-23 | Documented general-purpose compound container; basis for this independent implementation, not an ET record specification |
+| CFB header and directory entry | Sector sizes, header fields, directory offsets and UTF-16 names |
+| SheetJS format documentation | Lists ET read support and describes proprietary extensions over BIFF8; this is evidence for a future investigation, not proof that every ET/ETT variant is BIFF8 |
+| SheetJS repository/license | CE Apache-2.0; no code incorporated; documentation does not establish all ETT variants or WPS versions |
+| olefile API and license | Mature generic OLE stream reader, not native ET semantics; BSD-style terms plus inherited PIL notice; not installed/copied |
+| libwps upstream | Microsoft Works import library; its name does not establish Kingsoft WPS ET support |
+| WPS format list | Vendor service lists ET/ETT support, but that page is not a binary layout specification |
+
+No real ET/ETT binary sample is bundled in the maintained skill. An earlier public ET template
+was tested locally; its source, original SHA-256 and limited comparison results are
+recorded in the evidence manifest. No authorized user sample was supplied. The public
+SheetJS/test_files repository was disabled when checked, so it was not usable as a
+licensed/versioned ET corpus. Distributable tests generate synthetic CFB structures in
+memory under this repository's license; creator is the test builder, CFB versions are
+3/4, WPS producer/version is not applicable.
+Renamed XLS/XLSX or simulated containers are never counted as real ET/ETT acceptance.
+
+## CLI and support levels
+
+```console
+python3 -I -S -B "<skill-root>/scripts/read_et.py" input.et
+python3 -I -S -B "<skill-root>/scripts/wps_cfb.py" input.et
+```
+
+Content, not extension, selects the container probe. Non-CFB data is rejected by wps_cfb;
+read_wps dispatches supported contents and diagnoses unsupported inputs without guessing ET.
+The CFB report lists component-array stream paths, lengths and SHA-256 digests, not cells
+or full stream contents. Workbook/Book names are only workbook_stream_candidates.
+
+Three separate claims must remain separate: container_readable / BIFF readable / native
+ET/ETT accepted. The CFB reader only emits support_level cfb_container_only; biff_parsed,
+native_et_ett_parsed and cells_decoded are false. A consistent header alone no longer
+passes the compound probe. The unified read_wps entrypoint then checks the root streams
+and reads a supported document or BIFF subset, returning ok/partial or a specific refusal.
+Known EncryptionInfo/EncryptedPackage streams are refused as encrypted; generic private encryption is not decoded.
+A corrupt or outside-subset container returns invalid_or_unsupported, not a fake empty sheet.
+
+Use --compatibility legacy_excel_clsid explicitly on `<skill-root>/scripts/read_et.py`, `<skill-root>/scripts/wps_cfb.py` or
+`<skill-root>/scripts/wps_biff8.py` to accept the exact nonzero header CLSID
+`2008020000000000c000000000000046` (Excel WorksheetClass CLSID) in v3 only. The CFB-only inspector and explicit strict mode
+still reject it, as MS-CFB requires CLSID_NULL; the unified reader and BIFF file API
+default data policy select this evidenced profile automatically before parsing. This narrowly documented interoperability
+exception applies to these exact raw header CLSID bytes and reports the
+`nonstandard_header_clsid` issue. Stream contents are represented by path, length and
+SHA-256 digest; the report does not preserve original stream bytes. This does not prove
+WPS authorship or change the input. A root Workbook/Book stream is required after
+all regular allocation validation. Unknown GUIDs and the same nonzero GUID in v4 remain
+rejected. All length, chain, cross-link, orphan, name, encryption and quota checks remain.
+The BIFF entrypoint also uses an explicit raw-metadata allowlist in this mode, documented
+in the BIFF reference (`<skill-root>/references/biff8-readonly.md#observed-legacy-compatibility`).
+
+The standalone CFB CLI exits 0 after container diagnosis, including encrypted_unsupported;
+invalid/unsupported structure or I/O returns 1. The general inspector retains exit 0 for
+completed diagnoses; inspect JSON status and support flags, not exit alone.
+Python API: CompoundFile.load(path).report() and read_stream([component,...]) -> bytes.
+read_stream refuses recognized encrypted payloads; it never extracts to a filesystem path.
+Raw stream bytes are not a spreadsheet model and cannot be fed directly to region/profile.
+
+## Container subset and safety
+
+Support version 3 (512-byte sectors) and version 4 (4096-byte sectors), header and extended
+DIFAT, FAT, directory graphs, normal streams and 64-byte mini streams/MiniFAT. Check bounds,
+chain termination/length, cycles, cross-linked allocation, UTF-16 names, duplicate names,
+unreachable active directory entries and unreferenced allocated sectors. Never follow
+OLE links, URLs or external objects, execute macros, decrypt or decompress nested streams.
+Directory graph checks do not constitute full red-black ordering/conformance validation.
+Strict restrictions can reject otherwise readable noncanonical CFB files: exact stream
+chain lengths, no orphan allocated sectors, empty streams must use ENDOFCHAIN, casefold
+name collision checks, and aligned root mini-stream sizes. Report outside-subset rather
+than silently dropping payload. The CFB entrypoint interprets no spreadsheet types, dates, merges, formulas or styles.
+A separate strict BIFF8 record reader (`<skill-root>/references/biff8-readonly.md`) now provides a bounded record
+subset and explicit header adapter, without changing CFB-only or ET compatibility claims.
+
+Limits: input 32 MiB (+ one limit-detection byte), individual user stream 8 MiB, aggregate
+user streams 32 MiB, directory 4096 entries, graph depth 32, 512 FAT and 16 DIFAT sectors.
+Header-declared sizes/counts are bounded before materialization. CFB has no compression
+in this reader; existing OOXML ZIP member/uncompressed limits remain separate. No changes
+were made to permit unbounded compression or to trust extension-based dispatch.
+
+## Tests and remaining work
+
+Synthetic tests cover v3/v4, Chinese names/raw bytes, normal/mini/fragmented chains,
+extended DIFAT, nested storages, empty streams, cycles, cross-links, overlong declarations,
+malformed pointers/names, orphan allocations, encrypted stream rejection and CLI no-write.
+These verify container behavior only, not WPS or Excel interoperability.
+
+Next obtain permitted, versioned WPS-generated ET/ETT samples plus corresponding XLSX and
+producer/platform metadata. Establish stream signatures and private record rules, then
+extend the documented BIFF8 subset only after verifying ET private records and comparing
+real sheet/type/date/merge data. The separate BIFF8 tests are still synthetic. Unknown records must not be silently skipped to claim full data
+recovery. Formula caches would remain unverified with raw representation, never computed.
+For files outside the subset, the skill stops with a diagnostic. Independently of this
+standard-library runtime, a user may use a trusted local WPS copy to Save As a new XLSX
+and verify it; renaming is
+not conversion. The earlier ET comparison and current original-template checks are limited evidence;
+full native ET/ETT acceptance has not been performed. Real formula-cache bytes were retained
+and cross-checked, but their calculation correctness and real numeric-date interpretation remain unverified.

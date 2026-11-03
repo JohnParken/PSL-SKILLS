@@ -800,3 +800,23 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             result["status"] = "corrupt"
         result["diagnostics"] = [{"stream": part, "offset": None, "location": part, "message": message}]
         return result
+
+
+def package_kind(data: bytes) -> str:
+    """Identify whether an OOXML package represents a word document or spreadsheet."""
+    stream = io.BytesIO(data)
+    _preflight(stream, len(data))
+    with zipfile.ZipFile(stream) as package:
+        check_archive(package)
+        names = set(package.namelist())
+        if "word/document.xml" in names:
+            return "word"
+        if "xl/workbook.xml" in names:
+            return "spreadsheet"
+        if "[Content_Types].xml" in names:
+            ct = read_part(package, "[Content_Types].xml")
+            if b"spreadsheetml" in ct or b"application/vnd.openxmlformats-officedocument.spreadsheetml" in ct:
+                return "spreadsheet"
+            if b"wordprocessingml" in ct:
+                return "word"
+        raise ValueError("Unsupported OOXML main content type")

@@ -8,16 +8,12 @@
 - FIB与正文规则 (`<skill-root>/references/format.md#fib与正文规则`)
 - 兼容策略和来源 (`<skill-root>/references/format.md#兼容策略和来源`)
 - 预算与输出 (`<skill-root>/references/format.md#预算与输出`)
-- 数字解释与保存可见性 (`<skill-root>/references/format.md#数字解释与保存可见性`)
 - 附加文字与引用 (`<skill-root>/references/format.md#附加文字与引用`)
 - OOXML结构化表格 (`<skill-root>/references/format.md#ooxml结构化表格`)
 - 隐藏文字与修订策略 (`<skill-root>/references/format.md#隐藏文字与修订策略`)
 - 更广OPC容器子集 (`<skill-root>/references/format.md#更广opc容器子集`)
 - 统一读取可信度 (`<skill-root>/references/format.md#统一读取可信度`)
-- 样式来源与关联部件 (`<skill-root>/references/format.md#样式来源与关联部件`)
-- 会计与条件数字格式 (`<skill-root>/references/format.md#会计与条件数字格式`)
-
-- CFB兼容头与容器检查（`<skill-root>/references/format.md#cfb兼容头与容器检查`）
+- CFB兼容头与容器检查 (`<skill-root>/references/format.md#cfb兼容头与容器检查`)
 
 ## 能力与证据矩阵
 
@@ -35,16 +31,9 @@
 | Strict/Transitional OOXML Word | 正文、表格文字、修订视图、显式关系/引用ID关联文字 | 合成；未知namespace/MC/绘图/字段等partial，需Expat>=2.6 |
 | OOXML逻辑表格 | tables坐标/gridSpan/vMerge/空单元格/嵌套来源 | 仅合成；缺网格坐标unknown/partial，默认文字契约保持，不渲染页面 |
 | MS-DOC直接PAPX行/单元格 | 一级行、文字、CP来源与初始列定义，partial | 仅合成；不归组表格、不恢复合并/嵌套，未知操作保留未解析诊断 |
-| BIFF8 plain SST/String Continue | typed cells/长字符串/日期元数据/缓存 | 四个既有真实ET/ETT及合成；不重算缓存 |
-| BIFF8 plain Label及Continue | 内联单元格文字，保留来源与类型 | 新增布局仅合成；data普通Unicode兼容 (`<skill-root>/references/biff8-readonly.md#pure-table-unicode-compatibility`)忽略保留位并报告partial；不支持RString或实际富格式/注音尾布局，不按GBK猜解码 |
-| BIFF8视图/分页元数据 | data默认或显式legacy_excel_clsid保留Palette/Pane/横纵分页原始字节 | 结构检查后保留，不应用布局；显式strict仍拒绝，新增布局仅合成 |
-| BIFF8 DXF（0x088D） | FrtHeader及XFProps/属性边界校验、原始属性保留，partial | data/legacy支持；不应用差异格式；新增仅合成，无反馈原件验收 |
-| BIFF8 rich SST及Continue | 文字+原始格式run信息，partial | 仅合成；字符编码与run续段分开，不应用字体布局；phonetic ExtRst 另保留原始字节且未解码 |
-| BIFF8共享/数组公式 | 各单元格保存的缓存+组范围/锚点，partial | 仅合成；不恢复表达式、不重算，不将锚点缓存广播 |
-| OOXML电子表格及ISO日期类型d | Strict/Transitional保存值、缓存、合并、原始日期字符串 | 仅合成；日期不转serial，复杂样式unknown，关联部件仍有限 |
 | 其他FIB、私有WPS/Works | unsupported | 不猜测、不自动转换或软件回退 |
 
-后缀不是格式证据。主入口按签名、容器、内部负载分流；同时存在WordDocument和Workbook/Book则拒绝歧义。docx/xlsx原生入口拒绝WPS家族后缀，CFB伪装OOXML也不会走二进制解码。
+后缀不是格式证据。主入口按签名、容器、内部负载分流；同时存在WordDocument和Workbook/Book则拒绝歧义。电子表格（.et/.ett）使用专门的 `et` 技能。
 
 ## FIB与正文规则
 
@@ -62,9 +51,9 @@ csw14、cslw22、Windows envr0，nFibBack允许BF/C1。由cswNew决定使用base
 
 偏移24/28是必须忽略的保留字段。片段仍主动限定在[FIB截止,cbMac)，cbMac不超过流长度；检查重叠、CP顺序、总故事数，拒绝FIB/数据交叉。这是有限子集，不是完整格式认证。
 
-CLX取fc/lcb索引33，按标志选0Table/1Table；Prc有界跳过，复杂Prm检查零基索引后不应用格式。唯一末尾Pcdt必须长度/边界正确。压缩片段按FcCompressed映射，UTF16按逻辑片段拼接，严格代理对解码。默认仅读CP0,ccpText)，其他故事仅边界检查。显式include-related按公开FIB顺序输出六区及CP半开范围；最后额外CP不输出；每区独立代理对/字段闭合，不能借下一故事修复。有界脚注尾注引用表见[CP映射 (`<skill-root>/references/binary-note-references.md`)，批注见作者/引用 (`<skill-root>/references/binary-comments.md`)，节与页眉存储槽见分节 (`<skill-root>/references/binary-headers.md`)，其他引用未知partial，见存储故事 (`<skill-root>/references/ms-doc-stories.md`)。
+CLX取fc/lcb索引33，按标志选0Table/1Table；Prc有界跳过，复杂Prm检查零基索引后不应用格式。唯一末尾Pcdt必须长度/边界正确。压缩片段按FcCompressed映射，UTF16按逻辑片段拼接，严格代理对解码。默认仅读CP0,ccpText)，其他故事仅边界检查。显式include-related按公开FIB顺序输出六区及CP半开范围；最后额外CP不输出；每区独立代理对/字段闭合，不能借下一故事修复。有界脚注尾注引用表见 CP映射 (`<skill-root>/references/binary-note-references.md`)，批注见作者/引用 (`<skill-root>/references/binary-comments.md`)，节与页眉存储槽见分节 (`<skill-root>/references/binary-headers.md`)，其他引用未知partial，见存储故事 (`<skill-root>/references/ms-doc-stories.md`)。
 
-CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。统一read/read_bytes/CLI的data模式默认对MS-DOC使用text_policy=recover：未指定的field_policy取cached_result、object_policy取placeholder；显式reject仍生效。strict/legacy兼容模式、底层parse_streams默认保持strict文字策略；显式text_policy=strict可在data模式保留原拒绝行为。--text-policy仅适用于MS-DOC，ET/OOXML显式传入会拒绝；不改变其默认行为。
+CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。统一read/read_bytes/CLI的data模式默认对MS-DOC使用text_policy=recover：未指定的field_policy取cached_result、object_policy取placeholder；显式reject仍生效。strict/legacy兼容模式、底层parse_streams默认保持strict文字策略；显式text_policy=strict可在data模式保留原拒绝行为。--text-policy仅适用于MS-DOC，其他格式显式传入会拒绝；不改变其默认行为。
 
 cached_result只按13/14/15分隔符和有界嵌套保留保存结果；隐藏指令不输出，缓存新鲜度和sprmCFSpec/Plcfld未验证，始终partial。不带结果的闭合域省略并报告；缺损、重复分隔、跨故事未闭合域仍corrupt，不用后续文字猜边界。显式field_policy=reject仍拒绝域。
 
@@ -76,9 +65,9 @@ U+0001在placeholder模式替换U+FFFC，不推断图片/对象类型。U+0008�
 
 ## 兼容策略和来源
 
-显式strict要求CFB零头CLSID和minor003E；data及显式legacy额外接受已观察的minor003B并报告partial，其他minor仍拒绝。MS-CFB 2.2对003E使用SHOULD；该兼容不改变major/sector及分配验证。legacy_word_clsid只允许v3精确头字节0609020000000000c000000000000046，根WordDocument必须A5EC，且无Workbook/Book；不改写输入头。异常头永远记录partial，GUID不证明生成软件或完整MS-DOC。legacy_excel_clsid只用于BIFF工作簿，允许v3精确头字节2008020000000000c000000000000046及对应受限元数据，具体范围见BIFF兼容 (`<skill-root>/references/biff8-readonly.md#observed-legacy-compatibility`)。Word与Excel专用策略不可交叉使用；默认data对OOXML沿用strict解析，显式legacy仍不适用。data按精确GUID自动选择已知Word或Excel头策略；Word头路径仍要求v3、有效WordDocument标识且不含Workbook/Book，Excel路径继续限定工作簿；零GUID沿用严格容器读取。BIFF元数据策略见默认数据策略 (`<skill-root>/references/biff8-readonly.md#default-data-policy`)。链、分配、重叠、目录、预算检查均保持。
+显式strict要求CFB零头CLSID和minor003E；data及显式legacy额外接受已观察的minor003B并报告partial，其他minor仍拒绝。MS-CFB 2.2对003E使用SHOULD；该兼容不改变major/sector及分配验证。legacy_word_clsid只允许v3精确头字节0609020000000000c000000000000046，根WordDocument必须A5EC，且无Workbook/Book；不改写输入头。异常头永远记录partial，GUID不证明生成软件或完整MS-DOC。Word专用策略不与Excel专用策略交叉使用；默认data对OOXML沿用strict解析，显式legacy仍不适用。data按精确GUID自动选择已知Word头策略；Word头路径仍要求v3、有效WordDocument标识且不含Workbook/Book，零GUID沿用严格容器读取。链、分配、重叠、目录、预算检查均保持。
 
-CFB/BIFF已迁至wps包内唯一实现；不依赖相邻xlsx。CFB迁移基线hash为00dcd269218d94737e9ebad48c06fafa62b1fae72c3807a037fe7f1cd0bfb42a，此后新增只读打开及精确Word策略，不再逐字节相同。OOXML必要读取守卫来自docx，纯表头helper来自xlsx；原生流程仍保留各自必需代码。不得自动复制覆盖形成漂移。
+CFB已迁至wps包内唯一实现。CFB迁移基线hash为00dcd269218d94737e9ebad48c06fafa62b1fae72c3807a037fe7f1cd0bfb42a，此后新增只读打开及精确Word策略。OOXML必要读取守卫来自docx。不得自动复制覆盖形成漂移。
 
 官方依据 (`<skill-root>/references/format-evidence.json`)仅开发资料，运行时不联网。Word头例外是明示经验兼容策略，并非宣称符合MS-CFB零CLSID要求。
 
@@ -88,15 +77,7 @@ CFB/BIFF已迁至wps包内唯一实现；不依赖相邻xlsx。CFB迁移基线ha
 
 OOXML解压前检查目录/成员/命名冲突，部件32MiB、累计128MiB、成员4096；XML每部件16MiB、深度128并累计节点/属性/名字预算，拒绝DTD/实体。必须Expat>=2.6；所有ZIP成员有界长度及CRC检查，不解包到磁盘。
 
-BIFF流/记录/单元格/字符串预算保持；重复单元格文字及格式文本累计8Mi UTF16单位，JSON在完整输出前以iterencode限制16MiB。日期保留原始数值及date_system/XF/format，另有直接格式白名单numeric_interpretation；复杂格式unknown，可验证的cellXfs/cellStyleXfs两层数字格式来源及单一行列来源可有限解释；不推断完整样式级联或显示。公式tokens及已有缓存分开保留，未重算且可能过时；共享/数组支持与拒绝条件统一见公式组边界 (`<skill-root>/references/formula-groups.md`)，字符串续段见富文本续段 (`<skill-root>/references/biff-rich-continuation.md`)。其他记录范围详见BIFF参考 (`<skill-root>/references/biff8-readonly.md`)。
-
-CLI选项以 `"<skill-root>/scripts/read_wps.py" --help` 为准；含 `--hidden-text include|exclude|annotate`，分支适用性见主入口任务路由。统一CLI、Python API、失败字典与输出阶段例外详见结果与失败契约 (`<skill-root>/references/reading-assessment.md#入口与失败行为`)。BIFF文件CLI默认data，ok/partial分别退出0/3；显式strict/legacy的低层历史状态及成功退出0保留，优先使用统一入口。CFB及部分BIFF诊断仍仅阶段/消息，并非每处都有精确偏移。
-
-## 数字解释与保存可见性
-
-numeric_interpretation (`<skill-root>/references/numeric-interpretation.md`)为附加解释，不改变value/type/cache_status；Decimal金额/百分比、千分/缩放/编号和白名单日期时间均有边界，非完整渲染。公式缓存不重算。
-
-保存可见性 (`<skill-root>/references/saved-visibility.md`)解释Row/ColInfo隐藏标志；未知行状态保留unknown，隐藏原因不区分手动或筛选。筛选记录保留原字节、条件未解释且未执行，partial。默认全部数据；显式saved_visible选择也保留未知行。OOXML电子表格使用独立schema和同样的保守可见性约定；复杂样式继承不猜测。
+CLI选项以 `"<skill-root>/scripts/read_wps.py" --help` 为准；含 `--hidden-text include|exclude|annotate`，分支适用性见主入口任务路由。统一CLI、Python API、失败字典与输出阶段例外详见结果与失败契约 (`<skill-root>/references/reading-assessment.md#入口与失败行为`)。CFB诊断仍仅阶段/消息，并非每处都有精确偏移。
 
 ## 附加文字与引用
 
@@ -112,22 +93,14 @@ OOXML hidden-text默认include，显式exclude/annotate共用XML预处理覆盖�
 
 ## 更广OPC容器子集
 
-按officeDocument主关系及内容类型识别Word/电子表格。Strict Word逐已选部件验证家族一致后仅内存规范化复用契约，主部件仍固定word/document.xml；不是全Strict认证。电子表格支持Strict/Transitional及保存值/缓存/合并/有限样式与可见性，明确schema ooxml_spreadsheet_readonly_v1，不伪称BIFF。全部OOXML需Expat>=2.6；未知类型、关系、外部目标、宏与混合家族拒绝。复杂格式unknown，公式表达式原样不解释并partial。详见Word (`<skill-root>/references/strict-word.md`)与电子表格 (`<skill-root>/references/ooxml-spreadsheet.md`)。新增覆盖仅合成，无真实WPS容器语义对照。
+按officeDocument主关系及内容类型识别Word文档。Strict Word逐已选部件验证家族一致后仅内存规范化复用契约，主部件仍固定word/document.xml；不是全Strict认证。全部OOXML需Expat>=2.6；未知类型、关系、外部目标、宏拒绝。详见Word (`<skill-root>/references/strict-word.md`)。新增覆盖仅合成，无真实WPS容器语义对照。
 
 ## 统一读取可信度
 
-reading_assessment (`<skill-root>/references/reading-assessment.md`)是统一入口的附加摘要，保留原诊断和数据。ok仅within_declared_scope，partial与失败严格分开；位置缺失保持unknown，不复制排除全文。ISO日期读取的精确支持范围见日期类型d (`<skill-root>/references/iso-date.md`)。
-
-## 样式来源与关联部件
-
-行列格式来源 (`<skill-root>/references/row-column-formats.md`)单一明确来源或双来源数字格式等价时可解释；两层格式链接 (`<skill-root>/references/style-inheritance.md`)检查父子保存值、apply标志和冲突，非法链循环/越界/深度均unknown。location-only内部超链接 (`<skill-root>/references/internal-links.md`)保留原元数据并partial，不解析目标、不读取外部关系；不是工作表关联部件通用支持；当前另有传统批注 (`<skill-root>/references/sheet-comments.md`)纯文本子集，另支持有限VML Note锚点 (`<skill-root>/references/vml-note-anchors.md`)；其他绘图/外部或未知关系仍拒绝。新行为仅合成验证，实现边界及未验证范围见验证记录 (`<skill-root>/references/validation.md`)。
-
-## 会计与条件数字格式
-
-会计格式 (`<skill-root>/references/accounting-formats.md`)支持有限2–4位置段，保留Decimal原值与原格式；移除填充后的display_text不代表列宽或页面显示。纯数值条件 (`<skill-root>/references/conditional-number-formats.md`)仅支持至多两个常量比较与后备段；区域指令仅元数据，颜色及复杂混合语法仍unknown。批注保留单元格、作者、文本与关系来源，不并入单元格值，布局未解码partial。所有新增能力只作标准库合成测试；真实Balance格式字节可检查，不等于独立显示对照。
+reading_assessment (`<skill-root>/references/reading-assessment.md`)是统一入口的附加摘要，保留原诊断和数据。ok仅within_declared_scope，partial与失败严格分开；位置缺失保持unknown，不复制排除全文。
 
 默认 MS-DOC 检测到非空未选附加故事时，返回 `omitted_regions` 的类型/CP范围并标为 partial，不读取或复制其文字。已知表格标记但结构不完整时同样 partial。统一范围摘要另提供有界 coverage；见结果契约 (`<skill-root>/references/reading-assessment.md`)。
 
 ## CFB兼容头与容器检查
 
-默认 data 按精确头 GUID 自动选择已有的旧版 Word/Excel CFB 兼容路径，并接受旧版 minor `0x003B`；仍检查对应负载、版本、扇区链和边界，并报告 partial。显式 strict 保留零头 GUID 与 minor `0x003E` 要求。字段、对象及正文布局等独立限制继续按下表处理，容器可读不等于任意 MS-DOC 都能提取。
+默认 data 按精确头 GUID 自动选择已有的旧版 Word CFB 兼容路径，并接受旧版 minor `0x003B`；仍检查对应负载、版本、扇区链和边界，并报告 partial。显式 strict 保留零头 GUID 与 minor `0x003E` 要求。字段、对象及正文布局等独立限制继续按下表处理，容器可读不等于任意 MS-DOC 都能提取。

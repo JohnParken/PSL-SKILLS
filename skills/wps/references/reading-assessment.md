@@ -2,7 +2,7 @@
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-失败JSON新增diagnostic_context，辅助区分CFB容器、负载路由和BIFF记录层。原status、location、message和退出码不变；DXF已知记录会注明0x088D及data/strict边界，不表示容器不受支持或允许自动放宽策略。详细范围见 `<skill-root>/references/biff8-readonly.md#dxf-selected-property-interpretation`。
+失败JSON新增diagnostic_context，辅助区分CFB容器与负载路由层。原status、location、message和退出码不变。
 
 ## 目录
 
@@ -10,12 +10,11 @@
 - 结果字段与范围评估 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)
 - MS-DOC 段落 CP 来源（可选） (`<skill-root>/references/reading-assessment.md#ms-doc-段落-cp-来源可选`)
 - MS-DOC 段落 CHPX/PAPX 原始证据关联 (`<skill-root>/references/reading-assessment.md#ms-doc-段落-chpxpapx-原始证据关联`)
-- 消费电子表格 JSON (`<skill-root>/references/reading-assessment.md#消费电子表格-json`)
 - 可运行的契约示例 (`<skill-root>/references/reading-assessment.md#可运行的契约示例`)
 
 ## 入口与失败行为
 
-先完成 环境自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。下表针对统一入口 `<skill-root>/scripts/read_wps.py`，低层流解析器默认仍 strict；文件入口默认 data，区别见 数据读取策略 (`<skill-root>/references/biff8-readonly.md#default-data-policy`)。
+先完成 环境自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。下表针对统一入口 `<skill-root>/scripts/read_wps.py`，低层流解析器默认仍 strict；文件入口默认 data。
 
 | 入口 | 正常返回 | 读取失败与异常 |
 |---|---|---|
@@ -30,7 +29,7 @@ CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返�
 
 ## 结果字段与范围评估
 
-文档结果有 `format`、`text`、`paragraphs` 和范围/诊断；OOXML 文档可另有 `tables`，显式附加文字另有 `related_stories`。二进制段落和 TAB 不代表完整表格或页面还原；另有 `binary_table_structure` 的有限一级行/单元格证据，见 二进制表格 (`<skill-root>/references/binary-tables.md`)。电子表格的 `schema_version` 分别为 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1`，字段见 BIFF 输出 (`<skill-root>/references/biff8-readonly.md#headers-and-output`) 和 OOXML 保存值 (`<skill-root>/references/ooxml-spreadsheet.md`)。不要把文档、失败字典或 OOXML 表格当成 BIFF schema；BIFF 统一结果另保留 `reader_status`；data 可为 ok/partial，显式 strict/legacy 保留历史字符串。新增 cell_value_coverage、omissions_affect_cell_values 及 reading_assessment.cell_values 区分元数据缺口与公式缓存缺失。
+文档结果有 `format`、`text`、`paragraphs` 和范围/诊断；OOXML 文档可另有 `tables`，显式附加文字另有 `related_stories`。二进制段落和 TAB 不代表完整表格或页面还原；另有 `binary_table_structure` 的有限一级行/单元格证据，见 二进制表格 (`<skill-root>/references/binary-tables.md`)。电子表格（`.et/.ett`）已迁移至专用的 `et` 技能。
 
 `reading_assessment.schema_version` 为 `wps_reading_assessment_v1`，它是附加摘要，不替换正文、单元格或原始 `issues`、`diagnostics`：
 
@@ -74,10 +73,6 @@ CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 
 - `effective_formatting` 与 `table_grid` 固定为 `unknown`。`character_status=no_observed_runs`、`papx_row_status=no_observed_row_ends` 只说明没有在本次声明的受控范围中观察到对应证据，不等于文件中不存在相应格式。
 - 已经过字段存储结果过滤或对象标记替换的故事，如果无法保持存储 CP 精确对齐，则不生成 `paragraph_evidence`，沿用 `paragraph_source_status=unavailable_after_text_transform`。需要关联 CHPX 时，必须显式组合 `--binary-paragraph-sources --hidden-text annotate`，二者均不会执行隐藏文字过滤。
 - 输出链接最多 100000 条/类型；超出时使用 `resource_limited` 并清空相应链接，不截断后声称完整。依然受 16 MiB JSON 输出预算。即使运行成功，也只说明“带来源的原始证据关联”，不表示最终样式已生效。
-
-## 消费电子表格 JSON
-
-电子表格的最小共同契约、完整结果/有界视图选择和可运行调用示例移至 `<skill-root>/references/spreadsheet-consumption.md`。普通ET消费无需加载本页的MS-DOC段落证据；旧锚点保留作为兼容路由。
 
 ## 可运行的契约示例
 
