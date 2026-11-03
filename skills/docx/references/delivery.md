@@ -143,3 +143,9 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_deliverables.py\
 以上模块均随本技能完整分发，仅依赖标准库；公共artifact-lifecycle与XLSX使用受追踪副本，不依赖仓库公共目录。迁移时须带齐模块及其同级依赖，保留本轮所有权、输入保护、任务目录和失败语义，不能仅复制函数后移除检查。归档成功的用户提示按本页“用户展示与机器元信息”映射；内部路径和警告保留于机器结果。模块拆分不提升原有并发写者隔离保证，也不把单文件原子替换变成整批事务。
 
 归档默认保留同名旧文件；冲突返回archive_status=failed及对应files项的error_code=archive_conflict，主文件仍可交付，临时项照常清理。自动生成/编辑不会授权覆盖归档。只有用户明确授权更新所列归档时，才单独调用归档入口并显式传入--replace-existing（API为replace_existing=True），列全保护输入；该选项不绕过路径、链接、输入和其他交付物保护。不要为解决归档冲突删除旧文件或重跑生成。并发任务仍使用独立任务目录；显式更新不保证对抗同权限恶意并发写者。
+
+归档增强：复制后以 SHA-256 核对主文件及副本，匹配后 files 项返回 archive_verified=true；不匹配报告失败并保留文件供排查。跨文件系统、权限不足及空间不足分别返回 archive_cross_device、archive_permission_denied、archive_storage_full。完整回执保留实际相对 archive_output；精简回执仅在归档 copied 时使用，skipped/failed 保留完整原因和文件明细。实际目录仍以宿主确认的任务工作目录为基准加 output/{questionId}，不得切换到输入或 Skill 目录执行，也不根据对话猜测其他目录。
+
+宿主没有将 ROUTER_CONFIG_VARIABLES 传入子进程时，标准 create 可用 --question-id 传入已确认的任务 ID，归档仍到任务目录下 output/{questionId}/。参数按相同 ID 规则校验；已有配置无效或两处 ID 不一致时拒绝，不静默覆盖。配置只在该次调用中补入并恢复。缺少可信 ID 时仍明确报告跳过，不从聊天正文或历史文件猜测。
+
+用户提示字段 archive_user_notice 与机器字段 archive_message 并存。归档汇总及交付回执自动返回成功、失败、跳过、部分成功或未知的对应提示，完整和精简回执均保留。失败默认提示保存已生成文件，不虚构下载能力；有真实下载方式时助手可使用本页规定的完整失败话术。主任务失败不得套用已生成话术；清理状态仍单独核对。

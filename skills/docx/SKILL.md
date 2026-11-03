@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261102.1954.3193"
+version: "20261103.1633.1524"
 description: 用 Python 标准库创建 DOCX 公文、报告、通知与简单表格，按需提取正文、章节和数据，或受控编辑现有文档。普通生成使用轻量入口，复杂排版、目录、批注与故障诊断才加载对应参考资料。保留原件、校验、归档和清理规则；不支持旧 DOC、WPS 专有格式转换及真实视觉分页验证。
 ---
 
@@ -21,7 +21,7 @@ description: 用 Python 标准库创建 DOCX 公文、报告、通知与简单�
 
 ## 简单创建：仅本入口
 
-默认 `"theme":"official"`；按用户格式，不凭标题切换。`blocks` 按序：
+默认 `"theme":"official"`；用户格式优先，不凭标题切换。`blocks` 按序：
 
 | 内容 | 最小 block |
 |---|---|
@@ -69,17 +69,21 @@ runner自动自检、验收、归档、清理；`--compact-receipt` 仅精简成
 | 旧CLI/配置/命名 | `<skill-root>/references/generation-runtime.md` |
 | 维护审计 | `<skill-root>/references/reference-loading.md` 与 `<skill-root>/references/maintenance-validation.md`，普通任务禁止预读 |
 
-按任务选文件；同任务只复用仍在上下文且路径/版本未变的参考，不递归预读。缺失或变化则复核；宿主缓存/计费不可由本说明控制，不复用其他任务授权。编辑须明确锚点、新文件交付，保真不足拒绝。
+同任务参考仅在上下文及路径/版本未变时复用，否则复核；不递归预读，不控制宿主缓存/计费，不复用其他任务授权。编辑须明确锚点、新文件交付，保真不足拒绝。
 
 ## 工具调用约定
 
 提交真实命令与完整stdin；create一次，不并发同名。超时先核状态；未执行schema错误最多纠正一次，规格错误最多重试两次，安全/环境失败停止。
 
+`--question-id` 传可信ID，冲突拒绝。
+
 ## 验收与收尾
 
-核对 `status=verified`、`task_status`、`output` 与非空主文件；`--verify` 不是 Word/WPS 实机验收。核对 `warnings`，保留显式分页。核对 `archive_status`（`copied`/`skipped`/`failed`），归档失败不否定主文件；不泄露归档路径/凭据。核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；`cleanup_incomplete`/退出 3 如实报告，不乱删/重发。链接必须真实；目录/页码字段需办公软件更新。`/large_tool_results/` 只由宿主 `read_file` 访问，不用 Shell/Python 绕过。
+核对 `status=verified`、`task_status`、`output`、非空主文件及 `warnings`；静态验收非视觉验收。按 `archive_status` 与明细展示 `archive_user_notice`：全部成功用“🎉 文档已经放到你的云空间啦，随时都能找到～ ☁️✨”；失败说明未归档，有真实下载方式才提示下载；skipped说明跳过，未知/部分成功如实报告。保留主文件链接，隐藏内部路径/ID/日志。
+
+核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；`cleanup_incomplete`/退出3如实说明，不乱删或重发。`/large_tool_results/` 仅用宿主 `read_file`，不得绕过。
 
 ## 维护资源
 
-仅授权维护时读资料；审计**不自动截获其他工具读取或模型 Token**；usage由宿主提供。禁止在普通文档任务中修改本 Skill。
+审计不自动截获其他工具读取或模型 Token；usage由宿主提供。禁止在普通文档任务中修改本 Skill。
 <!-- SKILL_DEFINITION_END -->

@@ -658,11 +658,16 @@ def compact_success_receipt(result):
     cleanup = result.get('cleanup')
     if not isinstance(cleanup, dict) or not cleanup.get('cleanup_complete'):
         return result
+    if result.get('archive_status') != 'copied':
+        # Preserve reason codes, per-file failures and recovery evidence.
+        return result
     return {
         'status': result['status'],
         'task_status': result['task_status'],
         'output': result.get('output'),
         'archive_status': result.get('archive_status'),
+        'archive_output': result.get('archive_output'),
+        'archive_user_notice': result.get('archive_user_notice'),
         'warnings': result.get('warnings', []),
         'cleanup': {
             'cleanup_complete': cleanup.get('cleanup_complete'),
@@ -673,6 +678,31 @@ def compact_success_receipt(result):
     }
 
 
+@contextmanager
+def question_id_configuration(question_id):
+    """Allow an explicit host-supplied ID when no environment was forwarded."""
+    if question_id is None:
+        yield
+        return
+    from output_location import resolve_output_location
+    raw = json.dumps({'commonParam': [{'name': 'questionId', 'value': question_id}]})
+    selected = resolve_output_location(raw)
+    if selected.used_fallback:
+        raise ValueError('Invalid explicit questionId')
+    previous = os.environ.get('ROUTER_CONFIG_VARIABLES')
+    if previous is not None:
+        existing = resolve_output_location(previous)
+        if existing.used_fallback or existing.output_dir != selected.output_dir:
+            raise ValueError('Explicit questionId conflicts with or cannot verify router configuration')
+    try:
+        if previous is None:
+            os.environ['ROUTER_CONFIG_VARIABLES'] = raw
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop('ROUTER_CONFIG_VARIABLES', None)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -680,6 +710,7 @@ def main(argv=None):
     create = commands.add_parser('create')
     create.add_argument('output')
     create.add_argument('--protect-input', action='append', default=[])
+    create.add_argument('--question-id', help='explicit trusted task ID when router environment is unavailable')
     create.add_argument('--compact-receipt', action='store_true', help='brief successful result; errors remain complete')
     for name in ('retry', 'resume'):
         command = commands.add_parser(name)
@@ -694,7 +725,8 @@ def main(argv=None):
             if len(raw) > MAX_TASK_BYTES:
                 raise ValueError('Automatic task JSON exceeds 2 MiB')
             spec = json.loads(raw, object_pairs_hook=_unique_object)
-            result = create_task(spec, args.output, protected_inputs=args.protect_input) if args.command == 'create' else retry_task(args.manifest, spec)
+            with question_id_configuration(getattr(args, 'question_id', None)):
+                result = create_task(spec, args.output, protected_inputs=args.protect_input) if args.command == 'create' else retry_task(args.manifest, spec)
         else:
             result = resume_task(args.manifest)
         visible = compact_success_receipt(result) if args.compact_receipt else result

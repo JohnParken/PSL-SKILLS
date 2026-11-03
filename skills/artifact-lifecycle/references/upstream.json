@@ -1,5 +1,5 @@
 {
-  "origin": "DOCX 20261029.2203.2365; no-clobber archival and collision-aware version names",
+  "origin": "DOCX 20261103.1633.1524; explicit archive user notice",
   "policy": "Explicit vendored distribution; repository parity test must pass for changes to either copy. No runtime cross-skill imports.",
   "files": [
     {
@@ -30,7 +30,7 @@
     {
       "file": "archive_deliverables.py",
       "mode": "before-main",
-      "sha256": "2f9b46917d9fd88dc3c286f6970b5ca27d14eb01b11e3a653f2b1e5bead9ca4d"
+      "sha256": "6b93434f2be57f6a4059a624407920fe312ed9091f1afef424382280271d2713"
     }
   ]
 }
