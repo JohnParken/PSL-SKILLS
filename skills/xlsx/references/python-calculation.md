@@ -42,6 +42,10 @@ skill directory. Python 3.9+; no pip packages, external applications or network 
 ## Known business computations without Excel formulas
 
 Use Decimal from strings for currency; explicitly choose rounding timing and policy.
+Prefer the bundled exact analysis aggregation and fixed-context advanced helpers for
+summaries; a bare Python `sum` over Decimal values uses ambient precision and can lose
+small terms. Check source/group reconciliation and an independent expected amount
+as described in `<skill-root>/references/data-analysis.md#reliable-amount-summaries`.
 Use `csv`, `collections`, `statistics` and ordinary Python loops for analysis. Write
 computed static results through `value`, and explain their non-updating nature.
 Do not wrap an arbitrary formula string in Python eval/exec.
@@ -51,8 +55,10 @@ The Python API is `Workbook.create(spec, appearance=None)`, `Workbook.load(path)
 task-local helper run with `-I -S -B`, add only that resolved directory to `sys.path`
 before importing. Do not import from a guessed task-local directory named `scripts` or set PYTHONPATH.
 API data paths use the same task-directory base as CLI data paths. `calculate` returns a report; do not call save if status is failed. It rewrites
-formula caches but does not refresh the in-memory inspection index; reopen the saved
-file to inspect results. Caller-supplied caches are never accepted through the JSON API.
+formula caches and refreshes the in-memory inspection index after nonfailed calculation.
+Keep the calculation report as evidence; a later reopened file alone still cannot prove
+cache freshness. Reopen saved files to verify persistence. Caller-supplied caches are
+never accepted through the JSON API.
 
 JSON input deeper than 128 object/array levels returns a structured nesting failure before decoding, independently of CPython recursion behavior. Brackets inside quoted/escaped strings do not count toward this budget. Bounded query
 readers also enforce byte limits on actual reads, not only filesystem size metadata.

@@ -12,6 +12,7 @@ before using this reference; internal resources and task data have different pat
 - Specialized task directory (`<skill-root>/references/data-analysis.md#specialized-task-directory`)
 - Profile a sheet or region (`<skill-root>/references/data-analysis.md#profile-a-sheet-or-region`)
 - Filter and summarize (`<skill-root>/references/data-analysis.md#filter-and-summarize`)
+- Reliable amount summaries (`<skill-root>/references/data-analysis.md#reliable-amount-summaries`)
 - Identify contents, including ET/ETT candidates (`<skill-root>/references/data-analysis.md#identify-contents-including-etett-candidates`)
 - Analyze a WPS result without conversion (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`)
 
@@ -49,6 +50,9 @@ JSON Decimal values are strings with accompanying type metadata. Sums are exact 
 1000-digit arithmetic; exceeding that limit fails. Means use 34 significant digits and
 ROUND_HALF_EVEN with `mean_rounded` reporting inexact division. Empty numeric sets return
 null statistics, not zero. Hidden/filtered rows are included; merges are not expanded.
+Arithmetic contexts fix precision, rounding, exponent bounds and traps; prior Decimal
+settings in the calling process cannot change these results. This also applies to the
+shared exact/rounded helpers used by advanced statistics and management calculations.
 
 ## Filter and summarize
 
@@ -77,14 +81,64 @@ and blank measures per group. Groups appear in first-seen order with typed keys.
 and empty-text keys form separate groups. Reports show selected/excluded row counts;
 no matches produce an empty group list. Header-only input also yields no groups.
 
+`summarize` additionally returns `reconciliation`: selected/group row counts, and,
+when a measure exists, numeric/blank/ignored counts plus `source_sum` and `group_sum`.
+All `checks` must be true and `status` must be `passed`; otherwise the command fails.
+Totals are recomputed from the selected source population and compared with grouped
+output, without tolerance or early rounding. No numeric samples retain null totals.
+This checks internal consistency, not whether the user intended the selected scope.
+
 Both analysis commands reject formulas by default, including formulas in header cells.
 `--formulas cached` explicitly uses existing caches and reports their number as
 `unverified_formula_caches`; missing caches and Excel error cells fail. No recalculation
-is performed, and cache freshness is never assumed. These checks cover the selected
+is performed in cached mode, and cache freshness is never assumed. These checks cover the selected
 rectangle before filtering, so a filter cannot silently hide erroneous inputs.
+
+For native XLSX/XLSM, explicitly use `--formulas calculate` to recompute the entire
+workbook in memory and then analyze current values. The source is never saved or
+overwritten, and no temporary workbook is created. Unsupported formulas, errors and
+cycles anywhere in the workbook stop analysis; `status: failed` includes the original
+`calculation` report in CLI JSON. There is no fallback to caches or partial totals.
+Success includes `formula_calculation` (with `excel_equivalence_verified: false`) and
+`recalculated_formula_cells` for the selected rectangle including headers; only this
+mode reports those fresh cells with `unverified_formula_caches: 0`. Empty-string
+formula results remain empty text, not missing caches or numeric zero. Other analysis
+CLI entrypoints retain their existing reject/cached options; this new CLI option is
+exposed by profile/summarize here. WPS extraction JSON cannot be recalculated.
+
+```console
+python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize ./input.xlsx --sheet Sales --range A1:C100 --query ./query.json --formulas calculate
+```
+
+Read `<skill-root>/references/formula-calculation.md` before using this mode. It does
+not refresh chart/pivot/external-link caches or establish business/Excel equivalence.
 Limits: 200,000 selected cells including blanks, 10,000 groups, query file 64 KiB,
 and the underlying workbook package limits. This is bounded in-memory analysis.
 Exit 0 indicates completed analysis; exit 1 returns JSON `status: failed`.
+
+## Reliable amount summaries
+
+1. Confirm sheet/range, header rows, currency/unit, date scope and filters. Exclude
+   subtotal/grand-total rows explicitly when aggregating detail; do not add both.
+   Hidden/filtered Excel rows remain included unless query filters exclude them.
+2. Preserve numeric types. Text amounts, identifiers, blanks and zero have different
+   meanings; do not silently coerce or replace missing values. Use `mixed: reject`
+   unless omission was explicitly chosen; report omitted/blank counts.
+3. Use full-region `summarize` or the appropriate specialized script, not a sum of
+   preview pages. For formulas, default rejection remains; `--formulas cached` is
+   only for explicitly accepted unverified stored results. Use `--formulas calculate`
+   for supported-subset recalculation before analysis; incomplete results are refused.
+4. Keep full Decimal precision through aggregation. Confirm decimal places, rounding
+   mode and per-item versus final-total rounding before formatting monetary results.
+   Built-in summaries do not automatically round amounts to cents or convert units.
+5. Require reconciliation to pass and independently spot-check source rows, one
+   group total and the overall total against user-provided expectations or a separate
+   calculation. For custom compound calculations, retain component values and check
+   counts, additive totals and numerator/denominator definitions before exporting.
+   Summing percentages or averaging group averages is not a weighted aggregate.
+6. Reopen exported results and compare types and exact values. The result exporter
+   may preserve numbers exceeding Excel's numeric precision as text with a warning;
+   retain that warning, and do not treat displayed decimal places as stored precision.
 
 ## Identify contents, including ET/ETT candidates
 

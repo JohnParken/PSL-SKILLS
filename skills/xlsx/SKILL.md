@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261102.1954.3193"
+version: "20261103.1357.5200"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -28,7 +28,7 @@ Read XLSX/XLSM, create XLSX reports, patch existing cells, or analyze typed data
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
 ```
 
-5. Require exit 0 and JSON `status: ready`. This checks imports, the template and a limited calculation, not task data, permissions or Excel compatibility. Confirm input readability. For writes, create a unique exclusive probe in each intended task output directory, read it back and remove only that probe; this also applies to configuration copies and redirected reports. Pure reads to stdout need no write probe. Do not use system temporary directories for business-task probes or overwrite existing files.
+5. Require exit 0 and JSON `status: ready`. This checks imports, the template and expected results for rounding, conditional/product sums, counting and empty-string formulas, not task data, permissions or Excel compatibility. Confirm input readability. For writes, create a unique exclusive probe in each intended task output directory, read it back and remove only that probe; this also applies to configuration copies and redirected reports. Pure reads to stdout need no write probe. Do not use system temporary directories for business-task probes or overwrite existing files.
 6. Stop dependent operations if self-check fails, its result is uncertain, or the required marker is absent. Retry only after the environment issue is resolved, without lowering checks. After context compaction re-read this file if constraints are missing; retain confirmed task paths.
 7. Before delivery verify the actual file exists and is nonempty; use only a supported harness delivery mechanism, never guessed URLs or unverified log output. Self-check is not result acceptance. File-producing CLIs now append `delivery` archive results; stdout-only reads do not. For owned JSON task configs and cleanup, follow delivery lifecycle (`<skill-root>/references/delivery-lifecycle.md`).
 
@@ -52,6 +52,7 @@ Read only the selected reference. `read`, `create`, `edit` and `calculate` are s
 |---|---|---|
 | Read XLSX/XLSM or CSV/TSV | `"<skill-root>/scripts/stdlib_xlsx.py" read` | Read and inspect (`<skill-root>/references/read-analyze.md`) |
 | Profile, filter or group a region; identify format | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize`; `<skill-root>/scripts/xlsx_identify.py` | Analysis and identification (`<skill-root>/references/data-analysis.md`) |
+| Analyze a formula table using freshly computed values | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize` with `--formulas calculate` | Analysis (`<skill-root>/references/data-analysis.md`) and formula subset (`<skill-root>/references/formula-calculation.md`) |
 | Analyze WPS extraction JSON | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize` | WPS result contract (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`) |
 | Import/export CSV/TSV | `<skill-root>/scripts/run_xlsx_task.py` wrapping `xlsx_tabular.py import` / `export` | Tabular interchange (`<skill-root>/references/tabular-interchange.md`) |
 | Create a report | stdin task specification → `<skill-root>/scripts/run_xlsx_task.py`; existing `"<skill-root>/scripts/stdlib_xlsx.py" create` remains supported | Create (`<skill-root>/references/create.md`) |
@@ -74,6 +75,7 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
 
 - 缓存可能过时或缺失，不当作零或已重算；数字字符串与文本编号分开解释。分析前确认工作表、区域、类型及用户口径，不猜业务精度。
 - 公式仅为支持子集，不等同Excel；incomplete/退出2必须报告“部分公式未计算”，failed/退出1不能交付为计算成功。不用零值掩盖错误。
+- 金额/复杂汇总先确认统计区域、明细与合计行、单位、筛选条件、缺失值及舍入时点；不要将页面预览或分页抽样当全量数据。用确定性脚本执行，按数据分析说明核对笔数与金额勾稽；成功退出不证明业务口径正确。缓存参与的结果继续标记未验证。
 - 编辑仅限指定单元格值、公式及现有样式，不重建既有工作簿、不进行任意行列或工作表结构编辑；未改ZIP部件保持内容字节，输入和非目标内容受保护。
 - 不支持签名/加密、图表工作表、Strict OOXML及XLS/XLSB；共享/数组/特殊属性公式工作表不用于编辑。不执行宏或刷新图表/透视缓存，不自动运行legacy工具、安装依赖或回退转换。不承诺完整OOXML、字体、视觉排版或公式等价性。
 - 写入/计算前按路由读取任务契约；涉及WPS提取JSON、日期、宏保留、XML生成约定或编辑兼容边界时，读结果解释（`<skill-root>/references/result-boundaries.md`）中对应条目，不默认加载其余部分。

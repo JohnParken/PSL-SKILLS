@@ -1,0 +1,16 @@
+{
+  "purpose": "User-authorized real business formula validation; sources and evidence retained",
+  "owned_new_paths": [
+    "sources.json",
+    "stanton_budget_q1.xlsx",
+    "denham_cashbook.xlsx",
+    "denham_bank_reconciliation.xlsx",
+    "ofgem_ed2_pcfm_v5.xlsx",
+    "verify_real_business.py",
+    "results.json",
+    "results_py312.json",
+    "write_probe",
+    "ofgem_gas_pcfm_draft.xlsx",
+    "README.md"
+  ]
+}

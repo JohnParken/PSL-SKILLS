@@ -1,0 +1,78 @@
+[
+  {
+    "file": "stanton_budget_q1.xlsx",
+    "title": "Stanton-under-Bardon budget monitoring 2025-26 Q1",
+    "source_page": "https://www.stantonunderbardonparishcouncil.gov.uk/budget-monitoring",
+    "download_url": "https://web-cdn.org/s/1242/file/Finance/Budget-Monitoring/25-26/Budget-Monitoring-End-of-Q1.xlsx?r=24830",
+    "retrieved_utc": "2026-11-03T06:52:30.672138+00:00",
+    "status": "downloaded",
+    "prior_attempt": {
+      "status": "download_failed",
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
+    },
+    "final_url": "https://web-cdn.org/s/1242/file/Finance/Budget-Monitoring/25-26/Budget-Monitoring-End-of-Q1.xlsx?r=24830",
+    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "bytes": 24830,
+    "sha256": "e9fda8ea7eee1afbb11295492a4c332cafe75fea12c0091416750d6dde2bcad9"
+  },
+  {
+    "file": "denham_cashbook.xlsx",
+    "title": "Denham cashbook 2019-20",
+    "source_page": "https://denhamparishcouncil.gov.uk/parish-council/finance/",
+    "download_url": "https://denhamparishcouncil.gov.uk/assets/Uploads/Denham-Cashbook-2019-20.xlsx",
+    "retrieved_utc": "2026-11-03T06:52:30.672533+00:00",
+    "status": "downloaded",
+    "prior_attempt": {
+      "status": "download_failed",
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
+    },
+    "final_url": "https://denhamparishcouncil.gov.uk/assets/Uploads/Denham-Cashbook-2019-20.xlsx",
+    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "bytes": 88845,
+    "sha256": "364f50fae6a961a59a224fe003fa8fffff446e0c9d3e9c93e8b463815bbee54d"
+  },
+  {
+    "file": "denham_bank_reconciliation.xlsx",
+    "title": "Denham bank reconciliation March 31 2020",
+    "source_page": "https://denhamparishcouncil.gov.uk/parish-council/finance/",
+    "download_url": "https://denhamparishcouncil.gov.uk/assets/Uploads/Denham-PC-Bank-reconciliation-March-31-2020.xlsx",
+    "retrieved_utc": "2026-11-03T06:52:30.672693+00:00",
+    "status": "downloaded",
+    "prior_attempt": {
+      "status": "download_failed",
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
+    },
+    "final_url": "https://denhamparishcouncil.gov.uk/assets/Uploads/Denham-PC-Bank-reconciliation-March-31-2020.xlsx",
+    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "bytes": 14294,
+    "sha256": "3d2177f4b1e51b6c86b2621a77975469bea13198f6d7a410ec5cf7b587679d5c"
+  },
+  {
+    "file": "ofgem_ed2_pcfm_v5.xlsx",
+    "title": "Ofgem ED2 Price Control Financial Model V5",
+    "source_page": "https://www.ofgem.gov.uk/guidance/ed2-price-control-financial-model",
+    "download_url": "https://www.ofgem.gov.uk/sites/default/files/2026-06/ED2-PCFM-V5.xlsx",
+    "retrieved_utc": "2026-11-03T06:52:30.672814+00:00",
+    "status": "downloaded",
+    "prior_attempt": {
+      "status": "download_failed",
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
+    },
+    "final_url": "https://www.ofgem.gov.uk/sites/default/files/2026-06/ED2-PCFM-V5.xlsx",
+    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "bytes": 4331837,
+    "sha256": "2f02bfdf2c4c85449129add05038fb1cbc10ad4ea716e9571a7dba0ea3642ce8"
+  },
+  {
+    "file": "ofgem_gas_pcfm_draft.xlsx",
+    "title": "Ofgem gas transmission RIIO-GT3 PCFM consultation draft",
+    "source_page": "https://www.ofgem.gov.uk/cy/consultation/gas-interconnector-import-capability-proposed-modifications-national-gas-transmissions-licence",
+    "download_url": "https://www.ofgem.gov.uk/sites/default/files/2026-10/Draft-financial-model-PCFM-gas-transmission-RIIO-GT3.xlsx",
+    "retrieved_utc": "2026-11-03T06:53:25.813905+00:00",
+    "final_url": "https://www.ofgem.gov.uk/sites/default/files/2026-10/Draft-financial-model-PCFM-gas-transmission-RIIO-GT3.xlsx",
+    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "status": "downloaded",
+    "bytes": 688848,
+    "sha256": "db694177e0f27cee09f037fdb3b169eed5c67492dc41c5b0e1af044f1083f512"
+  }
+]

@@ -3,10 +3,10 @@
 """A small, safe evaluator for a deliberately limited Excel formula subset.
 
 The evaluator accepts numeric and string literals, booleans, cell references,
-rectangular ranges, basic arithmetic and comparisons, and SUM, COUNT, AVERAGE,
-MIN, MAX, IF, and ROUND. It does not use Python ``eval``. References are
-resolved by the caller so workbook loading and dependency/cycle handling stay
-outside this module.
+rectangular ranges, basic arithmetic and comparisons, and a deliberately small
+set of aggregate and conditional functions. It does not use Python ``eval``.
+References are resolved by the caller so workbook loading and dependency/cycle
+handling stay outside this module.
 
 Supported semantics are intentionally conservative: blank cells are zero in
 arithmetic; booleans are zero or one in arithmetic; text is not coerced during
@@ -20,7 +20,19 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass
-from decimal import Decimal, DecimalException, ROUND_HALF_UP, localcontext
+from decimal import (
+    Context,
+    Decimal,
+    DecimalException,
+    DivisionByZero,
+    Inexact,
+    InvalidOperation,
+    Overflow,
+    ROUND_HALF_EVEN,
+    ROUND_HALF_UP,
+    Underflow,
+    localcontext,
+)
 from typing import Callable, Optional, Union
 
 
@@ -32,6 +44,45 @@ MAX_RANGE_CELLS = 100_000
 MAX_PARSE_DEPTH = 96
 MAX_EXCEL_ROW = 1_048_576
 MAX_EXCEL_COLUMN = 16_384  # XFD
+FORMULA_PRECISION = 28
+AGGREGATE_PRECISION = 1000
+DECIMAL_EMIN = -999_999
+DECIMAL_EMAX = 999_999
+MAX_ROUND_DIGITS = 1000
+MAX_CONDITIONAL_RANGE_CELLS = 200_000
+MAX_CONDITION_PAIRS = 127
+MAX_SUMPRODUCT_RANGES = 255
+MAX_CRITERION_LENGTH = 255
+MAX_CRITERIA_MATCH_WORK = 10_000_000
+
+CONDITIONAL_FUNCTIONS = frozenset({"SUMIF", "SUMIFS", "COUNTIF", "COUNTIFS"})
+_RANGE_FUNCTIONS = CONDITIONAL_FUNCTIONS | {"SUMPRODUCT"}
+
+
+def _new_decimal_context(precision: int = FORMULA_PRECISION, extra_traps=()) -> Context:
+    traps = [InvalidOperation, DivisionByZero, Overflow, Underflow]
+    traps.extend(extra_traps)
+    return Context(
+        prec=precision,
+        rounding=ROUND_HALF_EVEN,
+        Emin=DECIMAL_EMIN,
+        Emax=DECIMAL_EMAX,
+        capitals=1,
+        clamp=0,
+        flags=[],
+        traps=traps,
+    )
+
+
+def _exact_sum(values: list[Decimal]) -> Decimal:
+    try:
+        with localcontext(_new_decimal_context(AGGREGATE_PRECISION, (Inexact,))):
+            return sum(values, Decimal(0))
+    except Inexact:
+        raise _error(
+            "calculation_error",
+            "Aggregate exceeds the 1000-digit exact accumulation limit",
+        )
 
 
 class FormulaError(Exception):
@@ -72,9 +123,26 @@ class _Range:
     last_row: int
 
 
+@dataclass(frozen=True)
+class _PreparedRange:
+    area: _Range
+    values: tuple[Scalar, ...]
+
+
+@dataclass(frozen=True)
+class _Criterion:
+    operator: str
+    kind: str
+    value: Union[Decimal, str]
+    pattern: tuple[tuple[str, str], ...]
+
+
 _CELL_RE = re.compile(r"\$?([A-Za-z]+)\$?([0-9]+)\Z")
 _CELL_PREFIX_RE = re.compile(r"\$?[A-Za-z]+\$?[0-9]+")
 _NUMBER_RE = re.compile(r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)")
+_CRITERIA_NUMBER_RE = re.compile(
+    r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?\Z"
+)
 
 
 def _tokenize(formula: str) -> list[_Token]:
@@ -436,6 +504,185 @@ def _compare_values(left: Scalar, right: Scalar, op: str) -> bool:
     return a >= b
 
 
+def _wildcard_tokens(pattern: str) -> tuple[tuple[str, str], ...]:
+    tokens = []
+    index = 0
+    while index < len(pattern):
+        char = pattern[index]
+        if (char == "~" and index + 1 < len(pattern)
+                and pattern[index + 1] in "*?~"):
+            tokens.append(("literal", pattern[index + 1]))
+            index += 2
+        elif char == "*":
+            tokens.append(("many", ""))
+            index += 1
+        elif char == "?":
+            tokens.append(("one", ""))
+            index += 1
+        else:
+            tokens.append(("literal", char))
+            index += 1
+    return tuple(tokens)
+
+
+def _wildcard_matches(
+    value: str,
+    pattern: tuple[tuple[str, str], ...],
+) -> bool:
+    if all(kind == "literal" for kind, _ in pattern):
+        literal = "".join(token_value for _, token_value in pattern)
+        return value.casefold() == literal.casefold()
+
+    value_index = 0
+    token_index = 0
+    last_many = -1
+    many_match = 0
+    while value_index < len(value):
+        if token_index < len(pattern):
+            kind, token_value = pattern[token_index]
+            if (kind == "one" or (kind == "literal"
+                                   and value[value_index].casefold() == token_value.casefold())):
+                value_index += 1
+                token_index += 1
+                continue
+            if kind == "many":
+                last_many = token_index
+                token_index += 1
+                many_match = value_index
+                continue
+        if last_many >= 0:
+            many_match += 1
+            value_index = many_match
+            token_index = last_many + 1
+            continue
+        return False
+    while token_index < len(pattern) and pattern[token_index][0] == "many":
+        token_index += 1
+    return token_index == len(pattern)
+
+
+def _make_criterion(value: object) -> _Criterion:
+    if isinstance(value, bool):
+        raise _error("unsupported", "Boolean criteria are unsupported")
+    if isinstance(value, Decimal):
+        return _Criterion("=", "number", value, ())
+    if not isinstance(value, str):
+        raise _error("unsupported", "Blank and non-scalar criteria are unsupported")
+    if len(value) > MAX_CRITERION_LENGTH:
+        raise _error("unsupported", "Criteria exceed the 255-character limit")
+
+    operator = "="
+    operand = value
+    for candidate in ("<=", ">=", "<>", "=", "<", ">"):
+        if value.startswith(candidate):
+            operator = candidate
+            operand = value[len(candidate):]
+            break
+
+    if _CRITERIA_NUMBER_RE.fullmatch(operand):
+        try:
+            number = Decimal(operand)
+        except DecimalException:
+            raise _error("calculation_error", "Numeric criterion is outside supported Decimal limits")
+        if not number.is_finite():
+            raise _error("calculation_error", "Numeric criterion is non-finite")
+        return _Criterion(operator, "number", number, ())
+
+    if operator in {"<", "<=", ">", ">="}:
+        raise _error("unsupported", "Text ordering criteria are unsupported")
+    if not operand:
+        return _Criterion(operator, "empty", "", ())
+    return _Criterion(operator, "text", operand, _wildcard_tokens(operand))
+
+
+def _validate_criteria_values(values: tuple[Scalar, ...], criterion: _Criterion) -> None:
+    for value in values:
+        if isinstance(value, bool):
+            raise _error("unsupported", "Boolean values in criteria ranges are unsupported")
+        if criterion.kind == "number" and not isinstance(value, Decimal):
+            raise _error("unsupported", "Numeric criteria require numeric criteria-range values")
+        if (criterion.kind == "text" and value is not None
+                and not isinstance(value, str)):
+            raise _error("unsupported", "Text criteria cannot compare numeric criteria-range values")
+
+
+def _check_criteria_match_work(
+    conditions: list[tuple[_PreparedRange, _Criterion]],
+) -> None:
+    work = 0
+    for criteria_range, criterion in conditions:
+        if criterion.kind != "text":
+            continue
+        pattern_length = max(1, len(criterion.pattern))
+        for value in criteria_range.values:
+            text_length = len(value) if isinstance(value, str) else 0
+            work += max(1, text_length) * pattern_length
+            if work > MAX_CRITERIA_MATCH_WORK:
+                raise _error("unsupported", "Criteria matching exceeds the 10000000-step limit")
+
+
+def _validate_sum_values(values: tuple[Scalar, ...]) -> None:
+    for value in values:
+        if isinstance(value, bool):
+            raise _error("unsupported", "Boolean values in conditional sum ranges are unsupported")
+
+
+def _criterion_matches(value: Scalar, criterion: _Criterion) -> bool:
+    if criterion.kind == "number":
+        number = criterion.value
+        if not isinstance(number, Decimal) or not isinstance(value, Decimal):
+            raise _error("unsupported", "Numeric criteria require numeric criteria-range values")
+        if criterion.operator == "=":
+            return value == number
+        if criterion.operator == "<>":
+            return value != number
+        if criterion.operator == "<":
+            return value < number
+        if criterion.operator == "<=":
+            return value <= number
+        if criterion.operator == ">":
+            return value > number
+        return value >= number
+
+    if isinstance(value, bool):
+        raise _error("unsupported", "Boolean values in criteria ranges are unsupported")
+    if criterion.kind == "empty":
+        is_empty = value is None or value == ""
+        return is_empty if criterion.operator == "=" else not is_empty
+
+    if value is None:
+        return criterion.operator == "<>"
+    if isinstance(value, Decimal):
+        raise _error("unsupported", "Text criteria cannot compare numeric criteria-range values")
+    if not isinstance(value, str):
+        raise _error("unsupported", "Criteria ranges contain an unsupported value")
+    matches = _wildcard_matches(value, criterion.pattern)
+    return matches if criterion.operator == "=" else not matches
+
+
+def _sumproduct(arrays: list[_PreparedRange]) -> Decimal:
+    try:
+        with localcontext(_new_decimal_context(AGGREGATE_PRECISION, (Inexact,))):
+            total = Decimal(0)
+            for index in range(len(arrays[0].values)):
+                factors = [array.values[index] for array in arrays]
+                if any(not isinstance(value, Decimal) for value in factors):
+                    product = Decimal(0)
+                elif any(value == 0 for value in factors):
+                    product = Decimal(0)
+                else:
+                    product = Decimal(1)
+                    for value in factors:
+                        product *= value
+                total += product
+            return total
+    except Inexact:
+        raise _error(
+            "calculation_error",
+            "SUMPRODUCT exceeds the 1000-digit exact multiplication or accumulation limit",
+        )
+
+
 class _Evaluator:
     def __init__(self, sheet: str, resolve: Resolver):
         self.sheet = sheet
@@ -469,6 +716,14 @@ class _Evaluator:
                         self._check_arity(name, args, 3)
                         work.append(("if_choose", (args[1], args[2])))
                         work.append(("eval", args[0]))
+                    elif name in _RANGE_FUNCTIONS:
+                        prepared_ranges = self._prepare_conditional_ranges(name, args)
+                        work.append(("call", (name, len(args))))
+                        for index in range(len(args) - 1, -1, -1):
+                            if index in prepared_ranges:
+                                work.append(("push", prepared_ranges[index]))
+                            else:
+                                work.append(("eval", args[index]))
                     else:
                         if name not in {"SUM", "COUNT", "AVERAGE", "MIN", "MAX", "ROUND"}:
                             raise _error("unsupported", f"Function {name} is unsupported")
@@ -488,18 +743,18 @@ class _Evaluator:
                     values.append(_compare_values(left, right, item))
                 else:
                     a, b = _number(left), _number(right)
-                    with localcontext() as context:
-                        context.prec = 28
-                        if item == "+":
-                            result = a + b
-                        elif item == "-":
-                            result = a - b
-                        elif item == "*":
-                            result = a * b
-                        else:
-                            if b == 0:
-                                raise _error("calculation_error", "Division by zero")
-                            result = a / b
+                    if item == "+":
+                        result = a + b
+                    elif item == "-":
+                        result = a - b
+                    elif item == "*":
+                        result = a * b
+                    else:
+                        if b == 0:
+                            raise _error("calculation_error", "Division by zero")
+                        result = a / b
+                    if not result.is_finite():
+                        raise _error("calculation_error", "Arithmetic produced a non-finite result")
                     values.append(result)
             elif action == "if_choose":
                 condition = values.pop()
@@ -519,6 +774,8 @@ class _Evaluator:
                 if count:
                     del values[-count:]
                 values.append(self._call(name, args))
+            elif action == "push":
+                values.append(item)
 
         if len(values) != 1:
             raise _error("calculation_error", "Formula did not produce one result")
@@ -544,6 +801,67 @@ class _Evaluator:
             raise _error("unsupported", "Range exceeds the 100000-cell expansion limit")
         return _Range(target_sheet, min_column, min_row, max_column, max_row)
 
+    @staticmethod
+    def _range_shape(area: _Range) -> tuple[int, int]:
+        return (
+            area.last_row - area.first_row + 1,
+            area.last_column - area.first_column + 1,
+        )
+
+    def _prepare_conditional_ranges(self, name: str, args: list) -> dict[int, _PreparedRange]:
+        if name == "SUMIF":
+            if len(args) not in {2, 3}:
+                raise _error("calculation_error", "SUMIF expects 2 or 3 arguments")
+            positions = [0] + ([2] if len(args) == 3 else [])
+        elif name == "SUMIFS":
+            if len(args) < 3 or len(args) % 2 != 1:
+                raise _error("calculation_error", "SUMIFS expects a sum range and condition pairs")
+            if (len(args) - 1) // 2 > MAX_CONDITION_PAIRS:
+                raise _error("unsupported", "SUMIFS exceeds the 127-condition-pair limit")
+            positions = [0] + list(range(1, len(args), 2))
+        elif name == "COUNTIF":
+            self._check_arity(name, args, 2)
+            positions = [0]
+        elif name == "COUNTIFS":
+            if len(args) < 2 or len(args) % 2 != 0:
+                raise _error("calculation_error", "COUNTIFS expects condition pairs")
+            if len(args) // 2 > MAX_CONDITION_PAIRS:
+                raise _error("unsupported", "COUNTIFS exceeds the 127-condition-pair limit")
+            positions = list(range(0, len(args), 2))
+        else:
+            if not 1 <= len(args) <= MAX_SUMPRODUCT_RANGES:
+                raise _error("calculation_error", "SUMPRODUCT expects 1 to 255 ranges")
+            positions = list(range(len(args)))
+
+        areas = []
+        for position in positions:
+            node = args[position]
+            if node[0] == "ref":
+                area = self._make_range(node[1], node[2], node[2])
+            elif node[0] == "range":
+                area = self._make_range(node[1], node[2], node[3])
+            else:
+                raise _error("unsupported", f"{name} range arguments must be cell references")
+            areas.append((position, area))
+
+        total_cells = sum(
+            (area.last_row - area.first_row + 1)
+            * (area.last_column - area.first_column + 1)
+            for _, area in areas
+        )
+        if total_cells > MAX_CONDITIONAL_RANGE_CELLS:
+            raise _error("unsupported", "Function ranges exceed the 200000-cell total limit")
+
+        if name in {"SUMIF", "SUMIFS", "COUNTIFS", "SUMPRODUCT"}:
+            first_shape = self._range_shape(areas[0][1])
+            if any(self._range_shape(area) != first_shape for _, area in areas[1:]):
+                raise _error("unsupported", f"{name} range arguments must have identical dimensions")
+
+        prepared = {}
+        for position, area in areas:
+            prepared[position] = _PreparedRange(area, tuple(self._range_values(area)))
+        return prepared
+
     def _range_values(self, area: _Range):
         for row in range(area.first_row, area.last_row + 1):
             for column in range(area.first_column, area.last_column + 1):
@@ -556,20 +874,29 @@ class _Evaluator:
             raise _error("calculation_error", f"{name} expects {expected} arguments")
 
     def _call(self, name: str, args: list[object]):
+        if name in CONDITIONAL_FUNCTIONS:
+            return self._call_conditional(name, args)
+        if name == "SUMPRODUCT":
+            return _sumproduct(args)
         if name not in {"SUM", "COUNT", "AVERAGE", "MIN", "MAX", "ROUND"}:
             raise _error("unsupported", f"Function {name} is unsupported")
         if name == "ROUND":
             self._check_arity(name, args, 2)
             number = _number(args[0])
             digits_value = _number(args[1])
+            if (digits_value < -MAX_ROUND_DIGITS
+                    or digits_value > MAX_ROUND_DIGITS):
+                raise _error("calculation_error", "ROUND digits exceed the supported limit")
             if digits_value != digits_value.to_integral_value():
                 raise _error("calculation_error", "ROUND digits must be an integer")
             digits = int(digits_value)
             try:
-                with localcontext() as context:
-                    context.prec = 28
+                with localcontext(_new_decimal_context()):
                     quantum = Decimal(1).scaleb(-digits)
-                    return number.quantize(quantum, rounding=ROUND_HALF_UP)
+                    result = number.quantize(quantum, rounding=ROUND_HALF_UP)
+                    if not result.is_finite():
+                        raise _error("calculation_error", "ROUND produced a non-finite result")
+                    return result
             except DecimalException:
                 raise _error("calculation_error", "ROUND result is outside supported Decimal precision")
 
@@ -592,18 +919,76 @@ class _Evaluator:
         if name == "COUNT":
             return Decimal(len(numeric))
         if name == "SUM":
-            with localcontext() as context:
-                context.prec = 28
-                return sum(numeric, Decimal(0))
+            return _exact_sum(numeric)
         if name == "AVERAGE":
             if not numeric:
                 raise _error("calculation_error", "AVERAGE has no numeric values")
-            with localcontext() as context:
-                context.prec = 28
-                return sum(numeric, Decimal(0)) / Decimal(len(numeric))
+            return _exact_sum(numeric) / Decimal(len(numeric))
         if not numeric:
             return Decimal(0)
         return min(numeric) if name == "MIN" else max(numeric)
+
+    def _call_conditional(self, name: str, args: list[object]) -> Decimal:
+        if name == "SUMIF":
+            criteria_range = args[0]
+            criterion = _make_criterion(args[1])
+            sum_range = args[2] if len(args) == 3 else criteria_range
+            _validate_criteria_values(criteria_range.values, criterion)
+            _validate_sum_values(sum_range.values)
+            _check_criteria_match_work([(criteria_range, criterion)])
+            matched = [
+                value
+                for condition_value, value in zip(criteria_range.values, sum_range.values)
+                if _criterion_matches(condition_value, criterion)
+                and isinstance(value, Decimal)
+            ]
+            return _exact_sum(matched)
+
+        if name == "SUMIFS":
+            sum_range = args[0]
+            conditions = [
+                (args[index], _make_criterion(args[index + 1]))
+                for index in range(1, len(args), 2)
+            ]
+            for criteria_range, criterion in conditions:
+                _validate_criteria_values(criteria_range.values, criterion)
+            _validate_sum_values(sum_range.values)
+            _check_criteria_match_work(conditions)
+            matched = []
+            for index, value in enumerate(sum_range.values):
+                if all(
+                    _criterion_matches(criteria_range.values[index], criterion)
+                    for criteria_range, criterion in conditions
+                ) and isinstance(value, Decimal):
+                    matched.append(value)
+            return _exact_sum(matched)
+
+        if name == "COUNTIF":
+            criteria_range = args[0]
+            criterion = _make_criterion(args[1])
+            _validate_criteria_values(criteria_range.values, criterion)
+            _check_criteria_match_work([(criteria_range, criterion)])
+            count = sum(
+                1 for value in criteria_range.values
+                if _criterion_matches(value, criterion)
+            )
+            return Decimal(count)
+
+        conditions = [
+            (args[index], _make_criterion(args[index + 1]))
+            for index in range(0, len(args), 2)
+        ]
+        for criteria_range, criterion in conditions:
+            _validate_criteria_values(criteria_range.values, criterion)
+        _check_criteria_match_work(conditions)
+        count = 0
+        for index in range(len(conditions[0][0].values)):
+            if all(
+                _criterion_matches(criteria_range.values[index], criterion)
+                for criteria_range, criterion in conditions
+            ):
+                count += 1
+        return Decimal(count)
 
 
 def evaluate(formula: str, sheet: str, resolve: Resolver) -> Scalar:
@@ -617,10 +1002,13 @@ def evaluate(formula: str, sheet: str, resolve: Resolver) -> Scalar:
         raise _error("calculation_error", "resolve must be callable")
     try:
         expression = _Parser(_tokenize(formula)).parse()
-        with localcontext() as context:
-            context.prec = 28
+        with localcontext(_new_decimal_context()):
             result = _Evaluator(sheet, resolve).evaluate(expression)
-        if isinstance(result, (Decimal, bool, str)) or result is None:
+        if isinstance(result, Decimal):
+            if not result.is_finite():
+                raise _error("calculation_error", "Formula result is non-finite")
+            return result
+        if isinstance(result, (bool, str)) or result is None:
             return result
         raise _error("unsupported", "Formula produced an unsupported value")
     except FormulaError:

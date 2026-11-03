@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Explicit Decimal descriptive statistics and calendar-month comparisons."""
 import argparse
-from decimal import Decimal, DecimalException, Inexact, ROUND_FLOOR, ROUND_HALF_EVEN, localcontext
+from decimal import Decimal, DecimalException, Inexact, ROUND_FLOOR, localcontext
 import json
 from pathlib import Path
 import re
@@ -11,7 +11,7 @@ from xml.etree import ElementTree as ET
 import zipfile
 
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-from xlsx_analysis import region, is_blank
+from xlsx_analysis import region, is_blank, arithmetic_context
 from xlsx_headers import resolve_column
 from xlsx_rows import read_query
 
@@ -24,11 +24,7 @@ def precision_option(config):
 
 
 def rounded(operation,precision):
-    with localcontext() as context:
-        context.prec=precision+16
-        context.rounding=ROUND_HALF_EVEN
-        context.traps[Inexact]=False
-        context.clear_flags()
+    with localcontext(arithmetic_context(precision+16)) as context:
         value=operation()
         intermediate=context.flags[Inexact]
         context.prec=precision
@@ -38,9 +34,7 @@ def rounded(operation,precision):
 
 
 def exact(operation):
-    with localcontext() as context:
-        context.prec=1000
-        context.traps[Inexact]=True
+    with localcontext(arithmetic_context(1000, exact=True)):
         try:
             return operation()
         except DecimalException as exc:

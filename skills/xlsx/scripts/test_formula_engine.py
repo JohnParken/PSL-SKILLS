@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 """Focused tests for the standard-library formula evaluator."""
 
+import itertools
 import sys
 import unittest
-from decimal import Decimal
+from decimal import (
+    Decimal,
+    Inexact,
+    Overflow,
+    ROUND_DOWN,
+    Rounded,
+    Underflow,
+    getcontext,
+    localcontext,
+)
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -73,6 +83,98 @@ class FormulaEngineTests(unittest.TestCase):
         self.assertEqual(self.value("MIN(A1:A2)"), Decimal("2"))
         self.assertEqual(self.value("MAX(A1:A2)"), Decimal("3"))
         self.assertEqual(self.value("SUM('Current'!A2:A1)"), Decimal("5"))
+
+    def test_sum_is_exact_across_permutations_with_mixed_signs(self):
+        values = (
+            Decimal("10000000000000000000000000000"),
+            Decimal("0.01"),
+            Decimal("-10000000000000000000000000000"),
+        )
+        for ordered_values in itertools.permutations(values):
+            with self.subTest(ordered_values=ordered_values):
+                for index, value in enumerate(ordered_values, start=1):
+                    self.cells[("Current", f"A{index}")] = value
+                self.assertEqual(self.value("SUM(A1:A3)"), Decimal("0.01"))
+
+    def test_average_uses_exact_sum_and_28_digit_division(self):
+        self.cells[("Current", "A1")] = Decimal("0.01")
+        self.cells[("Current", "A2")] = Decimal("0")
+        self.cells[("Current", "A3")] = Decimal("0")
+        self.assertEqual(
+            self.value("AVERAGE(A1:A3)"),
+            Decimal("0.003333333333333333333333333333"),
+        )
+
+    def test_sum_rejects_values_exceeding_exact_accumulation_limit(self):
+        self.cells[("Current", "A1")] = Decimal("1" * 1001)
+        with self.assertRaises(FormulaError) as caught:
+            self.value("SUM(A1)")
+        self.assertEqual(caught.exception.code, "calculation_error")
+        self.assertIn("1000-digit", str(caught.exception))
+
+    def test_evaluate_isolates_and_restores_decimal_context_and_flags(self):
+        with localcontext() as caller_context:
+            caller_context.prec = 2
+            caller_context.rounding = ROUND_DOWN
+            caller_context.Emin = -2
+            caller_context.Emax = 2
+            caller_context.traps[Inexact] = True
+            caller_context.clear_flags()
+            caller_context.flags[Rounded] = True
+            original_flags = caller_context.flags.copy()
+            original_traps = caller_context.traps.copy()
+
+            self.assertIs(getcontext(), caller_context)
+            self.assertEqual(
+                self.value("1.2345678901234567890123456775 + 0"),
+                Decimal("1.234567890123456789012345678"),
+            )
+            self.assertEqual(self.value("10000000000 + 1"), Decimal("10000000001"))
+            self.assertEqual(
+                self.value("1 / 3"),
+                Decimal("0.3333333333333333333333333333"),
+            )
+            self.assertIs(getcontext(), caller_context)
+            self.assertEqual(caller_context.flags, original_flags)
+            self.assertEqual(caller_context.traps, original_traps)
+
+    def test_round_rejects_extreme_digits_before_integer_conversion(self):
+        for value in (
+            Decimal("1e999999"),
+            Decimal("-1e999999"),
+            Decimal("1001"),
+            Decimal("-1001"),
+        ):
+            with self.subTest(value=value):
+                self.cells[("Current", "A1")] = value
+                self.assert_error("ROUND(1,A1)", "calculation_error")
+
+    def test_division_overflow_is_rejected_when_caller_disables_overflow_trap(self):
+        self.cells[("Current", "A1")] = Decimal("1e999999")
+        self.cells[("Current", "A2")] = Decimal("1e-999999")
+        with localcontext() as caller_context:
+            caller_context.Emax = 2
+            caller_context.Emin = -2
+            caller_context.traps[Overflow] = False
+            self.assert_error("A1/A2", "calculation_error")
+
+    def test_division_underflow_is_controlled_and_restores_caller_context(self):
+        self.cells[("Current", "A1")] = Decimal("1e-999999")
+        self.cells[("Current", "A2")] = Decimal("1e28")
+        with localcontext() as caller_context:
+            caller_context.Emax = 2
+            caller_context.Emin = -2
+            caller_context.traps[Underflow] = False
+            caller_context.clear_flags()
+            caller_context.flags[Rounded] = True
+            original_flags = caller_context.flags.copy()
+            original_traps = caller_context.traps.copy()
+
+            self.assertIs(getcontext(), caller_context)
+            self.assert_error("A1/A2", "calculation_error")
+            self.assertIs(getcontext(), caller_context)
+            self.assertEqual(caller_context.flags, original_flags)
+            self.assertEqual(caller_context.traps, original_traps)
 
     def test_scalar_boolean_aggregate_arguments_are_unsupported(self):
         for formula in ("COUNT(TRUE)", "SUM(A4)", "AVERAGE(FALSE)", "MIN(TRUE)", "MAX(FALSE)"):

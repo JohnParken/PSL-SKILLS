@@ -67,7 +67,13 @@ def import_table(source, output, sheet='Sheet1', encoding='utf-8-sig', numeric_c
                 if not re.fullmatch(r'[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?', value):
                     raise ValueError('Invalid numeric value at ' + ref)
                 value = numeric(value)
-                if len(value.normalize().as_tuple().digits) > 15:
+                # normalize() rounds using the caller's Decimal context before
+                # counting, which can hide significant digits. Inspect exactly.
+                digits = value.as_tuple().digits
+                significant = len(digits)
+                while significant and digits[significant - 1] == 0:
+                    significant -= 1
+                if significant > 15:
                     raise ValueError('More than 15 significant digits at ' + ref + '; import as text')
             cells[ref] = {'value': value}
     if not rows:

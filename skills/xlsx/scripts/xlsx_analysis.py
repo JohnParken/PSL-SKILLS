@@ -3,7 +3,7 @@
 """Read-only, type-preserving XLSX region profiling and grouped analysis."""
 import argparse
 from collections import Counter
-from decimal import Decimal, DecimalException, Inexact, ROUND_HALF_EVEN, localcontext
+from decimal import Context, Decimal, DecimalException, DivisionByZero, Inexact, InvalidOperation, Overflow, ROUND_HALF_EVEN, Underflow, localcontext
 import json
 from pathlib import Path
 import sys
@@ -14,6 +14,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from stdlib_xlsx import MAX_CELLS, Workbook, address, read_spec, UnsupportedInputError
 from xlsx_tabular import column_name
 from xlsx_headers import reconstruct, resolve_column
+
+
+class FormulaCalculationError(ValueError):
+    """Refuse analysis when whole-workbook recalculation did not complete."""
+
+    def __init__(self, report):
+        self.calculation = report
+        issues = report.get('issues', [])
+        detail = '; '.join(item['sheet'] + '!' + item['cell'] + ': ' + item['message'] for item in issues[:3])
+        super().__init__('Formula recalculation ' + report['status'] + ': ' + detail)
 
 
 def typed_value(cell):
@@ -33,23 +43,26 @@ def is_blank(item):
     return item[0] == 'blank' or item == ('text', '')
 
 
+def arithmetic_context(precision, exact=False):
+    """Use a fresh deterministic context, including exponent limits and traps."""
+    traps = [InvalidOperation, DivisionByZero, Overflow, Underflow]
+    if exact:
+        traps.append(Inexact)
+    return Context(prec=precision, rounding=ROUND_HALF_EVEN, Emin=-999999,
+                   Emax=999999, capitals=1, clamp=0, flags=[], traps=traps)
+
+
 def statistics(values):
     numbers = [value for kind, value in values if kind == 'number']
     if not numbers:
         return {'count': 0, 'sum': None, 'min': None, 'max': None, 'mean': None, 'mean_rounded': False}
     # Never silently round a sum. Fail explicitly if this precision bound is exceeded.
-    with localcontext() as context:
-        context.prec = 1000
-        context.traps[Inexact] = True
+    with localcontext(arithmetic_context(1000, exact=True)):
         try:
             total = sum(numbers, Decimal(0))
         except DecimalException as exc:
             raise ValueError('Numeric sum exceeds exact 1000-digit arithmetic limit') from exc
-    with localcontext() as context:
-        context.prec = 34
-        context.rounding = ROUND_HALF_EVEN
-        context.traps[Inexact] = False
-        context.clear_flags()
+    with localcontext(arithmetic_context(34)) as context:
         mean = total / len(numbers)
         rounded = context.flags[Inexact]
     return {'count': len(numbers), 'sum': total, 'min': min(numbers), 'max': max(numbers),
@@ -58,15 +71,22 @@ def statistics(values):
 
 def region(source, sheet, cell_range=None, header=True, formulas='reject',
            header_rows=None, header_exclude=(), include_spanning_headings=False):
-    if formulas not in ('reject', 'cached'):
-        raise ValueError('Formula policy must be reject or cached')
+    if formulas not in ('reject', 'cached', 'calculate'):
+        raise ValueError('Formula policy must be reject, cached or calculate')
     if Path(source).suffix.lower() == '.json':
+        if formulas == 'calculate':
+            raise ValueError('Formula recalculation requires a native XLSX/XLSM, not extraction JSON')
         from xlsx_wps_result import load_result
         book = load_result(source, address)
     else:
         book = Workbook.load(source)
     if sheet not in book.cells:
         raise ValueError('Unknown worksheet: ' + sheet)
+    calculation = None
+    if formulas == 'calculate':
+        calculation = book.calculate()
+        if calculation['status'] != 'calculated_subset':
+            raise FormulaCalculationError(calculation)
     cells = book.cells[sheet]
     if cell_range is not None:
         if not isinstance(cell_range, str) or not cell_range:
@@ -89,14 +109,15 @@ def region(source, sheet, cell_range=None, header=True, formulas='reject',
     if header_rows is None and (header_exclude or include_spanning_headings):
         raise ValueError('Header exclusions/spanning policy require --header-rows')
     cached_refs = set()
+    calculated_refs = set()
     def read_cell(ref):
         cell = cells.get(ref, {})
         if cell.get('formula') is not None:
             if formulas == 'reject':
-                raise ValueError('Formula at ' + ref + '; choose --formulas cached explicitly')
+                raise ValueError('Formula at ' + ref + '; explicitly choose --formulas cached, or recalculate with xlsx_analysis.py --formulas calculate')
             if cell.get('cache_status') != 'unverified' or cell.get('value') is None:
                 raise ValueError('Missing formula cache at ' + ref)
-            cached_refs.add(ref)
+            (calculated_refs if calculation is not None else cached_refs).add(ref)
         if cell.get('type') == 'e':
             raise ValueError('Excel error at ' + ref + ': ' + str(cell.get('value')))
         return typed_value(cell)
@@ -122,6 +143,9 @@ def region(source, sheet, cell_range=None, header=True, formulas='reject',
                 'precision': 'exact sums up to 1000 digits; means 34 significant digits, ROUND_HALF_EVEN',
                 'decimals': 'JSON strings; use type tags to distinguish numbers from text',
                 'visibility': 'includes hidden rows/columns and filtered-out rows; merges are not expanded'}
+    if calculation is not None:
+        metadata['formula_calculation'] = calculation
+        metadata['recalculated_formula_cells'] = len(calculated_refs)
     if hasattr(book, 'wps_source_status'):
         metadata['input_schema'] = book.wps_input_schema
         metadata['source_status'] = book.wps_source_status
@@ -147,7 +171,8 @@ def profile(source, sheet, cell_range=None, header=True, formulas='reject',
         populated = [item for item in values if not is_blank(item)]
         types = Counter(kind for kind, _ in values)
         result.append({'column': name, 'column_id': 'col:'+name,
-                       'header_path': metadata['header_schema']['columns'][index]['path'] if 'header_schema' in metadata else None, 'header': None if headers is None else {'type': headers[index][0], 'value': headers[index][1]},
+                       'header_path': metadata['header_schema']['columns'][index]['path'] if 'header_schema' in metadata else None,
+                       'header': None if headers is None else {'type': headers[index][0], 'value': headers[index][1]},
                        'types': dict(sorted(types.items())), 'mixed_types': len({kind for kind, _ in populated}) > 1,
                        'missing_cells': types['blank'], 'empty_text': values.count(('text', '')),
                        'blank_count': sum(is_blank(item) for item in values),
@@ -231,6 +256,7 @@ def summarize(source, sheet, query, cell_range=None, header=True, formulas='reje
     measure_index = None if measure is None else columns.index(measure)
     buckets = {}
     selected = 0
+    selected_values = []
     for row_number, row in rows:
         if not matches(row, filters):
             continue
@@ -244,6 +270,7 @@ def summarize(source, sheet, query, cell_range=None, header=True, formulas='reje
         bucket['rows'] += 1
         if measure_index is not None:
             value = row[measure_index]
+            selected_values.append(value)
             if is_blank(value):
                 bucket['blank'] += 1
             elif value[0] != 'number':
@@ -258,9 +285,34 @@ def summarize(source, sheet, query, cell_range=None, header=True, formulas='reje
                        'rows': bucket['rows'], 'blank_measure': bucket['blank'],
                        'ignored_non_numeric': bucket['ignored'],
                        'numeric': None if measure is None else statistics(bucket['values'])})
+    reconciliation = reconcile_groups(selected, selected_values, result, measure is not None)
     return {'status': 'summarized', **metadata, 'requested_query': query, 'selected_rows': selected,
             'excluded_rows': len(rows)-selected, 'group_by': group_columns, 'measure': measure,
-            'mixed': mixed, 'groups': result}
+            'mixed': mixed, 'groups': result, 'reconciliation': reconciliation}
+
+
+def reconcile_groups(selected_rows, selected_values, groups, has_measure):
+    """Check grouped output against the selected source population before returning."""
+    group_rows = sum(group['rows'] for group in groups)
+    checks = {'row_count': group_rows == selected_rows}
+    report = {'selected_rows': selected_rows, 'group_rows': group_rows}
+    if has_measure:
+        source = statistics(selected_values)
+        blanks = sum(is_blank(item) for item in selected_values)
+        ignored = sum(not is_blank(item) and item[0] != 'number' for item in selected_values)
+        group_count = sum(group['numeric']['count'] for group in groups)
+        grouped = statistics([('number', group['numeric']['sum']) for group in groups
+                              if group['numeric']['sum'] is not None])
+        checks.update(source_rows=len(selected_values) == selected_rows,
+                      numeric_count=source['count'] == group_count,
+                      blank_count=blanks == sum(group['blank_measure'] for group in groups),
+                      ignored_count=ignored == sum(group['ignored_non_numeric'] for group in groups),
+                      amount_sum=source['sum'] == grouped['sum'])
+        report.update(numeric_count=source['count'], blank_count=blanks,
+                      ignored_non_numeric=ignored, source_sum=source['sum'], group_sum=grouped['sum'])
+    if not all(checks.values()):
+        raise ValueError('Summary reconciliation failed: ' + ', '.join(key for key, passed in checks.items() if not passed))
+    return {'status': 'passed', **report, 'checks': checks}
 
 
 def main():
@@ -273,7 +325,7 @@ def main():
     parser.add_argument('--header-rows')
     parser.add_argument('--header-exclude', type=int, nargs='*', default=[])
     parser.add_argument('--include-spanning-headings', action='store_true')
-    parser.add_argument('--formulas', choices=('reject', 'cached'), default='reject')
+    parser.add_argument('--formulas', choices=('reject', 'cached', 'calculate'), default='reject')
     parser.add_argument('--query', help='JSON grouping/filter configuration for summarize')
     args = parser.parse_args()
     try:
@@ -289,6 +341,9 @@ def main():
                              args.header_rows, args.header_exclude, args.include_spanning_headings)
         print(json.dumps(result, ensure_ascii=False, default=str))
         return 0
+    except FormulaCalculationError as exc:
+        print(json.dumps({'status': 'failed', 'message': str(exc), 'calculation': exc.calculation}, ensure_ascii=False))
+        return 1
     except UnsupportedInputError as exc:
         print(json.dumps({'status': 'unsupported', 'message': str(exc)}, ensure_ascii=False))
         return 1

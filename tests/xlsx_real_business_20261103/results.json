@@ -1,0 +1,1198 @@
+{
+  "executed_utc": "2026-11-03T06:58:46.516613+00:00",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.9.6",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+    "-I",
+    "-S",
+    "-B",
+    "tests/xlsx_real_business_20261103/verify_real_business.py",
+    "--output",
+    "results.json"
+  ],
+  "scope": "original workbooks + independently labelled selected formula and derived transaction checks",
+  "harness_sha256": "3838d20f57549f4137dc97eff515f9d1906ae0b8d0711390bacf52f349f88ade",
+  "cache_is_oracle": false,
+  "excel_recalculation_run": false,
+  "linux_validation_run": false,
+  "workbooks": [
+    {
+      "file": "stanton_budget_q1.xlsx",
+      "sha256": "e9fda8ea7eee1afbb11295492a4c332cafe75fea12c0091416750d6dde2bcad9",
+      "inventory": {
+        "sheet_count": 1,
+        "stored_cell_count": 1399,
+        "formula_count": 178,
+        "special_formula_count": 162,
+        "functions_in_stored_formula_text": {
+          "SUM": 16
+        }
+      },
+      "verified_original_formulas": [
+        {
+          "sheet": "Sheet1",
+          "cell": "O5",
+          "formula": "SUM(C5:E5)",
+          "actual": "9978.27",
+          "independent_expected": "9978.27",
+          "exact_match": true,
+          "original_cache": "9978.27",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "P5",
+          "formula": "SUM(F5:N5)",
+          "actual": "9978.26",
+          "independent_expected": "9978.26",
+          "exact_match": true,
+          "original_cache": "9978.26",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "Q5",
+          "formula": "SUM(O5:P5)-B5",
+          "actual": "0",
+          "independent_expected": "0",
+          "exact_match": true,
+          "original_cache": "0",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "C13",
+          "formula": "B13/2",
+          "actual": "1530",
+          "independent_expected": "1530",
+          "exact_match": true,
+          "original_cache": "1530",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "D21",
+          "formula": "1625.34+213.2+148.95",
+          "actual": "1987.49",
+          "independent_expected": "1987.49",
+          "exact_match": true,
+          "original_cache": "1987.49",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F21",
+          "formula": "1600.26+1625.34+213",
+          "actual": "3438.6",
+          "independent_expected": "3438.6",
+          "exact_match": true,
+          "original_cache": "3438.6",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "O21",
+          "formula": "SUM(C21:E21)",
+          "actual": "9545.84",
+          "independent_expected": "9545.84",
+          "exact_match": true,
+          "original_cache": "9545.84",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "P21",
+          "formula": "SUM(F21:N21)",
+          "actual": "21838.6",
+          "independent_expected": "21838.6",
+          "exact_match": true,
+          "original_cache": "21838.6",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "Q21",
+          "formula": "B21-SUM(O21:P21)",
+          "actual": "1347.56",
+          "independent_expected": "1347.56",
+          "exact_match": true,
+          "original_cache": "1347.5600000000013",
+          "cache_delta": "-1.3E-12",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "-1.3E-12",
+          "cache_exact_match": false,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F32",
+          "formula": "50+89",
+          "actual": "139",
+          "independent_expected": "139",
+          "exact_match": true,
+          "original_cache": "139",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "H32",
+          "formula": "50+89",
+          "actual": "139",
+          "independent_expected": "139",
+          "exact_match": true,
+          "original_cache": "139",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "K32",
+          "formula": "50+89",
+          "actual": "139",
+          "independent_expected": "139",
+          "exact_match": true,
+          "original_cache": "139",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "N32",
+          "formula": "50+89",
+          "actual": "139",
+          "independent_expected": "139",
+          "exact_match": true,
+          "original_cache": "139",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "J36",
+          "formula": "629+89",
+          "actual": "718",
+          "independent_expected": "718",
+          "exact_match": true,
+          "original_cache": "718",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        }
+      ],
+      "native": {
+        "status": "incomplete",
+        "engine": "python_decimal_subset",
+        "formula_count": 178,
+        "calculated_count": 14,
+        "output_written": false,
+        "excel_equivalence_verified": false,
+        "retained_not_refreshed": [],
+        "changed_parts": [
+          "[Content_Types].xml",
+          "xl/_rels/workbook.xml.rels",
+          "xl/calcChain.xml",
+          "xl/workbook.xml",
+          "xl/worksheets/sheet1.xml"
+        ],
+        "issue_groups": [
+          {
+            "code": "unsupported",
+            "message": "Shared/array/special formulas are not evaluated",
+            "count": 164,
+            "example": {
+              "sheet": "Sheet1",
+              "cell": "O6",
+              "code": "unsupported",
+              "message": "Shared/array/special formulas are not evaluated"
+            },
+            "example_formula": "SUM(C6:E6)"
+          }
+        ]
+      },
+      "analysis_cli": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts/xlsx_analysis.py",
+          "profile",
+          "tests/xlsx_real_business_20261103/stanton_budget_q1.xlsx",
+          "--sheet",
+          "Sheet1",
+          "--range",
+          "A1:B2",
+          "--no-header",
+          "--formulas",
+          "calculate"
+        ],
+        "exit_code": 1,
+        "stderr": "",
+        "stdout_status": "failed",
+        "stdout_bytes": 20445,
+        "stdout_sha256": "2c4d40413f35f3dc97799108556d44d65541f7dd2612e1ea89d60564b4f2ddfc",
+        "selected_range_formula_count": null,
+        "contract_passed": true
+      }
+    },
+    {
+      "file": "denham_cashbook.xlsx",
+      "sha256": "364f50fae6a961a59a224fe003fa8fffff446e0c9d3e9c93e8b463815bbee54d",
+      "inventory": {
+        "sheet_count": 1,
+        "stored_cell_count": 26546,
+        "formula_count": 16,
+        "special_formula_count": 13,
+        "functions_in_stored_formula_text": {
+          "SUM": 5
+        }
+      },
+      "verified_original_formulas": [
+        {
+          "sheet": "Sheet1",
+          "cell": "E16",
+          "formula": "SUM(E6:E15)",
+          "actual": "3669.39",
+          "independent_expected": "3669.39",
+          "exact_match": true,
+          "original_cache": "3669.39",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "S47",
+          "formula": "SUM(H47+I47+J47+K47+L47+M47+N47+O47+P47+Q47+R47)",
+          "actual": "4450",
+          "independent_expected": "4450",
+          "exact_match": true,
+          "original_cache": "4450",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        }
+      ],
+      "native": {
+        "status": "incomplete",
+        "engine": "python_decimal_subset",
+        "formula_count": 16,
+        "calculated_count": 2,
+        "output_written": false,
+        "excel_equivalence_verified": false,
+        "retained_not_refreshed": [],
+        "changed_parts": [
+          "[Content_Types].xml",
+          "xl/_rels/workbook.xml.rels",
+          "xl/calcChain.xml",
+          "xl/workbook.xml",
+          "xl/worksheets/sheet1.xml"
+        ],
+        "issue_groups": [
+          {
+            "code": "unsupported",
+            "message": "Shared/array/special formulas are not evaluated",
+            "count": 14,
+            "example": {
+              "sheet": "Sheet1",
+              "cell": "E45",
+              "code": "unsupported",
+              "message": "Shared/array/special formulas are not evaluated"
+            },
+            "example_formula": "SUM(E21:E44)"
+          }
+        ]
+      },
+      "analysis_cli": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts/xlsx_analysis.py",
+          "profile",
+          "tests/xlsx_real_business_20261103/denham_cashbook.xlsx",
+          "--sheet",
+          "Sheet1",
+          "--range",
+          "A1:B2",
+          "--no-header",
+          "--formulas",
+          "calculate"
+        ],
+        "exit_code": 1,
+        "stderr": "",
+        "stdout_status": "failed",
+        "stdout_bytes": 2308,
+        "stdout_sha256": "34238447b63b8c6a28b738f9217671b4afddf8846c8365ea69b69dacd58a33d7",
+        "selected_range_formula_count": null,
+        "contract_passed": true
+      }
+    },
+    {
+      "file": "denham_bank_reconciliation.xlsx",
+      "sha256": "3d2177f4b1e51b6c86b2621a77975469bea13198f6d7a410ec5cf7b587679d5c",
+      "inventory": {
+        "sheet_count": 1,
+        "stored_cell_count": 420,
+        "formula_count": 14,
+        "special_formula_count": 0,
+        "functions_in_stored_formula_text": {
+          "SUM": 14
+        }
+      },
+      "verified_original_formulas": [
+        {
+          "sheet": "Sheet1",
+          "cell": "F5",
+          "formula": "SUM(F2+F3)",
+          "actual": "3906.41",
+          "independent_expected": "3906.41",
+          "exact_match": true,
+          "original_cache": "3906.41",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "B18",
+          "formula": "SUM(B7:B16)",
+          "actual": "5609.68",
+          "independent_expected": "5609.68",
+          "exact_match": true,
+          "original_cache": "5609.68",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "B52",
+          "formula": "SUM(B23:B51)",
+          "actual": "5495.729999999999984",
+          "independent_expected": "5495.729999999999984",
+          "exact_match": true,
+          "original_cache": "5495.73",
+          "cache_delta": "-1.6E-14",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "-1.6E-14",
+          "cache_exact_match": false,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "B53",
+          "formula": "SUM(F5+B18-B52)",
+          "actual": "4020.360000000000016",
+          "independent_expected": "4020.360000000000016",
+          "exact_match": true,
+          "original_cache": "4020.3600000000006",
+          "cache_delta": "-5.84E-13",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "-5.84E-13",
+          "cache_exact_match": false,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "B55",
+          "formula": "SUM(B48+B50)",
+          "actual": "102.56",
+          "independent_expected": "102.56",
+          "exact_match": true,
+          "original_cache": "102.56",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F56",
+          "formula": "SUM(B25+B26+B34+B36+B38+B41+B42+B43+B48+B49)",
+          "actual": "1604.509999999999994",
+          "independent_expected": "1604.509999999999994",
+          "exact_match": true,
+          "original_cache": "1604.5099999999995",
+          "cache_delta": "4.94E-13",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "4.94E-13",
+          "cache_exact_match": false,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "B57",
+          "formula": "SUM(B53+B55)",
+          "actual": "4122.920000000000016",
+          "independent_expected": "4122.920000000000016",
+          "exact_match": true,
+          "original_cache": "4122.920000000001",
+          "cache_delta": "-9.84E-13",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "-9.84E-13",
+          "cache_exact_match": false,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F58",
+          "formula": "SUM(4.5+B33+B37)",
+          "actual": "170.1",
+          "independent_expected": "170.1",
+          "exact_match": true,
+          "original_cache": "170.1",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F60",
+          "formula": "SUM(405.21+B44)",
+          "actual": "576.68",
+          "independent_expected": "576.68",
+          "exact_match": true,
+          "original_cache": "576.67999999999995",
+          "cache_delta": "5E-14",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "5E-14",
+          "cache_exact_match": false,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "B62",
+          "formula": "SUM(B59+B60)",
+          "actual": "4122.92",
+          "independent_expected": "4122.92",
+          "exact_match": true,
+          "original_cache": "4122.92",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F63",
+          "formula": "SUM(134.73+B30+B40)",
+          "actual": "234.73",
+          "independent_expected": "234.73",
+          "exact_match": true,
+          "original_cache": "234.73",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F66",
+          "formula": "SUM(420+82.3+B31+B32+B35+B39+B45+B47)",
+          "actual": "2893.45",
+          "independent_expected": "2893.45",
+          "exact_match": true,
+          "original_cache": "2893.45",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "F69",
+          "formula": "SUM(F55:F67)",
+          "actual": "5495.729999999999994",
+          "independent_expected": "5495.729999999999994",
+          "exact_match": true,
+          "original_cache": "5495.73",
+          "cache_delta": "-6E-15",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "-6E-15",
+          "cache_exact_match": false,
+          "cache_matches_to_gbp_cents": true
+        },
+        {
+          "sheet": "Sheet1",
+          "cell": "G69",
+          "formula": "SUM(G55:G67)",
+          "actual": "5040",
+          "independent_expected": "5040",
+          "exact_match": true,
+          "original_cache": "5040",
+          "cache_delta": "0",
+          "currency_scale_to_gbp": 1,
+          "cache_delta_gbp": "0",
+          "cache_exact_match": true,
+          "cache_matches_to_gbp_cents": true
+        }
+      ],
+      "native": {
+        "status": "calculated_subset",
+        "engine": "python_decimal_subset",
+        "formula_count": 14,
+        "calculated_count": 14,
+        "output_written": false,
+        "excel_equivalence_verified": false,
+        "retained_not_refreshed": [],
+        "changed_parts": [
+          "[Content_Types].xml",
+          "xl/_rels/workbook.xml.rels",
+          "xl/calcChain.xml",
+          "xl/workbook.xml",
+          "xl/worksheets/sheet1.xml"
+        ],
+        "issue_groups": []
+      },
+      "analysis_cli": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts/xlsx_analysis.py",
+          "profile",
+          "tests/xlsx_real_business_20261103/denham_bank_reconciliation.xlsx",
+          "--sheet",
+          "Sheet1",
+          "--range",
+          "A1:B2",
+          "--no-header",
+          "--formulas",
+          "calculate"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "stdout_status": "profiled",
+        "stdout_bytes": 1612,
+        "stdout_sha256": "1fbde415450ebeeeecd0b0868878927644560523c1ea70864598641d604a9440",
+        "selected_range_formula_count": 0,
+        "contract_passed": true
+      }
+    },
+    {
+      "file": "ofgem_ed2_pcfm_v5.xlsx",
+      "sha256": "2f02bfdf2c4c85449129add05038fb1cbc10ad4ea716e9571a7dba0ea3642ce8",
+      "inventory": {
+        "sheet_count": 31,
+        "stored_cell_count": 401035,
+        "formula_count": 20869,
+        "special_formula_count": 7425,
+        "functions_in_stored_formula_text": {
+          "MID": 1,
+          "CELL": 4,
+          "SEARCH": 3,
+          "INDEX": 935,
+          "MATCH": 782,
+          "CHOOSE": 1836,
+          "AND": 3,
+          "MAX": 18,
+          "SUM": 6444,
+          "SUMPRODUCT": 742,
+          "IFERROR": 212,
+          "IF": 12482,
+          "PRODUCT": 4,
+          "YEAR": 723,
+          "COUNT": 152,
+          "MIN": 5797,
+          "COUNTIF": 39,
+          "AVERAGE": 4,
+          "ABS": 5,
+          "LARGE": 2,
+          "MONTH": 8,
+          "DATE": 1109,
+          "AVERAGEIFS": 190,
+          "EOMONTH": 703,
+          "ISBLANK": 16
+        }
+      },
+      "verified_original_formulas": [],
+      "native": {
+        "status": "load_rejected",
+        "message": "Workbook exceeds cell limit",
+        "calculated_count": 0
+      },
+      "analysis_cli": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts/xlsx_analysis.py",
+          "profile",
+          "tests/xlsx_real_business_20261103/ofgem_ed2_pcfm_v5.xlsx",
+          "--sheet",
+          "Cover",
+          "--range",
+          "A1:B2",
+          "--no-header",
+          "--formulas",
+          "calculate"
+        ],
+        "exit_code": 1,
+        "stderr": "",
+        "stdout_status": "failed",
+        "stdout_bytes": 63,
+        "stdout_sha256": "17d2d40e4cff462c32ef13055d153e051abd0b834206ac1c168fe0e2375ea760",
+        "selected_range_formula_count": null,
+        "contract_passed": true
+      }
+    },
+    {
+      "file": "ofgem_gas_pcfm_draft.xlsx",
+      "sha256": "db694177e0f27cee09f037fdb3b169eed5c67492dc41c5b0e1af044f1083f512",
+      "inventory": {
+        "sheet_count": 23,
+        "stored_cell_count": 68495,
+        "formula_count": 27668,
+        "special_formula_count": 16849,
+        "functions_in_stored_formula_text": {
+          "MID": 541,
+          "CELL": 44,
+          "SEARCH": 3,
+          "FIND": 1060,
+          "IF": 1308,
+          "SUM": 2911,
+          "COUNTIFS": 4,
+          "COUNTA": 718,
+          "ROUND": 27,
+          "_XLFN.ISFORMULA": 798,
+          "ISERROR": 714,
+          "SUMIFS": 308,
+          "INDEX": 1610,
+          "MATCH": 1320,
+          "AND": 847,
+          "OR": 2,
+          "PRODUCT": 20,
+          "NOT": 4,
+          "SUMPRODUCT": 9,
+          "YEAR": 2173,
+          "AVERAGEIFS": 90,
+          "DATE": 181,
+          "IFERROR": 264,
+          "_XLFN.FORMULATEXT": 1560,
+          "ISBLANK": 1177,
+          "TRANSPOSE": 2,
+          "MONTH": 1,
+          "DAY": 1,
+          "MIN": 844,
+          "AVERAGE": 19,
+          "MAX": 49,
+          "OFFSET": 20,
+          "ROUNDUP": 15,
+          "ABS": 10,
+          "SIGN": 5,
+          "EOMONTH": 384,
+          "INT": 290,
+          "ROW": 580
+        }
+      },
+      "verified_original_formulas": [],
+      "native": {
+        "status": "failed",
+        "engine": "python_decimal_subset",
+        "formula_count": 27668,
+        "calculated_count": 6143,
+        "output_written": false,
+        "excel_equivalence_verified": false,
+        "retained_not_refreshed": [],
+        "issue_groups": [
+          {
+            "code": "unsupported",
+            "message": "Shared/array/special formulas are not evaluated",
+            "count": 18504,
+            "example": {
+              "sheet": "Cover",
+              "cell": "D9",
+              "code": "unsupported",
+              "message": "Shared/array/special formulas are not evaluated"
+            },
+            "example_formula": "MID(CELL(\"filename\"),SEARCH(\"[\",CELL(\"filename\"))+1,SEARCH(\"]\",CELL(\"filename\"))-SEARCH(\"[\",CELL(\"filename\"))-1)"
+          },
+          {
+            "code": "unsupported",
+            "message": "Named references are unsupported",
+            "count": 889,
+            "example": {
+              "sheet": "VariantAllowances",
+              "cell": "G780",
+              "code": "unsupported",
+              "message": "Named references are unsupported"
+            },
+            "example_formula": "price_label"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function AND is unsupported",
+            "count": 787,
+            "example": {
+              "sheet": "VariantAllowances",
+              "cell": "AY53",
+              "code": "unsupported",
+              "message": "Function AND is unsupported"
+            },
+            "example_formula": "IF(AND(AW53=1,AV53=TRUE),1,IF(AND(AW53=2,AV53=TRUE),2,IF(AND(AW53=1,AV53=FALSE),1.5,IF(AND(AW53=2,AV53=FALSE),2.5,0))))"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function ISERROR is unsupported",
+            "count": 674,
+            "example": {
+              "sheet": "Checks",
+              "cell": "I57",
+              "code": "unsupported",
+              "message": "Function ISERROR is unsupported"
+            },
+            "example_formula": "ISERROR(SUM(VariantAllowances!I$5:I$972))*1"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function ISBLANK is unsupported",
+            "count": 384,
+            "example": {
+              "sheet": "Inflation",
+              "cell": "D2",
+              "code": "unsupported",
+              "message": "Function ISBLANK is unsupported"
+            },
+            "example_formula": "IF(ISBLANK(C2),INDEX(NGT_TO!$AP$513:$AZ$513,MATCH(YEAR(EOMONTH(A2,15)),NGT_TO!$AP$512:$AZ$512,0))/100,\"-\")"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function INDEX is unsupported",
+            "count": 118,
+            "example": {
+              "sheet": "Checks",
+              "cell": "BA104",
+              "code": "unsupported",
+              "message": "Function INDEX is unsupported"
+            },
+            "example_formula": "INDEX(NGT_TO!AV$128:AV$172,MATCH($E104,NGT_TO!$E$128:$E$172,0))"
+          },
+          {
+            "code": "unsupported",
+            "message": "Formula uses an unsupported operator or reference form",
+            "count": 92,
+            "example": {
+              "sheet": "Transform_TO",
+              "cell": "V161",
+              "code": "unsupported",
+              "message": "Formula uses an unsupported operator or reference form"
+            },
+            "example_formula": "AVERAGEIFS(Inflation!$E:$E,Inflation!$A:$A,\">=\"&DATE(V$160-1,4,1),Inflation!$A:$A,\"<=\"&DATE(V$160,4-1,1))"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function YEAR is unsupported",
+            "count": 30,
+            "example": {
+              "sheet": "Transform_TO",
+              "cell": "V160",
+              "code": "unsupported",
+              "message": "Function YEAR is unsupported"
+            },
+            "example_formula": "YEAR(Transform_TO!V4)"
+          },
+          {
+            "code": "calculation_error",
+            "message": "Cell reference is outside Excel worksheet bounds",
+            "count": 15,
+            "example": {
+              "sheet": "Transform_TO",
+              "cell": "AU210",
+              "code": "calculation_error",
+              "message": "Cell reference is outside Excel worksheet bounds"
+            },
+            "example_formula": "AU206*RIIO3+AU167*(RIIO1+RIIO2+PreRIIO)"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function ABS is unsupported",
+            "count": 15,
+            "example": {
+              "sheet": "Tax",
+              "cell": "AU39",
+              "code": "unsupported",
+              "message": "Function ABS is unsupported"
+            },
+            "example_formula": "ABS(AU14)>AU15"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function SIGN is unsupported",
+            "count": 10,
+            "example": {
+              "sheet": "Tax",
+              "cell": "AU40",
+              "code": "unsupported",
+              "message": "Function SIGN is unsupported"
+            },
+            "example_formula": "-SIGN(AU14)*AU15"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function NOT is unsupported",
+            "count": 4,
+            "example": {
+              "sheet": "Transform_TO",
+              "cell": "AU8",
+              "code": "unsupported",
+              "message": "Function NOT is unsupported"
+            },
+            "example_formula": "NOT(AU7)"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function COUNTA is unsupported",
+            "count": 2,
+            "example": {
+              "sheet": "Checks",
+              "cell": "I16",
+              "code": "unsupported",
+              "message": "Function COUNTA is unsupported"
+            },
+            "example_formula": "IF(COUNTA(NGT_TO!E81:E123)=COUNTA(E104:E146),0,1)"
+          },
+          {
+            "code": "unsupported",
+            "message": "Function DATE is unsupported",
+            "count": 1,
+            "example": {
+              "sheet": "Depreciation",
+              "cell": "I96",
+              "code": "unsupported",
+              "message": "Function DATE is unsupported"
+            },
+            "example_formula": "DATE(YEAR(I12)+I18-1,MONTH(I12),DAY(I12))"
+          }
+        ]
+      },
+      "analysis_cli": {
+        "command": [
+          "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/xlsx/scripts/xlsx_analysis.py",
+          "profile",
+          "tests/xlsx_real_business_20261103/ofgem_gas_pcfm_draft.xlsx",
+          "--sheet",
+          "ICAASOt notes",
+          "--range",
+          "A1:B2",
+          "--no-header",
+          "--formulas",
+          "calculate"
+        ],
+        "exit_code": 1,
+        "stderr": "",
+        "stdout_status": "failed",
+        "stdout_bytes": 2699509,
+        "stdout_sha256": "3fe733ec232a447a1a987965da62b796fb01de8f2920959beb0a77e7e2832bd5",
+        "selected_range_formula_count": null,
+        "contract_passed": true
+      }
+    }
+  ],
+  "selected_original_sumproduct_checks": [
+    {
+      "sheet": "Transform_TO",
+      "cell": "AU120",
+      "formula": "SUMPRODUCT(AU113:AU118,$I$113:$I$118)",
+      "source": "ofgem_gas_pcfm_draft.xlsx",
+      "unit": "GBP million, 2023/24 prices",
+      "scope": "selected dependency closure only; native whole workbook failed",
+      "actual": "11.37689359285843492444444444444448",
+      "independent_expected": "11.37689359285843492444444444444448",
+      "exact_match": true,
+      "original_cache": "11.376893592858433",
+      "cache_delta": "1.92444444444444448E-15",
+      "currency_scale_to_gbp": 1000000,
+      "cache_delta_gbp": "1.92444444444444448E-9",
+      "cache_exact_match": false,
+      "cache_matches_to_gbp_cents": true
+    },
+    {
+      "sheet": "Transform_TO",
+      "cell": "AV120",
+      "formula": "SUMPRODUCT(AV113:AV118,$I$113:$I$118)",
+      "source": "ofgem_gas_pcfm_draft.xlsx",
+      "unit": "GBP million, 2023/24 prices",
+      "scope": "selected dependency closure only; native whole workbook failed",
+      "actual": "8.98681989456270162444444444444448",
+      "independent_expected": "8.98681989456270162444444444444448",
+      "exact_match": true,
+      "original_cache": "8.9868198945627",
+      "cache_delta": "1.62444444444444448E-15",
+      "currency_scale_to_gbp": 1000000,
+      "cache_delta_gbp": "1.62444444444444448E-9",
+      "cache_exact_match": false,
+      "cache_matches_to_gbp_cents": true
+    },
+    {
+      "sheet": "Transform_TO",
+      "cell": "AW120",
+      "formula": "SUMPRODUCT(AW113:AW118,$I$113:$I$118)",
+      "source": "ofgem_gas_pcfm_draft.xlsx",
+      "unit": "GBP million, 2023/24 prices",
+      "scope": "selected dependency closure only; native whole workbook failed",
+      "actual": "7.91098650515855422444444444444448",
+      "independent_expected": "7.91098650515855422444444444444448",
+      "exact_match": true,
+      "original_cache": "7.9109865051585535",
+      "cache_delta": "7.2444444444444448E-16",
+      "currency_scale_to_gbp": 1000000,
+      "cache_delta_gbp": "7.2444444444444448E-10",
+      "cache_exact_match": false,
+      "cache_matches_to_gbp_cents": true
+    },
+    {
+      "sheet": "Transform_TO",
+      "cell": "AX120",
+      "formula": "SUMPRODUCT(AX113:AX118,$I$113:$I$118)",
+      "source": "ofgem_gas_pcfm_draft.xlsx",
+      "unit": "GBP million, 2023/24 prices",
+      "scope": "selected dependency closure only; native whole workbook failed",
+      "actual": "5.44444444444444532444444444444448",
+      "independent_expected": "5.44444444444444532444444444444448",
+      "exact_match": true,
+      "original_cache": "5.4444444444444446",
+      "cache_delta": "7.2444444444444448E-16",
+      "currency_scale_to_gbp": 1000000,
+      "cache_delta_gbp": "7.2444444444444448E-10",
+      "cache_exact_match": false,
+      "cache_matches_to_gbp_cents": true
+    },
+    {
+      "sheet": "Transform_TO",
+      "cell": "AY120",
+      "formula": "SUMPRODUCT(AY113:AY118,$I$113:$I$118)",
+      "source": "ofgem_gas_pcfm_draft.xlsx",
+      "unit": "GBP million, 2023/24 prices",
+      "scope": "selected dependency closure only; native whole workbook failed",
+      "actual": "5.44444444444444532444444444444448",
+      "independent_expected": "5.44444444444444532444444444444448",
+      "exact_match": true,
+      "original_cache": "5.4444444444444446",
+      "cache_delta": "7.2444444444444448E-16",
+      "currency_scale_to_gbp": 1000000,
+      "cache_delta_gbp": "7.2444444444444448E-10",
+      "cache_exact_match": false,
+      "cache_matches_to_gbp_cents": true
+    }
+  ],
+  "derived_transaction_checks": [
+    {
+      "formula": "SUMIF(F23:F50,\"HMRC\",B23:B50)",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "320.799999999999994",
+      "independent_expected": "320.799999999999994",
+      "exact_match": true
+    },
+    {
+      "formula": "SUMIF(F23:F50,\"hMrC\",B23:B50)",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "320.799999999999994",
+      "independent_expected": "320.799999999999994",
+      "exact_match": true
+    },
+    {
+      "formula": "SUMIFS(B23:B50,F23:F50,\"HMRC\",B23:B50,\">75\")",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "197.6",
+      "independent_expected": "197.6",
+      "exact_match": true
+    },
+    {
+      "formula": "COUNTIF(F23:F50,\"HMRC\")",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "4",
+      "independent_expected": "4",
+      "exact_match": true
+    },
+    {
+      "formula": "COUNTIFS(F23:F50,\"HMRC\",B23:B50,\">75\")",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "2",
+      "independent_expected": "2",
+      "exact_match": true
+    },
+    {
+      "formula": "SUMIF(F7:F16,\"Bank Interest\",B7:B16)",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "4.48",
+      "independent_expected": "4.48",
+      "exact_match": true
+    },
+    {
+      "formula": "COUNTIF(F7:F16,\"Bank*\")",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "4",
+      "independent_expected": "4",
+      "exact_match": true
+    },
+    {
+      "formula": "SUMIFS(B23:B50,F23:F50,\"not_a_payee\",B23:B50,\">75\")",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "0",
+      "independent_expected": "0",
+      "exact_match": true
+    },
+    {
+      "formula": "ROUND(SUMIF(F23:F50,\"HMRC\",B23:B50),2)",
+      "source": "denham_bank_reconciliation.xlsx",
+      "scope": "new_formula_on_original_data",
+      "actual": "320.8",
+      "independent_expected": "320.8",
+      "exact_match": true
+    }
+  ],
+  "bank_business_checks": [
+    {
+      "cell": "F5",
+      "actual_raw": "3906.41",
+      "expected_gbp_to_cents": "3906.41",
+      "passed": true
+    },
+    {
+      "cell": "B18",
+      "actual_raw": "5609.68",
+      "expected_gbp_to_cents": "5609.68",
+      "passed": true
+    },
+    {
+      "cell": "B52",
+      "actual_raw": "5495.729999999999984",
+      "expected_gbp_to_cents": "5495.73",
+      "passed": true
+    },
+    {
+      "cell": "B53",
+      "actual_raw": "4020.360000000000016",
+      "expected_gbp_to_cents": "4020.36",
+      "passed": true
+    },
+    {
+      "cell": "B55",
+      "actual_raw": "102.56",
+      "expected_gbp_to_cents": "102.56",
+      "passed": true
+    },
+    {
+      "cell": "B57",
+      "actual_raw": "4122.920000000000016",
+      "expected_gbp_to_cents": "4122.92",
+      "passed": true
+    },
+    {
+      "cell": "B62",
+      "actual_raw": "4122.92",
+      "expected_gbp_to_cents": "4122.92",
+      "passed": true
+    }
+  ],
+  "source_content_note": "Denham bank filename says March 31 2020; workbook dates and transactions are 2018/19. Validation follows workbook content.",
+  "recalculated_group_summary": {
+    "reconciliation": {
+      "status": "passed",
+      "selected_rows": 28,
+      "group_rows": 28,
+      "numeric_count": 28,
+      "blank_count": 0,
+      "ignored_non_numeric": 0,
+      "source_sum": "5495.729999999999984",
+      "group_sum": "5495.729999999999984",
+      "checks": {
+        "row_count": true,
+        "source_rows": true,
+        "numeric_count": true,
+        "blank_count": true,
+        "ignored_count": true,
+        "amount_sum": true
+      }
+    },
+    "sum": "5495.729999999999984",
+    "group_count": 16,
+    "unverified_formula_caches": 0,
+    "passed": true
+  },
+  "input_integrity": {
+    "stanton_budget_q1.xlsx": true,
+    "denham_cashbook.xlsx": true,
+    "denham_bank_reconciliation.xlsx": true,
+    "ofgem_ed2_pcfm_v5.xlsx": true,
+    "ofgem_gas_pcfm_draft.xlsx": true
+  }
+}

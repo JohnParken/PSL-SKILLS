@@ -270,6 +270,10 @@ class Workbook:
                     value = "".join(t.text or "" for t in cell.findall(NS + "is/" + NS + "t"))
                     if not value:
                         value = "".join(t.text or "" for t in cell.findall(NS + "is/" + NS + "r/" + NS + "t"))
+                elif kind == "str" and v is not None:
+                    # An empty string result has a present but empty <v/>.
+                    # A missing <v> still means a missing formula cache.
+                    value = text or ""
                 elif text is not None:
                     if kind == "s":
                         index = int(text)
@@ -289,7 +293,7 @@ class Workbook:
                 sheet_cells[ref] = {"value": value, "type": kind, "style": cell.get("s", "0"),
                                     "formula": formula.text or "" if formula is not None else None,
                                     "formula_attributes": dict(formula.attrib) if formula is not None else {},
-                                    "cache_status": "unverified" if formula is not None and text is not None else
+                                    "cache_status": "unverified" if formula is not None and v is not None and (text is not None or kind == "str") else
                                     "missing" if formula is not None else "not_applicable"}
                 count += 1
                 if count > MAX_CELLS:
@@ -504,6 +508,9 @@ class Workbook:
             self.changed.add("xl/workbook.xml")
             self.drop_calc_chain()
         self.flush()
+        # Refresh values and removed formulas for subsequent inspection/analysis.
+        # Stored caches remain unverified without this calculation's report.
+        self._index()
         report["changed_parts"] = sorted(self.changed)
         return report
 
@@ -703,9 +710,19 @@ def main():
     try:
         validate_cli_paths(args)
         if args.command == "check":
-            book = Workbook.create({"sheets": [{"name": "Check", "cells": {"A1": {"formula": "ROUND(1.005,2)"}}}]})
+            book = Workbook.create({"sheets": [{"name": "Check", "cells": {
+                "A1": {"value": Decimal("0.1")}, "A2": {"value": Decimal("0.2")},
+                "B1": {"formula": 'SUMIF(A1:A2,">0")'},
+                "B2": {"formula": 'COUNTIFS(A1:A2,">0")'},
+                "B3": {"formula": 'SUMIFS(A1:A2,A1:A2,">0")'},
+                "C1": {"formula": "SUMPRODUCT(A1:A2,A1:A2)"},
+                "D1": {"formula": "ROUND(1.005,2)"}, "D2": {"formula": 'IF(TRUE,"",0)'},
+            }}]})
             result = book.calculate()
-            if result["calculated_count"] != 1 or result["issues"]:
+            expected = {"B1": Decimal("0.3"), "B2": Decimal(2), "B3": Decimal("0.3"),
+                        "C1": Decimal("0.05"), "D1": Decimal("1.01"), "D2": ""}
+            if (result["calculated_count"] != len(expected) or result["issues"]
+                    or any(book.cells["Check"][ref]["value"] != value for ref, value in expected.items())):
                 raise ValueError("Calculation self-check failed")
             result = {"status": "ready", "python": sys.version.split()[0],
                       "dependencies": "standard_library_only", "check_kind": "environment",
