@@ -52,14 +52,16 @@ class TestWpsTaskRunner(unittest.TestCase):
             }
             res = create_document(spec, out_file, compact_receipt=True)
             self.assertEqual(res["status"], "success")
-            self.assertEqual(res["readback_status"], "ok")
+            self.assertEqual(res["readback_status"], "partial")
+            self.assertTrue(res['partial'])
+            self.assertIn('rtf_destination_skipped', [item['code'] for item in res['issues']])
             self.assertTrue(out_file.exists())
             self.assertGreater(res["file_size"], 0)
 
             raw = out_file.read_bytes()
             self.assertTrue(raw.startswith(b"{\\rtf"))
             parsed = read_bytes(raw)
-            self.assertEqual(parsed["status"], "ok")
+            self.assertEqual(parsed["status"], "partial")
             self.assertIn("关于专项检查的通报", parsed["text"])
             self.assertIn("一、总体情况", parsed["text"])
 

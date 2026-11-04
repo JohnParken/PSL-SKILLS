@@ -65,7 +65,7 @@ U+0001在placeholder模式替换U+FFFC，不推断图片/对象类型。U+0008�
 
 ## 兼容策略和来源
 
-显式strict要求CFB零头CLSID和minor003E；data及显式legacy额外接受已观察的minor003B并报告partial，其他minor仍拒绝。MS-CFB 2.2对003E使用SHOULD；该兼容不改变major/sector及分配验证。legacy_word_clsid只允许v3精确头字节0609020000000000c000000000000046，根WordDocument必须A5EC，且无Workbook/Book；不改写输入头。异常头永远记录partial，GUID不证明生成软件或完整MS-DOC。Word专用策略不与Excel专用策略交叉使用；默认data对OOXML沿用strict解析，显式legacy仍不适用。data按精确GUID自动选择已知Word头策略；Word头路径仍要求v3、有效WordDocument标识且不含Workbook/Book，零GUID沿用严格容器读取。链、分配、重叠、目录、预算检查均保持。
+显式strict要求CFB零头CLSID和minor003E；data及显式legacy额外接受已观察的minor003B并报告partial，其他minor仍拒绝。MS-CFB 2.2对003E使用SHOULD；该兼容不改变major/sector及分配验证。legacy_word_clsid只允许v3精确头字节0609020000000000c000000000000046，根WordDocument必须A5EC，且无Workbook/Book；不改写输入头。异常头永远记录partial，GUID不证明生成软件或完整MS-DOC。Word专用策略不与Excel专用策略交叉使用；默认data对OOXML沿用strict解析，显式legacy仍不适用。data按精确GUID自动选择已知Word头策略；Word头路径仍要求v3、有效WordDocument标识且不含Workbook/Book，零GUID仍遵守原头部约束，默认data另允许下述经声明长度验证的末扇区缺填充兼容。链、分配、重叠、目录、预算检查均保持。
 
 CFB已迁至wps包内唯一实现。CFB迁移基线hash为00dcd269218d94737e9ebad48c06fafa62b1fae72c3807a037fe7f1cd0bfb42a，此后新增只读打开及精确Word策略。OOXML必要读取守卫来自docx。不得自动复制覆盖形成漂移。
 
@@ -103,4 +103,12 @@ reading_assessment (`<skill-root>/references/reading-assessment.md`)是统一入
 
 ## CFB兼容头与容器检查
 
+默认 data 对已识别 MS-DOC 的末扇区缺填充作有界兼容：全部声明流字节必须实际存在，目录及分配元数据必须完整，并通过原有链、交叉引用、加密和资源检查；仅在内存补齐末扇区未声明填充，记录 `cfb_missing_final_sector_padding` 并返回 partial。严格模式仍拒绝物理长度不对齐。不得截去原件尾部或将缺失流内容补零当作正文；原件保持不变。当前农行项目需求真实原件（末扇区存73字节）读取6212字符、152段，与独立FIB/CLX正文解码一致；第二份农行报名原件（453256字节，末扇区存136字节）直接读取3268字符、122段并返回partial；独立FIB/CLX抽取的88个非域指令正文片段共2920字符按序匹配，完整语义对照因域/对象控制符未完成，不声明表格结构或全文完整。macOS/Python3.13验证，不代表客户端版式或Linux/Windows验收。
+
 默认 data 按精确头 GUID 自动选择已有的旧版 Word CFB 兼容路径，并接受旧版 minor `0x003B`；仍检查对应负载、版本、扇区链和边界，并报告 partial。显式 strict 保留零头 GUID 与 minor `0x003E` 要求。字段、对象及正文布局等独立限制继续按下表处理，容器可读不等于任意 MS-DOC 都能提取。
+
+## RTF部分恢复与发布边界
+
+RTF读取在未闭合组、行或单元格、Unicode/十六进制截断时保留可证实的文字和物理单元格，返回partial及rtf_*诊断；不能确认的字符不猜测。未配对Unicode代理项以替代字符显示并诊断。页眉页脚、图片及对象省略明确标记；域只保留存储结果，不执行、不证明新鲜度。未知可选destination保守跳过并诊断；字体/颜色等已知元数据不因未呈现而自动标记正文缺失。二进制长度确定时按字节跳过，不将其字节误作正文或组边界。
+
+生成/重排编辑在发布前拒绝带结构或文字恢复诊断的候选，保留原目标；仅附加内容省略、域缓存未验证可带partial回执发布，不意味着版式和所有内容已验收。普通编辑仍拒绝partial输入，用户明确授权--allow-lossy-reflow时才生成标注损失的新副本。读取变为partial可能使原来静默省略页眉/对象的RTF不再进入默认重排编辑，这是缺口显式化；不是取消读取能力。

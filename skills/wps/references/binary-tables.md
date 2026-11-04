@@ -8,7 +8,7 @@
 
 `schema_version=ms_doc_table_rows_v1` 的 `rows` 是独立观察到的行，不是完整表格对象。每行保留 `cells`、正文 CP 半开范围、行结束符 CP 与 PAPX 来源。每个 cell 有从零开始的行内 `index`、文字、CP 范围与属性来源；同一单元格的多段文字用换行连接，空单元格保留。CP 按 UTF-16 码元计算，不按 Python 字符索引计算。
 
-只接受已校验 BTE/PAPX FKP 中显式 `sprmPFInTable=1`、`sprmPItap=1`、`sprmPFTtp=0/1` 的一级段落/单元格/行界。缺少属性、嵌套层级、非零片段 PRM、字段内容或未知段落操作不猜测。未知段落操作的剩余字节不会被扫描为表格标志。已知 TDefTable 保留初始列数和 twips 边界；其他表格操作只按有界操作数跳过并计数，不应用其含义。
+只接受已校验 BTE/PAPX FKP 中显式 `sprmPFInTable=1`、`sprmPItap=1` 的一级段落/单元格边界；行终止必须有显式 `sprmPFTtp=1`，普通标记未写PFTtp按规范默认false，不要求冗余false操作数。缺少属性、嵌套层级、非零片段 PRM、字段内容或未知段落操作不猜测。未知段落操作的剩余字节不会被扫描为表格标志。已知 TDefTable 保留初始列数和 twips 边界；其他表格操作只按有界操作数跳过并计数，不应用其含义。
 
 `initial_definition` 只描述保存的初始定义，不能据此推断最终列网格。`table_grouping`、`grid_and_merges` 和每行 `merges` 均为 unknown；不把相邻行自动拼成同一表格，不推断跨行/跨列合并、布局、样式、修订后的结构或显示顺序。未读取全部属性时也不声称源文件结构合法。
 
@@ -24,4 +24,25 @@
 
 依据微软 MS-DOC 的表格概述、PapxFkp、PapxInFkp、直接段落格式及 TDefTableOperand 实现有限读取；定位与使用范围见格式依据 (`<skill-root>/references/format-evidence.json`)。这些是开发材料，运行时不联网。
 
-当前验证为独立字面量构造的合成 PAPX/FKP 样例，包括中文、压缩文本、代理对、空单元格、多段文字、初始列边界、属性缺失/未知、嵌套深度、PRM、损坏和预算。尚无真实 WPS 二进制表格与独立内容/结构预期的验收，不能据此称完整表格兼容。
+当前验证为独立字面量构造的合成 PAPX/FKP 样例，包括中文、压缩文本、代理对、空单元格、多段文字、初始列边界、属性缺失/未知、嵌套深度、PRM、损坏和预算。另有两份工行官网原件的有限核验：价格表恢复9行（单元格数为10、10、10、10、10、4、5、5、5），大连采购表恢复2行、每行5个单元格；独立struct实现的BTE/FKP/PRL与FIB/CLX步行结果一致（仅共享CFB分配层），正文及原件哈希不变。价格表的5处HugePapx已按有界PrcData读取；不证明WPS生产者、完整表格、合并或客户端视觉效果。macOS/Python3.13验证，Linux/Windows未测。
+
+## 固定段落属性与保守停止
+
+MS-DOC 2.6.2（开发来源URL：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/484822ee-a9d9-4af4-8423-29fda67a6a58`）及Sprm长度定义（开发来源URL：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/099eb99c-a927-4caf-a80c-66254ea83d6a`）为开发依据。仅明确白名单中的固定长度段落排版属性可越过，不应用其版式语义；长度不够仍报告元数据缺口，不扫描操作数字节寻找表格标志。
+
+| SPRM | 固定操作数 | 本轮处理 |
+|---|---|---|
+| 0x2431 WidowControl | 1字节 | 保留原始操作数及来源，忽略渲染 |
+| 0x8418 DxaAbs | 2字节 | 同上，不据此推断视觉位置 |
+| 0x6412 DyaLine | 4字节LSPD | 同上，不推断行高 |
+| 0x2461 Jc | 1字节 | 同上，不渲染对齐 |
+| 0x4457 DxcLeft1 | 2字节 | 同上，不解释字符单位缩进 |
+| 0x6646 HugePapx | 4字节Data流引用 | 有界读取PrcData；不跳过引用语义，不继续解释原数组后缀 |
+
+同一规范已明确的保留/间距/缩进/框架位置等固定属性也作白名单处理，清单以 `<skill-root>/scripts/wps_binary_tables.py` 的LAYOUT_PROPERTIES为准。`layout_properties_not_rendered` 和 `unresolved_properties` 各最多100条，分别附总计数及truncated计数。没有按此诊断绘制样式的能力；rows仍始终为partial范围。
+
+## HugePapx与外部PrcData
+
+开发依据另见 MS-DOC 2.9.210（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/473fd992-c824-4655-8880-3186bd432f80`），运行时不联网。PrcData的2字节有符号长度必须处于10至0x3FA2，且全部属性字节位于Data流内。HugePapx若非数组首项按规范忽略；位于内联GrpPrlAndIstd时要求istd=0且只有此PRL。处理外部数组后不再处理原数组后缀。支持HugePapx/PTableProps的有界交接链，每链最多32个不同引用、每次表格检查最多4096次引用，累计仍受1MiB属性预算约束。循环、缺Data流、指针/长度越界、部分重叠数组和破损PRL不生成猜测行，保留正文及metadata_invalid原因；预算超限明确失败。
+
+`external_property_references`最多100条，附总计数和截断计数；行/单元格保留FKP来源及外部属性来源。重复引用同一完整数组允许，交叉覆盖不同数组拒绝。仍只读取明确一级行/单元格，不应用完整样式、修订或合并语义，不把rows_partial当作完整表格。

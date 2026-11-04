@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Pure Python RTF document builder tailored for seamless rendering in Kingsoft WPS Office."""
+"""Standard-library RTF builder; controls are tested, office rendering is not certified."""
 
 from typing import List, Dict, Optional, Tuple, Any
 
@@ -45,6 +45,8 @@ def escape_rtf_text(text: str) -> str:
     out = []
     for ch in text:
         code = ord(ch)
+        if code < 32 and ch not in "\r\n\t":
+            raise ValueError("Unsupported text control character")
         if code < 128:
             if ch in "\\{}":
                 out.append("\\" + ch)
@@ -58,8 +60,10 @@ def escape_rtf_text(text: str) -> str:
                 out.append(ch)
         else:
             # RTF 16-bit signed integer representation for Unicode code point
-            signed_code = code if code < 32768 else code - 65536
-            out.append(f"\\u{signed_code}?")
+            for offset in range(0, len(ch.encode("utf-16le")), 2):
+                unit = int.from_bytes(ch.encode("utf-16le")[offset:offset + 2], "little")
+                signed_code = unit if unit < 32768 else unit - 65536
+                out.append(f"\\u{signed_code}?")
     return "".join(out)
 
 
@@ -138,6 +142,11 @@ class RtfParagraph:
         right_indent_pt: float = 0.0,
         keep_with_next: bool = False,
         widow_control: bool = True,
+        page_break_before: bool = False,
+        keep_together: bool = False,
+        first_line_indent_pt: Optional[float] = None,
+        tabs_pt: Optional[List[float]] = None,
+        outline_level: Optional[int] = None,
     ):
         self.align = align
         self.space_before_pt = space_before_pt
@@ -149,6 +158,11 @@ class RtfParagraph:
         self.right_indent_pt = right_indent_pt
         self.keep_with_next = keep_with_next
         self.widow_control = widow_control
+        self.page_break_before = page_break_before
+        self.keep_together = keep_together
+        self.first_line_indent_pt = first_line_indent_pt
+        self.tabs_pt = tabs_pt or []
+        self.outline_level = outline_level
         self.runs: List[RtfRun] = []
 
     def add_run(self, run: RtfRun) -> "RtfParagraph":
@@ -190,31 +204,70 @@ class RtfParagraph:
         # Line spacing
         if self.line_spacing_exact_pt is not None:
             # Exact line spacing in twips with \slmult0
-            ctrls.append(f"\\sl{int(self.line_spacing_exact_pt * 20)}\\slmult0")
+            ctrls.append(f"\\sl{-int(self.line_spacing_exact_pt * 20)}\\slmult0")
         elif self.line_spacing_mult is not None:
             # Multiple of 240 twips (1.0 = 240)
             ctrls.append(f"\\sl{int(self.line_spacing_mult * 240)}\\slmult1")
 
         # Indentation (2 chars approx 28pt = 560 twips at 14pt, or relative)
-        if self.first_line_indent_chars > 0:
+        if self.first_line_indent_pt is not None:
+            ctrls.append(f"\\fi{int(self.first_line_indent_pt * 20)}")
+        elif self.first_line_indent_chars > 0:
             base_size = self.runs[0].size_pt if self.runs else 14.0
             indent_twips = int(self.first_line_indent_chars * base_size * 20)
             ctrls.append(f"\\fi{indent_twips}")
         elif self.first_line_indent_chars < 0:
-            ctrls.append(f"\\fi{int(self.first_line_indent_chars * 20)}")
+            base_size = self.runs[0].size_pt if self.runs else 14.0
+            ctrls.append(f"\\fi{int(self.first_line_indent_chars * base_size * 20)}")
 
         if self.left_indent_pt > 0:
             ctrls.append(f"\\li{int(self.left_indent_pt * 20)}")
         if self.right_indent_pt > 0:
             ctrls.append(f"\\ri{int(self.right_indent_pt * 20)}")
 
+        if self.outline_level is not None:
+            ctrls.append(f"\\outlinelevel{self.outline_level}")
+        for position in self.tabs_pt:
+            ctrls.append(f"\\tx{int(position * 20)}")
+        if self.page_break_before:
+            ctrls.append("\\pagebb")
+        if self.keep_together:
+            ctrls.append("\\keep")
         if self.keep_with_next:
             ctrls.append("\\keepn")
         if self.widow_control:
-            ctrls.append("\\widowctrl")
+            ctrls.append("\\widctlpar")
+        else:
+            ctrls.append("\\nowidctlpar")
 
         runs_rtf = "".join(run.to_rtf() for run in self.runs)
         return "".join(ctrls) + " " + runs_rtf + "\\par"
+
+
+def normalized_merges(rows, merges, repeat_header):
+    """Validate bounded merge rectangles without deleting covered user content."""
+    if not isinstance(merges, list) or len(merges) > 256:
+        raise ValueError("merges must contain at most 256 inclusive [r0,c0,r1,c1] ranges")
+    cells = {}
+    for span in merges:
+        if not isinstance(span, list) or len(span) != 4 or any(type(value) is not int for value in span):
+            raise ValueError("Merge coordinates must be four integers")
+        r0, c0, r1, c1 = span
+        if not (0 <= r0 <= r1 < len(rows) and 0 <= c0 <= c1 < len(rows[0])) or (r0 == r1 and c0 == c1):
+            raise ValueError("Merge is out of bounds, reversed or contains only one cell")
+        if repeat_header and r0 == 0 and r1 > 0:
+            raise ValueError("Vertical merge across repeating header boundary is unsupported; disable repetition explicitly")
+        for row in range(r0, r1 + 1):
+            for col in range(c0, c1 + 1):
+                if len(cells) >= 100000:
+                    raise ValueError("Merge coverage exceeds 100000 cells")
+                if (row, col) in cells:
+                    raise ValueError("Overlapping merge ranges")
+                if (row, col) != (r0, c0) and rows[row][col] != "":
+                    raise ValueError("Covered merge cells must be empty; refusing to discard content")
+                cells[row, col] = (("first" if col == c0 else "continue") if c0 != c1 else None,
+                                   ("first" if row == r0 else "continue") if r0 != r1 else None)
+    return cells
 
 
 class RtfTableCell:
@@ -229,10 +282,12 @@ class RtfTableCell:
         valign: str = "center",
         hmerge: Optional[str] = None,  # "first" or "continue"
         vmerge: Optional[str] = None,  # "first" or "continue"
+        border_width_pt: float = 0.5,
     ):
         self.paragraphs = paragraphs or []
         self.width_twips = width_twips
         self.borders = borders
+        self.border_width_pt = border_width_pt
         self.bg_color_idx = bg_color_idx
         self.valign = valign
         self.hmerge = hmerge
@@ -254,9 +309,10 @@ class RtfTableCell:
 class RtfTableRow:
     """A row in an RTF table."""
 
-    def __init__(self, is_header: bool = False, keep_with_next: bool = False):
+    def __init__(self, is_header: bool = False, keep_with_next: bool = False, keep_together: bool = False):
         self.is_header = is_header
         self.keep_with_next = keep_with_next
+        self.keep_together = keep_together
         self.cells: List[RtfTableCell] = []
 
     def add_cell(self, cell: RtfTableCell) -> "RtfTableRow":
@@ -269,6 +325,8 @@ class RtfTableRow:
         if self.is_header:
             out.append("\\trhdr")
         if self.keep_with_next:
+            out.append("\\trkeepfollow")
+        if self.keep_together:
             out.append("\\trkeep")
 
         # Cell definitions with accumulated width
@@ -277,11 +335,11 @@ class RtfTableRow:
             current_x += cell.width_twips
 
             # Borders
-            if cell.borders:
-                out.append("\\clbrdrt\\brdrs\\brdrw10")
-                out.append("\\clbrdrl\\brdrs\\brdrw10")
-                out.append("\\clbrdrb\\brdrs\\brdrw10")
-                out.append("\\clbrdrr\\brdrs\\brdrw10")
+            edges = ("top", "left", "bottom", "right") if cell.borders is True else cell.borders or ()
+            for edge in ("top", "left", "bottom", "right"):
+                code = {"top": "t", "left": "l", "bottom": "b", "right": "r"}[edge]
+                style = "\\brdrs\\brdrw" + str(int(cell.border_width_pt * 20)) if edge in edges else "\\brdrnil"
+                out.append("\\clbrdr" + code + style)
 
             # Background color
             if cell.bg_color_idx > 0:
@@ -361,6 +419,10 @@ class RtfDocument:
         self.header_text = header_text
         self.footer_text = footer_text
         self.page_numbering = page_numbering
+        self.page_width_twips = A4_WIDTH_TWIPS
+        self.page_height_twips = A4_HEIGHT_TWIPS
+        self.spec_warnings = []
+        self.spec_warning_count = 0
         self.elements: List[Any] = []
 
     def add_element(self, element: Any):
@@ -421,7 +483,7 @@ class RtfDocument:
             # View & Unicode control
             "\\viewkind4\\uc1",
             # Page dimension & margins
-            f"\\paperw{A4_WIDTH_TWIPS}\\paperh{A4_HEIGHT_TWIPS}",
+            f"\\paperw{self.page_width_twips}\\paperh{self.page_height_twips}",
             f"\\margl{self.margin_left_twips}\\margr{self.margin_right_twips}",
             f"\\margt{self.margin_top_twips}\\margb{self.margin_bottom_twips}",
         ]
@@ -456,6 +518,53 @@ class RtfDocument:
 
 def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
     """Build an RtfDocument instance from a declarative document specification."""
+    import math
+    if not isinstance(spec, dict) or not isinstance(spec.get("blocks"), list) or not spec["blocks"]:
+        raise ValueError("A nonempty blocks array is required")
+    if spec.get("theme", "official") not in ("official", "business", "general"):
+        raise ValueError("Unsupported theme")
+    if "page_numbering" in spec and type(spec["page_numbering"]) is not bool:
+        raise ValueError("page_numbering must be boolean")
+    for block in spec["blocks"]:
+        if not isinstance(block, dict) or block.get("type") not in ("title", "subtitle", "heading", "paragraph", "list", "table", "callout", "page_break"):
+            raise ValueError("Unsupported block")
+        if "text" in block and not isinstance(block["text"], str):
+            raise ValueError("Block text must be a string")
+        if block.get("type") == "table":
+            rows = block.get("rows")
+            if not isinstance(rows, list) or not rows or not all(isinstance(row, list) and row for row in rows) or len({len(row) for row in rows}) != 1:
+                raise ValueError("Tables require nonempty rectangular rows")
+        if "align" in block and block["align"] not in ("left", "right", "center", "justify"):
+            raise ValueError("Unsupported alignment")
+        if block.get("type") == "heading" and (type(block.get("level", 1)) is not int or not 1 <= block.get("level", 1) <= 9):
+            raise ValueError("heading level must be 1..9")
+        tabs = block.get("tabs_pt", [])
+        if not isinstance(tabs, list) or len(tabs) > 64:
+            raise ValueError("tabs_pt must be a list of at most 64 left-tab positions")
+        if any(type(t) not in (int, float) or not math.isfinite(t) or not 0 < t <= 1000 for t in tabs):
+            raise ValueError("Tab positions must be finite positive points")
+        if any(a >= b for a, b in zip(tabs, tabs[1:])):
+            raise ValueError("Tab positions must be strictly increasing")
+        if any(key in block for key in ("list_style", "list_level", "numbering")):
+            raise ValueError("Native multilevel/automatic list numbering is unsupported; use literal lists")
+        if block.get("type") == "list" and (type(block.get("start", 1)) is not int or not 1 <= block.get("start", 1) <= 1000000):
+            raise ValueError("List start must be an integer from 1 to 1000000")
+        for key in ("row_keep_together", "repeat_header", "header", "ordered", "widow_control", "keep_with_next", "keep_together", "page_break_before"):
+            if key in block and type(block[key]) is not bool:
+                raise ValueError("Expected boolean paragraph/table option")
+        for run in block.get("runs", []):
+            if not isinstance(run, dict) or not isinstance(run.get("text", ""), str):
+                raise ValueError("Invalid text run")
+            size = run.get("size_pt", 14)
+            if type(size) not in (int, float) or not math.isfinite(size) or not 1 <= size <= 200:
+                raise ValueError("Invalid run font size")
+        for key in ("space_before_pt", "space_after_pt", "indent_chars", "line_spacing_exact_pt", "line_spacing_mult", "left_indent_pt", "right_indent_pt", "first_line_indent_pt"):
+            if key in ("line_spacing_exact_pt", "line_spacing_mult") and block.get(key, 0) is None:
+                continue
+            if key in block and (type(block[key]) not in (int, float) or not math.isfinite(block[key]) or abs(block[key]) > 1000):
+                raise ValueError("Invalid paragraph measurement")
+            if key in block and key not in ("indent_chars", "first_line_indent_pt") and block[key] < 0:
+                raise ValueError("Spacing must be nonnegative")
     theme = spec.get("theme", "official")
     header_text = spec.get("header_text") or spec.get("header")
     footer_text = spec.get("footer_text") or spec.get("footer")
@@ -520,8 +629,40 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
         line_spacing_exact = None
         line_spacing_mult = 1.2
 
+    def warn_unknown(value, supported, path):
+        for key in value:
+            if key not in supported:
+                doc.spec_warning_count += 1
+                if len(doc.spec_warnings) < 100:
+                    doc.spec_warnings.append({"code": "unsupported_option_ignored", "path": path + str(key)})
+    warn_unknown(spec, {"theme", "header_text", "header", "footer_text", "footer", "page_numbering", "blocks", "page"}, "")
+    page = spec.get("page", {})
+    if not isinstance(page, dict):
+        raise ValueError("page must be an object")
+    warn_unknown(page, {"width_pt", "height_pt", "margin_left_pt", "margin_right_pt", "margin_top_pt", "margin_bottom_pt"}, "page.")
+    for key, attribute in {"width_pt": "page_width_twips", "height_pt": "page_height_twips",
+                           "margin_left_pt": "margin_left_twips", "margin_right_pt": "margin_right_twips",
+                           "margin_top_pt": "margin_top_twips", "margin_bottom_pt": "margin_bottom_twips"}.items():
+        if key in page:
+            value = page[key]
+            if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 2000:
+                raise ValueError("Invalid page measurement")
+            setattr(doc, attribute, int(value * 20))
+    if (doc.page_width_twips <= doc.margin_left_twips + doc.margin_right_twips
+            or doc.page_height_twips <= doc.margin_top_twips + doc.margin_bottom_twips):
+        raise ValueError("Page margins leave no printable area")
     blocks = spec.get("blocks", [])
-    for block in blocks:
+    block_options = {
+        "title": {"type", "text"}, "subtitle": {"type", "text"}, "heading": {"type", "text", "level"},
+        "paragraph": {"type", "text", "runs", "align", "space_before_pt", "space_after_pt", "indent_chars",
+                      "line_spacing_exact_pt", "line_spacing_mult", "widow_control", "keep_with_next", "keep_together",
+                      "page_break_before", "left_indent_pt", "right_indent_pt", "first_line_indent_pt", "tabs_pt"},
+        "list": {"type", "items", "ordered", "start"},
+        "table": {"type", "rows", "header", "col_widths", "col_alignments", "repeat_header", "row_keep_together", "merges", "borders", "border_width_pt"},
+        "callout": {"type", "text"}, "page_break": {"type"},
+    }
+    for block_index, block in enumerate(blocks):
+        warn_unknown(block, block_options[block["type"]], "blocks[{}].".format(block_index))
         b_type = block.get("type", "paragraph")
         if b_type == "title":
             text = block.get("text", "")
@@ -575,6 +716,7 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
                     keep_with_next=True,
                 )
                 p.add_text(text, font=h3_font, size_pt=h3_size, bold=True)
+            p.outline_level = level - 1
             doc.add_paragraph(p)
         elif b_type == "paragraph":
             text = block.get("text", "")
@@ -584,9 +726,16 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
                 space_before_pt=block.get("space_before_pt", 0.0),
                 space_after_pt=block.get("space_after_pt", 2.0 if theme == "official" else 4.0),
                 first_line_indent_chars=block.get("indent_chars", body_indent),
-                line_spacing_exact_pt=line_spacing_exact,
-                line_spacing_mult=line_spacing_mult,
-                widow_control=True,
+                line_spacing_exact_pt=block.get("line_spacing_exact_pt", None if "line_spacing_mult" in block else line_spacing_exact),
+                line_spacing_mult=block.get("line_spacing_mult", line_spacing_mult),
+                widow_control=block.get("widow_control", True),
+                keep_with_next=block.get("keep_with_next", False),
+                keep_together=block.get("keep_together", False),
+                page_break_before=block.get("page_break_before", False),
+                left_indent_pt=block.get("left_indent_pt", 0),
+                right_indent_pt=block.get("right_indent_pt", 0),
+                first_line_indent_pt=block.get("first_line_indent_pt"),
+                tabs_pt=block.get("tabs_pt", []),
             )
             if runs_data and isinstance(runs_data, list):
                 for r in runs_data:
@@ -605,7 +754,7 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
         elif b_type == "list":
             items = block.get("items", [])
             ordered = bool(block.get("ordered", False))
-            for idx, item_text in enumerate(items, start=1):
+            for idx, item_text in enumerate(items, start=block.get("start", 1)):
                 p = RtfParagraph(
                     align="left",
                     space_before_pt=1.0,
@@ -625,17 +774,44 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
             col_widths = block.get("col_widths")
             table = RtfTable()
             num_cols = max(len(r) for r in rows_data) if rows_data else 1
-            available_width = A4_WIDTH_TWIPS - doc.margin_left_twips - doc.margin_right_twips
-            default_cell_w = max(1000, available_width // num_cols)
+            available_width = doc.page_width_twips - doc.margin_left_twips - doc.margin_right_twips
+            default_cell_w = available_width // num_cols
+            if default_cell_w < 1:
+                raise ValueError("Too many table columns for the printable width")
+            if col_widths and (len(col_widths) != num_cols or any(type(w) not in (int, float) or not math.isfinite(w) or w < 0.05 for w in col_widths)
+                               or sum(int(w * 20) for w in col_widths) > available_width):
+                raise ValueError("Column widths must fit the page and match the table")
 
+            col_alignments = block.get("col_alignments", ["left"] * num_cols)
+            if (not isinstance(col_alignments, list) or len(col_alignments) != num_cols
+                    or any(a not in ("left", "center", "right", "justify") for a in col_alignments)):
+                raise ValueError("col_alignments must match columns and use supported paragraph alignments")
+            border_mode = block.get("borders", "all")
+            if type(border_mode) is bool:
+                border_mode = "all" if border_mode else "none"
+            if border_mode not in ("all", "none", "outer"):
+                raise ValueError("borders must be all, none or outer")
+            border_width = block.get("border_width_pt", 0.5)
+            if type(border_width) not in (int, float) or not math.isfinite(border_width) or not 0.05 <= border_width <= 12:
+                raise ValueError("border_width_pt must be finite and between 0.05 and 12")
+            merge_cells = normalized_merges(rows_data, block.get("merges", []), has_header and block.get("repeat_header", True))
             for r_idx, row_values in enumerate(rows_data):
                 is_hdr = has_header and (r_idx == 0)
-                row = RtfTableRow(is_header=is_hdr, keep_with_next=is_hdr)
+                row = RtfTableRow(is_header=is_hdr and block.get("repeat_header", True), keep_with_next=is_hdr,
+                                  keep_together=block.get("row_keep_together", is_hdr))
                 for c_idx, val in enumerate(row_values):
                     c_width = int(col_widths[c_idx] * 20) if col_widths and c_idx < len(col_widths) else default_cell_w
+                    edges = True if border_mode == "all" else []
+                    if border_mode == "outer":
+                        edges = (["top"] if r_idx == 0 else []) + (["bottom"] if r_idx == len(rows_data) - 1 else [])
+                        edges += (["left"] if c_idx == 0 else []) + (["right"] if c_idx == num_cols - 1 else [])
+                    merge = merge_cells.get((r_idx, c_idx))
                     cell = RtfTableCell(
                         width_twips=c_width,
-                        borders=True,
+                        borders=edges,
+                        border_width_pt=border_width,
+                        hmerge=merge[0] if merge else None,
+                        vmerge=merge[1] if merge else None,
                         bg_color_idx=6 if is_hdr else 0,
                         valign="center",
                     )
@@ -643,7 +819,7 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
                         str(val),
                         font=FONT_SIMHEI if is_hdr else FONT_SIMSUN,
                         size_pt=10.5,
-                        align="center" if is_hdr else "left",
+                        align="center" if is_hdr else col_alignments[c_idx],
                         bold=is_hdr,
                     )
                     row.add_cell(cell)

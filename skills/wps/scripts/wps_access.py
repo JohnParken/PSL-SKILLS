@@ -98,7 +98,8 @@ def load_compound(data, compatibility):
         raise ParseError('unsupported', {'stream': 'CFB header', 'offset': 8},
                          'Nonzero CFB header CLSID outside the explicitly supported profile')
     try:
-        compound = CompoundFile(data, compatibility=container_mode(data, compatibility))
+        compound = CompoundFile(data, compatibility=container_mode(data, compatibility),
+                                allow_missing_padding=compatibility != 'strict')
     except ValueError as exc:
         message = str(exc)
         location = {'stage': 'CFB'}

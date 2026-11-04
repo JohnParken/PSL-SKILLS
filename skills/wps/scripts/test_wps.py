@@ -487,6 +487,13 @@ class DeterministicMutationTests(unittest.TestCase):
                 result = read(path)
                 if result['status'] == 'ok':
                     self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
+                elif result['status'] == 'partial':
+                    # The final byte in this seed is undeclared sector padding.
+                    self.assertEqual(data, seed[:-1])
+                    self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
+                    self.assertTrue(result['partial'])
+                    self.assertIn('cfb_missing_final_sector_padding',
+                                  [item['code'] for item in result['container_issues']])
                 else:
                     self.assertIn(result['status'], {'unsupported', 'corrupt', 'invalid_or_unsupported', 'encrypted', 'resource_limit'})
                     self.assertIsNone(result['text'])

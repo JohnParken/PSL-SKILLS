@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-03T14:36:05.201192+00:00",
+  "source_head": "f491c532c4225bb6d0acf4970724f1adbd71cc85",
+  "wps_version": "20261103.2121.3771",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12",
+  "scope": "Current local reader acceptance; source has uncommitted RTF changes. No native producer, visual, full table or cross-platform certification.",
+  "retention": "Metadata only. ICBC forbids unauthorized reproduction; redistribution permission for others not established. No original binary or extracted body is checked in. Temporary downloaded copies are not project fixtures.",
+  "acquisition": [
+    {
+      "source": "government",
+      "url": "https://jsj.zs.gov.cn/attachment/0/579/579834/2656565.wps",
+      "at": "2026-11-03T14:33:59.039858+00:00",
+      "error": "URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>",
+      "source_page": "https://jsj.zs.gov.cn/gkmlpt/content/2/2656/post_2656565.html",
+      "source_page_status": "historical_official_record_not_refetched"
+    },
+    {
+      "source": "ABC",
+      "url": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/W020240407540325949009.doc",
+      "at": "2026-11-03T14:33:59.040123+00:00",
+      "final_url": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/W020240407540325949009.doc",
+      "bytes": 11241,
+      "sha256": "9ef884da24c675707894e2830c245c26d7a2f424791df7c67090235a13fb13b4",
+      "magic": "504b03040a000000",
+      "source_page": "https://www.abchina.com/cn/branch/gd/CG/BM/202404/t20240407_2412719.htm",
+      "source_page_status": "historical_official_record_not_refetched"
+    },
+    {
+      "source": "BOC",
+      "url": "https://www.bankofchina.com/cbservice/bi2/202510/P020251009612975299059.docx",
+      "at": "2026-11-03T14:33:59.040283+00:00",
+      "error": "URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>",
+      "source_page": "https://www.bankofchina.com/cbservice/bi2/202510/t20251009_25521263.html",
+      "source_page_status": "historical_official_record_not_refetched"
+    },
+    {
+      "source": "ICBC",
+      "url": "https://media.icbc.com.cn/pcms-default/purchase/announcement/PCMS0012555820231016141404?filename=%E9%87%87%E8%B4%AD%E4%BB%B7%E6%A0%BC.doc",
+      "at": "2026-11-03T14:33:59.040432+00:00",
+      "final_url": "https://media.icbc.com.cn/pcms-default/purchase/announcement/PCMS0012555820231016141404?filename=%E9%87%87%E8%B4%AD%E4%BB%B7%E6%A0%BC.doc",
+      "bytes": 14336,
+      "sha256": "99f9d1ebdce7e9cdbc031bed780853b15c57f71883498357053f8770c5f59224",
+      "magic": "d0cf11e0a1b11ae1",
+      "source_page": "https://www.sh.icbc.com.cn/dalian/page/887367093941452800.html",
+      "source_page_status": "historical_official_record_not_refetched"
+    },
+    {
+      "source": "CCB",
+      "url": "https://www1.ccb.com/chn/attachDir/2026/04/2026041608475854919.doc",
+      "at": "2026-11-03T14:33:59.040555+00:00",
+      "error": "URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>",
+      "source_page": null,
+      "source_page_status": "not_independently_located_in_this_run"
+    },
+    {
+      "source": "government",
+      "url": "https://www.szlh.gov.cn/lhrlzyj/attachment/1/1249/1249495/10445513.wps",
+      "expected_sha256": "f398a310829cd6324b36f930e81d89213dd698bdb74cd75b5691dd4931da7c0a",
+      "at": "2026-11-03T14:34:30.791991+00:00",
+      "error": "URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>",
+      "source_page": null,
+      "source_page_status": "not_independently_located_in_this_run"
+    },
+    {
+      "source": "ICBC",
+      "url": "https://media.icbc.com.cn/pcms-default/purchase/announcement/PCMS1000921320240703190649?filename=%E4%BB%B7%E6%A0%BC%E8%A1%A8.wps",
+      "expected_sha256": "64e7b718ce257ca594db3ff1d17d8a753bcb28d382f184895ab761d6c782dbf9",
+      "at": "2026-11-03T14:34:30.792248+00:00",
+      "final_url": "https://media.icbc.com.cn/pcms-default/purchase/announcement/PCMS1000921320240703190649?filename=%E4%BB%B7%E6%A0%BC%E8%A1%A8.wps",
+      "bytes": 25088,
+      "sha256": "64e7b718ce257ca594db3ff1d17d8a753bcb28d382f184895ab761d6c782dbf9",
+      "hash_matches": true,
+      "magic": "d0cf11e0a1b11ae1",
+      "source_page": null,
+      "source_page_status": "not_independently_located_in_this_run"
+    },
+    {
+      "source": "ABC",
+      "url": "https://www.abchina.com/zt/branch/gd/CG/BM/202407/W020240712611344275676.doc",
+      "expected_sha256": "228efe40a8884545d1d69ac405eb4f914f002c2a51a99b869e13db914ea7c35b",
+      "at": "2026-11-03T14:34:30.792403+00:00",
+      "final_url": "https://www.abchina.com/zt/branch/gd/CG/BM/202407/W020240712611344275676.doc",
+      "bytes": 106569,
+      "sha256": "228efe40a8884545d1d69ac405eb4f914f002c2a51a99b869e13db914ea7c35b",
+      "hash_matches": true,
+      "magic": "d0cf11e0a1b11ae1",
+      "source_page": null,
+      "source_page_status": "not_independently_located_in_this_run"
+    },
+    {
+      "source": "BOC",
+      "url": "https://www.boc.cn/hu/custserv/cs3/201003/P020100524664252850918.doc",
+      "expected_sha256": "37e8e4c9acfc040c23252338d9f167927b0f1c8363a75978ed5180988fea28d5",
+      "at": "2026-11-03T14:34:30.792547+00:00",
+      "error": "URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>",
+      "source_page": null,
+      "source_page_status": "not_independently_located_in_this_run"
+    },
+    {
+      "source": "CCB",
+      "url": "https://www3.ccb.com/yn/cn/business/upload/20200605_1591327418/20200605114803541061.doc",
+      "expected_sha256": "67a5beafe4a19a745496da3cd4a821251c22557d5ba6fdf402f630c5ce9e882f",
+      "at": "2026-11-03T14:34:30.792673+00:00",
+      "error": "URLError: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>",
+      "source_page": null,
+      "source_page_status": "not_independently_located_in_this_run"
+    }
+  ],
+  "validation": [
+    {
+      "file": "ICBC-new.wps",
+      "sha256": "64e7b718ce257ca594db3ff1d17d8a753bcb28d382f184895ab761d6c782dbf9",
+      "exit_code": 3,
+      "stderr": "",
+      "status": "partial",
+      "format": "ms_doc_subset",
+      "paragraphs": 1,
+      "text_characters": 384,
+      "issue_codes": [
+        "binary_table_structure_incomplete",
+        "nonstandard_header_clsid"
+      ],
+      "independent_text_equal": true,
+      "independent_paragraphs_equal": true,
+      "independent_text_sha256": "b70a40b1ea0e5808b522ecbce257f90207c0f2ca70c52441cdd6a51f2a024eea",
+      "oracle_main_units": 384,
+      "input_unchanged": true
+    },
+    {
+      "file": "ABC-new.wps",
+      "sha256": "228efe40a8884545d1d69ac405eb4f914f002c2a51a99b869e13db914ea7c35b",
+      "exit_code": 1,
+      "stderr": "",
+      "input_unchanged": true,
+      "status": "invalid_or_unsupported",
+      "location": {
+        "stage": "CFB",
+        "reason_code": "cfb_unaligned_physical_length"
+      },
+      "message": "CFB physical length is not sector aligned: remainder 73 bytes",
+      "independent_semantic_comparison": "not_run_container_rejected"
+    },
+    {
+      "file": "ICBC.bin",
+      "sha256": "99f9d1ebdce7e9cdbc031bed780853b15c57f71883498357053f8770c5f59224",
+      "exit_code": 3,
+      "stderr": "",
+      "status": "partial",
+      "format": "ms_doc_subset",
+      "paragraphs": 1,
+      "text_characters": 83,
+      "issue_codes": [
+        "binary_table_structure_incomplete",
+        "nonstandard_header_clsid"
+      ],
+      "independent_text_equal": true,
+      "independent_paragraphs_equal": true,
+      "independent_text_sha256": "cdf05a90aad0f0d84349a5a01e4f6096046ef593df94aa14d4306fc8d06dd517",
+      "oracle_main_units": 83,
+      "input_unchanged": true
+    },
+    {
+      "file": "ABC.bin",
+      "sha256": "9ef884da24c675707894e2830c245c26d7a2f424791df7c67090235a13fb13b4",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "ok",
+      "format": "ooxml-word",
+      "paragraphs": 16,
+      "text_characters": 218,
+      "issue_codes": [],
+      "input_unchanged": true,
+      "independent_paragraphs_equal": true,
+      "independent_method": "stdlib ZIP/XML direct w:body/w:p/w:t text concatenation; no production reader",
+      "independent_text_sha256": "bd85849c7c1918bcd40d1a7168cd509364697d420acf171b1091771f62961b26"
+    }
+  ],
+  "oracle_limitations": "MS-DOC oracle shares only bounded CFB allocation reader, independently decodes FIB/CLX pieces; not independent container validation. OOXML direct XML comparison proves only paragraph text under the stated policy.",
+  "reproduction": "Obtain authorized bytes from acquisition URL using default verified HTTPS, enforce <=32MiB and SHA256 equality, run Python >=3.10 -I -S -B <actual WPS root>/scripts/read_wps.py <relative fixture>. OOXML requires Expat >=2.6. Exit 3 retains JSON partial data; exit 1 does not supply readable content. MS-DOC cross-check: tests/wps_public_story_oracle.py independently_decode_main; its CLI pins another fixture so do not use that CLI on these samples.",
+  "not_verified": [
+    "Government current local input (TLS failure)",
+    "BOC current local input (TLS failure)",
+    "CCB current local input (TLS failure)",
+    "Permission and absence of personal data for binary redistribution",
+    "WPS or Word application rendering",
+    "Linux and Windows execution",
+    "Real host tool output delivery"
+  ],
+  "protected_sample_accessed": false,
+  "reader_source_sha256": {
+    "docx_to_wps_rtf.py": "372e689c322cf909d44c0bcfbc6c7f9ab1d47740fbd4567e09a2f5d5f43fe555",
+    "export_wps.py": "2f8d3b3f279f1ffd890862766366e9e6c3b7ac8be7ea6c5eb2cdd945b8e5e1f5",
+    "read_wps.py": "11383fcac552cbca22836578a88b7928ea5df70d3aa0d5c2333de604b50d3636",
+    "run_wps_edit.py": "d1c20e2ead8efd92a5c786612ca9603d80d85986d8b5e4d04bde23a333bdfa30",
+    "run_wps_task.py": "969a2e5980befdcf13b39c260cc4c69027ab4baadbd5ba966d5a8d982444f060",
+    "verify_wps_sample.py": "5c0f5ca5acd4317e345fd8200708b7ce449c572674b8c36b58fa3b9974a92f3e",
+    "wps_access.py": "1a910d010d34c1602147ab674a1f86472a7a3b7f0fe2d7807e2646bbe3b65250",
+    "wps_binary_comments.py": "5c211c7cbae4fd1c62b52a8a03c188879d44bc55c34da4770e5bd2f48f635043",
+    "wps_binary_headers.py": "ef36c0496ec2fff4d4e114f4efcfa06c9869ec60e188a20ad0dfd82899b35bbc",
+    "wps_binary_refs.py": "7eb203f9d7d693197294f8e7141690e6ff6615bf42524dd1ba351b865b2ec01a",
+    "wps_binary_shapes.py": "00e22d9e419bba9b4cc9c442bd3a65ae656a3144d13772b24ae8c9a51b870fda",
+    "wps_binary_tables.py": "2b88e1dd317d1804e896d87db79e85826c12be5fb456379010ff58fd884bf22a",
+    "wps_cfb.py": "e352865d46bb3c50f954d706234e34325acad4b4b9c787a57cf11455563dd667",
+    "wps_diagnostics.py": "0efb772c1653da5de8287828c73da565f72f4741eb5bb5743818da28f4170377",
+    "wps_msdoc_charprops.py": "27b48d3afc660e96020667ed676baaca413271082921b8c8622e51e7bb7a3a61",
+    "wps_ooxml.py": "5ea932f3c6a7239f0ff164c238424d73a660c4c9aff1182920dfa04dd7ff5a41",
+    "wps_ooxml_tables.py": "ab6406ac77adb0e5e279db3a8bb2a7c93b7749f7583966d0c59eaf1035934205",
+    "wps_paragraph_evidence.py": "47557c7d91d93962c0f0f4e701e679a42ccd461517b57a7d36571d68ee05e81c",
+    "wps_paragraph_sources.py": "641c5474b8f558437f1af6c96a097985405ae9ce489b2b7c4ade195219c4b14e",
+    "wps_read_view.py": "9f531f48c152b6fb21b89c69d30f9c4c064daf59beb8e3855d6b25b91a8303e2",
+    "wps_result.py": "d635ed96d4cc6024c4957d99adbc1cc27c0e6a1a65522c1134d162ed79c62b66",
+    "wps_rtf_builder.py": "5bc2efd2e851e15d400b88876a4571d943e9ded81a1068cbbd9e1086413bac94",
+    "wps_rtf_geometry.py": "614dd34c60fbf3099fd342caf9f129e8b85a921ff9ffab71bf926cdbbdac30a8",
+    "wps_rtf_read.py": "eddb46c8b2bfe4dfe1763904bc5a913dfe61647e74bb995bdc3edef6bb8174fe",
+    "wps_selective.py": "ce3792e1b38a33fea6fce2a7b36571b518dec102ccbcbfcfe7dac477517bda90",
+    "wps_word_visibility.py": "17d12a250107062ec678fabfc60c7fbbeb3934ff95257c3b42942708681bf1b5"
+  },
+  "local_filename_note": "ABC-new.wps is an isolated probe filename only; the downloaded official filename is .doc. No claim that the suffix proves WPS producer or native format. Other .bin names are also local probe names.",
+  "concurrent_task_check": "list_threads read-only request did not return and was terminated; no global no-writer assertion. Existing WPS source changes preserved; only this new uniquely named test metadata file written."
+}

@@ -89,7 +89,8 @@ class TestWpsExport(unittest.TestCase):
         finally:
             os.remove(env_path)
 
-    def test_check_environment(self):
+    @patch('export_wps.find_soffice', return_value=None)
+    def test_check_environment(self, _find_soffice):
         res = export_wps.check_environment()
         self.assertIn("status", res)
         self.assertEqual(res["status"], "environment-ok")
@@ -235,7 +236,8 @@ class TestWpsExport(unittest.TestCase):
             self.assertEqual(rb["status"], "readback-ok")
             self.assertGreater(rb["paragraph_count"], 5)
 
-    def test_convert_docx_complex_table_sample(self):
+    @patch('export_wps.find_soffice', return_value=None)
+    def test_convert_docx_complex_table_sample(self, _find_soffice):
         sample_path = Path("skills/03_复杂表格_跨行跨列合并.docx")
         if not sample_path.is_file():
             self.skipTest("Sample table docx not found")

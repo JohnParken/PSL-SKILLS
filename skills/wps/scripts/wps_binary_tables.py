@@ -6,16 +6,49 @@ MAX_MARKS = 100000
 MAX_CELLS = 100000
 MAX_PROPERTY_BYTES = 1024 * 1024
 TABLE_PROPERTIES = {0x2416: 'in_table', 0x2417: 'row_end', 0x6649: 'depth'}
+# MS-DOC 2.6.2: fixed-width paragraph layout only, never table boundaries.
+LAYOUT_PROPERTIES = {
+    0x2403: ('sprmPJc80', 1),
+    0x2405: ('sprmPFKeep', 1),
+    0x2406: ('sprmPFKeepFollow', 1),
+    0x240C: ('sprmPFNoLineNumb', 1),
+    0x840E: ('sprmPDxaRight80', 2),
+    0x840F: ('sprmPDxaLeft80', 2),
+    0x8411: ('sprmPDxaLeft180', 2),
+    0x2431: ('sprmPFWidowControl', 1),
+    0x8418: ('sprmPDxaAbs', 2),
+    0x8419: ('sprmPDyaAbs', 2),
+    0x261B: ('sprmPPc', 1),
+    0x6412: ('sprmPDyaLine', 4),
+    0xA413: ('sprmPDyaBefore', 2),
+    0xA414: ('sprmPDyaAfter', 2),
+    0x2461: ('sprmPJc', 1),
+    0x4457: ('sprmPDxcLeft1', 2),
+    0x4455: ('sprmPDxcRight', 2),
+    0x4456: ('sprmPDxcLeft', 2),
+    0x245B: ('sprmPFDyaBeforeAuto', 1),
+    0x245C: ('sprmPFDyaAfterAuto', 1),
+    0x8460: ('sprmPDxaLeft1', 2),
+    0x845D: ('sprmPDxaRight', 2),
+    0x845E: ('sprmPDxaLeft', 2),
+}
 
 
 def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
-                   table_ranges=(), word_ranges=(), piece_properties=False):
+                   table_ranges=(), word_ranges=(), piece_properties=False, data_region=None):
     """Return observed depth-one rows only when every paragraph has direct evidence."""
     from read_wps import ParseError, require
     result = {'schema_version': 'ms_doc_table_rows_v1', 'status': 'unresolved',
               'rows': [], 'unresolved_markers': [], 'table_grouping': 'unknown',
               'grid_and_merges': 'unknown', 'source': {'stream': 'WordDocument'},
               'issues': []}
+    result['layout_properties_not_rendered'] = []
+    result['unresolved_properties'] = []
+    result['layout_property_count'] = 0
+    result['unresolved_property_count'] = 0
+    result['external_property_references'] = []
+    external_reference_count = 0
+    external_ranges = []
     if '\x07' not in text:
         result['status'] = 'no_cell_markers'
         return result
@@ -34,7 +67,7 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
     physical_starts = [piece[0] for piece in physical]
 
     def properties(cp):
-        nonlocal property_bytes
+        nonlocal property_bytes, external_reference_count
         if piece_properties or not length:
             return None
         index = bisect_right(positions, cp) - 1
@@ -92,24 +125,77 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                 cursor += 2
                 props = {'source': page.location(pointer), 'istd': style}
                 valid = True
+                properties_region = page
+                array_start = cursor
+                visited_external = set()
                 while cursor < stop:
-                    require(stop - cursor >= 2, page.location(cursor), 'Truncated paragraph SPRM')
-                    sprm = page.number(cursor, 2)
+                    require(stop - cursor >= 2, properties_region.location(cursor), 'Truncated paragraph SPRM')
+                    sprm = properties_region.number(cursor, 2)
                     cursor += 2
+                    if sprm in (0x6646, 0x646B):
+                        require(cursor + 4 <= stop, properties_region.location(cursor), 'Truncated external paragraph property reference')
+                        external_offset = properties_region.number(cursor, 4)
+                        if sprm == 0x6646 and cursor - 2 != array_start:
+                            # The specification explicitly ignores non-first HugePapx.
+                            cursor += 4
+                            continue
+                        if properties_region is page and sprm == 0x6646:
+                            require(style == 0 and cursor + 4 == stop, properties_region.location(cursor),
+                                    'Inline HugePapx requires zero style and a sole PRL')
+                        require(data_region is not None, properties_region.location(cursor), 'External paragraph Data stream missing')
+                        require(external_offset not in visited_external, data_region.location(external_offset),
+                                'External paragraph property reference cycle')
+                        require(len(visited_external) < 32 and external_reference_count < 4096,
+                                data_region.location(external_offset), 'External paragraph reference budget exceeded', 'resource_limit')
+                        visited_external.add(external_offset)
+                        external_reference_count += 1
+                        size = data_region.number(external_offset, 2)
+                        require(10 <= size <= 0x3FA2, data_region.location(external_offset), 'Invalid external paragraph property length')
+                        external_end = external_offset + 2 + size
+                        data_region.view(external_offset + 2, size)
+                        require(all((external_offset, external_end) == span or external_end <= span[0] or span[1] <= external_offset
+                                    for span in external_ranges), data_region.location(external_offset),
+                                'Overlapping external paragraph property arrays')
+                        if (external_offset, external_end) not in external_ranges:
+                            external_ranges.append((external_offset, external_end))
+                        property_bytes += size
+                        require(property_bytes <= MAX_PROPERTY_BYTES, data_region.location(external_offset),
+                                'Paragraph property budget exceeded', 'resource_limit')
+                        if len(result['external_property_references']) < 100:
+                            result['external_property_references'].append({
+                                'sprm': hex(sprm), 'source': properties_region.location(cursor - 2),
+                                'target': data_region.location(external_offset), 'property_bytes': size})
+                        props['external_properties_source'] = data_region.location(external_offset + 2)
+                        # Process the referenced array, never the original array suffix.
+                        properties_region = data_region
+                        cursor = external_offset + 2
+                        stop = external_end
+                        array_start = cursor
+                        continue
+                    if sprm in LAYOUT_PROPERTIES:
+                        name, width = LAYOUT_PROPERTIES[sprm]
+                        require(cursor + width <= stop, properties_region.location(cursor), 'Truncated known paragraph layout property')
+                        result['layout_property_count'] += 1
+                        if len(result['layout_properties_not_rendered']) < 100:
+                            result['layout_properties_not_rendered'].append({
+                                'sprm': hex(sprm), 'name': name, 'operand_hex': bytes(properties_region.view(cursor, width)).hex(),
+                                'source': properties_region.location(cursor), 'effect': 'layout_not_rendered'})
+                        cursor += width
+                        continue
                     # Unrecognized operands may contain exceptional variable lengths.
                     # Stop rather than scan their bytes for apparent table flags.
                     if sprm == 0xD608:  # TDefTable's exceptional two-byte length
-                        require(cursor + 2 <= stop, page.location(cursor), 'Truncated table definition length')
-                        definition_end = cursor + page.number(cursor, 2) + 1
+                        require(cursor + 2 <= stop, properties_region.location(cursor), 'Truncated table definition length')
+                        definition_end = cursor + properties_region.number(cursor, 2) + 1
                         cursor += 2
-                        require(cursor < definition_end <= stop, page.location(cursor), 'Invalid table definition extent')
-                        columns = page.number(cursor, 1)
+                        require(cursor < definition_end <= stop, properties_region.location(cursor), 'Invalid table definition extent')
+                        columns = properties_region.number(cursor, 1)
                         require(columns <= 63 and cursor + 1 + 2 * (columns + 1) <= definition_end,
-                                page.location(cursor), 'Invalid table definition columns')
-                        edges = [int.from_bytes(page.view(cursor + 1 + 2 * i, 2), 'little', signed=True)
+                                properties_region.location(cursor), 'Invalid table definition columns')
+                        edges = [int.from_bytes(properties_region.view(cursor + 1 + 2 * i, 2), 'little', signed=True)
                                  for i in range(columns + 1)]
                         require(all(a <= b for a, b in zip(edges, edges[1:])),
-                                page.location(cursor), 'Table definition edges not ordered')
+                                properties_region.location(cursor), 'Table definition edges not ordered')
                         # Retain initial boundaries only. TC80 and later table changes
                         # can alter display/merges; never promote these to a grid.
                         props['initial_definition'] = {'column_count': columns, 'edges_twips': edges,
@@ -120,20 +206,25 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                         if (sprm >> 10) & 7 == 5:
                             width = (1, 1, 2, 4, 2, 2, None, 3)[sprm >> 13]
                             if width is None:
-                                require(cursor < stop, page.location(cursor), 'Missing table property length')
-                                width = page.number(cursor, 1)
+                                require(cursor < stop, properties_region.location(cursor), 'Missing table property length')
+                                width = properties_region.number(cursor, 1)
                                 cursor += 1
-                            require(cursor + width <= stop, page.location(cursor), 'Truncated table property')
+                            require(cursor + width <= stop, properties_region.location(cursor), 'Truncated table property')
                             cursor += width
                             props['uninterpreted_table_modifiers'] = props.get('uninterpreted_table_modifiers', 0) + 1
                             continue
+                        result['unresolved_property_count'] += 1
+                        if len(result['unresolved_properties']) < 100:
+                            result['unresolved_properties'].append({
+                                'sprm': hex(sprm), 'source': properties_region.location(cursor - 2),
+                                'reason': 'external_paragraph_properties_not_followed' if sprm == 0x6646 else 'unknown_property_not_skipped'})
                         valid = False
                         break
                     width = 4 if sprm == 0x6649 else 1
-                    require(cursor + width <= stop, page.location(cursor), 'Truncated table SPRM')
-                    value = page.number(cursor, width)
+                    require(cursor + width <= stop, properties_region.location(cursor), 'Truncated table SPRM')
+                    value = properties_region.number(cursor, width)
                     if width == 1:
-                        require(value in (0, 1), page.location(cursor), 'Invalid table boolean')
+                        require(value in (0, 1), properties_region.location(cursor), 'Invalid table boolean')
                     props[TABLE_PROPERTIES[sprm]] = value
                     cursor += width
                 groups.append(props if valid else None)
@@ -144,7 +235,9 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
         if not 0 <= run < len(groups) or offsets[run + 1] != fc + stride:
             return None
         props = groups[run]
-        if props is None or props.get('in_table') != 1 or props.get('depth') != 1 or 'row_end' not in props:
+        # MS-DOC 2.6.2 PFTtp defaults to false; a row still ends only at
+        # an explicit PFTtp=1 mark. Do not require redundant false operands.
+        if props is None or props.get('in_table') != 1 or props.get('depth') != 1:
             return None
         return props
 
@@ -187,6 +280,7 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                         result['rows'].append({'cells': cells, 'source': {'stream': 'WordDocument',
                             'cp_start': row_start, 'cp_end': cp + 1, 'row_mark_cp': cp},
                             'row_properties_source': props['source'], 'merges': 'unknown',
+                            'external_properties_source': props.get('external_properties_source'),
                             'initial_definition': props.get('initial_definition'),
                             'uninterpreted_table_modifiers': props.get('uninterpreted_table_modifiers', 0)})
                     else:
@@ -204,7 +298,8 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                                 word.location(76), 'Binary table cell budget exceeded', 'resource_limit')
                         cells.append({'index': len(cells), 'text': '\n'.join(chunks),
                             'source': {'stream': 'WordDocument', 'cp_start': cell_start,
-                                       'cp_end': cp + 1}, 'properties_source': props['source']})
+                                       'cp_end': cp + 1}, 'properties_source': props['source'],
+                                      'external_properties_source': props.get('external_properties_source')})
                         total_cells += 1
                         chunks = []
                         cell_start = cp + 1
@@ -223,8 +318,12 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
         result['rows'] = []
         result['status'] = 'unresolved'
         result['issues'].append({'code': 'binary_table_metadata_invalid', **exc.location,
-                                 'metadata_status': exc.status})
+                                 'metadata_status': exc.status, 'message': str(exc)})
     result['fkp_ranges'] = occupied_pages
+    result['external_reference_count'] = external_reference_count
+    result['external_references_truncated'] = max(0, external_reference_count - len(result['external_property_references']))
+    result['layout_properties_truncated'] = max(0, result['layout_property_count'] - len(result['layout_properties_not_rendered']))
+    result['unresolved_properties_truncated'] = max(0, result['unresolved_property_count'] - len(result['unresolved_properties']))
     result['issues'].append({'code': 'binary_table_structure_incomplete', 'stream': 'WordDocument',
                             'cp_start': cp_start, 'cp_end': cp_start + len(text.encode('utf-16le')) // 2,
                             'message': 'Only explicit depth-one PAPX row/cell boundaries; grouping, merges, styles and unsupported properties remain unknown'})

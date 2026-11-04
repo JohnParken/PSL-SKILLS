@@ -410,7 +410,8 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 table_ranges=table_spans,
                 word_ranges=[(item['offset'], item['offset'] + item['size'])
                              for item in header_mapping.get('word_ranges', [])] if header_mapping else (),
-                piece_properties=piece_properties)
+                piece_properties=piece_properties,
+                data_region=Region(streams[('Data',)], 'Data') if ('Data',) in streams else None)
             issues.extend(table_structure['issues'])
         elif '\x07' in text:
             issues.append({'code': 'binary_table_fields_unresolved', 'stream': 'WordDocument',

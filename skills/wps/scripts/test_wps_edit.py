@@ -19,6 +19,7 @@ class TestWpsEditOperations(unittest.TestCase):
         self.base_file = self.td / "base.wps"
         spec = {
             "theme": "official",
+            "page_numbering": False,
             "blocks": [
                 {"type": "title", "text": "原始标题通知"},
                 {"type": "heading", "level": 1, "text": "一、工作方案"},

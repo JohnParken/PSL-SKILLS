@@ -25,11 +25,12 @@ COMPATIBILITY_MODES=("strict","legacy_excel_clsid","legacy_word_clsid")
 
 
 class CompoundFile:
-    def __init__(self,data,*,compatibility="strict"):
+    def __init__(self,data,*,compatibility="strict", allow_missing_padding=False):
         if compatibility not in COMPATIBILITY_MODES: raise ValueError("Unknown CFB compatibility mode")
         self.compatibility=compatibility; self.issues=[]
         if not isinstance(data,bytes) or len(data)>MAX_FILE_BYTES:
             raise ValueError('CFB input exceeds 32 MiB or is not bytes')
+        self.physical_length = len(data)
         self.data=data; self.used={}; self.mini_used=set(); self.paths={}; self.streams={}
         if len(data)<512 or data[:8]!=SIGNATURE: raise ValueError('Missing/truncated CFB header')
         self.major=self.u16(26); shift=self.u16(30)
@@ -46,8 +47,14 @@ class CompoundFile:
         if data[34:40]!=bytes(6):
             raise ValueError('Nonzero reserved CFB header bytes')
         if len(data)%self.sector_size:
-            raise ValueError('CFB physical length is not sector aligned: remainder {} bytes'.format(
-                len(data)%self.sector_size))
+            if compatibility != 'legacy_word_clsid' and not allow_missing_padding:
+                raise ValueError('CFB physical length is not sector aligned: remainder {} bytes'.format(
+                    len(data)%self.sector_size))
+            padding = self.sector_size - len(data) % self.sector_size
+            if len(data) + padding > MAX_FILE_BYTES:
+                raise ValueError('CFB padded extent exceeds byte budget')
+            self.data = data + bytes(padding)
+            self.sector_count += 1
         if self.sector_count<2:
             raise ValueError('CFB file lacks required header, FAT and directory sectors')
         if any(data[512:self.sector_size]): raise ValueError('Nonzero version-4 header padding')
@@ -114,6 +121,18 @@ class CompoundFile:
             self.streams[path]=content
         if any(value!=FREE and index not in self.used for index,value in enumerate(self.fat[:self.sector_count])):
             raise ValueError('Unreferenced allocated physical sector')
+        if self.physical_length != len(self.data):
+            word = self.streams.get(('WordDocument',))
+            if word is None or not word.startswith(b'\xec\xa5'):
+                raise ValueError('Missing padding recovery requires an identified MS-DOC payload')
+            if self.sector_count - 1 not in self.used:
+                raise ValueError('CFB physical length is not sector aligned: remainder {} bytes; '
+                                 'incomplete last sector is not owned by a declared stream'.format(
+                                     self.physical_length % self.sector_size))
+            self.issues.append({'code': 'cfb_missing_final_sector_padding',
+                                'physical_bytes': self.physical_length,
+                                'missing_padding_bytes': len(self.data) - self.physical_length,
+                                'message': 'All declared stream bytes exist; only undeclared final-sector padding was synthesized in memory'})
         if any(value!=FREE and index not in self.mini_used for index,value in enumerate(self.mini_fat)):
             raise ValueError('Unreferenced or out-of-range allocated mini sector')
         if self.issues and compatibility == "legacy_excel_clsid" and not any(len(path)==1 and path[0].casefold() in ("workbook","book") for path in self.streams):
@@ -156,6 +175,9 @@ class CompoundFile:
 
     def claim(self,identifier,owner):
         self.sector(identifier)
+        if ((identifier + 2) * self.sector_size > self.physical_length
+                and not (owner.startswith('stream ') or owner == 'root mini stream')):
+            raise ValueError('CFB allocation metadata is physically truncated')
         if identifier in self.used: raise ValueError('Sector chain cycle/cross-link/duplicate allocation')
         self.used[identifier]=owner
 
@@ -166,6 +188,9 @@ class CompoundFile:
         while current!=END:
             if count>=limit//self.sector_size or expected is not None and count>=expected:
                 raise ValueError(owner+' chain length/declared size exceeds limit')
+            required = self.sector_size if size is None else min(self.sector_size, size - count * self.sector_size)
+            if (current + 1) * self.sector_size + required > self.physical_length:
+                raise ValueError(owner + ' declared content is physically truncated')
             self.claim(current,owner); parts.append(self.sector(current)); count+=1
             current=self.fat[current]
         if expected is not None and count!=expected: raise ValueError(owner+' chain is shorter than declared size')

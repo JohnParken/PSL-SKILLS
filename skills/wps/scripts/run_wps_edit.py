@@ -16,16 +16,17 @@ if __package__ in (None, ""):
 from wps_rtf_builder import build_document_from_spec
 from read_wps import read_bytes, ParseError
 from wps_selective import detect_heading
+from wps_access import read_input
 
 
 MAX_EDIT_SPEC_BYTES = 2 * 1024 * 1024  # 2 MiB
 
 
-def load_wps_to_blocks(input_path: Path) -> Any:
+def load_wps_to_blocks(input_path: Path, parsed=None) -> Any:
     """Parse existing WPS document into structured blocks and tables."""
-    raw_bytes = input_path.read_bytes()
     try:
-        parsed = read_bytes(raw_bytes, source=str(input_path))
+        if parsed is None:
+            parsed = read_bytes(read_input(input_path), source=str(input_path))
     except ParseError as exc:
         raise RuntimeError(f"Failed to read input WPS document: {exc}") from exc
 
@@ -124,6 +125,8 @@ def apply_edit_operations(
             extra_blocks = op.get("blocks", [])
             if isinstance(extra_blocks, list):
                 stats["appended_blocks"].extend(extra_blocks)
+        else:
+            raise ValueError(f"Unsupported edit operation: {op_type}")
 
     return stats
 
@@ -163,16 +166,60 @@ def execute_edit_task(
     output_path: Path,
     operations: List[Dict[str, Any]],
     theme: str = "official",
+    allow_lossy_reflow: bool = False,
 ) -> Dict[str, Any]:
     """Run full edit pipeline: read -> modify -> rebuild -> write atomic -> readback verify."""
     if not input_path.is_file():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
-    paragraphs, tables = load_wps_to_blocks(input_path)
+    if input_path.resolve() == output_path.resolve():
+        raise ValueError("Reflow editing requires a new output file; original is protected")
+    source_bytes = read_input(input_path)
+    original = read_bytes(source_bytes)
+    if original.get("status") not in ("ok", "partial"):
+        raise ValueError("No reliable content available for reflow")
+    order_unknown = bool(original.get("tables") and not original.get("blocks"))
+    if allow_lossy_reflow and output_path.exists():
+        raise ValueError("Explicit lossy reflow requires an unused output name")
+    if original.get("status") == "partial" and not allow_lossy_reflow:
+        raise ValueError("Partial input cannot be safely reflow-edited; inspect omissions and prepare an explicit new specification")
+    if order_unknown and not allow_lossy_reflow:
+        raise ValueError("Input table/paragraph order is unavailable; automatic reconstruction refused")
+    order = [dict(item) for item in original.get("blocks", [])]
+    paragraph_tokens = [item for item in order if item["type"] == "paragraph"]
+    for operation in operations:
+        if (operation.get("operation") or operation.get("op")) == "delete_paragraph" and paragraph_tokens:
+            index = int(operation.get("index", 1)) - 1
+            if not 0 <= index < len(paragraph_tokens):
+                raise IndexError("Paragraph index out of range")
+            paragraph_tokens.pop(index)["deleted"] = True
+    paragraphs, tables = load_wps_to_blocks(input_path, parsed=original)
     stats = apply_edit_operations(paragraphs, tables, operations)
     spec = rebuild_spec_from_edited(paragraphs, tables, stats["appended_blocks"], theme=theme)
 
+    if order:
+        ordered = []
+        paragraph_index = 0
+        for item in order:
+            if item.get("deleted"):
+                continue
+            if item["type"] == "paragraph":
+                ordered.append({"type": "paragraph", "text": paragraphs[paragraph_index]})
+                paragraph_index += 1
+            else:
+                table_spec = {"type": "table", "rows": tables[item["index"]]}
+                source_table = original['tables'][item['index']]
+                if source_table.get('merge_geometry_status') == 'explicit_grid_recovered' and original.get('status') == 'ok':
+                    table_spec['merges'] = source_table.get('merges', [])
+                    table_spec['repeat_header'] = False
+                    bounds = source_table['cell_boundaries_twips']
+                    table_spec['col_widths'] = [(right - left) / 20 for left, right in zip([0] + bounds[:-1], bounds)]
+                ordered.append(table_spec)
+        spec["blocks"] = ordered + stats["appended_blocks"]
+    if allow_lossy_reflow and (original.get("status") == "partial" or order_unknown):
+        spec["blocks"].insert(0, {"type": "paragraph", "text": "[部分内容重排副本：仅含可读取内容；原格式及未读取内容不保留，表格相对位置可能未知。]"})
     doc = build_document_from_spec(spec)
+    raw_bytes = doc.render().encode("ascii")
     target_dir = output_path.parent.resolve()
     target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -184,26 +231,52 @@ def execute_edit_task(
     temp_path = Path(temp_path_str)
     try:
         with os.fdopen(temp_fd, "w", encoding="ascii") as fp:
-            fp.write(doc.render())
-        os.replace(temp_path, output_path)
+            fp.write(raw_bytes.decode("ascii"))
+        candidate = read_bytes(temp_path.read_bytes())
+        from wps_rtf_read import require_publishable_candidate
+        require_publishable_candidate(candidate)
+        from wps_content_validation import validate_content
+        content_validation = validate_content(doc, candidate)
+        if read_input(input_path) != source_bytes:
+            raise RuntimeError("Source changed during reflow; publication stopped")
+        if allow_lossy_reflow:
+            os.link(temp_path, output_path)
+            temp_path.unlink()
+        else:
+            os.replace(temp_path, output_path)
     except Exception:
         if temp_path.exists():
             temp_path.unlink()
         raise
 
     # Readback verification
-    raw_bytes = output_path.read_bytes()
-    read_res = read_bytes(raw_bytes)
+    read_res = candidate
     if read_res.get("status") not in ("ok", "partial"):
         raise RuntimeError(f"Readback status rejected after edit: {read_res.get('status')}")
 
     return {
         "status": "success",
+        "content_validation": content_validation,
         "target": str(output_path),
         "source": str(input_path),
         "file_size": len(raw_bytes),
         "edit_stats": stats,
         "readback_status": read_res.get("status"),
+        "edit_mode": "content_reflow_not_lossless",
+        "layout_verification": "not_run",
+        "native_wps": False,
+        "partial": original.get("status") == "partial" or read_res.get("status") == "partial" or order_unknown or bool(doc.spec_warning_count),
+        "spec_warnings": doc.spec_warnings,
+        "spec_warning_count": doc.spec_warning_count,
+        "lossy_reflow_authorized": allow_lossy_reflow,
+        "order_status": "unknown_paragraphs_then_tables" if order_unknown else "available_source_order",
+        "losses": ["Original formatting, fields, objects and pagination are not preserved"]
+                  + (["Relative paragraph/table order unknown; paragraphs followed by tables"] if order_unknown else [])
+                  + (["Only recovered source content included; omitted regions remain omitted"] if original.get("status") == "partial" else []),
+        "source_omitted_regions": original.get("omitted_regions", []),
+        "source_issues": original.get("issues", []),
+        "source_diagnostics": original.get("diagnostics", []),
+        "source_reading_assessment": original.get("reading_assessment", {}),
         "paragraphs_count": len(paragraphs),
         "tables_count": len(tables),
     }
@@ -248,6 +321,8 @@ def main(argv=None) -> int:
     batch_parser.add_argument("--spec", help="inline JSON specification or file path")
     batch_parser.add_argument("--theme", choices=("official", "business", "general"), default="official")
 
+    for command_parser in (text_parser, struct_parser, tbl_parser, batch_parser):
+        command_parser.add_argument("--allow-lossy-reflow", action="store_true", help="explicitly reflow recovered content to a new unused file")
     args = parser.parse_args(argv)
 
     if not args.command:
@@ -323,9 +398,9 @@ def main(argv=None) -> int:
             parser.error("Batch spec must be a list of operations or a dict containing 'operations'")
 
     try:
-        res = execute_edit_task(input_file, output_file, operations, theme=theme)
+        res = execute_edit_task(input_file, output_file, operations, theme=theme, allow_lossy_reflow=args.allow_lossy_reflow)
         print(json.dumps(res, ensure_ascii=False, indent=2))
-        return 0
+        return 3 if args.allow_lossy_reflow and res["partial"] else 0
     except Exception as exc:
         print(json.dumps({
             "status": "failed",

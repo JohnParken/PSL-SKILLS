@@ -78,6 +78,9 @@ def create_document(
 
     validate_spec(spec)
     doc = build_document_from_spec(spec)
+    raw_bytes = doc.render().encode("ascii")
+    if not raw_bytes.startswith(b"{\\rtf"):
+        raise RuntimeError("Generated document does not have a valid RTF stream header")
 
     target_dir = output_path.parent.resolve()
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -91,9 +94,14 @@ def create_document(
     temp_path = Path(temp_path_str)
     try:
         with os.fdopen(temp_fd, "w", encoding="ascii") as fp:
-            fp.write(doc.render())
+            fp.write(raw_bytes.decode("ascii"))
 
-        # Atomic replacement
+        # Validate the private candidate before publishing or touching the target.
+        candidate = read_bytes(temp_path.read_bytes())
+        from wps_rtf_read import require_publishable_candidate
+        require_publishable_candidate(candidate)
+        from wps_content_validation import validate_content
+        content_validation = validate_content(doc, candidate)
         os.replace(temp_path, output_path)
     except Exception:
         if temp_path.exists():
@@ -101,12 +109,9 @@ def create_document(
         raise
 
     # Readback validation
-    raw_bytes = output_path.read_bytes()
-    if not raw_bytes.startswith(b"{\\rtf"):
-        raise RuntimeError("Generated document does not have a valid RTF stream header")
 
     try:
-        read_result = read_bytes(raw_bytes)
+        read_result = candidate
     except ParseError as exc:
         raise RuntimeError(f"Readback validation failed: {exc}") from exc
 
@@ -119,10 +124,17 @@ def create_document(
     if compact_receipt:
         return {
             "status": "success",
+            "content_validation": content_validation,
             "target": str(output_path),
             "file_size": file_size,
             "blocks_count": blocks_count,
             "readback_status": read_result.get("status"),
+            "layout_verification": "not_run",
+            "native_wps": False,
+            "partial": read_result.get("status") == "partial" or bool(doc.spec_warning_count),
+            "spec_warnings": doc.spec_warnings,
+            "spec_warning_count": doc.spec_warning_count,
+            "issues": read_result.get("issues", []),
             "receipt": {
                 "format": "wps_rtf",
                 "theme": spec.get("theme", "official"),
@@ -131,10 +143,17 @@ def create_document(
 
     return {
         "status": "success",
+        "content_validation": content_validation,
         "target": str(output_path),
         "file_size": file_size,
         "blocks_count": blocks_count,
         "readback_status": read_result.get("status"),
+            "layout_verification": "not_run",
+            "native_wps": False,
+            "partial": read_result.get("status") == "partial" or bool(doc.spec_warning_count),
+            "spec_warnings": doc.spec_warnings,
+            "spec_warning_count": doc.spec_warning_count,
+            "issues": read_result.get("issues", []),
         "theme": spec.get("theme", "official"),
         "preview_text": read_result.get("text", "")[:300],
     }
@@ -161,11 +180,11 @@ def main(argv=None) -> int:
 
     if args.command == "create":
         output_file = Path(args.output)
-        if output_file.suffix.lower() != ".wps":
+        if output_file.suffix.lower() not in (".wps", ".rtf"):
             print(
                 json.dumps({
                     "status": "failed",
-                    "error": "Output filename must have a .wps extension",
+                    "error": "Output filename must have a .wps or .rtf extension",
                 }, ensure_ascii=False),
                 file=sys.stderr,
             )
