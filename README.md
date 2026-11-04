@@ -8,9 +8,10 @@
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1954.3193 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261103.1633.1524 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261104.0108.5846 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261104.1601.0533 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；显式依赖 xlsx，ET 来源另依赖 et | 20261104.1601.0533 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、公式预检、逐格溯源与审计；不支持 ET 写回或任意明细连接 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261104.0029.0158 | 标准库生成RTF（可用.wps后缀，非金山原生格式）、受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.0945.4309 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.1438.0555 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261104.0046.0390 | OFD 1.0/1.1/1.2 XML结构与存储文字、来源及复合引用；缺失可选资源索引时保留独立可读内容并报告partial，结构/安全错误仍拒绝；不做OCR、验签或渲染 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
@@ -45,6 +46,7 @@ PSL-SKILLS/
     │   ├── scripts/               # 标准库入口、分析模块、复杂模板与测试
     │   ├── references/            # 输入格式、能力边界、公式计算与生命周期说明
     │   └── assets/                # XLSX 模板和示例数据
+    ├── table-workflow/            # 跨表任务编排、显式计划、源/模板核验与溯源
     ├── wps/
     │   ├── SKILL.md
     │   ├── requirements.txt
@@ -69,6 +71,7 @@ PSL-SKILLS/
 - **docx**：Python 3.10 及以上标准库（包含 zlib，Expat >=2.6.0，需支持 POSIX 锁与文件描述符操作）；零第三方包依赖。
 - **xlsx**：Python 3.9 及以上；维护中的主流程与生命周期 runner 仅依赖标准库。
 - **wps**：Python 3.10 及以上，纯 Python 创建、读取、编辑与 RTF 导出仅用标准库；OOXML 读取另需 Expat >=2.6；二进制导出可选系统 LibreOffice。
+- **table-workflow**：Python >=3.12（维护基线3.12.11），仅标准库；单独安装完整 xlsx，含ET来源时再安装完整 et，通过实际读取主入口所得绝对根路径传参，不猜相邻位置。
 - **et**：Python 3.9 及以上标准库；OOXML 表格分支另需 Expat >=2.6。
 - **ofd**：仅 Python >=3.10 自带标准库（含 zlib、Expat >=2.6.0）；零第三方包、零外部软件。自带能力缺失则诊断并停止，不额外安装组件。
 - **artifact-lifecycle**：Python 3.10 及以上标准库（需 POSIX 锁与文件描述符操作能力）；零第三方包、零外部软件。
@@ -89,6 +92,14 @@ PSL-SKILLS/
 前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；本次在 macOS 实测，云端 Linux 与 Windows 未验证。
 
 当前版本仅修订能力描述，正文与参考资料沿用上述已评测版本；名称与描述的独立选择模拟见[描述评测记录](tests/bank_writing_description_evaluation/summary.json)，不代表宿主自动注册或触发验收。
+
+### 多源表格填报
+
+[table-workflow](skills/table-workflow/SKILL.md) 负责“来源表 + 已有目标模板 → 指标映射 → 聚合与期间比较 → XLSX 副本及核验 JSON”。先有界 inspect，再按需读取计划契约；plan 在内存试算，apply 才写入最终文件并归档。格式读取、表头/统计、公式、写入仍复用 ET/XLSX。简单建表或单表读取不加载本流程。
+
+支持受控 one-to-one/many-to-one 维表补列后按键聚合，匹配唯一目标键；可配置业务勾稽与容差、缺期和空值政策，默认失败阻断、显式降级保留 partial。明确单位、期间、重复键、空值、小计及缓存政策；不支持任意明细级多表连接或原生ET写回。未知/数据性 partial、模板不支持公式、未刷新图表/透视/外链缓存均不得作为完整成功交付。模型负责业务语义，脚本不凭列名猜测口径。
+
+合成集成回归见 [测试](tests/test_table_workflow.py)，环境、端到端结果、输出规模与未验证项见 [初次验证记录](tests/table_workflow_validation.json)，后续公式策略隔离、计划重放、状态与保护验证见 [针对性复核](tests/table_workflow_review.json)，维表关联、勾稽与真实公开样本验收见 [本轮增强记录](tests/table_workflow_quality_validation.json)。仅本机 macOS/Python3.12.11 验证，含明确标注的公开 XLSX 样本；不代表 Linux、Windows、WPS/Excel 软件视觉或宿主 token 节省验收。没有修改已有发布ZIP。
 
 ### XLSX
 

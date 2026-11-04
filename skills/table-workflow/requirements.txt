@@ -1,0 +1,5 @@
+# Python >=3.12; reference environment Python 3.12.11. Standard library only.
+# No third-party packages, runtime network, Office or LibreOffice.
+# Requires separately installed xlsx with region_from_book/summarize_region/load_result_bytes.
+# ET/ETT sources additionally require separately installed et; explicit confirmed roots.
+# No vendored cross-Skill code. No-follow file primitives required; archive may require hard links.

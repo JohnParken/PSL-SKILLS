@@ -80,6 +80,21 @@ def region(source, sheet, cell_range=None, header=True, formulas='reject',
         book = load_result(source, address)
     else:
         book = Workbook.load(source)
+    return region_from_book(book, sheet, cell_range, header, formulas,
+                            header_rows, header_exclude, include_spanning_headings)
+
+
+def region_from_book(book, sheet, cell_range=None, header=True, formulas='reject',
+                     header_rows=None, header_exclude=(), include_spanning_headings=False):
+    """Analyze an already validated Workbook or load_result_bytes result in memory.
+
+    This is not a deserializer: callers must use the native Workbook or the WPS
+    JSON validator. Calculation mutates only the caller-owned in-memory book.
+    """
+    if formulas not in ('reject', 'cached', 'calculate'):
+        raise ValueError('Formula policy must be reject, cached or calculate')
+    if formulas == 'calculate' and not isinstance(book, Workbook):
+        raise ValueError('Formula recalculation requires a native XLSX/XLSM')
     if sheet not in book.cells:
         raise ValueError('Unknown worksheet: ' + sheet)
     calculation = None
@@ -249,8 +264,13 @@ def matches(row, filters):
 
 def summarize(source, sheet, query, cell_range=None, header=True, formulas='reject',
               header_rows=None, header_exclude=(), include_spanning_headings=False):
-    columns, _, rows, metadata = region(source, sheet, cell_range, header, formulas,
-                                                header_rows, header_exclude, include_spanning_headings)
+    return summarize_region(region(source, sheet, cell_range, header, formulas,
+                                   header_rows, header_exclude, include_spanning_headings), query)
+
+
+def summarize_region(table, query):
+    """Aggregate a region_from_book tuple; preserve typed cells and source metadata."""
+    columns, _, rows, metadata = table
     group_columns, measure, mixed, filters = validate_query(query, columns, metadata.get('header_schema'))
     indices = [columns.index(col) for col in group_columns]
     measure_index = None if measure is None else columns.index(measure)

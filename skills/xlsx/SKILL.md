@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261104.0108.5846"
+version: "20261104.1601.0533"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -11,7 +11,9 @@ license: MIT
 
 Read XLSX/XLSM, create XLSX reports, patch existing cells, or analyze typed data using Python 3.9+ and only its standard library. No package installation, Office/LibreOffice, external applications or network access. Keep the complete Skill directory: bundled modules are in `<skill-root>/scripts/` and templates in `<skill-root>/assets/minimal_xlsx/`.
 
-原生 XLSX/XLSM 按文件格式处理，包括 WPS 软件保存的文件；`.wps/.et/.ett`（不区分大小写）交由 wps 技能。本技能拒绝这些输入及伪装成 XLSX/XLSM 的 CFB，不自动调用其他技能或转换。可分析 wps 已提取的 JSON，不读取其原件。
+原生 XLSX/XLSM 按文件格式处理，包括 WPS 软件保存的文件；`.wps` 交由 wps 技能，`.et/.ett` 交由 et 技能（不区分大小写）。本技能拒绝这些输入及伪装成 XLSX/XLSM 的 CFB，不自动调用其他技能或转换。可分析 et 已提取的受支持 JSON，不读取其原件。
+
+用户同时提供多个来源和目标模板、需要先识别指标口径再计算填报时，使用独立的 table-workflow 技能编排；简单创建、已知单元格修改或本技能现有分析不增加该流程。编排程序使用受检内存接口时读 `<skill-root>/references/workflow-api.md`，普通 CLI 任务不加载。
 
 ## 执行环境约束与首步自检
 

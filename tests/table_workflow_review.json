@@ -1,0 +1,308 @@
+{
+  "schema_version": "table_workflow_targeted_review_v1",
+  "generated_utc": "2026-11-04T08:32:20.630991+00:00",
+  "scope": "Follow-up targeted review; initial implementation evidence retained separately",
+  "environment": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.11",
+    "expat": "expat_2.6.3",
+    "isolation": "-I -S -B",
+    "linux": "not_run; no authorized Linux endpoint or local container runtime",
+    "windows": "not_run",
+    "pylint": "not_installed; full naming and C0301/C0321 Pylint checks not run"
+  },
+  "version_clock": {
+    "sampled_new_york": "2026-11-04T03:12:40.291553-05:00",
+    "calendar_plus_hours": 12,
+    "version": "20261104.1512.4029"
+  },
+  "checks": [
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow*.py"
+      ],
+      "exit_code": 0,
+      "test_count": 60,
+      "stdout": "",
+      "stderr": "............................................................\n----------------------------------------------------------------------\nRan 60 tests in 10.265s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_et_pipeline.py"
+      ],
+      "exit_code": 0,
+      "test_count": 3,
+      "stdout": "",
+      "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.106s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/table-workflow",
+        "skills/xlsx",
+        "--strict"
+      ],
+      "exit_code": 0,
+      "test_count": null,
+      "stdout": "OK skills/table-workflow\nOK skills/xlsx\n",
+      "stderr": ""
+    }
+  ],
+  "runtime_check": {
+    "exit_code": 0,
+    "stdout": "{\"status\": \"environment-ok\", \"check_kind\": \"environment\", \"artifact_validation\": \"not_run\", \"python\": \"3.12.11\", \"task_writable\": true, \"dependencies\": {\"xlsx\": {\"exit_code\": 0, \"stdout\": \"{\\n  \\\"status\\\": \\\"ready\\\",\\n  \\\"python\\\": \\\"3.12.11\\\",\\n  \\\"dependencies\\\": \\\"standard_library_only\\\",\\n  \\\"check_kind\\\": \\\"environment\\\",\\n  \\\"artifact_validation\\\": \\\"not_run\\\"\\n}\\n\", \"stderr\": \"\", \"skill_sha256\": \"65b57bdf7ef5afc5c9e0d47d21055f0b801cdbe9b0c18197485ebe550a637096\"}, \"et\": {\"exit_code\": 0, \"stdout\": \"check_kind=environment artifact_validation=not_run\\nooxml-sheet=available\\nenvironment-ok\\n\", \"stderr\": \"\", \"skill_sha256\": \"fbe56931fe27b2b5687b6a83b6ef9df36531990302467e88b81a3a931593c973\"}}}\n",
+    "stderr": ""
+  },
+  "synthetic_e2e": {
+    "independent_expected": {
+      "B2": "200.00",
+      "C2": "50.00",
+      "D2": "33.33",
+      "B3": "50.00",
+      "C3": "-50.00",
+      "D3": "-50.00"
+    },
+    "actual": {
+      "B2": "200.00",
+      "C2": "50.00",
+      "D2": "33.33",
+      "B3": "50.00",
+      "C3": "-50.00",
+      "D3": "-50.00"
+    },
+    "passed": true
+  },
+  "formula_cache_proof": {
+    "fixture": "Formula 120+80 with intentionally stale saved cache 999",
+    "before_fix_observed": {
+      "fresh": "200.00",
+      "saved": "200.00"
+    },
+    "independent_expected": {
+      "fresh": "200.00",
+      "saved": "999.00"
+    },
+    "actual": {
+      "fresh": "200.00",
+      "saved": "999.00"
+    },
+    "status": "partial",
+    "warning_count": 1
+  },
+  "numeric_plan_replay": {
+    "before_fix_observed": "JSON number became a JSON string via default=str",
+    "expected_number_literal": "0.50000000000000000000000000000000001",
+    "actual_literal": "0.50000000000000000000000000000000001",
+    "actual_parsed_type": "Decimal",
+    "passed": true
+  },
+  "complete_computation_with_bounded_output": {
+    "fixture": "2000 rows for 甲, final row 乙, one header, two columns; full declared range",
+    "inspect_characters": 1793,
+    "inspect_utf8_bytes": 1807,
+    "preview_cells": 8,
+    "unshown_positions": 3996,
+    "expected_B2": "2000.00",
+    "actual_B2": "2000.00",
+    "host_tokens": "not_available; character proxy only; no token-savings claim"
+  },
+  "large_diagnostics_proof": {
+    "before_fix_observed": "Output projection raised Response metadata exceeds budget after publication",
+    "expected_exit_code": 3,
+    "actual_exit_code": 3,
+    "response": {
+      "schema_version": "table_workflow_receipt_v1",
+      "status": "partial",
+      "verification": "written_package_and_inputs_passed",
+      "output": "filled.xlsx",
+      "audit": "audit.json",
+      "output_written": true,
+      "audit_written": true,
+      "delivery_incomplete": true,
+      "cleanup": "archive_cleanup_incomplete",
+      "write_count": 6,
+      "warning_count": 1,
+      "projection_truncated": true,
+      "original_characters": 202653,
+      "details_omitted_due_to_budget": true,
+      "next": "Use the audit for full calculation provenance; inspect individual files/sheets for omitted source details",
+      "delivery": {
+        "filled.xlsx": {
+          "archive_status": "failed",
+          "archive_message": "归档失败",
+          "temporary_residual_count": 1,
+          "details_omitted_due_to_budget": true
+        },
+        "audit.json": {
+          "archive_status": "failed",
+          "archive_message": "归档失败",
+          "temporary_residual_count": 1,
+          "details_omitted_due_to_budget": true
+        }
+      }
+    },
+    "workbook_exists": true,
+    "audit_exists": true,
+    "simulation": "Archive failure/residual report mocked locally; not actual cloud storage"
+  },
+  "static_proxies": [
+    {
+      "file": "skills/table-workflow/scripts/table_workflow.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "skills/table-workflow/scripts/workflow_runtime.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "tests/test_table_workflow.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "tests/test_table_workflow_review.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "skills/xlsx/scripts/xlsx_analysis.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "skills/xlsx/scripts/xlsx_wps_result.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    }
+  ],
+  "static_scope": "AST parsing/physical line lengths/statement positions; manually reviewed new names/import order. Not full Pylint.",
+  "additional_regressions": {
+    "new_test_count": 17,
+    "test_names": [
+      "test_audit_open_failure_reports_known_workbook_outcome",
+      "test_audit_partial_write_is_explicit",
+      "test_audit_plan_numeric_literals_roundtrip_without_coercion",
+      "test_command_option_mismatch_and_template_alias_are_refused",
+      "test_corrupt_et_keeps_original_failure_stage",
+      "test_dependency_timeout_signal_and_malformed_success_are_not_passed",
+      "test_formula_modes_are_isolated_and_order_independent",
+      "test_inspection_retains_et_partial_and_exit_three",
+      "test_large_archive_diagnostics_preserve_published_partial_state",
+      "test_later_key_failure_does_not_erase_accepted_partial_warning",
+      "test_non_target_additions_and_wrong_target_values_are_rejected",
+      "test_preflight_failure_is_not_reported_as_unknown_write",
+      "test_projection_does_not_mutate_complete_result",
+      "test_source_calculation_failure_preserves_engine_report",
+      "test_subtotals_filters_and_duplicate_keys_have_independent_counts",
+      "test_target_subtotal_formula_is_preserved_and_recomputed",
+      "test_unshown_tail_rows_still_participate_in_validation"
+    ],
+    "fixed": [
+      "Independent formula recomputation snapshots preserve cached modes and source order independence",
+      "Executable audit plan preserves Decimal JSON numeric literals and types",
+      "Bounded projection preserves completed output identities, partial and archive/cleanup outcomes without mutating full reports",
+      "ET inspection propagates partial with exit 3",
+      "Failure reports retain source parser location, calculation diagnostics, accepted partial warnings and publication phase",
+      "Preservation gate rejects wrong target values, added non-target cells and package parts",
+      "Dependency self-check validates real JSON/markers and retains timeout/signal channel evidence without invented exits",
+      "Same-file template aliases and command-specific option mismatches refused"
+    ],
+    "confirmed": [
+      "Explicit duplicate aggregation and subtotal exclusions have separate physical row/filter counts",
+      "Excluded target subtotal formula is preserved and recalculated",
+      "Unshown tail rows still participate in key validation; preview never supplies calculation data"
+    ]
+  },
+  "dependency_regression_reference": {
+    "file": "tests/table_workflow_validation.json",
+    "phase": "initial implementation, not rerun in this follow-up",
+    "xlsx_tests": 366,
+    "et_tests": 450,
+    "runtime_source_files_unchanged_since_record": true,
+    "et_strict_existing_exception": "69 preexisting pyc files plus cache directory retained; initial clean source projection passed"
+  },
+  "description_review": {
+    "changed": false,
+    "characters": 120,
+    "reason": "Scope remains aggregation by declared keys into an XLSX copy; no new format/write capability",
+    "automatic_model_activation": "not_run",
+    "entry_contract_README_CLI_consistency": "manually reviewed"
+  },
+  "channels": {
+    "script": "Subprocess stdout, stderr and return code captured separately for checks above; real CLI fixtures also exercised",
+    "executor": "Exec tool exposes combined output plus session/exit metadata; model received summary and completion. Not production harness integration proof",
+    "review_failure_injection": "CLI main invoked with patched stdin/argv and redirected stdout; underlying dependency subprocesses still run",
+    "truncation": "Synthetic long delivery report; marked compact projection retained both final files and partial outcome"
+  },
+  "limitations": [
+    "No Linux/Windows acceptance",
+    "No real WPS/Excel business source or visual application acceptance",
+    "No host token usage, auto-routing or production dual-channel integration acceptance",
+    "No actual user cloud-space/download integration",
+    "No SIGKILL recovery or two-file atomic transaction",
+    "Native ET writeback and arbitrary detail joins outside first-stage scope",
+    "Pylint unavailable"
+  ],
+  "preservation_and_publication": {
+    "unrelated_untracked_directory_retained": ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/",
+    "preexisting_et_caches_retained": true,
+    "commit": false,
+    "push": false,
+    "release_zip_modified": false,
+    "subagents_used": false,
+    "temporary_test_fixtures": "owned TemporaryDirectory cleanup only"
+  },
+  "current_files_sha256": {
+    "skills/table-workflow/scripts/table_workflow.py": "bea0aff4fdf2fd8cf65021884072a90e649047c959c945797a9b89245f9b82e5",
+    "skills/table-workflow/scripts/workflow_runtime.py": "979183fc41c3bc99821a84ec9b603326533e3219548111f573b6a4af9f9a82a2",
+    "tests/test_table_workflow.py": "98c398d13636d49dd3d5f107297b47e779cd462519ff608d47391f351293b96b",
+    "tests/test_table_workflow_review.py": "95586e44acf5becda4813819bf4f1e18792d6f1ce8abc909b38d1727cc5c743a",
+    "skills/xlsx/scripts/xlsx_analysis.py": "76680bb75ec77cc3fd21fdc5d8edc0663c4b771bcb0215dfd702ddf80c1f0863",
+    "skills/xlsx/scripts/xlsx_wps_result.py": "62d123ad56e2b3cbf566cef5f566b78f000da3146eb91db9358839c343800469",
+    "skills/table-workflow/SKILL.md": "f6a874511ff1435ec659d93ea71f49e7969c09658b3c79330cf4b4b841ecfcd3",
+    "skills/table-workflow/references/plan-contract.md": "e13642a34e769b127b3725046a699ba68ef7381d0d85b5744b078857a221643f",
+    "skills/table-workflow/references/validation.md": "6f6601ffe84855903eb088fc54ea9746ad37c3c035e4af598b828a4bfa12dcff",
+    "skills/table-workflow/requirements.txt": "17842df51ff33331ccfca0f4ac30221167deafc21cb79d19e8916dd825e106c8",
+    "skills/xlsx/SKILL.md": "65b57bdf7ef5afc5c9e0d47d21055f0b801cdbe9b0c18197485ebe550a637096",
+    "skills/et/SKILL.md": "fbe56931fe27b2b5687b6a83b6ef9df36531990302467e88b81a3a931593c973"
+  },
+  "document_sizes": {
+    "skills/table-workflow/SKILL.md": {
+      "characters": 4475,
+      "utf8_bytes": 10006
+    },
+    "skills/table-workflow/references/plan-contract.md": {
+      "characters": 6526,
+      "utf8_bytes": 12178
+    },
+    "skills/table-workflow/references/validation.md": {
+      "characters": 1422,
+      "utf8_bytes": 3184
+    }
+  },
+  "checks_passed": true,
+  "followup": {
+    "file": "tests/table_workflow_quality_validation.json",
+    "note": "Historical review hashes/results retained; newer capabilities and current fingerprints are in the quality record."
+  }
+}
