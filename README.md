@@ -1,6 +1,6 @@
 # PSL-SKILLS
 
-面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字创建/读取/受控编辑与导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
+面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
 
 ## 收录内容
 
@@ -8,10 +8,10 @@
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1954.3193 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261103.1633.1524 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261102.1954.3193 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261103.1447.4700 | WPS 文字（.wps/.rtf）规范创建、读取、受控编辑，以及 DOCX 到 WPS 兼容格式导出；支持选择性读取；纯 Python 工作流零依赖，导出可选 LibreOffice 后端；ET/ETT 使用 et 技能 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261103.1343.4800 | 离线读取 WPS 表格（.et/.ett）的工作表、单元格保存值与公式缓存；支持 BIFF8 与 OOXML 子集，保留 partial 诊断；不重算公式、不编辑或转换 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261102.1954.3193 | OFD 1.0/1.1/1.2 XML 结构与存储文字；全量节点/字符/来源、页资源与复合引用；结构与文字覆盖分别报告；不做 OCR、验签或渲染 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261104.0108.5846 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261104.0029.0158 | 标准库生成RTF（可用.wps后缀，非金山原生格式）、受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.0945.4309 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261104.0046.0390 | OFD 1.0/1.1/1.2 XML结构与存储文字、来源及复合引用；缺失可选资源索引时保留独立可读内容并报告partial，结构/安全错误仍拒绝；不做OCR、验签或渲染 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
@@ -142,7 +142,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 ### WPS 文字（.wps/.rtf）
 
-独立入口见 [wps](skills/wps/SKILL.md)。支持声明式创建 `.wps`、读取 WPS 文字/RTF、定点编辑，以及将 DOCX 导出为 WPS 兼容格式。首次操作按任务类型分别自检：
+独立入口见 [wps](skills/wps/SKILL.md)。支持读取受限的 WPS 文字/RTF、定点编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和兼容导出 DOCX。生成结果是 RTF 流，不是金山原生 WPS 格式。首次操作按任务类型分别自检：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/read_wps.py" --check
@@ -154,14 +154,25 @@ python3 -I -S -B "<skill-root>/scripts/export_wps.py" check
 
 ### WPS 表格（.et/.ett）
 
-独立入口见 [et](skills/et/SKILL.md)。离线提取工作表、单元格保存值与公式缓存；使用实际文件结构识别 BIFF8 或 OOXML 子集，不重算公式，也不编辑或转换文件。
+独立入口见 [et](skills/et/SKILL.md)。离线提取工作表、单元格保存值与公式缓存；使用实际文件结构识别 BIFF8 或 OOXML 子集。支持候选表头区域预览，还可对指定区域按物理行号排除行、筛选、排序、去重、做列统计和分组汇总，并返回统计质量报告，输出派生 JSON；不重算公式，不修改原表，也不转换办公文件。
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/read_et.py" --check
 python3 -I -S -B "<skill-root>/scripts/read_et.py" ./input.et
+python3 -I -S -B "<skill-root>/scripts/analyze_et.py" --check
+python3 -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D8 --preview
+python3 -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1
 ```
 
-退出码 0 表示声明范围内完整成功，退出码 3 表示保留部分数据并报告 `issues` 与 `reading_assessment` 缺口；退出码 1 表示读取失败，退出码 2 表示参数错误。
+尚不确定表头时，先用 `--preview` 查看明确矩形内的物理位置、空白/缺失、保存缓存与合并锚点，再选择表头和数据范围。预览返回独立 `et_table_preview_v1`，不推断表头、不填值、不计算统计；默认最多 10 行，分页和遗漏见 [表头区域预览](skills/et/references/table-analysis.md#表头区域预览)。
+
+区域内穿插已确认的小计、总计或重复表头时，可在 `--query` 的 JSON 中用 `exclude_rows` 列出原始物理行号；不自动识别这些行。排除项必须位于所选数据行内，结果保留原始行号和单独的排除计数；被排除的合并锚点不会向其他行填充标签。选区诊断与最终匹配数据数量分别报告，排除行不会隐藏源 partial。
+
+分析默认排除公式参与计算；显式选择缓存政策才使用已保存缓存，错误或缺失缓存保留诊断，不补零。合并区域默认不填充；可显式填充普通文本标签并记录来源，数字和公式标签不扩散。统计覆盖全部匹配行，行与分组预览有界，源 partial 不升级为完整成功。筛选、排序、去重、分组等查询及限制见 [统计与结果表处理](skills/et/references/table-analysis.md)。
+
+分析的 `quality_report` 覆盖全部匹配数据，报告数值纳入/排除分母、缺失与缓存状态、有界位置样本、表头标签及分组覆盖；样本截断不缩小统计范围。它是事实诊断，不是业务正确性评分，也不证明公式缓存最新；仍需保留源 partial 和选区诊断。字段与边界见 [统计质量报告](skills/et/references/table-analysis.md#统计质量报告)。
+
+退出码 0 表示当前声明范围的操作完成；退出码 3 保留结果，读取/预览保留源诊断，分析同时保留源诊断和 `analysis_issues`；退出码 1 表示读取、查询或资源失败，退出码 2 表示参数错误。
 
 ### OFD
 
@@ -216,8 +227,8 @@ python3 -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_check_s
 ## 能力边界
 
 - **XLSX**：原生编辑仅支持受控单元格操作，不支持任意结构编辑；不直接读取 WPS 专有格式，ET/ETT 使用 [et](skills/et/SKILL.md) 技能。其 BIFF8 子集、样本清单与验证记录见 ET Skill；公式读取的是保存缓存，不重算。
-- **WPS**：支持 WPS 文字（.wps/.rtf）的创建、读取、受控编辑，以及 DOCX 到 WPS 兼容格式导出；不承诺完整原生格式或页面视觉还原。未知私有记录、加密、损坏结构与资源错误按入口契约拒绝并报告。
-- **ET**：支持 .et/.ett 的 BIFF8 与 OOXML 电子表格有限读取及保存值/公式缓存提取；不重算公式，不编辑或转换，不将有限子集表述为完整格式支持。
+- **WPS**：读取受支持的 WPS 文字/RTF，并可生成 RTF 文档（可使用 `.wps` 后缀）、受控编辑及 DOCX 兼容导出；RTF 流不是金山原生 WPS 格式，不承诺无损编辑或页面视觉还原。未知私有记录、加密、损坏结构与资源错误按入口契约拒绝并报告。
+- **ET**：支持 .et/.ett 的 BIFF8 与 OOXML 有限读取、表头区域预览，以及按物理行号排除行、区域筛选、排序、去重、列统计和分组汇总，并提供统计质量报告；保留源 partial 与缓存缺口，不自动识别表头、小计或总计，不认证业务正确性。处理的是保存值与派生 JSON，不重算公式、不写回原格式或转换办公文件，不将有限子集表述为完整格式支持。
 - **DOCX**：支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 文字由独立 wps 技能提供，ET/ETT 由 et 技能提供。
 - **交付物归档与同名保护**：归档默认原子独占发布，同名拒绝覆盖并保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。
 - **失败立即清理**：生成或编辑失败、子进程超时同样立即清理本轮中间辅助文件与清单，不因待重试保留临时材料；重试需从原始输入重新发起。
@@ -289,8 +300,8 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
 | .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
 | .ofd | 1.0/1.1/1.2 XML 结构、存储文字、页资源与复合引用 | 不支持 | 已知版本统一判定；结构、命名空间与文字覆盖分开；不作全文/视觉或全规范认证 |
-| .wps/.rtf | WPS 文字按实际结构读取有限子集 | 创建、受控编辑；支持 DOCX 到 WPS 兼容格式导出 | 不承诺完整原生格式或页面视觉还原 |
-| .et/.ett | et 按实际结构读取 BIFF8/OOXML 有限子集及保存值/公式缓存 | 不生成、不编辑、不转换 | 不重算公式；按结果报告 partial 与格式缺口 |
+| .wps/.rtf | WPS 文字按实际结构读取有限子集 | 生成 RTF 文档（可使用 .wps 后缀）、受控编辑及 DOCX 兼容导出 | RTF 流不是金山原生 WPS 格式；不承诺完整原生格式或页面视觉还原 |
+| .et/.ett | et 按实际结构读取 BIFF8/OOXML 有限子集及保存值/公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计、分组汇总及质量报告 | 只读预览或分析输出派生 JSON；不生成、编辑或转换办公文件 | 不自动识别表头、小计或总计；质量报告不认证业务正确性；公式默认排除，显式使用的缓存未证明最新；保留 partial，不写回原表 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 
 仓库没有PDF、PPT/PPTX、ODT/ODS/ODP、RTF专用技能或通用转换器。旧DOC/XLS内部结构只能由wps识别其有限MS-DOC/BIFF子集，不能称完整支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。推荐下一步先补有合法来源的真实样本与独立内容预期，再按实际办公需求单独规划PDF/PPT等技能；不要通过后缀或依赖推断已支持。
