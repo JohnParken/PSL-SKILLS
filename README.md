@@ -1,6 +1,6 @@
 # PSL-SKILLS
 
-面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
+面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取、受限 SVG 原生 PPTX 创建及结构读取、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
 
 ## 收录内容
 
@@ -12,6 +12,7 @@
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261104.0029.0158 | 标准库生成RTF（可用.wps后缀，非金山原生格式）、受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.0945.4309 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261104.0046.0390 | OFD 1.0/1.1/1.2 XML结构与存储文字、来源及复合引用；缺失可选资源索引时保留独立可读内容并报告partial，结构/安全错误仍拒绝；不做OCR、验签或渲染 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.5.0 转换子集与标准库入口 | 20261104.1519.0362 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
@@ -56,6 +57,7 @@ PSL-SKILLS/
     │   ├── scripts/               # ET/ETT 读取、BIFF8、OOXML 与合成回归
     │   └── references/            # 表格格式、样本来源、保存值与验证限制
     ├── ofd/                       # OFD 三版本 XML 结构与存储文字只读
+    ├── pptx/                      # 标准库 SVG 原生 PPTX 创建、读取与结构验证
     └── artifact-lifecycle/        # 交付物原子归档与受控临时文件清理公共技能
         ├── SKILL.md
         ├── requirements.txt
@@ -71,6 +73,7 @@ PSL-SKILLS/
 - **wps**：Python 3.10 及以上，纯 Python 创建、读取、编辑与 RTF 导出仅用标准库；OOXML 读取另需 Expat >=2.6；二进制导出可选系统 LibreOffice。
 - **et**：Python 3.9 及以上标准库；OOXML 表格分支另需 Expat >=2.6。
 - **ofd**：仅 Python >=3.10 自带标准库（含 zlib、Expat >=2.6.0）；零第三方包、零外部软件。自带能力缺失则诊断并停止，不额外安装组件。
+- **pptx**：Python >=3.10 标准库（含 zlib、Expat >=2.6.0）及 POSIX 描述符相对 I/O；本版面向 Linux，Windows 不支持；零第三方包、零外部软件。
 - **artifact-lifecycle**：Python 3.10 及以上标准库（需 POSIX 锁与文件描述符操作能力）；零第三方包、零外部软件。
 - **skill-development-standards**：Python 3.10 及以上标准库（需系统 IANA 时区支持以生成规范版本时间戳）；零第三方包依赖。
 - 办公格式处理与生命周期纯 Python 主流程无需安装第三方 Python 包；WPS 二进制导出可选使用系统 LibreOffice。脚本使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存；纯文本写作不需要 Python。
@@ -226,6 +229,7 @@ python3 -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_check_s
 
 ## 能力边界
 
+- **PPTX**：受限 SVG 创建可编辑的原生对象，支持 PNG/JPEG、有限图表、表格和公式；可读取 Transitional PPTX 子集的文本、备注及对象计数并检查包结构。不提供任意既有 PPTX 编辑、完整格式导入或桌面显示验证；创建拒绝覆盖同名文件，归档显式交给公共生命周期技能。
 - **XLSX**：原生编辑仅支持受控单元格操作，不支持任意结构编辑；不直接读取 WPS 专有格式，ET/ETT 使用 [et](skills/et/SKILL.md) 技能。其 BIFF8 子集、样本清单与验证记录见 ET Skill；公式读取的是保存缓存，不重算。
 - **WPS**：读取受支持的 WPS 文字/RTF，并可生成 RTF 文档（可使用 `.wps` 后缀）、受控编辑及 DOCX 兼容导出；RTF 流不是金山原生 WPS 格式，不承诺无损编辑或页面视觉还原。未知私有记录、加密、损坏结构与资源错误按入口契约拒绝并报告。
 - **ET**：支持 .et/.ett 的 BIFF8 与 OOXML 有限读取、表头区域预览，以及按物理行号排除行、区域筛选、排序、去重、列统计和分组汇总，并提供统计质量报告；保留源 partial 与缓存缺口，不自动识别表头、小计或总计，不认证业务正确性。处理的是保存值与派生 JSON，不重算公式、不写回原格式或转换办公文件，不将有限子集表述为完整格式支持。
@@ -279,7 +283,17 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 
 原生行为测试要求 Python >=3.10、Expat >=2.6.0；跳过测试不算行为验收。范围、命令和证据见 [DOCX 维护测试与历史验证记录](skills/docx/references/maintenance-validation.md)。环境自检、固定预期回归和视觉验收覆盖不同内容，当前流程不调用办公软件做视觉验证。
 
+PPTX 从仓库根目录运行隔离环境回归；要求满足其 Linux/Python/Expat 与描述符操作条件。测试覆盖的结构与内容不等于桌面软件显示或真实宿主触发验收：
+
+```console
+python -I -S -B -m unittest discover -s tests/pptx -p 'test_*.py'
+```
+
+PPTX 的本次 Linux 验证记录见 [标准库 PPTX 验证记录](tests/pptx/verification.json)：66 项回归、严格结构检查，以及开发阶段独立读取器的内容核对。桌面视觉、真实业务样本、Windows 与专用宿主触发未验证；开发核对工具不属于运行依赖。
+
 ## 迁移来源与许可
+
+`pptx` 以 `JohnParken/ppt-master` v6.5.0、提交 `c951bf4a3a4af7cbc2382447f3d2e7719b292bd2` 的转换子集为基线，保留上游 MIT 及形状数据的原始许可与通知；范围见 [PPTX 来源说明](skills/pptx/references/provenance.md)。
 
 本次于 2026-10-23 从本地相邻项目复制，首次迁移保留原目录名称及 skill 内部文件内容，排除系统缓存文件；随后将本仓库的 `minimax-xlsx` 更名为 `xlsx`，同步更新名称和路径引用，脚本及资源内容不变。复制的是来源项目**当时的工作区内容，包含未提交修改**，不是对应提交的纯净快照。来源仓库当时的 HEAD 仅供追溯：
 
@@ -294,6 +308,7 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 
 | 后缀/输入 | 读取 | 生成或编辑 | 验证与边界 |
 |---|---|---|---|
+| .pptx | Transitional 子集文本、备注、对象计数与包摘要 | 从受限 SVG 新建原生 PPTX；不编辑现有文件 | 标准库结构验证及内容回读；PNG/JPEG、有限图表/表格/公式；无桌面视觉验收 |
 | .docx | 正文与显式结构 | 生成及受控编辑；标准入口定点防同名递增版本命名，失败立即清理中间文件 | 原生行为回归；不保证任意排版 |
 | .dotx | ZIP/XML读取 | 同后缀定点编辑，不生成DOTX | 规则受控，不以改后缀转换 |
 | .xlsx | 原生读取与分析 | XLSX生成、受控编辑/公式子集；标准任务入口自动防同名覆盖递增命名，失败立即清理中间文件 | 不等于完整Excel引擎 |
@@ -304,7 +319,7 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 | .et/.ett | et 按实际结构读取 BIFF8/OOXML 有限子集及保存值/公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计、分组汇总及质量报告 | 只读预览或分析输出派生 JSON；不生成、编辑或转换办公文件 | 不自动识别表头、小计或总计；质量报告不认证业务正确性；公式默认排除，显式使用的缓存未证明最新；保留 partial，不写回原表 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 
-仓库没有PDF、PPT/PPTX、ODT/ODS/ODP、RTF专用技能或通用转换器。旧DOC/XLS内部结构只能由wps识别其有限MS-DOC/BIFF子集，不能称完整支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。推荐下一步先补有合法来源的真实样本与独立内容预期，再按实际办公需求单独规划PDF/PPT等技能；不要通过后缀或依赖推断已支持。
+仓库没有 PDF、旧式 PPT、ODT/ODS/ODP、RTF 专用技能或通用转换器；PPTX 的新建与读取仅覆盖上表明确子集。旧DOC/XLS内部结构只能由wps识别其有限MS-DOC/BIFF子集，不能称完整支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。后续优先补充有合法来源的真实样本与独立内容预期，再按实际办公需求规划 PDF、PPTX 扩展等能力；不要通过后缀或依赖推断已支持。
 
 本批四技能任务选择的固定正反例见 `tests/skill_selection_cases.json`。20 项人工边界核对及未见标准答案的独立选择模拟均匹配预期；这是有限用例的选择评测，不是真实宿主自动触发验收。
 
@@ -317,7 +332,7 @@ OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不�
 
 仓库维护与接入可用 [run_skill_check.py](tools/run_skill_check.py) 执行固定自检入口并输出独立回传 JSON；[入口清单、用法及边界](docs/check-execution.md)列出全部 Skill 和未验证范围。该适配器不随独立 Skill 发布，不安装或修改项目专属 execute 工具；原 Skill 命令仍可直接执行，宿主按原生接口回传。
 
-适配器支持的 8 个环境自检入口包括：
+适配器支持的 9 个环境自检入口包括：
 - `docx-read`：`docx/scripts/read_docx.py --check`
 - `docx-task`：`docx/scripts/run_docx_task.py check`
 - `docx-create`：`docx/scripts/create_docx.py --check`
@@ -325,6 +340,7 @@ OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不�
 - `wps`：`wps/scripts/read_wps.py --check`
 - `ofd`：`ofd/scripts/read_ofd.py --check`
 - `xlsx`：`xlsx/scripts/stdlib_xlsx.py check`
+- `pptx`：`pptx/scripts/pptx.py check`
 - `artifact-lifecycle`：`artifact-lifecycle/scripts/lifecycle.py check`
 以及 1 个结构检查入口 `skill-structure`（调用 `check_skill.py --strict`）。
 
@@ -406,3 +422,4 @@ XLSX十个受支持写文件CLI在业务处理前检查输入、配置和输出�
 DOCX 标准新建/编辑与 XLSX 标准任务入口在生成前定点检查主路径和归档同名，保留主题并选择“_第2版”“_第3版”等可用名称；以返回的实际 output 交付。归档默认原子独占发布，同名保留历史副本；只有明确授权的独立归档调用可传 `--replace-existing`。失败仍清理本轮中间文件，删除受阻则报告 `cleanup_incomplete`。旧直接入口不自动改名，主输出行为保留；共享归档默认保护同步到公共生命周期包。
 
 源码回归 591 项通过（DOCX 269、XLSX 304、公共生命周期 16、来源一致性 2）；三包严格检查、CRC、源码逐字节核对及只读安装回归 52 项通过，安装内容哈希未变。description 能力与适用范围人工核对后保持不变。验证为 macOS/Python 3.12.14 和隔离合成样本，未执行云端 Linux/Windows、真实生产宿主、Office 视觉或模型触发验收；专用命名 linter 不可用。新版本三包保留于 skills 目录，旧包未覆盖。证据：[同名保护验收](tests/archive_collision_20261029_2203_2365.json)。本轮主代理完成实现、审查与验收，未调用子代理。
+
