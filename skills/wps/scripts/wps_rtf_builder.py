@@ -13,6 +13,7 @@ FONT_TIMES = 5
 FONT_CALIBRI = 6
 FONT_YAHEI = 7
 FONT_FANGSONG_GB2312 = 8
+FONT_XIAOBIAOSONG = 9
 
 FONT_MAP = {
     "simsun": FONT_SIMSUN,
@@ -31,6 +32,7 @@ FONT_MAP = {
     "calibri": FONT_CALIBRI,
     "microsoft yahei": FONT_YAHEI,
     "微软雅黑": FONT_YAHEI,
+    "方正小标宋简体": FONT_XIAOBIAOSONG,
 }
 
 # Standard A4 paper in twips (1 inch = 1440 twips = 25.4mm)
@@ -88,6 +90,7 @@ class RtfRun:
         underline: bool = False,
         color_idx: int = 0,
         highlight_idx: int = 0,
+        latin_font: Optional[int] = None,
     ):
         self.text = text
         self.font = font
@@ -97,11 +100,15 @@ class RtfRun:
         self.underline = underline
         self.color_idx = color_idx
         self.highlight_idx = highlight_idx
+        self.latin_font = latin_font
 
     def to_rtf(self) -> str:
         """Render run to RTF control sequence."""
         half_pts = int(round(self.size_pt * 2))
         ctrls = [f"\\f{self.font}", f"\\fs{half_pts}"]
+        if self.latin_font is not None:
+            # RTF 1.9.1 composite fonts: associate East Asian and Latin families.
+            ctrls = [f"\\hich\\af{self.latin_font}\\dbch\\af{self.font}\\loch\\f{self.latin_font}", f"\\fs{half_pts}"]
         if self.bold:
             ctrls.append("\\b")
         if self.italic:
@@ -124,7 +131,9 @@ class RtfRun:
             suffix.append("\\ulnone")
         if self.color_idx > 0:
             suffix.append("\\cf0")
-        return prefix + escaped_text + "".join(suffix)
+        rendered = prefix + escaped_text + "".join(suffix)
+        # Composite font associations must not leak into an explicitly formatted next run.
+        return "{" + rendered + "}" if self.latin_font is not None else rendered
 
 
 class RtfParagraph:
@@ -141,12 +150,13 @@ class RtfParagraph:
         left_indent_pt: float = 0.0,
         right_indent_pt: float = 0.0,
         keep_with_next: bool = False,
-        widow_control: bool = True,
+        widow_control: Optional[bool] = True,
         page_break_before: bool = False,
         keep_together: bool = False,
         first_line_indent_pt: Optional[float] = None,
         tabs_pt: Optional[List[float]] = None,
         outline_level: Optional[int] = None,
+        character_indent: bool = False,
     ):
         self.align = align
         self.space_before_pt = space_before_pt
@@ -163,6 +173,7 @@ class RtfParagraph:
         self.first_line_indent_pt = first_line_indent_pt
         self.tabs_pt = tabs_pt or []
         self.outline_level = outline_level
+        self.character_indent = character_indent
         self.runs: List[RtfRun] = []
 
     def add_run(self, run: RtfRun) -> "RtfParagraph":
@@ -178,8 +189,9 @@ class RtfParagraph:
         italic: bool = False,
         underline: bool = False,
         color_idx: int = 0,
+        latin_font: Optional[int] = None,
     ) -> "RtfParagraph":
-        self.runs.append(RtfRun(text, font, size_pt, bold, italic, underline, color_idx))
+        self.runs.append(RtfRun(text, font, size_pt, bold, italic, underline, color_idx, latin_font=latin_font))
         return self
 
     def to_rtf(self) -> str:
@@ -219,6 +231,9 @@ class RtfParagraph:
         elif self.first_line_indent_chars < 0:
             base_size = self.runs[0].size_pt if self.runs else 14.0
             ctrls.append(f"\\fi{int(self.first_line_indent_chars * base_size * 20)}")
+        if self.character_indent and self.first_line_indent_pt is None:
+            # Keep the equivalent twip fallback; explicit point indents take precedence.
+            ctrls.append(f"\\cufi{round(self.first_line_indent_chars * 100)}")
 
         if self.left_indent_pt > 0:
             ctrls.append(f"\\li{int(self.left_indent_pt * 20)}")
@@ -237,7 +252,7 @@ class RtfParagraph:
             ctrls.append("\\keepn")
         if self.widow_control:
             ctrls.append("\\widctlpar")
-        else:
+        elif self.widow_control is False:
             ctrls.append("\\nowidctlpar")
 
         runs_rtf = "".join(run.to_rtf() for run in self.runs)
@@ -411,6 +426,7 @@ class RtfDocument:
         header_text: Optional[str] = None,
         footer_text: Optional[str] = None,
         page_numbering: bool = False,
+        official_typography: bool = False,
     ):
         self.margin_top_twips = int(margin_top_pt * 20)
         self.margin_bottom_twips = int(margin_bottom_pt * 20)
@@ -419,6 +435,7 @@ class RtfDocument:
         self.header_text = header_text
         self.footer_text = footer_text
         self.page_numbering = page_numbering
+        self.official_typography = official_typography
         self.page_width_twips = A4_WIDTH_TWIPS
         self.page_height_twips = A4_HEIGHT_TWIPS
         self.spec_warnings = []
@@ -476,6 +493,7 @@ class RtfDocument:
             "{\\f6\\fnil\\fcharset0 Calibri;}",
             "{\\f7\\fnil\\fcharset134 Microsoft YaHei;}",
             "{\\f8\\fnil\\fcharset134 FangSong_GB2312;}",
+            "{\\f9\\fnil\\fcharset134 " + escape_rtf_text("方正小标宋简体") + ";}",
             "}",
             # Color table
             "{\\colortbl ;\\red0\\green0\\blue0;\\red255\\green0\\blue0;\\red0\\green112\\blue192;"
@@ -488,10 +506,21 @@ class RtfDocument:
             f"\\margt{self.margin_top_twips}\\margb{self.margin_bottom_twips}",
         ]
 
-        if self.header_text:
+        if self.official_typography:
+            for kind, text, page_number in (("header", self.header_text, False), ("footer", self.footer_text, self.page_numbering)):
+                if text is None and not page_number:
+                    continue
+                paragraph = RtfParagraph(align="left", first_line_indent_chars=0, line_spacing_mult=1.15, widow_control=None)
+                paragraph.add_text((text or "") + (" " if text and page_number else ""), font=FONT_FANGSONG, size_pt=16, latin_font=FONT_TIMES)
+                content = paragraph.to_rtf()[:-4]
+                if page_number:
+                    page_run = RtfRun("", font=FONT_FANGSONG, size_pt=16, latin_font=FONT_TIMES).to_rtf()
+                    content += page_run[:-1] + "{\\field{\\*\\fldinst PAGE}{\\fldrslt 1}}}"
+                parts.append("{\\" + kind + " " + content + "\\par}")
+        elif self.header_text:
             escaped_header = escape_rtf_text(self.header_text)
             parts.append(f"{{\\header \\pard\\qr\\fs18 {escaped_header}\\par}}")
-        if self.footer_text or self.page_numbering:
+        if not self.official_typography and (self.footer_text or self.page_numbering):
             footer_content = []
             if self.footer_text:
                 footer_content.append(escape_rtf_text(self.footer_text) + " ")
@@ -510,10 +539,14 @@ class RtfDocument:
         return "\n".join(parts)
 
     def save(self, file_path: str):
-        """Save the document as .wps file (with ASCII encoding of RTF stream)."""
+        """Save validated ASCII RTF as .rtf/.wps and return readback diagnostics."""
+        from wps_output_contract import require_output_path, require_output_bytes
+        require_output_path(file_path, 'rtf')
         content = self.render()
+        inspection = require_output_bytes(content.encode('ascii'), file_path, 'rtf')
         with open(file_path, "w", encoding="ascii") as fp:
             fp.write(content)
+        return inspection
 
 
 def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
@@ -568,27 +601,30 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
     theme = spec.get("theme", "official")
     header_text = spec.get("header_text") or spec.get("header")
     footer_text = spec.get("footer_text") or spec.get("footer")
-    page_numbering = bool(spec.get("page_numbering", True))
+    page_numbering = spec.get("page_numbering", theme != "official")
+    latin_font = FONT_TIMES if theme == "official" else None
 
     if theme == "official":
-        # GB/T 9704-2012: top 37mm, bottom 35mm, left 28mm, right 26mm
+        # Match the DOCX official preset (not a claim of national-standard compliance).
+        # 31.8 mm rounded to whole twips is 1803; top/bottom are 25.4 mm.
         doc = RtfDocument(
-            margin_top_pt=104.9,
-            margin_bottom_pt=99.2,
-            margin_left_pt=79.4,
-            margin_right_pt=73.7,
-            header_text=header_text,
-            footer_text=footer_text,
+            margin_top_pt=72.0,
+            margin_bottom_pt=72.0,
+            margin_left_pt=90.15,
+            margin_right_pt=90.15,
+            header_text=spec.get("header_text") if spec.get("header_text") is not None else spec.get("header"),
+            footer_text=spec.get("footer_text") if spec.get("footer_text") is not None else spec.get("footer"),
             page_numbering=page_numbering,
+            official_typography=True,
         )
-        title_font = FONT_SIMHEI
+        title_font = FONT_XIAOBIAOSONG
         title_size = 22.0
-        h1_font, h1_size = FONT_SIMHEI, 16.0
-        h2_font, h2_size = FONT_KAITI, 15.0
-        h3_font, h3_size = FONT_FANGSONG, 14.0
-        body_font, body_size = FONT_FANGSONG, 14.0
+        h1_font, h1_size = FONT_XIAOBIAOSONG, 18.0
+        h2_font, h2_size = FONT_SIMHEI, 16.0
+        h3_font, h3_size = FONT_KAITI, 16.0
+        body_font, body_size = FONT_FANGSONG, 16.0
         body_indent = 2.0
-        line_spacing_exact = 28.8
+        line_spacing_exact = 28.0
         line_spacing_mult = None
     elif theme == "business":
         doc = RtfDocument(
@@ -652,8 +688,31 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
             or doc.page_height_twips <= doc.margin_top_twips + doc.margin_bottom_twips):
         raise ValueError("Page margins leave no printable area")
     blocks = spec.get("blocks", [])
+    paragraph_options = {
+        "align": "align", "space_before_pt": "space_before_pt", "space_after_pt": "space_after_pt",
+        "indent_chars": "first_line_indent_chars", "line_spacing_exact_pt": "line_spacing_exact_pt",
+        "line_spacing_mult": "line_spacing_mult", "widow_control": "widow_control", "keep_with_next": "keep_with_next",
+        "keep_together": "keep_together", "page_break_before": "page_break_before", "left_indent_pt": "left_indent_pt",
+        "right_indent_pt": "right_indent_pt", "first_line_indent_pt": "first_line_indent_pt", "tabs_pt": "tabs_pt",
+    }
+
+    def apply_heading_options(paragraph, block):
+        for option, attribute in paragraph_options.items():
+            if option in block:
+                setattr(paragraph, attribute, block[option])
+
+    def resolve_run_font(name, path):
+        if name is not None and not isinstance(name, str):
+            raise ValueError("Run font must be a string")
+        if name and name.strip().lower() not in FONT_MAP:
+            doc.spec_warning_count += 1
+            if len(doc.spec_warnings) < 100:
+                doc.spec_warnings.append({"code": "unsupported_font_substituted", "path": path, "replacement": "SimSun"})
+        return resolve_font_index(name)
+
     block_options = {
-        "title": {"type", "text"}, "subtitle": {"type", "text"}, "heading": {"type", "text", "level"},
+        "title": {"type", "text"} | set(paragraph_options), "subtitle": {"type", "text"} | set(paragraph_options),
+        "heading": {"type", "text", "level"} | set(paragraph_options),
         "paragraph": {"type", "text", "runs", "align", "space_before_pt", "space_after_pt", "indent_chars",
                       "line_spacing_exact_pt", "line_spacing_mult", "widow_control", "keep_with_next", "keep_together",
                       "page_break_before", "left_indent_pt", "right_indent_pt", "first_line_indent_pt", "tabs_pt"},
@@ -668,28 +727,40 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
             text = block.get("text", "")
             p = RtfParagraph(
                 align="center",
-                space_before_pt=14.0,
+                space_before_pt=0.0 if theme == "official" else 14.0,
                 space_after_pt=12.0,
                 first_line_indent_chars=0.0,
                 keep_with_next=True,
+                line_spacing_mult=1.15 if theme == "official" else None,
+                widow_control=None if theme == "official" else True,
             )
-            p.add_text(text, font=title_font, size_pt=title_size, bold=True)
+            apply_heading_options(p, block)
+            p.add_text(text, font=title_font, size_pt=title_size, bold=theme != "official", latin_font=latin_font)
             doc.add_paragraph(p)
         elif b_type == "subtitle":
             text = block.get("text", "")
             p = RtfParagraph(
                 align="center",
                 space_before_pt=0.0,
-                space_after_pt=12.0,
+                space_after_pt=8.0 if theme == "official" else 12.0,
                 first_line_indent_chars=0.0,
                 keep_with_next=True,
+                line_spacing_mult=1.15 if theme == "official" else None,
+                widow_control=None if theme == "official" else True,
             )
-            p.add_text(text, font=FONT_KAITI, size_pt=16.0, bold=False)
+            apply_heading_options(p, block)
+            p.add_text(text, font=FONT_XIAOBIAOSONG if theme == "official" else FONT_KAITI,
+                       size_pt=14.0 if theme == "official" else 16.0, bold=False, latin_font=latin_font)
             doc.add_paragraph(p)
         elif b_type == "heading":
             level = int(block.get("level", 1))
             text = block.get("text", "")
-            if level == 1:
+            if theme == "official":
+                font, size = {1: (h1_font, h1_size), 2: (h2_font, h2_size), 3: (h3_font, h3_size)}.get(level, (FONT_FANGSONG, 16.0))
+                p = RtfParagraph(align="center" if level == 1 else "left", first_line_indent_chars=0,
+                                 line_spacing_mult=1.15, keep_with_next=True, widow_control=None)
+                p.add_text(text, font=font, size_pt=size, bold=level == 3, latin_font=latin_font)
+            elif level == 1:
                 p = RtfParagraph(
                     align="left",
                     space_before_pt=10.0,
@@ -717,18 +788,19 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
                 )
                 p.add_text(text, font=h3_font, size_pt=h3_size, bold=True)
             p.outline_level = level - 1
+            apply_heading_options(p, block)
             doc.add_paragraph(p)
         elif b_type == "paragraph":
             text = block.get("text", "")
             runs_data = block.get("runs")
             p = RtfParagraph(
-                align=block.get("align", "justify"),
+                align=block.get("align", "left" if theme == "official" else "justify"),
                 space_before_pt=block.get("space_before_pt", 0.0),
-                space_after_pt=block.get("space_after_pt", 2.0 if theme == "official" else 4.0),
+                space_after_pt=block.get("space_after_pt", 0.0 if theme == "official" else 4.0),
                 first_line_indent_chars=block.get("indent_chars", body_indent),
                 line_spacing_exact_pt=block.get("line_spacing_exact_pt", None if "line_spacing_mult" in block else line_spacing_exact),
                 line_spacing_mult=block.get("line_spacing_mult", line_spacing_mult),
-                widow_control=block.get("widow_control", True),
+                widow_control=block.get("widow_control", None if theme == "official" else True),
                 keep_with_next=block.get("keep_with_next", False),
                 keep_together=block.get("keep_together", False),
                 page_break_before=block.get("page_break_before", False),
@@ -736,20 +808,22 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
                 right_indent_pt=block.get("right_indent_pt", 0),
                 first_line_indent_pt=block.get("first_line_indent_pt"),
                 tabs_pt=block.get("tabs_pt", []),
+                character_indent=theme == "official",
             )
             if runs_data and isinstance(runs_data, list):
-                for r in runs_data:
+                for run_index, r in enumerate(runs_data):
                     p.add_text(
                         r.get("text", ""),
-                        font=resolve_font_index(r.get("font")),
+                        font=resolve_run_font(r.get("font"), f"blocks[{block_index}].runs[{run_index}].font"),
                         size_pt=r.get("size_pt", body_size),
                         bold=bool(r.get("bold", False)),
                         italic=bool(r.get("italic", False)),
                         underline=bool(r.get("underline", False)),
                         color_idx=int(r.get("color_idx", 0)),
+                        latin_font=latin_font if not r.get("font") else None,
                     )
             else:
-                p.add_text(text, font=body_font, size_pt=body_size)
+                p.add_text(text, font=body_font, size_pt=body_size, latin_font=latin_font)
             doc.add_paragraph(p)
         elif b_type == "list":
             items = block.get("items", [])
@@ -757,16 +831,18 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
             for idx, item_text in enumerate(items, start=block.get("start", 1)):
                 p = RtfParagraph(
                     align="left",
-                    space_before_pt=1.0,
-                    space_after_pt=2.0,
+                    space_before_pt=0.0 if theme == "official" else 1.0,
+                    space_after_pt=0.0 if theme == "official" else 2.0,
                     first_line_indent_chars=0.0,
-                    left_indent_pt=18.0,
-                    line_spacing_mult=1.2,
-                    widow_control=True,
+                    left_indent_pt=36.0 if theme == "official" else 18.0,
+                    first_line_indent_pt=-18.0 if theme == "official" else None,
+                    tabs_pt=[36.0] if theme == "official" else [],
+                    line_spacing_mult=1.15 if theme == "official" else 1.2,
+                    widow_control=None if theme == "official" else True,
                 )
                 prefix = f"{idx}. " if ordered else "• "
-                p.add_text(prefix, font=body_font, size_pt=body_size, bold=ordered)
-                p.add_text(str(item_text), font=body_font, size_pt=body_size)
+                p.add_text(prefix, font=body_font, size_pt=body_size, bold=ordered and theme != "official", latin_font=latin_font)
+                p.add_text(str(item_text), font=body_font, size_pt=body_size, latin_font=latin_font)
                 doc.add_paragraph(p)
         elif b_type == "table":
             rows_data = block.get("rows", [])
@@ -798,7 +874,7 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
             for r_idx, row_values in enumerate(rows_data):
                 is_hdr = has_header and (r_idx == 0)
                 row = RtfTableRow(is_header=is_hdr and block.get("repeat_header", True), keep_with_next=is_hdr,
-                                  keep_together=block.get("row_keep_together", is_hdr))
+                                  keep_together=block.get("row_keep_together", True if theme == "official" else is_hdr))
                 for c_idx, val in enumerate(row_values):
                     c_width = int(col_widths[c_idx] * 20) if col_widths and c_idx < len(col_widths) else default_cell_w
                     edges = True if border_mode == "all" else []
@@ -812,16 +888,17 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
                         border_width_pt=border_width,
                         hmerge=merge[0] if merge else None,
                         vmerge=merge[1] if merge else None,
-                        bg_color_idx=6 if is_hdr else 0,
+                        bg_color_idx=6 if is_hdr and theme != "official" else 0,
                         valign="center",
                     )
-                    cell.add_text(
-                        str(val),
-                        font=FONT_SIMHEI if is_hdr else FONT_SIMSUN,
-                        size_pt=10.5,
-                        align="center" if is_hdr else col_alignments[c_idx],
-                        bold=is_hdr,
-                    )
+                    if theme == "official":
+                        paragraph = RtfParagraph(align="center" if is_hdr else col_alignments[c_idx], first_line_indent_chars=0,
+                                                 line_spacing_mult=1.15, widow_control=None)
+                        paragraph.add_text(str(val), font=FONT_FANGSONG, size_pt=16, bold=is_hdr, latin_font=latin_font)
+                        cell.paragraphs.append(paragraph)
+                    else:
+                        cell.add_text(str(val), font=FONT_SIMHEI if is_hdr else FONT_SIMSUN, size_pt=10.5,
+                                      align="center" if is_hdr else col_alignments[c_idx], bold=is_hdr)
                     row.add_cell(cell)
                 table.add_row(row)
             doc.add_table(table)

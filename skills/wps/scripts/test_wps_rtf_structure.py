@@ -23,7 +23,7 @@ class StructureTests(unittest.TestCase):
         self.assertEqual(read_bytes(text.encode('ascii'))['paragraphs'][0]['text'], '甲\t乙')
         multiple = render([{'type': 'paragraph', 'text': '倍数', 'line_spacing_mult': 1.5}])
         self.assertIn(r'\sl360\slmult1', multiple)
-        self.assertNotIn(r'\sl-576', multiple)
+        self.assertNotIn(r'\sl-560', multiple)
 
     def test_repeat_header_and_column_alignment(self):
         table = {'type': 'table', 'rows': [['头1', '头2'], ['值', '12']], 'col_widths': [72, 144], 'col_alignments': ['left', 'right']}

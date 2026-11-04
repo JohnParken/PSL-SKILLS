@@ -10,7 +10,7 @@
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261103.1633.1524 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261104.1601.0533 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；显式依赖 xlsx，ET 来源另依赖 et | 20261104.1601.0533 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、公式预检、逐格溯源与审计；不支持 ET 写回或任意明细连接 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261104.0029.0158 | 标准库生成RTF（可用.wps后缀，非金山原生格式）、受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261104.2054.2758 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.1438.0555 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261104.0046.0390 | OFD 1.0/1.1/1.2 XML结构与存储文字、来源及复合引用；缺失可选资源索引时保留独立可读内容并报告partial，结构/安全错误仍拒绝；不做OCR、验签或渲染 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
@@ -153,7 +153,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 ### WPS 文字（.wps/.rtf）
 
-独立入口见 [wps](skills/wps/SKILL.md)。支持读取受限的 WPS 文字/RTF、定点编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和兼容导出 DOCX。生成结果是 RTF 流，不是金山原生 WPS 格式。首次操作按任务类型分别自检：
+独立入口见 [wps](skills/wps/SKILL.md)。支持读取受限的 WPS 文字/RTF、定点编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和兼容导出 DOCX。生成结果默认使用 `.wps` 后缀，用户显式请求 `.rtf` 时保留；内容仍是 RTF 流，回执明确标注，不能称为金山原生 WPS 二进制。首次操作按任务类型分别自检：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/read_wps.py" --check
@@ -161,7 +161,9 @@ python3 -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 python3 -I -S -B "<skill-root>/scripts/export_wps.py" check
 ```
 
-读取正文可使用全量 JSON、纯文本或大纲/章节切片；创建、编辑与导出命令及其边界见 WPS 主入口。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取退出码 3 表示 `status=partial`，须保留已读内容和缺口诊断。
+读取正文可使用全量 JSON、纯文本或大纲/章节切片；创建、编辑与导出命令及其边界见 WPS 主入口。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
+
+WPS新建默认公文参照当前DOCX：上下25.4mm、左右31.8mm，仿宋16pt／Times New Roman、固定28pt、首行2字、零段前段后；标题层级、页眉页脚和默认关闭页码同步。未明确要求新页时自然分页，保留用户显式配置。RTF与OOXML不是同一格式，不保证字体回退或跨阅读器分页一致；现有DOCX→RTF导出不解析完整样式继承，不作为统一排版的捷径。仓库对照回归见 [测试](tests/test_wps_docx_official_parity.py)，350项历史测试结果、缓存告警与未验证范围见 [排版对齐记录](tests/wps_docx_official_alignment_20261104.json)。后续 DOC 回读与格式匹配修复的377项 WPS、2项对照测试、8份已有输入回归及真实二进制导出未通过的范围，见 [导出契约验证](tests/wps_export_contract_validation_20261104.json)。默认 `.wps`、显式 `.rtf` 的命名与回读回归见 [后缀验证记录](tests/wps_default_suffix_validation_20261104.json)。
 
 ### WPS 表格（.et/.ett）
 
@@ -311,7 +313,7 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
 | .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
 | .ofd | 1.0/1.1/1.2 XML 结构、存储文字、页资源与复合引用 | 不支持 | 已知版本统一判定；结构、命名空间与文字覆盖分开；不作全文/视觉或全规范认证 |
-| .wps/.rtf | WPS 文字按实际结构读取有限子集 | 生成 RTF 文档（可使用 .wps 后缀）、受控编辑及 DOCX 兼容导出 | RTF 流不是金山原生 WPS 格式；不承诺完整原生格式或页面视觉还原 |
+| .wps/.rtf/.doc | 按真实 RTF、MS-DOC 或 OOXML 结构读取有限子集 | 新建/重排及纯 Python 导出只写 .rtf/.wps；.doc 导出需 LibreOffice 实际生成并验签 | 输入读取不按后缀拒绝可靠内容；RTF 不是二进制 DOC 或金山原生 WPS；不承诺完整格式或视觉还原 |
 | .et/.ett | et 按实际结构读取 BIFF8/OOXML 有限子集及保存值/公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计、分组汇总及质量报告 | 只读预览或分析输出派生 JSON；不生成、编辑或转换办公文件 | 不自动识别表头、小计或总计；质量报告不认证业务正确性；公式默认排除，显式使用的缓存未证明最新；保留 partial，不写回原表 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 

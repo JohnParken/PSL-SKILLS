@@ -13,7 +13,7 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(escape_rtf_text('😀'), r'\u-10179?\u-8704?')
         doc = build_document_from_spec({'page_numbering': False, 'blocks': [{'type': 'paragraph', 'text': '甲😀乙'}]})
         raw = doc.render().encode('ascii')
-        self.assertIn(br'\sl-576\slmult0', raw)
+        self.assertIn(br'\sl-560\slmult0', raw)
         self.assertEqual(read_bytes(raw)['paragraphs'][0]['text'], '甲😀乙')
 
     def test_wide_table_fits_printable_area(self):

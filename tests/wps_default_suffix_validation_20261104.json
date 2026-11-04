@@ -1,0 +1,81 @@
+{
+  "task": "Default RTF deliverable suffix to .wps; preserve explicitly requested .rtf",
+  "timestamp_utc": "2026-11-04T13:57:30.451898+00:00",
+  "version": "20261104.2054.2758",
+  "version_clock": "2026-11-04T08:54:27.581502-05:00; America/New_York calendar time plus 12 hours",
+  "platform": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "python": "3.12.11"
+  },
+  "findings": [
+    "RTF export without output already uses input basename .wps in the input directory",
+    "Creation and reflow require explicit output paths; model chooses a concrete .wps name unless user explicitly requests .rtf",
+    "Existing signature/content readback already accepts RTF inside .wps and records the actual format"
+  ],
+  "changes": [
+    "Clarified default naming in Skill description, entrypoint, relevant references, README and CLI help",
+    "Preserved conversion logic, explicit .rtf output, binary-DOC constraints, partial propagation and input protection",
+    "Added five behavior regressions for .wps creation and default export, explicit .rtf, auto fallback default path and failed default export target preservation"
+  ],
+  "checks": {
+    "wps": {
+      "tests": 382,
+      "passed": 382,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "stdout_characters": 3824,
+      "stdout_display": "summarized; existing JSON receipts",
+      "stderr": "Expected negative-test invalid-extension diagnostic, then Ran 382 tests / OK"
+    },
+    "docx_official_parity": {
+      "tests": 2,
+      "passed": 2,
+      "exit_code": 0
+    },
+    "environment": "read_wps, run_wps_task, export_wps, standards help passed; Python 3.12.11",
+    "source_strict": {
+      "exit_code": 1,
+      "warnings": 56,
+      "reason": "Only preexisting __pycache__ directory and 55 pyc files; retained"
+    },
+    "cache_excluded_copy_strict": {
+      "exit_code": 0,
+      "result": "OK",
+      "temporary_copy_removed": true
+    },
+    "static": {
+      "ast": "passed",
+      "lines_over_200": 0,
+      "same_line_statements": 0,
+      "git_diff_check": "passed",
+      "pylint": "not run; unavailable"
+    },
+    "description": {
+      "characters": 129,
+      "manually_reviewed": true,
+      "model_selection_benchmark": "not run"
+    },
+    "test_development_issue": "Two initial path-equality assertions failed because macOS resolves /var to /private/var. Corrected expected paths using resolve; no runtime naming defect."
+  },
+  "verification_limits": [
+    "No WPS/Word client opening, font, pagination or save verification",
+    "No Linux or Windows validation",
+    "Previous actual LibreOffice binary-DOC probe failed; not retried or presented as successful native generation",
+    "RTF .wps compatibility confirmed only by the project reader and synthetic/document regressions"
+  ],
+  "repository": {
+    "committed": false,
+    "pushed": false,
+    "concurrent_changes": "Preserved all unrelated ET/XLSX/table-workflow/OFD and README changes"
+  },
+  "sha256": {
+    "skills/wps/SKILL.md": "00620cd02c9da3cdc90b44c60a90bbd3e66a9ad0337237a371c0267ccce2ec61",
+    "skills/wps/references/generation.md": "58cbc007d12331bddf19092b6efef63999d1d6f086d938901b4f8034585509a2",
+    "skills/wps/references/export-rtf-backend.md": "f1de9c8e953b8c5d2537b535c71893797a14591471716ef7b8c95d45188eba8b",
+    "skills/wps/scripts/run_wps_task.py": "bc336dd13811bb552db8bf0900f23bb3e1aa0d1c99758f993d4fe747de1a2f43",
+    "skills/wps/scripts/export_wps.py": "07eb994592f2d32081938d5f7fe0e6219946f594b79fb1ffe613d4732a2c2c3d",
+    "skills/wps/scripts/test_wps_output_contract.py": "be51370381286e0a18bd843b437e13b934cd58e6c905efe475807a5c5a68cc50"
+  }
+}

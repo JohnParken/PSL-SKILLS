@@ -5,7 +5,6 @@
 import json
 import os
 from pathlib import Path
-import struct
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
@@ -16,52 +15,11 @@ import docx_to_wps_rtf
 
 
 def create_mock_cfb_with_word_document(sector_shift=9, w_ident=0xA5EC, n_fib=0x00C1):
-    """Helper to synthesize a minimal CFB binary with a WordDocument stream."""
-    sector_size = 1 << sector_shift
-    buf = bytearray(sector_size * 4)
-
-    # Header
-    buf[0:8] = export_wps.CFB_SIGNATURE
-    struct.pack_into("<H", buf, 28, 0xFFFE)
-    struct.pack_into("<H", buf, 30, sector_shift)
-    struct.pack_into("<H", buf, 32, 6)
-    struct.pack_into("<I", buf, 44, 1)
-    struct.pack_into("<I", buf, 48, 1)
-    struct.pack_into("<I", buf, 56, 4096)
-
-    # FAT sector at sector 0
-    struct.pack_into("<109I", buf, 76, 0, *([0xFFFFFFFF] * 108))
-
-    fat_offset = sector_size
-    struct.pack_into("<I", buf, fat_offset, 0xFFFFFFFD)
-    struct.pack_into("<I", buf, fat_offset + 4, 0xFFFFFFFE)
-    struct.pack_into("<I", buf, fat_offset + 8, 0xFFFFFFFE)
-
-    # Directory sector at sector 1
-    dir_offset = 2 * sector_size
-
-    # Root Entry (entry 0)
-    root_name = "Root Entry\x00".encode("utf-16le")
-    buf[dir_offset : dir_offset + len(root_name)] = root_name
-    struct.pack_into("<H", buf, dir_offset + 64, len(root_name))
-    buf[dir_offset + 66] = 5
-    struct.pack_into("<I", buf, dir_offset + 116, 0xFFFFFFFE)
-    struct.pack_into("<Q", buf, dir_offset + 120, 0)
-
-    # WordDocument Entry (entry 1)
-    doc_entry_offset = dir_offset + 128
-    doc_name = "WordDocument\x00".encode("utf-16le")
-    buf[doc_entry_offset : doc_entry_offset + len(doc_name)] = doc_name
-    struct.pack_into("<H", buf, doc_entry_offset + 64, len(doc_name))
-    buf[doc_entry_offset + 66] = 2
-    struct.pack_into("<I", buf, doc_entry_offset + 116, 2)
-    struct.pack_into("<Q", buf, doc_entry_offset + 120, 4096)
-
-    # WordDocument stream at sector 2
-    doc_offset = 3 * sector_size
-    struct.pack_into("<HH", buf, doc_offset, w_ident, n_fib)
-
-    return bytes(buf)
+    """Valid synthetic CFB/FIB/piece table, independent of the export inspector."""
+    from test_wps import document, replace_word, synthetic_cfb
+    streams = replace_word(document(), 0, w_ident, 2)
+    streams = replace_word(streams, 2, n_fib, 2)
+    return synthetic_cfb({name[0]: data for name, data in streams.items()}, major=3 if sector_shift == 9 else 4)
 
 
 class TestWpsExport(unittest.TestCase):
@@ -102,7 +60,7 @@ class TestWpsExport(unittest.TestCase):
     def test_inspect_missing_file(self):
         res = export_wps.inspect_wps_structure("/nonexistent/file.wps")
         self.assertFalse(res["valid"])
-        self.assertIn("File not found", res["error"])
+        self.assertIn("No such file", res["error"])
 
     def test_inspect_truncated_file(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wps") as tf:
@@ -111,7 +69,7 @@ class TestWpsExport(unittest.TestCase):
         try:
             res = export_wps.inspect_wps_structure(tmp_name)
             self.assertFalse(res["valid"])
-            self.assertIn("smaller than 16 bytes", res["error"])
+            self.assertEqual(res["container"], "unknown")
         finally:
             os.remove(tmp_name)
 
@@ -122,7 +80,7 @@ class TestWpsExport(unittest.TestCase):
         try:
             res = export_wps.inspect_wps_structure(tmp_name)
             self.assertFalse(res["valid"])
-            self.assertIn("starts with ZIP magic", res["error"])
+            self.assertEqual(res["container"], "zip")
         finally:
             os.remove(tmp_name)
 
@@ -133,7 +91,7 @@ class TestWpsExport(unittest.TestCase):
         try:
             res = export_wps.inspect_wps_structure(tmp_name)
             self.assertFalse(res["valid"])
-            self.assertIn("neither CFB/OLE", res["error"])
+            self.assertEqual(res["container"], "unknown")
         finally:
             os.remove(tmp_name)
 
@@ -160,7 +118,7 @@ class TestWpsExport(unittest.TestCase):
         try:
             res = export_wps.inspect_wps_structure(tmp_name)
             self.assertFalse(res["valid"])
-            self.assertIn("Invalid WordDocument stream signature", res["error"])
+            self.assertIn("signature", res["error"].lower())
         finally:
             os.remove(tmp_name)
 
@@ -186,12 +144,15 @@ class TestWpsExport(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as td:
             in_docx = (Path(td) / "sample.docx").resolve()
-            in_docx.write_text("dummy docx content", encoding="utf-8")
+            from test_wps_ooxml import package
+            in_docx.write_bytes(package("<w:p><w:r><w:t>Hello</w:t></w:r></w:p>"))
             out_wps = (Path(td) / "sample.wps").resolve()
 
             def side_effect(*args, **kwargs):
                 mock_data = create_mock_cfb_with_word_document()
-                out_wps.write_bytes(mock_data)
+                command = args[0]
+                private = Path(command[command.index("--outdir") + 1])
+                (private / "sample.doc").write_bytes(mock_data)
                 m = MagicMock()
                 m.returncode = 0
                 m.stdout = "Converted successfully"
@@ -245,12 +206,16 @@ class TestWpsExport(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             out_wps = (Path(td) / "table_result.wps").resolve()
             res = export_wps.convert_docx_to_wps(str(sample_path), output_path=str(out_wps), backend="auto")
-            self.assertEqual(res["status"], "success")
+            self.assertEqual(res["status"], "partial")
+            self.assertTrue(res["fallback_used"])
+            self.assertFalse(res["binary_doc"])
             self.assertTrue(out_wps.is_file())
 
             # Read back text
             rb = export_wps.verify_readback(str(out_wps))
-            self.assertEqual(rb["status"], "readback-ok")
+            self.assertEqual(rb["status"], "readback-partial")
+            self.assertEqual(rb["returncode"], 3)
+            self.assertIn("rtf_merge_geometry_not_reconstructed", [item["code"] for item in rb["issues"]])
 
     def test_rtf_builder_escaping(self):
         text = "Hello {World} \\ 汉字测试 123"

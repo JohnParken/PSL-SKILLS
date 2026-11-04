@@ -4,7 +4,16 @@
 
 ## 概述
 
-`run_wps_task.py` 提供对标 DOCX 规范的轻量、原子化、声明式文档生成能力。直接生成金山 WPS 深度兼容的规范流文档（`.wps`），具备标准公文边距、中文字体映射、表格渲染与动态页码。
+`<skill-root>/scripts/run_wps_task.py` 生成 RTF 流（默认 `.wps` 后缀，显式请求 `.rtf` 时保留），默认公文参数参照项目 DOCX 公文模式；不是金山原生二进制，不承诺跨阅读器完全一致。无运行时 DOCX Skill 依赖。以下输入输出均位于宿主确认的任务工作目录。
+
+## 目录
+
+- 主题与默认值：`<skill-root>/references/generation.md#主题系统与公文规范`
+- 支持的块：`<skill-root>/references/generation.md#支持的-block-类型`
+- 产物验收：`<skill-root>/references/generation.md#产物验证与交付收尾`
+- RTF边界：`<skill-root>/references/generation.md#rtf结构与可验证排版范围`
+- 标题与表格：`<skill-root>/references/generation.md#标题制表位和表格增量`
+- 表格合并：`<skill-root>/references/generation.md#表格合并和边框`
 
 ## 核心命令与调用范式
 
@@ -31,15 +40,33 @@ JSON
 
 | 主题 | 页面边距与排版规则 | 适用场景 |
 |---|---|---|
-| `official`（默认） | GB/T 9704-2012 国家公文标准：上37mm、下35mm、左28mm、右26mm；标题小标宋/黑体，正文三号仿宋，首行缩进 2 字符，固定行距 28.8 磅。 | 党政机关通知、工作汇报、通报、纪要 |
+| `official`（默认） | 参照项目 DOCX 公文预设：A4，上下25.4mm、左右31.8mm；正文仿宋16pt，西文Times New Roman，左对齐、首行2字、固定28pt、零段前段后；默认不生成页码。 | 通知、工作汇报、通报、纪要 |
 | `business` | 严肃商业报告规范：边距 25.4mm（1英寸）；标题微软雅黑/黑体加粗，正文 11 磅，1.25 倍行距。 | 企业商业方案、项目分析、运营总结 |
 | `general` | 通用文档：边距 20mm；标题黑体/楷体，正文小四号宋体，1.2 倍行距。 | 日常备忘、说明文档、个人笔记 |
 
+`official` 的主副标题和分级标题默认如下；西文均使用 Times New Roman，行距均为1.15倍，零首行缩进，默认与后文同页。这是实际预设，不等于公文标准认证。
+
+| 块 | 中文字体与字号 | 对齐／加粗 | 段前／段后（pt） |
+|---|---|---|---|
+| title | 方正小标宋简体22pt | 居中／否 | 0／12 |
+| subtitle | 方正小标宋简体14pt | 居中／否 | 0／8 |
+| heading 1 | 方正小标宋简体18pt | 居中／否 | 0／0 |
+| heading 2 | 黑体16pt | 左／否 | 0／0 |
+| heading 3 | 楷体16pt | 左／是 | 0／0 |
+| heading 4–9 | 仿宋16pt | 左／否 | 0／0 |
+
+页码使用 WPS 既有字段 `page_numbering`，显式 true/false 优先；business/general 仍默认开启。公文页眉页脚与启用后的页码采用仿宋／Times New Roman、16pt、左对齐、1.15倍行距。PAGE 域中的1仅为占位结果，实际页码由阅读器更新。读取器不提取页眉页脚和执行域，因此这些文档仍可能返回partial，不能抹去诊断。
+
+字体只写入名称，不检测安装、不嵌入字体。默认复合字体分别声明东亚与西文字体；显式 `runs[].font` 继续作为整段run的单一字体，字号等覆盖保留。映射支持方正小标宋简体；其他未知显式字体保留既有宋体回退，但回执新增 `unsupported_font_substituted` 并标记partial。缺少字体时实际替代仍由阅读器决定。
+
+默认不按章节、篇幅或空段猜测新页。用户未要求时，不添加 `page_break`、`page_break_before:true`；标题用 `keep_with_next`，正文由阅读器自然分页。用户明确要求时可在标题或段落设置 `page_break_before:true`，或用独立 `page_break`，同一位置只选一种；不静默删除显式分页。不支持 DOCX 分节和自动目录。
+
+本次默认值变更影响新建以及显式选择official的内容重排副本，不改写原件，不改变原文件的读取规则。需要旧外观时可显式给定page、paragraph参数及runs字体字号；页码仍可显式开启。DOCX的styles/profile/format不是WPS接口，不能直接照搬；未知配置继续报告spec_warnings。
+
 ## 支持的 Block 类型
 
-- `title`: 文档主标题（居中、黑体/小标宋、大字号）。
-- `subtitle`: 副标题（居中、楷体）。
-- `heading`: 1~4 级标题（左对齐、加粗、带 keep_with_next 孤行防脱落）。
+- `title`、`subtitle`: 主副标题，按主题取默认值。
+- `heading`: 1–9级标题，写入大纲级别；公文前四级对应DOCX，5–9级沿用四级外观。
 - `paragraph`: 正文段落，可包含 `text` 或富文本 `runs` 数组（支持字体、字号、加粗、斜体、下划线）。
 - `list`: 有序/无序列表项，带规整悬挂缩进。
 - `table`: 二维表格，自动分配列宽与单元格边框，支持表头背景色。
@@ -56,11 +83,15 @@ JSON
 
 paragraph支持align、space_before_pt、space_after_pt、indent_chars、line_spacing_exact_pt、line_spacing_mult、keep_with_next、keep_together、page_break_before、widow_control。显式倍数行距覆盖主题默认固定值；两者均显式指定时固定值优先，可用null清除相应行距。table必须非空矩形，col_widths以磅计、长度等于列数且总宽不超过正文区域；未指定时均分，不再强制最小列宽导致宽表溢出。不会按内容猜换页或渲染测量。
 
+title/subtitle/heading也接受上述段落参数和left_indent_pt/right_indent_pt/first_line_indent_pt/tabs_pt，显式值覆盖主题默认值。公文正文字符缩进同时写入cufi和等效fi回退，默认2字／32pt；显式first_line_indent_pt只使用磅数，不被字符缩进覆盖。基础公文不强制widow_control，保留阅读器默认；用户可显式设置。keep_together与keep_with_next是阅读器排版请求，不保证超长内容不分页。
+
+公文表格使用仿宋／Times New Roman16pt、1.15倍行距、无首行缩进、零段前段后；表头居中加粗、无默认灰底，数据行默认左对齐，默认请求行内不拆分，可由row_keep_together覆盖。列表使用16pt、1.15倍行距、零段前段后与悬挂缩进，但仍是字面编号；自动续号、列表细节、表格内边距及callout不宣称与DOCX等价。RTF生成成功和回读成功不证明字体可用或视觉分页一致。
+
 编辑为content_reflow_not_lossless：保留可获得的段落/表格顺序，重新排版，原字体、页眉页脚、字段、对象、修订和页面布局不保证保留。必须输出新文件；默认对partial输入或缺少表格顺序拒绝自动重建。用户明确接受潜在损失时，可加--allow-lossy-reflow（API: allow_lossy_reflow=True），只发布到未占用的新文件：保留已读内容、原始issues/diagnostics/omitted_regions及assessment，未知顺序明确采用正文段落后接表格，不声称恢复原位置。副本正文增加部分内容重排提示，回执partial=true、losses列明损失，CLI退出3；不据此跳过危险格式或资源检查，原件保持不变。创建/编辑先验证临时候选再发布；候选失败不覆盖目标。回执partial/源诊断与layout_verification=not_run分别核对，success不等于实机视觉验收。
 
 ## 标题、制表位和表格增量
 
-- heading.level支持1–9，写入对应0–8的RTF大纲级别；这是大纲语义，不是命名样式表、自动目录或读取器的格式识别保证。现有主题字体层级保留，三级以上沿用现有三级外观。
+- heading.level支持1–9，写入对应0–8的RTF大纲级别；这是大纲语义，不是命名样式表、自动目录或读取器的格式识别保证。公文5–9级沿用四级外观，其他主题三级以上沿用三级外观。
 - paragraph增加left_indent_pt、right_indent_pt及first_line_indent_pt；后者覆盖indent_chars，可用负值表达悬挂缩进。tabs_pt为严格递增的左对齐制表位磅数列表，例如[72,144]，正文用真实TAB字符。暂不支持右/居中/小数点制表位、引导符或多级编号。
 - list.start可指定字面有序列表的起始数字，默认1；旧项目文本和项目符号行为保留，不生成自动编号listtable，不能保证客户端自动续号。
 - table.col_alignments与列数一致，支持left/center/right/justify，作用于数据行，首行仍使用原表头样式。repeat_header默认true；只有header=true的首行可重复，false仅关闭重复，不取消表头样式。row_keep_together控制行内不拆分；与后行同页、重复表头、行内不拆分是不同控制，实际分页须客户端验收。
@@ -83,3 +114,5 @@ borders支持all/none/outer，也接受true/false分别规范化为all/none；bo
 正常重排编辑对已确认且无覆盖文字冲突的网格保留合并范围和物理列宽，输出新文件；这是受限结构往返，不是原格式无损编辑。partial输入仍走显式降级流程，保持原件并列明潜在结构损失。任意变宽行、嵌套表、复杂行偏移和跨页合并显示不在认证范围；候选partial仍须交付时说明。
 
 语义依据为微软RTF 1.9.1表格控制：保留每行cellx与cell数量对应，横向与纵向合并分别用独立标记；只实现上述可验证子集。未增加外部渲染依赖，未进行WPS/Word实机或跨平台分页验收。
+
+创建 CLI、公开 create_document API 与 RtfDocument.save 均只接受 `.wps/.rtf` 输出，拒绝将 RTF 写成 `.doc/.docx`。回执 `output_format=rtf`、`binary_doc=false`；需要二进制 DOC 时使用有条件的导出路径，见 `<skill-root>/references/export-libreoffice-backend.md`。

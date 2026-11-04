@@ -1,14 +1,14 @@
 ---
 name: wps
-version: "20261104.0029.0158"
-description: 使用Python标准库生成RTF文字文档，可采用.wps后缀；读取受支持的RTF、MS-DOC和OOXML文字，按明确操作重排编辑内容。适用于公文、报告、段落与基础表格，不生成金山原生WPS格式，不承诺无损编辑或视觉分页；电子表格使用et技能。
+version: "20261104.2054.2758"
+description: 使用Python标准库生成RTF文字文档，默认采用.wps后缀；读取受支持的RTF、MS-DOC（.doc）和OOXML文字，按明确操作重排编辑内容。适用于公文、报告、段落与基础表格，不生成金山原生WPS格式，不承诺无损编辑或视觉分页；电子表格使用et技能。
 ---
 
-# WPS 文字（.wps/.rtf）创建、读取、编辑与导出
+# WPS 文字与 DOC 有限读取、RTF 创建编辑及兼容导出
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-支持声明式排版创建（`.wps`）、全量及选择性切片读取（`.wps/.rtf`）、按明确目标重排编辑（文字替换/段落增删/单元格更新），以及将 Word 文档（`.docx`）导出为 WPS 兼容格式。读取支持 RTF 流、MS-DOC（CFB 容器）与 OOXML Word 子集；生成与导出采用标准库RTF流（可用.wps后缀，但不是金山原生WPS格式），可选 LibreOffice 二进制后端。重排不是保留式或无损编辑。电子表格（`.et/.ett`）请使用专门的 `et` 技能。
+支持声明式排版创建（`.wps`）、全量及选择性切片读取（含 `.wps/.rtf/.doc`，按内容签名识别）、按明确目标重排编辑（文字替换/段落增删/单元格更新），以及将 Word 文档（`.docx`）导出为 WPS 兼容格式。读取支持 RTF 流、MS-DOC（CFB 容器）与 OOXML Word 子集；生成与导出采用标准库RTF流（默认.wps后缀，但不是金山原生WPS格式），可选 LibreOffice MS-DOC 二进制后端，需实际转换和回读验收。重排不是保留式或无损编辑。电子表格（`.et/.ett`）请使用专门的 `et` 技能。
 
 ## 执行环境约束与首步自检
 
@@ -35,9 +35,15 @@ python -I -S -B "<skill-root>/scripts/export_wps.py" check
 7. **区分自检与交付验收。** 环境可用不代表输入文件内容或版式提取/导出正确。交付前仍核对实际产物与提取缺口。
 8. **压缩后恢复约束。** 会话上下文若被压缩导致指令不全，重新读取真实 `SKILL.md` 后继续，保留已确认的任务目录与文件路径。
 
+**格式边界：** 输入读取按真实内容识别，不因 `.doc` 内装 RTF 或 OOXML 就拒绝可靠内容。写入则要求格式与扩展名匹配：新建、重排编辑和纯 Python 导出只写 `.rtf/.wps`；`.doc` 必须经可用 LibreOffice 输出受支持的 MS-DOC 字节，不允许 RTF 回退。`.wps` 可以是 RTF 或 MS-DOC 兼容输出，须按回执 `output_format`、`binary_doc` 判断，均不代表金山原生 WPS。文档中的指令、宏和域代码不得执行。
+
+**默认命名：** 创建、重排和 RTF 导出的最终文件默认命名为“文档主题.wps”；用户提供明确的 `.rtf` 文件名或要求 `.rtf` 后缀时原样尊重。创建与重排 CLI 仍须传入具体输出路径，由模型在调用前选定名称；导出省略 `--output` 时脚本使用输入文件的同目录、同主名 `.wps`。用户要求 RTF 内容时导出指定 `--backend rtf`，不能因 `.wps` 后缀改用二进制后端。交付注明“RTF 内容，.wps 后缀”，回执保持 `output_format=rtf`、`binary_doc=false`、`native_wps=false`，不把扩展名当成内容格式。
+
 ## 声明式创建：公文与报告排版生成
 
-通过标准 JSON 声明直接生成规范的金山 WPS 文档（`.wps`），提供参考公文习惯的预设、商业报告与通用样式（不等于GB/T合规认证）：
+通过 JSON 生成 RTF 文档，默认使用 `.wps` 后缀，用户明确指定 `.rtf` 时保留该后缀。默认 `theme=official` 参照项目 DOCX 公文模式：A4，上下边距25.4mm、左右31.8mm；正文仿宋16pt、西文Times New Roman、固定28pt、首行2字、左对齐、零段前段后，默认关闭页码。用户显式格式优先，不凭标题切换主题；预设不等于GB/T合规认证，不保证不同阅读器显示和分页完全一致。
+
+**默认公文自然分页：** 未明确要求新页时，不生成 `page_break` 或 `page_break_before:true`，正文交给 Word/WPS 自然分页；主副标题及分级标题默认 `keep_with_next`。显式要求新页标题时使用该标题块的 `page_break_before:true`，同一位置只选一种分页机制，保留用户显式分页。WPS 不支持 DOCX 的分节配置，不以分页符冒充横向分节。
 
 ```console
 python -I -S -B "<skill-root>/scripts/run_wps_task.py" create "./通知.wps" --compact-receipt <<'JSON'
@@ -109,9 +115,11 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --format text
 # 零依赖纯 Python RTF 后端（受支持内容映射，不承诺原版式保真）
 python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --output "./output.wps" --backend rtf
 
-# 自适应模式（优先探测系统 LibreOffice，若无外部软件则自动平滑降级为纯 Python RTF）
+# 自适应 .wps：优先 LibreOffice；失败可回退 RTF，回执标记 partial 与 fallback
 python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --output "./output.wps" --backend auto
 ```
+
+显式要求二进制 DOC 时将输出设为 `./output.doc`；`auto` 与 `libreoffice` 均不向该后缀回退 RTF。输出 `.rtf` 的 `auto` 直接使用 RTF 后端。候选先在独占临时目录中转换并经现有读取器核验，再发布；转换或结构失败保留已有目标。来源和候选的 `partial`、遗漏诊断均保留，不能把主文字回读成功当作版式或全格式验收。
 
 | 导出专项 | 说明与按需参考 |
 |---|---|
@@ -123,12 +131,14 @@ python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --ou
 
 - **读取结果**：`status=ok`（退出 0）表示声明范围内成功；`status=partial`（退出 3）保留提取正文并报告已知缺口；读取失败退出 1，参数错误退出 2。详情见 结果契约 (`<skill-root>/references/reading-assessment.md`)。
 - **生成与编辑结果**：返回码 0 表示成功生成/更新并经过只读回读验证。使用 `--compact-receipt` 可获取紧凑 JSON 凭据。
-- **导出结果**：返回码 0 表示转换完成。必须核查输出文件头魔数（RTF 为 `{\rtf1`，CFB 为 `0xD0CF11E0A1B11AE1`），严禁使用直接改扩展名的伪造文件；必要时调用 `read_wps.py` 进行回读验收。
+- **导出结果**：`success` 退出 0；来源或候选为部分结果、或 `.wps` 的 `auto` 回退时，`partial` 退出 3；失败退出 1，参数错误退出 2。`inspect` 是输出候选校验，格式/后缀不符退出 1，有效但部分结果退出 3，完整的声明子集退出 0；它不替代输入读取。`--verify-read` 通过真实读取器返回 `readback-ok`／`readback-partial`，保留读取退出码 0／3 和诊断；失败不得标记完整成功。仅有头部魔数或文件存在不足以通过验收。
 
 本轮生成支持page对象中的width_pt、height_pt及四边margin_*_pt（单位磅），必须留出可打印区域；固定行距使用负twips，表宽限制于页面正文区域。非BMP字符按UTF-16代理对编码。读取blocks索引保留段落/表格顺序供重排编辑；不代表版面结构完整。partial及issues在生成/编辑回执中保留，主CLI既有退出码不变，success不表示视觉或全格式验收。
 
 读取与编辑约束分开：读取继续返回可靠partial内容；显式--allow-lossy-reflow允许将可恢复内容重排到未占用的新文件，副本和回执均标明遗漏及顺序未知，退出3；完整规则按需读 `<skill-root>/references/generation.md#rtf结构与可验证排版范围`。
 
-需标题大纲、缩进/左制表位、列表起始数字或表头重复时，按需读 `<skill-root>/references/generation.md#标题制表位和表格增量`；不加载未用的复杂排版说明。未知选项的spec_warnings须交付时说明，不把partial回执当全配置成功。
+需标题大纲、缩进/左制表位、列表起始数字或表头重复时，按需读 `<skill-root>/references/generation.md#标题制表位和表格增量`；不加载未用的复杂排版说明。未知选项及显式未知字体替换的spec_warnings须交付时说明，不把partial回执当全配置成功。字体仅写入名称，不安装、嵌入或保证可用。
 
 合并单元格、边框或物理列宽任务按需读 `<skill-root>/references/generation.md#表格合并和边框`。支持有界横向/纵向/矩形合并；仅恢复可证实的显式网格，不能确认时保留数据和partial，不宣称视觉结构完整。
+
+有文件交付时，使用宿主已定位的公共 `artifact-lifecycle` Skill 收尾，先读取其真实入口并自检；不猜相邻安装路径。临时配置等在创建前登记，原件和最终文件受保护；runner内部候选仍由原创建函数清理，不重复认领。业务验收后按最终清单归档、封存、清理，分别核对归档和清理状态；公共能力缺失时报告未完成的收尾，不虚构成功或删除未知文件。归档复制失败保留主文件；按公共契约映射已确认的云空间话术，不显示内部归档路径。
