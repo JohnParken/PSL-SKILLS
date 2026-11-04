@@ -1,0 +1,490 @@
+{
+  "schema_version": "et_table_analysis_evidence_v1",
+  "checked_on": "2026-11-04",
+  "skill_version": "20261104.0945.4309",
+  "version_clock": {
+    "america_new_york_sample": "2026-11-03T21:45:43.095500-05:00",
+    "calendar_hours_added": 12
+  },
+  "platform": {
+    "system": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.11",
+    "requested_exact_version_verified": true,
+    "expat": "2.6.3",
+    "isolated_no_site_no_bytecode": true,
+    "linux_container": "not_run",
+    "windows": "not_run"
+  },
+  "implementation": {
+    "entry": "scripts/analyze_et.py",
+    "data_selection": "scripts/et_table_data.py",
+    "analysis": "scripts/et_table_analysis.py",
+    "tests": "scripts/test_et_table_analysis.py",
+    "offline_original_verifier": "scripts/verify_et_analysis.py",
+    "source_reader_modified": false,
+    "runtime_dependencies": "Python standard library and this skill's existing reader modules only",
+    "runtime_network": false,
+    "source_writeback": false,
+    "output": "et_table_analysis_v1 with nested et_table_quality_v1, or et_table_preview_v1; JSON stdout only",
+    "additional_tests": "scripts/test_et_table_row_selection.py",
+    "quality_report": "scripts/et_table_quality.py",
+    "rectangular_preview": "scripts/et_table_preview.py",
+    "quality_preview_tests": "scripts/test_et_table_quality_preview.py"
+  },
+  "scope": [
+    "Explicit worksheet/rectangle selection and existing merge-aware header reconstruction",
+    "Typed AND filters, physical column projection, stable multi-key sort and stable first-row distinct",
+    "Column profiles, exact bounded Decimal sum/median/min/max, 34-digit half-even mean with inexact flag",
+    "Typed grouping with count, distinct count, numeric measures and explicit unavailable-key counts",
+    "Default formula exclusion; explicit cached policy retains unverified freshness and excludes missing/error caches",
+    "Blank, absent cell, empty text, boolean, numeric text and numeric values remain distinct",
+    "Default merged-cell preservation; explicit plain-text-only label propagation with source provenance",
+    "Source partial/diagnostics preserved; independent row/group preview pagination does not shrink statistics scope",
+    "Explicit physical-row exclusions before value filters and merge propagation, with original row identities and separate counts",
+    "Selected-rectangle issue positions are distinguished from matching-data positions without hiding original partial diagnostics",
+    "Factual per-column quality coverage partition, bounded source-coordinate findings, declared-header label checks and whole-group coverage; no correctness score",
+    "Explicit rectangular header-region preview includes missing/blank positions and merge anchors without inferring headers, filling values or computing statistics"
+  ],
+  "description_review": {
+    "characters": 130,
+    "changed": true,
+    "reason": "Describe the implemented header-region preview and factual quality diagnostics while preserving stored-value/read-only/native-XLSX boundaries",
+    "manual_applicable": [
+      "Read ET/ETT saved values and inspect formula caches",
+      "Filter selected ET rows and summarize numeric saved values by category",
+      "Sort or deduplicate a derived ET table without changing the original",
+      "Exclude explicitly identified subtotal or repeated-header rows from a selected ET region",
+      "Inspect an explicit ET header region before choosing header rows",
+      "Explain missing/cache/non-numeric coverage behind selected-region numeric statistics"
+    ],
+    "manual_not_applicable": [
+      "Edit or recalculate an ET workbook",
+      "Write the transformed table back as ET/ETT",
+      "Read native XLSX using this skill"
+    ],
+    "automated_trigger_evaluation": "not_run"
+  },
+  "synthetic_validation": {
+    "focused_tests": 61,
+    "focused_status": "passed as part of full suite",
+    "full_suite": {
+      "python": "3.12.11",
+      "run": 450,
+      "passed": 450,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "command_from_repository_root": "python -I -S -B -m unittest discover -s skills/et/scripts -p 'test_*.py'",
+    "independent_expectations": [
+      "Hand-specified 12-row mixed-type table: five usable numbers sum to 40.1; numeric median 10.1; mean 8.02",
+      "Explicit cached policy uses stored 999 and yields 1039.1, without evaluating its formula",
+      "North/South exact sums 19.9/20.2 with row counts 9/3 and numeric denominators 3/2",
+      "Filter-distinct-sort pipeline yields source rows 3,2,8 and sum 30.3",
+      "Fraction independently checks cancellation of 1e1000, 1e-1000 and -1e1000, independent of caller Decimal context",
+      "BIFF byte fixture yields 3.75 without cache and 1002.75 with explicit stored cache",
+      "OOXML byte fixture yields exact 0.3 while keeping ISO date text and including an explicitly hidden row",
+      "Synthetic report includes detail, subtotal, grand total and repeated header rows: raw cached sum 1.125; four explicit row exclusions yield detail sum 0.375, mean 0.09375, median 0.1125 and group sums 0.30/0.075",
+      "Seed 20261104: 120 signed fractional values; Fraction independently verifies all filtered and row-excluded group sums and medians under hostile caller Decimal context",
+      "Actual BIFF CLI with excluded physical row 2 keeps stored cache 999 and exact sum 1000.25, returns partial/3 and leaves input bytes unchanged",
+      "Mixed-type fixture numeric coverage partitions all 12 positions into 5 included numbers, 3 unavailable, 1 blank, 1 missing and 2 usable non-numbers",
+      "Quality reporting is identical across row-preview pagination and select projection; bounded findings use original row order with explicit truncation",
+      "Unverified blank and empty-text caches are distinct from numeric zero; quality findings may overlap but numeric partition does not",
+      "OOXML preview preserves text identifier 001 and saved formula cache 7 for expression 1+1, without recalculation"
+    ],
+    "failure_and_boundary_coverage": [
+      "Projection/failure schema refusal; invalid types, unknown fields, malformed/duplicate JSON keys and lone Unicode surrogate",
+      "Unavailable formula/error values never match ordinary blank, are not zero, and are not deduplicated as equal unknowns",
+      "Merged numbers are not propagated; text fill is traceable and refuses overwriting non-anchor content",
+      "Header merge clipping/crossing refusal; unavailable formula headers preserved as unavailable labels",
+      "Grid/rectangle/query/group/output budgets; nonfinite/float/bool-as-number rejection",
+      "Complete failure JSON on output budget errors, CLI partial exit 3, usage exit 2 and no input mutations",
+      "Synthetic workbook cannot masquerade as pinned original provenance",
+      "Excluded merge anchors are never propagated, excluded targets are never filled; existing non-anchor content remains protected",
+      "Excluded header/leading/out-of-range/duplicate/non-integer rows rejected; 10000-row budget and original rectangle/cell checks remain enforced",
+      "Empty result after excluding all data rows retains null statistics and source partial; selected-only header caches never count as matching-data caches",
+      "Quality sample limits require an integer 0..20; missing/blank/non-numeric observations do not invent a quality score or change source status",
+      "Duplicate/empty/unavailable declared-header labels preserve physical column identities; no automatic header inference or renaming",
+      "Preview accepts only sheet/range/offset/limit, refuses analysis options and header declarations, and preserves original selection and output budgets",
+      "Partial/source diagnostics survive preview; off-page/out-of-selection merge anchors are identified without filling; missing positions are explicit",
+      "BIFF CLI preview returns source status, complete failure JSON on output-budget errors and no original mutation; OOXML preview uses actual parsing"
+    ],
+    "baseline_full_tests": 417,
+    "new_row_selection_tests": 13,
+    "quality_preview_baseline_full_tests": 430,
+    "new_quality_preview_tests": 20
+  },
+  "real_source_validation": {
+    "source_oracle_repository_path": "tests/wps_source_oracle.py",
+    "source_oracle_sha256": "74746845b7a7dffa0aea399c36b73578b9eb563b8ab5d83d7e3fca327218e66e",
+    "method": "Independent source observations and Fraction sums frozen before target reading/analysis; original file SHA pinned; no source oracle imports from ET parser",
+    "expectation_digest_fields": [
+      "column",
+      "region",
+      "numeric_count",
+      "cached_count",
+      "distinct_numbers",
+      "sum_fraction"
+    ],
+    "expectation_encoding": "UTF-8 json.dumps(mapping, sort_keys=True), default separators; SHA-256",
+    "formula_policy": "cached explicitly; no freshness certification or recalculation",
+    "numeric_caches_used": 19,
+    "source_derived_groups_matched": 14,
+    "fraction_sums_matched": 3,
+    "status": "all_partial_and_matched",
+    "originals_saved_or_bundled": false,
+    "producing_wps_version_verified": false,
+    "redistribution_rights": "not established; originals fetched into memory only",
+    "maintenance_https": "default TLS validation, no redirects, pinned hashes and 4 MiB download cap; no runtime downloader added",
+    "scope_limit": "Fixed-column arithmetic verification, not business report totals; Balance Sheet and Start-up selected numeric columns contain repeated zero values. Diverse negative/fractional/typed groups are synthetic evidence.",
+    "initial_source_only_probe": "Amortization had no non-formula numeric values for the proposed default-policy column selection; target analysis was not run. Validation switched to the documented three-file set with explicit cached policy.",
+    "samples": [
+      {
+        "name": "Balance_Sheet.ett",
+        "url": "https://raw.githubusercontent.com/winunix/wps-office-templates/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7/deb_package/opt/kingsoft/wps-office/office6/mui/pt_BR/templates/et/Business/Balance%20Sheet.ett",
+        "sha256": "1124b720ad792c52cf5a5e39cd99bbebd512b200523070dd3fd035ea37af427b",
+        "region": "B8:B52",
+        "numeric_count": 36,
+        "cached_count": 11,
+        "distinct_groups": 1,
+        "expectation_sha256": "d9a1e97b27120f3ba19223236364b96f73ea1223ecb3fc040dbe957f2780917e",
+        "fraction_sum_matched": true,
+        "input_bytes_unchanged": true
+      },
+      {
+        "name": "Schedule.ett",
+        "url": "https://raw.githubusercontent.com/winunix/wps-office-templates/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7/deb_package/opt/kingsoft/wps-office/office6/mui/pt_BR/templates/et/Office/Schedule.ett",
+        "sha256": "23d27b4e72eb4c83dd888593df2552d9d4134749762918baeffa57b97799a9eb",
+        "region": "C4:C15",
+        "numeric_count": 12,
+        "cached_count": 0,
+        "distinct_groups": 12,
+        "expectation_sha256": "685f446189eaf97caf7176aa4fa8d6c4ce2f67e0237526fc9d229d38a9273429",
+        "fraction_sum_matched": true,
+        "input_bytes_unchanged": true
+      },
+      {
+        "name": "Start-up Expenses.ett",
+        "url": "https://raw.githubusercontent.com/winunix/wps-office-templates/64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7/deb_package/opt/kingsoft/wps-office/office6/mui/pt_BR/templates/et/Business/Start-up%20Expenses.ett",
+        "sha256": "71f0a34a74a17989c3dd20edc64d741bf6f10e5c189148043e7f6c2354aff149",
+        "region": "C7:C71",
+        "numeric_count": 36,
+        "cached_count": 8,
+        "distinct_groups": 1,
+        "expectation_sha256": "97f1b594bb6cbbb16a5f425e9fb4a4da2674178a5c8ac66420399df6c2a17dd2",
+        "fraction_sum_matched": true,
+        "input_bytes_unchanged": true
+      }
+    ],
+    "offline_verifier_function_rechecked": "verify_bytes passed all three originals against the same frozen expectation digests; source data supplied in memory by maintenance harness",
+    "numeric_values_covered": 84,
+    "observation_granularity": "Baseline: aggregate numeric/cache/group counts and Fraction sums over 84 values. Additional row-selection and quality-preview iterations below state their own per-cell, position, header and statistics coverage; overlapping observations are not added as unique values.",
+    "current_verifier_recheck": "All three pinned originals passed the current offline verifier. Baseline 84-value aggregate observations and Startup row exclusions remain matched; Schedule now additionally verifies 48 nonzero per-cell numeric observations, 12 saved caches, 12 groups, mean rounding, quality coverage and 10 preview values. These scopes overlap and must not be added as independent counts."
+  },
+  "structure_and_isolation": {
+    "source_strict_command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict",
+    "source_strict_exit_code": 1,
+    "source_errors": 0,
+    "source_warnings": 70,
+    "source_warning_scope": "Existing __pycache__ directory plus 69 pre-existing bytecode files; preserved, no non-cache warnings",
+    "clean_copy_strict_exit_code": 0,
+    "clean_copy_files": 141,
+    "readonly_file_mode": "0444",
+    "readonly_directory_mode": "0555",
+    "empty_PATH": true,
+    "python": "3.12.11",
+    "self_check": "exit 0; environment-ok; ooxml-sheet=available",
+    "focused_tests": {
+      "run": 61,
+      "passed": 61,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "full_suite": {
+      "run": 450,
+      "passed": 450,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "source_and_copy_hashes_unchanged_after_checks": true,
+    "explicitly_registered_temporary_copy_cleaned": true,
+    "copy_exclusion": "Only existing __pycache__ excluded; target installation itself not altered to obtain a clean check",
+    "recording_note": "Checks ran with current runtime/docs; this evidence JSON was updated after check completion. No executable code changed after the successful checks."
+  },
+  "static_checks": {
+    "five_new_python_files_ast": "passed",
+    "lines_over_200": 0,
+    "semicolon_statement_operators": 0,
+    "pylint": "Current explicit C0301/C0321 invocation exits 1: No module named pylint. No package installed; AST/token/line-length checks do not substitute for Pylint or a naming linter.",
+    "git_diff_check": "passed for skills/et",
+    "four_changed_python_files_ast": "passed for et_table_data.py, et_table_analysis.py, verify_et_analysis.py and test_et_table_row_selection.py",
+    "seven_quality_preview_python_files_ast": "passed for analyze_et.py, et_table_data.py, et_table_analysis.py, et_table_quality.py, et_table_preview.py, verify_et_analysis.py and test_et_table_quality_preview.py"
+  },
+  "remaining_limits": [
+    "No Linux container or Windows acceptance run; macOS tests do not substitute for target-platform validation",
+    "No date-period grouping, units conversion, joins, new formula evaluation, office export or original-file writeback",
+    "No producer-version, rendered-layout, latest-cache or business-total certification",
+    "Shared README is not edited by this work line; parent must synchronize its ET version/capability row"
+  ],
+  "manual_consistency_review": {
+    "description": "130 Unicode characters; actual preview/quality capability added; no automatic-header, freshness or business-correctness claim",
+    "entry_and_routes": "Main entry and bounded-reading reference route to explicit --preview; table-analysis reference specifies quality denominator/sample and preview pagination/omission contracts",
+    "consumer_contract": "Full source schemas and separate derived analysis schema explained; cache gaps no longer described as universally blocking this new consumer",
+    "dependencies": "requirements.txt unchanged; all new runtime and verification code standard library only",
+    "shared_readme": "Prior closeout synchronized README to 20261104.0720.2881 and physical-row exclusions. Current iteration leaves README untouched; parent must update version to 20261104.0945.4309 and quality/preview wording.",
+    "delivery": "stdout-only; no new file delivery, archive, cleanup or original-format writeback",
+    "installation": "Internal resources resolve from script/SKILL location; no developer absolute path embedded"
+  },
+  "host_output_contract": {
+    "script_channels": "Read-only copy checks captured real stdout/stderr/returncode individually; CLI tests cover success/partial/failure/usage and complete failure JSON",
+    "executor_payload": "Full JSON with actual per-command channels and exit codes was returned to the model",
+    "model_received": "Complete readonly-check JSON, full-suite totals and real-original verifier JSON were visible",
+    "executor_internal_implementation": "not inspected; subprocess capture does not certify all host invocations"
+  },
+  "row_selection_iteration": {
+    "skill_version": "20261104.0720.2881",
+    "problem": "Actual Start-up Expenses template interleaves detail and summary rows within a contiguous region; old query had no explicit physical-row exclusion. Existing diagnostics also did not label selected-versus-matched position scopes.",
+    "implementation": "exclude_rows is an optional list of unique physical data-row integers; it runs before plain-text merge propagation, value filters, distinct, sort and statistics. It does not bypass parsing, cell validation or source resource budgets.",
+    "source_reader_modified": false,
+    "source_sample_sha256": "71f0a34a74a17989c3dd20edc64d741bf6f10e5c189148043e7f6c2354aff149",
+    "independent_method": "Before target analysis, standalone repository source oracle provided numeric/formula/text records. A separate struct.unpack of 0x00E5 records confirmed C1:D1 and F2:G2 geometry. Frozen expectations use Fraction arithmetic and source labels to identify five explicitly chosen rows; runtime does not infer subtotal roles.",
+    "frozen_expectation_sha256": "10657378e3b15a62b94a7ccbdcfd16e883417ea1202a49e493958b2a695ca1db",
+    "expectation_encoding": "UTF-8 json.dumps(mapping, sort_keys=True), default separators; SHA-256",
+    "frozen_observations": {
+      "excluded_source_rows": [
+        11,
+        24,
+        31,
+        39,
+        48
+      ],
+      "raw_numeric_count": 28,
+      "raw_cache_count": 4,
+      "numeric_source_rows": [
+        7,
+        8,
+        9,
+        10,
+        20,
+        21,
+        22,
+        23,
+        27,
+        28,
+        29,
+        30,
+        34,
+        35,
+        36,
+        37,
+        38,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47
+      ],
+      "detail_numeric_count": 23,
+      "detail_cache_count": 0,
+      "detail_sum_fraction": "0",
+      "header_value_sha256": "d1d936ca1aa8bb86cb48972330ec9ee07176c9a10d725935d9fe5bc8dfeef59d",
+      "header_sources": [
+        "C1",
+        "C1"
+      ],
+      "header_merge": "C1:D1",
+      "merge_anchor_numeric_count": 1,
+      "merge_nonanchor_numeric_count": 0,
+      "merge_anchor_cache_count": 1,
+      "merge_anchor_sum_fraction": "39602"
+    },
+    "result": "passed, all source-derived analysis results remain partial, input bytes unchanged",
+    "coverage_limit": "Template detail values here are zero. Nonzero mixed-sign fractional business totals, missing values and precision diversity are synthetic evidence; no claim of populated business-report or fresh-cache acceptance.",
+    "maintenance_source_access": {
+      "originals_saved_or_bundled": false,
+      "initial_combined_probe": "Tool output was truncated and is not counted as verification; no claim about unseen results.",
+      "government_attempts": [
+        {
+          "url": "https://jt.zs.gov.cn/attachment/0/572/572379/2632463.et",
+          "sha256": "fec59f9e22694cba7403bd96505225a45075f7f5c1a9801472e20ac8e39e280a",
+          "status": "not_verified",
+          "reason": "SSL UNEXPECTED_EOF_WHILE_READING; no TLS bypass or retry after observed error"
+        },
+        {
+          "url": "https://jt.zs.gov.cn/attachment/0/564/564802/2603613.et",
+          "sha256": "ae032129a2d67b383abc391c17820769537936e8d97487ec2fdf8465cbe2e9b2",
+          "status": "not_verified",
+          "reason": "SSL UNEXPECTED_EOF_WHILE_READING; no TLS bypass or retry after observed error"
+        }
+      ]
+    },
+    "synthetic_tests": 13,
+    "focused_total": 41,
+    "full_total": 430,
+    "failed": 0,
+    "skipped": 0,
+    "linux_container": "not_run",
+    "windows": "not_run",
+    "pylint": "unavailable",
+    "shared_files_edited_in_this_iteration": false,
+    "committed_or_pushed": false
+  },
+  "quality_preview_iteration": {
+    "skill_version": "20261104.0945.4309",
+    "found_gaps": [
+      "Existing profiles required manual reconstruction of numeric inclusion/omission coverage and had no bounded coordinate findings",
+      "Stored-cell pagination lacked explicit rectangular ranges and merge/missing-position context for choosing headers",
+      "Earlier real statistics largely used zero-value columns or only 12 nonzero Schedule values"
+    ],
+    "implemented": [
+      "Nested et_table_quality_v1 with disjoint numeric coverage partition, bounded findings, declared-header label facts and group coverage",
+      "--preview / et_table_preview_v1 with explicit physical rectangle, missing/blank/cache preservation, merge anchors and bounded row pages",
+      "Offline verifier extended to a frozen independent 48-nonzero-value Schedule observation set"
+    ],
+    "quality_limits": {
+      "sample_limit_default": 5,
+      "sample_limit_maximum": 20,
+      "sample_limit_zero": "counts only; omitted coordinate samples marked truncated",
+      "score": "not provided",
+      "scope": "all matched data before row/group preview pages; original selected-range diagnostics retained externally"
+    },
+    "preview_limits": {
+      "default_rows": 10,
+      "maximum_rows": 50,
+      "maximum_page_positions": 10000,
+      "original_selection_positions": 200000,
+      "maximum_columns": 256,
+      "snapshot_cache": false,
+      "auto_header_inference": false,
+      "value_fill": false,
+      "statistics_computed": false,
+      "formula_expressions_and_layout": "omitted explicitly"
+    },
+    "real_nonzero_validation": {
+      "sample": "Schedule.ett",
+      "sha256": "23d27b4e72eb4c83dd888593df2552d9d4134749762918baeffa57b97799a9eb",
+      "expectation_sha256": "b565d02005e5097ee4cc63be00c57368c4a7fca1443fb30117a4b4aa1035b537",
+      "method": "Independent source oracle decodes raw numeric/formula/text records before target analysis. Fraction computes exact sum/min/max/median. Mean expectation is rounded independently using integer digit scaling, divmod and a remainder comparison with ties to an even quotient; no target Decimal summary function is used.",
+      "expectation_encoding": "UTF-8 json.dumps(mapping, sort_keys=True), default separators; SHA-256",
+      "frozen_observations": {
+        "columns": {
+          "C": {
+            "numeric_count": 12,
+            "nonzero_count": 12,
+            "cache_count": 0,
+            "sum_fraction": "78",
+            "min_fraction": "1",
+            "max_fraction": "12",
+            "median_fraction": "13/2",
+            "mean_fraction": "13/2",
+            "mean_inexact": false,
+            "numeric_coverage": {
+              "numerator": 12,
+              "denominator": 12
+            },
+            "quality_unverified_positions": 0,
+            "default_numeric_count": 12,
+            "default_formula_excluded": 0
+          },
+          "E": {
+            "numeric_count": 12,
+            "nonzero_count": 12,
+            "cache_count": 0,
+            "sum_fraction": "429970",
+            "min_fraction": "35793",
+            "max_fraction": "35871",
+            "median_fraction": "35832",
+            "mean_fraction": "3583083333333333333333333333333333/100000000000000000000000000000",
+            "mean_inexact": true,
+            "numeric_coverage": {
+              "numerator": 12,
+              "denominator": 12
+            },
+            "quality_unverified_positions": 0,
+            "default_numeric_count": 12,
+            "default_formula_excluded": 0
+          },
+          "F": {
+            "numeric_count": 12,
+            "nonzero_count": 12,
+            "cache_count": 0,
+            "sum_fraction": "83",
+            "min_fraction": "1",
+            "max_fraction": "18",
+            "median_fraction": "9/2",
+            "mean_fraction": "6916666666666666666666666666666667/1000000000000000000000000000000000",
+            "mean_inexact": true,
+            "numeric_coverage": {
+              "numerator": 12,
+              "denominator": 12
+            },
+            "quality_unverified_positions": 0,
+            "default_numeric_count": 12,
+            "default_formula_excluded": 0
+          },
+          "G": {
+            "numeric_count": 12,
+            "nonzero_count": 12,
+            "cache_count": 12,
+            "sum_fraction": "430041",
+            "min_fraction": "35793",
+            "max_fraction": "35872",
+            "median_fraction": "35839",
+            "mean_fraction": "143347/4",
+            "mean_inexact": false,
+            "numeric_coverage": {
+              "numerator": 12,
+              "denominator": 12
+            },
+            "quality_unverified_positions": 12,
+            "default_numeric_count": 0,
+            "default_formula_excluded": 12
+          }
+        },
+        "numeric_values_sha256": "297d4586cd14ad7b050016ed07c5b7f9114c152db01b1d6fe6ac66b0dee4fd57",
+        "preview_known_coordinates": [
+          "C3",
+          "D3",
+          "E3",
+          "F3",
+          "G3",
+          "C4",
+          "D4",
+          "E4",
+          "F4",
+          "G4"
+        ],
+        "preview_values_sha256": "78beab77ee8cbfd81b15f4b884d15e363b88444ef0bfeaa538696027e3fb0362",
+        "group_count": 12,
+        "group_sums_sha256": "00174232a71cad7a4ab1fe56753b724472feb6599e71a697e2e3ddadbb0ad384"
+      },
+      "nonzero_values_matched": 48,
+      "numeric_caches_matched": 12,
+      "groups_matched": 12,
+      "preview_values_matched": 10,
+      "current_offline_verifier": "passed, including earlier three-file baseline and Startup exclusion observations",
+      "source_unchanged": true,
+      "all_results_partial": true,
+      "scope_limits": "Nonzero saved values are schedule ordinals, date serials and durations; this is not a populated financial amount dataset. Actual values here are integers, with independently verified recurring means in two columns. Mixed-sign fractional amounts remain synthetic validation. No cache-freshness or rendered-layout claim."
+    },
+    "new_tests": 20,
+    "focused_tests": 61,
+    "full_tests": 450,
+    "failures": 0,
+    "skipped": 0,
+    "exact_python": "3.12.11",
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "expat": "2.6.3",
+    "readonly_empty_path_checks": "passed",
+    "linux_container": "not_run",
+    "windows": "not_run",
+    "pylint": "unavailable; not installed",
+    "source_reader_modified": false,
+    "shared_files_edited_in_this_iteration": false,
+    "originals_saved_or_bundled": false,
+    "maintenance_https": "Previously pinned public sources only, normal certificate validation, no redirects, 4 MiB cap, memory only; earlier failing government HTTPS targets were not retried",
+    "source_strict_exception": "70 unchanged existing cache warnings, zero errors; clean readonly copy strict check passes",
+    "initial_test_correction": "Initial CLI preview test expected analysis-induced partial/3 for a source-ok synthetic BIFF. Corrected expectation to source-ok/0 because preview performs no calculation; source-partial preservation is separately verified. Imported TestCase class was changed to a module reference to avoid duplicate unittest discovery.",
+    "committed_or_pushed": false
+  }
+}

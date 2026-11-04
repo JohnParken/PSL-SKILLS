@@ -1,6 +1,6 @@
 """Conservative MS-XLS Lbl/Name stored-value metadata classifier.
 
-Permits a narrow ordinary static area or two-area union, plus built-in
+Permits a narrow ordinary static cell, area or two-area union, plus built-in
 Print_Titles/_FilterDatabase with exact bounded token forms. No name/print/
 filter evaluation or external link, macro, or formula execution.
 """
@@ -14,6 +14,7 @@ class UnsafeDefinedName(ValueError):
 
 MAX_STATIC_NAMES = 256
 AREA3D_TOKENS = frozenset((0x3B, 0x5B, 0x7B))
+REF3D_TOKENS = frozenset((0x3A, 0x5A, 0x7A))
 
 
 def _refuse(message):
@@ -27,10 +28,8 @@ PTG_PAREN = 0x15
 PTG_MEMFUNC = frozenset((0x29, 0x49, 0x69))
 
 
-def _area3d_record(token, sheet_count, internal_refs, itab):
-    """Read one exact 11-byte PtgArea3d; no interpretation of expressions."""
-    if len(token) != 11 or token[0] not in AREA3D_TOKENS:
-        _refuse('Name token is not an exact bounded PtgArea3d')
+def _internal_sheet(token, sheet_count, internal_refs, itab):
+    """Resolve only the already verified self-workbook XTI collection."""
     external_index = struct.unpack_from('<H', token, 1)[0]
     if external_index >= len(internal_refs):
         _refuse('Name formula has no verified internal XTI reference')
@@ -39,6 +38,32 @@ def _area3d_record(token, sheet_count, internal_refs, itab):
         _refuse('Name refers to a sheet span outside single-sheet subset')
     if itab and first_sheet != itab - 1:
         _refuse('Name local scope and internal XTI sheet disagree')
+    return external_index, first_sheet
+
+
+def _cell3d_record(token, sheet_count, internal_refs, itab):
+    """Read one exact absolute PtgRef3d; relative RgceLocRel is unsupported."""
+    if len(token) != 7 or token[0] not in REF3D_TOKENS:
+        _refuse('Name token is not an exact bounded PtgRef3d')
+    external_index, first_sheet = _internal_sheet(token, sheet_count, internal_refs, itab)
+    row, column = struct.unpack_from('<2H', token, 3)
+    if column & 0xC000:
+        _refuse('Relative defined-name cell unsupported')
+    if column >= 256:
+        _refuse('Invalid static defined-name cell column')
+    return {
+        'formula_token_raw': hex(token[0]),
+        'internal_xti_index_raw': external_index,
+        'internal_sheet_index_zero_based': first_sheet,
+        'bounds_zero_based': [row, row, column, column],
+    }
+
+
+def _area3d_record(token, sheet_count, internal_refs, itab):
+    """Read one exact 11-byte PtgArea3d; no interpretation of expressions."""
+    if len(token) != 11 or token[0] not in AREA3D_TOKENS:
+        _refuse('Name token is not an exact bounded PtgArea3d')
+    external_index, first_sheet = _internal_sheet(token, sheet_count, internal_refs, itab)
     row_first, row_last, col_first_raw, col_last_raw = struct.unpack_from(
         '<4H', token, 3)
     if col_first_raw & 0xC000 or col_last_raw & 0xC000:
@@ -180,7 +205,7 @@ def classify_static_builtin_name(payload, sheet_count, internal_refs):
 
 
 def classify_static_name(payload, sheet_count, internal_refs):
-    """Accept only a non-macro, direct internal absolute PtgArea3d range.
+    """Accept a non-macro internal absolute cell, area or two-area union.
 
     The caller has already validated CFB/BIFF framing, BOF/sheets and that
     the ExternSheet array refers only to a self SupBook. Name bytes are not
@@ -198,11 +223,18 @@ def classify_static_name(payload, sheet_count, internal_refs):
             not (name[0].isalpha() or name[0] == '_') or
             not all(ch.isalnum() or ch in '._' for ch in name)):
         _refuse('Name contains unsupported identifier characters')
-    areas, is_union = _static_area_expression(
-        payload[name_end:], sheet_count, internal_refs, itab, allow_union=True)
+    formula = payload[name_end:]
+    single_cell = len(formula) == 7 and formula[0] in REF3D_TOKENS
+    if single_cell:
+        areas = [_cell3d_record(formula, sheet_count, internal_refs, itab)]
+        is_union = False
+    else:
+        areas, is_union = _static_area_expression(
+            formula, sheet_count, internal_refs, itab, allow_union=True)
     single = areas[0]
     return {
-        'classification': 'ordinary_static_internal_area_only',
+        'classification': ('ordinary_static_internal_cell_only' if single_cell else
+                           'ordinary_static_internal_area_only'),
         'name_character_count': name_length,
         'name_sha256': hashlib.sha256(name.encode('utf-16le')).hexdigest(),
         'name_folded_sha256': hashlib.sha256(name.casefold().encode('utf-16le')).hexdigest(),

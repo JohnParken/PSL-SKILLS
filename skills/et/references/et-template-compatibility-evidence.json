@@ -1,0 +1,320 @@
+{
+  "schema_version": "et_template_compatibility_evidence_v1",
+  "checked_on": "2026-11-03",
+  "skill_version": "20261104.0050.0877",
+  "version_clock": {
+    "america_new_york_sample": "2026-11-03T12:50:08.773713-05:00",
+    "calendar_hours_added": 12
+  },
+  "platform": {
+    "system": "macOS 27.2 arm64",
+    "python": "3.12.11",
+    "expat": "2.6.3",
+    "isolated_no_site_no_bytecode": true,
+    "linux_container": "not_run",
+    "windows": "not_run",
+    "requested_exact_version_verified": true
+  },
+  "changes": [
+    "Data-only ordinary absolute single-cell PtgRef3d metadata; no evaluation or external links",
+    "Data-only bounded opaque CondFmt/CF groups; inner DXFN/formula bodies unvalidated and never applied",
+    "Data-only page-break layout anomalies preserved with raw bytes and diagnostics; frame/count/resource failures still rejected",
+    "Data/opaque-only precisely framed MsoDrawing note fragments with Obj/TxO/Continue/Note source retention; comments and drawing semantics unexposed and unverified",
+    "Data-only bounded DVal/Dv groups; rule flags/formulas preserved raw, never enforced, executed or followed"
+  ],
+  "description_review": {
+    "characters": 119,
+    "changed": false,
+    "reason": "Existing offline, read-only BIFF8 subset and partial boundaries remain accurate",
+    "manual_applicable": [
+      "Read an ET/ETT saved-value matrix",
+      "Inspect cached formula values in an ETT"
+    ],
+    "manual_not_applicable": [
+      "Edit or recalculate ET formulas",
+      "Read native XLSX using the ET skill"
+    ],
+    "automated_trigger_evaluation": "not_run"
+  },
+  "source": {
+    "repository": "https://github.com/winunix/wps-office-templates",
+    "commit": "64c6bd7628e7e3d88bed2fbdf6cbf7828c0762a7",
+    "path_prefix": "deb_package/opt/kingsoft/wps-office/office6/mui/pt_BR/templates/et/",
+    "redistribution": "Not established; originals fetched into memory only, no binaries bundled",
+    "producer_version_verified": false
+  },
+  "independent_oracle": {
+    "repository_path": "tests/wps_source_oracle.py",
+    "sha256": "74746845b7a7dffa0aea399c36b73578b9eb563b8ab5d83d7e3fca327218e66e",
+    "scope": "Plain SST text, Number/RK/MulRK and numeric Formula cache source values; no recalculation, error/text caches or effective display",
+    "ordering": "Source expectations computed and hashed before invoking the target reader",
+    "cell_counts": "Separate source-record count including known blank and multi-cell records"
+  },
+  "samples": [
+    {
+      "path": "Business/Amortization.ett",
+      "bytes": 59392,
+      "sha256": "498f0d61d65544ec3389e8f18c838059a2e332de72a35dd8e90f2f737a0d772d",
+      "oracle_sha256": "e4b87024594158ce856ea6a10eec09a9d649350184762e952c7b88b1de496973",
+      "before": {
+        "status": "unsupported",
+        "record": "0x18",
+        "offset": 4825
+      },
+      "after_name_fix_next_blocker": {
+        "record": "0x1b0",
+        "offset": 14093
+      },
+      "after": {
+        "status": "partial",
+        "cells": 260,
+        "independent_known_cell_count": 260,
+        "saved_values_matched": 35,
+        "unverified_numeric_caches_matched": 1,
+        "static_cell_names": 8,
+        "conditional_groups": 2,
+        "input_bytes_unchanged": true
+      }
+    },
+    {
+      "path": "Personal/Home Analysis.ett",
+      "bytes": 54784,
+      "sha256": "a5b164d2866ae6d794b7da5cb18c96a7edfade2dc50a2a642fe6477ed8407050",
+      "oracle_sha256": "c4251900caa180b7ab78ee88d34c5596df1e74480b1d00b01f4dc9facc4a3ee8",
+      "before": {
+        "status": "unsupported",
+        "record": "0x1b0",
+        "offset": 10394
+      },
+      "after": {
+        "status": "partial",
+        "cells": 309,
+        "independent_known_cell_count": 309,
+        "saved_values_matched": 35,
+        "unverified_numeric_caches_matched": 1,
+        "static_cell_names": 0,
+        "conditional_groups": 1,
+        "input_bytes_unchanged": true
+      }
+    },
+    {
+      "path": "Business/Start-up Expenses.ett",
+      "bytes": 63488,
+      "sha256": "71f0a34a74a17989c3dd20edc64d741bf6f10e5c189148043e7f6c2354aff149",
+      "oracle_sha256": "4af2a7a37d6af56716d5b152bab41d41668e422c5bf5ae61f253a1036c7af8d1",
+      "before": {
+        "status": "rejected",
+        "record": "0x1b",
+        "offset": 8288,
+        "reason": "Invalid horizontal page-break columns"
+      },
+      "page_break_observed": {
+        "row_raw": 0,
+        "column_start_raw": 65535,
+        "column_end_raw": 255,
+        "layout_valid": false
+      },
+      "after_page_break_fix_next_blocker": {
+        "status": "still_rejected",
+        "record": "0xec",
+        "offset": 15324,
+        "reason": "Drawing root type/length/version mismatch",
+        "independent_known_cell_count": 520,
+        "oracle_observed_values": 162,
+        "saved_values_matched": 0
+      },
+      "after": {
+        "status": "partial",
+        "cells": 520,
+        "independent_known_cell_count": 520,
+        "saved_values_matched": 162,
+        "unverified_numeric_caches_matched": 24,
+        "conditional_groups": 1,
+        "opaque_source_records_matched": 58,
+        "input_bytes_unchanged": true
+      },
+      "drawing_framing": {
+        "workbook_bytes": 18896,
+        "workbook_sha256": "0eacd32f4cd24c9a7112048f49458f5fa320f9b6039e9b2dd4f94328394ed779",
+        "first_fragment_offset": 15324,
+        "first_fragment_bytes": 194,
+        "root_body_declared_bytes": 1048,
+        "joined_drawing_bytes": 1056,
+        "drawing_sha256": "897511a94ebbaed4d8cbec9e748ff787f36151184583b95ffe52c6835721490e",
+        "fragments": 16,
+        "note_objects": 8,
+        "note_group_biff_records": 56,
+        "all_recursive_frame_ends_match": true,
+        "split_endpoints_match_actual_client_leaves": true,
+        "object_txo_continue_excluded_from_escher_lengths": true,
+        "note_terminal_unused_byte_observed": "omitted in all eight source Note records; absence explicitly recorded",
+        "semantics_and_rendering_verified": false
+      }
+    }
+  ],
+  "baseline_recheck": {
+    "samples": 4,
+    "saved_values_matched": 198,
+    "unverified_numeric_caches_matched": 33,
+    "status": "all_partial_and_values_match"
+  },
+  "initial_survey": {
+    "samples": 12,
+    "readable_partial": 4,
+    "rejected": 8,
+    "other_unresolved_first_failures": [
+      {
+        "sample": "Business/Expense Statement.ett",
+        "record": "0xe5",
+        "offset": 9292,
+        "reason": "Invalid merge bounds"
+      },
+      {
+        "sample": "Business/Invoice.ett",
+        "record": "0xeb",
+        "offset": 3648,
+        "reason": "Drawing root type/length/version mismatch"
+      },
+      {
+        "sample": "Business/Sales Analysis.ett",
+        "record": "0xec",
+        "offset": 40806,
+        "reason": "Drawing root type/length/version mismatch"
+      },
+      {
+        "sample": "Personal/Monthly Budget_Family.ett",
+        "record": "0xec",
+        "offset": 21178,
+        "reason": "Drawing root type/length/version mismatch"
+      },
+      {
+        "sample": "Personal/Women Fitness.ett",
+        "record": "0xec",
+        "offset": 12750,
+        "reason": "Drawing root type/length/version mismatch"
+      }
+    ],
+    "all_12_resurveyed_after_changes": false
+  },
+  "synthetic_validation": {
+    "added_tests": 39,
+    "python_3_13_suite": {
+      "run": 371,
+      "passed": 371,
+      "skipped": 0
+    },
+    "scope": [
+      "absolute coordinates and operand classes",
+      "macro/external/relative/extra token refusal",
+      "name collisions/budgets",
+      "page layout partial vs framing refusal",
+      "conditional group adjacency/count/ranges/formula lengths",
+      "raw bytes and saved cells unchanged",
+      "partial CLI JSON/stdout/empty stderr/exit 3",
+      "note fragments, multiple/empty text, encoding changes and split surrogate pairs",
+      "forged client marker within atom, unknown atom, parent bounds/depth/count, truncated chains",
+      "macro/link Obj and TxO refusal, invalid/duplicate object and cell links, text/run lengths",
+      "DVal/Dv adjacency, strings/formula/range partitions and metadata budgets",
+      "continued cell extraction before and after notes, source bytes unchanged, partial CLI JSON"
+    ],
+    "python_3_9_suite": {
+      "run": 371,
+      "passed": 335,
+      "skipped": 36,
+      "reason": "Host Expat below 2.6; OOXML tests retain their existing prerequisite skip"
+    },
+    "earlier_name_page_conditional_tests": 21,
+    "followup_note_validation_tests": 18,
+    "python_3_12_11_suite": {
+      "run": 389,
+      "passed": 389,
+      "skipped": 0
+    },
+    "earlier_suites_scope": "3.13 and 3.9 results predate the note/data-validation follow-up; only 3.12.11 ran the final 389-test suite"
+  },
+  "verification_limits": [
+    "No Office/WPS rendering or producer validation",
+    "No formula recomputation or whole-file semantic certification",
+    "No Linux/Windows execution for this iteration",
+    "Pylint is not installed; no Pylint-clean claim",
+    "Comment text/author output, OfficeArt properties, text runs, DVal flags and formula semantics are not interpreted or certified",
+    "General mixed drawings, arbitrary fragment splits and other object types remain unsupported",
+    "Other five initial template failures were not resurveyed in this follow-up"
+  ],
+  "network": {
+    "maintenance_only": true,
+    "tls_validation": true,
+    "redirects_refused": true,
+    "maximum_bytes_per_sample": 4194304,
+    "runtime_network_added": false,
+    "originals_saved": false
+  },
+  "host_output_evidence": {
+    "script_stdout": "Complete structured JSON was returned for real-sample probe; no saved cell contents printed",
+    "exit_code": 0,
+    "stderr": "Probe emitted no diagnostics; executor exposes merged output rather than separate raw channel artifacts",
+    "model_received": "Full probe JSON and actual return code visible in exec tool result",
+    "executor_separate_channel_internals": "not_verified",
+    "readonly_copy_checks": "Actual stdout, stderr and exit codes separately captured and returned as full JSON to the model for strict/selfcheck/39 focused tests; source process and tool result visible"
+  },
+  "maintenance_command": "python -I -S -B tests/et_template_compatibility_probe.py --download --include-baseline",
+  "structure_validation": {
+    "source_command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict",
+    "source_exit_code": 1,
+    "source_errors": 0,
+    "source_warnings": 70,
+    "source_warning_reason": "Existing __pycache__ directory plus 69 CPython 3.12 bytecode files; preserved, not owned by this task",
+    "cache_latest_mtime_utc": "2026-11-03T07:49:02.251808+00:00",
+    "clean_copy_strict_exit_code": 0,
+    "clean_copy_files": 130,
+    "clean_copy_scope": "Copied exact source excluding existing __pycache__; skill folder named et; files 0444 and directories 0555",
+    "empty_path_self_check": "environment-ok; ooxml-sheet=available; exit 0",
+    "empty_path_readonly_focused_tests": {
+      "run": 39,
+      "passed": 39,
+      "skipped": 0,
+      "python": "3.12.11"
+    },
+    "source_and_copy_sha256_unchanged_after_checks": true,
+    "registered_temporary_copies_cleaned": true,
+    "first_staging_attempt": "Rejected only because random target directory contained digits; cleaned, then corrected by preserving the et folder name",
+    "previous_clean_copy_validation": {
+      "files": 128,
+      "focused_tests": 21,
+      "scope": "prior name/page/conditional iteration"
+    }
+  },
+  "static_validation": {
+    "changed_python_ast_parse": "passed",
+    "git_diff_check": "passed",
+    "new_or_changed_helper_test_lines_over_200": 0,
+    "new_or_changed_helper_test_semicolon_statements": 0,
+    "existing_wps_biff8_exceptions": {
+      "over_200_lines": 6,
+      "semicolon_operators": 94,
+      "baseline_counts_unchanged": true
+    },
+    "pylint": "not_run: module not installed; no dependency installed",
+    "manual_review": "New constants and identifiers use required naming; import bootstrap preserved; byte inputs remain binary, text files explicitly UTF-8",
+    "limits": "AST/token counts are not Pylint C0301/C0321/C0103 verification"
+  },
+  "real_probe": {
+    "python": "3.12.11",
+    "status": "passed",
+    "originals": 7,
+    "saved_values_matched": 430,
+    "unverified_numeric_caches_matched": 59,
+    "note_validation_raw_records_matched": 58,
+    "downloaded_originals_saved": false,
+    "exit_code": 0
+  },
+  "manual_consistency_review": {
+    "description": "119 decoded Unicode characters; remains accurate, unchanged",
+    "main_entry": "data policy, partial, opaque note/validation scope and no execution documented",
+    "references": "advanced route, BIFF8 details, note/chart scope, noncell and real-sample evidence synchronized",
+    "requirements": "unchanged; Python >=3.9 and standard library only",
+    "repository_readme": "Shared README not edited per parallel-task restriction; ET row still says 20261103.1343.4800 and needs parent-owned synchronization to 20261104.0050.0877; capability description remains accurate",
+    "file_delivery": "stdout-only reader; no runtime archival or cleanup added",
+    "source_paths": "all target internal Markdown paths use skill-root; no local interpreter path added to distributed skill"
+  }
+}

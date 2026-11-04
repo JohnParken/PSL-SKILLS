@@ -14,6 +14,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'skills/xlsx/scripts'))
 sys.path.insert(0, str(ROOT / 'skills/wps/scripts'))
+sys.path.insert(0, str(ROOT / 'skills/et/scripts'))
 import xlsx_read_view
 import wps_read_view
 from stdlib_xlsx import Workbook
@@ -117,7 +118,7 @@ class BudgetOracleTests(unittest.TestCase):
             Workbook.create({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': 1}, 'A2': {'value': 2}}}]}).save(task / 'data.xlsx')
             body = b''.join(rec(0x203, cell(i, 0) + struct.pack('<d', i + 1)) for i in range(2))
             (task / 'data.et').write_bytes(synthetic_cfb({'Workbook': workbook([body])}))
-            for skill, script, name in [('xlsx', 'stdlib_xlsx.py', 'data.xlsx'), ('wps', 'read_wps.py', 'data.et')]:
+            for skill, script, name in [('xlsx', 'stdlib_xlsx.py', 'data.xlsx'), ('et', 'read_et.py', 'data.et')]:
                 command = [sys.executable, '-I', '-S', '-B', str(ROOT / 'skills' / skill / 'scripts' / script)]
                 if skill == 'xlsx':
                     command.append('read')

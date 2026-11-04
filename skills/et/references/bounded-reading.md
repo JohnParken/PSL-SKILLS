@@ -14,6 +14,8 @@ python -I -S -B "<skill-root>/scripts/read_et.py" ./input.wps --page-size 2000 -
 
 概况只返回表名/存储单元格数或主正文字符数，不含单元格值/正文，`coverage=overview_only_no_values_or_text`。单元格模式保留 `items[].sheet/cell/data` 的原始值、类型、数字解释、公式及cache_status，不丢精度或把文本编号转数值；只按表原顺序及行列顺序取已存单元格，不填空白。`--sheet` 按精确名称选表，不提供range参数。
 
+需要按明确矩形检查候选表头、空位与合并锚点时，使用 `<skill-root>/scripts/analyze_et.py` 的 `--preview --sheet "数据" --range A1:G8`；先完成主入口自检，输入仍为任务目录相对路径。它返回独立 `et_table_preview_v1`，不自动识别表头、不填值、不计算统计，也不替代完整读取 schema。参数、分页、覆盖和遗漏详见 `<skill-root>/references/table-analysis.md#表头区域预览`；不要为定位小块表头逐页取完整工作表。
+
 文字模式只返回主正文 `text`，start/returned_items均以Unicode字符计数，不是CP、字节、段落或页面。`coverage=main_text_only_no_layout_or_related_content`，不用于还原页面。JSON视图不与 `--include-related`、`--binary-paragraph-sources`、`--format text`组合；这些任务继续使用原入口完整契约。
 
 视图默认最多200个存储单元格或200个主正文字符，字符预算12000；`--page-size` 为1..10000，`--max-output-chars` 为512..2097152，预算含JSON末尾换行。诊断不静默裁剪；单格或完整诊断超过预算时明确退出1并返回output_view_error，提高预算或改用完整读取。字符不是token。原完整JSON的16MiB序列化上限不变。

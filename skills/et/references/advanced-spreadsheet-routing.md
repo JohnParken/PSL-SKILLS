@@ -10,9 +10,17 @@ BIFF8 `data` 模式额外接受有明确编码编号的 CodePage 874、949、950
 
 已在中山市交通运输局两份公开 `.et` 文件上补齐 BIFF8 `TableStyle (0x088F)` 与相邻 `TableStyleElement (0x0890)` 的严格格式证据读取：仅 `data` 模式校验完整样式组及 DXF 索引后原样保留，返回 `partial`，不应用视觉样式。真实文件核验分别读取 32/43 个单元格，独立 MS-XLS 记录观察器共对照 37 项保存值；详见真实 ET 实测（`<skill-root>/references/biff8-gov-real-et-validation.md`）。两份的 CodePage 都为 1200，不证明其他 CodePage 的生产兼容性。
 
+## BIFF8 条件格式与分页元数据（默认 data 部分读取）
+
+默认 data 对 `CondFmt (0x01B0)` + 相邻 1–3 个 `CF (0x01B1)` 检查组数量、区域及公式长度边界后保留全部源字节；DXFN 和条件公式本体不验证、不求值、不应用。对已完整分帧、数量受限的分页记录，将越界/倒序/重叠布局记入 `structure.layout_issues` 与 `page_break_layout_not_applied`，继续读取保存值；不修正原值或宣称打印布局有效。显式 strict/legacy 保留原边界。实际恢复三份 ETT，详见 `<skill-root>/references/et-real-validation.md#template-compatibility-iteration-2026-11-03`；字段与限制见 `<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata`。
+
+## BIFF8 批注绘图与数据验证（默认 data 部分读取）
+
+对已确认的 note 对象链，默认 data/opaque 在实际 Escher ClientData/ClientTextbox 边界拼接 MsoDrawing，核对 Obj、TxO、文字/格式续段及 Note 的长度和链接后原样保留，继续读取单元格。批注文字、作者和显示未作为已解码内容返回，绘图属性内部语义未验证；边界和未知对象不猜测。完整限制见 `<skill-root>/references/embedded-charts.md#fragmented-note-drawings-data-only`。`DVal/Dv` 另按相邻组数量、字符串、公式分区及区域边界保留；不执行公式、跟随外链、应用验证规则或显示提示。两者均保留 partial，严格/legacy 不扩大，资源和截断错误仍拒绝。
+
 ## BIFF8 静态命名区域与部分内置名称（默认 data 可读）
 
-对 `.et/.ett` 内的 `Name (0x0018)`，仅当 Lbl 头、名称、内部 `SupBook/ExternSheet`、最终 `BoundSheet8` 作用域和静态公式结构均已验证时才受限保留：普通名称支持单个绝对 `PtgArea3d` 或同一内部表上至多两个区域的 `PtgUnion`；内置 `Print_Titles` 仅支持完整行/列区域，`_FilterDatabase` 仅支持一个静态区域，历史内置 `Print_Area` 的窄子集继续保留。结果为来源元数据并报告 `partial`，**不计算名称公式、不应用打印/筛选设置**。其他内置宏/函数名称、外链和无法确认语义的 Name 仍拒绝，即使开启临时 salvage 也不能绕过。已用中山市政府官网固定哈希原件验证此前被 Name 拒绝的 1 份 ET 现在可受限读取：2 张工作表、126 个已识别单元格，并有独立 BIFF 已知记录计数 `66+60` 对照；不等于独立逐格真值或 WPS 软件兼容认证。针对 `Print_Titles` 的另一种真实 BIFF8 编码，本轮已增加严格界定的 `PtgMemFunc(cce=23)` 双区域联合、以及尾随显示用 `PtgParen`，不增加通用公式解码。原始记录验证来自独立 LibreOffice 生成的 `.xls`，**不是 WPS Office 原生 `.et`**；新增九份政府 ET 原件也未观察到该类 Name。详细范围见静态内部名称边界（`<skill-root>/references/biff8-defined-names.md`）和独立生产者记录证据（`<skill-root>/references/biff8-print-title-real-evidence.json`）。
+对 `.et/.ett` 内的 `Name (0x0018)`，仅当 Lbl 头、名称、内部 `SupBook/ExternSheet`、最终 `BoundSheet8` 作用域和静态公式结构均已验证时才受限保留：普通名称支持一个绝对内部单元格 `PtgRef3d`、单个绝对 `PtgArea3d` 或同一内部表上至多两个区域的 `PtgUnion`；内置 `Print_Titles` 仅支持完整行/列区域，`_FilterDatabase` 仅支持一个静态区域，历史内置 `Print_Area` 的窄子集继续保留。结果为来源元数据并报告 `partial`，**不计算名称公式、不应用打印/筛选设置**。其他内置宏/函数名称、外链和无法确认语义的 Name 仍拒绝，即使开启临时 salvage 也不能绕过。已用中山市政府官网固定哈希原件验证此前被 Name 拒绝的 1 份 ET 现在可受限读取：2 张工作表、126 个已识别单元格，并有独立 BIFF 已知记录计数 `66+60` 对照；不等于独立逐格真值或 WPS 软件兼容认证。针对 `Print_Titles` 的另一种真实 BIFF8 编码，本轮已增加严格界定的 `PtgMemFunc(cce=23)` 双区域联合、以及尾随显示用 `PtgParen`，不增加通用公式解码。原始记录验证来自独立 LibreOffice 生成的 `.xls`，**不是 WPS Office 原生 `.et`**；新增九份政府 ET 原件也未观察到该类 Name。详细范围见静态内部名称边界（`<skill-root>/references/biff8-defined-names.md`）和独立生产者记录证据（`<skill-root>/references/biff8-print-title-real-evidence.json`）。
 
 ## BIFF8 临时最大兼容（仅显式低层入口）
 

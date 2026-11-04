@@ -247,8 +247,43 @@ records in `uninterpreted_metadata`, with scope, record offset, ID and raw paylo
 | Global DXF (`0x088D`) | Validate the matching FrtHeader, scope flags, XFProps count, property types and byte framing; retain raw payload plus structural property metadata. Differential formatting is not applied to cells. |
 | Global Palette (`0x0092`) | Exactly 56 colors and 226 payload bytes; colors are not applied to styles. |
 | Worksheet Pane (`0x0041`) | Ten bytes, a valid active-pane byte and a BIFF8 column index; reserved byte is retained but ignored. Split positions and Window2-dependent display semantics are not interpreted. |
-| HorizontalPageBreaks (`0x001B`) | At most 1026 six-byte entries after the count; exact length, ordered nonoverlapping column intervals per row, valid column bounds. |
-| VerticalPageBreaks (`0x001A`) | At most 255 six-byte entries after the count; exact length, ordered nonoverlapping row intervals per column, valid column bounds. |
+| HorizontalPageBreaks (`0x001B`) | At most 1026 six-byte entries, exact length. Data retains invalid layout with explicit diagnostics; legacy still requires valid, sorted nonoverlapping column intervals. |
+| VerticalPageBreaks (`0x001A`) | At most 255 six-byte entries, exact length. Data retains invalid layout with explicit diagnostics; legacy still requires valid columns and sorted nonoverlapping row intervals. |
+| CondFmt (`0x01B0`) + CF (`0x01B1`), data only | Exactly 1–3 adjacent CF rules; bounded CondFmt range list contained by its bounding rectangle; CF header/type/comparison and formula-length partitions checked. The DXFN and formula bodies remain opaque and unvalidated, never applied or executed. |
+| DVal (`0x01B2`) + Dv (`0x01BE`), data only | Exact adjacent rule count, bounded four Unicode strings, two formula-length partitions and 1–432 ranges per rule. Rule flags and formula semantics remain unvalidated, never enforced, executed or followed. |
+
+For page breaks, data records `structure.layout_checks_passed`, bounded
+`layout_issues` counts/first indices and `layout_applied=false`; invalid bounds,
+order or overlap also produce `page_break_layout_not_applied`. This is partial
+stored-value recovery, not correction or validation of the print layout. Counts,
+exact byte framing and resource limits still fail closed. The invalid
+`(row=0, colStart=65535, colEnd=255)` entry in Start-up Expenses ETT is retained.
+Its subsequent note drawing and validation records now pass the bounded opaque
+subsets below; the returned saved cells still carry partial status.
+
+Conditional-format metadata retains every group's raw bytes, header range and
+rule-length evidence; `inner_payload_validated=false` prevents treating opaque
+DXFN/formula bytes as verified styles. CF12/CondFmt12/CFEx, orphan CF and arbitrary
+unknown records remain outside this addition. See the real template results in
+`<skill-root>/references/et-real-validation.md#template-compatibility-iteration-2026-11-03`.
+Maintenance references: MS-XLS CondFmt
+(`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/03ae6098-bdc2-475b-ba2c-b8aef7882174`),
+CF (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d6dcadf2-7e07-4f7d-a60a-0f643780225d`)
+and DXFN (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/a1141f1d-f607-45ef-b8dd-4a1f2b27b4f9`).
+
+Data-validation metadata checks DVal's exact 18-byte header and following Dv count,
+four string byte boundaries, both DVParsedFormula partitions and exact SqRefU bounds.
+It retains source bytes and `formula_semantics_validated=false`; validation flags,
+prompt/error display, allowed-value decisions and formula contents are not applied.
+Orphan/interrupted Dv groups and malformed lengths still fail, including in salvage.
+Sources: MS-XLS DVal (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/f88c3d08-b7fe-4730-9068-39a5dcd41db5`),
+Dv (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/862bbc7c-009a-4fd6-a93e-3e32e591c2f8`),
+DVParsedFormula (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/f30fbda8-d382-4d5a-901f-4691743f83e2`).
+
+Data with opaque drawing policy also retains a narrow, linked note-object chain:
+MsoDrawing fragments split exactly at actual Escher client markers, fixed note Obj,
+TxO/text/run continuations and linked Note records. See the precise scope and
+omissions in `<skill-root>/references/embedded-charts.md#fragmented-note-drawings-data-only`.
 
 Zero-entry page-break lists are allowed. These additions share the existing
 metadata byte/count limits and compatibility diagnostic; they do not apply print
@@ -258,8 +293,7 @@ are not skipped. CFB allocation checks, explicit strict minor `0x003E` (data/leg
 are unchanged. Missing date-system information is never silently replaced by 1900.
 
 Source references are recorded in the format evidence (`<skill-root>/references/et-format-evidence.json`).
-These additions have synthetic coverage; existing real ET/ETT regression samples
-do not establish real-world coverage of the newly added record layouts. BIFF Note,
+The original Palette/Pane additions have synthetic coverage; the newer conditional-format, note and validation groups have the limited real ETT evidence linked above. Unlinked BIFF Note,
 HLink and RString, arbitrary XML extensions and private WPS records remain outside
 this addition. Actual verification results are in validation (`<skill-root>/references/validation.md`).
 

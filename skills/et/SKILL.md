@@ -1,14 +1,16 @@
 ---
 name: et
-version: "20261103.1343.4800"
-description: 用于离线读取金山 WPS 表格（.et/.ett）的工作表矩阵、单元格保存值与公式缓存；支持 BIFF8 二进制与 OOXML 表格子集，报告部分读取和未支持范围。未知私有格式不猜测，不重算公式，不编辑转换。原生 XLSX 使用对应技能。
+version: "20261104.0945.4309"
+description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，预览表头区域，并按指定范围筛选、排序、去重、统计及分组汇总，提供质量诊断；支持 BIFF8 与 OOXML 子集并保留 partial。公式不重算，不修改原表；原生 XLSX 使用对应技能。
 ---
 
-# WPS 表格（ET/ETT）只读提取
+# WPS 表格（ET/ETT）只读提取与统计
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 用于读取 `.et/.ett` 的工作表、单元格保存值与保存的公式缓存；按实际内容识别 BIFF8 有限子集（CFB 容器内 Workbook/Book 流）或 OOXML 电子表格。原生 XLSX 任务使用对应技能；本技能不生成、编辑或转换办公文件，不恢复页面布局，不执行公式重算、宏、外链或嵌入对象。未知容器和私有格式明确拒绝，有限读取不等于完整 WPS 兼容。
+
+还可对已读出的指定区域做类型明确的筛选、排序、去重、列统计与分组汇总，输出派生 JSON；原始文件及读取结果不变。统计不等于完整格式认证、公式重算或原格式写回。
 
 ## 执行环境约束与首步自检
 
@@ -38,17 +40,36 @@ python -I -S -B "<skill-root>/scripts/read_et.py" --check
 python -I -S -B "<skill-root>/scripts/read_et.py" ./input.et
 ```
 
-只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其 `wps_read_view_v1` 是投影，不交给原 schema 分析器。分页用于抽查，不先遍历全部页做全量统计；每页仍重读解析输入。需要程序汇总则用默认完整提取 JSON，按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源 partial 与诊断。
+只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其 `wps_read_view_v1` 是投影，不交给原 schema 分析器。分页用于抽查，不先遍历全部页做全量统计；每页仍重读解析输入。需要统计或处理结果表时用下方分析入口；已取得完整 JSON 的程序按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源 partial 与诊断。
 
 1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认完整电子表格 `schema_version` 应为 `biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口；退出 1 或 2 停止后续分析，不把失败当空表。
 2. **解释保存值。** 按单元格 `type` 解释 `value`，保留数字字符串的精度和文本编号；`numeric_interpretation` 仅补充格式解释，不能替代原值。`formula` 存在时读取的是保存缓存，结合 `cache_status` 区分缺失、错误和未验证缓存，不能保证最新或重算。程序消费和保存值解释见电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）。
-3. **交付或分析。** 提交所需工作表/区域及明确缺口；需要汇总时先确认 schema、选定区域和缓存政策。如另有 xlsx 技能，可消费满足其限制的 JSON，仍保留源 partial 和诊断。
+3. **交付或分析。** 提交所需工作表/区域及明确缺口；需要汇总时选定区域和缓存政策，使用下面的只读分析入口。如另有 xlsx 技能，可消费满足其限制的原读取 JSON，仍保留源 partial 和诊断；不要把派生分析 schema 冒充原工作簿。
 
 默认 data 保留有明确依据的非单元格元数据并报告 partial，不应用视觉格式、不重算缓存；未知数据、加密、结构和资源错误仍拒绝。默认不启用 salvage；仅用户明确要求最大限度部分读取时才按高级说明选独立 BIFF 入口。
 
+## 统计与结果表处理
+
+在已确认任务目录执行；分析入口先自检，要求退出 0 且 `environment-ok`，OOXML 仍需可用标记。工作表、矩形区域和表头行由任务确定，不猜测标题或合计行：
+
+```console
+python -I -S -B "<skill-root>/scripts/analyze_et.py" --check
+python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D8 --preview
+python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1
+```
+
+尚不确定表头时，先用 `--preview` 查看明确矩形内的物理位置、空白/缺失、保存缓存与合并锚点，再确定表头和数据范围。预览不推断表头、不计算统计、不填充内容；不得将预览 schema 当完整读取结果消费。分页、覆盖和遗漏说明见 `<skill-root>/references/table-analysis.md#表头区域预览`。
+
+默认返回列统计与前 100 行；统计覆盖整个指定区域的数据行，预览分页不缩小汇总范围。数字用 Decimal，文本编号、布尔、空文本、空白与缺失分别处理；公式默认仅展示保存值并从计算排除，计入缺口。只有明确采用缓存时，才在查询中设置 `formula_policy=cached`；缓存未证明最新，错误或缺失缓存仍排除并报告，不当零。
+
+分析同时返回 `quality_report`：列出数值纳入/排除分母、缺失与缓存状态、有界位置样本、表头标签和分组覆盖。它是事实诊断，不是业务正确性评分；样本截断不缩小统计范围。解释总额前核对质量报告和源 partial，详见 `<skill-root>/references/table-analysis.md#统计质量报告`。
+
+筛选、分组、排序、去重、选列与文本合并标签填充使用 `--query ./query.json`；格式及边界见 `<skill-root>/references/table-analysis.md`。默认不填充合并区域、不自动隐藏或筛掉源行、不识别小计/总计。区域内穿插合计或重复表头时，可用 `exclude_rows` 明确列出原始物理行号；先核对范围和排除项，不凭标签猜测业务口径。结果 `et_table_analysis_v1` 保留源 partial/诊断及分析缺口，分别报告选区诊断和最终匹配数据数量；输出仅 stdout，成功 0、部分结果 3、失败 1、用法错误 2，不写回 ET。
+
 | 按需场景 | 读取参考 |
 |---|---|
-| CodePage、已知元数据、DXF、表样式、静态命名区域或 Print_Titles 拒绝 | 高级电子表格路由（`<skill-root>/references/advanced-spreadsheet-routing.md`） |
+| 表头区域预览、统计质量、区域筛选、排序、去重、分组汇总及合并文本标签处理 | 表格分析（`<skill-root>/references/table-analysis.md`） |
+| CodePage、DXF、条件格式、数据验证、批注绘图、分页、表样式、静态名称或 Print_Titles 的读取边界 | 高级电子表格路由（`<skill-root>/references/advanced-spreadsheet-routing.md`） |
 | 显式最大兼容 salvage、富字符串/缓存/XF 审计 | 显式部分读取（`<skill-root>/references/advanced-spreadsheet-routing.md#biff8-临时最大兼容仅显式低层入口`） |
 | 默认读取已满足任务 | 继续保存值、缓存和缺口核对，不加载高级说明 |
 
@@ -57,6 +78,8 @@ python -I -S -B "<skill-root>/scripts/read_et.py" ./input.et
 - 按实际容器和失败阶段说明范围。CFB 是容器，本包能读取其中受支持的 BIFF8 子集；不能把某个 CFB 文件被拒绝概括为“只支持 OOXML”。同样，`.et/.ett` 后缀不证明内部结构或生成软件。
 - `0x088D` 按 MS-XLS 标准 DXF 结构读取并保留属性；有界 DXF 内未知/无效格式属性保留原始记录并报告 partial，不阻断可靠单元格读取。未支持的其他 BIFF 记录仍停止读取，不跳过未知记录后宣称成功。
 - `status=ok`、退出 0：声明范围内成功，允许空工作表，不等于完整格式认证。
+- 默认 data 另可保留有界 `CondFmt/CF` 条件格式组与异常分页布局，均不应用到保存值；条件公式与 DXFN 内部语义未验证。普通静态名称可指向一个内部绝对单元格。分页长度/数量、组边界、宏/外链与单元格结构仍校验；这不表示打印布局、条件显示或名称求值已支持。
+- 默认 data 可保留受限批注绘图分片链与 `DVal/Dv` 数据验证组，返回 partial；批注文字、作者、绘图效果和验证规则不并入单元格值、不执行或跟随。完整原始记录、对象链接与遗漏诊断保留；未知对象、错误分片边界、截断及资源越界仍拒绝。其他绘图类型和完整规则语义尚未支持。
 - `status=partial`、退出 3：保留提取结果并说明已知缺口。
 - 读取失败退出 1；参数错误退出 2。
 - 维护验收与真实样例验证详见 真实 ET/ETT 记录（`<skill-root>/references/et-real-validation.md`）与 格式说明（`<skill-root>/references/biff8-readonly.md`）。

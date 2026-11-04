@@ -4,13 +4,21 @@
 
 ## 目标与允许范围
 
-这是现有 WPS 文字 Skill 下独立的 **BIFF8 `.et/.ett` 只读 Name 兼容子集**。依据 MS-XLS Lbl、XLUnicodeStringNoCch、NameParsedFormula、PtgArea3d、RgceAreaRel 和 XtiIndex 规范，明确区分非宏的普通静态区域、内置打印区域、宏以及外部引用。新增能力在默认 `compatibility=data` 下可用，不需要启用临时 `--salvage-unknown-metadata`；显式 strict/legacy 仍保留原 Name 接受范围，BIFF8 核心安全校验不变。只消费 Workbook 内部保存的字节，不计算名称/公式、不打开外部链接、不执行宏。
+这是独立 ET Skill 的 **BIFF8 `.et/.ett` 只读 Name 兼容子集**。依据 MS-XLS Lbl、XLUnicodeStringNoCch、NameParsedFormula、PtgArea3d、RgceAreaRel 和 XtiIndex 规范，明确区分非宏的普通静态区域、内置打印区域、宏以及外部引用。新增能力在默认 `compatibility=data` 下可用，不需要启用临时 `--salvage-unknown-metadata`；显式 strict/legacy 仍保留原 Name 接受范围，BIFF8 核心安全校验不变。只消费 Workbook 内部保存的字节，不计算名称/公式、不打开外部链接、不执行宏。
 
-当前支持 **普通非宏命名区域的单个内部绝对 `PtgArea3d`，或同一内部工作表最多两个绝对 `PtgArea3d` 由唯一 `PtgUnion (0x10)` 连接**：先验证 14 字节 Lbl 头、`fHidden/fFunc/fOB/fProc/fCalcExp/fBuiltin` 等标志为 0、键盘快捷键为 0、保留字段为 0、名称为受限的纯 Unicode 字符串（1–255 字符、合法首字符和安全的字母/数字/下划线/句点后缀）；仅允许 11 字节单个 `PtgArea3d`（`0x3B/0x5B/0x7B`），内部 `ExternSheet` 的 `ixti` 必须指向已被前置检查证实的 self SupBook 之单个工作表，矩形行列与绝对标志合法。名称实际内容只在内存中校验；输出只给名称哈希、作用域、原始 token 和有限区域信息；原始负载仍按已存在的 `uninterpreted_metadata.payload_hex` 机制保存。
+区域分支支持 **普通非宏命名区域的单个内部绝对 `PtgArea3d`，或同一内部工作表最多两个绝对 `PtgArea3d` 由唯一 `PtgUnion (0x10)` 连接**：先验证 14 字节 Lbl 头、`fHidden/fFunc/fOB/fProc/fCalcExp/fBuiltin` 等标志为 0、键盘快捷键为 0、保留字段为 0、名称为受限的纯 Unicode 字符串（1–255 字符、合法首字符和安全的字母/数字/下划线/句点后缀）；仅允许 11 字节单个 `PtgArea3d`（`0x3B/0x5B/0x7B`），内部 `ExternSheet` 的 `ixti` 必须指向已被前置检查证实的 self SupBook 之单个工作表，矩形行列与绝对标志合法。名称实际内容只在内存中校验；输出只给名称哈希、作用域、原始 token 和有限区域信息；原始负载仍按已存在的 `uninterpreted_metadata.payload_hex` 机制保存。
 
 **两阶段交叉校验**：Name 可以在 BoundSheet8 列表之前出现，因此读取记录时只验证名称、公式 token 与已出现的内部 ExternSheet 证据，并将 `itab` /区域所属工作表暂存；Globals EOF 时再与完整 BoundSheet8 数量核对，防止提前拒绝真实文档或接受越界索引。每簿最多 256 个此类名称；相同工作簿/工作表作用域下同名（忽略大小写）拒绝。所有实际记录仍受 BIFF 8204/8224 记录长度、1 MiB 原始元数据和总输出预算约束。
 
 保留旧有 **built-in Print_Area (0x06)** 的确切兼容规则，不把任意 built-in name 视为普通名称。新增有限的 **Print_Titles (0x07)** 和 **_FilterDatabase (0x0D)**（见下节），其余内置名称仍拒绝。宏名称、函数名称、`fOB/fProc`、快捷键、未在受控子集中允许的标志、`PtgFunc`、`PtgNameX`、外部 SupBook、跨多个工作表的 XTI、相对单元格范围、复杂公式/附加字节、未支持的名称字符及非法保留字段均**明确拒绝**。此模式不对未知 Name 执行静默 continue 或将其归为普通的 `unknown_biff_record_salvaged`；即使用户启用了临时 salvage 也保持拒绝。
+
+## 扩展：单个内部绝对单元格（仅 data 模式）
+
+普通名称还允许恰好 7 字节的 `PtgRef3d (0x3A/0x5A/0x7A)`：2 字节 XTI + 2 字节行 + 2 字节列，仅接受绝对坐标和 BIFF8 列 0–255。复用名称头、非宏、内部链接、作用域最终核对、重复名称及预算检查；相对坐标、跨表范围、外链、多个单元格 token/联合、额外公式字节仍拒绝，内置名称接受范围不扩大。
+
+返回 `classification=ordinary_static_internal_cell_only`、原始 token 与 `[row,row,col,col]` 坐标；原有区域名称结构不改名，不执行名称求值。真实 Amortization ETT 中 8 个单元格名称及 2 组条件格式在默认 data 下可受限保留；260 个已知单元格记录数独立匹配，35 个保存值（含 1 个未重算数值缓存）独立匹配。其余文本缓存/错误缓存、显示样式与公式正确性未获独立验证，不能由 35 项推为全部值验收。完整证据及复现入口见 `<skill-root>/references/et-real-validation.md#template-compatibility-iteration-2026-11-03`。
+
+规范依据：MS-XLS PtgRef3d（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/1ca817be-8df3-4b80-8d35-46b5eb753577`）和 NameParsedFormula 中使用的 RgceLocRel（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/2db37ba7-32f3-4395-88fe-6646034a5358`）；运行时不联网。
 
 ## 扩展：打印标题、筛选区域与双区域联合（仅 data 模式）
 

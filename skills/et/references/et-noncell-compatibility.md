@@ -4,7 +4,7 @@
 
 ## 目标
 
-针对 `.et/.ett` 的 **BIFF8 保存值读取**，把非单元格元数据和单元格值记录区别处理。仅在 MS-XLS 明确规定记录结构、所属 substream、顺序、大小、预算和后续记录边界时开放受限兼容；保留原始字节、来源位置与 `partial` 诊断。**不进行未知记录通用跳过、回退扫描、容器修复、加密绕过、公式执行或完整格式/视觉推断**。本工作线只修改 `wps_biff8.py` 和新增 `wps_biff8_noncell.py`，`.wps` MS-DOC 文字读取器保持原样。
+针对 `.et/.ett` 的 **BIFF8 保存值读取**，把非单元格元数据和单元格值记录区别处理。仅在 MS-XLS 明确规定记录结构、所属 substream、顺序、大小、预算和后续记录边界时开放受限兼容；保留原始字节、来源位置与 `partial` 诊断。**不进行未知记录通用跳过、回退扫描、容器修复、加密绕过、公式执行或完整格式/视觉推断**。该记录兼容分支只作用于 ET 的 BIFF8 读取；不修改 `.wps` MS-DOC 文字读取器。
 
 ## 已实施的两类明确记录（仅 compatibility=data）
 
@@ -18,6 +18,12 @@
 ## 真实非单元格格式拒绝治理：TableStyle 系列
 
 新增实测不是 CodePage 缺省问题。中山市交通运输局两份 `.et` 都声明 CodePage 1200；其中一份在 `0x088F` TableStyle 处拒绝。经过独立 MS-XLS 规范对照，新增在 `data` 模式对 TableStyle + 紧邻 TableStyleElement 元数据组进行严格边界验证，保留原始来源与 `partial` 诊断。若缺失前置 TableStyles、元素数量/顺序不符、索引引用了未验证的 DXF、future record header/UTF-16 非法，仍拒绝；不忽略通用未知记录。具体实测来源和独立保存值对照见 `<skill-root>/references/biff8-gov-real-et-validation.md`。
+
+## 条件格式组与分页布局的部分读取
+
+默认 data 对已识别的 `CondFmt/CF` 组保留原始负载，验证组数量、区域及公式长度边界，不解释 DXFN 或执行条件公式。对完整分帧且数量受限的 `HorizontalPageBreaks/VerticalPageBreaks`，布局越界、倒序与重叠改为原始元数据和 `page_break_layout_not_applied` 诊断；不应用或修复布局，保存值继续按原结构验证。严格/legacy 规则不扩大。分帧截断、数量/资源越界、孤立 CF、未知记录仍按既有边界拒绝；这不是未知记录通用跳过。
+
+Start-up Expenses 后续 `0x00EC` 拒绝来自跨记录绘图分片；现已按实际 Escher 容器及 ClientData/ClientTextbox 边界保留受限批注链，并补齐有界 `DVal/Dv` 组。单元格保存值继续读取，批注、绘图与规则语义仍不应用或执行，边界错误和未知对象仍拒绝。完整字段见 `<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata` 与 `<skill-root>/references/embedded-charts.md#fragmented-note-drawings-data-only`；三份真实 ETT 的受限成功和独立预期对照记录于 `<skill-root>/references/et-real-validation.md#template-compatibility-iteration-2026-11-03`。
 
 ## CodePage 声明的受控扩展（下一批）
 

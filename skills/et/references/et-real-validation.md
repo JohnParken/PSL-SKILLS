@@ -13,6 +13,7 @@ before using this reference; internal resources and task data have different pat
 - Reproduce offline (`<skill-root>/references/et-real-validation.md#reproduce-offline`)
 - Remaining limits (`<skill-root>/references/et-real-validation.md#remaining-limits`)
 - Independent source-value observations (`<skill-root>/references/et-real-validation.md#independent-source-value-observations`)
+- Template compatibility iteration (`<skill-root>/references/et-real-validation.md#template-compatibility-iteration-2026-11-03`)
 
 ## Default data-policy acceptance
 
@@ -132,3 +133,54 @@ runtime dependencies and are not bundled with this skill.
 ## Unified-reader regression
 
 The verifier now checks both the legacy BIFF entry and the unified WPS byte reader against the frozen typed values. The unified result must preserve `partial`, `biff8_subset` and a noncertifying reading assessment. Expected legacy default-chart rejection is also checked through both entries. Reacquired pinned originals on 2026-10-27 passed both legacy reject and opaque verifier runs; the opaque run checked all 198 stored values including 33 unverified formula caches. This extends entry-point acceptance, not producer-version or rendered-display coverage.
+
+## Template compatibility iteration 2026-11-03
+
+An in-memory survey of all 12 `pt_BR` ETT originals in the same pinned template
+repository found four readable under data mode and eight rejected. The iteration
+adds absolute internal cell names and opaque CondFmt/CF groups, plus diagnosed
+retention of layout-invalid but correctly framed page-break metadata. The follow-up
+adds precisely bounded fragmented note drawings and opaque DVal/Dv groups.
+
+| Pinned original | Before | Current data result | Independent evidence |
+|---|---|---|---|
+| Amortization.ett | Name `0x18`, offset 4825; after the Name fix, CondFmt `0x1b0`, offset 14093 | partial; 260 cells; 8 static cell names; 2 conditional groups | 260 known cell records; 35 typed saved values including 1 numeric formula cache matched |
+| Home Analysis.ett | CondFmt `0x1b0`, offset 10394 | partial; 309 cells; 1 conditional group | 309 known cell records; 35 typed saved values including 1 numeric formula cache matched |
+| Start-up Expenses.ett | Invalid page-break interval `0x1b`, offset 8288; then drawing `0xec`, offset 15324 | partial; 520 cells; 8 opaque notes; 1 data-validation rule | 520 known cells; 162 typed saved values including 24 numeric formula caches; 58 opaque record payloads matched |
+
+The 232 new value observations come from the pre-existing independent standard-library
+source oracle, called before the target reader and pinned by original and observation
+SHA-256. They cover plain SST text and numeric source/cache values, not every blank,
+error or text-formula cache. Source record counts are a separate check. All four
+original baseline ET/ETT files were rechecked: 198 frozen values including 33 numeric
+formula caches match. No cache was recalculated or certified current.
+
+The first drawing fragment is 194 bytes; its Escher DgContainer declares 1056 bytes
+including the header. Joining only the 16 MsoDrawing payloads yields exactly that
+length and valid nested frame ends. Obj/TxO/Continue bytes are outside those Escher
+lengths, as specified by MS-XLS. The old complete-per-record assumption caused the
+rejection. The new path preserves all 56 note-group BIFF payloads, then the two
+DVal/Dv payloads; each is independently compared with its pinned source offset.
+The joined drawing digest and source evidence are recorded below. Neither the
+eight comment bodies nor drawing/validation semantics are certified or rendered.
+
+The explicit maintenance command is repository-relative, outside the distributed Skill:
+
+```console
+python -I -S -B tests/et_template_compatibility_probe.py --download --include-baseline
+```
+
+Run it from the confirmed repository root. It uses HTTPS with default certificate
+validation, rejects redirects, pins source hashes, and limits each download to 4 MiB.
+Original bytes exist only in memory; no binaries or cell contents are saved, published
+or bundled. Redistribution rights and producing WPS versions remain unestablished.
+The skill itself remains offline. The current seven-file probe must return `passed`
+and match all observations; each returned workbook remains `partial`. The other
+five failures in the initial 12-template survey have not been reassessed here.
+
+Machine evidence, scope and remaining corpus failures are in
+`<skill-root>/references/et-template-compatibility-evidence.json`.
+The follow-up ran on macOS using the requested exact Python 3.12.11 with Expat 2.6.3;
+the earlier name/page/conditional iteration also ran on 3.13.12. Linux container
+and Windows validation were not performed. The previously recorded
+Linux CI results elsewhere in these references do not cover this iteration.

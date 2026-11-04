@@ -7,7 +7,7 @@
 先完成主入口共同自检和任务路径确认；仅Python标准库，不安装、转换、重算或执行宏/外链。退出0/3分别要求status为ok/partial且JSON完整；退出1/2停止分析，不把失败当空表。partial保留全部可用数据与issues/reading_assessment，不能当作完整格式兼容或最新缓存。
 
 - 只看结构、逐格查看或主正文分页：有界输出（`<skill-root>/references/bounded-reading.md`）；`wps_read_view_v1`是投影，不能交给只接受原schema的XLSX分析器，也不能把所有页拼成伪造的原完整schema。
-- 程序分析ET/ETT：默认read_wps完整提取JSON，接受`biff8_readonly_v1`或`ooxml_spreadsheet_readonly_v1`；下方消费示例保留同一结果。XLSX并非本包依赖，另有对应技能时才按其入口交接，不猜相邻目录。
+- 程序分析ET/ETT：默认read_et完整提取JSON，接受`biff8_readonly_v1`或`ooxml_spreadsheet_readonly_v1`；下方消费示例保留同一结果。内置只读分析使用 `<skill-root>/scripts/et_table_analysis.py` 的 `analyze(result, query)`，查询和输出见 `<skill-root>/references/table-analysis.md`。XLSX并非本包依赖，另有对应技能时才按其入口交接，不猜相邻目录。
 - WPS文字、API异常、reading_assessment覆盖细节或二进制来源：按任务读结果契约（`<skill-root>/references/reading-assessment.md`），普通ET消费不加载MS-DOC段落证据。
 - 未知schema、无效JSON、工具结果截断、status/退出码不符，均停止依赖分析。只有JSON完整并不证明全部单元格、缓存或元数据完整。
 
@@ -52,7 +52,9 @@ if process.returncode == 3:
 PY
 ```
 
-表格消费者按 `type` 解释 `value`：JSON 中的数字字符串保持保存值精度，不与文本长编号混为一类，不先转换成 float。`numeric_interpretation` 是有限数字格式/日期解释的附加字段，不替换 `value`。有 `formula` 的值属于保存缓存；`cache_status=missing` 不能当空值或零，`unverified` 等状态不能证明缓存最新。使用缓存分析须显式选择 cached 政策，所选区域的缺失或错误缓存仍拒绝，禁止重算。
+表格消费者按 `type` 解释 `value`：JSON 中的数字字符串保持保存值精度，不与文本长编号混为一类，不先转换成 float。`numeric_interpretation` 是有限数字格式/日期解释的附加字段，不替换 `value`。有 `formula` 的值属于保存缓存；`cache_status=missing` 不能当空值或零，`unverified` 等状态不能证明缓存最新。内置分析默认排除公式并明确计数；显式 cached 才使用已保存且非错误的缓存，错误/缺失缓存保留为不可用于计算的单元格并报告 partial，绝不补零或重算。其他消费者若要求拒绝缺失缓存，仍按其自身契约交接，不通过删诊断规避。
+
+内置分析保留原读取对象，返回独立 `et_table_analysis_v1`。只读取派生统计不能替代完整工作簿；`row_page`/`group_page` 是有界预览，`profiles`/`totals` 覆盖过滤、去重后的全部匹配行。合并默认保持保存位置；只在明确选择 `merge_policy=fill_text` 时填充普通文本标签，记录来源，数字和公式标签不扩散。所有保存的隐藏/筛选行默认都在显式矩形内参与，不猜测有效可见性。
 
 BIFF `cell_value_coverage=complete_within_declared_sheets` 只表示已声明工作表的受支持单元格/缓存范围；`missing_formula_caches` 和 `omissions_affect_cell_values=true` 指出缓存缺口。它们不取代 `issues`，不证明私有流、有效格式或完整 ET 支持；OOXML 按其自身 schema/诊断解释，不假定具有全部 BIFF 字段。保留顶层 `reading_assessment` 和原始诊断，分析接入另见 表头与输出 (`<skill-root>/references/biff8-readonly.md#headers-and-output`)。
 

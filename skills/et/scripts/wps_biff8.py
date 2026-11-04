@@ -16,10 +16,12 @@ from wps_cfb import CompoundFile,MAX_STREAM_BYTES,COMPATIBILITY_MODES
 from wps_visibility import SavedVisibility
 from wps_biff8_headers import column_name, address, reconstruct
 from wps_biff8_charts import CHART_POLICIES, drawing_frame, chart_end
+from wps_biff8_drawing_notes import note_drawing_group
 from wps_numeric import interpret_cell_number
 from wps_biff8_merges import MergeOverlapError, validate_merge_ranges
 from wps_dxf import validate_dxf
-from wps_biff8_noncell import inspect_noncell
+from wps_biff8_noncell import inspect_noncell, inspect_page_break_layout
+from wps_biff8_conditional import conditional_group, validation_group
 from wps_biff8_tablestyles import table_style_group
 from wps_biff8_names import (classify_static_name, classify_static_builtin_name,
                             MAX_STATIC_NAMES)
@@ -338,6 +340,7 @@ class Reader:
         self.salvage_skipped_records=0
         self.salvage_issues={}
         self.chart_policy=chart_policy; self.embedded_charts=[]; self.drawing_group_seen=False
+        self.note_drawings = []
         self.compatibility=compatibility
         self.passive_issues = {}
         self.dxf_property_count = 0
@@ -548,7 +551,7 @@ class Reader:
             elif self.compatibility in ("legacy_excel_clsid", "data") and kind==0x0018:
                 # Keep the historically verified built-in Print_Area behavior.
                 # New ordinary and selected built-in names require entirely static,
-                # self-linked, absolute area tokens and are data-mode only.
+                # self-linked, absolute cell/area tokens and are data-mode only.
                 static_print_area = (
                     len(payload)==27 and
                     payload[:8]==b'\x20\x00\x00\x01\x0b\x00\x00\x00' and
@@ -590,7 +593,9 @@ class Reader:
                         require(key not in safe_name_keys,
                                 'Duplicate ordinary static name in workbook/sheet scope')
                         safe_name_keys.add(key)
-                        source_name = 'OrdinaryStaticInternalAreaName'
+                        source_name = ('OrdinaryStaticInternalCellName'
+                                       if structure['classification'] == 'ordinary_static_internal_cell_only'
+                                       else 'OrdinaryStaticInternalAreaName')
                     safe_name_sheets.append((
                         structure['local_sheet_ordinal_raw'],
                         structure['internal_sheet_index_zero_based']))
@@ -672,7 +677,8 @@ class Reader:
             require(bound['offset'] in offset_index and offset_index[bound['offset']]==position,'Worksheet offset gap/overlap or unbound records')
             sheet,position=self.sheet(position,bound); sheets[bound['name']]=sheet
         require(position==len(self.records),'Trailing/unbound BIFF records are not ignored')
-        require(not self.drawing_group_seen or self.embedded_charts,'Drawing group without supported embedded chart')
+        require(not self.drawing_group_seen or self.embedded_charts or self.note_drawings,
+                'Drawing group without supported embedded chart or note drawing')
         for sheet in sheets.values():
             for cell in sheet['cells'].values():
                 if cell['type'] == 'number' and date_system != 'unknown':
@@ -687,6 +693,7 @@ class Reader:
                                       any(i.get('code') == 'missing_formula_string_cache' for i in self.issues)),
                 'biff_parsed':True,
                 'chart_policy':self.chart_policy,'charts_decoded':False,'embedded_charts':self.embedded_charts,
+                **({'note_drawings': self.note_drawings} if self.note_drawings else {}),
                 'native_et_ett_parsed':False,'wps_compatibility_verified':False,'formulas_executed':False,'external_links_followed':False,
                 'date_system':date_system,'code_page_raw':self.code_page,
                 'format_string_header_flags':self.format_string_flags,'sheets':[sheets[item['name']] for item in bounds],
@@ -767,6 +774,24 @@ class Reader:
                 continue
             if kind==0x00EC and self.chart_policy=="opaque":
                 require(self.drawing_group_seen,'Embedded drawing requires a drawing group')
+                if (self.compatibility == 'data' and index < len(self.records) and
+                        self.records[index][1] == 0x5D and self.records[index][2][:6] == b'\x15\x00\x12\x00\x19\x00'):
+                    stop, details, identities, report = note_drawing_group(
+                        self.records, index - 1, byte_budget=MAX_METADATA_BYTES-self.metadata_bytes,
+                        record_budget=4096-len(self.metadata), existing_ids=object_ids)
+                    note_kinds = {0xEC: 'MsoDrawingNoteFragmentOpaque', 0x5D: 'ObjNoteOpaque',
+                                  0x1B6: 'TxONoteOpaque', 0x3C: 'NoteTextOrRunsOpaque', 0x1C: 'NoteLinkOpaque'}
+                    for component in self.records[index - 1:stop]:
+                        self.metadata_record(component, note_kinds, bound['name'])
+                        if component[0] in details:
+                            self.metadata[-1]['structure'] = details[component[0]]
+                    object_ids.update(identities)
+                    self.note_drawings.append({**report, 'sheet': bound['name']})
+                    self.issue({'sheet': bound['name'], 'code': 'note_drawing_retained_opaque',
+                                'record_offset': offset, 'object_count': report['object_count'],
+                                'message': 'Framed note objects retained raw; comment text, author and display are omitted from cell values. No formulas or external content executed.'})
+                    index = stop
+                    continue
                 drawing_frame(payload,0xF002)
                 self.metadata_record(record,{kind:'MsoDrawingOpaque'},bound['name'])
                 drawing_pending=True
@@ -815,6 +840,22 @@ class Reader:
             elif kind==0x0081:
                 require(not ws_bool and len(payload)==2 and not struct.unpack('<H',payload)[0]&0x0010,'Duplicate/malformed/dialog WsBool unsupported')
                 ws_bool=True
+            elif self.compatibility == 'data' and kind == 0x01B0:
+                stop, evidence = conditional_group(self.records, index - 1)
+                for component, structure in zip(self.records[index - 1:stop], evidence):
+                    self.metadata_record(component, {0x01B0: 'CondFmtOpaque', 0x01B1: 'CFOpaque'}, bound['name'])
+                    self.metadata[-1]['structure'] = structure
+                index = stop
+            elif self.compatibility == 'data' and kind == 0x01B1:
+                require(False, 'Orphan CF record without a preceding CondFmt group')
+            elif self.compatibility == 'data' and kind == 0x01B2:
+                stop, evidence = validation_group(self.records, index - 1, 4096-len(self.metadata))
+                for component, structure in zip(self.records[index - 1:stop], evidence):
+                    self.metadata_record(component, {0x01B2: 'DValOpaque', 0x01BE: 'DvOpaque'}, bound['name'])
+                    self.metadata[-1]['structure'] = structure
+                index = stop
+            elif self.compatibility == 'data' and kind == 0x01BE:
+                require(False, 'Orphan Dv record without a preceding DVal group')
             elif kind in (0x0203,0x027E,0x0205,0x0201,0x00FD,0x0204,0x0006):
                 require(len(payload)>=6,'Truncated cell record'); row,col,xf=struct.unpack_from('<3H',payload)
                 if kind==0x0203:
@@ -946,26 +987,19 @@ class Reader:
                     limit=MAX_HORIZONTAL_PAGE_BREAKS if kind==0x001B else MAX_VERTICAL_PAGE_BREAKS
                     require(count<=limit and len(payload)==2+6*count,
                             'Malformed/oversized page-break record')
-                    for start in range(2,len(payload),6):
-                        first,second,third=struct.unpack_from('<3H',payload,start)
-                        if kind==0x001B:
-                            axis,interval_start,interval_end=first,second,third
-                            require(interval_start<=interval_end<256,
-                                    'Invalid horizontal page-break columns')
-                        else:
-                            axis,interval_start,interval_end=first,second,third
-                            require(axis<256 and interval_start<=interval_end,
-                                    'Invalid vertical page-break column or rows')
-                        key=(axis,interval_start)
-                        previous_key=page_break_last_key[kind]
-                        require(previous_key is None or previous_key<key,
-                                'Page-break entries are not sorted by axis and start')
-                        previous_end=page_break_end_by_axis[kind].get(axis)
-                        require(previous_end is None or interval_start>previous_end,
-                                'Overlapping page-break intervals on the same axis')
-                        page_break_last_key[kind]=key
-                        page_break_end_by_axis[kind][axis]=interval_end
+                    layout, page_break_last_key[kind] = inspect_page_break_layout(
+                        kind, payload, page_break_last_key[kind], page_break_end_by_axis[kind])
+                    if layout['layout_issues'] and self.compatibility != 'data':
+                        require(False, layout['layout_issues'][0]['message'])
                 self.metadata_record(record,LEGACY_VALIDATED_SHEET_METADATA,bound['name'])
+                if kind in (0x001A, 0x001B) and self.compatibility == 'data':
+                    self.metadata[-1]['structure'] = layout
+                    if layout['layout_issues']:
+                        self.issue({'code': 'page_break_layout_not_applied', 'sheet': bound['name'],
+                                    'record_offset': offset, 'record_id': hex(kind),
+                                    'metadata_index': len(self.metadata) - 1,
+                                    'cell_value_impact': 'none_within_parsed_cells',
+                                    'message': 'Invalid page-break layout retained raw; see structure.layout_issues. Saved cells are read without applying print layout.'})
             elif kind in self.sheet_metadata: self.metadata_record(record,self.sheet_metadata,bound['name'])
             elif self.salvage_unknown_metadata:
                 self.salvage_record(record, bound['name'])

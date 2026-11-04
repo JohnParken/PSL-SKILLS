@@ -1,4 +1,4 @@
-"""Repository integration: WPS stored-value JSON into optional XLSX analysis."""
+"""Repository integration: ET stored-value JSON into optional XLSX analysis."""
 from decimal import Decimal
 import json
 from pathlib import Path
@@ -8,18 +8,31 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / 'skills' / name / 'scripts') for name in ('wps', 'xlsx')]
+sys.path[:0] = [str(ROOT / 'skills' / name / 'scripts') for name in ('et', 'xlsx')]
 from test_wps_biff8 import workbook, rec, formula, special
 from test_wps_cfb import synthetic_cfb
 from xlsx_analysis import region
 
 
 class EtPipelineTests(unittest.TestCase):
+    def test_document_skill_rejects_spreadsheet_after_split(self):
+        with tempfile.TemporaryDirectory(dir='.') as directory:
+            path = Path(directory) / 'input.et'
+            path.write_bytes(synthetic_cfb({'Workbook': workbook()}))
+            process = subprocess.run([sys.executable, '-I', '-S', '-B',
+                                      str(ROOT / 'skills/wps/scripts/read_wps.py'), str(path)],
+                                     capture_output=True, text=True, encoding='utf-8', check=False)
+            self.assertEqual(process.returncode, 1)
+            result = json.loads(process.stdout)
+            self.assertEqual(result['status'], 'unsupported')
+            self.assertIsNone(result['text'])
+            self.assertIn('et skill', result['message'])
+
     def extract(self, directory, stream):
         path = directory / 'input.et'
         path.write_bytes(synthetic_cfb({'Workbook': stream}))
         process = subprocess.run([sys.executable, '-I', '-S', '-B',
-                                  str(ROOT / 'skills/wps/scripts/read_wps.py'), str(path)],
+                                  str(ROOT / 'skills/et/scripts/read_et.py'), str(path)],
                                  capture_output=True, text=True, encoding='utf-8', check=False)
         self.assertIn(process.returncode, (0, 3), process.stdout)
         result = json.loads(process.stdout)
