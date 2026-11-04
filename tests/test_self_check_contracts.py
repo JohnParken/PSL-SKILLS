@@ -188,11 +188,11 @@ class SelfCheckContractTests(unittest.TestCase):
                 """
                 import builtins
                 original_import = builtins.__import__
-                def fail_biff8(name, *args, **kwargs):
-                    if name == "wps_biff8":
+                def fail_cfb(name, *args, **kwargs):
+                    if name == "wps_cfb":
                         raise ImportError("injected dependency failure")
                     return original_import(name, *args, **kwargs)
-                builtins.__import__ = fail_biff8
+                builtins.__import__ = fail_cfb
                 """
             ),
             invoke='sys.argv = [script_path, "--check"]\nraise SystemExit(module.main())',
@@ -205,6 +205,24 @@ class SelfCheckContractTests(unittest.TestCase):
             invoke='sys.argv = [script_path, "--check"]\nraise SystemExit(module.main())',
         )
         self._assert_text_failure(old_python, "environment-failed:", code=2)
+
+    def test_document_wps_check_no_longer_requires_et_biff_parser(self) -> None:
+        result = self._run_injected(
+            self._script('wps', 'read_wps.py'),
+            injection=textwrap.dedent(
+                """
+                import builtins
+                original_import = builtins.__import__
+                def reject_biff(name, *args, **kwargs):
+                    if name == 'wps_biff8':
+                        raise ImportError('ET-only dependency deliberately unavailable')
+                    return original_import(name, *args, **kwargs)
+                builtins.__import__ = reject_biff
+                """
+            ),
+            invoke='sys.argv = [script_path, "--check"]\nraise SystemExit(module.main())',
+        )
+        self._assert_text_success(result, 'environment-ok')
 
     def test_ofd_check_text_success_and_handled_json_failures(self) -> None:
         script = self._script("ofd", "read_ofd.py")
@@ -219,7 +237,7 @@ class SelfCheckContractTests(unittest.TestCase):
             failed,
             code=1,
             status="failed",
-            expected_fields={"schema_version": "ofd-read-2"},
+            expected_fields={"schema_version": "ofd-read-3"},
         )
         self.assertEqual(failure_payload["diagnostics"][0]["code"], "read_error")
 
@@ -235,7 +253,7 @@ class SelfCheckContractTests(unittest.TestCase):
             unsupported,
             code=4,
             status="unsupported",
-            expected_fields={"schema_version": "ofd-read-2"},
+            expected_fields={"schema_version": "ofd-read-3"},
         )
         self.assertEqual(unsupported_payload["diagnostics"][0]["code"], "read_error")
 
