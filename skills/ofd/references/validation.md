@@ -4,6 +4,8 @@
 
 ## 规范身份与实现依据
 
+本参考主要记录读取器历史验收。当前基础生成入口、字体许可/度量限制、独立维护工具交叉检查与尚未完成的客户端/视觉验收见 `<skill-root>/references/generation.md`；生成器不继承读取器的版本覆盖或完整性结论。
+
 目标规范是 **GB/T 33190-2016《电子文件存储与交换格式 版式文档》正式版**，不以网上草案代替。以下是可追溯的公开来源：
 
 - 国家密码管理局正式介绍 (`https://www.oscca.gov.cn/sca/ztpd/2017-04/19/content_1012652.shtml`)：2017-04-19，来源为国家电子文件管理部际联席会议办公室，确认标准的范围。
@@ -12,14 +14,22 @@
 
 **证据边界：**已确认正式规范身份和公开附件，但没有完成正式全文所有字段的逐条核对。当前字段处理为待其余正式条款与真实样本进一步验收的有限实现，不能称为 GB/T 33190 全面符合性实现。已按独立查看的正式扫描条文核对：§6.2 单一 OFD.xml、§7.1 命名空间、§7.3 ST_Loc 点段与包根、§7.6 显式页序、§7.7 模板内部引用无效、表45 TextCode 四位十六进制转义。尚未逐条核对整个格式，不据此作完整合规认证。下述合成结果不填补这一规范语义证据缺口。
 
-## 本轮真实样本与平台
+## 当前资源索引缺失恢复验证
+
+2026-11-03，macOS arm64 / Python 3.12.11 / Expat 2.6.3，标准库隔离启动：维护前92项回归通过，增加11项回归后共103项通过。缺失 PublicRes、DocumentRes、PageRes 索引在1.0/1.1/1.2均保留独立可读文字并返回partial；仍拒绝路径越界、外部路径、目录、现存畸形XML、DTD/实体、资源载荷缺失及必需文档/页面/模板缺失，引用预算继续生效。full、summary、page-text均保留诊断和partial/3。新能力不改变description声明的XML存储与文字读取范围，未扩大到OCR、渲染或完整规范认证。
+
+重新读取固定提交的四个公开 OFDRW 原件并核对既有SHA-256：Page5曾因缺失PublicRes整体failed，现保留五页、七个XML部件，明确missing_resource_index和partial/3；原件五页没有TextCode，目标文字登记为empty，未把图形解释成文字。修改解析器前，用独立标准库ElementTree逐页提取TextObject/TextCode并冻结预期，仅验证原始存储文字，不是可见文字或版式预期。reader HelloWorld按既有上游固定文字断言通过；1.1 keyword2和1.2 areaholder的文字哈希与维护前一致，后两项只是回归保留证据，没有新的独立全文验收。来源、原始哈希和当前结果见 `<skill-root>/references/real-samples.json` 的 resource_index_recovery_run；完整维护记录位于仓库 `tests/ofd_resource_recovery_20261103.json`，不随包分发。
+
+没有在Linux或Windows运行当前修复；本机Python 3.12.11通过不能代替目标Linux验收。未执行本轮独立代理审查或模型触发评测；此前独立审查仅作为历史证据。当前静态检查仍使用标准库AST/tokenize和严格结构检查器，未安装第三方linter。
+
+## 2026-11-02 结构扩展历史验证
 
 2026-11-02 使用 Python 标准库直接读取 OFDRW 固定提交 `c633a61fb37d300392a51f67b101f46738866c83` 的7个未修改公开测试原件，不运行上游 Java/JS，不使用 OCR、PDF 转换器或外部解析器。每个原件的源 URL、SHA-256、大小、Version、实际状态及退出码见 `<skill-root>/references/real-samples.json`。
 
 - 两个 reader HelloWorld（其中一个含 PageBlock）按上游 ContentExtractorTest.java 的独立固定文字预期核对，均单页22字符、complete/0。预期在运行目标解析器前冻结。原有固定历史样例记录保留，不按相同字节的不同提交重复计数为新的语义样本。
 - 真实 Version 1.1 keyword2 原件：13个 XML 部件的结构目录完成，一页63段541字符。其 CustomTag.xml 带异常命名空间名称，保持原始名称和内容、namespace_resolution=partial，主 OFD/页面未放宽。全局仍 partial/3，不能把“结构已存储完整”冒充“命名空间、所有文字及显示语义均完整”。没有独立全文预期，不能据数量推断无漏字或显示一致。
 - 真实 Version 1.2 areaholder_fields 原件：5个 XML 部件、一页2段4字符；真实 OFD-A 1.2 原件：4个 XML 部件、一页1段11字符。两者结构目录均 complete，全局仍因向量/附加部件或归档规范未认证而 partial/3；没有独立全文或归档规范验收。
-- converter HelloWorld 作为额外结构烟雾验证，complete/0；另一 Page5 原件引用不存在的 PublicRes.xml，failed/1。没有通过换路径、忽略引用或强制 partial 隐藏结构失败。
+- converter HelloWorld 作为额外结构烟雾验证，complete/0；当时另一 Page5 原件引用不存在的 PublicRes.xml，failed/1。当前资源索引缺失恢复结果见上一节，历史结果保留而不改写。
 - 页资源、嵌套复合对象新增行为仍只有合成验证；没有新增政务/商业原件全文、表格或视觉验收。
 
 本轮实际平台为 macOS、Python 3.13.12 / Expat 2.6.3，保留 `-I -S -B`，运行隔离测试时 PATH 为空。未取得目标 Linux 容器执行入口，Linux 及 Windows 未验证；本机通过不等于目标平台验收或跨平台保证。旧 Python 3.12 基线仅为历史记录。自检对缺少安全文件操作原语的宿主仍明确拒绝，不降级。

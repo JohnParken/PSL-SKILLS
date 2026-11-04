@@ -1,5 +1,7 @@
 # 版本与兼容性
 
+本参考覆盖读取器的版本策略；独立生成器目前只输出OFD 1.0固定版式子集，见 `<skill-root>/references/generation.md`。
+
 路径占位符说明：`<skill-root>` 是 OFD Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 OFD 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 ## 版本策略
@@ -24,6 +26,7 @@ compatible 是用户理解缺口后显式选择的未知小版本存储结构试
 ## 扩大的解析范围
 
 - PageRes 与公共/文档资源使用相同的安全引用入口；资源 ID 在文档公共作用域及当前页/模板作用域中查找，页级声明不泄漏到其他页。冲突定义失败，同一资源文件重复引用不重复声明。
+- PublicRes、DocumentRes、PageRes 索引成员确实缺失时保留其他可读 XML / TextCode，记录 resource_gaps 与 missing_resource_index，结构和全局结果为 partial；文字可能缺少复合资源内容。仍累计引用预算，不扫描同名路径、不合并未知资源。目标为目录、路径越界、现存 XML 损坏、DTD/实体、角色冲突或载荷缺失仍失败；此机制不适用于文档/页面/模板/签名/附件索引。
 - Font、MultiMedia、CompositeGraphicUnit、DrawParam、ColorSpace 元数据及字体/媒体包内引用；不解码字体或图像，不应用绘制参数。
 - CompositeObject 通过 ResourceID 展开 CompositeGraphicUnit/Content 内的 TextObject；嵌套最多16层，循环失败，共享资源每个实际出现各提取一次，不将重复出现误当作重复数据删除。节点和输出预算继续累计。
 - text_runs 中的 occurrence 保存外到内的复合对象引用链，ancestry 保存当前源 XML 中的原始祖先属性。复合资源中的 source 指向资源 XML。原始坐标不做缩放、CTM、裁剪或可见性计算；复合几何缺口明确 partial。

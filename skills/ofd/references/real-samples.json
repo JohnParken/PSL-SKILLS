@@ -519,5 +519,142 @@
       }
     ]
   },
-  "compatibility_run_schema_version": "ofd-read-2 (historical run)"
+  "compatibility_run_schema_version": "ofd-read-2 (historical run)",
+  "resource_index_recovery_run": {
+    "version": "20261104.0046.0390",
+    "python": "3.12.11",
+    "expat": "2.6.3",
+    "platform": "macOS arm64; Linux and Windows not verified",
+    "samples": [
+      {
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/Page5.ofd",
+        "sha256": "ad57abde3dafc7fd0d2845e42b3767ba0eb900514148e1cce2205da2d97b89c0",
+        "bytes": 4110,
+        "before_status": "failed",
+        "actual": {
+          "status": "partial",
+          "structure_status": "partial",
+          "text_status": "empty",
+          "pages": 5,
+          "runs": 0,
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "characters": 0,
+          "xml_parts": 7,
+          "resource_gaps": [
+            {
+              "kind": "PublicRes",
+              "source": "Doc_0/Document.xml",
+              "value": "PublicRes.xml",
+              "target": "Doc_0/PublicRes.xml",
+              "scope": "document"
+            }
+          ],
+          "diagnostics": {
+            "missing_resource_index": 1,
+            "vector_not_interpreted": 78,
+            "no_explainable_text": 5,
+            "document_feature_not_interpreted": 1,
+            "foreign_namespace": 2
+          },
+          "frozen_storage_oracle": "passed; no TextCode in any of five pages",
+          "cli": {
+            "exit_code": 3,
+            "stdout_characters": 110638,
+            "stderr": "",
+            "parsed_complete_json": true
+          }
+        },
+        "independent_expectation": "Direct standard-library ElementTree TextObject/TextCode extraction from hash-verified unchanged original before modifying target; storage oracle only, no visual/semantic assertion"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld.ofd",
+        "sha256": "edaf7b227ebff5d7621e05fefc251e572bffa6cb24e9ab1485988b39ba8d4429",
+        "bytes": 1652,
+        "before_status": "complete",
+        "actual": {
+          "status": "complete",
+          "structure_status": "complete",
+          "text_status": "complete",
+          "pages": 1,
+          "runs": 1,
+          "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494",
+          "characters": 22,
+          "xml_parts": 4,
+          "resource_gaps": [],
+          "diagnostics": {},
+          "text_unchanged_from_baseline": true,
+          "upstream_literal_oracle": "passed",
+          "cli": {
+            "exit_code": 0,
+            "stdout_characters": 14784,
+            "stderr": "",
+            "parsed_complete_json": true
+          }
+        },
+        "independent_expectation": "HelloWorld: frozen upstream literal; other inputs: baseline text preservation only"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/keyword2.ofd",
+        "sha256": "bff244b1133ad553648537c395db97baa4f35d9a959afc7c938735a3f8b2b8a1",
+        "bytes": 14095,
+        "before_status": "partial",
+        "actual": {
+          "status": "partial",
+          "structure_status": "complete",
+          "text_status": "partial",
+          "pages": 1,
+          "runs": 63,
+          "text_sha256": "d50d2e0fc6e6b36d54d34f2ffd699ef847140a1fe507bb708d6e98bde2f648cc",
+          "characters": 541,
+          "xml_parts": 13,
+          "resource_gaps": [],
+          "diagnostics": {
+            "metadata_only": 3,
+            "signatures_not_verified": 1,
+            "vector_not_interpreted": 23,
+            "image_not_read": 1,
+            "xml_namespace_unresolved": 1,
+            "foreign_namespace": 35
+          },
+          "text_unchanged_from_baseline": true,
+          "cli": {
+            "exit_code": 3,
+            "stdout_characters": 272808,
+            "stderr": "",
+            "parsed_complete_json": true
+          }
+        },
+        "independent_expectation": "HelloWorld: frozen upstream literal; other inputs: baseline text preservation only"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+        "sha256": "09cff60df3e503a25f8f9c008ba72596051b0e91264211ba8a0123c59d826a02",
+        "bytes": 2310,
+        "before_status": "partial",
+        "actual": {
+          "status": "partial",
+          "structure_status": "complete",
+          "text_status": "partial",
+          "pages": 1,
+          "runs": 2,
+          "text_sha256": "2573807d9856cc8e535c9a1a8894ee4ff0870bc34a090cfe4d2c400ad3923286",
+          "characters": 4,
+          "xml_parts": 5,
+          "resource_gaps": [],
+          "diagnostics": {
+            "vector_not_interpreted": 13,
+            "additional_xml_part_catalogued": 1
+          },
+          "text_unchanged_from_baseline": true,
+          "cli": {
+            "exit_code": 3,
+            "stdout_characters": 34282,
+            "stderr": "",
+            "parsed_complete_json": true
+          }
+        },
+        "independent_expectation": "HelloWorld: frozen upstream literal; other inputs: baseline text preservation only"
+      }
+    ]
+  }
 }

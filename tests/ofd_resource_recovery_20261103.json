@@ -1,0 +1,278 @@
+{
+  "temporary_root": ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae",
+  "registered_before_creation": [
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/Page5.ofd",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/reader.ofd",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/keyword2.ofd",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/areaholder.ofd",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/SKILL.md",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/references/boundaries.md",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/references/compatibility.md",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/references/contract.md",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/references/output-views.md",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/references/real-samples.json",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/references/structure.md",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/references/validation.md",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/requirements.txt",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/scripts/read_ofd.py",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/scripts/test_ofd.py",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/scripts/test_ofd_compat.py",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/scripts/test_ofd_resource_recovery.py",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/scripts/test_ofd_structure.py",
+    ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/release/ofd/scripts/test_ofd_views.py"
+  ],
+  "cleanup": "completed; only pre-registered current-run temporary files removed",
+  "baseline": {
+    "tests": 92,
+    "python": "3.12.11",
+    "expat": "2.6.3"
+  },
+  "duplicate_task_check": {
+    "agents": "only current agent",
+    "process_inventory": "denied: ps operation not permitted; no retry"
+  },
+  "samples": [
+    {
+      "path": ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/Page5.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/Page5.ofd",
+      "sha256": "ad57abde3dafc7fd0d2845e42b3767ba0eb900514148e1cce2205da2d97b89c0",
+      "bytes": 4110,
+      "before": {
+        "status": "failed",
+        "reason": "missing package reference: Doc_0/PublicRes.xml"
+      },
+      "frozen_storage_oracle": {
+        "method": "Direct standard-library ElementTree TextObject/TextCode extraction from hash-verified unchanged original before modifying target; storage oracle only, no visual/semantic assertion",
+        "pages": [
+          {
+            "source": "Doc_0/Pages/Page_0/Content.xml",
+            "raw_textcodes": [],
+            "raw_character_count": 0,
+            "xml_sha256": "c573c8d859e8a902d136838ce20eb8adf03138007cba4bbf095ea46614c1995c"
+          },
+          {
+            "source": "Doc_0/Pages/Page_1/Content.xml",
+            "raw_textcodes": [],
+            "raw_character_count": 0,
+            "xml_sha256": "3991fa558b6145fd8c07bffeeb49472cb9ebf8b3892bac4b7ea1da0a1a0a6179"
+          },
+          {
+            "source": "Doc_0/Pages/Page_2/Content.xml",
+            "raw_textcodes": [],
+            "raw_character_count": 0,
+            "xml_sha256": "0e2ec1f72a1280fc93b163856291feef09a7afe82895b6a5007d07cdb83d039c"
+          },
+          {
+            "source": "Doc_0/Pages/Page_3/Content.xml",
+            "raw_textcodes": [],
+            "raw_character_count": 0,
+            "xml_sha256": "7e702a947625e34dee846d11e79174f9885408ded2b3cf15632caee26332df5a"
+          },
+          {
+            "source": "Doc_0/Pages/Page_4/Content.xml",
+            "raw_textcodes": [],
+            "raw_character_count": 0,
+            "xml_sha256": "451bc649c4df1bb172790cd9199483b1401041bd82fad74eb56cdeba98d19a90"
+          }
+        ]
+      },
+      "after": {
+        "status": "partial",
+        "structure_status": "partial",
+        "text_status": "empty",
+        "pages": 5,
+        "runs": 0,
+        "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "characters": 0,
+        "xml_parts": 7,
+        "resource_gaps": [
+          {
+            "kind": "PublicRes",
+            "source": "Doc_0/Document.xml",
+            "value": "PublicRes.xml",
+            "target": "Doc_0/PublicRes.xml",
+            "scope": "document"
+          }
+        ],
+        "diagnostics": {
+          "missing_resource_index": 1,
+          "vector_not_interpreted": 78,
+          "no_explainable_text": 5,
+          "document_feature_not_interpreted": 1,
+          "foreign_namespace": 2
+        },
+        "frozen_storage_oracle": "passed; no TextCode in any of five pages",
+        "cli": {
+          "exit_code": 3,
+          "stdout_characters": 110638,
+          "stderr": "",
+          "parsed_complete_json": true
+        }
+      }
+    },
+    {
+      "path": ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/reader.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-reader/src/test/resources/helloworld.ofd",
+      "sha256": "edaf7b227ebff5d7621e05fefc251e572bffa6cb24e9ab1485988b39ba8d4429",
+      "bytes": 1652,
+      "before": {
+        "status": "complete",
+        "text": "你好呀，OFD Reader&Writer！"
+      },
+      "after": {
+        "status": "complete",
+        "structure_status": "complete",
+        "text_status": "complete",
+        "pages": 1,
+        "runs": 1,
+        "text_sha256": "3e1aef7f96578548d82c9c800242a608656d6208fb69c315fb9545b52bfc7494",
+        "characters": 22,
+        "xml_parts": 4,
+        "resource_gaps": [],
+        "diagnostics": {},
+        "text_unchanged_from_baseline": true,
+        "upstream_literal_oracle": "passed",
+        "cli": {
+          "exit_code": 0,
+          "stdout_characters": 14784,
+          "stderr": "",
+          "parsed_complete_json": true
+        }
+      }
+    },
+    {
+      "path": ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/keyword2.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/keyword2.ofd",
+      "sha256": "bff244b1133ad553648537c395db97baa4f35d9a959afc7c938735a3f8b2b8a1",
+      "bytes": 14095,
+      "before": {
+        "status": "partial",
+        "text": "机器编号：发票代码：发票号码：开票日期：校验码：购买方名称：纳税人识别号：地址、电话：开户行及账号：密码区项目名称规格型号单位数量单价金额税率税额合计价税合计（大写）（小写）销售方名称：纳税人识别号：地址、电话：开户行及账号：备注收款人：复核：开票人：江苏增值税电子普通发票032001600511上海后衍品牌管理有限公司钟楼分公司91320404MA22FHG7XX新北区河海街道时代商务广场3幢1910室18015826027江南农村商业银行天宁支行8980114401203000000028131471858667007910547管理员新北区河海华昇印章雕刻社01897 10905 47488 983210051/+5358/9/1/9>5258<>-4-6/46*7-*/*9+2+9>*8<38565*0/959>6188633>+48>17004*52*43<77<*75><+</*49/67019>+>194<>875差额征税：2.00。常州市钟楼区莱蒙都会商业街4-101号320404197607060813012020年10月04日贰佰圆整¥200.00¥198.04¥1.96蔡海霞蔡海霞*印刷品*POP制作费***组198.041.96198.041"
+      },
+      "after": {
+        "status": "partial",
+        "structure_status": "complete",
+        "text_status": "partial",
+        "pages": 1,
+        "runs": 63,
+        "text_sha256": "d50d2e0fc6e6b36d54d34f2ffd699ef847140a1fe507bb708d6e98bde2f648cc",
+        "characters": 541,
+        "xml_parts": 13,
+        "resource_gaps": [],
+        "diagnostics": {
+          "metadata_only": 3,
+          "signatures_not_verified": 1,
+          "vector_not_interpreted": 23,
+          "image_not_read": 1,
+          "xml_namespace_unresolved": 1,
+          "foreign_namespace": 35
+        },
+        "text_unchanged_from_baseline": true,
+        "cli": {
+          "exit_code": 3,
+          "stdout_characters": 272808,
+          "stderr": "",
+          "parsed_complete_json": true
+        }
+      }
+    },
+    {
+      "path": ".ofd-resource-d926e149f8db4b43bd739d7d1e330aae/areaholder.ofd",
+      "url": "https://raw.githubusercontent.com/ofdrw/ofdrw/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-layout/src/test/resources/areaholder_fields.ofd",
+      "sha256": "09cff60df3e503a25f8f9c008ba72596051b0e91264211ba8a0123c59d826a02",
+      "bytes": 2310,
+      "before": {
+        "status": "partial",
+        "text": "姓名生日"
+      },
+      "after": {
+        "status": "partial",
+        "structure_status": "complete",
+        "text_status": "partial",
+        "pages": 1,
+        "runs": 2,
+        "text_sha256": "2573807d9856cc8e535c9a1a8894ee4ff0870bc34a090cfe4d2c400ad3923286",
+        "characters": 4,
+        "xml_parts": 5,
+        "resource_gaps": [],
+        "diagnostics": {
+          "vector_not_interpreted": 13,
+          "additional_xml_part_catalogued": 1
+        },
+        "text_unchanged_from_baseline": true,
+        "cli": {
+          "exit_code": 3,
+          "stdout_characters": 34282,
+          "stderr": "",
+          "parsed_complete_json": true
+        }
+      }
+    }
+  ],
+  "new_synthetic_tests": 11,
+  "total_skill_tests": 103,
+  "target_linux": "not verified; current executor is macOS",
+  "version": "20261104.0046.0390",
+  "original_network_attempt": "DNS unavailable in sandbox; no bytes received; authorized network-enabled retry fetched only the four declared OFDRW public inputs",
+  "prohibited_inputs": "No formerly denied NDRC document, duplicate content or Library sample accessed",
+  "description_review": "unchanged: storage XML and literal text scope still accurate; no new OCR/rendering/conformance claim",
+  "static": {
+    "ast_tokenize": "passed; all OFD scripts syntax, max 200 characters, no semicolon or inline compound suites, stdlib imports",
+    "files": [
+      "skills/ofd/scripts/read_ofd.py",
+      "skills/ofd/scripts/test_ofd.py",
+      "skills/ofd/scripts/test_ofd_compat.py",
+      "skills/ofd/scripts/test_ofd_resource_recovery.py",
+      "skills/ofd/scripts/test_ofd_structure.py",
+      "skills/ofd/scripts/test_ofd_views.py"
+    ],
+    "pylint": "not installed; not run",
+    "skill_strict": "passed",
+    "description_unicode_chars": 126
+  },
+  "regression": {
+    "skill_tests": 103,
+    "postfix_review_tests": 6,
+    "status": "passed",
+    "environment_selfcheck": "passed; Python 3.12.11 Expat 2.6.3 zlib and descriptor primitives",
+    "host_channels": "tools returned stdout/stderr/exit for successful and failed invocations; real sample CLI stdout captured and parsed locally; model received summaries, not all JSON content"
+  },
+  "package": {
+    "path": "skills/ofd-20261104.0046.0390.zip",
+    "bytes": 65984,
+    "sha256": "83cf1696a5c955c0f9963dff2637303cda6ca6d3c52c69d570901b121edb9351",
+    "members": {
+      "SKILL.md": "fc46f961547d56179ccf60f1d63bee7ffbfe46364b1f0c76e6b2eb0f25bf7bca",
+      "references/boundaries.md": "0d6b9106cc666010e05d58afaaef86a01d230a59af97d980a7c2e75d67342c23",
+      "references/compatibility.md": "5de22631885b249bf1310d3a4a11cd6bdcb007595a0e7b346471f6420a4f0aea",
+      "references/contract.md": "7febea557357762032aa350eb2e9751998b39bef86626118aff7288bd354ac47",
+      "references/output-views.md": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+      "references/real-samples.json": "3fbaf5276bb2af447af82e5878ec98553daaf75c38eb9247329151b40c34bdc2",
+      "references/structure.md": "02023cf895d8ffbcd6e32456fb16ee49cf2c3d97327eb91671506e68a9ed1443",
+      "references/validation.md": "445868bbe88616bce967585a9ab8349e35b816c1579d86c9d1d2c3fd2e1364c8",
+      "requirements.txt": "423841be34df23375c319889cc694b1fd76cfebc8cd5712a008356f4d44259c8",
+      "scripts/read_ofd.py": "620e15c95b364a8f724d210b6cfcf9fff1cdd04f226ce021535a5365f85e2906",
+      "scripts/test_ofd.py": "858f0873a262d6001b18bbca271d4c68194723d78c08a65046f56ca60b198bda",
+      "scripts/test_ofd_compat.py": "73ea4a11cf2b3a71ebedc05491d71314cb3cd7ee944c45eaff41b3caa4fbc4d1",
+      "scripts/test_ofd_resource_recovery.py": "f3349178a08b7d182d442e249fedf698b1cbf96e25151ce21a1abe8a3f97d622",
+      "scripts/test_ofd_structure.py": "33499b069079b53243c37a3462a2516d7980b256c92f1c251dfcde2ccc5c99cb",
+      "scripts/test_ofd_views.py": "a3057f07490c66b746e21e0577b66a77dd1f0ddc4a89f06cba98af945667f4ff"
+    },
+    "read_only_empty_path_runs": [
+      {
+        "stdout": "",
+        "stderr": "----------------------------------------------------------------------\nRan 103 tests in 0.810s\n\nOK\n",
+        "exit_code": 0
+      },
+      {
+        "stdout": "",
+        "stderr": "----------------------------------------------------------------------\nRan 103 tests in 0.813s\n\nOK\n",
+        "exit_code": 0
+      }
+    ],
+    "source_and_install_unchanged": true,
+    "release_destination": "local only; no Library replacement or other external publication attempted"
+  },
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "shared_readme": "not modified: shared README is concurrently maintained; parent should reconcile only OFD version row if desired"
+}

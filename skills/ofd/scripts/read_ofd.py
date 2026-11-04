@@ -240,12 +240,18 @@ class Package:
         self.payload_classified = set()
         self.xml_modes = {}
 
-    def reference(self, source, value):
+    def reference(self, source, value, *, missing_ok=False):
         self.references += 1
         if self.references > LIMITS['references']:
             raise ReadError('limit: references')
         target = resolve(source, value)
-        if target not in self.members or self.members[target].is_dir():
+        if target not in self.members:
+            if target + '/' in self.members:
+                raise ReadError('package reference points to directory: ' + target)
+            if missing_ok:
+                return None
+            raise ReadError('missing package reference: ' + target)
+        if self.members[target].is_dir():
             raise ReadError('missing package reference: ' + target)
         record = dict(source=source, value=value, target=target)
         self.account(record)
@@ -616,6 +622,11 @@ def catalogue_structure(package, documents, issue):
                     if not info.is_dir() and name not in package.cache and name not in package.opaque_members]
     structure['unclassified_members'] = unclassified
     package.account(unclassified)
+    missing_indexes = sum(len(document['resource_gaps']) for document in documents)
+    structure['missing_resource_index_count'] = missing_indexes
+    package.account(dict(missing_resource_index_count=missing_indexes))
+    if missing_indexes:
+        structure['status'] = 'partial'
     if unclassified:
         structure['status'] = 'partial'
         for name in unclassified:
@@ -687,7 +698,7 @@ def read_ofd(path, *, task_root=None, version_policy="known"):
         if doc_root is None and versions is None:
             raise ReadError('missing DocRoot')
         doc_path = package.reference('OFD.xml', text_of(doc_root)) if doc_root is not None else 'OFD.xml'
-        doc = dict(source=doc_path, pages=[], resources=[], metadata=[], template_sources={})
+        doc = dict(source=doc_path, pages=[], resources=[], resource_gaps=[], metadata=[], template_sources={})
         append_to(result['documents'], doc)
         doc['info'] = []
         doc_info = single_child(body, 'DocInfo')
@@ -722,8 +733,16 @@ def read_ofd(path, *, task_root=None, version_policy="known"):
         resource_defs = {}
         resource_records = set()
 
-        def load_resources(source, value, ids, definitions, scope):
-            res_path = package.reference(source, value)
+        def load_resources(source, value, ids, definitions, scope, kind):
+            # Only absence of a resource index is recoverable. Path validation,
+            # directories, malformed/present XML and payload-role conflicts still fail.
+            res_path = package.reference(source, value, missing_ok=True)
+            if res_path is None:
+                target = resolve(source, value)
+                append_to(doc['resource_gaps'], dict(kind=kind, source=source, value=value,
+                                                     target=target, scope=scope))
+                issue('missing_resource_index', source, kind + ': ' + target)
+                return
             resource = package.xml(res_path, 'Res')
             package.budget(resource)
             base = resource.get('BaseLoc', '')
@@ -763,7 +782,7 @@ def read_ofd(path, *, task_root=None, version_policy="known"):
                 templates[ident] = package.reference(doc_path, entry.get('BaseLoc', ''))
             for kind in ('PublicRes', 'DocumentRes'):
                 for entry in common.findall(q(kind)):
-                    load_resources(doc_path, text_of(entry), resource_ids, resource_defs, 'document')
+                    load_resources(doc_path, text_of(entry), resource_ids, resource_defs, 'document', kind)
         # Preserve related XML as metadata only; never treat its text as page text.
         for kind in ('Attachments', 'Annotations', 'CustomTags', 'Extensions'):
             for entry in document.findall(q(kind)):
@@ -822,7 +841,7 @@ def read_ofd(path, *, task_root=None, version_policy="known"):
                 local_ids = dict(resource_ids)
                 local_defs = dict(resource_defs)
                 for page_resource in page_xml.findall(q('PageRes')):
-                    load_resources(source, text_of(page_resource), local_ids, local_defs, source)
+                    load_resources(source, text_of(page_resource), local_ids, local_defs, source, 'PageRes')
                 if not is_template:
                     page['content_present'] = single_child(page_xml, 'Content') is not None
                 else:
@@ -945,7 +964,7 @@ def read_ofd(path, *, task_root=None, version_policy="known"):
         'glyph_mapping_not_interpreted', 'image_not_read', 'vector_not_interpreted',
         'uninterpreted_object', 'unknown_element', 'unresolved_composite_resource',
         'object_outside_content', 'unexpected_textcode_parent', 'no_explainable_text',
-        'version_common_subset', 'missing_version_assumed',
+        'version_common_subset', 'missing_version_assumed', 'missing_resource_index',
     }
     gaps = sorted({diagnostic['code'] for diagnostic in result['diagnostics']
                    if diagnostic['code'] in text_gap_codes})

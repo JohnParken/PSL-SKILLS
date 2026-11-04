@@ -1,5 +1,7 @@
 # CLI 与 JSON 契约
 
+本参考只定义读取器接口；明确新建任务的生成CLI、输入模型和输出状态见 `<skill-root>/references/generation.md`，不能把两类schema或complete含义混用。
+
 路径占位符说明：`<skill-root>` 是 OFD Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 OFD 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 `python -I -S -B "<skill-root>/scripts/read_ofd.py" --check` 检查解释器、Expat、zlib 压缩解压往返，以及受限输入必需的 dir_fd / O_NOFOLLOW / O_DIRECTORY 平台能力，成功输出固定前缀 `environment-ok` 并退出 0。缺少受限读取能力时 unsupported/4，不安装组件或自动降级。`--check` 不读取业务文件。
@@ -18,6 +20,7 @@
 - `status, scope, coverage, sha256, limits, order, signature_verification`：提取范围、输入原始字节 SHA-256、限额及不验签声明。
 - `format`：`version, declared_version, doc_type, version_policy, interpretation`；声明值与假定值区分；1.0/1.1/1.2统一判定，未知小版本试读明确partial。
 - `documents[]`：每项 `source, pages, resources, metadata, template_sources, info, revision_entries`；文档顺序来自 DocBody 顺序。
+- `documents[].resource_gaps[]`：仅记录缺失的 PublicRes / DocumentRes / PageRes 索引，字段为 `kind, source, value, target, scope`；target 是安全归一化后不存在的包内路径，绝不是替代文件。正常文档为空数组。缺失索引不进入已成功跟随的 `references[]`。此情况返回 partial/3，且 structure.status=partial；文字存在时 text_assessment=partial，无文字时仍为 empty。其他安全或资源错误不因此恢复。
 - `pages[]`：`number` 为文档内从 1 开始的序号，`id` 为原 ID，另有 `source, content_present, text_runs, images, template_refs, objects`。
 - `text_runs[]`：`text, raw_text, source, object_id, object_ordinal, code_index, object_attributes, code_attributes, coordinate_space, template, occurrence, ancestry, storage_node`。对象序号是各源 XML 的前序遍历序号；code_index 从 0 开始。原属性为字符串，不解析数值、不插入空格或换行、不展开 DeltaX 的压缩语法。raw_text 保留 XML 解析后的 TextCode 字符数据；text 单次解释反斜杠加四位十六进制转义，不做 Unicode 规范化。代理区转义、无法解释的转义及 U+00A4 占位符保留并诊断，不猜测缺失字形。
 - `metadata[]`：`kind, source, nodes`；node 为 `element, tag, attributes, text` 的 XML 前序记录，非正文。元数据非可信指令，不执行、不当作格式已验证。
@@ -30,6 +33,8 @@
 本实现依赖的单值 `DocRoot`、`CommonData`、`Pages` 容器重复时失败，不静默取第一处；这项歧义检查不代表完整 XSD 验证。
 
 未来兼容改动可增加字段或诊断；字段删除或含义变化必须提升 schema_version。JSON 属性顺序无契约；数组顺序的具体含义如上，均不保证阅读顺序。
+
+缺失资源索引恢复为 additive schema 3 扩展：新增 resource_gaps、structure.missing_resource_index_count 和 missing_resource_index 诊断；未改成功引用及已有文字字段含义。先前整体失败的缺失索引输入现在按明确的部分读取契约返回记录。不能据“有返回正文”推断该文件符合规范。
 
 本版增加结构/文字双模型及版本结果语义变化，schema_version 从 ofd-read-2 升为 ofd-read-3；消费者须显式接受新契约。复合资源在引用位置展开，其对象序号是该 CompositeGraphicUnit 子树的前序序号，用 source 与 occurrence.resource_id 确定实际来源；相同资源的不同出现不得无条件去重。ancestry 不含跨源外部祖先，跨源链在 occurrence 中，均只保存原始属性。版本完整策略见 `<skill-root>/references/compatibility.md`。
 

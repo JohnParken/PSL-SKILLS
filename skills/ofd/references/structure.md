@@ -4,7 +4,7 @@
 
 ## 三个覆盖维度
 
-1. `structure.status` 为 complete：在安全与资源上限内，所有实际读取的 XML 元素、属性、字符数据和结构事件均已保存，且没有未分类成员。指 XML 存储层面的完整，不是所有业务字段的语义解释或 XSD 合规证明。
+1. `structure.status` 为 complete：在安全与资源上限内，所有实际读取的 XML 元素、属性、字符数据和结构事件均已保存，且没有未分类成员或缺失的资源索引。指 XML 存储层面的完整，不是所有业务字段的语义解释或 XSD 合规证明。`missing_resource_index_count` 记录按引用出现统计的缺失索引数量；具体来源、原值、归一化目标与作用域见 documents[].resource_gaps，不把缺失引用标成已验证目标。
 2. `structure.namespace_resolution` 为 complete：所有已读部件均完成命名空间展开；partial 表示存在以原始名称保留的自定义 XML。具体部件的 namespace_mode 区分 expanded_names 与 raw_names，不猜测或修复命名空间。
 3. `text_assessment.status` 为 complete / partial / empty：登记的 OFD TextCode 是否有解释缺口。实际原始 XML 字符数据始终保留在 nodes.text / tail；此状态不证明图像/轮廓/字形对应的自然语言已全部恢复。全局 status 保留其他诊断，不能只取其中一个状态就宣称整个文档完整。
 

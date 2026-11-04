@@ -1,0 +1,324 @@
+{
+  "task_work_directory": ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51",
+  "registered_before_creation": [
+    ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51"
+  ],
+  "skill_version": "20261104.0550.0787",
+  "temporary_files": [
+    "font.ttf",
+    "OFL.txt",
+    "chart.png",
+    "photo.jpg",
+    "layout.json",
+    "generator_report.json",
+    "upload_request.json",
+    "library_upload.py",
+    "library_hosted_apps.py",
+    "library_file_transfer.py"
+  ],
+  "deliverables": [
+    "OFD_Acceptance_20261103.ofd",
+    "OFD_Acceptance_Guide_20261103.txt"
+  ],
+  "scope": "explicit user request for OFD reader acceptance; no denied inputs",
+  "routing_review": {
+    "method": "manual instruction-level regression; no runtime natural-language router or real host trigger test claimed",
+    "cases": [
+      {
+        "request": "生成一份会议纪要",
+        "decision": "do_not_generate_ofd",
+        "review": "passed"
+      },
+      {
+        "request": "生成一份Word报告",
+        "decision": "do_not_generate_ofd",
+        "review": "passed"
+      },
+      {
+        "request": "生成PDF说明书",
+        "decision": "do_not_generate_ofd",
+        "review": "passed"
+      },
+      {
+        "request": "制作一个带中文表格的文档",
+        "decision": "do_not_generate_ofd",
+        "review": "passed"
+      },
+      {
+        "request": "读取这个OFD",
+        "decision": "read_only",
+        "review": "passed"
+      },
+      {
+        "request": "研究OFD生成方案",
+        "decision": "discussion_only",
+        "review": "passed"
+      },
+      {
+        "request": "生成一个OFD格式样本",
+        "decision": "generate_ofd",
+        "review": "passed"
+      },
+      {
+        "request": "按上面OFD验收计划制作样本",
+        "decision": "generate_ofd_in_explicit_context",
+        "review": "passed"
+      },
+      {
+        "request": "再做一页，延续当前OFD样本",
+        "decision": "generate_ofd_in_explicit_context",
+        "review": "passed"
+      },
+      {
+        "request": "把用户现成OFD任意改写",
+        "decision": "unsupported_editing",
+        "review": "passed"
+      },
+      {
+        "request": "读一下上传的文件",
+        "input_mapping": "uploaded.ofd",
+        "decision": "read_only_without_requiring_format_keyword",
+        "review": "passed"
+      },
+      {
+        "request": "提取这份文件正文",
+        "input_mapping": "uploaded.ofd",
+        "decision": "read_only_without_generation_gate",
+        "review": "passed"
+      },
+      {
+        "request": "生成一份文档",
+        "context": "previous task only read an OFD; no explicit OFD generation request",
+        "decision": "do_not_default_to_ofd",
+        "review": "passed"
+      },
+      {
+        "request": "按当前明确的OFD生成任务再做一份",
+        "decision": "continue_explicit_ofd_generation",
+        "review": "passed"
+      }
+    ],
+    "description_characters": 136,
+    "scope": "Only this project OFD Skill generation route; no global preference and no restriction of OFD reading/extraction/analysis",
+    "current_skill_version": "20261104.0555.2793",
+    "call_path_review": "Natural-language selection guard is scoped to Skill entry/generation reference; read_ofd CLI untouched and does not require an OFD-generation request; direct generation CLI remains an explicit format operation, not a generic document router"
+  },
+  "frozen_expected_page_texts": [
+    [
+      "中文生成验证 OFD 1.0",
+      "第1页：中文、数字与标点",
+      "ABC 12345 你好，世界！",
+      "线框应完整，斜线连接矩形两角。",
+      "项目",
+      "数量",
+      "备注",
+      "中文",
+      "12",
+      "通过",
+      "图片",
+      "2",
+      "待目视",
+      "第1页 / 共2页"
+    ],
+    [
+      "第2页：图片与分页验证",
+      "本页应为A5，图片保持原始比例。",
+      "PNG：从左到右为红、绿、蓝色块。",
+      "JPEG：应有独立图像，不应空白或变形。",
+      "第2页 / 共2页"
+    ]
+  ],
+  "expected_layout": {
+    "page_sizes_mm": [
+      [
+        210,
+        297
+      ],
+      [
+        148,
+        210
+      ]
+    ],
+    "table_rows": [
+      [
+        "项目",
+        "数量",
+        "备注"
+      ],
+      [
+        "中文",
+        "12",
+        "通过"
+      ],
+      [
+        "图片",
+        "2",
+        "待目视"
+      ]
+    ],
+    "png": "three left-to-right RGB color blocks, 2:1 ratio",
+    "jpeg": "3x2 low-resolution dark/green test pattern; 3:2 ratio; no fine detail expectation"
+  },
+  "sample": {
+    "filename": "OFD_Acceptance_20261103.ofd",
+    "bytes": 5875341,
+    "sha256": "33bec7c37f4972fa36c3c5a571d11323d6fb73e7e4f882c5f36be0962d59c1db",
+    "pages": 2,
+    "objects": 32,
+    "characters": 157,
+    "generator_exit_code": 0,
+    "readback_exit_code": 3,
+    "readback_status": "partial",
+    "readback_diagnostic_codes": [
+      "glyph_mapping_not_interpreted",
+      "image_not_read",
+      "vector_not_interpreted"
+    ],
+    "frozen_text_comparison": "passed",
+    "independent_jdk": {
+      "status": "passed",
+      "tool": "JDK ZIP/XML/Font/ImageIO",
+      "pages": 2,
+      "text_runs": 19,
+      "characters": 157,
+      "checked_advances": 138,
+      "decoded_images": 2,
+      "visual_ofd_rendering": "not_performed"
+    },
+    "visual_reader_acceptance": "pending_user_reader"
+  },
+  "upload_process": {
+    "exit_code": 1,
+    "stderr": "library upload failed: Library prepare_uploads is not available\n"
+  },
+  "library_upload_result": {
+    "status": "unparsed",
+    "stdout_characters": 0
+  },
+  "sample_source_hashes_before_further_optimization": {
+    "skills/ofd/scripts/ofd_generation_assets.py": "e810fd4aeca86e9804cac133f04735388e2cdb90e6bce8dd9a614d6ef6b557d2",
+    "skills/ofd/scripts/test_ofd_generate.py": "0a3834a3fe378556ed2e52d3416247d8ac4488772c00803494c2230b47e98a42",
+    "skills/ofd/scripts/generate_ofd.py": "24dd98069e54e7e80fbc4297644e9d414a7b57d2bdb47282da65d2687996dcac",
+    "skills/ofd/scripts/test_ofd_views.py": "a3057f07490c66b746e21e0577b66a77dd1f0ddc4a89f06cba98af945667f4ff",
+    "skills/ofd/scripts/read_ofd.py": "620e15c95b364a8f724d210b6cfcf9fff1cdd04f226ce021535a5365f85e2906",
+    "skills/ofd/scripts/test_ofd_compat.py": "73ea4a11cf2b3a71ebedc05491d71314cb3cd7ee944c45eaff41b3caa4fbc4d1",
+    "skills/ofd/scripts/test_ofd.py": "858f0873a262d6001b18bbca271d4c68194723d78c08a65046f56ca60b198bda",
+    "skills/ofd/scripts/test_ofd_resource_recovery.py": "f3349178a08b7d182d442e249fedf698b1cbf96e25151ce21a1abe8a3f97d622",
+    "skills/ofd/scripts/test_ofd_structure.py": "33499b069079b53243c37a3462a2516d7980b256c92f1c251dfcde2ccc5c99cb",
+    "skills/ofd/scripts/check_generated_ofd.py": "4fb1f8815af42f8a362775e8b54a75f66d9ccc00956d43e774264fcb80ad0618"
+  },
+  "upload_failure": {
+    "action": "supported Library prepared batch helper",
+    "targets": [
+      "OFD_Acceptance_20261103.ofd",
+      "OFD_Acceptance_Guide_20261103.txt"
+    ],
+    "stage": "prepare capability discovery before transfer",
+    "outcome": "failed; no Library file IDs returned",
+    "error": "Library prepare_uploads is not available",
+    "retry": "none; no direct-upload substitution attempted"
+  },
+  "cleanup": {
+    "status": "completed",
+    "registered_business_temporary_files": 13,
+    "cleanup_complete": true,
+    "manifests_removed": true,
+    "deliverables_unchanged": true,
+    "remaining": [
+      "OFD_Acceptance_20261103.ofd",
+      "OFD_Acceptance_Guide_20261103.txt"
+    ]
+  },
+  "local_archive": {
+    "status": "skipped",
+    "reason": "missing_router_config",
+    "cloud_library_save": "succeeded through explicitly authorized direct create_library_file"
+  },
+  "delivery_pending": {
+    "status": "resolved",
+    "files": [
+      {
+        "file_name": "OFD_Acceptance_20261103.ofd",
+        "library_file_id": "libfile_4367df0dc1d48191b748adac230f549b",
+        "current_version_number": 0,
+        "bytes": 5875341
+      },
+      {
+        "file_name": "OFD_Acceptance_Guide_20261103.txt",
+        "library_file_id": "libfile_4bddb954b1dc819186f3e8a6f256e382",
+        "current_version_number": 0,
+        "bytes": 2778
+      }
+    ]
+  },
+  "direct_save_transport_registered_before_creation": [
+    "/Users/yangxuezhen/git/PSL-SKILLS/.ofd-native-save-42b6f0f6a01643dfb6da9df0cc7ed630",
+    "/Users/yangxuezhen/git/PSL-SKILLS/.ofd-native-save-42b6f0f6a01643dfb6da9df0cc7ed630/library_file_transfer.py",
+    "/Users/yangxuezhen/git/PSL-SKILLS/.ofd-native-save-42b6f0f6a01643dfb6da9df0cc7ed630/library_hosted_apps.py"
+  ],
+  "direct_save_authorized": "Parent explicitly requests direct create_library_file upload of existing two deliverables; earlier batch-helper failure occurred before transfer",
+  "direct_library_save": {
+    "result": {
+      "results": [
+        {
+          "operation": "create_library_file",
+          "status": "succeeded",
+          "path": "/OFD_Acceptance_20261103.ofd",
+          "file_id": "file_00000000b0c881fd9f12373c93675f20",
+          "library_file_id": "libfile_4367df0dc1d48191b748adac230f549b",
+          "file_name": "OFD_Acceptance_20261103.ofd",
+          "current_version_number": 0,
+          "restored_from_version_number": null,
+          "xattrs": [
+            {
+              "name": "user.library-file-version",
+              "value": "0"
+            }
+          ],
+          "directory_id": "libdir_bc117264c1bc81918c7cfba37e9f7102",
+          "mime_type": "application/zip",
+          "library_artifact_type": "report",
+          "file_size_bytes": 5875341
+        },
+        {
+          "operation": "create_library_file",
+          "status": "succeeded",
+          "path": "/OFD_Acceptance_Guide_20261103.txt",
+          "file_id": "file_0000000002508230b229c2476a86981b",
+          "library_file_id": "libfile_4bddb954b1dc819186f3e8a6f256e382",
+          "file_name": "OFD_Acceptance_Guide_20261103.txt",
+          "current_version_number": 0,
+          "restored_from_version_number": null,
+          "xattrs": [
+            {
+              "name": "user.library-file-version",
+              "value": "0"
+            }
+          ],
+          "directory_id": "libdir_bc117264c1bc81918c7cfba37e9f7102",
+          "mime_type": "text/plain",
+          "library_artifact_type": "report",
+          "file_size_bytes": 2778
+        }
+      ],
+      "warnings": [],
+      "external_connectors_accessed": false
+    },
+    "metadata": [
+      {
+        "file_name": "OFD_Acceptance_20261103.ofd",
+        "library_file_id": "libfile_4367df0dc1d48191b748adac230f549b",
+        "local_identity_exit_code": 0,
+        "local_identity_stdout": "/Users/yangxuezhen/git/PSL-SKILLS/.ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/OFD_Acceptance_20261103.ofd\n"
+      },
+      {
+        "file_name": "OFD_Acceptance_Guide_20261103.txt",
+        "library_file_id": "libfile_4bddb954b1dc819186f3e8a6f256e382",
+        "local_identity_exit_code": 0,
+        "local_identity_stdout": "/Users/yangxuezhen/git/PSL-SKILLS/.ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/OFD_Acceptance_Guide_20261103.txt\n"
+      }
+    ]
+  },
+  "direct_save_transport_cleanup": "completed; only registered current helper files removed",
+  "direct_save_bytes_unchanged": true
+}

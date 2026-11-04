@@ -1,0 +1,1114 @@
+{
+  "temporary_paths_registered_before_creation": [
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.ttf",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.license",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.ofd",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.spec.json",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.png",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.jpg",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.final.ofd",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/SKILL.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/boundaries.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/compatibility.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/contract.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/generation.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/output-views.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/real-samples.json",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/structure.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/references/validation.md",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/requirements.txt",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/check_generated_ofd.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/generate_ofd.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/ofd_generation_assets.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/read_ofd.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/test_ofd.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/test_ofd_compat.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/test_ofd_generate.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/test_ofd_resource_recovery.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/test_ofd_structure.py",
+    ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41_install/scripts/test_ofd_views.py"
+  ],
+  "baseline_source_sha256": {
+    "skills/ofd/requirements.txt": "423841be34df23375c319889cc694b1fd76cfebc8cd5712a008356f4d44259c8",
+    "skills/ofd/SKILL.md": "fc46f961547d56179ccf60f1d63bee7ffbfe46364b1f0c76e6b2eb0f25bf7bca",
+    "skills/ofd/references/output-views.md": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+    "skills/ofd/references/structure.md": "02023cf895d8ffbcd6e32456fb16ee49cf2c3d97327eb91671506e68a9ed1443",
+    "skills/ofd/references/validation.md": "445868bbe88616bce967585a9ab8349e35b816c1579d86c9d1d2c3fd2e1364c8",
+    "skills/ofd/references/real-samples.json": "3fbaf5276bb2af447af82e5878ec98553daaf75c38eb9247329151b40c34bdc2",
+    "skills/ofd/references/contract.md": "7febea557357762032aa350eb2e9751998b39bef86626118aff7288bd354ac47",
+    "skills/ofd/references/boundaries.md": "0d6b9106cc666010e05d58afaaef86a01d230a59af97d980a7c2e75d67342c23",
+    "skills/ofd/references/compatibility.md": "5de22631885b249bf1310d3a4a11cd6bdcb007595a0e7b346471f6420a4f0aea",
+    "skills/ofd/scripts/test_ofd_views.py": "a3057f07490c66b746e21e0577b66a77dd1f0ddc4a89f06cba98af945667f4ff",
+    "skills/ofd/scripts/read_ofd.py": "620e15c95b364a8f724d210b6cfcf9fff1cdd04f226ce021535a5365f85e2906",
+    "skills/ofd/scripts/test_ofd_compat.py": "73ea4a11cf2b3a71ebedc05491d71314cb3cd7ee944c45eaff41b3caa4fbc4d1",
+    "skills/ofd/scripts/test_ofd.py": "858f0873a262d6001b18bbca271d4c68194723d78c08a65046f56ca60b198bda",
+    "skills/ofd/scripts/test_ofd_resource_recovery.py": "f3349178a08b7d182d442e249fedf698b1cbf96e25151ce21a1abe8a3f97d622",
+    "skills/ofd/scripts/test_ofd_structure.py": "33499b069079b53243c37a3462a2516d7980b256c92f1c251dfcde2ccc5c99cb"
+  },
+  "python": "3.12.11 (main, Oct  7 2025, 15:53:48) [Clang 20.1.4 ]",
+  "runtime_dependencies": "stdlib only; no installs",
+  "prohibited_inputs": "No previously denied NDRC OFD or identical content",
+  "cleanup": {
+    "status": "completed",
+    "removed_registered_files": 27,
+    "removed_private_installations": 1,
+    "user_inputs_and_other_tasks": "untouched",
+    "generated_smoke_ofd": "temporary validation candidates removed; source and validation evidence retained"
+  },
+  "maintenance_cleanup_exception": {
+    "action": "explicit py_compile wrote its caches despite -B; subsequent checks use AST only",
+    "known_created_files_removed": [
+      "skills/ofd/scripts/__pycache__/generate_ofd.cpython-312.pyc",
+      "skills/ofd/scripts/__pycache__/ofd_generation_assets.cpython-312.pyc",
+      "skills/ofd/scripts/__pycache__/check_generated_ofd.cpython-312.pyc"
+    ],
+    "pre_registration": "not performed for these three compiler-created caches; no unrelated caches removed"
+  },
+  "font_source": {
+    "directory_api": "https://api.github.com/repos/google/fonts/contents/ofl/mashanzheng",
+    "files": [
+      {
+        "name": "MaShanZheng-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/mashanzheng/MaShanZheng-Regular.ttf",
+        "git_blob_sha": "11bbfb9867d70612158229d037e7a5f622bd0e38",
+        "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+        "bytes": 5857936,
+        "local_path": ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.ttf"
+      },
+      {
+        "name": "OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/mashanzheng/OFL.txt",
+        "git_blob_sha": "9e252e1997092670936a7f1d38560973d919f6b0",
+        "sha256": "d7bdb1cee215b689e23c2f95672a6084c790542170648267a55114103d756a08",
+        "bytes": 4397,
+        "local_path": ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.license"
+      }
+    ]
+  },
+  "jdk_test_jpeg": {
+    "stdout": "{\"status\":\"test-jpeg-created\",\"width\":3,\"height\":2}\n",
+    "stderr": "",
+    "exit_code": 0
+  },
+  "frozen_expected": {
+    "texts": [
+      "中文生成验证 OFD 1.0",
+      "项目",
+      "数量",
+      "中文",
+      "12",
+      "第二页 验证"
+    ],
+    "pages": 2,
+    "images": 2,
+    "table_cells": 4
+  },
+  "real_generation": {
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_characters": 8866,
+    "result": {
+      "schema_version": "ofd-generation-result-1",
+      "status": "generated",
+      "profile": "fixed-layout-1",
+      "ofd_version": "1.0",
+      "pages": [
+        {
+          "number": 1,
+          "source": "Doc_0/Pages/Page_0.xml",
+          "items": [
+            {
+              "kind": "text",
+              "id": "6",
+              "text": "中文生成验证 OFD 1.0",
+              "boundary": [
+                23.8,
+                25.425,
+                47.36,
+                6.44
+              ],
+              "baseline": [
+                25.0,
+                30.0
+              ],
+              "font": "1",
+              "glyphs": [
+                137,
+                2387,
+                3625,
+                2041,
+                6592,
+                5423,
+                6967,
+                15,
+                6,
+                4,
+                6967,
+                6879,
+                6888,
+                6878
+              ],
+              "advances": [
+                5.0,
+                5.0,
+                5.0,
+                5.0,
+                5.0,
+                5.0,
+                1.06,
+                2.1350000000000002,
+                2.505,
+                2.45,
+                1.06,
+                1.025,
+                0.9,
+                2.0100000000000002
+              ]
+            },
+            {
+              "kind": "rectangle",
+              "id": "7"
+            },
+            {
+              "kind": "line",
+              "id": "8"
+            },
+            {
+              "kind": "image",
+              "id": "9",
+              "boundary": [
+                20.0,
+                72.5,
+                30.0,
+                15.0
+              ],
+              "ref": "png"
+            },
+            {
+              "kind": "image",
+              "id": "10",
+              "boundary": [
+                60.0,
+                70.0,
+                30.0,
+                20.0
+              ],
+              "ref": "jpeg"
+            },
+            {
+              "kind": "table",
+              "table_index": 0
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "source": "Doc_0/Pages/Page_1.xml",
+          "items": [
+            {
+              "kind": "text",
+              "id": "23",
+              "text": "第二页 验证",
+              "boundary": [
+                24.04,
+                31.34,
+                21.828,
+                5.152
+              ],
+              "baseline": [
+                25.0,
+                35.0
+              ],
+              "font": "1",
+              "glyphs": [
+                4150,
+                182,
+                6456,
+                6967,
+                6592,
+                5423
+              ],
+              "advances": [
+                4.0,
+                4.0,
+                4.0,
+                0.848,
+                4.0,
+                4.0
+              ]
+            }
+          ]
+        }
+      ],
+      "fonts": [
+        {
+          "ref": "main",
+          "id": "1",
+          "name": "MaShanZheng-Regular",
+          "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+          "permission": "caller confirmed; fsType=0; not legal validation",
+          "license_text": "Copyright 2018 The Ma Shan Zheng Project Authors (https://github.com/googlefonts/mashanzheng)\n\nThis Font Software is licensed under the SIL Open Font License, Version 1.1.\nThis license is copied below, and is also available with a FAQ at:\nhttp://scripts.sil.org/OFL\n\n\n-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE.\n",
+          "license_sha256": "d7bdb1cee215b689e23c2f95672a6084c790542170648267a55114103d756a08"
+        }
+      ],
+      "images": [
+        {
+          "ref": "png",
+          "id": "2",
+          "sha256": "ad0296980d1852b61d129d90513b6951c31188d6fab3876be9193a28a2b69e39",
+          "format": "PNG",
+          "width": 2,
+          "height": 1,
+          "validation": "CRC and bounded scanlines; no visual decoding"
+        },
+        {
+          "ref": "jpeg",
+          "id": "3",
+          "sha256": "57d8539a50e3654c8c948f68ae50fed426b139334a3e58d97df8cc6547093dcf",
+          "format": "JPEG",
+          "width": 3,
+          "height": 2,
+          "validation": "markers/dimensions only; entropy and visual decoding not performed"
+        }
+      ],
+      "tables": [
+        {
+          "page": 1,
+          "rows": 2,
+          "columns": 2,
+          "grid_object_ids": [
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16"
+          ],
+          "cells": [
+            {
+              "row": 0,
+              "column": 0,
+              "text": "项目",
+              "box": [
+                20.0,
+                110.0,
+                40.0,
+                15.0
+              ],
+              "object_ids": [
+                "17"
+              ]
+            },
+            {
+              "row": 0,
+              "column": 1,
+              "text": "数量",
+              "box": [
+                60.0,
+                110.0,
+                50.0,
+                15.0
+              ],
+              "object_ids": [
+                "18"
+              ]
+            },
+            {
+              "row": 1,
+              "column": 0,
+              "text": "中文",
+              "box": [
+                20.0,
+                125.0,
+                40.0,
+                15.0
+              ],
+              "object_ids": [
+                "19"
+              ]
+            },
+            {
+              "row": 1,
+              "column": 1,
+              "text": "12",
+              "box": [
+                60.0,
+                125.0,
+                50.0,
+                15.0
+              ],
+              "object_ids": [
+                "20"
+              ]
+            }
+          ],
+          "semantics": "explicit input grid; no merged cells or editable table model"
+        }
+      ],
+      "visual_validation": "not_performed",
+      "independent_client_validation": "not_performed",
+      "diagnostics": [
+        "No shaping, kerning, bidi, wrapping, arbitrary editing or signature support",
+        "Font metrics and declared bounds do not prove renderer or font-program correctness"
+      ],
+      "doc_id": "64AF3C31294945F8989C8CFA3ABF6F68",
+      "max_unit_id": 23,
+      "objects": 16,
+      "characters": 28,
+      "sha256": "1f25e7e6ddfea70b13b88d355ec095ad9dbc6e209146b94ffa9d302e78d43995",
+      "bytes": 5869464,
+      "structural_validation": {
+        "tool": "check_generated_ofd stdlib independent structural implementation",
+        "status": "passed",
+        "scope": "fixed-layout-1 ZIP/XML/references/IDs/bounds/literal text only; no XSD or rendering certification",
+        "sha256": "1f25e7e6ddfea70b13b88d355ec095ad9dbc6e209146b94ffa9d302e78d43995",
+        "pages": [
+          {
+            "source": "Doc_0/Pages/Page_0.xml",
+            "text": [
+              {
+                "object_id": "6",
+                "text": "中文生成验证 OFD 1.0"
+              },
+              {
+                "object_id": "17",
+                "text": "项目"
+              },
+              {
+                "object_id": "18",
+                "text": "数量"
+              },
+              {
+                "object_id": "19",
+                "text": "中文"
+              },
+              {
+                "object_id": "20",
+                "text": "12"
+              }
+            ],
+            "objects": [
+              {
+                "id": "6",
+                "kind": "TextObject"
+              },
+              {
+                "id": "7",
+                "kind": "PathObject"
+              },
+              {
+                "id": "8",
+                "kind": "PathObject"
+              },
+              {
+                "id": "9",
+                "kind": "ImageObject"
+              },
+              {
+                "id": "10",
+                "kind": "ImageObject"
+              },
+              {
+                "id": "11",
+                "kind": "PathObject"
+              },
+              {
+                "id": "12",
+                "kind": "PathObject"
+              },
+              {
+                "id": "13",
+                "kind": "PathObject"
+              },
+              {
+                "id": "14",
+                "kind": "PathObject"
+              },
+              {
+                "id": "15",
+                "kind": "PathObject"
+              },
+              {
+                "id": "16",
+                "kind": "PathObject"
+              },
+              {
+                "id": "17",
+                "kind": "TextObject"
+              },
+              {
+                "id": "18",
+                "kind": "TextObject"
+              },
+              {
+                "id": "19",
+                "kind": "TextObject"
+              },
+              {
+                "id": "20",
+                "kind": "TextObject"
+              }
+            ]
+          },
+          {
+            "source": "Doc_0/Pages/Page_1.xml",
+            "text": [
+              {
+                "object_id": "23",
+                "text": "第二页 验证"
+              }
+            ],
+            "objects": [
+              {
+                "id": "23",
+                "kind": "TextObject"
+              }
+            ]
+          }
+        ],
+        "max_unit_id": 23
+      },
+      "output": ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.ofd",
+      "cleanup": "private candidate removed",
+      "archive": "not_requested; host must archive validated deliverables through its confirmed lifecycle"
+    }
+  },
+  "independent_jdk": {
+    "stdout": "{\"status\":\"passed\",\"tool\":\"JDK ZIP/XML/Font/ImageIO\",\"pages\":2,\"text_runs\":6,\"characters\":28,\"checked_advances\":22,\"decoded_images\":2,\"visual_ofd_rendering\":\"not_performed\"}\n",
+    "stderr": "",
+    "exit_code": 0,
+    "scope": "maintenance-only JDK24 ZIP/XML/TrueType glyph IDs/advances/image decoders; not skill dependency, not OFD rendering or XSD validation"
+  },
+  "reader_roundtrip": {
+    "exit_code": 3,
+    "status": "partial",
+    "stderr": "",
+    "stdout_characters": 58746,
+    "text_expectation": "passed",
+    "pages": 2,
+    "diagnostic_codes": [
+      "glyph_mapping_not_interpreted",
+      "image_not_read",
+      "vector_not_interpreted"
+    ]
+  },
+  "static_checks": {
+    "stdlib_ast_tokenize": "passed; all skill Python, syntax/imports/200-char/no semicolon/no inline suites",
+    "description_unicode_characters": 126,
+    "pylint": "not installed; not run",
+    "description_review": "new limited-generation scope plus explicit font and non-editing constraints; routing separated from read-only flow; no host trigger/token measurement performed"
+  },
+  "version": "20261104.0512.5024",
+  "final_real_generation": {
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_characters": 9590,
+    "result": {
+      "schema_version": "ofd-generation-result-1",
+      "status": "generated",
+      "profile": "fixed-layout-1",
+      "ofd_version": "1.0",
+      "pages": [
+        {
+          "number": 1,
+          "source": "Doc_0/Pages/Page_0.xml",
+          "items": [
+            {
+              "kind": "text",
+              "id": "6",
+              "text": "中文生成验证 OFD 1.0",
+              "boundary": [
+                23.8,
+                25.425,
+                47.36,
+                6.44
+              ],
+              "baseline": [
+                25.0,
+                30.0
+              ],
+              "font": "1",
+              "glyphs": [
+                137,
+                2387,
+                3625,
+                2041,
+                6592,
+                5423,
+                6967,
+                15,
+                6,
+                4,
+                6967,
+                6879,
+                6888,
+                6878
+              ],
+              "advances": [
+                5.0,
+                5.0,
+                5.0,
+                5.0,
+                5.0,
+                5.0,
+                1.06,
+                2.1350000000000002,
+                2.505,
+                2.45,
+                1.06,
+                1.025,
+                0.9,
+                2.0100000000000002
+              ]
+            },
+            {
+              "kind": "rectangle",
+              "id": "7"
+            },
+            {
+              "kind": "line",
+              "id": "8"
+            },
+            {
+              "kind": "image",
+              "id": "9",
+              "boundary": [
+                20.0,
+                72.5,
+                30.0,
+                15.0
+              ],
+              "ref": "png"
+            },
+            {
+              "kind": "image",
+              "id": "10",
+              "boundary": [
+                60.0,
+                70.0,
+                30.0,
+                20.0
+              ],
+              "ref": "jpeg"
+            },
+            {
+              "kind": "table",
+              "table_index": 0
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "source": "Doc_0/Pages/Page_1.xml",
+          "items": [
+            {
+              "kind": "text",
+              "id": "23",
+              "text": "第二页 验证",
+              "boundary": [
+                24.04,
+                31.34,
+                21.828,
+                5.152
+              ],
+              "baseline": [
+                25.0,
+                35.0
+              ],
+              "font": "1",
+              "glyphs": [
+                4150,
+                182,
+                6456,
+                6967,
+                6592,
+                5423
+              ],
+              "advances": [
+                4.0,
+                4.0,
+                4.0,
+                0.848,
+                4.0,
+                4.0
+              ]
+            }
+          ]
+        }
+      ],
+      "fonts": [
+        {
+          "ref": "main",
+          "id": "1",
+          "name": "MaShanZheng-Regular",
+          "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+          "permission": "caller confirmed; fsType=0; not legal validation",
+          "license_text": "Copyright 2018 The Ma Shan Zheng Project Authors (https://github.com/googlefonts/mashanzheng)\n\nThis Font Software is licensed under the SIL Open Font License, Version 1.1.\nThis license is copied below, and is also available with a FAQ at:\nhttp://scripts.sil.org/OFL\n\n\n-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE.\n",
+          "license_sha256": "d7bdb1cee215b689e23c2f95672a6084c790542170648267a55114103d756a08"
+        }
+      ],
+      "images": [
+        {
+          "ref": "png",
+          "id": "2",
+          "sha256": "ad0296980d1852b61d129d90513b6951c31188d6fab3876be9193a28a2b69e39",
+          "format": "PNG",
+          "width": 2,
+          "height": 1,
+          "validation": "CRC and bounded scanlines; no visual decoding"
+        },
+        {
+          "ref": "jpeg",
+          "id": "3",
+          "sha256": "57d8539a50e3654c8c948f68ae50fed426b139334a3e58d97df8cc6547093dcf",
+          "format": "JPEG",
+          "width": 3,
+          "height": 2,
+          "validation": "markers/dimensions only; entropy and visual decoding not performed"
+        }
+      ],
+      "tables": [
+        {
+          "page": 1,
+          "rows": 2,
+          "columns": 2,
+          "grid_object_ids": [
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16"
+          ],
+          "cells": [
+            {
+              "row": 0,
+              "column": 0,
+              "text": "项目",
+              "box": [
+                20.0,
+                110.0,
+                40.0,
+                15.0
+              ],
+              "object_ids": [
+                "17"
+              ]
+            },
+            {
+              "row": 0,
+              "column": 1,
+              "text": "数量",
+              "box": [
+                60.0,
+                110.0,
+                50.0,
+                15.0
+              ],
+              "object_ids": [
+                "18"
+              ]
+            },
+            {
+              "row": 1,
+              "column": 0,
+              "text": "中文",
+              "box": [
+                20.0,
+                125.0,
+                40.0,
+                15.0
+              ],
+              "object_ids": [
+                "19"
+              ]
+            },
+            {
+              "row": 1,
+              "column": 1,
+              "text": "12",
+              "box": [
+                60.0,
+                125.0,
+                50.0,
+                15.0
+              ],
+              "object_ids": [
+                "20"
+              ]
+            }
+          ],
+          "semantics": "explicit input grid; no merged cells or editable table model"
+        }
+      ],
+      "visual_validation": "not_performed",
+      "independent_client_validation": "not_performed",
+      "diagnostics": [
+        "No shaping, kerning, bidi, wrapping, arbitrary editing or signature support",
+        "Font metrics and declared bounds do not prove renderer or font-program correctness"
+      ],
+      "doc_id": "2C2363808D254D6089A68395F73072E4",
+      "max_unit_id": 23,
+      "objects": 16,
+      "characters": 28,
+      "sha256": "0652accbe65a31d6b7686264ce57ee6cfdfb523c1c30314c1bb47d743e01f6d9",
+      "bytes": 5869464,
+      "structural_validation": {
+        "tool": "check_generated_ofd stdlib independent structural implementation",
+        "status": "passed",
+        "scope": "fixed-layout-1 ZIP/XML/references/IDs/bounds/literal text only; no XSD or rendering certification",
+        "sha256": "0652accbe65a31d6b7686264ce57ee6cfdfb523c1c30314c1bb47d743e01f6d9",
+        "pages": [
+          {
+            "source": "Doc_0/Pages/Page_0.xml",
+            "text": [
+              {
+                "object_id": "6",
+                "text": "中文生成验证 OFD 1.0"
+              },
+              {
+                "object_id": "17",
+                "text": "项目"
+              },
+              {
+                "object_id": "18",
+                "text": "数量"
+              },
+              {
+                "object_id": "19",
+                "text": "中文"
+              },
+              {
+                "object_id": "20",
+                "text": "12"
+              }
+            ],
+            "objects": [
+              {
+                "id": "6",
+                "kind": "TextObject",
+                "boundary": [
+                  23.8,
+                  25.425,
+                  47.36,
+                  6.44
+                ]
+              },
+              {
+                "id": "7",
+                "kind": "PathObject",
+                "boundary": [
+                  19.9,
+                  39.9,
+                  60.2,
+                  15.2
+                ]
+              },
+              {
+                "id": "8",
+                "kind": "PathObject",
+                "boundary": [
+                  19.9,
+                  59.9,
+                  110.2,
+                  0.2
+                ]
+              },
+              {
+                "id": "9",
+                "kind": "ImageObject",
+                "boundary": [
+                  20.0,
+                  72.5,
+                  30.0,
+                  15.0
+                ]
+              },
+              {
+                "id": "10",
+                "kind": "ImageObject",
+                "boundary": [
+                  60.0,
+                  70.0,
+                  30.0,
+                  20.0
+                ]
+              },
+              {
+                "id": "11",
+                "kind": "PathObject",
+                "boundary": [
+                  19.9,
+                  109.9,
+                  0.2,
+                  30.2
+                ]
+              },
+              {
+                "id": "12",
+                "kind": "PathObject",
+                "boundary": [
+                  59.9,
+                  109.9,
+                  0.2,
+                  30.2
+                ]
+              },
+              {
+                "id": "13",
+                "kind": "PathObject",
+                "boundary": [
+                  109.9,
+                  109.9,
+                  0.2,
+                  30.2
+                ]
+              },
+              {
+                "id": "14",
+                "kind": "PathObject",
+                "boundary": [
+                  19.9,
+                  109.9,
+                  90.2,
+                  0.2
+                ]
+              },
+              {
+                "id": "15",
+                "kind": "PathObject",
+                "boundary": [
+                  19.9,
+                  124.9,
+                  90.2,
+                  0.2
+                ]
+              },
+              {
+                "id": "16",
+                "kind": "PathObject",
+                "boundary": [
+                  19.9,
+                  139.9,
+                  90.2,
+                  0.2
+                ]
+              },
+              {
+                "id": "17",
+                "kind": "TextObject",
+                "boundary": [
+                  21.0,
+                  111.0,
+                  8.98,
+                  5.152
+                ]
+              },
+              {
+                "id": "18",
+                "kind": "TextObject",
+                "boundary": [
+                  61.0,
+                  111.0,
+                  8.98,
+                  5.152
+                ]
+              },
+              {
+                "id": "19",
+                "kind": "TextObject",
+                "boundary": [
+                  21.0,
+                  126.0,
+                  8.98,
+                  5.152
+                ]
+              },
+              {
+                "id": "20",
+                "kind": "TextObject",
+                "boundary": [
+                  61.0,
+                  126.0,
+                  5.8,
+                  5.152
+                ]
+              }
+            ]
+          },
+          {
+            "source": "Doc_0/Pages/Page_1.xml",
+            "text": [
+              {
+                "object_id": "23",
+                "text": "第二页 验证"
+              }
+            ],
+            "objects": [
+              {
+                "id": "23",
+                "kind": "TextObject",
+                "boundary": [
+                  24.04,
+                  31.34,
+                  21.828,
+                  5.152
+                ]
+              }
+            ]
+          }
+        ],
+        "max_unit_id": 23,
+        "input_model_comparison": "passed; literal text/page order and explicit table cell bindings"
+      },
+      "output": ".ofd-gen-9f87cee2ac634a7eb0709af55b9daa41.final.ofd",
+      "cleanup": "private candidate removed",
+      "archive": "not_requested; host must archive validated deliverables through its confirmed lifecycle"
+    }
+  },
+  "isolated_readonly_install": {
+    "runs": [
+      {
+        "stdout": "",
+        "stderr": "----------------------------------------------------------------------\nRan 122 tests in 0.980s\n\nOK\n",
+        "exit_code": 0
+      },
+      {
+        "stdout": "",
+        "stderr": "----------------------------------------------------------------------\nRan 122 tests in 0.976s\n\nOK\n",
+        "exit_code": 0
+      }
+    ],
+    "source_and_install_unchanged": true,
+    "runtime": "Python3.12.11 -I -S -B; empty PATH; no Java or external software in skill tests",
+    "source_hashes": {
+      "SKILL.md": "25352a3d22e20a0c6ad1cb1048254a25bdb73efb4af93e89b44d61a0e9afcf9d",
+      "references/boundaries.md": "1fc3f4d203459344d2559663c611801775fe7db1ea6822c3a25b5bda8fc06c02",
+      "references/compatibility.md": "30d1e336861142c0b206d9557ecab6a3dc8581967a8f70b5e9b49d99aa8b1b6a",
+      "references/contract.md": "35a7a974931e70932d92b047af12445aaae9c6cf6b2982dc8b7d2d5a399fb2a5",
+      "references/generation.md": "963d7b77c63be8a6bc5c3fd5bcfc660dcb5ace6a0169cefc08fe14c7a4ebc3cd",
+      "references/output-views.md": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+      "references/real-samples.json": "3fbaf5276bb2af447af82e5878ec98553daaf75c38eb9247329151b40c34bdc2",
+      "references/structure.md": "02023cf895d8ffbcd6e32456fb16ee49cf2c3d97327eb91671506e68a9ed1443",
+      "references/validation.md": "7794f6e3da5a018a76e40dc6e56c41838764733d2f9ba4b0ebf775901d608133",
+      "requirements.txt": "bd14a5344f288b95427a64f94a346b559d430c8bad9dbbf00f3d1b8b986f2730",
+      "scripts/check_generated_ofd.py": "4fb1f8815af42f8a362775e8b54a75f66d9ccc00956d43e774264fcb80ad0618",
+      "scripts/generate_ofd.py": "24dd98069e54e7e80fbc4297644e9d414a7b57d2bdb47282da65d2687996dcac",
+      "scripts/ofd_generation_assets.py": "e810fd4aeca86e9804cac133f04735388e2cdb90e6bce8dd9a614d6ef6b557d2",
+      "scripts/read_ofd.py": "620e15c95b364a8f724d210b6cfcf9fff1cdd04f226ce021535a5365f85e2906",
+      "scripts/test_ofd.py": "858f0873a262d6001b18bbca271d4c68194723d78c08a65046f56ca60b198bda",
+      "scripts/test_ofd_compat.py": "73ea4a11cf2b3a71ebedc05491d71314cb3cd7ee944c45eaff41b3caa4fbc4d1",
+      "scripts/test_ofd_generate.py": "0a3834a3fe378556ed2e52d3416247d8ac4488772c00803494c2230b47e98a42",
+      "scripts/test_ofd_resource_recovery.py": "f3349178a08b7d182d442e249fedf698b1cbf96e25151ce21a1abe8a3f97d622",
+      "scripts/test_ofd_structure.py": "33499b069079b53243c37a3462a2516d7980b256c92f1c251dfcde2ccc5c99cb",
+      "scripts/test_ofd_views.py": "a3057f07490c66b746e21e0577b66a77dd1f0ddc4a89f06cba98af945667f4ff"
+    },
+    "post_document_clarification_run": {
+      "stdout": "",
+      "stderr": "----------------------------------------------------------------------\nRan 122 tests in 0.958s\n\nOK\n",
+      "exit_code": 0
+    }
+  },
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "linux": "not_verified; no target Linux executor available",
+  "windows": "not_verified",
+  "published": "no external publication, no new distribution ZIP, no commit or push",
+  "final_independent_jdk": {
+    "stdout": "{\"status\":\"passed\",\"tool\":\"JDK ZIP/XML/Font/ImageIO\",\"pages\":2,\"text_runs\":6,\"characters\":28,\"checked_advances\":22,\"decoded_images\":2,\"visual_ofd_rendering\":\"not_performed\"}\n",
+    "stderr": "",
+    "exit_code": 0,
+    "result": {
+      "status": "passed",
+      "tool": "JDK ZIP/XML/Font/ImageIO",
+      "pages": 2,
+      "text_runs": 6,
+      "characters": 28,
+      "checked_advances": 22,
+      "decoded_images": 2,
+      "visual_ofd_rendering": "not_performed"
+    },
+    "runtime_dependency": false
+  },
+  "final_reader_roundtrip": {
+    "exit_code": 3,
+    "status": "partial",
+    "text_expectation": "passed",
+    "stderr": "",
+    "stdout_characters": 58746,
+    "diagnostic_codes": [
+      "glyph_mapping_not_interpreted",
+      "image_not_read",
+      "vector_not_interpreted"
+    ]
+  },
+  "final_checks": {
+    "skill_tests": 122,
+    "generation_tests": 19,
+    "existing_postfix_review_tests": 6,
+    "strict": "passed",
+    "ast_tokenize_stdlib": "passed",
+    "dedicated_pylint": "not installed; not run",
+    "environment": "Python3.12.11/Expat2.6.3; read and generation checks passed",
+    "read_only_source_sha256_preserved": true
+  },
+  "client_availability": {
+    "identified_ofd_viewer": "none identified in standard Applications inventory or queried CLI names",
+    "ofd_visual_acceptance": "not performed; existing JDK checks assets/XML, not OFD page rendering",
+    "scope": "not an exhaustive app/plugin inventory; no installation or unverified client launch attempted"
+  },
+  "host_output_evidence": "Subprocess captured stdout/stderr/exit; complete generation JSON parsed and retained in this record; model received bounded summaries; no universal host relay certification",
+  "shared_files": "README and other skills not modified in this generation task; parent may coordinate the OFD README row separately",
+  "phase_one_remaining_acceptance": [
+    "No OFD page renderer/client acceptance",
+    "No target Linux or Windows runtime acceptance",
+    "No full XSD/conformance certification",
+    "JPEG runtime validation remains bounded metadata/scan-header inspection, not pixel decoding"
+  ],
+  "optional_reference_access_failures": [
+    {
+      "action": "web.open",
+      "target": "https://github.com/ofdrw/ofdrw/tree/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-core/src/main/java/org/ofdrw/core/basicStructure/res",
+      "outcome": "denied by tool URL restriction",
+      "reason": "Failed to fetch restricted URL",
+      "retry": "none; no alternate route to these directory pages used"
+    },
+    {
+      "action": "web.open",
+      "target": "https://github.com/ofdrw/ofdrw/tree/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-core/src/main/java/org/ofdrw/core/text",
+      "outcome": "denied by tool URL restriction",
+      "reason": "Failed to fetch restricted URL",
+      "retry": "none; no alternate route to these directory pages used"
+    }
+  ],
+  "conformance_evidence": "Formal standard identity and previously verified container/path/page-order/TextCode clauses retained; current writer profile checked with independent ZIP/XML implementation and JDK font/image primitives; not full formal XSD or OFD client conformance",
+  "followup_independent_ofd_acceptance": {
+    "checked_utc": "2026-11-03T22:21:57.266407+00:00",
+    "scope": [
+      "standard /Applications inventory",
+      "PATH names ofd2pdf/ofdrw/ofdviewer/mutool/mupdf",
+      "org/ofdrw Maven and org.ofdrw Gradle package-cache locations only",
+      "LibreOffice installed .xcd filter registry",
+      "repository XSD/JAR/GB33190 filenames including hidden files; excluded git and private config"
+    ],
+    "findings": {
+      "identified_ofd_reader_or_parser": "none in checked locations",
+      "ofdrw_cached_jars": "not found",
+      "libreoffice_ofd_filter_registration": "no OFD/ofdspec match",
+      "authoritative_local_xsd_or_standard_attachment": "not found in checked repository",
+      "jdk": "available but not an OFD page parser/renderer"
+    },
+    "outcome": "blocked_missing_independent_ofd_tool_and_authoritative_local_xsd",
+    "action_not_run": "open/parse/render generated Chinese multipage OFD with an independent OFD implementation; full XSD validation",
+    "reason": "no identified compatible installed implementation or authoritative local XSD in checked locations; no software installation, network upload, or access to denied samples permitted",
+    "visual_status": "not_verified",
+    "conformance_status": "not_verified",
+    "tests": {
+      "python": "3.12.11",
+      "skill_tests": 122,
+      "status": "passed"
+    },
+    "mutations": "validation record only; no source changes, new runtime dependency, install, commit, push or publication",
+    "inventory_limit": "not an exhaustive scan of the machine or browser plugins; no private profiles or Library files inspected"
+  }
+}

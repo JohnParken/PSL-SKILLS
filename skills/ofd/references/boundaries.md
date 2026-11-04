@@ -5,10 +5,10 @@
 | 内容 | 当前行为 | 限制 |
 |---|---|---|
 | ZIP 容器 | 检查成员表、重复名、特殊成员、压缩和大小；内存读取 | 仅 stored/deflate；不解包到磁盘、不支持加密 |
-| OFD.xml / Document / Pages | 2016 命名空间；1.0/1.1/1.2 存储结构与文字模型，OFD/OFD-A；多文档、页序列 | 非完整 XSD 校验；畸形引用导致整个读取失败 |
+| OFD.xml / Document / Pages | 2016 命名空间；1.0/1.1/1.2 存储结构与文字模型，OFD/OFD-A；多文档、页序列 | 非完整 XSD 校验；必需引用与不安全引用失败；仅资源索引缺失可 partial |
 | TextObject / TextCode | Unicode 与四位十六进制转义、原始字符串、页码、对象序号、来源、原始属性 | 不恢复字形、可见性、段落或语义阅读顺序 |
 | 模板 | CommonData/TemplatePage 与 Page/Template；每页按源去重 | 模板内的 Template 引用按规范无效，诊断且不递归；同一模板跨页各保留一次；不实现叠放语义 |
-| PublicRes / DocumentRes / PageRes | Font、MultiMedia、CompositeGraphicUnit、DrawParam、ColorSpace；文件引用与作用域检查 | 不解码字体/图像，不应用绘制参数 |
+| PublicRes / DocumentRes / PageRes | Font、MultiMedia、CompositeGraphicUnit、DrawParam、ColorSpace；文件引用与作用域检查 | 索引缺失保留可读文字并登记 resource_gaps；已存在索引及载荷错误仍失败；不解码字体/图像或应用绘制参数 |
 | CompositeObject | 按资源引用提取内部文字，保留每次出现的引用链 | 循环拒绝；不恢复缩放、裁剪或复合几何；partial |
 | DocInfo | 文档信息独立元数据 | 不混入正文，不代表信息真实 |
 | 图片 / 路径 / 未知对象 | 图像和对象元数据；诊断不解释的内容 | 图像需 OCR 才可能读取文字；路径可能是轮廓文字 |
@@ -16,7 +16,8 @@
 | 签名 | 列表及 Signature XML 元数据 | 不解码签名值/印章，不验签，不验证摘要或证书 |
 | 全量 XML 目录 | 元素、属性、text/tail、注释、处理指令、命名空间及引用字段均保留 | 不是任意 XSD 语义验证；未知内容不丢弃 |
 | 版本快照 | Versions / DocVersion 存储结构与文字登记 | 不自动选择、覆盖当前页内容 |
-| 表格 / OCR / 转换 | 不支持 | 不凭坐标猜表格，tables 为空 |
+| 读取表格 / OCR / 转换 | 不支持 | 不凭坐标猜表格，读取结果tables为空 |
+| 有限生成 | 独立JSON入口；OFD 1.0 固定坐标文字、线框、受限PNG/JPEG、显式网格 | 非第三方文件编辑；字体覆盖/嵌入/度量与边界均须通过；不作客户端或完整标准符合性保证，见 `<skill-root>/references/generation.md` |
 
 ## 路径与引用策略
 

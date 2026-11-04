@@ -1,0 +1,164 @@
+{
+  "version": "20261104.0555.2793",
+  "changes": [
+    "table horizontal alignment by table or column; vertical alignment; unchanged default left/top",
+    "full-font no-subsetting compatibility fsType=0x0100; no byte or permission mutation"
+  ],
+  "public_reference": "https://learn.microsoft.com/en-us/typography/opentype/spec/os2#fstype",
+  "evidence_scope": "No-subsetting permission distinction verified against primary OpenType documentation; flag-specific font fixture synthetic only",
+  "prohibited_inputs": "not accessed",
+  "planned_temporary_files": "registered through opt.cleanup.json in current acceptance task directory",
+  "baseline_read_sha256": "620e15c95b364a8f724d210b6cfcf9fff1cdd04f226ce021535a5365f85e2906",
+  "publish": "none; existing user acceptance sample not overwritten",
+  "real_font_alignment": {
+    "sha256": "c981e1a192686cf19d0df39c50a86cdda4e66413ba3ef0b3ba19164d4aae8595",
+    "pages": 2,
+    "characters": 157,
+    "table_alignment": [
+      {
+        "horizontal": "left",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "right",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "center",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "left",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "right",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "center",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "left",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "right",
+        "vertical": "middle"
+      },
+      {
+        "horizontal": "center",
+        "vertical": "middle"
+      }
+    ],
+    "model_comparison": "passed; literal text/page order and explicit table cell bindings",
+    "independent_jdk": {
+      "status": "passed",
+      "tool": "JDK ZIP/XML/Font/ImageIO",
+      "pages": 2,
+      "text_runs": 19,
+      "characters": 157,
+      "checked_advances": 138,
+      "decoded_images": 2,
+      "visual_ofd_rendering": "not_performed"
+    },
+    "readback_status": "partial",
+    "readback_text": "unchanged from frozen user-sample expectation",
+    "visual_acceptance": "not_performed"
+  },
+  "user_sample_unchanged": true,
+  "registered_maintenance_installation_before_creation": [
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/SKILL.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/boundaries.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/compatibility.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/contract.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/generation.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/output-views.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/real-samples.json",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/structure.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/references/validation.md",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/requirements.txt",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/check_generated_ofd.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/generate_ofd.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/ofd_generation_assets.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/read_ofd.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/test_ofd.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/test_ofd_compat.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/test_ofd_generate.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/test_ofd_resource_recovery.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/test_ofd_structure.py",
+    "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/ofd-opt-install-9caa4b3b4bb947a0bcb7f5d1fb66072e/scripts/test_ofd_views.py"
+  ],
+  "verification": {
+    "skill_tests": 127,
+    "generation_tests": 24,
+    "old_postfix_tests": 6,
+    "strict": "passed",
+    "stdlib_ast_tokenize": "passed",
+    "pylint": "unavailable; not run",
+    "readonly_empty_path_runs": [
+      {
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "----------------------------------------------------------------------\nRan 127 tests in 0.981s\n\nOK\n"
+      },
+      {
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "----------------------------------------------------------------------\nRan 127 tests in 0.982s\n\nOK\n"
+      }
+    ],
+    "source_hashes": {
+      "SKILL.md": "f31f90321062cbfc0e29ff0326f75f2eaff40a88ee1ef642c2379b0054ba30b6",
+      "references/boundaries.md": "1fc3f4d203459344d2559663c611801775fe7db1ea6822c3a25b5bda8fc06c02",
+      "references/compatibility.md": "30d1e336861142c0b206d9557ecab6a3dc8581967a8f70b5e9b49d99aa8b1b6a",
+      "references/contract.md": "35a7a974931e70932d92b047af12445aaae9c6cf6b2982dc8b7d2d5a399fb2a5",
+      "references/generation.md": "9a0d3cb06c3a7184e11b2cc6bd155edce2a9591cbc91fe096e842a8b8ca6c42f",
+      "references/output-views.md": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+      "references/real-samples.json": "3fbaf5276bb2af447af82e5878ec98553daaf75c38eb9247329151b40c34bdc2",
+      "references/structure.md": "02023cf895d8ffbcd6e32456fb16ee49cf2c3d97327eb91671506e68a9ed1443",
+      "references/validation.md": "7794f6e3da5a018a76e40dc6e56c41838764733d2f9ba4b0ebf775901d608133",
+      "requirements.txt": "bd14a5344f288b95427a64f94a346b559d430c8bad9dbbf00f3d1b8b986f2730",
+      "scripts/check_generated_ofd.py": "4fb1f8815af42f8a362775e8b54a75f66d9ccc00956d43e774264fcb80ad0618",
+      "scripts/generate_ofd.py": "e860725e23286f32da848a4c92ab92f72a093100228f95107a6a8e7ba7b190be",
+      "scripts/ofd_generation_assets.py": "13487a1da6b8c67fa58e2fa883a3e5a7791a79fd29fe30121cf069fdb3e42d52",
+      "scripts/read_ofd.py": "620e15c95b364a8f724d210b6cfcf9fff1cdd04f226ce021535a5365f85e2906",
+      "scripts/test_ofd.py": "858f0873a262d6001b18bbca271d4c68194723d78c08a65046f56ca60b198bda",
+      "scripts/test_ofd_compat.py": "73ea4a11cf2b3a71ebedc05491d71314cb3cd7ee944c45eaff41b3caa4fbc4d1",
+      "scripts/test_ofd_generate.py": "2cad9cdda375d38b7e0eb50a08d0f14005f7aefeec0aa7165de0791e6ef71494",
+      "scripts/test_ofd_resource_recovery.py": "f3349178a08b7d182d442e249fedf698b1cbf96e25151ce21a1abe8a3f97d622",
+      "scripts/test_ofd_structure.py": "33499b069079b53243c37a3462a2516d7980b256c92f1c251dfcde2ccc5c99cb",
+      "scripts/test_ofd_views.py": "a3057f07490c66b746e21e0577b66a77dd1f0ddc4a89f06cba98af945667f4ff"
+    },
+    "reader_unchanged": true,
+    "maintenance_installation_cleanup": "completed",
+    "linux": "not verified",
+    "windows": "not verified",
+    "independent_ofd_visual": "not verified"
+  },
+  "next_priorities": [
+    {
+      "priority": 1,
+      "direction": "Fix concrete compatibility defects from the user OFD reader acceptance result",
+      "risk": "low if reproduced and scoped; currently waiting for reader evidence"
+    },
+    {
+      "priority": 2,
+      "direction": "Measured simple wrapping/line-height and explicit pagination for the supported horizontal text subset",
+      "risk": "medium; requires overflow and loss/duplication checks plus reader acceptance; not implemented"
+    },
+    {
+      "priority": 3,
+      "direction": "Broader authoritative schema/profile conformance coverage and additional static-font samples",
+      "risk": "medium; no claim of full XSD validation today"
+    },
+    {
+      "priority": 4,
+      "direction": "Complex shaping, arbitrary third-party editing, signatures and broad version generation",
+      "risk": "high; outside current implemented scope"
+    }
+  ],
+  "temporary_business_proof_cleanup": "completed through opt.cleanup.json; original acceptance files retained unchanged"
+}
