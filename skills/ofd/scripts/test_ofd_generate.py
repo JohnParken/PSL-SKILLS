@@ -155,7 +155,7 @@ class GenerationTests(unittest.TestCase):
                 WRITER.validate_model(data, spec, bad, CHECKER)
 
     def test_restricted_or_unconfirmed_font_rejected(self):
-        for bits in (1, 2, 4, 8, 0x200, 0x102, 0x300):
+        for bits in (1, 2, 4, 0x200, 0x102, 0x104, 0x300, 0x308):
             self.assets['font.ttf'] = font_fixture(bits)
             with self.subTest(bits=bits), self.assertRaises(WRITER.GenerationError):
                 self.build()
@@ -164,6 +164,22 @@ class GenerationTests(unittest.TestCase):
         spec['fonts']['main']['embedding_permission'] = 'guessed'
         with self.assertRaises(WRITER.GenerationError):
             self.build(spec)
+
+    def test_custom_font_path_only_without_license_reads(self):
+        spec = spec_fixture()
+        spec['fonts']['main'] = {'path': 'font.ttf'}
+        del self.assets['license.txt']
+        data, report = self.build(spec)
+        self.assertIsNone(report['fonts'][0]['license_sha256'])
+        self.assertIn('not assessed', report['fonts'][0]['permission'])
+        self.assertEqual(CHECKER.audit(data)['status'], 'passed')
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            self.assertIn(b'not_assessed', archive.read('OFD.xml'))
+            self.assertNotIn(b'FontLicense:', archive.read('OFD.xml'))
+        for bits in (2, 4, 0x200):
+            self.assets['font.ttf'] = font_fixture(bits)
+            with self.subTest(bits=bits), self.assertRaises(WRITER.GenerationError):
+                self.build(spec)
 
     def test_missing_character_complex_text_and_control_rejected(self):
         for text in ('文', 'e\u0301', '\u0627', 'A\nB', '\u00a4', '\U0001f600', '\u200d', '\ud800'):
@@ -264,6 +280,19 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual(report['fonts'][0]['fs_type'], 0x100)
         self.assertEqual(report['fonts'][0]['embedding_mode'], 'full_font_unmodified')
         self.assertEqual(CHECKER.audit(data)['status'], 'passed')
+
+    def test_editable_embedding_flags_preserved_with_explicit_license(self):
+        for bits in (8, 0x108):
+            original = font_fixture(fs_type=bits)
+            self.assets['font.ttf'] = original
+            data, report = self.build()
+            with self.subTest(bits=bits), zipfile.ZipFile(io.BytesIO(data)) as archive:
+                self.assertEqual(archive.read('Doc_0/Res/Font_1.ttf'), original)
+                self.assertEqual(report['fonts'][0]['fs_type'], bits)
+        spec = spec_fixture()
+        spec['fonts']['main']['embedding_permission'] = 'unknown'
+        with self.assertRaises(WRITER.GenerationError):
+            self.build(spec)
 
     def test_png_crc_decompression_and_trailing_bytes_rejected(self):
         good = png_fixture()
