@@ -28,7 +28,7 @@
 
 归档读取ROUTER_CONFIG_VARIABLES的commonParam/questionId，配置缺失/无效则skipped。按实际主文件basename复制，默认原子独占发布；同名文件保留，返回archive_status=failed及files项error_code=archive_conflict。全部输入/配置须保护，CLI自动传入其输入、query、spec、appearance及daily等文件。发布使用任务根目录临时副本和独占硬链接，完成后删除临时链接；能力不可用或跨文件系统时报告失败，不回退覆盖。主文件不移动、不回滚；多文件不保证整批事务。
 
-`delivery.archive_status`、files、warnings和archive_message属于内部机器契约。copied仅表示副本完成；skipped/failed需如实提示，不回滚主产物，不因归档失败重跑生成。用户成功和失败提示统一按下方归档用户话术映射，不转贴机器文案和内部路径。`DOCX_DEBUG_ROUTER_CONFIG` 默认关闭，显式设为1也只输出是否配置及已脱敏标记，不输出原始值；勿回显环境配置猜路径。
+`delivery.archive_status`、files、warnings和archive_message属于内部机器契约。copied表示复制后已核对源与目标SHA256；新复制成功的files项带archive_verified=true。already_archived表示主路径就是归档路径，不新增复制验证标记。skipped/failed需如实提示，不回滚主产物，不因归档失败重跑生成。用户成功和失败提示统一按下方归档用户话术映射，不转贴机器文案和内部路径。`DOCX_DEBUG_ROUTER_CONFIG` 默认关闭，显式设为1也只输出是否配置及已脱敏标记，不输出原始值；勿回显环境配置猜路径。
 
 ## 归档用户话术
 
@@ -104,3 +104,11 @@ runner新增`child_execution`，记录调用ID、exited/signaled/timeout/not_sta
 归档默认保留同名旧文件；冲突返回archive_status=failed及对应files项的error_code=archive_conflict，主文件仍可交付，临时项照常清理。自动生成/编辑不会授权覆盖归档。只有用户明确授权更新所列归档时，才单独调用归档入口并显式传入--replace-existing（API为replace_existing=True），列全保护输入；该选项不绕过路径、链接、输入和其他交付物保护。不要为解决归档冲突删除旧文件或重跑生成。并发任务仍使用独立任务目录；显式更新不保证对抗同权限恶意并发写者。
 
 任务结束时必须清理本轮全部中间文件，包括脚本、配置、回读结果、日志、暂存、锁、回执和清单；仅将当前与历史交付物作为任务生成的留存文件。用户原件与其他任务文件仍受保护，不属于可删除中间文件。创建前完整登记，普通内部暂存由创建函数收尾；若删除失败、归属不明或强杀留下未确认残留，报告收尾未完成，不声称只剩交付物，也不扫描删除未知文件。生成或编辑失败同样立即清理本轮临时文件和清单，不因可能重试而保留；需要重试时从原始输入重新创建独占任务。删除受阻、锁仍被占用或归属无法确认时报告cleanup_incomplete，处理阻碍后继续清理，不能宣称已完成。
+
+## 公共归档副本同步
+
+本包归档实现按 `<skill-root>/references/lifecycle-upstream.json` 的显式变换从公共artifact-lifecycle复制，保留独立安装，不运行时定位相邻Skill。保留archive_status、archive_message、files、warnings和原业务退出码，新增archive_user_notice及新复制项archive_verified。用户提示仍按归档用户话术，不向用户转贴内部路径或原始错误。
+
+归档前记录源哈希，复制后复核目标与源；变化或不一致返回failed及archive_copy_or_verification_failed，不回滚主文件、不把目标副本误称已验证。已发布但未通过复核的归档副本可能仍存在，核对失败记录后再显式处理，不自动覆盖重试。EXDEV、EACCES/EPERM、ENOSPC分别分类为archive_cross_device、archive_permission_denied、archive_storage_full；原有archive_conflict等错误码继续保留。归档失败不改业务成功状态，runner依原规则处理归档和清理，不重复生成。
+
+本轮macOS/Python3.12.11验证正常/故障注入、来源哈希及只读独立安装；不是云端Linux、Windows或宿主真实归档服务验收。

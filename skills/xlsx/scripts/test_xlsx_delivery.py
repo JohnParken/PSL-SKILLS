@@ -47,6 +47,8 @@ class DeliveryTests(unittest.TestCase):
     def assert_archived(self, result, filename):
         self.assertEqual(result['delivery']['archive_status'], 'copied')
         self.assertEqual(result['delivery']['archive_message'], '归档完成')
+        self.assertTrue(result['delivery']['files'][0]['archive_verified'])
+        self.assertIn('云空间', result['delivery']['archive_user_notice'])
         self.assertEqual(Path(filename).read_bytes(), Path('output/test', Path(filename).name).read_bytes())
 
     def test_owned_json_success_cleans_and_final_remains(self):

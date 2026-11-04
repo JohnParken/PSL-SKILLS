@@ -1,6 +1,8 @@
 from __future__ import annotations
 """Archive an explicit list of this turn's completed deliverables, never scan folders."""
 import argparse
+import errno
+import hashlib
 import json
 import os
 import re
@@ -93,9 +95,36 @@ def archive_user_message(result: dict) -> str:
     return '归档状态未确认'
 
 
+def archive_user_notice(result: dict) -> str:
+    """Public wording; no internal paths or unsupported download promises."""
+    state = archive_user_message(result)
+    if state == '归档完成':
+        return '🎉 文档已经放到你的云空间啦，随时都能找到～ ☁️✨'
+    if state == '归档未执行':
+        return '本次未执行归档，文件未放入云空间。'
+    if state == '归档未完成':
+        files = result.get('files', [])
+        if any(item.get('archive_status') in ('copied', 'already_archived')
+               for item in files if isinstance(item, dict)):
+            return '部分文件已放入云空间，其余文件归档未完成，请核对结果。'
+        return '🥺 本次没能放进你的云空间，请先保存已生成的文件。 📄'
+    return '归档结果尚未确认，请核对后再确认文件是否已放入云空间。'
+
+
 def _archive_summary(summary: dict) -> dict:
     summary['archive_message'] = archive_user_message(summary)
+    summary['archive_user_notice'] = archive_user_notice(summary)
     return summary
+
+
+def _archive_digest(path):
+    """Read a bounded-memory digest without accepting links as archive evidence."""
+    validate_input_path(Path(path))
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        while chunk := stream.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def archive_outputs(outputs: list[Path], protected_inputs: list[Path],
@@ -143,18 +172,27 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path],
             if source.resolve() == (task_dir / target).resolve():
                 item['archive_status'] = 'already_archived'
                 continue
+            expected_digest = _archive_digest(source)
             protected = [Path(p) for p in protected_inputs] + [p for p in sources if p != source]
             if replace_existing:
                 _copy_main_to_archive(task_dir, source, location, source.name, source, protected,
                                       replace_existing=True)
             else:
                 _copy_main_to_archive(task_dir, source, location, source.name, source, protected)
+            if _archive_digest(target) != expected_digest or _archive_digest(source) != expected_digest:
+                raise ValueError('Archive verification failed: source changed or archive bytes differ')
+            item['archive_verified'] = True
             item['archive_status'] = 'copied'
         except Exception as exc:
             item['archive_status'] = 'failed'
             item['error'] = str(exc)
             if getattr(exc, 'error_code', None):
                 item['error_code'] = exc.error_code
+            else:
+                item['error_code'] = {
+                    errno.EXDEV: 'archive_cross_device', errno.EACCES: 'archive_permission_denied',
+                    errno.EPERM: 'archive_permission_denied', errno.ENOSPC: 'archive_storage_full',
+                }.get(getattr(exc, 'errno', None), 'archive_copy_or_verification_failed')
             if getattr(exc, 'temporary_residuals', None):
                 summary.setdefault('temporary_residuals', []).extend(exc.temporary_residuals)
             summary['archive_status'] = 'failed'
@@ -173,6 +211,7 @@ def finalize_delivery(output, protected_inputs, *, status, result=None) -> dict:
                           'warnings': [str(exc)]}
     payload = {**archive_result, 'status': status, 'output': output.as_posix()}
     payload['archive_message'] = archive_user_message(payload)
+    payload['archive_user_notice'] = archive_user_notice(payload)
     if result is not None:
         payload['result'] = result if isinstance(result, dict) else str(result)
     return payload
