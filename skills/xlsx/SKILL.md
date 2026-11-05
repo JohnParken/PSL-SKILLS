@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261105.1644.0317"
+version: "20261105.1736.5039"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -13,7 +13,9 @@ Read XLSX/XLSM, create XLSX reports, patch existing cells, or analyze typed data
 
 原生 XLSX/XLSM 按文件格式处理，包括 WPS 软件保存的文件；`.wps` 交由 wps 技能，`.et/.ett` 交由 et 技能（不区分大小写）。本技能拒绝这些输入及伪装成 XLSX/XLSM 的 CFB，不自动调用其他技能或转换。可分析 et 已提取的受支持 JSON，不读取其原件。
 
-用户同时提供多个来源和目标模板、需要先识别指标口径再计算填报时，使用独立的 table-workflow 技能编排；简单创建、已知单元格修改或本技能现有分析不增加该流程。编排程序使用受检内存接口时读 `<skill-root>/references/workflow-api.md`，普通 CLI 任务不加载。
+用户同时提供多个来源和目标模板、需要先识别指标口径再计算填报时，使用独立的 table-workflow 技能编排；简单创建、已知单元格修改或本技能现有分析不增加该流程。新编排使用稳定CLI；仅迁移旧内存调用时读 `<skill-root>/references/workflow-api.md`，普通 CLI 任务不加载。
+
+维护CLI或接入跨技能编排时，按需读取 `<skill-root>/scripts/docs/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。回归脚本集中在 `<skill-root>/scripts/test/`。
 
 ## 执行环境约束与首步自检
 
@@ -27,7 +29,7 @@ Read XLSX/XLSM, create XLSX reports, patch existing cells, or analyze typed data
 4. Use the harness-confirmed Python 3.9+ interpreter, denoted by `python3` below. Preserve `-I -S -B`; modules load bundled resources from their own source directory. Before the first operation run:
 
 ```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
+python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run check
 ```
 
 5. Require exit 0 and JSON `status: ready`. This checks imports, the template and expected results for rounding, conditional/product sums, counting and empty-string formulas, not task data, permissions or Excel compatibility. Confirm input readability. For writes, create a unique exclusive probe in each intended task output directory, read it back and remove only that probe; this also applies to configuration copies and redirected reports. Pure reads to stdout need no write probe. Do not use system temporary directories for business-task probes or overwrite existing files.
@@ -52,12 +54,12 @@ Read only the selected reference. `read`, `create`, `edit` and `calculate` are s
 
 | Task | Action | Read when needed |
 |---|---|---|
-| Read XLSX/XLSM or CSV/TSV | `"<skill-root>/scripts/stdlib_xlsx.py" read` | Read and inspect (`<skill-root>/references/read-analyze.md`) |
+| Read XLSX/XLSM or CSV/TSV | `"<skill-root>/scripts/xlsx_cli.py" run read` | Read and inspect (`<skill-root>/references/read-analyze.md`) |
 | Profile, filter or group a region; identify format | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize`; `<skill-root>/scripts/xlsx_identify.py` | Analysis and identification (`<skill-root>/references/data-analysis.md`) |
 | Analyze a formula table using freshly computed values | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize` with `--formulas calculate` | Analysis (`<skill-root>/references/data-analysis.md`) and formula subset (`<skill-root>/references/formula-calculation.md`) |
 | Analyze WPS extraction JSON | `"<skill-root>/scripts/xlsx_analysis.py" profile` / `summarize` | WPS result contract (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`) |
 | Import/export CSV/TSV | `<skill-root>/scripts/run_xlsx_task.py` wrapping `xlsx_tabular.py import` / `export` | Tabular interchange (`<skill-root>/references/tabular-interchange.md`) |
-| Create a report | stdin task specification → `<skill-root>/scripts/run_xlsx_task.py`; existing `"<skill-root>/scripts/stdlib_xlsx.py" create` remains supported | Create (`<skill-root>/references/create.md`) |
+| Create a report | stdin task specification → `<skill-root>/scripts/run_xlsx_task.py`; existing `"<skill-root>/scripts/xlsx_cli.py" run create` remains supported | Create (`<skill-root>/references/create.md`) |
 | Correct existing cells | `<skill-root>/scripts/run_xlsx_task.py` wrapping `stdlib_xlsx.py edit` | Edit and preservation (`<skill-root>/references/edit.md`) |
 | Compute supported formulas | `<skill-root>/scripts/run_xlsx_task.py` wrapping `stdlib_xlsx.py calculate` to a new file | 写入与结果契约（`<skill-root>/references/write-contract.md`）及公式计算（`<skill-root>/references/formula-calculation.md`） |
 | Fix a known formula defect | Diagnose intent, then `edit` | Fix (`<skill-root>/references/fix.md`) |
@@ -66,7 +68,7 @@ Read only the selected reference. `read`, `create`, `edit` and `calculate` are s
 For a first read after self-check:
 
 ```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
+python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./input.xlsx
 ```
 
 概况用于选表，分页用于抽查；全量统计优先直接profile/summarize指定区域，不先逐页搬运整表。大表读取先按需用概况、选表/区域及分页（`<skill-root>/references/bounded-reading.md`）；旧默认完整读取不变，新视图不是完整数据或旧分析schema。

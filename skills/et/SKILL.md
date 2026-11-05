@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261105.1644.0317"
+version: "20261105.1717.1148"
 description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，预览表头区域，并按指定范围筛选、排序、去重、统计及分组汇总，提供质量诊断；支持 BIFF8 与 OOXML 子集并保留 partial。公式不重算，不修改原表；原生 XLSX 使用对应技能。
 ---
 
@@ -14,6 +14,8 @@ description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公
 
 多份来源计算后填入另附 XLSX 模板时，交由独立 table-workflow 技能编排，ET 仍只读。交接原始完整读取 schema 与 partial/缓存诊断，不能将 et_table_analysis_v1 或预览直接当原工作簿；单表读取与统计继续本入口，不加载跨表流程。
 
+维护CLI或接入跨技能编排时，按需读取 `<skill-root>/scripts/docs/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。回归脚本集中在 `<skill-root>/scripts/test/`。
+
 ## 执行环境约束与首步自检
 
 **用户文件定位：** 用户上传文件及用户要求读取的交付物，默认以宿主确认的任务工作目录为基准，按 `./文件路径` 查找；文件路径含子目录时使用已确认的相对路径。优先采用宿主提供的附件映射或用户明确指定的路径；映射缺失、文件不可访问或目标不明确时如实说明并按需询问，不猜测其他路径或自行搜索其他目录。此规则不授权扫描或读取未指定的历史归档。
@@ -23,7 +25,7 @@ description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公
 3. **核对真实运行条件。** 使用宿主确认可用的 Python 3.9+，按 requirements.txt（`<skill-root>/requirements.txt`）核对仅需标准库；禁止安装包、运行时联网或调用外部办公软件。保留 `-I -S -B`，首次读取前运行环境自检：
 
 ```console
-python -I -S -B "<skill-root>/scripts/read_et.py" --check
+python -I -S -B "<skill-root>/scripts/et_cli.py" run --check
 ```
 
 4. **首次操作前完成自检。** 要求退出 0 且输出 `environment-ok`。OOXML 电子表格分支另需 Expat >=2.6；自检的 `ooxml-sheet=available` 表示此条件满足，`unavailable` 时仅可读取二进制 BIFF8 子集，不尝试 OOXML 解析。自检仅检查基础入口和依赖可用性，不代表任务文件已验收。
@@ -39,7 +41,7 @@ python -I -S -B "<skill-root>/scripts/read_et.py" --check
 完成共同自检后，在任务工作目录运行；将文件名换成实际输入，保留默认 JSON 和 `data` 策略：
 
 ```console
-python -I -S -B "<skill-root>/scripts/read_et.py" ./input.et
+python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et
 ```
 
 只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其 `wps_read_view_v1` 是投影，不交给原 schema 分析器。分页用于抽查，不先遍历全部页做全量统计；每页仍重读解析输入。需要统计或处理结果表时用下方分析入口；已取得完整 JSON 的程序按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源 partial 与诊断。
