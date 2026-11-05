@@ -151,14 +151,14 @@ sum 和 median 在有界 Decimal 精度下精确计算，不经过 float；mean 
 
 ## 验证依据
 
-测试入口为 `<skill-root>/scripts/test_et_table_analysis.py` 和 `<skill-root>/scripts/test_et_table_row_selection.py`，覆盖手工指定类型/缓存数据、独立 Fraction 精度对照、合并标签、稳定筛选去重排序、分页、错误输入、BIFF/OOXML 实际解析链和 CLI 输出契约。后者另用含明细、小计、总计、重复表头和缺失值的合成报表核对排除行后的总额、均值、中位数及分组结果。真实原件的维护统计核对及平台结果见 `<skill-root>/references/table-analysis-evidence.json`。真实源记录一致性不证明公式最新、视觉布局或业务总额正确。
+测试入口为 `<skill-root>/scripts/test/test_et_table_analysis.py` 和 `<skill-root>/scripts/test/test_et_table_row_selection.py`，覆盖手工指定类型/缓存数据、独立 Fraction 精度对照、合并标签、稳定筛选去重排序、分页、错误输入、BIFF/OOXML 实际解析链和 CLI 输出契约。后者另用含明细、小计、总计、重复表头和缺失值的合成报表核对排除行后的总额、均值、中位数及分组结果。真实原件的维护统计核对及平台结果见 `<skill-root>/references/table-analysis-evidence.json`。真实源记录一致性不证明公式最新、视觉布局或业务总额正确。
 
-`<skill-root>/scripts/test_et_table_quality_preview.py` 另验证质量分母与位置样本、重复/空/不可用表头、分组覆盖、跨页/裁切合并预览、blank/空文本缓存及 BIFF/OOXML 实际预览链。Schedule 原件核对 48 个非零保存数值（含 12 个缓存）、12 个分组和 10 个预览保存值；Fraction 独立精确统计及整数商余数实现的 34 位 half-even 均值预期在调用目标分析前冻结。其数值包括序号、日期序列与时长，未把它们冒充已填报金额；未验证源公式新鲜度或业务总额。
+`<skill-root>/scripts/test/test_et_table_quality_preview.py` 另验证质量分母与位置样本、重复/空/不可用表头、分组覆盖、跨页/裁切合并预览、blank/空文本缓存及 BIFF/OOXML 实际预览链。Schedule 原件核对 48 个非零保存数值（含 12 个缓存）、12 个分组和 10 个预览保存值；Fraction 独立精确统计及整数商余数实现的 34 位 half-even 均值预期在调用目标分析前冻结。其数值包括序号、日期序列与时长，未把它们冒充已填报金额；未验证源公式新鲜度或业务总额。
 
 已按证据中的来源与 SHA-256 单独取得原件后，先自检，再在任务目录运行离线维护核对；文件名可替换成实际相对路径，不因名称相同就接受，核对器必须匹配原始哈希：
 
 ```console
-python -I -S -B "<skill-root>/scripts/verify_et_analysis.py" ./Balance_Sheet.ett ./Schedule.ett "./Start-up Expenses.ett"
+python -I -S -B "<skill-root>/scripts/test/verify_et_analysis.py" ./Balance_Sheet.ett ./Schedule.ett "./Start-up Expenses.ett"
 ```
 
 退出 0 且 `status=passed` 只表示本次提供的固定原件与独立冻结统计一致。Start-up Expenses 原件另核对显式排除五行后 23 个数值的位置和统计、合并表头来源及数值锚点不重复。脚本不会下载、保存或重分发原件；未提供的原件不计为通过。这里的选列仅验证保存值运算，不把包含模板合计行的整列相加解释为业务总额；该模板明细列的零值不能代替多样金额或真实填报业务的验收。

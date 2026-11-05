@@ -63,7 +63,7 @@ python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et
 
 ```console
 python -I -S -B "<skill-root>/scripts/read_et.py" --check
-python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v
+python -I -S -B -m unittest discover -s skills/wps/scripts/test -p 'test_*.py' -v
 python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict
 ```
 

@@ -74,4 +74,4 @@
 
 ## 维护测试
 
-`python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_*.py' -q`，重点新增 `<skill-root>/scripts/test_docx_p1_layout.py`；运行环境仍需满足原 Skill 对 Python/Expat 等要求。仅在 Skill 维护/发布场景运行完整回归，不要为普通用户的每一份文档反复运行测试套件。
+`python -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_*.py' -q`，重点新增 `<skill-root>/scripts/test/test_docx_p1_layout.py`；运行环境仍需满足原 Skill 对 Python/Expat 等要求。仅在 Skill 维护/发布场景运行完整回归，不要为普通用户的每一份文档反复运行测试套件。

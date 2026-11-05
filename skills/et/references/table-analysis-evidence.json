@@ -20,7 +20,7 @@
     "data_selection": "scripts/et_table_data.py",
     "analysis": "scripts/et_table_analysis.py",
     "tests": "scripts/test_et_table_analysis.py",
-    "offline_original_verifier": "scripts/verify_et_analysis.py",
+    "offline_original_verifier": "scripts/test/verify_et_analysis.py",
     "source_reader_modified": false,
     "runtime_dependencies": "Python standard library and this skill's existing reader modules only",
     "runtime_network": false,

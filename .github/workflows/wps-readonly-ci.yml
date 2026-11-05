@@ -4,6 +4,7 @@ on:
     paths:
       - 'skills/wps/**'
       - 'skills/skill-development-standards/**'
+      - 'tools/run_skill_tests.py'
       - '.github/workflows/wps-readonly-ci.yml'
   workflow_dispatch:
 permissions:
@@ -25,7 +26,7 @@ jobs:
           python -I -S -B skills/wps/scripts/read_wps.py --check
       - name: WPS complete unit regression
         run: |
-          python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v
+          python -I -S -B tools/run_skill_tests.py skills/wps/scripts/test
       - name: Strict Skill structure
         run: |
           python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict

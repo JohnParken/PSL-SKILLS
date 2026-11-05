@@ -1,8 +1,10 @@
-name: WPS BIFF8 isolated audit regression
+name: ET BIFF8 isolated audit regression
 on:
   pull_request:
     paths:
-      - 'skills/wps/**'
+      - 'skills/et/**'
+      - 'skills/skill-development-standards/**'
+      - 'tools/run_skill_tests.py'
       - '.github/workflows/wps-biff8-audit.yml'
   workflow_dispatch:
 permissions:
@@ -19,15 +21,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Read-only WPS self-check
+      - name: Read-only ET self-check
         run: |
-          python -I -S -B skills/wps/scripts/read_wps.py --check
+          python -I -S -B skills/et/scripts/read_et.py --check
       - name: Isolated BIFF8 audit tests
         run: |
-          python -I -S -B -m unittest discover -s skills/wps/scripts -p test_wps_biff8_audit.py -v
-      - name: WPS full regression including word reader
+          python -I -S -B tools/run_skill_tests.py skills/et/scripts/test -p test_wps_biff8_audit.py
+      - name: ET full regression
         run: |
-          python -I -S -B -m unittest discover -s skills/wps/scripts -p 'test_*.py' -v
+          python -I -S -B tools/run_skill_tests.py skills/et/scripts/test
       - name: Strict Skill structure
         run: |
-          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict
+          python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict

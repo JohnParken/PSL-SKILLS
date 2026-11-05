@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'skills/xlsx/scripts'))
 sys.path.insert(0, str(ROOT / 'skills/wps/scripts'))
 sys.path.insert(0, str(ROOT / 'skills/et/scripts'))
+sys.path.insert(0, str(ROOT / 'skills/et/scripts/test'))
 import xlsx_read_view
 import wps_read_view
 from stdlib_xlsx import Workbook

@@ -94,7 +94,7 @@ installation path to copy into task commands. Tests use isolated temporary direc
 this does not authorize business workflows to choose a different temporary root.
 
 ```console
-python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
+python3 -I -S -B -m unittest discover -s skills/xlsx/scripts/test -p 'test_*.py' -v
 ```
 
 2026-11-02 XML output maintenance: synthetic creation/calculation/save/reopen tests
@@ -133,7 +133,7 @@ per-item versus total rounding, and calculate/save/reopen/summarize/export/reope
 Validation from the confirmed repository root on macOS:
 
 - Python 3.9.6 and the host-located bundled Python 3.12.14 each ran
-  `-I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py'`:
+  `-I -S -B -m unittest discover -s skills/xlsx/scripts/test -p 'test_*.py'`:
   331 tests, exit 0, no failures or skips on each interpreter.
 - Both interpreters ran `<skill-root>/scripts/stdlib_xlsx.py` with `check`, returning exit 0,
   `status: ready`. Python 3.12.14 also passed the development standard's interpreter

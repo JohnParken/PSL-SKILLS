@@ -9,7 +9,7 @@
 在已确认的任务目录准备获准使用的原始 `.wps` 和独立内容预期 JSON。两个文件都必须使用任务目录内的相对路径；绝对路径、父目录、解析到任务目录外的符号链接会被拒绝。不要使用 DOC/DOCX 改后缀样例作为真实 WPS 来源证据。
 
 ```console
-python -I -S -B "<skill-root>/scripts/verify_wps_sample.py" ./samples/original.wps ./expectations.json
+python -I -S -B "<skill-root>/scripts/test/verify_wps_sample.py" ./samples/original.wps ./expectations.json
 ```
 
 清单上限 1 MiB，样本上限 32 MiB，均必须是可读普通文件。报告 JSON 的 `status=passed`、`passed=true` 且退出 0 才是字节和预期匹配；失败报告退出 1。参数解析错误退出 2，不是验收结果。

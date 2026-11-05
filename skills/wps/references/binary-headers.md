@@ -19,4 +19,4 @@ SEPX 仅有界保留原始字节和来源，不解析属性操作、纸张、奇
 
 ## 验证与依据
 
-`<skill-root>/scripts/test_wps_binary_headers.py` 为标准库合成规范样本，测试两节固定 CP、空槽、多类槽、guard、末 CP、缺表、畸形长度/顺序、SEPX 越界/文本交叠和预算。无真实非空页眉分节独立内容对照。公开依据位于 来源清单 (`<skill-root>/references/binary-headers-evidence.json`)，仅开发研究，运行时不访问网络。
+`<skill-root>/scripts/test/test_wps_binary_headers.py` 为标准库合成规范样本，测试两节固定 CP、空槽、多类槽、guard、末 CP、缺表、畸形长度/顺序、SEPX 越界/文本交叠和预算。无真实非空页眉分节独立内容对照。公开依据位于 来源清单 (`<skill-root>/references/binary-headers-evidence.json`)，仅开发研究，运行时不访问网络。

@@ -38,6 +38,6 @@ JSON
 
 ## 独立分发与维护
 
-公共实现随本包位于 `<skill-root>/scripts/_wps_artifact_runtime/`，来源及哈希见 `<skill-root>/references/lifecycle-upstream.json`。变换仅增加延迟注解及包内相对导入，不从仓库或相邻Skill运行时导入。仓库维护时从仓库根运行 `python -I -S -B -m unittest discover -s tests -p test_wps_lifecycle_parity.py`，审阅公共来源与副本差异并同步哈希，不能只改记录通过检查。该仓库测试不随独立包运行；独立包的 `<skill-root>/scripts/test_wps_delivery.py`验证只读安装、三入口和受控job，无需其他Skill。
+公共实现随本包位于 `<skill-root>/scripts/_wps_artifact_runtime/`，来源及哈希见 `<skill-root>/references/lifecycle-upstream.json`。变换仅增加延迟注解及包内相对导入，不从仓库或相邻Skill运行时导入。仓库维护时从仓库根运行 `python -I -S -B -m unittest discover -s tests -p test_wps_lifecycle_parity.py`，审阅公共来源与副本差异并同步哈希，不能只改记录通过检查。该仓库测试不随独立包运行；独立包的 `<skill-root>/scripts/test/test_wps_delivery.py`验证只读安装、三入口和受控job，无需其他Skill。
 
 仅Python标准库，不安装软件。受控文件操作依赖真实dir_fd/不跟随链接能力，不可用时停止，不降级删除。需宿主已确认的任务目录；Linux容器、macOS、Windows及真实宿主验收分别记录，不能将本机结果当作跨平台或云空间证明。

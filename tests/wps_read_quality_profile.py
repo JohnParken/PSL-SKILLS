@@ -13,6 +13,7 @@ import tracemalloc
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'skills' / 'wps' / 'scripts'))
+sys.path.insert(0, str(ROOT / 'skills' / 'wps' / 'scripts' / 'test'))
 from read_wps import parse_streams
 from test_wps import document
 

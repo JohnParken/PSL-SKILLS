@@ -19,6 +19,6 @@ cch≤32767，继续沿用记录数和文件/流预算；在收集正文或元�
 
 验证：test_wps_rich_strings.py 为标准库构造的合成规范样例，包含中文/ASCII/跨记录代理对、编码切换、长字符串、run 各字节分界、后接字符串、固定头/长度/编码/预算错误及固定种子结构扰动。当前已有合法 ET/ETT 样本未观察到富文本，不能称这些新行为已通过真实富文本语义验收。
 
-新增注音验证见 `<skill-root>/scripts/test_wps_phonetic.py`：字符编码切换、代理对、原始扩展的每个切分点、后接字符串、零长度扩展、组合预算及结构化失败位置。仍为合成证据，详见解析增强边界 (`<skill-root>/references/et-parser-stability.md`)。
+新增注音验证见 `<skill-root>/scripts/test/test_wps_phonetic.py`：字符编码切换、代理对、原始扩展的每个切分点、后接字符串、零长度扩展、组合预算及结构化失败位置。仍为合成证据，详见解析增强边界 (`<skill-root>/references/et-parser-stability.md`)。
 
-纯文字 `Label` 内联单元格复用字符续段规则：从六字节单元格前缀之后读取完整字符串头，只接受 flags 0/1，不接受富格式或注音字段，末尾必须恰好消费完。`<skill-root>/scripts/test_wps_biff_reading.py` 覆盖编码切换、跨记录代理对及失败边界；不扩大 SST 元数据或公式缓存的既有支持范围。详见内联文字与兼容元数据 (`<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata`)。
+纯文字 `Label` 内联单元格复用字符续段规则：从六字节单元格前缀之后读取完整字符串头，只接受 flags 0/1，不接受富格式或注音字段，末尾必须恰好消费完。`<skill-root>/scripts/test/test_wps_biff_reading.py` 覆盖编码切换、跨记录代理对及失败边界；不扩大 SST 元数据或公式缓存的既有支持范围。详见内联文字与兼容元数据 (`<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata`)。

@@ -7,14 +7,14 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1954.3193 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261103.1633.1524 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261104.1601.0533 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261105.1313.4408 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.1438.0555 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261105.1127.3283 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261105.1335.5039 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261105.1644.0317 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261105.1644.0317 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261105.1644.0317 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261105.1644.0317 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261105.1644.0317 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261105.1644.0317 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；显式依赖 xlsx，ET 来源另依赖 et | 20261104.1601.0533 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、公式预检、逐格溯源与审计；不支持 ET 写回或任意明细连接 |
-| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261105.1644.0317 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261105.1556.4829 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构
@@ -286,16 +286,19 @@ python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skill
 python3 -I -S -B -m unittest discover -s skills/skill-development-standards/scripts/test -p 'test_check_skill.py' -v
 ```
 
-在仓库根目录运行 XLSX 自带测试：
+各 Skill 自带测试位于 `scripts/test/`，生产流程不调用测试。仓库维护可使用 `tools/run_skill_tests.py <测试目录>`：显示发现数量，零发现、导入错误或测试失败均返回非零；不同 Skill 分进程执行，避免同名夹具模块互相污染。独立 Skill 包继续使用下列标准库 unittest 命令，不依赖仓库工具。跨 Skill 集成及仓库适配器测试留在仓库 `tests/`。
+
+在仓库根目录运行 XLSX 与 ET 自带测试：
 
 ```console
-python3 -I -S -B -m unittest discover -s skills/xlsx/scripts -p 'test_*.py' -v
+python3 -I -S -B -m unittest discover -s skills/xlsx/scripts/test -p 'test_*.py' -v
+python3 -I -S -B -m unittest discover -s skills/et/scripts/test -p 'test_*.py' -v
 ```
 
 DOCX 已包含标准库固定预期回归，覆盖生成、编辑、ZIP/XML 拒绝边界和格式路由。从仓库根目录使用满足 DOCX 环境要求的解释器执行：
 
 ```console
-python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
+python3 -I -S -B tools/run_skill_tests.py skills/docx/scripts/test
 ```
 
 原生行为测试要求 Python >=3.10、Expat >=2.6.0；跳过测试不算行为验收。范围、命令和证据见 [DOCX 维护测试与历史验证记录](skills/docx/references/maintenance-validation.md)。环境自检、固定预期回归和视觉验收覆盖不同内容，当前流程不调用办公软件做视觉验证。
@@ -303,7 +306,8 @@ python3 -I -S -B -m unittest discover -s skills/docx/scripts -p 'test_*.py' -v
 PPTX 从仓库根目录运行隔离环境回归；要求满足其 Linux/Python/Expat 与描述符操作条件。测试覆盖的结构与内容不等于桌面软件显示或真实宿主触发验收：
 
 ```console
-python -I -S -B -m unittest discover -s tests/pptx -p 'test_*.py'
+python -I -S -B tools/run_skill_tests.py skills/pptx/scripts/test
+python -I -S -B tools/run_skill_tests.py tests/pptx
 ```
 
 PPTX 的本次 Linux 验证记录见 [标准库 PPTX 验证记录](tests/pptx/verification.json)：92 项回归（新增 26 项）、严格结构检查，以及开发阶段独立读取器的内容核对。桌面视觉、真实业务样本、Windows 与专用宿主触发未验证；开发核对工具不属于运行依赖。
@@ -433,7 +437,7 @@ XLSX十个受支持写文件CLI在业务处理前检查输入、配置和输出�
 
 ## WPS DXF 记录校验与格式增强（2026-10-29）
 
-支持 MS-XLS 0x088D DXF（差异格式）标准结构校验与属性保留，新增 [test_wps_dxf.py](skills/wps/scripts/test_wps_dxf.py) 与 [test_wps_dxf_integration.py](skills/wps/scripts/test_wps_dxf_integration.py)。WPS 电子表格在读取时将 DXF 记录保留于元数据，不将格式混入单元格值，不将其误判为 WPS 私有记录。WPS 技能全量 424 项回归测试通过。
+支持 MS-XLS 0x088D DXF（差异格式）标准结构校验与属性保留，新增 [test_wps_dxf.py](skills/et/scripts/test/test_wps_dxf.py) 与 [test_wps_dxf_integration.py](skills/et/scripts/test/test_wps_dxf_integration.py)。WPS 电子表格在读取时将 DXF 记录保留于元数据，不将格式混入单元格值，不将其误判为 WPS 私有记录。WPS 技能全量 424 项回归测试通过。
 
 ## 同名保护与递增版本命名（20261029.2203.2365）
 

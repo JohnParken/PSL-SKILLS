@@ -2,6 +2,8 @@
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
+测试脚本路径已按当前布局更新至 `<skill-root>/scripts/test/`；下文历史测试数量、平台及结论仍为当时记录，不代表本次重跑。测试只用于维护，生产不得调用。
+
 本次新增MS-DOC安全文字降级：默认data策略与显式严格回退、控制符前后正文、嵌套域/隐藏指令、对象/无锚点标记、CP位置、损坏/加密/预算拒绝均用隔离合成fixture验证。以下旧现场记录保留原日期和策略，不将历史拒绝当作当前默认行为；当前策略以 `<skill-root>/references/format.md#fib与正文规则` 为准。本机获取汕头装订标准公开原件因TLS握手超时未成功，不宣称本次真实原件复验通过。
 
 ## 目录
@@ -85,7 +87,7 @@ GitHub Actions Linux Python3.11/3.13 全量 WPS **451 项测试均通过**、入
 
 ```console
 python -I -S -B "<skill-root>/scripts/read_wps.py" --check
-python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p "test_*.py"
+python -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p "test_*.py"
 ```
 
 自检要求退出 0 和 `environment-ok`，并单独确认 OOXML 所需 Expat 可用；测试要求退出 0，区分通过与跳过。运行 契约示例 (`<skill-root>/references/reading-assessment.md#可运行的契约示例`) 要求退出 0 和 `contract-examples-ok`。独立包验证检查 ZIP CRC、包内路径、每个文件与源码的 SHA-256、隔离运行及执行前后安装文件不变。

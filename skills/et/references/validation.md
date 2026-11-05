@@ -29,7 +29,7 @@
 
 ```console
 python -I -S -B "<skill-root>/scripts/read_et.py" --check
-python -I -S -B -m unittest discover -s "<skill-root>/scripts" -p "test_*.py"
+python -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p "test_*.py"
 ```
 
 自检要求退出 0 和 `environment-ok`，并单独确认 OOXML 所需 Expat 可用；测试要求全部通过。

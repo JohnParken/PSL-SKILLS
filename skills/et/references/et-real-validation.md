@@ -24,7 +24,7 @@ The original legacy-policy verifier remains available and still expects Schedule
 be refused when its explicit legacy chart policy is reject. To verify default data:
 
 ```console
-python -I -S -B "<skill-root>/scripts/verify_et_samples.py" ./samples --compatibility data
+python -I -S -B "<skill-root>/scripts/test/verify_et_samples.py" ./samples --compatibility data
 ```
 
 No original is rewritten or bundled; this is the same four-file provenance set and
@@ -84,8 +84,8 @@ readable and run the skill self-check first. From the confirmed task directory:
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/read_et.py" --check
-python3 -I -S -B "<skill-root>/scripts/verify_et_samples.py" ./samples
-python3 -I -S -B "<skill-root>/scripts/verify_et_samples.py" ./samples --chart-policy opaque
+python3 -I -S -B "<skill-root>/scripts/test/verify_et_samples.py" ./samples
+python3 -I -S -B "<skill-root>/scripts/test/verify_et_samples.py" ./samples --chart-policy opaque
 python3 -I -S -B "<skill-root>/scripts/read_et.py" ./samples/Balance_Sheet.ett --compatibility legacy_excel_clsid
 ```
 

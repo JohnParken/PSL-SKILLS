@@ -92,6 +92,7 @@ def run_case(skill, count, page_size, summary=False):
 
 def cli_cases(commit=None):
     """Small full CLI traversal, including subprocess startup and source parsing."""
+    sys.path.insert(0, str(ROOT / 'skills/et/scripts/test'))
     from test_wps_biff8 import workbook, rec, cell
     from test_wps_cfb import synthetic_cfb
     rows = []
