@@ -169,6 +169,8 @@ def execute_edit_task(
     allow_lossy_reflow: bool = False,
 ) -> Dict[str, Any]:
     """Run full edit pipeline: read -> modify -> rebuild -> write atomic -> readback verify."""
+    from wps_output_contract import require_output_path
+    require_output_path(output_path, 'rtf')
     if not input_path.is_file():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
@@ -265,6 +267,8 @@ def execute_edit_task(
         "edit_mode": "content_reflow_not_lossless",
         "layout_verification": "not_run",
         "native_wps": False,
+        "output_format": "rtf",
+        "binary_doc": False,
         "partial": original.get("status") == "partial" or read_res.get("status") == "partial" or order_unknown or bool(doc.spec_warning_count),
         "spec_warnings": doc.spec_warnings,
         "spec_warning_count": doc.spec_warning_count,

@@ -5,3 +5,7 @@ __pycache__/
 *.[eE][tT]
 *.[eE][tT][tT]
 /test_workspace/
+
+# OFD installation-local user fonts are private, not distribution assets.
+/skills/ofd/assets/user_fonts/*
+!/skills/ofd/assets/user_fonts/NOTICE.txt

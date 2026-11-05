@@ -1,0 +1,24 @@
+{
+  "version": "20261104.1606.5183",
+  "platform": "macOS",
+  "python": "3.12.11",
+  "change": "custom font path required; license_path and embedding_permission optional; no automatic discovery",
+  "rights": "not assessed when custom; restricted flags still rejected; bundled notices preserved",
+  "tests": 139,
+  "review_regressions": 6,
+  "strict": "passed",
+  "empty_path_run": {
+    "stdout": "",
+    "stderr": "...........................................................................................................................................\n----------------------------------------------------------------------\nRan 139 tests in 1.153s\n\nOK\n",
+    "exit_code": 0
+  },
+  "static": "AST, max200 and semicolon checks passed; Pylint unavailable, not run",
+  "linux": "not verified",
+  "visual": "not performed",
+  "distribution": "source updated; previous ZIP retained unchanged and predates this simplification",
+  "files": {
+    "skills/ofd/scripts/generate_ofd.py": "36f96893bb7a761e0d8c4b6c47abf7f66ac127989861f5ed40bf923545d26ae4",
+    "skills/ofd/scripts/check_generated_ofd.py": "dc044c894be383003d7e5d2a8fb1637cb0295e637f5c85fed85ebf77c5fef9e9",
+    "skills/ofd/scripts/test_ofd_generate.py": "3709684ab4921ec2124c7b2ed35e7bbc3b520838790ca418c0aa7fb5fa8ded4c"
+  }
+}

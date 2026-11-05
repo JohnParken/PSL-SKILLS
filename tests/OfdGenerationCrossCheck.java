@@ -49,9 +49,9 @@ class OfdGenerationCrossCheck {
             long total = 0;
             for (var entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
                 check(members.size() < 64 && !members.containsKey(entry.getName()), "ZIP entries");
-                byte[] bytes = zip.readNBytes(8 * 1024 * 1024 + 1);
+                byte[] bytes = zip.readNBytes(10 * 1024 * 1024 + 1);
                 total += bytes.length;
-                check(bytes.length <= 8 * 1024 * 1024 && total <= 32 * 1024 * 1024, "ZIP byte bound");
+                check(bytes.length <= 10 * 1024 * 1024 && total <= 32 * 1024 * 1024, "ZIP byte bound");
                 members.put(entry.getName(), bytes);
             }
         }
@@ -84,6 +84,7 @@ class OfdGenerationCrossCheck {
         for (int index = 0; index < fontNodes.getLength(); index++) {
             Element font = (Element) fontNodes.item(index);
             String source = docDirectory + resources.getAttribute("BaseLoc") + "/" + child(font, "FontFile");
+            check(members.get(source).length <= 10 * 1024 * 1024, "font byte bound");
             Font parsed = Font.createFont(Font.TRUETYPE_FONT, new ByteArrayInputStream(members.get(source))).deriveFont(1000f);
             fonts.put(font.getAttribute("ID"), parsed);
         }
@@ -92,6 +93,7 @@ class OfdGenerationCrossCheck {
         for (int index = 0; index < imageNodes.getLength(); index++) {
             Element image = (Element) imageNodes.item(index);
             String source = docDirectory + resources.getAttribute("BaseLoc") + "/" + child(image, "MediaFile");
+            check(members.get(source).length <= 8 * 1024 * 1024, "image byte bound");
             BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(members.get(source)));
             check(decoded != null && decoded.getWidth() > 0 && decoded.getHeight() > 0, "independent image decode");
             decodedImages++;

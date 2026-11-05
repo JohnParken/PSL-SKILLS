@@ -6,7 +6,7 @@
 
 ## 环境、定位和自检
 
-在harness确认的任务工作目录执行；任务JSON、字体、许可证与图片均为该目录内明确指定的相对输入，拒绝任何层级符号链接、父目录与绝对数据路径。不扫描系统字体，不自动下载、安装或转换资源。使用Python >=3.12.11、自带zlib和Expat >=2.6.0；零第三方Python包与外部软件运行依赖，保留 `-I -S -B`。安全发布需dir_fd、O_NOFOLLOW、O_DIRECTORY及描述符相对、不跟随链接的link/unlink/stat，缺失时停止。
+在harness确认的任务工作目录执行；任务JSON、自备字体、许可证与图片均为该目录内明确指定的相对输入；显式bundled字体只读取本Skill固定且校验哈希的内部资源，拒绝任何层级符号链接、父目录与绝对数据路径。不扫描系统字体，不自动下载、安装或转换资源。使用Python >=3.12.11、自带zlib和Expat >=2.6.0；零第三方Python包与外部软件运行依赖，保留 `-I -S -B`。安全发布需dir_fd、O_NOFOLLOW、O_DIRECTORY及描述符相对、不跟随链接的link/unlink/stat，缺失时停止。
 
 ```console
 python -I -S -B "<skill-root>/scripts/generate_ofd.py" --check
@@ -43,15 +43,18 @@ python -I -S -B "<skill-root>/scripts/check_generated_ofd.py" ./new-document.ofd
 
 线宽、全字体声明包围盒与文字advance均计入边界检查。超出页内容框或单元格即失败，绝不截断、缩小或添加省略号。对齐按声明的保守文字包围盒在单元格内定位，不是复杂塑形或实际像素边缘对齐；padding仍保留，空单元格不生成伪文字。全字体包围盒有意保守，可能拒绝实际上可排下的文本；不冒称精确轮廓或可见性证明。空单元格保留记录而不生成空TextObject；普通文字项不接受空字符串。网格、单元格文本与对象ID的明确绑定保存在结果tables中，是输入模型的实现证明，不是从版面猜测或通用OFD表格标准。
 
-fonts是字典，每项需path、license_path和embedding_permission="confirmed"。例如用户已经明确给出并确认了任务目录内字体和许可证，可使用 `{"main":{"path":"./font.ttf","license_path":"./OFL.txt","embedding_permission":"confirmed"}}`。确认标志须来自实际许可核对，不能为通过检查编造。license_path是完整UTF-8许可及版权文本，完整嵌入DocInfo/CustomDatas/CustomData（XML解析按标准规范换行），供用户查看。字体原字节完整嵌入，不安装、不子集化或改名字体内部名称；没有许可材料时先取得用户授权和材料，不用系统字体替代。安装嵌入权限与可选的No subsetting标志只是技术门槛，不等于法律许可认证。
+fonts是字典。内置示例为 `{"example":{"bundled":"zhuque-fangsong-v0.212"}}`，来源与完整许可见 `<skill-root>/references/bundled-fonts.md`。普通自备字体最小输入为 `{"main":{"path":"./font.ttf"}}`：将字体放到任务目录后明确此路径即可，不扫描其他目录、不自动发现或回退。字体必须是可读普通文件，不能位于目录外或经符号链接访问。
 
-只接受独立、静态TrueType/glyf字体，Unicode cmap4/12、hmtx/hhea/head/maxp/loca、OS/2及可解释PostScript名称。只允许fsType=0或0x0100；后者要求完整嵌入，生成器始终保留原始字体全部字节并报告embedding_mode=full_font_unmodified，不通过改写权限位取得成功。拒绝TTC、CFF、变量/彩色/SVG字体、限制/预览打印/可编辑/仅位图及未知权限位组合。对每个字符核对非零、未越界的映射和advance；非空白字符还需有声明范围内的非空字形包围盒。允许ASCII、BMP汉字和受限中西文标点、全角字符；拒绝组合符、控制字符、双向/阿拉伯文、emoji、补充平面及需要塑形的其他文字。即使有cmap，也不能证明字体绘出的图案与语言意义一致；字体应来自可信、已获准使用的来源。字体程序不执行、不栅格化，也不宣称完成字体安全净化。
+自备字体的license_path及embedding_permission均不再必填；兼容旧输入，若提供license_path则仍验证UTF-8及大小并完整保留，若提供embedding_permission则只接受旧值confirmed但不把它当法律认证。未提供许可时JSON的permission明确not assessed、license_sha256=null，OFD写入FontRights:not_assessed元数据，不伪造许可证或授权。提供字体文件不等于自动获得嵌入或分发授权；生成器不执行法律许可审查。内置朱雀的两份完整许可、版权及预览声明继续随包保留并嵌入，不因自备字体简化而删除。字体原字节完整嵌入，不安装、不子集化或改名字体内部名称。
+
+
+只接受独立、静态TrueType/glyf字体，Unicode cmap4/12、hmtx/hhea/head/maxp/loca、OS/2及可解释PostScript名称。只允许fsType=0、8、0x0100或0x0108；8表示Editable embedding，非限制嵌入；含0x0100者要求完整嵌入，生成器始终保留原始字体全部字节并报告embedding_mode=full_font_unmodified，不通过改写权限位取得成功。拒绝TTC、CFF、变量/彩色/SVG字体、限制/预览打印/仅位图及未知权限位组合。对每个字符核对非零、未越界的映射和advance；非空白字符还需有声明范围内的非空字形包围盒。允许ASCII、BMP汉字和受限中西文标点、全角字符；拒绝组合符、控制字符、双向/阿拉伯文、emoji、补充平面及需要塑形的其他文字。即使有cmap，也不能证明字体绘出的图案与语言意义一致；字体应来自可信、已获准使用的来源。字体程序不执行、不栅格化，也不宣称完成字体安全净化。
 
 images是字典，每项只含path。PNG限非交错8-bit灰度/RGB及可选alpha，验证全部块CRC、受限解压后的扫描线长度和滤镜编号；不做视觉解码。拒绝调色板、APNG、EXIF及不支持的关键块。JPEG限单扫描8-bit灰度/三分量baseline，有基础量化/Huffman表和扫描头；拒绝progressive、APP1/EXIF/XMP、算术编码及其他扩展。标准库不含JPEG像素解码器，因此只检查标记、尺寸和扫描轮廓，结果images[].validation明确说明未解码熵数据，不承诺任何通过头部检查的JPEG都可显示。需要像素级或视觉保证而无独立客户端时，该项验收未完成。图片原字节直接嵌入，不净化未知元数据。
 
 ## 输出与验收契约
 
-成功stdout为一个UTF-8 JSON、退出0、schema_version="ofd-generation-result-1"、status="generated"；只表示新文件已发布且通过本生成子集结构检查。报告含output、sha256、bytes、doc_id、max_unit_id、pages、fonts、images、tables、structural_validation，以及visual_validation和independent_client_validation。后两项默认not_performed，生成成功不能覆盖它们。字体许可确认、图片检查范围和缺口随报告保留。宿主保存需要交付的报告时使用独占新文件，不覆盖原件。
+成功stdout为一个UTF-8 JSON、退出0、schema_version="ofd-generation-result-1"、status="generated"；只表示新文件已发布且通过本生成子集结构检查。报告含output、sha256、bytes、doc_id、max_unit_id、pages、fonts、images、tables、structural_validation，以及visual_validation和independent_client_validation。后两项默认not_performed，生成成功不能覆盖它们。字体权利状态、图片检查范围和缺口随报告保留。宿主保存需要交付的报告时使用独占新文件，不覆盖原件。
 
 失败stdout为同schema、status="failed"、退出1、stage和diagnostics；参数usage退出2写stderr。不返回伪造的空文件成功。publication_outcome为not_attempted或not_published_existing_name时没有本次最终文件；inspect_before_retry表示应先核查目标实际存在性与身份，不能自动重跑或删除可能已经成功发布的文件。原子建立名字不等于断电持久性或针对特权并发写者的完整沙箱。正常异常会核对候选inode再删除，仅处理本次登记项；强杀、权限变更或身份被替换时可能留候选，按原记录报告cleanup_incomplete，不扫描历史文件。
 
@@ -63,8 +66,18 @@ images是字典，每项只含path。PNG限非交错8-bit灰度/RGB及可选alph
 
 结构以GB/T 33190-2016的OFD/DocBody/DocInfo/DocRoot、Document/CommonData/MaxUnitID/PageArea/DocumentRes/Pages、Page/Area/Content/Layer、Res/Font/FontFile/MultiMedia/MediaFile及文字/路径/图像基本模型为目标。标准身份及已核对条款见 `<skill-root>/references/validation.md`；没有完成正式XSD逐条验证，不能称完整国标符合性。字体字段按Microsoft OpenType官方head、cmap、hmtx、OS/2文档核对：`https://learn.microsoft.com/en-us/typography/opentype/spec/hmtx`、`https://learn.microsoft.com/en-us/typography/opentype/spec/os2`。不以第三方草案代替正式标准。
 
-2026-11-03在macOS/Python3.12.11/Expat2.6.3进行标准库单元与负例测试。真实字体验收使用Google Fonts官方MaShanZheng-Regular.ttf原件及完整OFL，SHA-256分别为6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb和d7bdb1cee215b689e23c2f95672a6084c790542170648267a55114103d756a08；字体及图片不随技能包提供。两页生成样例有固定独立中文预期、PNG/JPEG和2×2网格；独立维护工具使用本机已有JDK24的ZIP/XML、TrueType GlyphVector与ImageIO，核对28字符字形映射、22项间距并实际解码两张图片。该JDK仅为维护交叉验收工具，非Python技能运行依赖，未安装新软件；它没有渲染OFD页面。维护工具源位于仓库tests/OfdGenerationCrossCheck.java，完整来源、哈希、退出码及剩余范围在tests/ofd_generation_validation_20261103.json，不是技能内部路径。
+2026-11-03在macOS/Python3.12.11/Expat2.6.3进行标准库单元与负例测试。真实字体验收使用Google Fonts官方MaShanZheng-Regular.ttf原件及完整OFL，SHA-256分别为6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb和d7bdb1cee215b689e23c2f95672a6084c790542170648267a55114103d756a08；该历史字体及图片不随技能包提供。两页生成样例有固定独立中文预期、PNG/JPEG和2×2网格；独立维护工具使用本机已有JDK24的ZIP/XML、TrueType GlyphVector与ImageIO，核对28字符字形映射、22项间距并实际解码两张图片。该JDK仅为维护交叉验收工具，非Python技能运行依赖，未安装新软件；它没有渲染OFD页面。维护工具源位于仓库tests/OfdGenerationCrossCheck.java，完整来源、哈希、退出码及剩余范围在tests/ofd_generation_validation_20261103.json，不是技能内部路径。
 
-合成字体只用于边界/契约测试，不作为真实中文字形证据；真实样例的原始输入在运行目标前冻结预期，未使用任何先前拒绝的政务文件。未完成Linux、Windows、独立OFD客户端或视觉验收；不能据本机结构、JDK字体/图片交叉检查称“所有客户端可打开、任意中文正确排版”。本次仅维护源码与验证材料，未发布或替换旧分发包。
+合成字体只用于边界/契约测试，不作为真实中文字形证据；真实样例的原始输入在运行目标前冻结预期，未使用任何先前拒绝的政务文件。未完成Linux、Windows、独立OFD客户端或视觉验收；不能据本机结构、JDK字体/图片交叉检查称“所有客户端可打开、任意中文正确排版”。此为历史验证，不代表当前分发状态。
 
-后续增量：表格可显式水平/垂直对齐，逐列设置水平模式；默认left/top保持原位置。结构验收逐单元格核对请求的对齐位置，不静默忽略未知模式。No subsetting字体兼容依据上述OpenType官方OS/2第8位；仅在原始全字体嵌入时放行0x0100，仍要求独立许可材料。对齐包含真实中文字体与合成边界验证；非零No subsetting旗标的新增兼容仅有合成回归，没有真实旗标字体或独立阅读器视觉验收。
+后续增量：表格可显式水平/垂直对齐，逐列设置水平模式；默认left/top保持原位置。结构验收逐单元格核对请求的对齐位置，不静默忽略未知模式。No subsetting字体兼容依据上述OpenType官方OS/2第8位；仅在原始全字体嵌入时放行0x0100，不要求自备字体提交许可材料，法律授权不由技术旗标证明。对齐包含真实中文字体与合成边界验证；非零No subsetting旗标的新增兼容仅有合成回归，没有真实旗标字体或独立阅读器视觉验收。
+
+当前单字体上限10 MiB（原8 MiB）；图片仍8 MiB、总输入资产24 MiB、产物32 MiB。完整朱雀仿宋原件为8,824,084字节，保持完整而非裁剪；固定资源有长度和SHA-256校验，失败停止。2026-11-04在macOS/Python3.12.11使用该原版生成两页84字符并逐页回读一致，独立JDK核对74项字宽和字形；不等于OFD页面视觉验收。当前分发包含该字体及两份完整OFL许可。
+
+## Skill 内的自备字体
+
+也可由用户将字体放入 `<skill-root>/assets/user_fonts/`，配置 `{"main":{"skill_font":"MyFont.ttf"}}`。只接受单个ASCII文件名及.ttf扩展名，不接受路径、子目录、符号链接或与bundled/path混用；按名称精确读取，不遍历寻找字体。字体目录基于本次真实Skill位置，不是任务目录。运行只读，不复制、移动或修改字体；安装目录不可写时使用原任务目录path流程，勿降级权限保护。读取OFD仍不依赖此目录。
+
+此目录用于安装本地的私人字体，不要求许可证文件或逐次确认，法律授权状态仍为not assessed；fsType、静态glyf、大小与缺字检查不变。字体文件不会自动进入git：仓库根.gitignore仅忽略本目录用户文件，保留NOTICE.txt；不要强制git add。分发必须使用维护入口 `<skill-root>/scripts/package_ofd.py`，它排除整个私人fonts目录中的用户文件，仅保留NOTICE.txt；不能用递归压缩整个Skill的方法发布。git忽略不等于通用ZIP工具会排除，手工复制安装目录仍可能泄露字体。内置朱雀位于assets而非私人目录，完整原版及许可继续分发。
+
+维护时在已确认任务目录运行 `python -I -S -B "<skill-root>/scripts/package_ofd.py" ./new-ofd.zip`，目标必须为新文件，禁止覆盖既有包；不自动上传或提交。文件放入Skill私人目录后不必每次再复制到任务目录，但搬迁或升级安装时需自行保留私人文件，不将其混入公共发行包。

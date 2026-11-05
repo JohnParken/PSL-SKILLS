@@ -4,32 +4,23 @@
 
 ## 导出原理与机制
 
-LibreOffice 将金山 WPS 文字的基础二进制格式定位为建立在 Microsoft Word 97–2003（DOC）复合文件（CFB）之上的兼容二进制结构。在 LibreOffice 的过滤器定义中：
-- 过滤器标识：`MS Word 97`
-- 对应输出语法：`wps:MS Word 97`
-
-执行导出时，调用格式如下：
+可选后端调用系统已有的 LibreOffice `MS Word 97` 过滤器，要求输出真正的 MS-DOC/CFB 字节。不是金山原生 WPS 生成器，也不保证任意文档转换保真。任务输入输出位于宿主确认的任务工作目录；建议使用带候选校验的公开入口：
 
 ```console
-soffice --headless --convert-to "wps:MS Word 97" --outdir <output-dir> <input-file.docx>
+python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --output "./output.doc" --backend libreoffice --verify-read
 ```
 
-该命令调用 LibreOffice 二进制导出器，将 OOXML 结构（.docx）转换为包含 WordDocument 流与 FIB（File Information Block）的 OLE/CFB 二进制文件，并将文件扩展名命名为 `.wps`。
+脚本使用 `--headless --convert-to "doc:MS Word 97"`，为每次调用创建独立输出目录及 UserInstallation 配置目录；取得 `.doc` 候选后通过现有有界 CFB/MS-DOC 读取器核验，再原子发布到 `.doc` 或兼容 `.wps`。仅换后缀、检查 CFB 魔数或发现旧目标文件均不能证明转换成功。
 
-## 依赖探测与执行环境要求
+## 依赖与失败处理
 
-1. **可执行程序探测**：优先检查环境变量 `SOFFICE_PATH` 或 `LIBREOFFICE_PATH`，其次在系统 `PATH` 及常见安装路径（如 `/usr/bin/soffice`、`/usr/lib/libreoffice/program/soffice`、`/Applications/LibreOffice.app/Contents/MacOS/soffice`）中寻找 `soffice`。
-2. **版本自检**：执行 `soffice --version` 验证程序可正常启动。
-3. **输出限制与隔离**：
-   - 使用独立临时或目标目录接收转换结果，避免覆盖已有文件。
-   - 显式指定 `--headless` 参数，禁止拉起图形界面。
-   - 捕获退出码及 stderr 输出，非 0 退出码视为转换失败并保留诊断日志。
+1. 依次检查明确指定的可执行路径、SOFFICE_PATH／LIBREOFFICE_PATH、PATH 和已实现的常见安装位置。不得安装软件或联网补依赖。
+2. 自检检查 Python 与后端可用性；发现可执行文件和版本信息不代表转换或客户端验收通过。
+3. 保留转换进程的实际 stdout、stderr 与退出码；超时不伪造退出码。候选缺失、格式不符或结构失败时不发布，保留已有目标。临时目录仅由本次调用清理。
+4. `.doc` 不允许 RTF 回退；显式 `libreoffice` 失败直接返回失败。仅 `.wps` 的 `auto` 允许改用 RTF，并返回 `status=partial`、`fallback_used=true` 与原失败原因；`output_format=rtf`、`binary_doc=false` 不得解释为二进制成功。`.rtf` 的 `auto` 直接使用纯 Python。
 
-## 格式能力与已知兼容边界
+## 回执与验证边界
 
-1. **结构保留**：正文段落、常用多级标题、列表编号、表格单元格文本及基础字符格式（粗体、斜体、字号、颜色）能够完整转换。
-2. **公文与板式降级风险**：
-   - 复杂嵌套表格与特殊单元格边距在转换为二进制流时可能产生微调。
-   - 复杂分页符与奇偶页眉页脚需经实机核验。
-   - 浮动图形锚定与艺术字可能降级为内联对象或静态位图。
-3. **专有扩展**：金山 WPS 私有的公文域代码、印章及私有对象不在 DOC 二进制标准导出中，属于兼容格式交付。
+真实 MS-DOC 候选的 `output_format=ms_doc_subset`、`binary_doc=true` 只表示实际字节格式与支持的读取子集已核验。来源或候选返回 partial 时导出也返回 partial／退出3，保留 source_readback、readback 和遗漏诊断；不能用回读到的主文字证明未解析区域完整。
+
+`layout_verification=not_run` 与 `full_format_verified=false` 保持明确。实际字体、分页、复杂表格、图形、域和 WPS/Word 客户端打开及再保存均需另行验收。模拟转换器测试验证调用、候选隔离、失败保护与状态传播，不等于 LibreOffice 实际生成验收。

@@ -1,0 +1,28 @@
+{
+  "version": "20261104.1621.2106",
+  "platform": "macOS",
+  "python": "3.12.11",
+  "tests": 140,
+  "review_regressions": 6,
+  "strict": "passed",
+  "private_directory": "skills/ofd/assets/user_fonts",
+  "reference": {
+    "main": {
+      "skill_font": "MyFont.ttf"
+    }
+  },
+  "checks": [
+    "explicit exact ASCII TTF filename",
+    "directory-relative nofollow reading",
+    "symlink and traversal rejection",
+    "fsType restrictions retained",
+    "private font bytes excluded by package_ofd.py",
+    "inner bundled font unchanged"
+  ],
+  "static": "AST, max200, semicolon checks passed; pylint not run",
+  "read_ofd_modified": false,
+  "linux": "not_verified",
+  "visual": "not_performed",
+  "package": "previous ZIP retained; new source packaging excludes user_fonts",
+  "review": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.015s\n\nOK\n"
+}

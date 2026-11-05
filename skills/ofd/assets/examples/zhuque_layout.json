@@ -1,0 +1,26 @@
+{
+  "schema_version": "ofd-generate-1",
+  "title": "朱雀仿宋离线示例",
+  "fonts": {"example": {"bundled": "zhuque-fangsong-v0.212"}},
+  "pages": [
+    {
+      "width": 210, "height": 297, "margins": [15, 15, 15, 15],
+      "items": [
+        {"kind": "text", "x": 25, "y": 35, "font": "example", "size_mm": 5, "text": "中文生成验证：朱雀仿宋 v0.212"},
+        {"kind": "text", "x": 25, "y": 55, "font": "example", "size_mm": 4, "text": "离线示例字体，保留完整原版与许可。"},
+        {"kind": "line", "x1": 20, "y1": 65, "x2": 190, "y2": 65},
+        {"kind": "table", "x": 25, "y": 85, "widths": [65, 65], "row_height": 16,
+         "font": "example", "size_mm": 4, "align": ["left", "center"], "valign": "middle",
+         "rows": [["项目", "说明"], ["字体", "预览测试版"], ["许可", "OFL 1.1"]]}
+      ]
+    },
+    {
+      "width": 148, "height": 210, "margins": [12, 12, 12, 12],
+      "items": [
+        {"kind": "text", "x": 22, "y": 35, "font": "example", "size_mm": 4, "text": "第二页：按请求逐字检查覆盖。"},
+        {"kind": "text", "x": 22, "y": 55, "font": "example", "size_mm": 3.5, "text": "缺字时停止，不替换或静默截断。"},
+        {"kind": "rectangle", "x": 20, "y": 75, "width": 100, "height": 35}
+      ]
+    }
+  ]
+}

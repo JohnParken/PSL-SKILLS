@@ -15,6 +15,7 @@ if __package__ in (None, ""):
 
 from wps_rtf_builder import build_document_from_spec
 from read_wps import read_bytes, ParseError
+from wps_output_contract import require_output_path
 
 
 MAX_SPEC_BYTES = 2 * 1024 * 1024  # 2 MiB
@@ -73,6 +74,8 @@ def create_document(
     theme_override: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Build, write atomically, and readback-verify a WPS document."""
+    output_path = Path(output_path)
+    require_output_path(output_path, 'rtf')
     if theme_override:
         spec["theme"] = theme_override
 
@@ -131,6 +134,8 @@ def create_document(
             "readback_status": read_result.get("status"),
             "layout_verification": "not_run",
             "native_wps": False,
+            "output_format": "rtf",
+            "binary_doc": False,
             "partial": read_result.get("status") == "partial" or bool(doc.spec_warning_count),
             "spec_warnings": doc.spec_warnings,
             "spec_warning_count": doc.spec_warning_count,
@@ -150,6 +155,8 @@ def create_document(
         "readback_status": read_result.get("status"),
             "layout_verification": "not_run",
             "native_wps": False,
+            "output_format": "rtf",
+            "binary_doc": False,
             "partial": read_result.get("status") == "partial" or bool(doc.spec_warning_count),
             "spec_warnings": doc.spec_warnings,
             "spec_warning_count": doc.spec_warning_count,
@@ -168,7 +175,7 @@ def main(argv=None) -> int:
 
     # create command
     create_parser = subparsers.add_parser("create", help="create a wps document from specification")
-    create_parser.add_argument("output", help="destination .wps file path")
+    create_parser.add_argument("output", help="destination path; use .wps by default, .rtf when explicitly requested (both contain RTF)")
     create_parser.add_argument("--spec", help="inline JSON specification or file path")
     create_parser.add_argument("--compact-receipt", action="store_true", help="output concise JSON receipt")
     create_parser.add_argument("--theme", choices=("official", "business", "general"), help="override theme")

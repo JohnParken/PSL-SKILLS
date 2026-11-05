@@ -1,0 +1,350 @@
+{
+  "schema_version": "table_workflow_maintenance_validation_v1",
+  "generated_utc": "2026-11-04T08:02:35.278747+00:00",
+  "environment": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.11",
+    "expat": "expat_2.6.3",
+    "isolation": "-I -S -B",
+    "linux": "not_run; no authorized Linux execution endpoint or docker/podman/nerdctl/colima/limactl",
+    "windows": "not_run",
+    "pylint": "not_installed; dedicated C0103/C0301/C0321 check not run"
+  },
+  "baseline": {
+    "local_head": "b85f536145e2cf02f0216c3ca5dd592b0cdacba7",
+    "remote_main": "b85f536145e2cf02f0216c3ca5dd592b0cdacba7",
+    "protected_preexisting_untracked": [
+      ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/"
+    ],
+    "concurrency": "Only owned target files changed; status reviewed at start and end; no process-wide inventory claim"
+  },
+  "version_clock": {
+    "sampled_new_york": "2026-11-04T02:38:05.550695-05:00",
+    "calendar_plus_hours": 12,
+    "version": "20261104.1438.0555"
+  },
+  "checks": [
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow.py"
+      ],
+      "exit_code": 0,
+      "test_count": 43,
+      "stdout": "",
+      "stderr": "...........................................\n----------------------------------------------------------------------\nRan 43 tests in 9.595s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/xlsx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_code": 0,
+      "test_count": 366,
+      "stdout": "",
+      "stderr": "..............................................................................................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 366 tests in 21.055s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/et/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_code": 0,
+      "test_count": 450,
+      "stdout": "check_kind=environment artifact_validation=not_run\nooxml-sheet=available\nenvironment-ok\n",
+      "stderr": "..................................................................................................................................................................................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 450 tests in 3.492s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_et_pipeline.py"
+      ],
+      "exit_code": 0,
+      "test_count": 3,
+      "stdout": "",
+      "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.106s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/table-workflow",
+        "skills/xlsx",
+        "--strict"
+      ],
+      "exit_code": 0,
+      "test_count": null,
+      "stdout": "OK skills/table-workflow\nOK skills/xlsx\n",
+      "stderr": ""
+    },
+    {
+      "arguments": [
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/et",
+        "--strict"
+      ],
+      "exit_code": 1,
+      "test_count": null,
+      "stdout": "WARNING skills/et:scripts/__pycache__: [suspicious-entry] Empty/cache/log/tmp/README directories are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_names.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_result.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_numeric.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf_semantics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_noncell.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_et_cli.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_builtin_names.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_legacy_compat.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf_integration.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_format_rules.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_visibility.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_phonetic.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_data_policy.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_ooxml_sheet.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_vml_notes.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_accounting.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/verify_et_samples.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_ooxml.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_continue.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_read_view.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_iso_date.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_dxf.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_audit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_cfb.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_print_titles_memfunc.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_style_inheritance.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_et_errors.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_internal_links.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_rich_strings.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_visibility.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_file_access.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_template_metadata.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_audit_sources.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_salvage.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_ooxml_sheet.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_sheet_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_tablestyles.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_row_column_formats.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff_codepage_decl.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff_tablestyles.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff_reading.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_merges.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_audit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_read_view.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_sheet_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf_readability.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_format_rules.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/read_wps.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_access.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_vml_notes.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_cfb.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_names.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_salvage_hardening.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_diagnostics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_style_formats.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_headers.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_pure_tables.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_et_capacity.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_spreadsheet_stability.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/read_et.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_numeric.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_iso_date.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_embedded_charts.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_noncell.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_formula_groups.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_charts.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\n",
+      "stderr": ""
+    },
+    {
+      "arguments": [
+        "skills/table-workflow/scripts/table_workflow.py",
+        "check",
+        "--xlsx-root",
+        "REPOSITORY_ROOT/skills/xlsx",
+        "--et-root",
+        "REPOSITORY_ROOT/skills/et",
+        "--write"
+      ],
+      "exit_code": 0,
+      "test_count": null,
+      "stdout": "{\"status\": \"environment-ok\", \"check_kind\": \"environment\", \"artifact_validation\": \"not_run\", \"python\": \"3.12.11\", \"task_writable\": true, \"dependencies\": {\"xlsx\": {\"exit_code\": 0, \"stdout\": \"{\\n  \\\"status\\\": \\\"ready\\\",\\n  \\\"python\\\": \\\"3.12.11\\\",\\n  \\\"dependencies\\\": \\\"standard_library_only\\\",\\n  \\\"check_kind\\\": \\\"environment\\\",\\n  \\\"artifact_validation\\\": \\\"not_run\\\"\\n}\\n\", \"stderr\": \"\", \"skill_sha256\": \"65b57bdf7ef5afc5c9e0d47d21055f0b801cdbe9b0c18197485ebe550a637096\"}, \"et\": {\"exit_code\": 0, \"stdout\": \"check_kind=environment artifact_validation=not_run\\nooxml-sheet=available\\nenvironment-ok\\n\", \"stderr\": \"\", \"skill_sha256\": \"fbe56931fe27b2b5687b6a83b6ef9df36531990302467e88b81a3a931593c973\"}}}\n",
+      "stderr": ""
+    }
+  ],
+  "preexisting_et_cache": {
+    "retained": true,
+    "files": 69,
+    "mtime_utc_counts": {
+      "2026-11-03T07:48+00:00": 67,
+      "2026-11-03T07:49+00:00": 2
+    },
+    "interpretation": "Pre-dates this task; original ET strict check remains nonzero for cache warnings; no source errors hidden"
+  },
+  "et_clean_source_projection": {
+    "exit_code": 0,
+    "stdout": "OK OWNED_CLEAN_ET_COPY\n",
+    "stderr": "",
+    "method": "Copy current ET source excluding preexisting cache metadata; strict checker; remove only owned copy afterwards"
+  },
+  "static_proxies": [
+    {
+      "file": "skills/xlsx/scripts/xlsx_analysis.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "skills/xlsx/scripts/xlsx_wps_result.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "skills/table-workflow/scripts/table_workflow.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "skills/table-workflow/scripts/workflow_runtime.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    },
+    {
+      "file": "tests/test_table_workflow.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "same_line_statements": {}
+    }
+  ],
+  "static_scope": "AST parse and physical line/statement proxy only; not full Pylint. Imports retain isolated bootstrap; new identifiers manually reviewed.",
+  "synthetic_e2e": {
+    "fixture": "WorkflowTests.setUp/base_plan; entirely synthetic native source tables and target",
+    "independent_expected": {
+      "B2": "200.00",
+      "C2": "50.00",
+      "D2": "33.33",
+      "B3": "50.00",
+      "C3": "-50.00",
+      "D3": "-50.00"
+    },
+    "actual": {
+      "B2": "200.00",
+      "B3": "50.00",
+      "C2": "50.00",
+      "C3": "-50.00",
+      "D2": "33.33",
+      "D3": "-50.00"
+    },
+    "passed": true,
+    "provenance_first_group": {
+      "key": [
+        {
+          "type": "text",
+          "value": "甲"
+        }
+      ],
+      "physical_rows": [
+        2,
+        3
+      ]
+    },
+    "additional_formats": "test_biff8_ett_source_end_to_end uses repository synthetic MS-CFB/BIFF8 builders; test_ooxml_et_original_read_schema_only uses native XLSX bytes under .et, not a WPS-produced sample"
+  },
+  "output_size_proxy": {
+    "units": [
+      "Unicode characters",
+      "UTF-8 bytes"
+    ],
+    "host_token_usage": "unavailable; no token-savings claim",
+    "fixture": "2000 rows for 甲 plus final 乙 row, 2 columns and 1 header; explicit full range",
+    "native_full_read": {
+      "characters": 842793,
+      "utf8_bytes": 846803
+    },
+    "inspect": {
+      "characters": 1742,
+      "utf8_bytes": 1756,
+      "small_source_characters": 1734
+    },
+    "calculation_expected_B2": "2000.00",
+    "calculation_actual_B2": "2000.00",
+    "preview_rows": 4,
+    "preview_columns": 8,
+    "truncation_does_not_reduce_calculation": true
+  },
+  "loading_review": {
+    "kind": "manual routing walkthrough and script behavior; not an independent live model activation test",
+    "cases": [
+      {
+        "request": "两份来源计算并填到目标模板",
+        "route": [
+          "table-workflow/SKILL.md",
+          "inspect",
+          "plan-contract.md",
+          "plan",
+          "XLSX edit/formula/delivery boundaries when writing",
+          "apply"
+        ],
+        "result": "synthetic native E2E passed"
+      },
+      {
+        "request": "XLSX和ET/ETT混合来源加目标模板",
+        "route": [
+          "table-workflow/SKILL.md",
+          "XLSX/ET actual entry prerequisites",
+          "inspect",
+          "plan-contract.md",
+          "plan/apply"
+        ],
+        "result": "both supported ET containers covered synthetically"
+      },
+      {
+        "request": "合并多级表头、三个来源和期间计算",
+        "route": [
+          "same plan contract; no unrelated banking-specific guides"
+        ],
+        "result": "explicit merged paths and 3-source tests passed"
+      },
+      {
+        "request": "未知partial或公式不支持",
+        "route": [
+          "original diagnostics preserved; no broad fallback loading"
+        ],
+        "result": "refused before publishing"
+      },
+      {
+        "request": "同一任务重复检查",
+        "route": [
+          "same entry/contract content may be reused when path/version still known"
+        ],
+        "result": "repeated inspect stable; no files; each new CLI validates dependency checks"
+      },
+      {
+        "request": "新建一个简单销售表",
+        "route": [
+          "xlsx"
+        ],
+        "result": "description/manual boundary reviewed; no live activation test"
+      },
+      {
+        "request": "只读取一个ET表",
+        "route": [
+          "et"
+        ],
+        "result": "description/manual boundary reviewed; no live activation test"
+      }
+    ],
+    "document_sizes": {
+      "skills/table-workflow/SKILL.md": {
+        "characters": 4183,
+        "utf8_bytes": 9360
+      },
+      "skills/table-workflow/references/plan-contract.md": {
+        "characters": 5922,
+        "utf8_bytes": 10852
+      },
+      "skills/table-workflow/references/validation.md": {
+        "characters": 1201,
+        "utf8_bytes": 2697
+      }
+    }
+  },
+  "description_review": {
+    "new_description_characters": 120,
+    "xlsx": "retained description; read/write semantics unchanged, added checked in-memory API and orchestration route",
+    "et": "retained description; read-only behavior unchanged, orchestration handoff note only",
+    "automatic_trigger_test": "not_run",
+    "routing_correction": "XLSX entry/data-analysis now direct ET/ETT to et; legacy identification recommended_skill marker documented, unchanged for compatibility."
+  },
+  "delivery_and_channels": {
+    "runtime": "43 integration tests include real CLI success/failure stdout/stderr/exit captured via subprocess; archive success/failure/skipped simulated locally",
+    "executor": "This task executor exposes a combined output string plus exit code; tool results were received by model. Not proof of production harness channel separation or truncation behavior.",
+    "cleanup": "Per-test owned TemporaryDirectory fixtures and one clean ET copy cleaned. Probe removed. Preexisting caches and OFD acceptance directory retained.",
+    "user_cloud_space": "not_verified; no actual user artifact created or cloud-space claim"
+  },
+  "not_verified": [
+    "Cloud Linux target",
+    "Windows",
+    "Real WPS/Excel-generated business samples and visual opening",
+    "Semantic correctness of arbitrary user-defined business rules",
+    "Host automatic skill selection, actual loading token usage and caching",
+    "Real host download links and cloud-space integration",
+    "SIGKILL recovery and two-file transactional publication",
+    "Native ET writeback and arbitrary detail-level joins (not implemented)"
+  ],
+  "publication": {
+    "committed": false,
+    "pushed": false,
+    "existing_release_zips_modified": false,
+    "subagents_used": false
+  },
+  "checks_passed_except_preexisting_cache_warnings": true,
+  "maintained_files_sha256": {
+    "skills/xlsx/scripts/xlsx_analysis.py": "76680bb75ec77cc3fd21fdc5d8edc0663c4b771bcb0215dfd702ddf80c1f0863",
+    "skills/xlsx/scripts/xlsx_wps_result.py": "62d123ad56e2b3cbf566cef5f566b78f000da3146eb91db9358839c343800469",
+    "skills/table-workflow/scripts/table_workflow.py": "765924d0a18c5c25421842e269f2b00cbfad79d98407ab1b2322d9e4d483a562",
+    "skills/table-workflow/scripts/workflow_runtime.py": "6d9cd2b727ee374d4ed88923c7f637900c2a549a98aa30ebc47d1d56388a847e",
+    "tests/test_table_workflow.py": "98c398d13636d49dd3d5f107297b47e779cd462519ff608d47391f351293b96b",
+    "skills/table-workflow/SKILL.md": "aa23ad03f0e990401cb31a1870611dbc45cddecd4a5a6ebffe626b39430c2b4a",
+    "skills/xlsx/SKILL.md": "65b57bdf7ef5afc5c9e0d47d21055f0b801cdbe9b0c18197485ebe550a637096",
+    "skills/et/SKILL.md": "fbe56931fe27b2b5687b6a83b6ef9df36531990302467e88b81a3a931593c973"
+  },
+  "followup": {
+    "file": "tests/table_workflow_review.json",
+    "note": "Historical initial-run evidence and hashes retained. Follow-up fixes/tests/current hashes are in the newer review record."
+  }
+}

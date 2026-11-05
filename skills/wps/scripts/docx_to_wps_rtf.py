@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Convert Word documents (.docx) to high-fidelity RTF-stream .wps files using Python standard library."""
+"""Map supported OOXML Word content to RTF .rtf/.wps using Python standard library."""
 
 import os
 from pathlib import Path
@@ -383,16 +383,34 @@ def parse_docx_to_rtf_doc(docx_path: str) -> RtfDocument:
 
 def convert_docx_to_rtf_wps(docx_path: str, output_path: str) -> Dict[str, Any]:
     """Convert .docx file to .wps file using pure Python RTF stream."""
+    from read_wps import read_bytes
+    from wps_access import read_input
+    from wps_output_contract import require_output_path, readback_summary
     in_path = Path(docx_path).resolve()
     out_path = Path(output_path).resolve()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    require_output_path(out_path, 'rtf')
+    if in_path == out_path or (out_path.exists() and in_path.samefile(out_path)):
+        raise ValueError('Output must not overwrite the source document')
+    source_bytes = read_input(in_path)
+    source = read_bytes(source_bytes)
+    if source.get('format') != 'ooxml-word' or source.get('status') not in ('ok', 'partial'):
+        raise ValueError('DOCX conversion requires a readable OOXML Word package, regardless of its suffix')
 
     rtf_doc = parse_docx_to_rtf_doc(str(in_path))
-    rtf_doc.save(str(out_path))
+    if read_input(in_path) != source_bytes:
+        raise ValueError('Source changed during conversion')
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    inspection = rtf_doc.save(str(out_path))
+    partial = source.get('status') == 'partial' or inspection['partial']
 
     return {
-        "status": "success",
+        "status": "partial" if partial else "success",
+        "partial": partial,
         "backend": "rtf_stream",
+        "output_format": "rtf",
+        "binary_doc": False,
+        "source_readback": readback_summary(source),
+        "readback": inspection['readback'],
         "output_file": str(out_path),
         "file_size": out_path.stat().st_size,
         "elements_count": len(rtf_doc.elements),

@@ -1,0 +1,12 @@
+Zhuque Fangsong v0.212 — original upstream technical preview
+
+This unmodified font is bundled as an offline OFD example, not installed.
+Upstream: TrionesType / JadeFoci, release v0.212, commit 803217b9663d1c6e1402e91acc94e4f572713d73.
+Release: https://github.com/TrionesType/zhuque/releases/tag/v0.212
+The author marks this release as a pre-release / technical preview and states:
+"Note that this version is not production-ready."
+字体处于预览测试阶段；设计、字符集及排版品质仍可能变化。仅作为示例/备用，不代表覆盖所有汉字或符号；每次使用继续检查字符映射和度量，缺字直接拒绝，不静默替换。
+
+The complete Zhuque SIL OFL 1.1 copyright and license is in LICENSE.txt.
+Western letters/symbols are attributed upstream to Alegreya by Juan Pablo del Peral / Huerta Tipografica. LICENSE_Alegreya.txt retains the complete upstream Alegreya OFL copyright/license. The font binary, family name and embedding flags are not altered or subsetted.
+Keep both complete licenses and this notice when redistributing this example. Font software remains under its own OFL license, independently of project code. No separate sale of the font is authorized by this packaging.

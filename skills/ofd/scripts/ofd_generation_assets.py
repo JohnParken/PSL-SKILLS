@@ -5,6 +5,8 @@ import struct
 import unicodedata
 import zlib
 
+MAX_FONT_BYTES = 10 * 1024 * 1024
+
 
 class GenerationError(ValueError):
     """Unsupported input or violated generation profile; never silently repair."""
@@ -42,8 +44,8 @@ class TrueType:
     The original complete font is embedded without modification or subsetting.
     """
     def __init__(self, data):
-        require(12 <= len(data) <= 8 * 1024 * 1024 and data[:4] == b'\x00\x01\x00\x00',
-                'font requires a static glyf TrueType sfnt, at most 8 MiB')
+        require(12 <= len(data) <= MAX_FONT_BYTES and data[:4] == b'\x00\x01\x00\x00',
+                'font requires a static glyf TrueType sfnt, at most 10 MiB')
         self.data = data
         self.sha256 = hashlib.sha256(data).hexdigest()
         count = struct.unpack_from('>H', data, 4)[0]
@@ -71,8 +73,8 @@ class TrueType:
         require(0 < self.metric_count <= self.glyph_count <= 65535, 'invalid font metrics count')
         self.metrics = self.table(b'hmtx', self.metric_count * 4 + (self.glyph_count - self.metric_count) * 2)
         self.fs_type = struct.unpack_from('>H', self.table(b'OS/2', 10), 8)[0]
-        require(self.fs_type in (0, 0x100),
-                'font embedding requires installable rights (optional no-subsetting flag) and explicit license permission')
+        require(self.fs_type in (0, 8, 0x100, 0x108),
+                'font embedding requires installable/editable rights (optional no-subsetting) and explicit license permission')
         self.table(b'glyf', 1)
         location_format = struct.unpack_from('>h', head, 50)[0]
         require(location_format in (0, 1), 'invalid loca format')

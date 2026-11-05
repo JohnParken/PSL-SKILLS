@@ -1,0 +1,298 @@
+{
+  "task": "Repair WPS DOC export readback and signature/suffix contracts",
+  "timestamp_utc": "2026-11-04T10:20:45.504065+00:00",
+  "platform": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "python": "3.12.11",
+    "runtime_python_dependencies": "standard library only"
+  },
+  "wps_version": "20261104.1703.4161",
+  "version_clock": "2026-11-04T05:03:41.612863-05:00; America/New_York calendar time plus 12 hours",
+  "changes": [
+    "Real read_wps CLI readback for RTF/MS-DOC/OOXML; string and object paragraphs adapted, partial/exit3 preserved",
+    "All WPS creation/edit/export writer entry points constrain RTF to .rtf/.wps, MS-DOC to .doc/.wps; input suffix-independent reading unchanged",
+    "Private conversion candidates validated by existing bounded reader before publication; source alias/change checks and existing-target protection",
+    "Explicit .doc never falls back to RTF; auto .wps fallback discloses actual backend, format, failure cause and partial",
+    "Legacy RTF export preserves safe merged-grid partial while rejecting recovered text/structural damage; create/edit stricter gates unchanged"
+  ],
+  "checks": {
+    "wps_regression": {
+      "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p test_*.py -q",
+      "tests": 377,
+      "passed": 377,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "stdout_characters": 3824,
+      "stderr": "Expected invalid-output-extension diagnostic from a negative test, then Ran 377 tests / OK"
+    },
+    "new_regressions": 29,
+    "repository_docx_parity": {
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "environment": {
+      "read_wps": "environment-ok, exit 0",
+      "run_wps_task": "environment-ok, exit 0",
+      "export_wps": "environment-ok, exit 0",
+      "checker_help": "exit 0"
+    },
+    "source_strict": {
+      "exit_code": 1,
+      "warnings": 56,
+      "errors": 0,
+      "reason": "Preexisting __pycache__ directory and 55 .pyc files only; retained, not owned by this task"
+    },
+    "cache_excluded_independent_copy_strict": {
+      "exit_code": 0,
+      "result": "OK",
+      "only_exclusion": "__pycache__",
+      "copy_removed": true
+    },
+    "static": {
+      "ast_parse": "passed",
+      "lines_over_200": 0,
+      "same_line_statements": 0,
+      "git_diff_check": "passed",
+      "pylint": "not run; unavailable; manual/AST checks are not Pylint",
+      "new_names": "manually reviewed"
+    },
+    "description": {
+      "characters": 128,
+      "changed": true,
+      "manual_scope_review": "Explicit .doc reading added; no native generation guarantee. Relevant: read DOC, RTF creation, controlled reflow, conditional DOCX export. Unrelated: ET spreadsheets, full native/visual editing.",
+      "model_trigger_benchmark": "not run"
+    }
+  },
+  "existing_input_regressions": [
+    {
+      "id": "doc_legacy_authors",
+      "sha256": "42491fab86a86a7f67f4673c2d777a4c1eb5d8817e75da49e303a8a719b07d8d",
+      "bytes": 76800,
+      "format": "ms_doc_subset",
+      "reader_status": "partial",
+      "paragraph_count": 214,
+      "character_count": 16027,
+      "readback_status": "readback-partial",
+      "reader_exit": 3,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "partial",
+        "paragraphs": 214,
+        "characters": 16027
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    },
+    {
+      "id": "doc_legacy_table",
+      "sha256": "67d7fe8e0555c16516354498a5935f24eeef90beb5efbf526f93a1d6c734da43",
+      "bytes": 19456,
+      "format": "ms_doc_subset",
+      "reader_status": "partial",
+      "paragraph_count": 2,
+      "character_count": 240,
+      "readback_status": "readback-partial",
+      "reader_exit": 3,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "partial",
+        "paragraphs": 2,
+        "characters": 240
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    },
+    {
+      "id": "abc_authorization",
+      "sha256": "9ef884da24c675707894e2830c245c26d7a2f424791df7c67090235a13fb13b4",
+      "bytes": 11241,
+      "format": "ooxml-word",
+      "reader_status": "ok",
+      "paragraph_count": 16,
+      "character_count": 218,
+      "readback_status": "readback-ok",
+      "reader_exit": 0,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "ok",
+        "paragraphs": 16,
+        "characters": 218
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    },
+    {
+      "id": "abc_project_requirements",
+      "sha256": "228efe40a8884545d1d69ac405eb4f914f002c2a51a99b869e13db914ea7c35b",
+      "bytes": 106569,
+      "format": "ms_doc_subset",
+      "reader_status": "partial",
+      "paragraph_count": 152,
+      "character_count": 6212,
+      "readback_status": "readback-partial",
+      "reader_exit": 3,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "partial",
+        "paragraphs": 152,
+        "characters": 6212
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    },
+    {
+      "id": "abc_registration",
+      "sha256": "b498675abff80d931ac1cf0b9b107f8150f2b26e950d6c43d40ffb10cc6212bf",
+      "bytes": 453256,
+      "format": "ms_doc_subset",
+      "reader_status": "partial",
+      "paragraph_count": 122,
+      "character_count": 3268,
+      "readback_status": "readback-partial",
+      "reader_exit": 3,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "partial",
+        "paragraphs": 122,
+        "characters": 3268
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    },
+    {
+      "id": "boc_remittance",
+      "sha256": "37e8e4c9acfc040c23252338d9f167927b0f1c8363a75978ed5180988fea28d5",
+      "bytes": 51712,
+      "format": "ms_doc_subset",
+      "reader_status": "partial",
+      "paragraph_count": 14,
+      "character_count": 962,
+      "readback_status": "readback-partial",
+      "reader_exit": 3,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "partial",
+        "paragraphs": 14,
+        "characters": 962
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    },
+    {
+      "id": "ccb_consumer_loan",
+      "sha256": "67a5beafe4a19a745496da3cd4a821251c22557d5ba6fdf402f630c5ce9e882f",
+      "bytes": 268288,
+      "format": "ms_doc_subset",
+      "reader_status": "partial",
+      "paragraph_count": 305,
+      "character_count": 12759,
+      "readback_status": "readback-partial",
+      "reader_exit": 3,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "partial",
+        "paragraphs": 305,
+        "characters": 12759
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    },
+    {
+      "id": "icbc_dalian_price",
+      "sha256": "99f9d1ebdce7e9cdbc031bed780853b15c57f71883498357053f8770c5f59224",
+      "bytes": 14336,
+      "format": "ms_doc_subset",
+      "reader_status": "partial",
+      "paragraph_count": 1,
+      "character_count": 83,
+      "readback_status": "readback-partial",
+      "reader_exit": 3,
+      "unchanged": true,
+      "expected_from_prior_read_only_audit": {
+        "status": "partial",
+        "paragraphs": 1,
+        "characters": 83
+      },
+      "independent_semantic_expectation": false,
+      "content_or_original_redistributed": false,
+      "baseline_matches": true,
+      "diagnostics_preserved": true,
+      "readback_matches": true
+    }
+  ],
+  "sample_scope": "Eight already-present, previously audited inputs; prior extraction counts are regression expectations, not independent producer/visual truth. Metadata only; originals and full text not redistributed. Two repository DOCX fixtures also exercised in export regression tests.",
+  "actual_libreoffice_probe": {
+    "version": "26.8.0.3",
+    "action": "Synthetic OOXML Word to .doc using doc:MS Word 97 in private output/profile directory",
+    "status": "conversion-failed",
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "",
+    "output_exists": false,
+    "unchanged_retry": false,
+    "temporary_workspace_removed": true,
+    "native_generation_accepted": false
+  },
+  "remaining_limits": [
+    "Linux and Windows not executed; Docker/Podman unavailable",
+    "No WPS/Word client or visual/font/pagination acceptance",
+    "Actual LibreOffice DOC generation failed without diagnostic; mocked backend tests are not native-generation proof",
+    "Source/target readback is not full source-to-output content equivalence; DOCX style inheritance and unsupported regions remain limited",
+    "Preexisting source cache strict-check warnings preserved",
+    "Pylint unavailable"
+  ],
+  "repository": {
+    "head_and_local_origin_main": "b85f536145e2cf02f0216c3ca5dd592b0cdacba7",
+    "live_remote_check": "Earlier this task: git ls-remote failed DNS; live remote state unknown",
+    "concurrent_changes": "ET/XLSX/table-workflow/OFD and unrelated README changes preserved",
+    "committed": false,
+    "pushed": false
+  },
+  "capture": {
+    "local": "Actual subprocess stdout/stderr/exit codes captured",
+    "model_tool_display": "Full test stderr and exit codes; stdout receipts summarized with actual character count. Real input body text not displayed.",
+    "downstream_harness": "Not independently verified"
+  },
+  "sha256": {
+    "skills/wps/SKILL.md": "16a12a28dead067f703dba01a2a937064d7135ad6d22577620b4089bbbee7154",
+    "skills/wps/requirements.txt": "5f1742627c4401089a22bf76f8e68b37ff063a57d6eba6e77607451c61252fb1",
+    "skills/wps/references/export-rtf-backend.md": "9d5f48bf4f18abea09e9bae5ecef9f73618009f76e0899eccadec9942e0a1733",
+    "skills/wps/references/export-libreoffice-backend.md": "621a80f119a7dc52bb764e5b981a88e51d44f236de5d7c07abb0050db590fd68",
+    "skills/wps/references/export-acceptance-criteria.md": "36221cc046d02406f583467d97a5277d9f4ec878e3b507bda8ebe775a12b536a",
+    "skills/wps/references/editing.md": "4aac560c2e19f722631b3717eb829d4d2fe0144fbf126626d4f901bb5eb88ce1",
+    "skills/wps/references/generation.md": "2b78988f2e0fc9af1de52eb080bd0ec0bfd2020c0c2e5d18695d146f34e085c8",
+    "skills/wps/scripts/wps_output_contract.py": "bc109f46661c741e5f145cddeb83f63133ca2ae27f37a3aa70769d2cf8fe25d0",
+    "skills/wps/scripts/export_wps.py": "d08746e351b153c124f04e821f5526ad6663bf3c67ac3f5458d44ceff96abad8",
+    "skills/wps/scripts/docx_to_wps_rtf.py": "af1a5e7ccf26b87df6f17e39a4c1427796c2efec70bda071dc2751ec343e1a1e",
+    "skills/wps/scripts/run_wps_task.py": "0c09378b69b5798fefa0b3d2dc2b2fa8e3d38b8930a97393a8db694ddcf53bdc",
+    "skills/wps/scripts/run_wps_edit.py": "50c262093690c8975488a37df961abed69f4f7976d2acfa863d4ed4c1d7982fb",
+    "skills/wps/scripts/wps_rtf_builder.py": "e5b7aedaddb25a99ccb69831637776b7a3afbf02ec71b6473f853faed8b528d9",
+    "skills/wps/scripts/test_wps_export.py": "af477cd00fa484a6cf48a88841e6a5716ee4460da222afa1854a13ac378e8441",
+    "skills/wps/scripts/test_wps_output_contract.py": "05fb9fccae90c9ca2039533d52dca1f2a3d543ca7ca2b7cb0c2467a23f970a7b"
+  }
+}

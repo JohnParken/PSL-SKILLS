@@ -1,0 +1,20 @@
+{
+  "id": "zhuque-fangsong-v0.212",
+  "version": "0.212",
+  "prerelease": true,
+  "original_unmodified": true,
+  "release_url": "https://github.com/TrionesType/zhuque/releases/tag/v0.212",
+  "commit": "803217b9663d1c6e1402e91acc94e4f572713d73",
+  "archive_url": "https://github.com/TrionesType/zhuque/releases/download/v0.212/ZhuqueFangsong-v0.212.zip",
+  "archive_sha256": "bb8b661a7643d2296a72d9d10530a00949419c4e527fb61783f73c2ba1a8c062",
+  "font_member": "ZhuqueFangsong-Regular.ttf",
+  "font_sha256": "558c62730844fe54ba220146ed62f859d4e2880188d92d985f8921c6e3743bc4",
+  "font_bytes": 8824084,
+  "license_source": "https://raw.githubusercontent.com/TrionesType/zhuque/803217b9663d1c6e1402e91acc94e4f572713d73/LICENSE.txt",
+  "license_sha256": "66cc01ad4df62fca6936431a426104cb32a52ce8da49de9a7d643e02d7659043",
+  "alegreya_license_source": "https://raw.githubusercontent.com/huertatipografica/Alegreya/1dd6b28b57c50e3168db1cbbb8086e7978abcfbf/OFL.txt",
+  "alegreya_license_sha256": "f6f60d5d4cf4f4b1fc4e41353c897a2f5a16e6396c0cd8fa8bdfd2f4586a9a68",
+  "notice_sha256": "40ff310b33f4f52ad32c07b9b30161c090e85a6e1a71f1363c83ebb1d8b10ccc",
+  "author_preview_statement": "Note that this version is not production-ready.",
+  "coverage": "checked per requested text; no all-symbol/all-Han guarantee"
+}

@@ -1,0 +1,358 @@
+{
+  "schema_version": "table_workflow_quality_validation_v1",
+  "generated_utc": "2026-11-04T09:19:04.396505+00:00",
+  "environment": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.11",
+    "expat": "expat_2.6.3",
+    "isolation": "-I -S -B",
+    "runtime_candidates": {
+      "docker": null,
+      "podman": null,
+      "nerdctl": null,
+      "colima": null,
+      "limactl": null
+    },
+    "linux": "not_run; no local container runtime or authorized remote Linux execution endpoint available",
+    "windows": "not_run",
+    "pylint": {
+      "executable": null,
+      "status": "not_run; unavailable"
+    }
+  },
+  "version_clock": {
+    "sampled_new_york": "2026-11-04T04:01:05.332906-05:00",
+    "calendar_plus_hours": 12,
+    "version": "20261104.1601.0533"
+  },
+  "implementation": {
+    "schema": "backward-compatible optional v1 fields; unknown fields still rejected",
+    "lookup": "checked XLSX lookup_regions API; one_to_one/many_to_one; typed unique dimension keys; strict unmatched refusal",
+    "business_checks": "equal/range; each_target/target_total/source_total; explicit absolute/relative tolerance; pre-rounding",
+    "exception_policies": "reject default; explicit blank/partial for missing measure/target/period/ratio denominator",
+    "provenance": "source_regions, lookup edges/physical rows/fact conservation, metric row membership and complete check observations",
+    "template": "unchanged formula/cache/preservation gates; blank writes additionally require formula-free template"
+  },
+  "checks": [
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow*.py"
+      ],
+      "test_count": 87,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ".......................................................................................\n----------------------------------------------------------------------\nRan 87 tests in 12.190s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/xlsx/scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "test_count": 366,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..............................................................................................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 366 tests in 21.634s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_et_pipeline.py"
+      ],
+      "test_count": 3,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.124s\n\nOK\n"
+    },
+    {
+      "arguments": [
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/table-workflow",
+        "skills/xlsx",
+        "--strict"
+      ],
+      "test_count": null,
+      "exit_code": 0,
+      "stdout": "OK skills/table-workflow\nOK skills/xlsx\n",
+      "stderr": ""
+    }
+  ],
+  "test_count_this_run": 456,
+  "environment_check": {
+    "exit_code": 0,
+    "stdout": "{\"status\": \"environment-ok\", \"check_kind\": \"environment\", \"artifact_validation\": \"not_run\", \"python\": \"3.12.11\", \"task_writable\": true, \"dependencies\": {\"xlsx\": {\"exit_code\": 0, \"stdout\": \"{\\n  \\\"status\\\": \\\"ready\\\",\\n  \\\"python\\\": \\\"3.12.11\\\",\\n  \\\"dependencies\\\": \\\"standard_library_only\\\",\\n  \\\"check_kind\\\": \\\"environment\\\",\\n  \\\"artifact_validation\\\": \\\"not_run\\\"\\n}\\n\", \"stderr\": \"\", \"skill_sha256\": \"20a66d42d2d17e053afbf2d7b7ea7e79c2f94d25728fa6fa5ebc5990e6c41223\"}, \"et\": {\"exit_code\": 0, \"stdout\": \"check_kind=environment artifact_validation=not_run\\nooxml-sheet=available\\nenvironment-ok\\n\", \"stderr\": \"\", \"skill_sha256\": \"fbe56931fe27b2b5687b6a83b6ef9df36531990302467e88b81a3a931593c973\"}}}\n",
+    "stderr": ""
+  },
+  "static_proxies": [
+    {
+      "file": "skills/table-workflow/scripts/table_workflow.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "multiple_statements": {}
+    },
+    {
+      "file": "skills/table-workflow/scripts/workflow_quality.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "multiple_statements": {}
+    },
+    {
+      "file": "skills/xlsx/scripts/xlsx_lookup.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "multiple_statements": {}
+    },
+    {
+      "file": "tests/test_table_workflow_quality.py",
+      "syntax": "passed",
+      "lines_over_200": [],
+      "multiple_statements": {}
+    }
+  ],
+  "static_scope": "AST parse and physical line/statement checks plus manual new identifier review; not full Pylint",
+  "new_test_count": 27,
+  "new_test_names": [
+    "test_abs_and_relative_tolerance_use_right_operand_and_inclusive_limit",
+    "test_blank_group_policy_and_downstream_missing_propagation",
+    "test_blank_inputs_cannot_feed_template_formulas",
+    "test_cli_reports_checks_and_lookup_without_printing_full_rows",
+    "test_composite_lookup_keys_and_source_total_blank_domain",
+    "test_composite_lookup_success_distinguishes_same_customer_accounts",
+    "test_duplicate_dimension_refused_even_when_raw_grouping_allows_it",
+    "test_equality_and_range_checks_pass",
+    "test_lookup_api_preserves_inputs_and_requires_header_schema",
+    "test_lookup_chain_retains_both_edges",
+    "test_lookup_dimension_et_partial_propagates",
+    "test_lookup_full_apply_conservation_and_lineage",
+    "test_lookup_relationship_budget_alias_and_numeric_dimension_refused",
+    "test_lookup_type_mismatch_and_null_keys",
+    "test_lookup_unmatched_fact_never_drops_amount",
+    "test_missing_check_operand_is_unassessed_not_zero_or_pass",
+    "test_missing_target_and_empty_selection_explicit_blank",
+    "test_one_to_one_success_and_duplicate_fact_refusal",
+    "test_period_coverage_by_entity_and_partial_policy",
+    "test_period_unexpected_blank_numeric_and_invalid_expected_refused",
+    "test_quality_plan_roundtrip_and_summary_stays_bounded",
+    "test_ratio_zero_and_missing_are_separate_policies",
+    "test_real_public_source_with_synthetic_dimension_and_independent_fraction_control",
+    "test_real_unsupported_formula_source_remains_blocked",
+    "test_reconciliation_rejects_before_output_or_marks_explicit_partial",
+    "test_tolerance_unknown_fields_units_and_periods_refused",
+    "test_total_scopes_include_only_the_declared_population"
+  ],
+  "real_source_e2e": {
+    "source_provenance": {
+      "file": "denham_bank_reconciliation.xlsx",
+      "title": "Denham bank reconciliation March 31 2020",
+      "source_page": "https://denhamparishcouncil.gov.uk/parish-council/finance/",
+      "download_url": "https://denhamparishcouncil.gov.uk/assets/Uploads/Denham-PC-Bank-reconciliation-March-31-2020.xlsx",
+      "retrieved_utc": "2026-11-03T06:52:30.672693+00:00",
+      "status": "downloaded",
+      "prior_attempt": {
+        "status": "download_failed",
+        "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
+      },
+      "final_url": "https://denhamparishcouncil.gov.uk/assets/Uploads/Denham-PC-Bank-reconciliation-March-31-2020.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 14294,
+      "sha256": "3d2177f4b1e51b6c86b2621a77975469bea13198f6d7a410ec5cf7b587679d5c"
+    },
+    "result": {
+      "file": "denham_bank_reconciliation.xlsx",
+      "sha256": "3d2177f4b1e51b6c86b2621a77975469bea13198f6d7a410ec5cf7b587679d5c",
+      "public_original_unchanged": true,
+      "business_period": "2018/19 from workbook; URL filename says 2020",
+      "source_rows": 28,
+      "source_selection": "Sheet1!B20:G50; header20; exclude21,22",
+      "synthetic_components": [
+        "alternating payee classification",
+        "Fraction-derived control table",
+        "target template"
+      ],
+      "independent_reader": "existing raw_read OOXML parser and Fraction; no formula caches as expected/input",
+      "independent_total_rounded_to_cents": "5495.73",
+      "raw_total_fraction": "343483124999999999/62500000000000",
+      "expected_output": {
+        "Group A": "2911.92",
+        "Group B": "2583.81"
+      },
+      "actual_output": {
+        "Group A": "2911.92",
+        "Group B": "2583.81"
+      },
+      "status": "validated",
+      "checks": [
+        {
+          "id": "real-control",
+          "status": "passed",
+          "failed_count": 0,
+          "unassessed_count": 0
+        }
+      ],
+      "fact_conservation": [
+        {
+          "column": "B",
+          "numeric_count": 28,
+          "before_sum": "5495.729999999999984",
+          "after_sum": "5495.729999999999984",
+          "status": "passed"
+        },
+        {
+          "column": "C",
+          "numeric_count": 6,
+          "before_sum": "472.530000000000001",
+          "after_sum": "472.530000000000001",
+          "status": "passed"
+        },
+        {
+          "column": "D",
+          "numeric_count": 0,
+          "before_sum": null,
+          "after_sum": null,
+          "status": "passed"
+        },
+        {
+          "column": "E",
+          "numeric_count": 28,
+          "before_sum": "16086",
+          "after_sum": "16086",
+          "status": "passed"
+        },
+        {
+          "column": "F",
+          "numeric_count": 0,
+          "before_sum": null,
+          "after_sum": null,
+          "status": "passed"
+        },
+        {
+          "column": "G",
+          "numeric_count": 0,
+          "before_sum": null,
+          "after_sum": null,
+          "status": "passed"
+        }
+      ],
+      "formula_calculation": {
+        "status": "calculated_subset",
+        "engine": "python_decimal_subset",
+        "formula_count": 14,
+        "calculated_count": 14,
+        "issues": [],
+        "output_written": false,
+        "excel_equivalence_verified": false,
+        "retained_not_refreshed": [],
+        "changed_parts": [
+          "[Content_Types].xml",
+          "xl/_rels/workbook.xml.rels",
+          "xl/calcChain.xml",
+          "xl/workbook.xml",
+          "xl/worksheets/sheet1.xml"
+        ]
+      }
+    },
+    "reuse_scope": "existing hash-pinned public-government source used locally; no new redistribution license claim, no originals changed",
+    "privacy": "no new user-private data; no transaction identities copied into this evidence",
+    "not_claimed": "not a user-provided desensitized multi-source business acceptance set; dimension/control/template are synthetic"
+  },
+  "real_refusal": {
+    "file": "denham_cashbook.xlsx",
+    "test": "test_real_unsupported_formula_source_remains_blocked",
+    "expected": "whole-workbook calculation failure still refuses even for a small selected region",
+    "result": "passed"
+  },
+  "corrected_test_assumption": {
+    "initial": "asserted exact raw literal sum equals displayed 5495.73",
+    "observed_raw_fraction": "343483124999999999/62500000000000",
+    "resolution": "use exact independent Fraction values for pre-rounding checks; independent ties-away-from-zero cents for final output",
+    "runtime_relaxation": false
+  },
+  "sample_inventory": {
+    "existing_public_xlsx_count": 5,
+    "real_xlsx_used": 2,
+    "real_et_ett": "not_run; repository contains provenance references, but no original ET/ETT inputs in scoped inventory",
+    "synthetic_et": "existing and new mixed-input regressions retained; not equivalent to real ET acceptance"
+  },
+  "lazy_loading": {
+    "entry": "quality-and-lookups reference read only for requested branch; base plan keeps original strict defaults",
+    "stdout": "summary check/lookup counts and limited check preview; complete lookup rows/check observations stay in audit",
+    "regressions": [
+      "old preview-tail full computation",
+      "new real CLI summary excludes full row_lineage",
+      "exact audit plan replay"
+    ],
+    "host_tokens": "unavailable; no measured token-savings claim"
+  },
+  "channels": {
+    "subprocess": "stdout/stderr/exit captured independently in this record",
+    "executor": "tool delivers combined output and process metadata; summary and completion were returned to model",
+    "production_host": "dual-channel/truncation/cloud-space integration not verified"
+  },
+  "limitations": [
+    "Linux and Windows not run",
+    "Pylint unavailable",
+    "Real ET/ETT not run",
+    "No user-private/desensitized multi-source sample set",
+    "No Office visual/recalculation validation",
+    "No production host token/download/cloud integration",
+    "Only explicit YYYY-MM period coverage; no Excel serial-date inference or temporal dimension lookup",
+    "No many-to-many/one-to-many expansion; unmatched facts refused; no normalization or fuzzy keys",
+    "Single XLSX template sheet/range; no row insertion or ET writeback",
+    "Business rules and units are declared; no automatic certification of semantic correctness",
+    "No SIGKILL recovery or two-file atomic publication"
+  ],
+  "preservation": {
+    "commit": false,
+    "push": false,
+    "release_zips_modified": false,
+    "ET_runtime_modified": false,
+    "concurrent_OFD_changes": "Not edited or cleaned by this task; concurrent owner changes are outside this record.",
+    "temporary_files": "owned test TemporaryDirectory fixtures only; no task files left in Skill installations"
+  },
+  "current_files_sha256": {
+    "skills/table-workflow/scripts/table_workflow.py": "b4207f44b4d6e15d2d746a4f7e89291a3b36f8094a3555d76cbf78ee4726aae8",
+    "skills/table-workflow/scripts/workflow_quality.py": "1ce648cceca5a349794b98b33e6acaa89161e1c514a25134963327e147cfb6a1",
+    "skills/xlsx/scripts/xlsx_lookup.py": "7de930577cc512d931167a7e7ddaca8e0873698642d5bcb164a733006382ae86",
+    "tests/test_table_workflow_quality.py": "5d845d3481233e37168c614dae0070f659cd15a5b070f35dbcc2a518772e7f73",
+    "skills/table-workflow/SKILL.md": "bdc906b46ccb92276df7406400c6a74e75e3752f1982af1199163ff8f72e167d",
+    "skills/table-workflow/references/plan-contract.md": "f65ef64fd4c63069184be3de92ea6d98359d379b0bf6f0b932a9d20bfd09abc5",
+    "skills/table-workflow/references/quality-and-lookups.md": "7b29eb537e5692f295de94f1b52c26a9783b01c4c55486b0caa37ac53c921b85",
+    "skills/table-workflow/references/validation.md": "b104f369818b22b59e92d886f2b0dafc6eae818faea59565ff0d6ab693999f91",
+    "skills/xlsx/SKILL.md": "20a66d42d2d17e053afbf2d7b7ea7e79c2f94d25728fa6fa5ebc5990e6c41223",
+    "skills/xlsx/references/workflow-api.md": "c9b3e5ffda21753558824729397394be65293317227f33618fea422848d572c0"
+  },
+  "description_review": {
+    "table_workflow_characters": 123,
+    "changed": "reflects controlled enrichment and reconciliation; no arbitrary joins/ET writeback",
+    "xlsx": "unchanged capability description; new checked in-memory API documented",
+    "trigger_review": "manual intended/simple-create/read-only boundary review; automatic model activation not run"
+  },
+  "original_sample_integrity": {
+    "stanton_budget_q1.xlsx": true,
+    "denham_cashbook.xlsx": true,
+    "denham_bank_reconciliation.xlsx": true,
+    "ofgem_ed2_pcfm_v5.xlsx": true,
+    "ofgem_gas_pcfm_draft.xlsx": true
+  },
+  "final_diff_check": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "current_file_fingerprints_verified": true
+}

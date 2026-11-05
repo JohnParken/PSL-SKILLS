@@ -84,6 +84,13 @@ def load_result(path, address):
             raise ValueError('WPS JSON input changed during read')
     finally:
         os.close(descriptor)
+    return load_result_bytes(raw, address)
+
+
+def load_result_bytes(raw, address):
+    """Validate an immutable extraction JSON snapshot with the file API's gates."""
+    if not isinstance(raw, bytes) or len(raw) > MAX_RESULT_BYTES:
+        raise ValueError('WPS JSON result must be bytes within 16 MiB')
     def reject_constant(value):
         raise ValueError('Nonfinite JSON constant refused: ' + value)
     def unique_object(pairs):
@@ -128,7 +135,8 @@ def load_result(path, address):
     for sheet in sheets:
         if not isinstance(sheet, dict) or not isinstance(sheet.get('name'), str) or not 1 <= len(sheet['name']) <= 31 or sheet['name'] in cells:
             raise ValueError('Invalid or duplicate WPS sheet name')
-        name = sheet['name']; source = sheet.get('cells')
+        name = sheet['name']
+        source = sheet.get('cells')
         if not isinstance(source, dict):
             raise ValueError('Invalid WPS cells object')
         count += len(source)
@@ -150,18 +158,23 @@ def load_result(path, address):
                 if not value.is_finite() or abs(value.adjusted()) > 1000:
                     raise ValueError('Nonfinite or oversized WPS number')
             elif kind == 'boolean':
-                if type(value) is not bool: raise ValueError('Invalid WPS boolean')
+                if type(value) is not bool:
+                    raise ValueError('Invalid WPS boolean')
             elif kind in ('text', 'error'):
-                if not isinstance(value, str) or len(value) > 32767: raise ValueError('Invalid WPS text/error')
+                if not isinstance(value, str) or len(value) > 32767:
+                    raise ValueError('Invalid WPS text/error')
             elif kind == 'blank':
-                if value is not None: raise ValueError('Invalid WPS blank')
+                if value is not None:
+                    raise ValueError('Invalid WPS blank')
             else:
                 raise ValueError('Unknown WPS cell type')
             mapped = {**cell, 'value': value, 'type': 'e' if kind == 'error' else kind}
             if 'formula' in cell:
-                if not isinstance(cell['formula'], dict): raise ValueError('Invalid opaque formula metadata')
+                if not isinstance(cell['formula'], dict):
+                    raise ValueError('Invalid opaque formula metadata')
                 # Existing analysis requires explicit cached opt-in. Preserve missing/error.
-                if cell.get('cache_status') == 'unverified_empty_string': mapped['cache_status'] = 'unverified'
+                if cell.get('cache_status') == 'unverified_empty_string':
+                    mapped['cache_status'] = 'unverified'
             cells[name][coordinate] = mapped
         values = sheet.get('merges', [])
         if not isinstance(values, list) or len(values) > 256:
@@ -171,7 +184,8 @@ def load_result(path, address):
             if not isinstance(merge, dict) or not isinstance(merge.get('range'), str):
                 raise ValueError('Invalid WPS merge')
             ends = merge['range'].split(':')
-            if len(ends) != 2: raise ValueError('Invalid WPS merge range')
+            if len(ends) != 2:
+                raise ValueError('Invalid WPS merge range')
             first, last = address(ends[0]), address(ends[1])
             if not (1 <= first[0] <= last[0] <= max_row and 1 <= first[1] <= last[1] <= max_col):
                 raise ValueError('WPS merge out of range')

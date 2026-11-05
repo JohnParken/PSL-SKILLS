@@ -1,6 +1,6 @@
 # PSL-SKILLS
 
-面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取、受限 SVG 原生 PPTX 创建及结构读取、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
+面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取及显式请求下的基础 OFD 1.0 生成、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
 
 ## 收录内容
 
@@ -13,6 +13,7 @@
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.0945.4309 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261104.0046.0390 | OFD 1.0/1.1/1.2 XML结构与存储文字、来源及复合引用；缺失可选资源索引时保留独立可读内容并报告partial，结构/安全错误仍拒绝；不做OCR、验签或渲染 |
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.5.0 转换子集与标准库入口 | 20261104.1519.0362 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
+| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；显式依赖 xlsx，ET 来源另依赖 et | 20261104.1601.0533 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、公式预检、逐格溯源与审计；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
@@ -46,6 +47,7 @@ PSL-SKILLS/
     │   ├── scripts/               # 标准库入口、分析模块、复杂模板与测试
     │   ├── references/            # 输入格式、能力边界、公式计算与生命周期说明
     │   └── assets/                # XLSX 模板和示例数据
+    ├── table-workflow/            # 跨表任务编排、显式计划、源/模板核验与溯源
     ├── wps/
     │   ├── SKILL.md
     │   ├── requirements.txt
@@ -56,8 +58,7 @@ PSL-SKILLS/
     │   ├── requirements.txt
     │   ├── scripts/               # ET/ETT 读取、BIFF8、OOXML 与合成回归
     │   └── references/            # 表格格式、样本来源、保存值与验证限制
-    ├── ofd/                       # OFD 三版本 XML 结构与存储文字只读
-    ├── pptx/                      # 标准库 SVG 原生 PPTX 创建、读取与结构验证
+    ├── ofd/                       # OFD 三版本只读提取及显式模型的基础 OFD 1.0 生成
     └── artifact-lifecycle/        # 交付物原子归档与受控临时文件清理公共技能
         ├── SKILL.md
         ├── requirements.txt
@@ -71,9 +72,9 @@ PSL-SKILLS/
 - **docx**：Python 3.10 及以上标准库（包含 zlib，Expat >=2.6.0，需支持 POSIX 锁与文件描述符操作）；零第三方包依赖。
 - **xlsx**：Python 3.9 及以上；维护中的主流程与生命周期 runner 仅依赖标准库。
 - **wps**：Python 3.10 及以上，纯 Python 创建、读取、编辑与 RTF 导出仅用标准库；OOXML 读取另需 Expat >=2.6；二进制导出可选系统 LibreOffice。
+- **table-workflow**：Python >=3.12（维护基线3.12.11），仅标准库；单独安装完整 xlsx，含ET来源时再安装完整 et，通过实际读取主入口所得绝对根路径传参，不猜相邻位置。
 - **et**：Python 3.9 及以上标准库；OOXML 表格分支另需 Expat >=2.6。
-- **ofd**：仅 Python >=3.10 自带标准库（含 zlib、Expat >=2.6.0）；零第三方包、零外部软件。自带能力缺失则诊断并停止，不额外安装组件。
-- **pptx**：Python >=3.10 标准库（含 zlib、Expat >=2.6.0）及 POSIX 描述符相对 I/O；本版面向 Linux，Windows 不支持；零第三方包、零外部软件。
+- **ofd**：读取需 Python >=3.10，生成另需 Python >=3.12.11；均只用自带标准库（含 zlib、Expat >=2.6.0），并检查各入口实际需要的描述符相对安全文件操作能力。零第三方包、零外部软件；缺失能力时停止，不安装组件或降低安全要求。
 - **artifact-lifecycle**：Python 3.10 及以上标准库（需 POSIX 锁与文件描述符操作能力）；零第三方包、零外部软件。
 - **skill-development-standards**：Python 3.10 及以上标准库（需系统 IANA 时区支持以生成规范版本时间戳）；零第三方包依赖。
 - 办公格式处理与生命周期纯 Python 主流程无需安装第三方 Python 包；WPS 二进制导出可选使用系统 LibreOffice。脚本使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存；纯文本写作不需要 Python。
@@ -92,6 +93,14 @@ PSL-SKILLS/
 前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；本次在 macOS 实测，云端 Linux 与 Windows 未验证。
 
 当前版本仅修订能力描述，正文与参考资料沿用上述已评测版本；名称与描述的独立选择模拟见[描述评测记录](tests/bank_writing_description_evaluation/summary.json)，不代表宿主自动注册或触发验收。
+
+### 多源表格填报
+
+[table-workflow](skills/table-workflow/SKILL.md) 负责“来源表 + 已有目标模板 → 指标映射 → 聚合与期间比较 → XLSX 副本及核验 JSON”。先有界 inspect，再按需读取计划契约；plan 在内存试算，apply 才写入最终文件并归档。格式读取、表头/统计、公式、写入仍复用 ET/XLSX。简单建表或单表读取不加载本流程。
+
+支持受控 one-to-one/many-to-one 维表补列后按键聚合，匹配唯一目标键；可配置业务勾稽与容差、缺期和空值政策，默认失败阻断、显式降级保留 partial。明确单位、期间、重复键、空值、小计及缓存政策；不支持任意明细级多表连接或原生ET写回。未知/数据性 partial、模板不支持公式、未刷新图表/透视/外链缓存均不得作为完整成功交付。模型负责业务语义，脚本不凭列名猜测口径。
+
+合成集成回归见 [测试](tests/test_table_workflow.py)，环境、端到端结果、输出规模与未验证项见 [初次验证记录](tests/table_workflow_validation.json)，后续公式策略隔离、计划重放、状态与保护验证见 [针对性复核](tests/table_workflow_review.json)，维表关联、勾稽与真实公开样本验收见 [本轮增强记录](tests/table_workflow_quality_validation.json)。仅本机 macOS/Python3.12.11 验证，含明确标注的公开 XLSX 样本；不代表 Linux、Windows、WPS/Excel 软件视觉或宿主 token 节省验收。没有修改已有发布ZIP。
 
 ### XLSX
 
@@ -145,7 +154,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 ### WPS 文字（.wps/.rtf）
 
-独立入口见 [wps](skills/wps/SKILL.md)。支持读取受限的 WPS 文字/RTF、定点编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和兼容导出 DOCX。生成结果是 RTF 流，不是金山原生 WPS 格式。首次操作按任务类型分别自检：
+独立入口见 [wps](skills/wps/SKILL.md)。支持读取受限的 WPS 文字/RTF、定点编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和兼容导出 DOCX。生成结果默认使用 `.wps` 后缀，用户显式请求 `.rtf` 时保留；内容仍是 RTF 流，回执明确标注，不能称为金山原生 WPS 二进制。首次操作按任务类型分别自检：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/read_wps.py" --check
@@ -153,7 +162,9 @@ python3 -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 python3 -I -S -B "<skill-root>/scripts/export_wps.py" check
 ```
 
-读取正文可使用全量 JSON、纯文本或大纲/章节切片；创建、编辑与导出命令及其边界见 WPS 主入口。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取退出码 3 表示 `status=partial`，须保留已读内容和缺口诊断。
+读取正文可使用全量 JSON、纯文本或大纲/章节切片；创建、编辑与导出命令及其边界见 WPS 主入口。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
+
+WPS新建默认公文参照当前DOCX：上下25.4mm、左右31.8mm，仿宋16pt／Times New Roman、固定28pt、首行2字、零段前段后；标题层级、页眉页脚和默认关闭页码同步。未明确要求新页时自然分页，保留用户显式配置。RTF与OOXML不是同一格式，不保证字体回退或跨阅读器分页一致；现有DOCX→RTF导出不解析完整样式继承，不作为统一排版的捷径。仓库对照回归见 [测试](tests/test_wps_docx_official_parity.py)，350项历史测试结果、缓存告警与未验证范围见 [排版对齐记录](tests/wps_docx_official_alignment_20261104.json)。后续 DOC 回读与格式匹配修复的377项 WPS、2项对照测试、8份已有输入回归及真实二进制导出未通过的范围，见 [导出契约验证](tests/wps_export_contract_validation_20261104.json)。默认 `.wps`、显式 `.rtf` 的命名与回读回归见 [后缀验证记录](tests/wps_default_suffix_validation_20261104.json)。
 
 ### WPS 表格（.et/.ett）
 
@@ -185,6 +196,12 @@ python3 -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据
 python3 -I -S -B "<skill-root>/scripts/read_ofd.py" --check
 python3 -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
 ```
+
+仅在用户明确指定 OFD 并要求新建时，按 [基础生成说明](skills/ofd/references/generation.md) 提供显式 JSON 模型；支持 OFD 1.0 固定位置横排文字、线框、受限 PNG/JPEG 和简单网格表格，不自动排版、转换或编辑第三方文件。生成前另运行 `python3 -I -S -B "<skill-root>/scripts/generate_ofd.py" --check`；在已确认任务目录生成到尚不存在的 `.ofd` 文件名，失败不覆盖原件或已有目标。
+
+可显式选择随包 [朱雀仿宋预览示例](skills/ofd/references/bundled-fonts.md)，或提供明确的自备字体路径／安装内私有字体引用；不扫描系统、不自动回退，缺字或不满足技术嵌入限制时停止。私有字体目录受 Git 忽略规则和专用打包器排除；字体权利状态不因提供文件而自动获得确认。当前结构与回读测试不代表 OFD 客户端视觉验收，Linux、Windows 和实机打开仍按各验证记录标为未验证。
+
+字体与独立包历史验证见 [朱雀记录](tests/ofd_zhuque_validation_20261104.json)，其中源码路径以仓库根目录为基准；后续输入简化与私有字体引用分别见 [输入契约记录](tests/ofd_font_input_simplification_20261104.json) 和 [私有字体记录](tests/ofd_private_fonts_validation_20261104.json)。这些记录保留各自测试时的版本与结果，不视为全部针对当前源码重跑。
 
 OFD 离线分发包沿用仓库现有位置 `skills/ofd-<version>.zip`；完整目录独立安装，不依赖相邻 wps/docx/xlsx。版本化 ZIP 按现有 `.gitignore` 规则不纳入版本控制，源目录和 README 是维护入口。
 
@@ -314,8 +331,8 @@ PPTX 的本次 Linux 验证记录见 [标准库 PPTX 验证记录](tests/pptx/ve
 | .xlsx | 原生读取与分析 | XLSX生成、受控编辑/公式子集；标准任务入口自动防同名覆盖递增命名，失败立即清理中间文件 | 不等于完整Excel引擎 |
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
 | .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
-| .ofd | 1.0/1.1/1.2 XML 结构、存储文字、页资源与复合引用 | 不支持 | 已知版本统一判定；结构、命名空间与文字覆盖分开；不作全文/视觉或全规范认证 |
-| .wps/.rtf | WPS 文字按实际结构读取有限子集 | 生成 RTF 文档（可使用 .wps 后缀）、受控编辑及 DOCX 兼容导出 | RTF 流不是金山原生 WPS 格式；不承诺完整原生格式或页面视觉还原 |
+| .ofd | 1.0/1.1/1.2 XML 结构、存储文字、页资源与复合引用 | 仅显式请求时按 JSON 模型生成基础 OFD 1.0 多页文件；不编辑第三方 OFD | 固定文字、线框、受限图片与简单网格；字体覆盖及嵌入限制逐次检查；无自动排版或格式转换，不作全文/视觉或全规范认证 |
+| .wps/.rtf/.doc | 按真实 RTF、MS-DOC 或 OOXML 结构读取有限子集 | 新建/重排及纯 Python 导出只写 .rtf/.wps；.doc 导出需 LibreOffice 实际生成并验签 | 输入读取不按后缀拒绝可靠内容；RTF 不是二进制 DOC 或金山原生 WPS；不承诺完整格式或视觉还原 |
 | .et/.ett | et 按实际结构读取 BIFF8/OOXML 有限子集及保存值/公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计、分组汇总及质量报告 | 只读预览或分析输出派生 JSON；不生成、编辑或转换办公文件 | 不自动识别表头、小计或总计；质量报告不认证业务正确性；公式默认排除，显式使用的缓存未证明最新；保留 partial，不写回原表 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 

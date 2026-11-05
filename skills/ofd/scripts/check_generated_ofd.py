@@ -50,7 +50,7 @@ def audit(data):
                and not name.startswith('/') and all(part not in ('', '.', '..') for part in name.split('/')),
                'unsafe member name')
         ensure(info.compress_type == zipfile.ZIP_STORED and not info.flag_bits & 1
-               and info.file_size == info.compress_size and info.file_size <= 8 * 1024 * 1024, 'compression/member profile')
+               and info.file_size == info.compress_size and info.file_size <= 10 * 1024 * 1024, 'compression/member profile')
         total += info.file_size
         ensure(total <= 32 * 1024 * 1024, 'total member bytes')
         payload = archive.read(info)
@@ -120,14 +120,17 @@ def audit(data):
             location = target(anchor, one(font, 'FontFile').text)
             referenced.add(location)
             ensure(members[location][:4] == b'\x00\x01\x00\x00', 'font magic')
+            ensure(len(members[location]) <= 10 * 1024 * 1024, 'font member limit')
             fonts[font.get('ID')] = location
             licenses = doc_info.findall(NAMESPACE + 'CustomDatas/' + NAMESPACE + 'CustomData')
-            ensure(any(node.get('Name') == 'FontLicense:' + font.get('ID') and (node.text or '').strip() for node in licenses),
-                   'missing preserved font license')
+            ensure(any((node.get('Name') == 'FontLicense:' + font.get('ID') and (node.text or '').strip())
+                       or (node.get('Name') == 'FontRights:' + font.get('ID') and node.text == 'not_assessed') for node in licenses),
+                   'missing font license or explicit unassessed-rights metadata')
         for image in res.findall(NAMESPACE + 'MultiMedias/' + NAMESPACE + 'MultiMedia'):
             location = target(anchor, one(image, 'MediaFile').text)
             referenced.add(location)
             ensure(image.get('Type') == 'Image' and image.get('Format') in ('PNG', 'JPEG'), 'image resource type')
+            ensure(len(members[location]) <= 8 * 1024 * 1024, 'image member limit')
             ensure(members[location].startswith(b'\x89PNG\r\n\x1a\n') if image.get('Format') == 'PNG'
                    else members[location].startswith(b'\xff\xd8'), 'image magic/format')
             images[image.get('ID')] = location

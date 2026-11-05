@@ -1,0 +1,142 @@
+{
+  "task": "Align WPS official creation defaults with current DOCX official preset",
+  "timestamp_utc": "2026-11-04T09:47:44.681022+00:00",
+  "platform": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "python": "3.12.11",
+    "third_party_python_dependencies_added": false
+  },
+  "versions": {
+    "wps": "20261104.1633.0041",
+    "docx_baseline": "20261103.1633.1524",
+    "version_clock": "2026-11-04T04:33:00.410426-05:00; America/New_York calendar time plus 12 hours"
+  },
+  "scope": [
+    "WPS official declarative creation and official content reflow defaults",
+    "Preserve explicit supported settings, other themes and existing readers",
+    "No changes to DOCX, DOCX converter behavior, other skills or release ZIPs"
+  ],
+  "aligned": [
+    "A4 and 25.4/25.4/31.8/31.8 mm page margins",
+    "FangSong 16pt, Times New Roman Latin, exact 28pt body line spacing, left alignment and zero paragraph spacing",
+    "Two-character body indent with equivalent twip fallback; explicit point indent wins",
+    "Title/subtitle and four heading levels, 1.15 multiple spacing, keep-with-next and natural pagination",
+    "Page numbers off by default; explicit running content 16pt left aligned",
+    "Table text 16pt, 1.15 spacing, header bold, no default fill, row keep-together; literal list typography"
+  ],
+  "diagnostics": [
+    "Explicit unmapped run fonts retain SimSun substitution but report partial/spec_warnings",
+    "Related content and field omissions remain partial; layout_verification remains not_run",
+    "Composite font associations are scoped so subsequent explicit font runs are protected"
+  ],
+  "checks": {
+    "environment": {
+      "python": "environment-ok",
+      "checker_help_exit_code": 0,
+      "read_wps": "environment-ok",
+      "run_wps_task": "environment-ok",
+      "export_wps": "environment-ok"
+    },
+    "wps_regression": {
+      "command": "python -I -S -B -m unittest discover -s skills/wps/scripts -p test_*.py -q",
+      "tests": 348,
+      "passed": 348,
+      "failed": 0,
+      "exit_code": 0,
+      "stderr_note": "Expected invalid-output-extension negative-test diagnostic before unittest OK"
+    },
+    "repository_docx_parity": {
+      "command": "python -I -S -B -m unittest discover -s tests -p test_wps_docx_official_parity.py -v",
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "new_wps_tests_included_above": 8,
+    "coverage": [
+      "Omitted/explicit official theme",
+      "Page, font and paragraph defaults",
+      "Actual CLI default/custom .wps and .rtf generation/readback",
+      "100-paragraph natural-pagination sample",
+      "Title/heading explicit break and spacing controls",
+      "Explicit fonts and fallback diagnostics",
+      "Page-number switches and running-content partial",
+      "Table/list defaults and explicit row controls",
+      "Legacy RTF reading and existing MS-DOC/OOXML/edit/export regressions",
+      "Current DOCX parameter parity"
+    ],
+    "fixtures": "Synthetic fixtures and existing repository regression fixtures; no new WPS/Word client-produced acceptance sample",
+    "source_strict": {
+      "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict",
+      "exit_code": 1,
+      "warnings": 56,
+      "reason": "Existing __pycache__ directory and 55 pyc files only",
+      "latest_cache_mtime_utc": "2026-11-03T07:48:55.431118+00:00",
+      "cache_files_deleted": false
+    },
+    "cache_excluded_independent_copy_strict": {
+      "exit_code": 0,
+      "result": "OK",
+      "only_exclusion": "__pycache__",
+      "temporary_copy_removed": true
+    },
+    "static": {
+      "ast_parse": "passed",
+      "lines_over_200": 0,
+      "same_line_statements": 0,
+      "git_diff_check": "passed",
+      "pylint": "not run; unavailable; AST/line checks are not equivalent to Pylint",
+      "naming_review": "New constants UPPER_SNAKE_CASE; functions and variables snake_case"
+    },
+    "description": {
+      "characters": 122,
+      "changed": false,
+      "manual_scope_review": "Still accurate; no format capability expansion",
+      "model_trigger_benchmark": "not run"
+    }
+  },
+  "renderer_probe": {
+    "backend": "LibreOffice 26.8.0.3",
+    "version_check": "passed",
+    "action": "Headless synthetic RTF to DOCX in an independent temporary profile/workspace",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "",
+    "output_exists": false,
+    "result": "failed without diagnostic; no visual/import acceptance claimed",
+    "temporary_workspace_removed": true,
+    "unchanged_retry": false
+  },
+  "remaining_limits": [
+    "No Word/WPS visual validation or installed-font verification",
+    "Linux and Windows not tested; no Docker or Podman available",
+    "RTF and OOXML rendering, font fallback, page counts not guaranteed identical",
+    "Literal list numbering, table cell margins, callouts and section support are not DOCX equivalents",
+    "Existing DOCX-to-RTF converter does not resolve complete styles.xml inheritance"
+  ],
+  "repository": {
+    "head_and_local_origin_main": "b85f536145e2cf02f0216c3ca5dd592b0cdacba7",
+    "live_remote_check": "git ls-remote failed: Could not resolve host github.com",
+    "concurrent_changes": "Existing table-workflow, ET/XLSX, OFD and unrelated README edits preserved",
+    "committed": false,
+    "pushed": false
+  },
+  "capture": {
+    "local_tests": "subprocess stdout/stderr captured separately with real return codes",
+    "tool_display": "Full final test stderr and exit codes displayed; stdout receipts summarized with character count",
+    "downstream_harness_delivery": "not independently verified"
+  },
+  "rtf_control_reference": "https://officeprotocoldoc.z19.web.core.windows.net/files/Archive_References/%5BMSFT-RTF%5D.pdf",
+  "sha256": {
+    "skills/wps/SKILL.md": "507be3e3c36291d56fcbe6941b5f204de5acea2b243cb76bb5a0cb44735b412e",
+    "skills/wps/requirements.txt": "63394b67a05c4bf72d9702bd86a056d2fb7523fe16dfe4b29799770768334ca9",
+    "skills/wps/references/generation.md": "2fed035aa47bc2d82fac25bd5487d459c1a66ae3b9f0c827b83df25582a607e2",
+    "skills/wps/references/export-rtf-backend.md": "9142952aad9dfe37e22d394bd4983809eebc8ceca0ae24e78aaa83b47996d657",
+    "skills/wps/scripts/wps_rtf_builder.py": "76ea80914f66230541da7e0a2f84bb9d0f5b49a2a2ef35544dcbafdde5209bbd",
+    "skills/wps/scripts/test_wps_official_defaults.py": "ec34726f79a98d857f57dc4d4338904e048ef8a71916ab9fb8174a924f50733f",
+    "skills/wps/scripts/test_wps_rtf_layout.py": "1e5d98bcae318e6cf3fcf29e0b5b99748a04276c0358272e6ce21659d721f902",
+    "skills/wps/scripts/test_wps_rtf_structure.py": "0584a4ab4236433b3643ae699043331ec6d559f7fa39698af28763862879d49e",
+    "tests/test_wps_docx_official_parity.py": "3d5bc4a5337ca928e600e7ae72eabb34ec5d8dbb6b3e72ac0d6948cb0cec90b7"
+  }
+}

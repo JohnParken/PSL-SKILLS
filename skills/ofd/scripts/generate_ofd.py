@@ -28,6 +28,13 @@ number = ASSETS.number
 NS = 'http://www.ofdspec.org/2016'
 MAX_OBJECTS = 1500
 MAX_CHARACTERS = 4000
+ZHUQUE_REFERENCE = 'zhuque-fangsong-v0.212'
+ZHUQUE_FILES = {
+    'ZhuqueFangsong-Regular.ttf': (ASSETS.MAX_FONT_BYTES, '558c62730844fe54ba220146ed62f859d4e2880188d92d985f8921c6e3743bc4'),
+    'LICENSE.txt': (65536, '66cc01ad4df62fca6936431a426104cb32a52ce8da49de9a7d643e02d7659043'),
+    'LICENSE_Alegreya.txt': (65536, 'f6f60d5d4cf4f4b1fc4e41353c897a2f5a16e6396c0cd8fa8bdfd2f4586a9a68'),
+    'NOTICE.txt': (8192, '40ff310b33f4f52ad32c07b9b30161c090e85a6e1a71f1363c83ebb1d8b10ccc'),
+}
 ET.register_namespace('ofd', NS)
 
 
@@ -67,6 +74,43 @@ def read_asset(path, limit):
     require(isinstance(path, str) and bool(path), 'asset path must be an explicit relative string')
     data = READER.read_input(Path(path), task_root='.')
     require(len(data) <= limit, 'asset size limit')
+    return data
+
+
+def bundled_font(reference):
+    """Read one reviewed immutable font bundle; never reinterpret user paths as skill paths."""
+    require(reference == ZHUQUE_REFERENCE, 'unknown bundled font reference')
+    root = Path(__file__).resolve().parent.parent
+    prefix = Path('assets/fonts/zhuque_fangsong')
+    assets = {}
+    for filename, (limit, digest) in ZHUQUE_FILES.items():
+        try:
+            data = READER.read_input(prefix / filename, task_root=root)
+        except (OSError, READER.ReadError) as exc:
+            raise GenerationError('bundled font asset missing/inaccessible: ' + filename) from exc
+        require(len(data) <= limit and hashlib.sha256(data).hexdigest() == digest,
+                'bundled font asset integrity check failed: ' + filename)
+        assets[filename] = data
+    # Preserve both complete upstream licenses; never rewrite the font binary.
+    license_data = assets['LICENSE.txt'] + b'\n\n----- Upstream Alegreya copyright and license -----\n\n' + assets['LICENSE_Alegreya.txt']
+    source = dict(kind='bundled', reference=reference, version='0.212', prerelease=True,
+                  release_url='https://github.com/TrionesType/zhuque/releases/tag/v0.212',
+                  author_preview_notice='Note that this version is not production-ready.',
+                  notice_text=assets['NOTICE.txt'].decode('utf-8'),
+                  checked_assets={name: digest for name, (_limit, digest) in ZHUQUE_FILES.items()},
+                  coverage='Requested text checked individually; no all-symbol or all-Han guarantee')
+    return assets['ZhuqueFangsong-Regular.ttf'], license_data, source
+
+
+def private_font(name):
+    """Read one explicitly named user font from this installation's private fonts directory."""
+    require(isinstance(name, str) and 0 < len(name) <= 128
+            and name not in ('.', '..') and '/' not in name and '\\' not in name
+            and all(char.isascii() and (char.isalnum() or char in '_.- ') for char in name)
+            and name.lower().endswith('.ttf'), 'skill_font must be one ASCII .ttf filename, not a path')
+    root = Path(__file__).resolve().parent.parent
+    data = READER.read_input(Path('assets/user_fonts') / name, task_root=root)
+    require(len(data) <= ASSETS.MAX_FONT_BYTES, 'font size limit')
     return data
 
 
@@ -114,16 +158,28 @@ class Builder:
         font_group = element('Fonts', self.resource) if fonts else None
         for key, value in fonts.items():
             require(isinstance(key, str) and 0 < len(key) <= 64, 'invalid font reference name')
-            fields(value, ('path', 'license_path', 'embedding_permission'), ('path', 'license_path', 'embedding_permission'))
-            require(value['embedding_permission'] == 'confirmed', 'explicit font embedding permission is required')
-            data = self.loader(value['path'], 8 * 1024 * 1024)
+            require(isinstance(value, dict), 'font source must be an object')
+            source = None
+            if 'bundled' in value:
+                fields(value, ('bundled',), ('bundled',))
+                data, license_data, source = bundled_font(value['bundled'])
+            elif 'skill_font' in value:
+                fields(value, ('skill_font',), ('skill_font',))
+                data = private_font(value['skill_font'])
+                license_data = b''
+            else:
+                fields(value, ('path', 'license_path', 'embedding_permission'), ('path',))
+                if 'embedding_permission' in value:
+                    require(value['embedding_permission'] == 'confirmed', 'invalid optional embedding_permission')
+                data = self.loader(value['path'], ASSETS.MAX_FONT_BYTES)
+                license_data = self.loader(value['license_path'], 64 * 1024) if 'license_path' in value else b''
             font = ASSETS.TrueType(data)
-            license_data = self.loader(value['license_path'], 64 * 1024)
             try:
                 license_text = xml_string(license_data.decode('utf-8'), 65536)
             except UnicodeError as exc:
                 raise GenerationError('font license must be UTF-8') from exc
-            require(license_text.strip(), 'font license text is required; no automated legal determination')
+            if license_data:
+                require(license_text.strip(), 'provided font license text is empty')
             ident = self.ident()
             filename = 'Font_' + ident + '.ttf'
             self.files['Doc_0/Res/' + filename] = data
@@ -131,9 +187,12 @@ class Builder:
             element('FontFile', node, filename)
             self.fonts[key] = (ident, font)
             self.report['fonts'].append(dict(ref=key, id=ident, name=font.name, sha256=font.sha256,
-                                             permission='caller confirmed; installable rights; not legal validation',
+                                             permission=('bundled OFL-1.1 original with complete notices' if source else 'not assessed; supplying a font does not establish authorization'),
                                              fs_type=font.fs_type, embedding_mode='full_font_unmodified',
-                                             license_text=license_text, license_sha256=hashlib.sha256(license_data).hexdigest()))
+                                             license_text=license_text, license_sha256=hashlib.sha256(license_data).hexdigest() if license_data else None))
+            if source is not None:
+                self.report['fonts'][-1]['source'] = source
+                self.report['diagnostics'].append('Bundled Zhuque v0.212 is a technical preview; requested character coverage still required')
             self.asset_bytes += len(data)
         image_group = element('MultiMedias', self.resource) if images else None
         for key, value in images.items():
@@ -339,7 +398,12 @@ class Builder:
         if self.report['fonts']:
             custom = element('CustomDatas', info)
             for font in self.report['fonts']:
-                element('CustomData', custom, font['license_text'], Name='FontLicense:' + font['id'])
+                if font['license_text']:
+                    element('CustomData', custom, font['license_text'], Name='FontLicense:' + font['id'])
+                else:
+                    element('CustomData', custom, 'not_assessed', Name='FontRights:' + font['id'])
+                if 'source' in font:
+                    element('CustomData', custom, font['source']['notice_text'], Name='FontNotice:' + font['id'])
         element('DocRoot', body, 'Doc_0/Document.xml')
         self.files['OFD.xml'] = serialized(ofd)
         buffer = io.BytesIO()
