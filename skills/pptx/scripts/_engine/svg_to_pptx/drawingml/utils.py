@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Coordinate, transform, color, and font helpers for DrawingML conversion.
 
 See references/shared-standards-core.md §2.1 for project geometry and
@@ -1511,6 +1511,82 @@ def svg_hidden_reason(
     if visibility in {'hidden', 'collapse'}:
         return f'visibility:{visibility}'
     return None
+
+
+def is_stroked_zero_axis_shape(
+    element: ET.Element,
+    ctx: ConvertContext | None = None,
+) -> bool:
+    """Recognize a native shape whose single collapsed frame axis still has an outline."""
+    geometry_tags = {'rect', 'circle', 'ellipse', 'line', 'path', 'polygon', 'polyline'}
+    if (
+        element.tag.rsplit('}', 1)[-1] not in geometry_tags | {'g'}
+        or element.get('data-pptx-object') != 'shape'
+        or not (
+            element.get('data-pptx-prst')
+            or element.get('data-pptx-geometry-kind') == 'custom'
+        )
+    ):
+        return False
+    try:
+        frame = tuple(float(value) for value in re.split(
+            r'[\s,]+', (element.get('data-pptx-frame') or '').strip(),
+        ))
+    except ValueError:
+        return False
+    if (
+        len(frame) != 4 or not all(math.isfinite(value) for value in frame)
+        or not ((frame[2] == 0 and frame[3] > 0) or (frame[3] == 0 and frame[2] > 0))
+    ):
+        return False
+    parents = {id(child): parent for parent in element.iter() for child in parent}
+    for leaf in element.iter():
+        if leaf.tag.rsplit('}', 1)[-1] not in geometry_tags or svg_hidden_reason(leaf, parents):
+            continue
+        lineage = [leaf]
+        while id(lineage[-1]) in parents:
+            lineage.append(parents[id(lineage[-1])])
+        if any(node.tag.rsplit('}', 1)[-1] in {'defs', 'clipPath', 'mask', 'metadata'} for node in lineage):
+            continue
+        inherited = dict(ctx.inherited_styles) if ctx is not None else {}
+        opacity = ctx.opacity_multiplier if ctx is not None else 1.0
+        try:
+            for node in reversed(lineage):
+                inherited.update(_extract_inheritable_styles(node))
+                local = parse_inline_style(node.get('style'))
+                opacity *= parse_project_opacity(local.get('opacity', node.get('opacity', '1')))
+            kind, value, alpha = parse_project_paint(inherited.get('stroke', 'none'), 'stroke')
+            width = parse_project_geometry_length(inherited.get('stroke-width', '1'), 'stroke-width')
+            opacity *= parse_project_opacity(inherited.get('stroke-opacity', '1')) * alpha
+        except ValueError:
+            continue
+        if kind == 'color' and width > 0 and opacity > 0:
+            return True
+        if kind == 'reference' and ctx is not None and width > 0 and opacity > 0:
+            gradient = ctx.defs.get(value)
+            if gradient is None:
+                continue
+            try:
+                # Only imported DrawingML gradients qualify for this source
+                # frame exception; authored gradient contracts stay unchanged.
+                if preserved_native_gradient_xml(gradient) is None:
+                    continue
+                for stop in gradient:
+                    if stop.tag.rsplit('}', 1)[-1] != 'stop':
+                        continue
+                    style = parse_inline_style(stop.get('style'))
+                    stop_kind, _color, stop_alpha = parse_project_paint(
+                        style.get('stop-color', stop.get('stop-color', '#000000')),
+                        'stop-color',
+                    )
+                    stop_alpha *= parse_project_opacity(
+                        style.get('stop-opacity', stop.get('stop-opacity', '1')),
+                    )
+                    if stop_kind == 'color' and stop_alpha > 0:
+                        return True
+            except ValueError:
+                continue
+    return False
 
 
 def iter_project_geometry_lengths(
@@ -3653,6 +3729,36 @@ def resolve_text_run_fonts(text: str, fonts: dict[str, str]) -> dict[str, str]:
     return {'latin': latin, 'ea': ea, 'cs': latin}
 
 
+# Unicode fixed-width spaces carry their width in their definition; bundled
+# advance tables omit them, and the generic 0.55em fallback triples the thin
+# spaces German and French typography sets before '%', units, and '§'.
+_FIXED_SPACE_EMS = {
+    ' ': 0.5,    # en space
+    ' ': 1.0,    # em space
+    ' ': 1 / 3,  # three-per-em space
+    ' ': 0.25,   # four-per-em space
+    ' ': 1 / 6,  # six-per-em space
+    ' ': 0.55,   # figure space
+    ' ': 0.3,    # punctuation space
+    ' ': 0.2,    # thin space
+    ' ': 0.1,    # hair space
+    ' ': 0.2,    # narrow no-break space
+}
+
+
+_UNDECOMPOSED_BASE_LETTERS = str.maketrans('đĐłŁøØħĦ', 'dDlLoOhH')
+
+
+def _base_letter(ch: str) -> str:
+    """Return the unaccented letter a precomposed character advances like."""
+    decomposed = unicodedata.normalize('NFD', ch)
+    if len(decomposed) > 1 and all(
+        unicodedata.category(mark) == 'Mn' for mark in decomposed[1:]
+    ):
+        ch = decomposed[0]
+    return ch.translate(_UNDECOMPOSED_BASE_LETTERS)
+
+
 def _estimate_character_width(ch: str, font_size: float) -> float:
     if (
         0xFF00 <= ord(ch) <= 0xFFEF
@@ -3663,6 +3769,9 @@ def _estimate_character_width(ch: str, font_size: float) -> float:
         return font_size
     if ch == ' ':
         return font_size * 0.3
+    if ch in _FIXED_SPACE_EMS:
+        return font_size * _FIXED_SPACE_EMS[ch]
+    ch = _base_letter(ch)
     if ch in 'mMwWOQ%':
         return font_size * 0.75
     if ch in 'iIlj!|':
@@ -3748,6 +3857,18 @@ def estimate_text_cluster_widths(
         ):
             widths.append(sum(advances[ch] for ch in cluster) * font_size)
             continue
+        # A precomposed letter the table lacks advances like its base letter.
+        bases = [
+            _base_letter(ch) for ch in cluster if not _is_grapheme_extend(ch)
+        ]
+        if advances is not None and not cjk and bases and all(
+            ch in advances and not _is_emoji_base(ch) for ch in bases
+        ) and all(
+            unicodedata.category(ch) == 'Mn' and not 0xFE00 <= ord(ch) <= 0xFE0F
+            for ch in cluster if _is_grapheme_extend(ch)
+        ):
+            widths.append(sum(advances[ch] for ch in bases) * font_size)
+            continue
         width = _estimate_grapheme_width(cluster, font_size)
         widths.append(width * 1.05 if bold and not cjk else width)
     return widths
@@ -3764,4 +3885,3 @@ def _xml_escape(text: str) -> str:
                 .replace('<', '&lt;')
                 .replace('>', '&gt;')
                 .replace('"', '&quot;'))
-

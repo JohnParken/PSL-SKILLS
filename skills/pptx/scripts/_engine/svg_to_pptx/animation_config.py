@@ -1,7 +1,17 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Structural group labels only; animation playback is outside this skill."""
 from __future__ import annotations
 import re
+from xml.etree import ElementTree as ET
+
+from .drawingml.utils import SVG_NS, XLINK_NS
+
+_NON_VISUAL_TAGS = frozenset(('defs', 'title', 'desc', 'metadata', 'style'))
+_ANCHOR_OWN_ATTRIBUTES = frozenset((
+    'href',
+    f'{{{XLINK_NS}}}href',
+    'xlink:href',
+))
 
 _CHROME_ID_TOKENS = frozenset({
     'background', 'bg',
@@ -50,3 +60,25 @@ def is_chrome_id(elem_id: str | None) -> bool:
 def usable_animation_group_id(raw: str | None) -> str | None:
     """Return one nonblank SVG animation anchor verbatim, else ``None``."""
     return raw if raw and raw.strip() else None
+
+
+def _tag_name(elem: ET.Element) -> str:
+    return elem.tag.replace(f'{{{SVG_NS}}}', '')
+
+
+def anchor_wrapped_group(elem: ET.Element) -> ET.Element | None:
+    """Return the single group wrapped by an otherwise bare hyperlink anchor."""
+    if _tag_name(elem) != 'a':
+        return None
+    if any(attr not in _ANCHOR_OWN_ATTRIBUTES for attr in elem.attrib):
+        return None
+    visual = [child for child in elem if _tag_name(child) not in _NON_VISUAL_TAGS]
+    if len(visual) != 1 or _tag_name(visual[0]) != 'g':
+        return None
+    return visual[0]
+
+
+def effective_top_level(elem: ET.Element) -> ET.Element:
+    """Return the element a top-level scan should treat ``elem`` as."""
+    wrapped = anchor_wrapped_group(elem)
+    return elem if wrapped is None else wrapped

@@ -253,6 +253,33 @@ def _image_uri(href: str, *, max_uri_bytes: int) -> str:
     return f"data:image/{media_type};base64," + base64.b64encode(data).decode("ascii")
 
 
+def _formula_expansion_cost(latex: str, *, inline: bool = False, style_bytes: int = 0) -> int:
+    """Reserve bounded math structure plus repeated run/control styling."""
+    from svg_to_pptx.native_objects.formula_compiler import compile_latex_to_inline_omml, compile_latex_to_omml
+
+    _text(latex, "Formula LaTeX", 8192)
+    compiler = compile_latex_to_inline_omml if inline else compile_latex_to_omml
+    # The compiler limits macros, AST size and serialized OMML independently.
+    # Count the expanded expression, so short macro definitions cannot evade
+    # the reservation. Styles are applied later to runs/control properties.
+    omml = compiler(latex)
+    node_count = sum(1 for _node in ET.fromstring(omml).iter())
+    styling_cost = node_count * (4096 + 32 * style_bytes)
+    return 65536 + len(omml.encode("utf-8")) + styling_cost
+
+
+def _inline_formula_style_bytes(element: ET.Element, parents: dict[ET.Element, ET.Element], paint_bytes: int) -> int:
+    """Bound inherited source styles and gradient data replicated into math."""
+    total = paint_bytes
+    current = element
+    while current is not None:
+        for name, value in current.attrib.items():
+            if name in PRESENTATION_ATTRIBUTES or name in {"style", f"{{{XML_NS}}}lang"}:
+                total += len(name.encode("utf-8")) + len(value.encode("utf-8"))
+        current = parents.get(current)
+    return total
+
+
 def _check_native_payload(value: object, kind: str | None) -> int:
     if not isinstance(value, dict):
         raise TaskError("Native object metadata must be a JSON object")
@@ -300,8 +327,9 @@ def _check_native_payload(value: object, kind: str | None) -> int:
         repeated_size = len(json.dumps(repeated, ensure_ascii=False).encode("utf-8"))
         expanded_cost += cell_count * (2048 + repeated_size)
     if kind == "formula":
-        _text(value.get("latex"), "Formula LaTeX", 8192)
-        expanded_cost += 65536
+        style = {key: value.get(key) for key in ("font_size", "color", "language")}
+        style_bytes = len(json.dumps(style, ensure_ascii=False).encode("utf-8"))
+        expanded_cost += _formula_expansion_cost(value.get("latex"), style_bytes=style_bytes)
     return expanded_cost
 
 
@@ -322,6 +350,11 @@ def prepare_svg(data: bytes, *, width: float, height: float, native_objects: boo
     native_cost = 0
     seen_ids = set()
     parent_map = {child: parent for parent in root.iter() for child in parent}
+    paint_tags = {f"{{{SVG_NS}}}{name}" for name in ("linearGradient", "radialGradient", "stop")}
+    paint_bytes = sum(
+        len(name.encode("utf-8")) + len(value.encode("utf-8"))
+        for node in root.iter() if node.tag in paint_tags for name, value in node.attrib.items()
+    )
     native_reference_ids = set()
     for marked in root.iter():
         if marked.get("data-pptx-replace-with") is not None or marked.get("data-pptx-inline-formula") is not None:
@@ -389,14 +422,15 @@ def prepare_svg(data: bytes, *, width: float, height: float, native_objects: boo
             if attribute in {"data-pptx-json", "data-pptx-data"}:
                 native_cost += _check_native_payload(strict_json(value), kind)
             if attribute == "data-pptx-inline-formula":
-                _text(value, "Inline formula", 8192)
+                style_bytes = _inline_formula_style_bytes(element, parent_map, paint_bytes)
+                native_cost += _formula_expansion_cost(value, inline=True, style_bytes=style_bytes)
         if tag == "metadata":
             parent = parent_map.get(element)
             parent_kind = parent.get("data-pptx-replace-with") if parent is not None else None
             if parent_kind not in {"chart", "table", "formula"} or element.get("type") != "application/json" or list(element):
                 raise TaskError("Only JSON metadata inside a native chart/table/formula marker is supported")
             native_cost += _check_native_payload(strict_json(element.text or ""), parent_kind)
-        if native_cost > max_expanded_bytes:
+        if native_cost >= max_expanded_bytes:
             raise TaskError("Native objects exceed the remaining deck expansion budget", "resource_limit")
         href_values = [element.get(name) for name in ("href", f"{{{XLINK_NS}}}href") if element.get(name) is not None]
         if len(set(href_values)) > 1:
@@ -477,10 +511,12 @@ def load_deck(config: str) -> Deck:
 
 
 def render_deck(deck: Deck) -> bytes:
+    from pptx_ooxml.package import PackagePartRegistry
     from svg_to_pptx.drawingml.converter import convert_svg_to_slide_shapes
 
     root = task_directory()
     slides = []
+    package_parts = PackagePartRegistry()
     # Preserve diagnostics without contaminating the machine-readable stdout.
     with contextlib.redirect_stdout(sys.stderr):
         for index, source in enumerate(deck.slides, 1):
@@ -488,6 +524,7 @@ def render_deck(deck: Deck) -> bytes:
                 root / f"slide-{index}.svg", resource_root=root, svg_text=source.svg,
                 slide_num=index, slide_count=len(deck.slides), image_optimize=False,
                 native_objects=deck.native_objects, text_flow=deck.text_flow,
+                package_parts=package_parts,
             )
             slides.append(ConvertedSlide.from_conversion(converted, notes=source.notes))
     return build_presentation(slides, width=deck.width, height=deck.height, title=deck.title)

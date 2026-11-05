@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Closed project grammar for SVG text presentation properties.
 
 The project accepts a deliberately small SVG text surface that maps
@@ -795,4 +795,3 @@ def project_text_property_errors(root: ET.Element) -> list[str]:
         for diagnostic in project_text_property_diagnostics(root)
         if diagnostic.severity == 'error'
     ]
-

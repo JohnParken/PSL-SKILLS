@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Classic native chart XML emitters."""
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from .chart_data import (
     _DEFAULT_CHART_COLORS,
     _category_axis_is_date,
     _category_axis_reversed,
+    _chart_language,
     _chart_list,
     _chart_plot_area_layout,
     _data_label_position,
@@ -914,6 +915,20 @@ def _axis_major_gridlines_xml(
     return _major_gridlines_xml(color) if enabled else ""
 
 
+def _axis_tx_pr_xml(
+    config: dict[str, Any],
+    font_size: int,
+    chart_style: dict[str, str | None],
+) -> str:
+    """Apply per-axis tick-label overrides to the shared chart text defaults."""
+    return _chart_tx_pr_xml(
+        _font_size_hpt(config["font_size"]) if config.get("font_size") else font_size,
+        config.get("color") or chart_style.get("text_color"),
+        font_face=config.get("font_family") or chart_style.get("font_face"),
+        language=chart_style.get("primary_language"),
+    )
+
+
 def _axis_pair_xml(
     cat_ax_id: str,
     val_ax_id: str,
@@ -951,16 +966,6 @@ def _axis_pair_xml(
     )
     val_number_format = _axis_number_format_xml(value, default_value_format)
     axis_sp_pr = _chart_line_sp_pr_xml(chart_style.get("axis_color"))
-
-    def axis_tx_pr(config: dict[str, Any]) -> str:
-        # Tick-label text per axis: the payload's colour/font/size win over
-        # the chart-wide text style (category labels dark, value ticks grey).
-        return _chart_tx_pr_xml(
-            _font_size_hpt(config["font_size"]) if config.get("font_size") else axis_font_size,
-            config.get("color") or chart_style.get("text_color"),
-            font_face=config.get("font_family") or chart_style.get("font_face"),
-            language=primary_language,
-        )
 
     cat_title_xml = "" if secondary else _axis_title_xml(
         _first_present(axis_titles.get("category"), axis_titles.get("x")),
@@ -1035,7 +1040,7 @@ def _axis_pair_xml(
         f"{cat_gridlines}{cat_title_xml}{cat_number_format}"
         f'<c:majorTickMark val="{cat_tick_marks}"/><c:minorTickMark val="none"/>'
         f'<c:tickLblPos val="{cat_tick_label_pos}"/>'
-        f"{axis_sp_pr}{axis_tx_pr(category)}"
+        f"{axis_sp_pr}{_axis_tx_pr_xml(category, axis_font_size, chart_style)}"
         f'<c:crossAx val="{val_ax_id}"/><c:crosses val="{category_crosses}"/>{category_tail}'
         f"</c:{category_tag}>"
         "<c:valAx>"
@@ -1044,7 +1049,7 @@ def _axis_pair_xml(
         f"{val_gridlines}{val_title_xml}{val_number_format}"
         f'<c:majorTickMark val="{val_tick_marks}"/><c:minorTickMark val="none"/>'
         f'<c:tickLblPos val="{val_tick_label_pos}"/>'
-        f"{axis_sp_pr}{axis_tx_pr(value)}"
+        f"{axis_sp_pr}{_axis_tx_pr_xml(value, axis_font_size, chart_style)}"
         f'<c:crossAx val="{cat_ax_id}"/><c:crosses val="{value_crosses}"/>'
         f"{cross_between}{major_unit}"
         "</c:valAx>"
@@ -1499,12 +1504,6 @@ def _xy_axis_xml(
     x_axis = normalized_axes.get("x", {})
     y_axis = normalized_axes.get("y", {})
     axis_sp_pr = _chart_line_sp_pr_xml(chart_style.get("axis_color"))
-    axis_tx_pr = _chart_tx_pr_xml(
-        axis_font_size,
-        chart_style.get("text_color"),
-        font_face=chart_style.get("font_face"),
-        language=primary_language,
-    )
     x_title_xml = _axis_title_xml(
         _first_present(axis_titles.get("x"), axis_titles.get("category")),
         font_size=axis_title_font_size,
@@ -1547,9 +1546,9 @@ def _xy_axis_xml(
             f'<c:axId val="{axis_id}"/>{_axis_scaling_xml(config)}'
             f'<c:delete val="{delete}"/><c:axPos val="{position}"/>'
             f"{gridlines}{title_xml}{number_format}"
-            '<c:majorTickMark val="out"/><c:minorTickMark val="none"/>'
+            f'<c:majorTickMark val="{config.get("tick_marks", "none")}"/><c:minorTickMark val="none"/>'
             f'<c:tickLblPos val="{tick_label_position}"/>'
-            f"{axis_sp_pr}{axis_tx_pr}"
+            f"{axis_sp_pr}{_axis_tx_pr_xml(config, axis_font_size, chart_style)}"
             f'<c:crossAx val="{cross_axis_id}"/><c:crosses val="autoZero"/>'
             f'<c:crossBetween val="midCat"/>{major_unit}'
             "</c:valAx>"
@@ -1670,6 +1669,7 @@ def _chart_xml(
     inherited_styles: dict[str, str] | None = None,
     primary_language: str | None = None,
 ) -> bytes:
+    primary_language = _chart_language(payload) or primary_language
     style = payload.get("style") if isinstance(payload.get("style"), dict) else {}
     colors = (
         [_clean_hex(color, "#4472C4") for color in style.get("colors", [])]
@@ -1740,4 +1740,3 @@ def _chart_rels_xml(workbook_target: str) -> bytes:
 <Relationship Id="rId1" Type="{PACKAGE_REL_TYPE}" Target="{_xml_escape(workbook_target)}"/>
 </Relationships>'''
     return xml.encode("utf-8")
-

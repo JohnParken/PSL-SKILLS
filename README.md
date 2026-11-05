@@ -12,7 +12,7 @@
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261105.1313.4408 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261104.1438.0555 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261105.1127.3283 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.5.0 转换子集与标准库入口 | 20261104.1519.0362 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261105.1335.5039 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；显式依赖 xlsx，ET 来源另依赖 et | 20261104.1601.0533 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、公式预检、逐格溯源与审计；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
@@ -306,11 +306,12 @@ PPTX 从仓库根目录运行隔离环境回归；要求满足其 Linux/Python/E
 python -I -S -B -m unittest discover -s tests/pptx -p 'test_*.py'
 ```
 
-PPTX 的本次 Linux 验证记录见 [标准库 PPTX 验证记录](tests/pptx/verification.json)：66 项回归、严格结构检查，以及开发阶段独立读取器的内容核对。桌面视觉、真实业务样本、Windows 与专用宿主触发未验证；开发核对工具不属于运行依赖。
+PPTX 的本次 Linux 验证记录见 [标准库 PPTX 验证记录](tests/pptx/verification.json)：92 项回归（新增 26 项）、严格结构检查，以及开发阶段独立读取器的内容核对。桌面视觉、真实业务样本、Windows 与专用宿主触发未验证；开发核对工具不属于运行依赖。
 
 ## 迁移来源与许可
 
-`pptx` 以 `JohnParken/ppt-master` v6.5.0、提交 `c951bf4a3a4af7cbc2382447f3d2e7719b292bd2` 的转换子集为基线，保留上游 MIT 及形状数据的原始许可与通知；范围见 [PPTX 来源说明](skills/pptx/references/provenance.md)。
+`pptx` 以 `JohnParken/ppt-master` v6.8.0、提交 `5e8856be0da8e6bc85c4aa28acc614478f7b7137` 的转换子集为基线，保留上游 MIT 及形状数据的原始许可与通知；范围见 [PPTX 来源说明](skills/pptx/references/provenance.md)，逐文件来源记录见 [上游迁移清单](tests/pptx/upstream_manifest.json)。
+本次从 v6.5.0 迁移文字度量与基线、图表样式及跨页包名分配、合并表格样式和公式备用显示，并同步只读与资源预算边界。运行仍仅需 Python 标准库；完整上游的浏览器、来源转换、图片 API、模板回填与动画工作流未移植。
 
 本次于 2026-10-23 从本地相邻项目复制，首次迁移保留原目录名称及 skill 内部文件内容，排除系统缓存文件；随后将本仓库的 `minimax-xlsx` 更名为 `xlsx`，同步更新名称和路径引用，脚本及资源内容不变。复制的是来源项目**当时的工作区内容，包含未提交修改**，不是对应提交的纯净快照。来源仓库当时的 HEAD 仅供追溯：
 

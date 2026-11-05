@@ -1,0 +1,749 @@
+{
+  "schema": "psl.pptx.upstream-manifest.v1",
+  "upstream_repository": "JohnParken/ppt-master",
+  "upstream_version": "6.8.0",
+  "upstream_commit": "5e8856be0da8e6bc85c4aa28acc614478f7b7137",
+  "previous_upstream_version": "6.5.0",
+  "previous_upstream_commit": "c951bf4a3a4af7cbc2382447f3d2e7719b292bd2",
+  "comparison_method": "Complete untruncated Git trees and source blob checksums; Python AST comparison preserves docstrings but omits locations.",
+  "counts": {
+    "adapted": 14,
+    "byte_identical": 9,
+    "local_namespace_shim": 1,
+    "python_ast_equal": 50
+  },
+  "scope": "Adopted SVG-to-DrawingML conversion subset and distributed source/data licenses; excludes the complete upstream workflow.",
+  "excluded_new_modules": {
+    "svg_to_pptx/native_objects/chart_patch.py": "Imported source-package chart editing is not part of the public creation contract and is not imported."
+  },
+  "files": [
+    {
+      "target": "skills/pptx/scripts/_engine/hyperlink_contract.py",
+      "distributed_sha256": "a3d3bbe6b95f08226ce73b5658a7040d3bb65c1fe4aec7395af6ef310777b88c",
+      "upstream_path": "skills/ppt-master/scripts/hyperlink_contract.py",
+      "upstream_git_blob": "2400ad0b580459a8ad59f7f97e740c7a5b9a6dd3",
+      "upstream_sha256": "03a73fe47de091a6060b428f0430bf5bd8a1ceec1e86fda3c7a91157f0cdfe0c",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/language_tags.py",
+      "distributed_sha256": "d51dcf20efaa471bdac9cd3132a5df19ed6c3c7b73329cce1e1b418ef9d21a4a",
+      "upstream_path": "skills/ppt-master/scripts/language_tags.py",
+      "upstream_git_blob": "29c101655bb08543c770726d4e50a1209f393bee",
+      "upstream_sha256": "ad3e1a913227b7e056717709fb49e0717d32a3f09aabc12bcf023ecb03702e7a",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/native_payloads.py",
+      "distributed_sha256": "8363ca875531dd40d1accdbfa6755a70cf9c1dddd38e489fb7fed897dcfb8ea9",
+      "upstream_path": "skills/ppt-master/scripts/native_payloads.py",
+      "upstream_git_blob": "a68c94f72aba4229f291162ea8b060445ac9582c",
+      "upstream_sha256": "4d793b9ec17dc9fd9a43ca7df4f15a7ddeb2692424ac64a31dc72f59744d5443",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Reject external payload references; omit workspace and gzip loading."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_effects.py",
+      "distributed_sha256": "6b2ada85b633f601c43b78395a5d2c966464567e524aea8f68f3c1980209738c",
+      "upstream_path": "skills/ppt-master/scripts/pptx_effects.py",
+      "upstream_git_blob": "e9200e2ef1c33f9986de8928df56e91e178cb14c",
+      "upstream_sha256": "ec9341c82723d97ed9a583a98ef36ca7e4ebfe0496a845a2981c67d1a479a014",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_gradients.py",
+      "distributed_sha256": "aa4fc3fc37c65e63186ba96d60fafcbfc4eb2870077e4df50bf711f284e490f9",
+      "upstream_path": "skills/ppt-master/scripts/pptx_gradients.py",
+      "upstream_git_blob": "abe29a5e6c44f896b6a1862cd863dee5b86fbff4",
+      "upstream_sha256": "3b1f2877007994ed60e4b0f77e5029eca624595180fd123dfcaadc3a7274debe",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_ooxml/__init__.py",
+      "distributed_sha256": "3f21a740d994f2df226fa2ebd76b6a33cc403e34d99e875520a7631c73dd5639",
+      "comparison": "local_namespace_shim",
+      "adaptation": "Local docstring-only namespace; no copied implementation."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_ooxml/package.py",
+      "distributed_sha256": "1f5380475110ed760879c1af35fb188b1d325cdb97d95bc99d34403ebbb9665a",
+      "upstream_path": "skills/ppt-master/scripts/pptx_ooxml/package.py",
+      "upstream_git_blob": "14c95ebbd0b8de6d4cb6c137ac750b886d8d6701",
+      "upstream_sha256": "76e36002c328af85e27d39ebae23a807f3d220f84e17314bc7bfd464f38e2e98",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Extract PackagePartRegistry in-memory behavior; remove filesystem package discovery and reads."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/__init__.py",
+      "distributed_sha256": "d516127a6af1eef1c0b08d0bd6d86518ccb7fab097d5cb3a24d317520b11db26",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/__init__.py",
+      "upstream_git_blob": "52d7ccbefec89d87933019e24b1a8ac49d195d1e",
+      "upstream_sha256": "dcb690214811cbcf5174b295391dfd020db654ae358fc83faeef67ec861d228b",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/data/LICENSE-APACHE-2.0.txt",
+      "distributed_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/data/LICENSE-APACHE-2.0.txt",
+      "upstream_git_blob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "upstream_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "upstream_changed_since_v650": false,
+      "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/data/LICENSE-OPEN-XML-SDK-MIT.txt",
+      "distributed_sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/data/LICENSE-OPEN-XML-SDK-MIT.txt",
+      "upstream_git_blob": "984713a49622a96da110443c15477613bc12656b",
+      "upstream_sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+      "upstream_changed_since_v650": false,
+      "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/data/NOTICE.txt",
+      "distributed_sha256": "57f3e499fbf289e2d03a3a494ea69a5cd1685a707ad8f2618e46144ea1ec88cb",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/data/NOTICE.md",
+      "upstream_git_blob": "0f1424823026959f8ba871dc8951c883f5cd53bc",
+      "upstream_sha256": "57f3e499fbf289e2d03a3a494ea69a5cd1685a707ad8f2618e46144ea1ec88cb",
+      "upstream_changed_since_v650": false,
+      "comparison": "byte_identical",
+      "adaptation": "Rename NOTICE.md to NOTICE.txt to satisfy distributed filename/documentation policy; preserve bytes."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/data/presetShapeDefinitions.xml",
+      "distributed_sha256": "4a762444d8d85876881c02a5b1dedf6f73006fcd8acb7b4e393435615b37c780",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/data/presetShapeDefinitions.xml",
+      "upstream_git_blob": "b425872e062cb992ae78d3cf288192724c0b25c8",
+      "upstream_sha256": "4a762444d8d85876881c02a5b1dedf6f73006fcd8acb7b4e393435615b37c780",
+      "upstream_changed_since_v650": false,
+      "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/data/presetShapeSemantics.json",
+      "distributed_sha256": "a39a29a669f06a5ec9b7afb081888026c8d8e3efbb54bc48d9088e1245734ceb",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/data/presetShapeSemantics.json",
+      "upstream_git_blob": "bdf70a2b202c4046f8db8b113cc8975f62ce0b35",
+      "upstream_sha256": "a39a29a669f06a5ec9b7afb081888026c8d8e3efbb54bc48d9088e1245734ceb",
+      "upstream_changed_since_v650": true,
+      "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/data/shape_type_values.txt",
+      "distributed_sha256": "f2c3bdcda8569b358ce3196cfeb183849e33bfc7955fac961dc85fceb6b3b587",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/data/shape_type_values.txt",
+      "upstream_git_blob": "cba0a418cd6af38c28724cb4ac6b6515c435303f",
+      "upstream_sha256": "f2c3bdcda8569b358ce3196cfeb183849e33bfc7955fac961dc85fceb6b3b587",
+      "upstream_changed_since_v650": false,
+      "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/errors.py",
+      "distributed_sha256": "380c5b54739b46b55600028c6ba1e291f4ce1db87daa3a63db8e8bb920261121",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/errors.py",
+      "upstream_git_blob": "e0d3199a4f02ed18deccbd44655c501752fd19a7",
+      "upstream_sha256": "ee3a22954c6c49eabeb76ae4a26bdea395d8b4318cfde8233758ccd9d28bab6b",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/formula.py",
+      "distributed_sha256": "a27f67424c449be32a07055c1d4d65eac6c94834e716c0f17aa94c808cc7f993",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/formula.py",
+      "upstream_git_blob": "3c07a23f196a72c4d88be0285213c032211ba2ae",
+      "upstream_sha256": "4e140cffb5413362746f20abbbdce107f8a4de8a79edcf4843093c662985259f",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/loader.py",
+      "distributed_sha256": "f75366b986e51189e14d401abb839b4ded8e5bdb93e448e9c632cf64d324a231",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/loader.py",
+      "upstream_git_blob": "8089a2a2672a4334f540707c94be903782a50eac",
+      "upstream_sha256": "81e04c63f65d39bcbec3b27322ba04e8706d062add4f85c8cfd8730b6104f422",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/models.py",
+      "distributed_sha256": "c3cbd6f078fff13c9f7637d12a550377d552fad56bffb650be77cf6b080bd7ab",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/models.py",
+      "upstream_git_blob": "0c60151953d9842f00e9cbbf4a831fe287b7553b",
+      "upstream_sha256": "6e1a6f38e8dde4f0a40abb3142e748a03e52ccced5e29684cdd69573527e5423",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/registry.py",
+      "distributed_sha256": "fa3f35f4b0cc3022f09072474692deb9703ba634347436fe5250276484837379",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/registry.py",
+      "upstream_git_blob": "adb8cc14fc4a1e8af62154f3ddf1d73ef5acdc68",
+      "upstream_sha256": "1e2299877aa96f704deacd3216ed3add6d24226d0267941682de755b08dc9155",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/semantic_hash.py",
+      "distributed_sha256": "5497edf6ed78d59e8debf240436e0068ab57ed6c04e32750c98dea10bf3d4403",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/semantic_hash.py",
+      "upstream_git_blob": "88cea092f8838ffa612b5975ce1bca4b42d37bca",
+      "upstream_sha256": "e47096d88923df44e38185ada3b32fd1dc9789c04e20809bbabdb5f2d280a597",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/semantics.py",
+      "distributed_sha256": "800fae64fac772fe74c45b45a25f2a95ee3613c1b832d6eb023f1a82b9995725",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/semantics.py",
+      "upstream_git_blob": "e7043a5e27fc21b73693daa5f34160e6af91777d",
+      "upstream_sha256": "5d5911a12868982052ad21a74691a91c0ba369ca642f13bf0df66a096210aeff",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_shapes/xml_safety.py",
+      "distributed_sha256": "ab56965ffda6fb1b40c8f9a1d390d36c4f5e2e0fbe97ce45333771cc34ca42ea",
+      "upstream_path": "skills/ppt-master/scripts/pptx_shapes/xml_safety.py",
+      "upstream_git_blob": "c0b717e6a7856780ae7382b92f68060a428d7c20",
+      "upstream_sha256": "b411dc284fc176bee652de58ca27a93f293b952c8f804b2aaf44394c574dbc3c",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_to_svg/__init__.py",
+      "distributed_sha256": "31b0836199d3899ea2e4f7a6831d11066f1a4c3fbf668bbd7dea46cf49e7b000",
+      "upstream_path": "skills/ppt-master/scripts/pptx_to_svg/__init__.py",
+      "upstream_git_blob": "e23cd0826ed2b3f53a7bc41c86452da9db615a0a",
+      "upstream_sha256": "f09490f56d2a10631be6d849503312b9eb244a0db74e3906a284421aa3f65e3a",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Keep package namespace for adopted geometry helpers; omit importer and CLI exports."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_to_svg/emu_units.py",
+      "distributed_sha256": "4e6ec6b432551a7b17f5c7c1e0dc48ded6311e1dc2a6e269d0d8388899c90614",
+      "upstream_path": "skills/ppt-master/scripts/pptx_to_svg/emu_units.py",
+      "upstream_git_blob": "ab48120449dd0c184c4f00cfd36420a9a87d9e2a",
+      "upstream_sha256": "877ce22705f1cc87ad645ae855d06b4e765b2e29ac9e0489c9a0a45edb0e5bf1",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_to_svg/preset_authoring.py",
+      "distributed_sha256": "ea9261e815a7a4305fbbfb655754ad90868ffd7fb3a7d1c0fcc6707f984b38da",
+      "upstream_path": "skills/ppt-master/scripts/pptx_to_svg/preset_authoring.py",
+      "upstream_git_blob": "04b200e6ae45dfb2be619512a427f63e906eb52f",
+      "upstream_sha256": "31d7eb7c2d5e40ce97906d094ef6304d8159ba4edbe8a1b9fee6e1e9bc497b07",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_to_svg/preset_registry_to_svg.py",
+      "distributed_sha256": "1628a3cf759f55b91ad7842e5275ed2ca016636ef0349188c0dfc552cd7c8f46",
+      "upstream_path": "skills/ppt-master/scripts/pptx_to_svg/preset_registry_to_svg.py",
+      "upstream_git_blob": "db0a7fd25add19f5917a7cd0b031f8ca988a9304",
+      "upstream_sha256": "41344cfe2cdcd42c88b2a716b7a56f8245be7a1f2076f6284a5075ed46012825",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/pptx_to_svg/preset_svg_markup.py",
+      "distributed_sha256": "55d762f01cba35a9a0bbbe4ebcc855b18413fc02e022148faf19f1c605800577",
+      "upstream_path": "skills/ppt-master/scripts/pptx_to_svg/preset_svg_markup.py",
+      "upstream_git_blob": "d64532378569fc189b4b054e9ce2ead65d88be4c",
+      "upstream_sha256": "ee5bf97cd129c7623b92551d9a8a43a183e316ae030249f2196b54ee5adc8848",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/resource_paths.py",
+      "distributed_sha256": "84974fdd46e36184356cf46ff3b0f7912953f5a8bbc2c032fae689f58de72fa9",
+      "upstream_path": "skills/ppt-master/scripts/resource_paths.py",
+      "upstream_git_blob": "00fe7a2659e29608300d3157a37addedbc9aa7b3",
+      "upstream_sha256": "c8ee17e1a83e946201e5c2944c3b4ef30b05eddebc4b62995fe7a9b722ccda3e",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/semantic_table.py",
+      "distributed_sha256": "f8b36eb42626c379a5eecd8eca1bd93dadcb6666110d4dd2acd2b9d12aed7de6",
+      "upstream_path": "skills/ppt-master/scripts/semantic_table.py",
+      "upstream_git_blob": "c4e30986ad64880918bfa160e5fef701d2a49009",
+      "upstream_sha256": "b7708ee74d519657b64985f25bd98f6dee2c7b97b42a9d1feea80828bd21e99e",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_authoring_view.py",
+      "distributed_sha256": "dd0e689efe2c0dd96d2515e9eac7bbabaa60f32ed4657df7a53c4fe56774a0ae",
+      "upstream_path": "skills/ppt-master/scripts/svg_authoring_view.py",
+      "upstream_git_blob": "bb9e6e52ba9870821d3cc44b3d1080f8dc372834",
+      "upstream_sha256": "9991d3d5506f8a978ac0444a957dace0d402b610a6ecf3ed0dd6de327d5580f2",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Keep SVG constants and semantic_shape_text_component only."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_compatibility.py",
+      "distributed_sha256": "794371ed2f293349b446d3bfd8d48e4d30cbcb16f647ea9dbc977040db566508",
+      "upstream_path": "skills/ppt-master/scripts/svg_compatibility.py",
+      "upstream_git_blob": "8cba0497c8cf45c9e0ae4063734ccdf229163c6c",
+      "upstream_sha256": "4d5e886625df473752571b375e40da5e032ca175a9361946b13dc5a182d480f5",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_finalize/__init__.py",
+      "distributed_sha256": "cc4065ee30b2f224597ea13a90eca6b708a160efe1cf3f1922ae095e1e42dbed",
+      "upstream_path": "skills/ppt-master/scripts/svg_finalize/__init__.py",
+      "upstream_git_blob": "4434081c9df6ad0b62b868f76620db4ba6c97581",
+      "upstream_sha256": "7ea7a774c2df7d075e53e792c028953d9c0a9d3e963d6d733df09ce8a177415a",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_finalize/flatten_tspan.py",
+      "distributed_sha256": "c2e11214c6821afa08bd54517a57447442f827860f768fbfef05d61aace6ccf4",
+      "upstream_path": "skills/ppt-master/scripts/svg_finalize/flatten_tspan.py",
+      "upstream_git_blob": "76c0fcdb582ae18c13e34588f5296cd5e3c2a634",
+      "upstream_sha256": "fa4c0fc13285046a6057dbf4916b41d80f07419e95c5b543c1fb204358f41d1c",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Keep in-memory finalization; omit file CLI/bootstrap/console handling and uppercase NUM_RE."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/__init__.py",
+      "distributed_sha256": "333c26c38dbc327cc5de171e64f4a22394ffaafa62a40ace08bfbf1763068632",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/__init__.py",
+      "upstream_git_blob": "f8a1e412623c9ea590565ef97ff0b101e53f5c45",
+      "upstream_sha256": "fa5a8ef67ceeee7b5b33b478639422f4e99c16eb430545059c171cc7727f2a47",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Keep package namespace; omit original builder and CLI exports."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/animation_config.py",
+      "distributed_sha256": "bd5b7b632f10b21b54b9658b8c2a54de0df723212c2111bfacda44c1465d3a3e",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/animation_config.py",
+      "upstream_git_blob": "9a3221c48cb7a73e0e0501dd9b5a7ec7dcf3154a",
+      "upstream_sha256": "c57629adf33bf51d01e09f15fb85d105c5425ac66e2772eeab28942a47a788e8",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Keep group identification and anchor-wrapped group helpers; omit animation workflow."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/canvas_contract.py",
+      "distributed_sha256": "f74a952e4516a64c0b80aa0571f789ee4f90ad2c3522b95491c6b4e22cd53b47",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/canvas_contract.py",
+      "upstream_git_blob": "f8e2f5aec82f01200c9861dc1bc19547e75d7fde",
+      "upstream_sha256": "0ed1a4e45f8f4d5cd2d4896ac2c64322388a2d3be62ed281f2c8214235d3eabf",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/__init__.py",
+      "distributed_sha256": "a33a82597f56f648abcaaa150197a9e1ea6526adf28f0516db4a8136ce94c13f",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/__init__.py",
+      "upstream_git_blob": "a892d4d57c43b20428aecf052b192961671e8553",
+      "upstream_sha256": "9313e6cb2ce93064d10a3f96f65252241a95300efcbfa3de3455fc5e2d1775dd",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/context.py",
+      "distributed_sha256": "b9467471efd97ed91fecf67880621b24897a2a27087d17853fd7e58a0c9d42bb",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/context.py",
+      "upstream_git_blob": "580c37043a425774eddaf6635b92de159bc7dd9d",
+      "upstream_sha256": "7ebce71f2282a200312b9b62cb02d909a428e26b54d1c000919ed1faa70f25a2",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Default image_optimize to False."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py",
+      "distributed_sha256": "b5c4649a2f59e0046e55210f35ab6bf782f8337c52041f4d8e55c859aa6147e8",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
+      "upstream_git_blob": "cdcc878836ba52ba3594209dd1258b6b12782f4d",
+      "upstream_sha256": "1a9f7ad49e39085234c329f647af84b5c9185e921917e408abae441b47b2adf8",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Add svg_text in-memory input and default image_optimize=False."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py",
+      "distributed_sha256": "b968e3fc64cdab41aa8ef0f4345a4dfc9c2697edef5a04a7ea74add9971470b8",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Replace Pillow image decoding/optimization paths with bounded stdlib PNG/JPEG inspection and byte embedding."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/font_advances.json",
+      "distributed_sha256": "8ea03925e43eae05dc1e03443e0245bbbd38c173d6c175fd4387429c8e97eeed",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/font_advances.json",
+      "upstream_git_blob": "3faefcaa111f70f85897a1558f3f5a1bc142a850",
+      "upstream_sha256": "8ea03925e43eae05dc1e03443e0245bbbd38c173d6c175fd4387429c8e97eeed",
+      "upstream_changed_since_v650": true,
+      "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/font_metrics.json",
+      "distributed_sha256": "2618fbebf57ade12f9c5bb3a20c6006ade95dd72d4301deff0c59557b05fd9d6",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/font_metrics.json",
+      "upstream_git_blob": "c4d0758250e8f5f99b97568d0256b4fe7c6aea92",
+      "upstream_sha256": "2618fbebf57ade12f9c5bb3a20c6006ade95dd72d4301deff0c59557b05fd9d6",
+      "upstream_changed_since_v650": true,
+      "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/hyperlinks.py",
+      "distributed_sha256": "7f7eaa2a4678c685675480c65a319b7996d94c2225617dd32747774a46cffacc",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/hyperlinks.py",
+      "upstream_git_blob": "a1123973a96740bba0c8f2550d60f17a3b5b76b6",
+      "upstream_sha256": "576e6a19e38fbe60952831b31ff19fba675d8bc14463e2130e09a06e6eaac21c",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/paths.py",
+      "distributed_sha256": "c0b1badace02638980416caeda3f070b435d2c4531682dad8e4f9709af50e9a4",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/paths.py",
+      "upstream_git_blob": "a12a6594e3e4d2bb1ba02d8b1e765f922612bdee",
+      "upstream_sha256": "3d8599d6510c9ad32a4b8ef1079a7ae65f0f09abd240f245366e6384b6103b90",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/styles.py",
+      "distributed_sha256": "ae4309fe997070c229c90c770cb68694b5501a3c9ea336a02ad488d163e44205",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/styles.py",
+      "upstream_git_blob": "889ba3794bdd115fa264fcac365046dd9a0d7a0d",
+      "upstream_sha256": "b9d186aa2b396b7cfbdba428f1c2d84e18afd12c2c4c83126aecf43c31a5ce60",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/text_baseline.py",
+      "distributed_sha256": "0192e56dbf08229d5b6fce16676a779f6191ee41641f6a9acf372847432abe16",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/text_baseline.py",
+      "upstream_git_blob": "da330d15003da6572c58626e297298a3046dbe8d",
+      "upstream_sha256": "75d9528917f03223b03dace7d6b71707a219d3a58c2aefc0ec594688f3530f64",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Change module documentation to describe bundled-only metrics; executable code unchanged."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/text_properties.py",
+      "distributed_sha256": "471dd3e94ba62dd454bcbc28646da4d706db4a821b3dca7f37a95f824c5819aa",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/text_properties.py",
+      "upstream_git_blob": "a15115c480fdd6f35f44441dd2472cced02105da",
+      "upstream_sha256": "d8954b6916d7b3afb1c7f01e0d62f209dc9afd654b43ef71c53d4f2ebcd04662",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/theme_colors.py",
+      "distributed_sha256": "1a1ea66c91c8f42775c11b4b4fa2bc1768ad68bffe9df65f47f5b28606be6c4f",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/theme_colors.py",
+      "upstream_git_blob": "a296d9d4fc7793f143be804bd3aad23e4a9b897d",
+      "upstream_sha256": "09c7ccce9c0839605d1c71fa400654ba71b3c4bb041c34ad1a99101369173e9c",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/theme_fonts.py",
+      "distributed_sha256": "05cb38fa086bfe4897bd91f505249ff00fd19798cbf8d798cd0aafd1be0c1b77",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/theme_fonts.py",
+      "upstream_git_blob": "319ed5366414eb21e0e52462e7783928546a4707",
+      "upstream_sha256": "3f731a1c0f13c387d8d211590c75f128c897767d0c8fd6cdcc4b499fd66236c6",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Remove unused project-page discovery function and slide_roster import."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py",
+      "distributed_sha256": "3b01448beb5f41236f6771096a4662b7f72737ac9137f1c46ce71dd4e7860734",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/geometry_properties.py",
+      "distributed_sha256": "c1dd6a233585ac49f039b4ae98c559658b4fd13afcecc20c5b01f781a60335ca",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/geometry_properties.py",
+      "upstream_git_blob": "b1e26a7bc70d662b1e92b37dadcadd863389a89a",
+      "upstream_sha256": "4408dbc0cc6b9b392ef1d97c613595a5f61b3b6107c79ea892b28365b874de0e",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/__init__.py",
+      "distributed_sha256": "f1e60512bb6ad9cb0891e31a2dc3a343092f9f754715b4f7cb31b878c10f3194",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/__init__.py",
+      "upstream_git_blob": "15ef20d3dc7f71da073293e3b523d94209a43637",
+      "upstream_sha256": "75cdf887994e56084bc81749c0ca30a5bf8c405e71e93f0a6fa7290e88d40764",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py",
+      "distributed_sha256": "c7d028708955125acbd2d0e46cd7ed86276a29fc317d564a357a23295379c828",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py",
+      "distributed_sha256": "edcbd393023910ed07622dc031a8ba615db60adc79410b45db111342def61989",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
+      "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py",
+      "distributed_sha256": "d613b3e4dbaa35e6acefb4997f0b1468f7048f6fae2c486b0e85d7be2fd7070a",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chartex.py",
+      "distributed_sha256": "6538e2429ffb0c427abfd82f79b1d08735ea242ee8f9daf08da6dd1b743d5563",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chartex.py",
+      "upstream_git_blob": "36c8fcfd49b9164390b9dceb91d2cff2276689a1",
+      "upstream_sha256": "dd1d76cbaa2068adf2e93df6e0840a01cd5361ecee6a4edebef1d89e86a62976",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/fallback_hash.py",
+      "distributed_sha256": "a364b9b68a9bec070d8be0ad1e7128c0f7b77ccec459a9d2ae4fae7c95053747",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/fallback_hash.py",
+      "upstream_git_blob": "0bf3a5fba4acce3f7ed046bf948dff24bf036ea4",
+      "upstream_sha256": "ffc5f50f2b790ad0a1cb890ba5315745a23fc803b3628b06bf27948dfafbc4ea",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula.py",
+      "distributed_sha256": "e61f13d37ee835d3d993906501ad12d5f79ba2499db0602e45f1fe2c44765a19",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula.py",
+      "upstream_git_blob": "4689787117d5d2b5c12003cac8da1fd059ef9636",
+      "upstream_sha256": "337712d777868e9937d313104d7390aedc19550b26f02f7e8e3ff2c8da1a4a3e",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_ast.py",
+      "distributed_sha256": "5cca995231ea41bd08dc66b04d9a88a635e5689237780b17be32b668e6a402ca",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_ast.py",
+      "upstream_git_blob": "1d6c9fa1c028cd6b576fed8005b6a7e71485c344",
+      "upstream_sha256": "67c65000fdf8682f9542fb03a39a75ccf9352a7a9efb53152dfe3383cbf17878",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_compiler.py",
+      "distributed_sha256": "11f27822b4a3a23afa740f4861d737cd60481d6cd90ee45ae9f7cbee7e6f0f5a",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_compiler.py",
+      "upstream_git_blob": "fa4bdaa79655d8ff3a80dbcdd6116e52fbb26d05",
+      "upstream_sha256": "4b487806c1350f9f373bef8815206ba37dc02c5db158de72370c26d1b9ad92ba",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py",
+      "distributed_sha256": "ede2180870ce153054f2c796e930abdd41cddb97de2405b3d1212f974663fa00",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_omml.py",
+      "upstream_git_blob": "2a6fe44086f85a80c3c8184d0d727a5f7dad39d6",
+      "upstream_sha256": "07e0db594546646b88772ab772820e959b0efdcc03b51bbaa9df0ce1b990ce6d",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py",
+      "distributed_sha256": "600c454dffab5256575204811007a3e18748f9b50ef0e6d200f8c1096149a308",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "upstream_git_blob": "30c13539294be6d3affe549ae75fe8e8860fa846",
+      "upstream_sha256": "4636546110b62a105f11b0554058ed8ccf6154db0bc631147777f9b3b9384088",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_profile.py",
+      "distributed_sha256": "ba9ffeb7ecad67e9ec746ecea6e2c1a49da01d6f98144db8b459568ffaaa43da",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_profile.py",
+      "upstream_git_blob": "604dcd60cab5028d5442adddc1a19ab485c5b5cf",
+      "upstream_sha256": "bedc1382bfc5f0c771f0137d75a3df246fd7d896f7610ff519b14c073b27bbd3",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_run_properties.py",
+      "distributed_sha256": "66f56328fa39bebf8b8bf543e9b9537d4d7c68331eba0f5e9f29583bec41b5eb",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_run_properties.py",
+      "upstream_git_blob": "5f449d34635019ced673042a9343bd39f0056a8b",
+      "upstream_sha256": "eac4cb86857333fce0a84a0d91b7cfb817fca3821d1dd63a28193d977c979ed7",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/inline_formula.py",
+      "distributed_sha256": "6c30afd37472072f354ffc85f3405ce1d4c478b096b05653e91ef70a809be360",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/inline_formula.py",
+      "upstream_git_blob": "2ae47aba37f2f353ae897f3ec707a91d996d1533",
+      "upstream_sha256": "541dbb2ddda762af5e97113561765d0627bd65fdcbb16593fd177074dcc67b76",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_attributes.py",
+      "distributed_sha256": "778ad088fe4bc3137a3a7d32dc69d6198f286e504031e25e1633bd8ff3c94037",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_attributes.py",
+      "upstream_git_blob": "db7f29a293b090cb133cd82a7d942aaaefa96c69",
+      "upstream_sha256": "9511e323278b7bc94179823e8629f71570c64699ec2d6bd2c6f0017993d6c44d",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py",
+      "distributed_sha256": "2fb711ccb7c3cb017051ca443dad5fb23f25b93de8cb545ff279f11317973644",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
+      "upstream_git_blob": "361e37763f02ab237c9b2063549f43901b48fdff",
+      "upstream_sha256": "fe42741b3fe2b198eca0bdee9115ad655553cb346b0d5f1379e9aae0c2de43fb",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_status.py",
+      "distributed_sha256": "24f4bb04b262fc681c8017955d17201c7acbdfd924425321b934633f45f0811d",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_status.py",
+      "upstream_git_blob": "996e52bc4a51b7b03cc529ac269d1966bf2c5b2f",
+      "upstream_sha256": "3b9e5c134d3521d86bf7eb93f66c9eeee81278484090ba53cbacfec70c4aa9a0",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py",
+      "distributed_sha256": "46b085eb7c01fc10c80de66f64fe7a922f67f1e27dc2489f46b93f497a01809d",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
+      "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
+      "upstream_changed_since_v650": true,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/workbook.py",
+      "distributed_sha256": "01bf0a821f183acd52a62733e85ddff96c0795b209da7a75e0d934c71b30cff4",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/workbook.py",
+      "upstream_git_blob": "29770395b01bcb33958134dbf705fda935eedcb3",
+      "upstream_sha256": "f725bb2dc58aadc8ffc293bba994a91cf0477b871829fffbe965acaa36a5b3ea",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Use only stdlib XLSX writer; preserve whitespace and complete workbook styles; remove optional third-party imports."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/semantic_markers.py",
+      "distributed_sha256": "728a2f8f85d32e7560489f84914d151e30ded5bcee9ab8ecfc1da943b8fcf367",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/semantic_markers.py",
+      "upstream_git_blob": "f1dbb2e64c186765991a72bbf71a414518b0910e",
+      "upstream_sha256": "fd8a59e49b9846c8f13424b1c73f27860c62a92d04b39883e2b2d7663af5d60e",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/tspan_flattener.py",
+      "distributed_sha256": "689c090f5744996ab6685ba53ffa71bd05fc914b4194a844782e998a6765df07",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/tspan_flattener.py",
+      "upstream_git_blob": "21ab62417c43890bc7f4f1e292b97640cf463d82",
+      "upstream_sha256": "3dfa78ef67e42e80b9ac06dba3985212fc5d4e7c56a039091d046e6de66f884d",
+      "upstream_changed_since_v650": false,
+      "comparison": "python_ast_equal",
+      "adaptation": "Provenance header; formatting-only changes where needed."
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/use_expander.py",
+      "distributed_sha256": "5a120b496671f5bcfe432bb998f10f2fd15963787211c3e855a307c1a88da882",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/use_expander.py",
+      "upstream_git_blob": "e3ff6ca724017636fa88d2fe2fc524200bc6d966",
+      "upstream_sha256": "6010bef6999264d175aab43c46f6b3df26f121f3a418772869c4a13e24eb761f",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Keep bounded local-use helpers; reject external data-icon and omit icon discovery functions."
+    },
+    {
+      "target": "skills/pptx/assets/licenses/ppt_master.txt",
+      "distributed_sha256": "80cefc234c1ec12a8cece4344f16300c634fa03df7891686fcf979e3828f0921",
+      "upstream_path": "LICENSE",
+      "upstream_git_blob": "9c261c3d9a1d3249fa8f18611c950d719d288560",
+      "upstream_sha256": "80cefc234c1ec12a8cece4344f16300c634fa03df7891686fcf979e3828f0921",
+      "upstream_changed_since_v650": false,
+      "comparison": "byte_identical"
+    }
+  ]
+}

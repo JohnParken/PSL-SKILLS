@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Core SVG -> DrawingML dispatcher, group handling, and main entry point."""
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from typing import Any
 from xml.etree import ElementTree as ET
 
 from native_payloads import NativePayloadError, hydrate_native_payload_refs
+from pptx_ooxml.package import PackagePartRegistry
 from hyperlink_contract import (
     SHAPE_HYPERLINK_ATTR,
     project_hyperlink_errors,
@@ -106,7 +107,12 @@ from .elements import (
     project_image_errors,
     project_nested_svg_crop_errors,
 )
-from ..animation_config import is_chrome_id, usable_animation_group_id
+from ..animation_config import (
+    anchor_wrapped_group,
+    effective_top_level,
+    is_chrome_id,
+    usable_animation_group_id,
+)
 from ..canvas_contract import (
     CanvasContractError,
     parse_project_svg_root,
@@ -121,8 +127,11 @@ from ..native_objects import (
     native_replacement_kind,
     native_marker_transform,
     require_fresh_native_fallback,
+    reserve_source_chart_parts,
     snapshot_native_fallback_freshness,
 )
+from ..native_objects.formula import formula_fallback_xml
+from ..native_objects.inline_formula import wrap_inline_formula_shape
 from ..native_objects.marker_status import native_marker_status_errors
 from ..semantic_markers import is_static_page_frame
 
@@ -720,6 +729,60 @@ def _append_shape_text(
     )
 
 
+_A14_NS = 'http://schemas.microsoft.com/office/drawing/2010/main'
+_A14_MATH_TAG = f'{{{_A14_NS}}}m'
+# Generated txBody fragments rely on the slide's prefixes; bind them to parse.
+_TXBODY_PREFIXES = (
+    'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+    f'xmlns:a="{DRAWINGML_NS}" xmlns:a14="{_A14_NS}" '
+    'xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"'
+)
+
+
+def _txbody_has_office_math(txbody_xml: str) -> bool:
+    try:
+        body = re.sub(r'^\s*<\?xml[^>]*\?>', '', txbody_xml)
+        root = ET.fromstring(f'<root {_TXBODY_PREFIXES}>{body}</root>')
+    except ET.ParseError:
+        return False
+    return any(node.tag == _A14_MATH_TAG for node in root.iter())
+
+
+def _with_office_math_fallback(
+    elem: ET.Element,
+    restored: ShapeResult,
+    geometry: ShapeResult,
+    ctx: ConvertContext,
+) -> ShapeResult:
+    """Give a shape's Office Math text its visible SVG text as MCE Fallback."""
+    # The copy is a plain picture of the shape: fresh id, no placeholder role.
+    carrier_xml = re.sub(
+        r'<p:cNvPr id="\d+"',
+        f'<p:cNvPr id="{ctx.next_id()}"',
+        geometry.xml,
+        count=1,
+    )
+    carrier_xml = re.sub(r'<p:ph\b[^>]*/>', '', carrier_xml)
+    results = [ShapeResult(xml=carrier_xml, bounds_emu=geometry.bounds_emu)]
+    for child in elem:
+        if (
+            child.get('data-pptx-part') is None
+            and child.tag.replace(f'{{{SVG_NS}}}', '') in {'text', 'g'}
+        ):
+            result = convert_element(child, ctx)
+            if result:
+                results.append(result)
+    fallback_xml = formula_fallback_xml(
+        results,
+        ctx,
+        _xml_escape(shape_display_name(elem, 'Formula')),
+    )
+    return ShapeResult(
+        xml=wrap_inline_formula_shape(restored.xml, fallback_xml),
+        bounds_emu=restored.bounds_emu,
+    )
+
+
 def _make_semantic_geometry_carrier_visible(element: ET.Element) -> None:
     """Remove authoring-only hiding from a semantic geometry carrier clone."""
     for name in ('visibility', 'display', 'pointer-events'):
@@ -829,7 +892,12 @@ def _convert_semantic_shape(
         # The carrier path becomes the native object; keep the group's name.
         carrier.set('data-name', str(shape.get('id')))
 
-    if shape.get('data-pptx-geometry-kind') == 'custom':
+    # Imported carriers retain their hash-guarded source geometry. Only a
+    # semantic custom shape without a source payload compiles from SVG alone.
+    if (
+        shape.get('data-pptx-geometry-kind') == 'custom'
+        and carrier.get('data-pptx-custgeom') is None
+    ):
         for name in (
             'data-pptx-custgeom',
             'data-pptx-geometry-kind',
@@ -843,7 +911,12 @@ def _convert_semantic_shape(
             'Semantic shape geometry carrier produced no native shape'
         )
     text_body = _semantic_shape_text_body(shape, ctx)
-    return _append_shape_text(geometry, text_body) if text_body else geometry
+    if not text_body:
+        return geometry
+    restored = _append_shape_text(geometry, text_body)
+    if _txbody_has_office_math(text_body):
+        return _with_office_math_fallback(shape, restored, geometry, ctx)
+    return restored
 
 
 def _restore_placeholder_sp_pr(
@@ -1309,6 +1382,11 @@ def convert_g(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
             native_text,
         )
         restored = _restore_placeholder_sp_pr(restored, elem)
+        if _txbody_has_office_math(native_text):
+            restored = _with_office_math_fallback(
+                elem, restored, geometry_result, geometry_ctx,
+            )
+            ctx.sync_from_child(geometry_ctx)
         if should_animate_group and elem_id:
             shape_match = re.search(r'<p:cNvPr id="(\d+)"', restored.xml)
             if shape_match:
@@ -1460,7 +1538,11 @@ def convert_g(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
 
 def convert_a(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
     """Convert one standard SVG anchor into a clickable DrawingML object."""
-    result = convert_g(elem, ctx)
+    # A bare anchor around one <g> is transparent: the group converts at the
+    # anchor's own depth, so a top-level <a href><g id> stays an animation
+    # anchor, and the click lands on its leaves.
+    wrapped = anchor_wrapped_group(elem)
+    result = convert_g(wrapped if wrapped is not None else elem, ctx)
     if result is None:
         return None
     return apply_shape_hyperlink(result, ctx, svg_hyperlink_href(elem))
@@ -1962,6 +2044,7 @@ def convert_svg_to_slide_shapes(
     promote_background: bool = True,
     text_flow: str | None = None,
     dangerous_nonconforming_export: bool = False,
+    package_parts: PackagePartRegistry | None = None,
 ) -> tuple[
     str,
     dict[str, bytes],
@@ -2010,6 +2093,8 @@ def convert_svg_to_slide_shapes(
             Parsing, resource, conversion, and package failures remain blocking.
         resource_root: Explicit project boundary for local images and icons.
             Omit only for direct library calls that require legacy inference.
+        package_parts: Shared native-part registry for the complete export,
+            including the template/source package and previously rebuilt slides.
 
     Returns:
         (slide_xml, media_files, rel_entries, anim_targets,
@@ -2368,17 +2453,20 @@ def convert_svg_to_slide_shapes(
         theme_font_spec=theme_font_spec,
         theme_color_spec=theme_color_spec,
         primary_language=primary_language,
+        package_parts=package_parts if package_parts is not None else PackagePartRegistry(),
         inherited_styles=_extract_inheritable_styles(root),
         opacity_multiplier=1.0 if root_opacity is None else root_opacity,
         parent_by_id={id(child): parent for parent in root.iter() for child in parent},
         text_font_sizes=text_font_sizes,
         text_letter_spacings=text_letter_spacings,
     )
+    if native_objects:
+        reserve_source_chart_parts(root, ctx)
     shapes: list[str] = []
     converted = 0
     skipped = 0
     has_top_level_group = any(
-        child.tag.replace(f'{{{SVG_NS}}}', '') == 'g'
+        effective_top_level(child).tag.replace(f'{{{SVG_NS}}}', '') == 'g'
         for child in root
     )
     background_xml, background_skip_id = (
@@ -2411,11 +2499,12 @@ def convert_svg_to_slide_shapes(
             shapes.append(result.xml)
             converted += 1
             m = re.search(r'<p:cNvPr id="(\d+)"', result.xml)
-            elem_id = child.get('id')
-            role = child.get('data-pptx-role')
-            placeholder = child.get('data-pptx-placeholder')
+            unit = effective_top_level(child)
+            elem_id = unit.get('id')
+            role = unit.get('data-pptx-role')
+            placeholder = unit.get('data-pptx-placeholder')
             has_explicit_semantics = role is not None or placeholder is not None
-            structurally_static = child.get('data-pptx-layer') is not None
+            structurally_static = unit.get('data-pptx-layer') is not None
             legacy_chrome = (
                 is_static_page_frame(role, placeholder)
                 if has_explicit_semantics
@@ -2517,4 +2606,3 @@ def convert_svg_to_slide_shapes(
         ctx.package_files,
         ctx.content_type_overrides,
     )
-

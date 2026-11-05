@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Canonical and compatible attribute access for native replacements."""
 
 from __future__ import annotations
