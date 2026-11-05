@@ -1,0 +1,923 @@
+{
+  "schema": "psl.publish_test_migration.v1",
+  "version": "20261105.1644.0317",
+  "moves": [
+    {
+      "from": "skills/artifact-lifecycle/scripts/test_lifecycle.py",
+      "to": "skills/artifact-lifecycle/scripts/test/test_lifecycle.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_archive_collision.py",
+      "to": "skills/docx/scripts/test/test_archive_collision.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_archive_deliverables.py",
+      "to": "skills/docx/scripts/test/test_archive_deliverables.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_cleanup_task.py",
+      "to": "skills/docx/scripts/test/test_cleanup_task.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_cli_task_paths.py",
+      "to": "skills/docx/scripts/test/test_cli_task_paths.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_delivery_api.py",
+      "to": "skills/docx/scripts/test/test_delivery_api.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_compact_receipt.py",
+      "to": "skills/docx/scripts/test/test_docx_compact_receipt.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_controlled_flow.py",
+      "to": "skills/docx/scripts/test/test_docx_controlled_flow.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_delivery.py",
+      "to": "skills/docx/scripts/test/test_docx_delivery.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_editing.py",
+      "to": "skills/docx/scripts/test/test_docx_editing.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_generation.py",
+      "to": "skills/docx/scripts/test/test_docx_generation.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_io.py",
+      "to": "skills/docx/scripts/test/test_docx_io.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_layout_delivery.py",
+      "to": "skills/docx/scripts/test/test_docx_layout_delivery.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_legacy_entry.py",
+      "to": "skills/docx/scripts/test/test_docx_legacy_entry.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_official_pagination_defaults.py",
+      "to": "skills/docx/scripts/test/test_docx_official_pagination_defaults.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_output_channels.py",
+      "to": "skills/docx/scripts/test/test_docx_output_channels.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_p1_layout.py",
+      "to": "skills/docx/scripts/test/test_docx_p1_layout.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_p2_layout.py",
+      "to": "skills/docx/scripts/test/test_docx_p2_layout.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_pagination_governance.py",
+      "to": "skills/docx/scripts/test/test_docx_pagination_governance.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_read_fastpath.py",
+      "to": "skills/docx/scripts/test/test_docx_read_fastpath.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_receipt_cleanup.py",
+      "to": "skills/docx/scripts/test/test_docx_receipt_cleanup.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_reference_loading.py",
+      "to": "skills/docx/scripts/test/test_docx_reference_loading.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_routing.py",
+      "to": "skills/docx/scripts/test/test_docx_routing.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_runtime.py",
+      "to": "skills/docx/scripts/test/test_docx_runtime.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_simple_fastpath.py",
+      "to": "skills/docx/scripts/test/test_docx_simple_fastpath.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_stability.py",
+      "to": "skills/docx/scripts/test/test_docx_stability.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_task_lazy_routing.py",
+      "to": "skills/docx/scripts/test/test_docx_task_lazy_routing.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_task_reliability.py",
+      "to": "skills/docx/scripts/test/test_docx_task_reliability.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_token_routing.py",
+      "to": "skills/docx/scripts/test/test_docx_token_routing.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_typography.py",
+      "to": "skills/docx/scripts/test/test_docx_typography.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_edit_delivery.py",
+      "to": "skills/docx/scripts/test/test_edit_delivery.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_flat_temporary.py",
+      "to": "skills/docx/scripts/test/test_flat_temporary.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_output_location.py",
+      "to": "skills/docx/scripts/test/test_output_location.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_run_docx_task.py",
+      "to": "skills/docx/scripts/test/test_run_docx_task.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_runtime_modules.py",
+      "to": "skills/docx/scripts/test/test_runtime_modules.py"
+    },
+    {
+      "from": "skills/docx/scripts/test_terminal_cleanup.py",
+      "to": "skills/docx/scripts/test/test_terminal_cleanup.py"
+    },
+    {
+      "from": "skills/et/scripts/test_et_cli.py",
+      "to": "skills/et/scripts/test/test_et_cli.py"
+    },
+    {
+      "from": "skills/et/scripts/test_et_table_analysis.py",
+      "to": "skills/et/scripts/test/test_et_table_analysis.py"
+    },
+    {
+      "from": "skills/et/scripts/test_et_table_quality_preview.py",
+      "to": "skills/et/scripts/test/test_et_table_quality_preview.py"
+    },
+    {
+      "from": "skills/et/scripts/test_et_table_row_selection.py",
+      "to": "skills/et/scripts/test/test_et_table_row_selection.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_accounting.py",
+      "to": "skills/et/scripts/test/test_wps_accounting.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8.py",
+      "to": "skills/et/scripts/test/test_wps_biff8.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_audit.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_audit.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_builtin_names.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_builtin_names.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_conditional.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_conditional.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_drawing_notes.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_drawing_notes.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_names.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_names.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_noncell.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_noncell.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_print_titles_memfunc.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_print_titles_memfunc.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_salvage.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_salvage.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff8_salvage_hardening.py",
+      "to": "skills/et/scripts/test/test_wps_biff8_salvage_hardening.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff_codepage_decl.py",
+      "to": "skills/et/scripts/test/test_wps_biff_codepage_decl.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff_reading.py",
+      "to": "skills/et/scripts/test/test_wps_biff_reading.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_biff_tablestyles.py",
+      "to": "skills/et/scripts/test/test_wps_biff_tablestyles.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_cfb.py",
+      "to": "skills/et/scripts/test/test_wps_cfb.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_continue.py",
+      "to": "skills/et/scripts/test/test_wps_continue.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_data_policy.py",
+      "to": "skills/et/scripts/test/test_wps_data_policy.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_dxf.py",
+      "to": "skills/et/scripts/test/test_wps_dxf.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_dxf_integration.py",
+      "to": "skills/et/scripts/test/test_wps_dxf_integration.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_dxf_readability.py",
+      "to": "skills/et/scripts/test/test_wps_dxf_readability.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_dxf_semantics.py",
+      "to": "skills/et/scripts/test/test_wps_dxf_semantics.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_embedded_charts.py",
+      "to": "skills/et/scripts/test/test_wps_embedded_charts.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_et_capacity.py",
+      "to": "skills/et/scripts/test/test_wps_et_capacity.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_et_errors.py",
+      "to": "skills/et/scripts/test/test_wps_et_errors.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_file_access.py",
+      "to": "skills/et/scripts/test/test_wps_file_access.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_format_rules.py",
+      "to": "skills/et/scripts/test/test_wps_format_rules.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_formula_groups.py",
+      "to": "skills/et/scripts/test/test_wps_formula_groups.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_internal_links.py",
+      "to": "skills/et/scripts/test/test_wps_internal_links.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_iso_date.py",
+      "to": "skills/et/scripts/test/test_wps_iso_date.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_legacy_compat.py",
+      "to": "skills/et/scripts/test/test_wps_legacy_compat.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_numeric.py",
+      "to": "skills/et/scripts/test/test_wps_numeric.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_ooxml_sheet.py",
+      "to": "skills/et/scripts/test/test_wps_ooxml_sheet.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_phonetic.py",
+      "to": "skills/et/scripts/test/test_wps_phonetic.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_pure_tables.py",
+      "to": "skills/et/scripts/test/test_wps_pure_tables.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_read_view.py",
+      "to": "skills/et/scripts/test/test_wps_read_view.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_rich_strings.py",
+      "to": "skills/et/scripts/test/test_wps_rich_strings.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_row_column_formats.py",
+      "to": "skills/et/scripts/test/test_wps_row_column_formats.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_sheet_comments.py",
+      "to": "skills/et/scripts/test/test_wps_sheet_comments.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_spreadsheet_stability.py",
+      "to": "skills/et/scripts/test/test_wps_spreadsheet_stability.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_style_inheritance.py",
+      "to": "skills/et/scripts/test/test_wps_style_inheritance.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_template_compatibility.py",
+      "to": "skills/et/scripts/test/test_wps_template_compatibility.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_template_metadata.py",
+      "to": "skills/et/scripts/test/test_wps_template_metadata.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_visibility.py",
+      "to": "skills/et/scripts/test/test_wps_visibility.py"
+    },
+    {
+      "from": "skills/et/scripts/test_wps_vml_notes.py",
+      "to": "skills/et/scripts/test/test_wps_vml_notes.py"
+    },
+    {
+      "from": "skills/et/scripts/verify_et_analysis.py",
+      "to": "skills/et/scripts/test/verify_et_analysis.py"
+    },
+    {
+      "from": "skills/et/scripts/verify_et_samples.py",
+      "to": "skills/et/scripts/test/verify_et_samples.py"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd.py",
+      "to": "skills/ofd/scripts/test/test_ofd.py"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_bundled_fonts.py",
+      "to": "skills/ofd/scripts/test/test_ofd_bundled_fonts.py"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_compat.py",
+      "to": "skills/ofd/scripts/test/test_ofd_compat.py"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_generate.py",
+      "to": "skills/ofd/scripts/test/test_ofd_generate.py"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_resource_recovery.py",
+      "to": "skills/ofd/scripts/test/test_ofd_resource_recovery.py"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_structure.py",
+      "to": "skills/ofd/scripts/test/test_ofd_structure.py"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_views.py",
+      "to": "skills/ofd/scripts/test/test_ofd_views.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_task_cli_support.py",
+      "to": "skills/wps/scripts/test/test_task_cli_support.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps.py",
+      "to": "skills/wps/scripts/test/test_wps.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_comments.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_comments.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_headers.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_headers.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_ownership.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_ownership.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_refs.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_refs.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_shapes.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_shapes.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_tables.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_tables.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_cfb.py",
+      "to": "skills/wps/scripts/test/test_wps_cfb.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_cfb_padding.py",
+      "to": "skills/wps/scripts/test/test_wps_cfb_padding.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_charprops.py",
+      "to": "skills/wps/scripts/test/test_wps_charprops.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_content_validation.py",
+      "to": "skills/wps/scripts/test/test_wps_content_validation.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_delivery.py",
+      "to": "skills/wps/scripts/test/test_wps_delivery.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_diagnostics.py",
+      "to": "skills/wps/scripts/test/test_wps_diagnostics.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_doc_extensions.py",
+      "to": "skills/wps/scripts/test/test_wps_doc_extensions.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_doc_versions.py",
+      "to": "skills/wps/scripts/test/test_wps_doc_versions.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_edit.py",
+      "to": "skills/wps/scripts/test/test_wps_edit.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_export.py",
+      "to": "skills/wps/scripts/test/test_wps_export.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_failure_diagnostics.py",
+      "to": "skills/wps/scripts/test/test_wps_failure_diagnostics.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_hidden.py",
+      "to": "skills/wps/scripts/test/test_wps_hidden.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_huge_papx.py",
+      "to": "skills/wps/scripts/test/test_wps_huge_papx.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_lazy_render.py",
+      "to": "skills/wps/scripts/test/test_wps_lazy_render.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_next_iteration.py",
+      "to": "skills/wps/scripts/test/test_wps_next_iteration.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_official_defaults.py",
+      "to": "skills/wps/scripts/test/test_wps_official_defaults.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_ooxml.py",
+      "to": "skills/wps/scripts/test/test_wps_ooxml.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_ooxml_related.py",
+      "to": "skills/wps/scripts/test/test_wps_ooxml_related.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_output_contract.py",
+      "to": "skills/wps/scripts/test/test_wps_output_contract.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_paragraph_evidence.py",
+      "to": "skills/wps/scripts/test/test_wps_paragraph_evidence.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_paragraph_sources.py",
+      "to": "skills/wps/scripts/test/test_wps_paragraph_sources.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_partial_reflow.py",
+      "to": "skills/wps/scripts/test/test_wps_partial_reflow.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_publication.py",
+      "to": "skills/wps/scripts/test/test_wps_publication.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_publish_failure.py",
+      "to": "skills/wps/scripts/test/test_wps_publish_failure.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_routing.py",
+      "to": "skills/wps/scripts/test/test_wps_routing.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_geometry.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_geometry.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_layout.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_layout.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_merges.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_merges.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_reading.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_reading.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_recovery.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_recovery.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_structure.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_structure.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_sample_acceptance.py",
+      "to": "skills/wps/scripts/test/test_wps_sample_acceptance.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_selective.py",
+      "to": "skills/wps/scripts/test/test_wps_selective.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_stories.py",
+      "to": "skills/wps/scripts/test/test_wps_stories.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_strict_word.py",
+      "to": "skills/wps/scripts/test/test_wps_strict_word.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_table_layout.py",
+      "to": "skills/wps/scripts/test/test_wps_table_layout.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_tables.py",
+      "to": "skills/wps/scripts/test/test_wps_tables.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_task.py",
+      "to": "skills/wps/scripts/test/test_wps_task.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_task_paths.py",
+      "to": "skills/wps/scripts/test/test_wps_task_paths.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_text_recovery.py",
+      "to": "skills/wps/scripts/test/test_wps_text_recovery.py"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_word_profile.py",
+      "to": "skills/wps/scripts/test/test_wps_word_profile.py"
+    },
+    {
+      "from": "skills/wps/scripts/verify_wps_sample.py",
+      "to": "skills/wps/scripts/test/verify_wps_sample.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_calculation_reliability.py",
+      "to": "skills/xlsx/scripts/test/test_calculation_reliability.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_formula_engine.py",
+      "to": "skills/xlsx/scripts/test/test_formula_engine.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_formula_functions.py",
+      "to": "skills/xlsx/scripts/test/test_formula_functions.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_formula_workflows.py",
+      "to": "skills/xlsx/scripts/test/test_formula_workflows.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_stdlib_xlsx.py",
+      "to": "skills/xlsx/scripts/test/test_stdlib_xlsx.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_advanced.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_advanced.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_analysis.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_analysis.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_appearance.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_appearance.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_archive_sync.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_archive_sync.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_boundary.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_boundary.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_cli_boundaries.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_cli_boundaries.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_customers.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_customers.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_daily.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_daily.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_dashboard.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_dashboard.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_delivery.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_delivery.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_deposit_structure.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_deposit_structure.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_deposits.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_deposits.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_et_entrypoint.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_et_entrypoint.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_header_candidates.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_header_candidates.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_headers.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_headers.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_hierarchy.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_hierarchy.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_identify.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_identify.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_management.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_management.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_management_integration.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_management_integration.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_management_policy.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_management_policy.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_match.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_match.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_maturity.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_maturity.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_paths.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_paths.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_rank_share.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_rank_share.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_read_view.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_read_view.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_reconcile.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_reconcile.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_result_export.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_result_export.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_rows.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_rows.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_safety_regressions.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_safety_regressions.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_tabular.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_tabular.py"
+    },
+    {
+      "from": "skills/xlsx/scripts/test_xlsx_wps_result.py",
+      "to": "skills/xlsx/scripts/test/test_xlsx_wps_result.py"
+    },
+    {
+      "from": "tests/pptx/test_images.py",
+      "to": "skills/pptx/scripts/test/test_images.py"
+    },
+    {
+      "from": "tests/pptx/test_package.py",
+      "to": "skills/pptx/scripts/test/test_package.py"
+    },
+    {
+      "from": "tests/pptx/test_svg_limits.py",
+      "to": "skills/pptx/scripts/test/test_svg_limits.py"
+    },
+    {
+      "from": "tests/pptx/test_v680_inspection.py",
+      "to": "skills/pptx/scripts/test/test_v680_inspection.py"
+    },
+    {
+      "from": "tests/pptx/test_v680_native.py",
+      "to": "skills/pptx/scripts/test/test_v680_native.py"
+    },
+    {
+      "from": "tests/pptx/test_v680_render.py",
+      "to": "skills/pptx/scripts/test/test_v680_render.py"
+    },
+    {
+      "from": "tests/pptx/test_validation.py",
+      "to": "skills/pptx/scripts/test/test_validation.py"
+    },
+    {
+      "from": "tests/pptx/test_workflow.py",
+      "to": "skills/pptx/scripts/test/test_workflow.py"
+    },
+    {
+      "from": "tests/test_ofd_postfix_review.py",
+      "to": "skills/ofd/scripts/test/test_ofd_postfix_review.py"
+    }
+  ],
+  "exclusions": [
+    "uncommitted CLI implementation and tests",
+    "uncommitted DOCX/WPS typography changes",
+    "release ZIP changes",
+    "private local audit logs and user acceptance files"
+  ],
+  "remote_base": "fcc016e",
+  "verification": {
+    "base": "fcc016e",
+    "comparison": {
+      "before": 2064,
+      "after": 2072,
+      "removed": [],
+      "added": [
+        [
+          "test_skill_test_runner.TestRunnerTests.test_empty_discovery_is_not_success",
+          1
+        ],
+        [
+          "test_skill_test_runner.TestRunnerTests.test_failures_keep_nonzero_exit_and_diagnostics",
+          1
+        ],
+        [
+          "test_skill_test_runner.TestRunnerTests.test_import_error_cannot_be_reported_as_a_passing_suite",
+          1
+        ],
+        [
+          "test_skill_test_runner.TestRunnerTests.test_nonmatching_pattern_cannot_be_reported_as_a_passing_suite",
+          1
+        ],
+        [
+          "test_skill_test_runner.TestRunnerTests.test_real_tests_are_counted_and_run",
+          1
+        ],
+        [
+          "test_check_skill.CheckSkillTests.test_misplaced_test_scripts_fail_both_modes_without_execution",
+          1
+        ],
+        [
+          "test_check_skill.CheckSkillTests.test_test_name_classifier_does_not_classify_data_or_checks",
+          1
+        ],
+        [
+          "test_check_skill.CheckSkillTests.test_test_subdirectory_and_runtime_checks_are_valid",
+          1
+        ]
+      ]
+    },
+    "suites": {
+      "artifact-lifecycle": {
+        "directory": "skills/artifact-lifecycle/scripts/test",
+        "collected": 16,
+        "run": 16,
+        "passed": 16,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 0.3159952920395881
+      },
+      "docx": {
+        "directory": "skills/docx/scripts/test",
+        "collected": 399,
+        "run": 399,
+        "passed": 399,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 22.217276541981846
+      },
+      "et": {
+        "directory": "skills/et/scripts/test",
+        "collected": 450,
+        "run": 450,
+        "passed": 450,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 6.159674583002925
+      },
+      "ofd": {
+        "directory": "skills/ofd/scripts/test",
+        "collected": 149,
+        "run": 149,
+        "passed": 149,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 2.2863908340223134
+      },
+      "pptx": {
+        "directory": "skills/pptx/scripts/test",
+        "collected": 89,
+        "run": 89,
+        "passed": 89,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 9.843154417001642
+      },
+      "wps": {
+        "directory": "skills/wps/scripts/test",
+        "collected": 435,
+        "run": 435,
+        "passed": 435,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 7.577267582993954
+      },
+      "xlsx": {
+        "directory": "skills/xlsx/scripts/test",
+        "collected": 366,
+        "run": 366,
+        "passed": 366,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 24.691664707963355
+      },
+      "repository": {
+        "directory": "tests",
+        "collected": 134,
+        "run": 134,
+        "passed": 134,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 19.11826591694262
+      },
+      "pptx_adapter": {
+        "directory": "tests/pptx",
+        "collected": 3,
+        "run": 3,
+        "passed": 3,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 0.6138314170530066
+      },
+      "checker": {
+        "directory": "skills/skill-development-standards/scripts/test",
+        "collected": 31,
+        "run": 31,
+        "passed": 31,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 0.25710387504659593
+      }
+    },
+    "structure": {
+      "skills": 10,
+      "strict": "passed"
+    },
+    "biff8": {
+      "collected": 15,
+      "passed": 15
+    },
+    "platform": "macOS arm64 / Python 3.12.11 / Expat 2.6.3",
+    "limitations": [
+      "No Linux, Windows, remote CI, new real-format samples, visual-client, or Pylint verification in this publishing run.",
+      "Earlier local migration report covered the full dirty workspace; this report covers only the filtered publish candidate.",
+      "Existing ZIPs, private raw audit logs, unrelated CLI and typography changes, and user acceptance data are intentionally excluded."
+    ]
+  }
+}
