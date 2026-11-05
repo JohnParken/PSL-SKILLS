@@ -2,7 +2,7 @@
 
 ## 入口盘点
 
-本次盘点覆盖仓库全部7个Skill。下表脚本路径均相对于各Skill真实目录，执行前替换实际路径，任务工作目录由宿主确认。开发规范本身未修改；纯文本写作不增加无用脚本。
+下表列出仓库维护适配器登记的自检入口与人工检查方式，包含新增的 PPTX 入口。脚本路径均相对于各 Skill 真实目录，执行前替换实际路径，任务工作目录由宿主确认。开发规范本身未修改；纯文本写作不增加无用脚本。
 
 | Skill | 入口 | 检查类型与原结果契约 |
 |---|---|---|
@@ -10,29 +10,31 @@
 | docx | `scripts/run_docx_task.py check` | 环境、目录探针与锁；stdout的check-ok，失败stderr的auto-cleanup-check-failed，退出0/1 |
 | docx | `scripts/create_docx.py --check`、`scripts/archive_deliverables.py --check` | 环境与目录能力；stdout的check-ok，失败stderr的check-failed，退出0/1；可选归档警告不等于主环境失败 |
 | xlsx | `scripts/stdlib_xlsx.py check` | 导入、模板及有限计算；单个JSON的ready/failed/unsupported，退出0/1 |
+| pptx | `scripts/pptx.py check` | 隔离环境与内存示例导出；单个 JSON 的 ok=true、environment-ok、in_memory_export=passed，退出0/2；真实业务产物仍需另行验收 |
 | wps | `scripts/read_wps.py --check` | 依赖与版本；stdout的environment-ok及OOXML可用性；受控失败stderr的environment-failed，依赖失败退出1，Python不足退出2 |
 | ofd | `scripts/read_ofd.py --check` | 版本、zlib往返、安全文件操作能力；成功文本environment-ok；失败仍为JSON的failed/unsupported及diagnostics，退出1/4 |
 | artifact-lifecycle | `scripts/lifecycle.py check` | 安全文件操作与本轮写入探针；单个JSON的environment-ok/error，退出0/1 |
 | bank-writing | 无脚本 | 人工确认任务、素材及资源可读；缺条件时说明具体缺口。无进程、stdout/stderr或退出码，不虚构执行证据 |
 | skill-development-standards | 入口Python版本检查、检查器`--help`；`scripts/check_skill.py 目标 --strict` | 版本命令已打印environment-ok，失败为断言诊断/非零退出；help是入口可用性信息。结构检查输出OK或ERROR/WARNING，不是环境/业务产物验收 |
 
-8个可执行环境自检入口增加 `check_kind=environment artifact_validation=not_run`。文本成功标记仍在stdout，文本受控失败标记在stderr；JSON入口只追加同名字段，不在JSON前后插入普通文字。未进入main的导入失败、语法错误或参数错误可能只有stderr诊断及非零退出，仍必须完整回传，不能冒称自检已运行。
+9个可执行环境自检入口使用 `check_kind=environment artifact_validation=not_run`。文本成功标记仍在stdout，文本受控失败标记在stderr；JSON入口使用同名字段，不在JSON前后插入普通文字。PPTX 的内存样例结构检查放在 `self_test`，不把它当作用户产物验收。未进入main的导入失败、语法错误或参数错误可能只有stderr诊断及非零退出，仍必须完整回传，不能冒称自检已运行。
 
 环境自检不产生业务文档，也不证明产物存在。DOCX的`office/validate.py`已有结构验收通过/失败提示及未执行XSD/视觉验证的边界；WPS样本验收脚本已有JSON结果；XLSX的写入/计算结果使用原status、output_written及计算诊断。这些不当作环境自检，也不因增加自检标记而扩大验收能力。XLSX legacy检查工具仍不进入维护后的业务流程。
 
 ## 仓库级回传适配器
 
-`tools/run_skill_check.py`用于仓库维护与宿主接入测试，标准库实现，不随独立Skill分发，不是任意命令执行器。它只调用固定的上述8个环境入口或现有结构检查器，使用启动它的已确认解释器及`-I -S -B`，不安装依赖、不改变Skill原输出、不生成业务文档。使用前确认相应入口所需环境；不同Skill的版本及平台要求仍各自适用。
+`tools/run_skill_check.py`用于仓库维护与宿主接入测试，标准库实现，不随独立Skill分发，不是任意命令执行器。它只调用固定的上述9个环境入口或现有结构检查器，使用启动它的已确认解释器及`-I -S -B`，不安装依赖、不改变Skill原输出、不生成业务文档。使用前确认相应入口所需环境；不同Skill的版本及平台要求仍各自适用。
 
 在宿主已确认的任务目录运行以下命令，先将`<repo_dir>`替换为已确认的仓库真实路径，不能按独立Skill安装位置猜测仓库路径：
 
 ```console
 python -I -S -B "<repo_dir>/tools/run_skill_check.py" docx-read --task-dir .
 python -I -S -B "<repo_dir>/tools/run_skill_check.py" xlsx --task-dir .
+python -I -S -B "<repo_dir>/tools/run_skill_check.py" pptx --task-dir .
 python -I -S -B "<repo_dir>/tools/run_skill_check.py" skill-structure --skill docx --task-dir .
 ```
 
-以上是三次独立调用示例，按需要选择，不要求全部执行。环境入口标识还有docx-task、docx-create、docx-archive、wps、ofd和artifact-lifecycle。`--task-dir`必填，仅允许当前已确认工作目录及其子目录，不接收绝对/父目录路径；不为适配器另建无用目录。不得把独立Skill安装目录当任务目录。`--timeout`默认30秒，必须大于0且不超过60秒。
+以上是四次独立调用示例，按需要选择，不要求全部执行。环境入口标识还有docx-task、docx-create、docx-archive、wps、ofd和artifact-lifecycle。`--task-dir`必填，仅允许当前已确认工作目录及其子目录，不接收绝对/父目录路径；不为适配器另建无用目录。不得把独立Skill安装目录当任务目录。`--timeout`默认30秒，必须大于0且不超过60秒。
 
 适配器输出一个JSON，包含：
 
@@ -78,3 +80,4 @@ python -I -S -B "<repo_dir>/tools/run_skill_check.py" skill-structure --skill do
 未执行Linux容器、Windows、真实用户文档验收、视觉验收或自动选Skill测试，未修改分发ZIP。公共生命周期修改仅涉及自有CLI与说明，共享实现及来源哈希保持原样。没有修改开发规范规则/检查器，也没有接管或删除历史任务文件。
 
 Subagent execution record：一次调用luna__check_contract_tests，luna_worker / gpt-6-luna / max，仅负责tests/test_self_check_contracts.py。Main-agent work：入口盘点、行为与边界决定、实现、适配器及其测试、说明、回归、证据解释、代码审查和最终验收。
+

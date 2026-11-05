@@ -17,7 +17,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_LIMIT = 65536
-SKILLS = ('artifact-lifecycle', 'bank-writing', 'docx', 'ofd',
+SKILLS = ('artifact-lifecycle', 'bank-writing', 'docx', 'ofd', 'pptx',
           'skill-development-standards', 'wps', 'xlsx')
 CHECKS = {
     'docx-read': ('docx/scripts/read_docx.py', ['--check'], 'read-check-ok'),
@@ -28,9 +28,10 @@ CHECKS = {
     'ofd': ('ofd/scripts/read_ofd.py', ['--check'],
             'environment-ok Python>=3.10 Expat>=2.6.0 stdlib-only'),
     'xlsx': ('xlsx/scripts/stdlib_xlsx.py', ['check'], 'ready'),
+    'pptx': ('pptx/scripts/pptx.py', ['check'], 'environment-ok'),
     'artifact-lifecycle': ('artifact-lifecycle/scripts/lifecycle.py', ['check'], 'environment-ok'),
 }
-JSON_CHECKS = frozenset(('xlsx', 'artifact-lifecycle'))
+JSON_CHECKS = frozenset(('xlsx', 'artifact-lifecycle', 'pptx'))
 
 
 def envelope(check_id, check_kind='environment'):
@@ -67,6 +68,11 @@ def check_passed(check_id, report, marker):
         try:
             data = json.loads(report['stdout'])
         except (ValueError, TypeError):
+            return False
+        if check_id == 'pptx' and (
+            not isinstance(data, dict) or data.get('ok') is not True or data.get('command') != 'check'
+            or data.get('in_memory_export') != 'passed'
+        ):
             return False
         return (isinstance(data, dict) and data.get('status') == marker
                 and data.get('check_kind') == 'environment'

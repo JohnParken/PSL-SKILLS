@@ -1,0 +1,91 @@
+{
+  "schema": "psl.pptx.verification.v1",
+  "verified_at_utc": "2026-11-04T08:26:30Z",
+  "skill_version": "20261104.1519.0362",
+  "source_repository": "JohnParken/ppt-master",
+  "source_commit": "c951bf4a3a4af7cbc2382447f3d2e7719b292bd2",
+  "target_base_commit": "b85f536145e2cf02f0216c3ca5dd592b0cdacba7",
+  "environment": {
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "python": "3.12.14",
+    "expat": "expat_2.8.3"
+  },
+  "regression": {
+    "command": "python -I -S -B -m unittest discover -s tests/pptx -p 'test_*.py'",
+    "exit_code": 0,
+    "tests": 66,
+    "passed": 66,
+    "failed": 0,
+    "skipped": 0,
+    "fixture_kind": "synthetic and fixed original small image fixtures"
+  },
+  "strict_skill_check": {
+    "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/pptx --strict",
+    "exit_code": 0,
+    "stdout": "OK skills/pptx"
+  },
+  "static_checks": {
+    "runtime_python_files": 69,
+    "python_3_10_grammar": "passed",
+    "line_length_200": "passed",
+    "one_statement_per_line": "passed",
+    "stdlib_or_distributed_imports": "passed",
+    "pylint": "not_installed_not_run"
+  },
+  "runtime_isolation": {
+    "cli_tests": "-I -S -B with PATH empty",
+    "site_packages": "disabled",
+    "external_programs": "not_used",
+    "network_services": "not_used"
+  },
+  "readonly_installation": {
+    "permissions": "directories0555 files0444",
+    "enforcement": "audit hook rejects writes/mutations in installation; source hashes unchanged",
+    "unprivileged_account": "not_verified; container rejected uid/gid mapping"
+  },
+  "behavior_checks": [
+    "editable Chinese/English text and notes",
+    "all seven declared native chart types",
+    "native semantic table and Office Math",
+    "chart cache and embedded workbook values",
+    "PNG/JPEG original bytes and native crop/rotation",
+    "same-document SVG use and bounded expansion",
+    "unsupported CSS and ambiguous metadata rejection",
+    "no output overwrite or partial files",
+    "parallel exports and exclusive publication",
+    "JSON stdout and stderr with actual exit status",
+    "repository check adapter success/failure contracts"
+  ],
+  "manual_path_race_checks": [
+    "parent changed to symlink after path check: publication rejected without outside write",
+    "input replaced with symlink after path check: read rejected",
+    "existing output retained byte-for-byte"
+  ],
+  "independent_development_readback": {
+    "python_pptx": "1.0.2",
+    "openpyxl": "3.1.5",
+    "runtime_dependency": false,
+    "results": [
+      "four-slide sample opens in parser",
+      "canvas12192000x6858000EMU",
+      "two chart series values match authored values",
+      "native table4rows3columns and header match",
+      "all four note texts match",
+      "embedded workbook rows match chart values",
+      "whitespace and formula-like strings preserved as strings",
+      "no workbook reader warnings after Normal-style fix"
+    ]
+  },
+  "not_verified": [
+    "PowerPoint/WPS desktop opening and visual layout",
+    "complete OOXML XSD conformance",
+    "real business document fixtures",
+    "real user harness registration/download/model delivery",
+    "Windows (unsupported runtime)",
+    "macOS runtime",
+    "Python3.10/3.11 execution (grammar only checked for3.10)",
+    "full other-skill regression suite",
+    "unprivileged OS account"
+  ],
+  "scope": "No changes to standards checker or unrelated business skills; PPTX runtime has no third-party Python packages."
+}
