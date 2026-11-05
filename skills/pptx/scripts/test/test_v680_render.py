@@ -61,7 +61,12 @@ class Render680Tests(unittest.TestCase):
             result = json.loads(process.stdout)
             self.assertTrue(result['ok'])
             self.assertEqual(result['structural_validation'], 'passed')
-            self.assertEqual(process.stderr, '')
+            registration = json.loads(process.stderr)
+            self.assertEqual(registration['schema'], 'psl.pptx.publication.v1')
+            self.assertEqual(registration['event'], 'planned')
+            self.assertEqual(registration['final'], 'render.pptx')
+            self.assertEqual(registration['sha256'], result['sha256'])
+            self.assertTrue(result['publication']['cleanup_complete'])
             data = (Path(directory) / 'render.pptx').read_bytes()
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             return ET.fromstring(archive.read('ppt/slides/slide1.xml'))

@@ -95,9 +95,9 @@ class AlternateContentInspectionTests(unittest.TestCase):
         parts["ppt/slides/slide1.xml"] = slide_xml(alternate(choice(text_shape(2, "selected")), invalid)).encode("utf-8")
         with self.assertRaisesRegex(ValidationError, "unresolved relationship"):
             validate_presentation(zipped(parts))
-        duplicate = alternate(choice(text_shape(2, "selected")), text_shape(2, "duplicate"))
-        parts["ppt/slides/slide1.xml"] = slide_xml(duplicate).encode("utf-8")
-        with self.assertRaisesRegex(ValidationError, "duplicate drawing object IDs"):
+        invalid_id = alternate(choice(text_shape(2, "selected")), text_shape(0, "invalid ID"))
+        parts["ppt/slides/slide1.xml"] = slide_xml(invalid_id).encode("utf-8")
+        with self.assertRaisesRegex(ValidationError, "integer is outside the supported range"):
             validate_presentation(zipped(parts))
 
     def test_ambiguous_branches_and_unreadable_choices_fail_explicitly(self) -> None:

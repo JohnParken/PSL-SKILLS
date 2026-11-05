@@ -72,9 +72,29 @@ SLIDE_FIELDS = frozenset({"svg", "svg_path", "notes"})
 class TaskError(ValueError):
     """An explicit input, environment, or task-boundary error."""
 
-    def __init__(self, message: str, code: str = "invalid_input") -> None:
+    def __init__(self, message: str, code: str = "invalid_input", **details: object) -> None:
         super().__init__(message)
         self.code = code
+        self.details = details
+
+
+def _located_error(error: Exception, **location: object) -> TaskError:
+    details = {**location, **getattr(error, "details", {})}
+    if isinstance(error, OSError):
+        return TaskError("Task file operation failed; verify access and available storage", "io_error", **details)
+    return TaskError(str(error), getattr(error, "code", "conversion_or_validation_failed"), **details)
+
+
+def _element_location(element: ET.Element, parents: dict[ET.Element, ET.Element], attribute: str | None) -> dict:
+    tag = element.tag.rsplit("}", 1)[-1]
+    location = {"element_tag": tag, "field_path": f"svg.{tag}" + (f".@{attribute}" if attribute else "")}
+    current = element
+    while current is not None:
+        if current.get("id"):
+            location["element_id"] = current.get("id")
+            break
+        current = parents.get(current)
+    return location
 
 
 @dataclass(frozen=True)
@@ -291,23 +311,25 @@ def _check_native_payload(value: object, kind: str | None) -> int:
     expanded_cost = encoded_size
     if kind == "chart":
         if "chart_type" in value:
-            raise TaskError("Use the canonical chart type field; chart_type aliases are unsupported")
+            raise TaskError("Use the canonical chart type field; chart_type aliases are unsupported", field_path="chart.chart_type")
         chart_type = str(value.get("type", "column")).lower()
         if chart_type not in {"column", "bar", "line", "area", "pie", "doughnut", "scatter"}:
-            raise TaskError("Supported native chart types: column, bar, line, area, pie, doughnut, scatter")
+            raise TaskError("Supported native chart types: column, bar, line, area, pie, doughnut, scatter", field_path="chart.type")
         series = value.get("series", [])
         categories = value.get("categories", [])
-        if not isinstance(series, list) or not 1 <= len(series) <= 50 or not isinstance(categories, list) or len(categories) > 2000:
-            raise TaskError("Charts require 1–50 series and at most 2000 categories", "resource_limit")
+        if not isinstance(series, list) or not 1 <= len(series) <= 50:
+            raise TaskError("Charts require 1–50 series", "resource_limit", field_path="chart.series")
+        if not isinstance(categories, list) or len(categories) > 2000:
+            raise TaskError("Charts permit at most 2000 categories", "resource_limit", field_path="chart.categories")
         point_count = 0
-        for item in series:
+        for index, item in enumerate(series):
             if not isinstance(item, dict):
-                raise TaskError("Each chart series must be a JSON object")
+                raise TaskError("Each chart series must be a JSON object", field_path=f"chart.series[{index}]")
             lengths = [len(categories)]
             for field in ("values", "x", "y", "xs", "ys", "points"):
                 values = item.get(field, [])
                 if not isinstance(values, list) or len(values) > 2000:
-                    raise TaskError("Chart series data must be lists with at most 2000 points", "resource_limit")
+                    raise TaskError("Chart series data must be lists with at most 2000 points", "resource_limit", field_path=f"chart.series[{index}].{field}")
                 lengths.append(len(values))
             point_count += max(lengths)
         if point_count > 10000:
@@ -364,93 +386,98 @@ def prepare_svg(data: bytes, *, width: float, height: float, native_objects: boo
                     native_reference_ids.add(ancestor.get("id"))
                 ancestor = parent_map.get(ancestor)
     for element in root.iter():
-        tag = element.tag.removeprefix(f"{{{SVG_NS}}}")
-        if tag not in SVG_TAGS:
-            raise TaskError(f"Unsupported SVG element: {tag}")
-        identifier = element.get("id")
-        if identifier:
-            if identifier in seen_ids:
-                raise TaskError("SVG element IDs must be unique within a slide")
-            seen_ids.add(identifier)
-        if "class" in element.attrib:
-            raise TaskError("CSS classes are unsupported; author inline SVG presentation attributes")
-        kind = element.get("data-pptx-replace-with")
-        if kind is not None and kind not in {"chart", "table", "formula"}:
-            raise TaskError("Unsupported native replacement kind")
-        if kind is not None:
-            ancestor = parent_map.get(element)
-            while ancestor is not None:
-                if ancestor.get("data-pptx-replace-with") is not None:
-                    raise TaskError("Native replacement objects must not be nested")
-                ancestor = parent_map.get(ancestor)
-        if kind in {"chart", "table"} and not native_objects:
-            raise TaskError("Native chart/table markers require native_objects=true")
-        if kind in {"chart", "table"} and element.get("data-pptx-native-authority") != "json":
-            raise TaskError("Native charts and tables require explicit data-pptx-native-authority=json")
-        carriers = int("data-pptx-json" in element.attrib) + int("data-pptx-data" in element.attrib)
-        carriers += sum(child.tag == f"{{{SVG_NS}}}metadata" for child in element)
-        if kind is not None and carriers != 1:
-            raise TaskError("Each native object must have exactly one JSON payload carrier")
-        if kind is None and any(name in element.attrib for name in ("data-pptx-json", "data-pptx-data")):
-            raise TaskError("Native JSON payload attributes require a native replacement marker")
-        for attribute, value in list(element.attrib.items()):
-            if attribute.startswith("{") and attribute not in {f"{{{XLINK_NS}}}href", f"{{{XML_NS}}}space", f"{{{XML_NS}}}lang"}:
-                raise TaskError("Unsupported namespaced SVG attribute")
-            if attribute.lower().startswith("on") or attribute in {"data-icon", "xml:base"}:
-                raise TaskError("Scripts, external icon stores and XML base overrides are unsupported")
-            if attribute.startswith("data-") and attribute not in NATIVE_ATTRIBUTES:
-                raise TaskError(f"Unsupported SVG metadata attribute: {attribute}")
-            if not attribute.startswith(("{", "data-")) and attribute not in SVG_ATTRIBUTES:
-                raise TaskError(f"Unsupported SVG attribute: {attribute}")
-            if attribute in {"filter", "mask"}:
-                raise TaskError("SVG filter and mask effects are outside this skill's supported subset")
-            if attribute == "style" and ("@" in value or "\\" in value or re.search(r"(?:filter|mask|animation)\s*:", value, re.IGNORECASE)):
-                raise TaskError("Unsupported inline CSS effect or escaped declaration")
-            if attribute == "style":
-                for declaration in value.split(";"):
-                    if not declaration.strip():
-                        continue
-                    property_name, separator, property_value = declaration.partition(":")
-                    if not separator or property_name.strip() not in PRESENTATION_ATTRIBUTES or not property_value.strip():
-                        raise TaskError("Inline CSS contains an unsupported or malformed presentation property")
-                    if "!important" in property_value.lower():
-                        raise TaskError("CSS priority declarations are unsupported")
-            if attribute in {"fill", "stroke", "clip-path", "style", "marker-start", "marker-mid", "marker-end"} and URL_START_RE.search(value):
-                remainder = LOCAL_URL_RE.sub("", value)
-                if URL_START_RE.search(remainder):
-                    raise TaskError("SVG paint and geometry references must be local fragment URLs")
-            if attribute in {"data-pptx-json", "data-pptx-data"}:
-                native_cost += _check_native_payload(strict_json(value), kind)
-            if attribute == "data-pptx-inline-formula":
-                style_bytes = _inline_formula_style_bytes(element, parent_map, paint_bytes)
-                native_cost += _formula_expansion_cost(value, inline=True, style_bytes=style_bytes)
-        if tag == "metadata":
-            parent = parent_map.get(element)
-            parent_kind = parent.get("data-pptx-replace-with") if parent is not None else None
-            if parent_kind not in {"chart", "table", "formula"} or element.get("type") != "application/json" or list(element):
-                raise TaskError("Only JSON metadata inside a native chart/table/formula marker is supported")
-            native_cost += _check_native_payload(strict_json(element.text or ""), parent_kind)
-        if native_cost >= max_expanded_bytes:
-            raise TaskError("Native objects exceed the remaining deck expansion budget", "resource_limit")
-        href_values = [element.get(name) for name in ("href", f"{{{XLINK_NS}}}href") if element.get(name) is not None]
-        if len(set(href_values)) > 1:
-            raise TaskError("href and xlink:href must agree")
-        href = href_values[0] if href_values else None
-        if tag == "image":
-            if not href:
-                raise TaskError("An image requires an href")
-            element.attrib.pop(f"{{{XLINK_NS}}}href", None)
-            uri = _image_uri(href, max_uri_bytes=max_expanded_bytes - expanded_bytes + len(href.encode("utf-8")))
-            expanded_bytes += max(0, len(uri) - len(href.encode("utf-8")))
-            element.set("href", uri)
-        elif href is not None:
-            if tag in {"use", "linearGradient", "radialGradient"}:
-                if not re.fullmatch(r"#[A-Za-z_][A-Za-z0-9_.:-]*", href):
-                    raise TaskError("SVG reuse requires a same-document fragment reference")
-                if tag == "use" and href[1:] in native_reference_ids:
-                    raise TaskError("SVG use cannot clone native chart/table/formula metadata")
-            elif tag != "a":
-                raise TaskError("An href is not supported on this SVG element")
+        attribute = None
+        try:
+            tag = element.tag.removeprefix(f"{{{SVG_NS}}}")
+            if tag not in SVG_TAGS:
+                raise TaskError(f"Unsupported SVG element: {tag}")
+            identifier = element.get("id")
+            if identifier:
+                if identifier in seen_ids:
+                    raise TaskError("SVG element IDs must be unique within a slide")
+                seen_ids.add(identifier)
+            if "class" in element.attrib:
+                raise TaskError("CSS classes are unsupported; author inline SVG presentation attributes")
+            kind = element.get("data-pptx-replace-with")
+            if kind is not None and kind not in {"chart", "table", "formula"}:
+                raise TaskError("Unsupported native replacement kind")
+            if kind is not None:
+                ancestor = parent_map.get(element)
+                while ancestor is not None:
+                    if ancestor.get("data-pptx-replace-with") is not None:
+                        raise TaskError("Native replacement objects must not be nested")
+                    ancestor = parent_map.get(ancestor)
+            if kind in {"chart", "table"} and not native_objects:
+                raise TaskError("Native chart/table markers require native_objects=true")
+            if kind in {"chart", "table"} and element.get("data-pptx-native-authority") != "json":
+                raise TaskError("Native charts and tables require explicit data-pptx-native-authority=json")
+            carriers = int("data-pptx-json" in element.attrib) + int("data-pptx-data" in element.attrib)
+            carriers += sum(child.tag == f"{{{SVG_NS}}}metadata" for child in element)
+            if kind is not None and carriers != 1:
+                raise TaskError("Each native object must have exactly one JSON payload carrier")
+            if kind is None and any(name in element.attrib for name in ("data-pptx-json", "data-pptx-data")):
+                raise TaskError("Native JSON payload attributes require a native replacement marker")
+            for attribute, value in list(element.attrib.items()):
+                if attribute.startswith("{") and attribute not in {f"{{{XLINK_NS}}}href", f"{{{XML_NS}}}space", f"{{{XML_NS}}}lang"}:
+                    raise TaskError("Unsupported namespaced SVG attribute")
+                if attribute.lower().startswith("on") or attribute in {"data-icon", "xml:base"}:
+                    raise TaskError("Scripts, external icon stores and XML base overrides are unsupported")
+                if attribute.startswith("data-") and attribute not in NATIVE_ATTRIBUTES:
+                    raise TaskError(f"Unsupported SVG metadata attribute: {attribute}")
+                if not attribute.startswith(("{", "data-")) and attribute not in SVG_ATTRIBUTES:
+                    raise TaskError(f"Unsupported SVG attribute: {attribute}")
+                if attribute in {"filter", "mask"}:
+                    raise TaskError("SVG filter and mask effects are outside this skill's supported subset")
+                if attribute == "style" and ("@" in value or "\\" in value or re.search(r"(?:filter|mask|animation)\s*:", value, re.IGNORECASE)):
+                    raise TaskError("Unsupported inline CSS effect or escaped declaration")
+                if attribute == "style":
+                    for declaration in value.split(";"):
+                        if not declaration.strip():
+                            continue
+                        property_name, separator, property_value = declaration.partition(":")
+                        if not separator or property_name.strip() not in PRESENTATION_ATTRIBUTES or not property_value.strip():
+                            raise TaskError("Inline CSS contains an unsupported or malformed presentation property")
+                        if "!important" in property_value.lower():
+                            raise TaskError("CSS priority declarations are unsupported")
+                if attribute in {"fill", "stroke", "clip-path", "style", "marker-start", "marker-mid", "marker-end"} and URL_START_RE.search(value):
+                    remainder = LOCAL_URL_RE.sub("", value)
+                    if URL_START_RE.search(remainder):
+                        raise TaskError("SVG paint and geometry references must be local fragment URLs")
+                if attribute in {"data-pptx-json", "data-pptx-data"}:
+                    native_cost += _check_native_payload(strict_json(value), kind)
+                if attribute == "data-pptx-inline-formula":
+                    style_bytes = _inline_formula_style_bytes(element, parent_map, paint_bytes)
+                    native_cost += _formula_expansion_cost(value, inline=True, style_bytes=style_bytes)
+            attribute = None
+            if tag == "metadata":
+                parent = parent_map.get(element)
+                parent_kind = parent.get("data-pptx-replace-with") if parent is not None else None
+                if parent_kind not in {"chart", "table", "formula"} or element.get("type") != "application/json" or list(element):
+                    raise TaskError("Only JSON metadata inside a native chart/table/formula marker is supported")
+                native_cost += _check_native_payload(strict_json(element.text or ""), parent_kind)
+            if native_cost >= max_expanded_bytes:
+                raise TaskError("Native objects exceed the remaining deck expansion budget", "resource_limit")
+            href_values = [element.get(name) for name in ("href", f"{{{XLINK_NS}}}href") if element.get(name) is not None]
+            if len(set(href_values)) > 1:
+                raise TaskError("href and xlink:href must agree")
+            href = href_values[0] if href_values else None
+            if tag == "image":
+                if not href:
+                    raise TaskError("An image requires an href")
+                element.attrib.pop(f"{{{XLINK_NS}}}href", None)
+                uri = _image_uri(href, max_uri_bytes=max_expanded_bytes - expanded_bytes + len(href.encode("utf-8")))
+                expanded_bytes += max(0, len(uri) - len(href.encode("utf-8")))
+                element.set("href", uri)
+            elif href is not None:
+                if tag in {"use", "linearGradient", "radialGradient"}:
+                    if not re.fullmatch(r"#[A-Za-z_][A-Za-z0-9_.:-]*", href):
+                        raise TaskError("SVG reuse requires a same-document fragment reference")
+                    if tag == "use" and href[1:] in native_reference_ids:
+                        raise TaskError("SVG use cannot clone native chart/table/formula metadata")
+                elif tag != "a":
+                    raise TaskError("An href is not supported on this SVG element")
+        except (ValueError, RuntimeError, OSError, OverflowError, TypeError, KeyError, IndexError) as error:
+            raise _located_error(error, **_element_location(element, parent_map, attribute)) from error
     ET.register_namespace("", SVG_NS)
     ET.register_namespace("xlink", XLINK_NS)
     _nodes, expansion_cost = check_expansion_budget(root, max_bytes=max_expanded_bytes - native_cost)
@@ -489,24 +516,27 @@ def load_deck(config: str) -> Deck:
     prepared = []
     expanded_bytes = 0
     for index, slide in enumerate(slides, 1):
-        if not isinstance(slide, dict):
-            raise TaskError(f"Slide {index} must be a JSON object")
-        _unknown_fields(slide, SLIDE_FIELDS, f"Slide {index}")
-        if ("svg" in slide) == ("svg_path" in slide):
-            raise TaskError(f"Slide {index} requires exactly one of svg and svg_path")
-        notes = _text(slide.get("notes", ""), f"Slide {index} notes", 200000)
-        if "svg_path" in slide:
-            svg_bytes = read_limited(task_path(slide["svg_path"]), MAX_SVG_BYTES)
-        else:
-            svg_bytes = _text(slide["svg"], f"Slide {index} SVG", MAX_SVG_BYTES).encode("utf-8")
-        svg, expansion_cost = prepare_svg(
-            svg_bytes, width=width, height=height, native_objects=native_objects,
-            max_expanded_bytes=MAX_EXPANDED_SVG_BYTES - expanded_bytes,
-        )
-        expanded_bytes += expansion_cost
-        if expanded_bytes > MAX_EXPANDED_SVG_BYTES:
-            raise TaskError("Expanded SVG inputs exceed 128 MiB", "resource_limit")
-        prepared.append(PreparedSlide(svg, notes))
+        try:
+            if not isinstance(slide, dict):
+                raise TaskError(f"Slide {index} must be a JSON object")
+            _unknown_fields(slide, SLIDE_FIELDS, f"Slide {index}")
+            if ("svg" in slide) == ("svg_path" in slide):
+                raise TaskError(f"Slide {index} requires exactly one of svg and svg_path")
+            notes = _text(slide.get("notes", ""), f"Slide {index} notes", 200000)
+            if "svg_path" in slide:
+                svg_bytes = read_limited(task_path(slide["svg_path"]), MAX_SVG_BYTES)
+            else:
+                svg_bytes = _text(slide["svg"], f"Slide {index} SVG", MAX_SVG_BYTES).encode("utf-8")
+            svg, expansion_cost = prepare_svg(
+                svg_bytes, width=width, height=height, native_objects=native_objects,
+                max_expanded_bytes=MAX_EXPANDED_SVG_BYTES - expanded_bytes,
+            )
+            expanded_bytes += expansion_cost
+            if expanded_bytes > MAX_EXPANDED_SVG_BYTES:
+                raise TaskError("Expanded SVG inputs exceed 128 MiB", "resource_limit")
+            prepared.append(PreparedSlide(svg, notes))
+        except (ValueError, RuntimeError, OSError, OverflowError, TypeError, KeyError, IndexError) as error:
+            raise _located_error(error, stage="input_validation", slide_number=index, field_path=f"slides[{index - 1}]") from error
     return Deck(title, width, height, text_flow, native_objects, tuple(prepared))
 
 
@@ -520,48 +550,45 @@ def render_deck(deck: Deck) -> bytes:
     # Preserve diagnostics without contaminating the machine-readable stdout.
     with contextlib.redirect_stdout(sys.stderr):
         for index, source in enumerate(deck.slides, 1):
-            converted = convert_svg_to_slide_shapes(
-                root / f"slide-{index}.svg", resource_root=root, svg_text=source.svg,
-                slide_num=index, slide_count=len(deck.slides), image_optimize=False,
-                native_objects=deck.native_objects, text_flow=deck.text_flow,
-                package_parts=package_parts,
-            )
-            slides.append(ConvertedSlide.from_conversion(converted, notes=source.notes))
+            try:
+                converted = convert_svg_to_slide_shapes(
+                    root / f"slide-{index}.svg", resource_root=root, svg_text=source.svg,
+                    slide_num=index, slide_count=len(deck.slides), image_optimize=False,
+                    native_objects=deck.native_objects, text_flow=deck.text_flow,
+                    package_parts=package_parts,
+                )
+                slides.append(ConvertedSlide.from_conversion(converted, notes=source.notes))
+            except (ValueError, RuntimeError, OSError, OverflowError, TypeError, KeyError, IndexError) as error:
+                location = {"stage": "conversion", "slide_number": index}
+                labels = re.findall(r'Failed to convert <([^\s>]+)(?: id="([^"]*)")?>', str(error))
+                if labels:
+                    location["element_tag"] = labels[-1][0]
+                    if labels[-1][1]:
+                        location["element_id"] = labels[-1][1]
+                raise _located_error(error, **location) from error
     return build_presentation(slides, width=deck.width, height=deck.height, title=deck.title)
 
 
-def publish_exclusive(path: Path, data: bytes) -> tuple[int, int]:
-    """Publish only validated bytes, preserving all existing task files."""
-    descriptor = None
-    owned_identity = None
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+def publish_exclusive(path: Path, data: bytes):
+    """Register staging, then exclusively expose a fully written package."""
+    from .publication import PublicationError, publish_bytes
+
+    output_parent = path.parent.relative_to(task_directory()).as_posix()
+
+    def register(record: dict) -> None:
+        print(json.dumps({**record, "output_parent": output_parent}, ensure_ascii=False), file=sys.stderr, flush=True)
+
     with _parent_descriptor(path) as (parent, name):
         try:
-            descriptor = os.open(name, flags, 0o600, dir_fd=parent)
-            info = os.fstat(descriptor)
-            owned_identity = (info.st_dev, info.st_ino)
-            with os.fdopen(descriptor, "wb") as handle:
-                descriptor = None
-                handle.write(data)
-                handle.flush()
-                os.fsync(handle.fileno())
-            if _read_at(parent, name, MAX_PPTX_BYTES) != data:
-                raise TaskError("Written output did not match the validated package", "write_failed")
-        except BaseException:
-            if descriptor is not None:
-                os.close(descriptor)
-            if owned_identity is not None:
-                try:
-                    current = os.stat(name, dir_fd=parent, follow_symlinks=False)
-                    if (current.st_dev, current.st_ino) == owned_identity:
-                        os.unlink(name, dir_fd=parent)
-                except OSError:
-                    pass
+            return publish_bytes(parent, name, data, register=register)
+        except PublicationError as error:
+            error.details["publication"]["output_parent"] = output_parent
             raise
-    return owned_identity
 
 
 def create(config: str, output: str) -> dict:
+    from .content import expected_slide
+
     destination = task_path(output, must_exist=False)
     if destination.suffix.lower() != ".pptx":
         raise TaskError("The output filename must end in .pptx")
@@ -569,18 +596,33 @@ def create(config: str, output: str) -> dict:
         raise TaskError("Output already exists; choose a new filename", "output_exists")
     deck = load_deck(config)
     data = render_deck(deck)
-    summary = validate_presentation(data)
-    publish_exclusive(destination, data)
+    title = deck.title.replace("\r\n", "\n").replace("\r", "\n")
+    expected = {"title": title, "width_emu": round(deck.width * 9525), "height_emu": round(deck.height * 9525), "slides": []}
+    for number, slide in enumerate(deck.slides, 1):
+        try:
+            expected["slides"].append(expected_slide(slide.svg, slide.notes))
+        except (ValueError, RuntimeError, TypeError, KeyError, IndexError) as error:
+            raise _located_error(error, stage="source_comparison", slide_number=number) from error
+    try:
+        summary = validate_presentation(data, content=True, expected=expected)
+    except ValueError as error:
+        raise _located_error(error, stage="content_validation") from error
+    receipt = publish_exclusive(destination, data)
     return {
         "output": destination.relative_to(task_directory()).as_posix(), "bytes": len(data),
         "sha256": hashlib.sha256(data).hexdigest(), **summary,
-        "archive_status": "handoff_required", "temporary_files": 0,
+        "archive_status": "handoff_required", "temporary_files": receipt.temporary_files,
+        "publication": {**receipt.as_dict(), "output_parent": destination.parent.relative_to(task_directory()).as_posix()},
     }
 
 
-def read_presentation(value: str, *, inspect: bool = False) -> dict:
+def read_presentation(value: str, *, inspect: bool = False, details: bool = False, content: bool = False) -> dict:
     data = read_limited(task_path(value), MAX_PPTX_BYTES)
-    result = inspect_presentation(data) if inspect else validate_presentation(data)
+    try:
+        result = inspect_presentation(data, details=details) if inspect else validate_presentation(data, content=content)
+    except ValueError as error:
+        stage = "content_validation" if content or details else "structural_validation"
+        raise _located_error(error, stage=stage) from error
     return {"input": value, "sha256": hashlib.sha256(data).hexdigest(), **result}
 
 
@@ -591,12 +633,15 @@ def environment() -> dict:
         raise TaskError("Run the interpreter with all flags: -I -S -B", "environment_failed")
     if pyexpat.version_info < (2, 6, 0):
         raise TaskError("Expat 2.6.0 or newer is required for bounded XML parsing", "environment_failed")
-    if not all(hasattr(os, option) for option in ("O_NOFOLLOW", "O_DIRECTORY", "O_NONBLOCK")) or not {os.open, os.stat, os.unlink}.issubset(os.supports_dir_fd):
+    file_operations = {os.open, os.stat, os.unlink, os.link}
+    if not all(hasattr(os, option) for option in ("O_NOFOLLOW", "O_DIRECTORY", "O_NONBLOCK")) or not file_operations.issubset(os.supports_dir_fd):
         raise TaskError("This release requires POSIX descriptor-relative file operations (Linux supported)", "environment_failed")
+    if not {os.stat, os.link}.issubset(os.supports_follow_symlinks):
+        raise TaskError("This release requires no-follow metadata and hard-link operations", "environment_failed")
     task_directory()
     return {
         "python": platform.python_version(), "platform": platform.system(), "expat": pyexpat.EXPAT_VERSION,
-        "isolated": True, "site_packages": False, "bytecode_writes": False, "descriptor_relative_io": True,
+        "isolated": True, "site_packages": False, "bytecode_writes": False, "descriptor_relative_io": True, "exclusive_link_publication": True,
         "third_party_python_dependencies": [], "external_programs": [],
     }
 
@@ -607,16 +652,32 @@ def check(*, write_probe: bool = False) -> dict:
     data = render_deck(Deck("Environment check", 1280, 720, "preserve", True, (PreparedSlide(svg, ""),)))
     summary = validate_presentation(data)
     if write_probe:
+        from .publication import PublicationError
+
         path = task_directory() / f"pptx-probe-{uuid.uuid4().hex}.tmp"
+        probe = b"pptx-write-probe\n"
         created_identity = None
+        receipt = None
+        publication_error = None
         try:
-            created_identity = publish_exclusive(path, b"pptx-write-probe\n")
+            receipt = publish_exclusive(path, probe)
+            created_identity = receipt.identity
+        except PublicationError as error:
+            receipt = error.receipt
+            created_identity = receipt.identity
+            publication_error = error
+            raise
         finally:
             if created_identity is not None:
                 with _parent_descriptor(path) as (parent, name):
                     current = os.stat(name, dir_fd=parent, follow_symlinks=False)
-                    if (current.st_dev, current.st_ino) == created_identity:
-                        os.unlink(name, dir_fd=parent)
+                    if (current.st_dev, current.st_ino) != created_identity or _read_at(parent, name, len(probe)) != probe:
+                        raise TaskError("Write probe changed identity or contents; cleanup is incomplete", "publication_cleanup_incomplete", publication=receipt.as_dict())
+                    os.unlink(name, dir_fd=parent)
+                    if publication_error is not None:
+                        publication_error.details["publication"]["probe_removed"] = True
+        if receipt is not None and not receipt.cleanup_complete:
+            raise TaskError("Write probe published but temporary cleanup is incomplete", "publication_cleanup_incomplete", publication=receipt.as_dict())
     return {
         "status": "environment-ok", "check_kind": "environment", "artifact_validation": "not_run", **details,
         "in_memory_export": "passed", "write_probe": "passed" if write_probe else "not_run", "self_test": summary,

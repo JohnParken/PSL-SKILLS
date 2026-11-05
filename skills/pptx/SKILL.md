@@ -1,10 +1,10 @@
 ---
 name: pptx
-version: "20261105.1644.0317"
-description: 用于将已有内容与受限 SVG 页面制作成可编辑的 PPTX 演示文稿，适合需要文本、形状、图片、表格、图表及基础公式的汇报材料；也可读取支持范围内的 PPTX 文本与备注并检查包结构。不提供任意现有演示文稿的编辑、完整格式导入或桌面显示效果验证。
+version: "20261106.0052.1248"
+description: 用于将已有内容与受限 SVG 页面制作成可编辑的 PPTX 演示文稿，支持文本、形状、PNG/JPEG、原生表格、七类图表及基础公式；可读取支持范围内的文字、备注和原生对象细节，核对数据与包结构。不提供任意既有演示文稿编辑、完整格式导入或桌面显示验证。
 ---
 
-# PPTX 创建与结构读取
+# PPTX 创建与内容核对
 
 ## 执行环境约束与首步自检
 
@@ -17,7 +17,7 @@ description: 用于将已有内容与受限 SVG 页面制作成可编辑的 PPTX
    输入、输出放在 Skill 安装目录外，不使用绝对数据路径、父目录、符号链接或切换挂载绕过边界，不切换到安装目录执行或向其写入。
    当前目录若属于安装目录，先取得宿主实际分配的任务目录；不要猜测或自行替换。
 2. 按上述规则定位主入口，再定位脚本和 依赖说明（`<skill-root>/requirements.txt`）。使用宿主确认的 Python 3.10 及以上解释器，并保留 `-I -S -B`。
-   运行要求包括 zlib、Expat >=2.6.0 和 POSIX 描述符相对操作及 `O_NOFOLLOW`、`O_DIRECTORY`；本版面向 Linux，Windows 不支持。
+   运行要求包括 zlib、Expat >=2.6.0 和 POSIX 描述符相对操作及 `O_NOFOLLOW`、`O_DIRECTORY`；写出所在文件系统须支持同目录硬链接与目录同步。本版面向 Linux，Windows 不支持。
    无第三方 Python 包、外部程序或网络依赖；缺失内置能力时诊断并停止，不安装组件或降低检查要求。
 3. 首次操作前运行下述自检。必须取得实际退出码 0，且完整 JSON 包含 `ok: true`、`status: "environment-ok"`、`in_memory_export: "passed"`。
    同时核对 `check_kind: "environment"`、`artifact_validation: "not_run"`。`self_test` 仅记录内存样例验证，不代表用户产物已验收，也不产生演示文稿文件。
@@ -36,7 +36,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" check
 
 将用户已确认的内容组织为页面，再以受限 SVG 描述布局并创建 PPTX。转换子集基于 PPT Master v6.8.0，保留本技能的标准库运行与输入边界。
 原生对象可在兼容的演示文稿软件中继续编辑；文本排版使用随包字体度量，实际字体显示仍受阅读软件影响。
-也可从受支持的现有 PPTX 读取文本、备注及对象计数，或检查包结构。不要将该读取能力扩展为任意导入、无损编辑、渲染、OCR、PDF 转换或旧式 `.ppt` 支持。
+也可从受支持的现有 PPTX 读取文本、备注、对象计数及原生内容细节，检查包结构与图表数据一致性。不要将该读取能力扩展为任意导入、无损编辑、渲染、OCR、PDF 转换或旧式 `.ppt` 支持。
 
 - 准备配置、SVG、图片、表格、图表或公式时，读取 输入与能力契约（`<skill-root>/references/input-contract.md`）。未知属性、超限资源或不支持的格式应修正源输入或报告受阻。
 - 需要完整创建示例时，读取 四页示例（`<skill-root>/assets/example.json`）。示例覆盖文本与形状、原生图表、原生表格及公式，不代表任意 SVG 或任意公式均受支持。
@@ -58,34 +58,44 @@ python -I -S -B "<skill-root>/scripts/pptx.py" create - report.pptx
 ```
 
 以上是两种互斥的调用方式；按实际任务选择一种。示例文件名可按主题替换，执行工作目录始终保持为已确认的任务目录。
-创建在内存完成组包和结构验证后独占写出最终文件；正常创建不生成中间文件，也不写入安装目录。
+创建在内存完成组包、结构验证和原生内容核对，再完整写入已登记的同目录暂存文件，读回并同步后以独占硬链接发布最终文件。
+最终名称在完整写入前不会出现，也不会覆盖已有文件；本次暂存及控制收据由创建函数按原身份收尾，不写入安装目录。
+创建前 stderr 会输出一条 `psl.pptx.publication.v1` 的 `event: "planned"` JSON，记录本次路径、父目录身份及预期校验和；宿主须保留该原始登记，不能把非空 stderr 一律当作失败。
 
-5. 要求退出码 0、`ok: true`、`structural_validation: "passed"`，核对返回的 `output`、`bytes`、`sha256`、`slide_count`。
-   再读取最终文件，核对页数、文字、备注及对象计数是否符合输入；按需核对图表数据与表格内容，不把对象数量视为内容完全正确。
+5. 要求退出码 0、`ok: true`、`structural_validation: "passed"`、`content_validation: "passed"`、`source_comparison: "passed"`，核对返回的 `output`、`bytes`、`sha256`、`slide_count`。
+   创建会核对页数、画布、标题、备注和原生对象内容。再读取最终文件，结合原始材料检查普通 SVG 正文与页面意图；原生内容核对不覆盖全部文字布局或视觉效果。
+   同时核对 `publication.published: true` 与 `publication.cleanup_complete`。清理未完成时保留合格的最终文件，按原登记报告并处理残留，不能重跑生成或声称已完全收尾。
 
 ```console
-python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx
-python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
+python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --details
+python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx --content
 ```
 
-`inspect` 已执行结构验证并返回内容摘要；仅需结构复核时选 `validate`，无需为同一结论重复运行两条命令。
+`inspect --details` 已执行结构与原生内容验证并返回细节；仅需通过/失败结果时选 `validate --content`，无需为同一结论重复运行两条命令。
+这些读取命令没有原始 JSON，返回 `source_comparison: "not_run"`；只能证明文件内部受支持的数据与结构一致，不能证明来源事实正确。
 读取结果与创建回执的 SHA-256 应一致；不一致时停止交付并查明文件变化。修订页面时从原始内容重新创建不同输出文件，不把此过程描述为原 PPTX 原位编辑。
 
 ## 读取与验证流程
 
 完成首步自检后，对用户明确提供的任务相对路径运行 `inspect` 或 `validate`。
-`inspect` 返回标题及逐页 `text`、`notes`、`objects`；文本包含受支持的段落、表格单元格和公式文本，不包含图表工作簿数值的完整导出。
-公式等备用显示内容按支持的命名空间选择一条 MCE 分支读取，避免重复文本与计数；所有分支仍接受结构与关系检查。
-`validate` 只返回包结构摘要；两者均不渲染页面、不执行宏，也不证明所有 OOXML 语义或桌面显示正确。
+默认 `inspect` 返回标题及逐页 `text`、`notes`、`objects`；默认 `validate` 只返回包结构摘要，保留原有简要行为。
+需要数据时使用 `inspect --details`，逐页另返回 `native_objects`，包含图表系列及工作簿比对、表格物理行列及合并区域、公式 OMML 结构；仅需核对时用 `validate --content`。
+详查限定本技能支持的原生内容子集；不支持的图表类型、引用表达式或数学结构明确失败，不将缺失字段当作验证通过。细节总量受对象数和字节预算限制。
+公式等备用显示内容按支持的命名空间选择一条 MCE 分支读取，避免重复文本与计数；按作用域处理可忽略扩展和显式内容处理要求，未知必须理解的命名空间会失败。
+所有原始分支仍接受结构与关系检查。命令均不渲染页面、不执行宏，也不证明所有 OOXML 语义或桌面显示正确。
 不支持的媒体、外部数据关系、宏、嵌入对象、损坏结构与资源超限会明确失败。不要把失败伪装成空内容或完整成功；需要可靠的部分结果时，先明确另行实现的读取契约。
 
 ## 结果回传与交付
 
 - 正常业务结果在 stdout 输出单个 JSON，`schema` 为 `psl.pptx.result.v1`。成功退出 0；失败退出 2，返回 `ok: false` 与 `error.code`、`error.message`，stderr 给出诊断。
-  `--help` 是文本帮助，退出 0 仅说明帮助可显示。生成回执的 `visual_validation` 始终为 `not_run`，`temporary_files` 为 0；不可改写成视觉通过。
+  能定位时另返回 `stage`、从 1 起的 `slide_number`、`element_id`、`object_kind` 或 `field_path`；字段路径中的 JSON 数组索引从 0 起。先按定位修正源输入，再以新输出路径重新运行。
+  `--help` 是文本帮助，退出 0 仅说明帮助可显示。生成回执的 `visual_validation` 始终为 `not_run`；正常收尾后 `temporary_files` 为 0，异常残留以 `publication` 的真实状态为准。
 - 宿主须及时回传对应调用的 stdout、stderr 和真实退出码，非零退出也保留 stdout。进程未启动、强杀、超时分别标明 `not_run`、`unknown`、`timeout`，不得伪造退出码。
   记录脚本实际输出、执行器回传与模型实际收到的结果三个层次；本地捕获不等于模型可见。工具参数或回传失败与脚本失败分别定位。
 - 保留必要诊断并避免向用户泄露敏感原文或内部路径。宿主截断时标明通道、截断状态及可知的原始长度；截断 JSON 不是完整成功，不能据此继续交付。
+- 发布错误可能包含 `publication.published: true`，表示完整主文件已经发布；按 `output_parent`、`final` 和校验和检查原文件，保留它并处理收尾，不删除主文件或重新生成来掩盖错误。
+  强杀可能留下本次已登记的暂存或收据，首次收据写入中断也可能只留下不完整控制文件。待生产进程退出，仅按原始登记和有效身份记录核对；未知、身份变化或记录不全的项保护并报告清理未完成。
+  不扫描文件名模式、不补登历史残留，也不把强杀后的恢复检查当作正常退出成功。本版不提供自动崩溃恢复命令。
 - 只把实际存在且已验收的最终 PPTX 交给宿主支持的下载方式。说明结构验收结果以及未执行的视觉、桌面软件、真实宿主触发检查；纯读取不创建附加文件或虚构下载链接。
 - 创建回执中的 `archive_status: "handoff_required"` 表示尚未归档。业务验收后，通过宿主发现并读取公共 `artifact-lifecycle` 的真实主入口，显式交接最终文件清单、来源和验证结果。
   按该公共 Skill 的自检、归档及收尾契约执行，不复制其代码、不猜兄弟目录或归档位置。公共能力不可用时报告归档 `skipped`；实际归档失败报告失败并保留已生成的最终文件。

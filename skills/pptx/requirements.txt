@@ -1,5 +1,6 @@
 # Python >=3.10; no third-party dependencies (无第三方依赖).
 # Runtime uses only Python standard library, including zlib and Expat >=2.6.0.
 # Run with -I -S -B; POSIX descriptor-relative I/O and no-follow flags required.
+# Publication requires same-directory hard links plus file/directory fsync.
 # Linux is the supported target for this release; Windows is unsupported.
 # No external programs, package installation, or network services are required.
