@@ -53,6 +53,10 @@ def _fail(code):
 
 
 def _within_task_directory(value, cwd):
+    from wps_task_paths import ACTIVE
+    if ACTIVE.get() is not None:
+        ACTIVE.get().validate(value)
+        return cwd / value
     if not isinstance(value, (str, os.PathLike)):
         _fail('invalid_task_relative_path')
     raw = os.fspath(value)
@@ -76,6 +80,11 @@ def _stat_key(info):
 
 
 def _read_bounded_regular_file(path, maximum, code_prefix):
+    from wps_task_paths import ACTIVE
+    access = ACTIVE.get()
+    if access is not None:
+        data = access.read(path, maximum)
+        return data, _stat_key(access.read_stats[tuple(access.parts(path))])
     flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0)
     flags |= getattr(os, 'O_CLOEXEC', 0) | getattr(os, 'O_NOFOLLOW', 0)
     try:
@@ -314,6 +323,10 @@ def verify(sample_argument, manifest_argument):
         return _failure(report, 'verification_failed')
 
 
+from wps_task_paths import cli_boundary
+
+
+@cli_boundary
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('sample', help='Task-relative .wps sample')

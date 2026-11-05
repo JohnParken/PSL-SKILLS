@@ -19,11 +19,14 @@ def package(body='', rels='', parts=()):
     files={'[Content_Types].xml':'<Types xmlns="'+reader.CONTENT_TYPES+'">'+''.join(types)+'</Types>',
            '_rels/.rels':'<Relationships xmlns="'+P+'"><Relationship Id="main" Type="'+R+'/officeDocument" Target="word/document.xml"/></Relationships>',
            'word/document.xml':'<w:document xmlns:w="'+W+'" xmlns:r="'+R+'"><w:body>'+body+'</w:body></w:document>'}
-    if rels: files['word/_rels/document.xml.rels']='<Relationships xmlns="'+P+'">'+rels+'</Relationships>'
-    for part,kind,text in parts: files[part]=text
+    if rels:
+        files['word/_rels/document.xml.rels']='<Relationships xmlns="'+P+'">'+rels+'</Relationships>'
+    for part,kind,text in parts:
+        files[part]=text
     output=io.BytesIO()
     with zipfile.ZipFile(output,'w') as archive:
-        for name,value in files.items(): archive.writestr(name,value)
+        for name,value in files.items():
+            archive.writestr(name,value)
     return output.getvalue()
 
 
@@ -36,7 +39,8 @@ def root(kind,text):
     return '<w:'+tag+' xmlns:w="'+W+'">'+text+'</w:'+tag+'>'
 
 
-def paragraph(text): return '<w:p><w:r><w:t>'+text+'</w:t></w:r></w:p>'
+def paragraph(text):
+    return '<w:p><w:r><w:t>'+text+'</w:t></w:r></w:p>'
 
 
 @unittest.skipUnless(reader.expat.version_info >= (2,6,0),'requires Expat >=2.6')
@@ -58,7 +62,8 @@ class RelatedTests(unittest.TestCase):
 
     def test_notes_comments_ids_only_no_unreferenced_text(self):
         body=paragraph('主')+'<w:p><w:r><w:footnoteReference w:id="2"/><w:endnoteReference w:id="3"/><w:commentReference w:id="0"/></w:r></w:p>'
-        parts=[];relations=''
+        parts=[]
+        relations=''
         for kind,singular,identity,expected in [('footnotes','footnote','2','脚注'),('endnotes','endnote','3','尾注'),('comments','comment','0','批注')]:
             entries='<w:'+singular+' w:id="'+identity+'">'+paragraph(expected)+'</w:'+singular+'><w:'+singular+' w:id="99">'+paragraph('UNREFERENCED')+'</w:'+singular+'>'
             parts.append(('word/custom_'+kind+'.xml',kind,root(kind,entries)))
@@ -143,4 +148,5 @@ class RelatedTests(unittest.TestCase):
         self.assertEqual(result['status'],'partial')
         self.assertEqual(result['related_stories'][0]['issues'][0]['code'],'related_nested_reference_not_followed')
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

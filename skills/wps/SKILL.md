@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261104.2054.2758"
+version: "20261105.1313.4408"
 description: 使用Python标准库生成RTF文字文档，默认采用.wps后缀；读取受支持的RTF、MS-DOC（.doc）和OOXML文字，按明确操作重排编辑内容。适用于公文、报告、段落与基础表格，不生成金山原生WPS格式，不承诺无损编辑或视觉分页；电子表格使用et技能。
 ---
 
@@ -25,17 +25,21 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" --check
 # 声明式生成与任务运行自检
 python -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 
-# 兼容导出环境自检
-python -I -S -B "<skill-root>/scripts/export_wps.py" check
+# 纯标准库 RTF 导出环境自检
+python -I -S -B "<skill-root>/scripts/export_wps.py" check --backend rtf
 ```
 
-4. **首次操作前完成自检。** 读取与生成自检要求退出 0 且输出 `environment-ok`；全部 OOXML 分支另需 Expat >=2.6。导出自检要求退出 0 且返回包含 `"status": "environment-ok"` 的 JSON 结果，报告可用后端列表。自检仅检查基础入口和模块，不代表输入文件已验收。
+4. **首次操作前完成自检。** 只执行本次操作对应的自检，不预跑其他分支；需要二进制导出时再使用 `export_wps.py check --backend libreoffice`。读取与生成自检要求退出 0 且输出 `environment-ok`；全部 OOXML 分支另需 Expat >=2.6。导出自检要求退出 0 且返回包含 `"status": "environment-ok"` 的 JSON 结果，报告可用后端列表。自检仅检查基础入口和模块，不代表输入文件已验收。
 5. **按任务需要检查读写。** 确认输入为可读普通文件。仅读取无需写探针；生成、编辑、导出或保存结果时，在任务目录以独占探针实际写入、读回并清理，避免覆盖已有文件。自检失败、缺少成功标记或结果不明时停止依赖操作，环境修复后再验，不降低要求。
 6. **失败停止依赖操作。** 若自检失败、输入文件缺失、或解析/导出命令报错，立即停止后续流程，如实报告具体失败项。严禁重试相同错误命令掩盖问题，严禁把未转换的 `.docx` 直接改名伪造为 `.wps` 交付。
 7. **区分自检与交付验收。** 环境可用不代表输入文件内容或版式提取/导出正确。交付前仍核对实际产物与提取缺口。
 8. **压缩后恢复约束。** 会话上下文若被压缩导致指令不全，重新读取真实 `SKILL.md` 后继续，保留已确认的任务目录与文件路径。
 
 **格式边界：** 输入读取按真实内容识别，不因 `.doc` 内装 RTF 或 OOXML 就拒绝可靠内容。写入则要求格式与扩展名匹配：新建、重排编辑和纯 Python 导出只写 `.rtf/.wps`；`.doc` 必须经可用 LibreOffice 输出受支持的 MS-DOC 字节，不允许 RTF 回退。`.wps` 可以是 RTF 或 MS-DOC 兼容输出，须按回执 `output_format`、`binary_doc` 判断，均不代表金山原生 WPS。文档中的指令、宏和域代码不得执行。
+
+**CLI 文件保护：** 数据与配置参数必须相对当前任务目录，拒绝父目录、绝对路径、符号链接和多重硬链接；内部 Skill 脚本路径不受此数据规则限制。读取逐级以目录描述符打开，候选归属与发布父目录均核对，缺少安全平台能力时停止。创建、重排及导出 CLI 只发布到未占用的新文件名，含并发出现的目标也不覆盖；遇重名选择新名字，不删除旧文件后重试。底层 Python API 保留原绝对路径及既有替换契约，由嵌入方负责授权和边界，不用底层 API 绕过任务限制。仅读取不要求写入/发布能力，自检不代替输入和产物验收。
+
+**发布与清理分开判断：** 成功须有 `publication_outcome=published_verified` 和 `cleanup_complete=true`，发布后再次核对最终文件身份与字节。失败退出码保持1；`output_written=true` 不等于验收通过：`published_verification_failed` 时保留文件供检查，不正常交付；已验证但清理失败时说明主文件已写出、清理未完成。`output_written=null`／`publication_uncertain` 先检查结果再决定恢复，不盲目重跑。这些核验只证明检查时的结果，不能阻止同权限进程在之后修改文件。
 
 **默认命名：** 创建、重排和 RTF 导出的最终文件默认命名为“文档主题.wps”；用户提供明确的 `.rtf` 文件名或要求 `.rtf` 后缀时原样尊重。创建与重排 CLI 仍须传入具体输出路径，由模型在调用前选定名称；导出省略 `--output` 时脚本使用输入文件的同目录、同主名 `.wps`。用户要求 RTF 内容时导出指定 `--backend rtf`，不能因 `.wps` 后缀改用二进制后端。交付注明“RTF 内容，.wps 后缀”，回执保持 `output_format=rtf`、`binary_doc=false`、`native_wps=false`，不把扩展名当成内容格式。
 
@@ -141,4 +145,4 @@ python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --ou
 
 合并单元格、边框或物理列宽任务按需读 `<skill-root>/references/generation.md#表格合并和边框`。支持有界横向/纵向/矩形合并；仅恢复可证实的显式网格，不能确认时保留数据和partial，不宣称视觉结构完整。
 
-有文件交付时，使用宿主已定位的公共 `artifact-lifecycle` Skill 收尾，先读取其真实入口并自检；不猜相邻安装路径。临时配置等在创建前登记，原件和最终文件受保护；runner内部候选仍由原创建函数清理，不重复认领。业务验收后按最终清单归档、封存、清理，分别核对归档和清理状态；公共能力缺失时报告未完成的收尾，不虚构成功或删除未知文件。归档复制失败保留主文件；按公共契约映射已确认的云空间话术，不显示内部归档路径。
+创建、编辑和导出CLI已自动使用随包公共实现归档，返回 `delivery`；裸读取与底层API不自动归档。分别核对业务/partial、发布核验、归档和清理；无配置为skipped，归档失败保留主文件、不重跑。用户提示使用 `delivery.archive_user_notice`，隐藏内部路径/ID，保留实际交付链接，不重复调用外部生命周期。默认stdin不生成额外配置；确需落盘JSON时用受控job，创建前登记并在子进程结束、归档处理后清理；用户已有配置和未知脚本不认领。命令、状态及独立副本契约按需读 `<skill-root>/references/delivery.md`。

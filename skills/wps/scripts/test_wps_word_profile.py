@@ -1,4 +1,5 @@
 """Synthetic exact-header compatibility fixtures, not producer evidence."""
+from test_task_cli_support import run_task_cli
 from pathlib import Path
 import struct
 import json
@@ -16,14 +17,16 @@ GUID=bytes.fromhex('0609020000000000c000000000000046')
 
 def container(streams=None,major=3,guid=GUID):
     streams={key[0]:value for key,value in document().items()} if streams is None else streams
-    data=bytearray(synthetic_cfb(streams,major));data[8:24]=guid
+    data=bytearray(synthetic_cfb(streams,major))
+    data[8:24]=guid
     return bytes(data)
 
 
 class WordProfileTests(unittest.TestCase):
     def test_explicit_exact_profile(self):
         data=container()
-        with self.assertRaises(ParseError):read_bytes(data,compatibility='strict')
+        with self.assertRaises(ParseError):
+            read_bytes(data,compatibility='strict')
         for mode in ('data', 'legacy_word_clsid'):
             result=read_bytes(data,compatibility=mode)
             self.assertEqual(result['text'],'Hello 中文\n第二段\n')
@@ -57,8 +60,10 @@ class WordProfileTests(unittest.TestCase):
         for data in (container(guid=bytes([1])*16),container(major=4),
                      container({'Workbook':b'abc'}),container({'WordDocument':b'bad'}),
                      container({'WordDocument':b'\xec\xa5','Workbook':b'abc'})):
-            with self.assertRaises(ValueError):CompoundFile(data,compatibility='legacy_word_clsid')
-        with self.assertRaises(ValueError):CompoundFile(container(),compatibility='legacy_excel_clsid')
+            with self.assertRaises(ValueError):
+                CompoundFile(data,compatibility='legacy_word_clsid')
+        with self.assertRaises(ValueError):
+            CompoundFile(container(),compatibility='legacy_excel_clsid')
 
     def test_default_cli_reads_legacy_word_header_without_rewriting(self):
         data = bytearray(container())
@@ -69,7 +74,7 @@ class WordProfileTests(unittest.TestCase):
             path.write_bytes(original)
             command = [sys.executable, '-I', '-S', '-B',
                        str(Path(__file__).with_name('read_wps.py')), str(path)]
-            process = subprocess.run(command, capture_output=True, text=True,
+            process = run_task_cli(command, capture_output=True, text=True,
                                      env={'PATH': ''}, timeout=5)
             self.assertEqual(process.returncode, 3, process.stderr)
             result = json.loads(process.stdout)
@@ -78,8 +83,11 @@ class WordProfileTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
 
     def test_structural_checks_remain(self):
-        data=bytearray(container());data[512:516]=b'\x00\x00\x00\x00'
-        with self.assertRaises(ValueError):CompoundFile(bytes(data),compatibility='legacy_word_clsid')
+        data=bytearray(container())
+        data[512:516]=b'\x00\x00\x00\x00'
+        with self.assertRaises(ValueError):
+            CompoundFile(bytes(data),compatibility='legacy_word_clsid')
 
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

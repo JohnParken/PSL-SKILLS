@@ -366,6 +366,56 @@ class GenerationTests(unittest.TestCase):
         self.assertCountEqual(outcomes, ['published', 'exists'])
         self.assertEqual((self.root / 'new.ofd').read_bytes(), data)
 
+    def test_postpublication_bytes_are_checked_and_retained_on_failure(self):
+        data, _ = self.build()
+        original_link = os.link
+        def altered(source, destination, **kwargs):
+            descriptor = os.open(source, os.O_WRONLY | os.O_TRUNC, dir_fd=kwargs['src_dir_fd'])
+            with os.fdopen(descriptor, 'wb') as stream:
+                stream.write(b'changed after candidate validation')
+            return original_link(source, destination, **kwargs)
+        with self.working(), patch.object(os, 'link', altered), self.assertRaises(WRITER.GenerationError) as raised:
+            WRITER.publish_new(data, 'new.ofd', CHECKER.audit)
+        self.assertTrue(raised.exception.publication['output_written'])
+        self.assertEqual(raised.exception.publication['publication_outcome'], 'published_verification_failed')
+        self.assertTrue(raised.exception.publication['cleanup_complete'])
+        self.assertEqual((self.root / 'new.ofd').read_bytes(), b'changed after candidate validation')
+
+    def test_postpublication_cleanup_failure_preserves_cli_outcome(self):
+        for name, data in self.assets.items():
+            (self.root / name).write_bytes(data)
+        (self.root / 'spec.json').write_text(json.dumps(spec_fixture()), encoding='utf-8')
+        original_unlink = os.unlink
+        def denied(name, *args, **kwargs):
+            if str(name).startswith('._ofd_candidate_'):
+                self.registered.append(self.root / name)
+                raise PermissionError('injected cleanup failure')
+            return original_unlink(name, *args, **kwargs)
+        output = io.StringIO()
+        with (self.working(), patch.object(os, 'unlink', denied),
+              patch.object(os, 'supports_dir_fd', os.supports_dir_fd | {denied}), contextlib.redirect_stdout(output)):
+            code = WRITER.main(['spec.json', 'new.ofd'])
+        self.assertEqual(code, 1)
+        report = json.loads(output.getvalue())
+        self.assertTrue(report['output_written'])
+        self.assertEqual(report['publication_outcome'], 'published_verified')
+        self.assertFalse(report['cleanup_complete'])
+        self.assertTrue((self.root / 'new.ofd').is_file())
+
+    def test_final_name_substitution_is_not_deleted_or_accepted(self):
+        data, _ = self.build()
+        (self.root / 'sentinel.txt').write_bytes(b'unknown replacement')
+        original_link = os.link
+        def substituted(source, destination, **kwargs):
+            original_link(source, destination, **kwargs)
+            os.unlink(destination, dir_fd=kwargs['dst_dir_fd'])
+            original_link('sentinel.txt', destination, dst_dir_fd=kwargs['dst_dir_fd'])
+        with self.working(), patch.object(os, 'link', substituted), self.assertRaises(WRITER.GenerationError) as raised:
+            WRITER.publish_new(data, 'new.ofd', CHECKER.audit)
+        self.assertEqual(raised.exception.publication['publication_verification'], 'failed')
+        self.assertEqual((self.root / 'new.ofd').read_bytes(), b'unknown replacement')
+        self.assertEqual((self.root / 'sentinel.txt').read_bytes(), b'unknown replacement')
+
     def test_cli_json_contract_and_readonly_assets(self):
         for name, data in self.assets.items():
             (self.root / name).write_bytes(data)

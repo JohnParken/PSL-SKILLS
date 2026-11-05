@@ -69,10 +69,13 @@ def find_soffice(custom_path=None):
     return None
 
 
-def check_environment(custom_soffice=None):
+def check_environment(custom_soffice=None, backend='auto'):
     """Verify runtime environment, Python version, and backend availability."""
     python_ok = sys.version_info >= (3, 10)
-    soffice_path = find_soffice(custom_soffice)
+    from wps_task_paths import write_capabilities
+    import wps_delivery
+    write_capabilities()
+    soffice_path = None if backend == 'rtf' else find_soffice(custom_soffice)
     soffice_version = None
 
     if soffice_path:
@@ -161,14 +164,45 @@ def _publish_conversion(candidate, target, source, source_bytes, source_payload,
         return {'status': 'structure-invalid', 'error': inspection['error'], 'structure_check': inspection}
     if read_input(source) != source_bytes:
         raise ValueError('Source changed during conversion; publication stopped')
+    from read_wps import read_bytes
+    payload = read_bytes(data)
+    def main_text(value):
+        if value.get('format') == 'rtf':
+            parts = []
+            for block in value.get('blocks', []):
+                if block['type'] == 'paragraph':
+                    parts.append(value['paragraphs'][block['index']]['text'])
+                else:
+                    parts.extend('\t'.join(cell['text'] for cell in row) for row in value['tables'][block['index']]['rows'])
+            return '\n'.join(parts)
+        return value.get('text', '')
+    if ''.join(main_text(source_payload).split()) != ''.join(main_text(payload).split()):
+        return {'status': 'content-mismatch', 'error': 'Ordered readable main text differs; target preserved',
+                'comparison_scope': 'main-text-with-whitespace-normalized-not-layout'}
+    if read_input(source) != source_bytes:
+        raise ValueError('Source changed during conversion; publication stopped')
     partial = inspection['partial'] or source_payload['status'] == 'partial'
-    os.replace(candidate, target)
-    return {'status': 'partial' if partial else 'success', 'partial': partial, 'backend': backend,
+    from wps_task_paths import output_candidate, write_candidate
+    with output_candidate(target, prefix='.tmp_wps_publish_') as (temporary, publish):
+        write_candidate(temporary, data)
+        publish()
+    return {'status': 'partial' if partial else 'success', **publish.receipt, 'partial': partial, 'backend': backend,
             'output_file': str(target), 'file_size': len(data), 'output_format': expected_format,
             'binary_doc': expected_format == 'ms_doc_subset', 'native_wps': False,
             'structure_check': inspection, 'readback': inspection['readback'],
             'source_readback': readback_summary(source_payload), 'layout_verification': 'not_run',
+            'source_content_comparison': 'ordered-main-text-matched-whitespace-normalized',
             'full_format_verified': False}
+
+
+def _conversion_failure(exc, target):
+    publication = getattr(exc, 'publication', {})
+    if publication and target is not None and publication.get('publication_target') != str(target):
+        return {'status': 'error', 'error': str(exc), 'output_written': False,
+                'publication_target': str(target), 'publication_outcome': 'not_attempted',
+                'cleanup_complete': None, 'cleanup_status': 'unconfirmed_after_staged_failure',
+                'intermediate_publication': publication}
+    return {'status': 'error', 'error': str(exc), **publication}
 
 
 def convert_docx_to_wps_libreoffice(docx_path, output_path=None, custom_soffice=None, timeout=120):
@@ -178,12 +212,16 @@ def convert_docx_to_wps_libreoffice(docx_path, output_path=None, custom_soffice=
         return {'status': 'missing-dependency', 'error': 'LibreOffice executable (soffice) not found'}
     try:
         source, target, source_bytes, source_payload = _prepare_conversion(docx_path, output_path, 'ms_doc_subset')
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix='.tmp_wps_export_', dir=target.parent) as directory:
+        from wps_task_paths import ACTIVE
+        if ACTIVE.get() is None:
+            target.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='.tmp_wps_export_', dir='.' if ACTIVE.get() is not None else target.parent) as directory:
             private = Path(directory)
             candidate = private / (source.stem + '.doc')
+            private_source = private / (source.stem + '.docx')
+            private_source.write_bytes(source_bytes)
             command = [soffice_path, '-env:UserInstallation=' + (private / 'profile').as_uri(), '--headless',
-                       '--convert-to', 'doc:MS Word 97', '--outdir', str(private), str(source)]
+                       '--convert-to', 'doc:MS Word 97', '--outdir', str(private), str(private_source)]
             process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                      text=True, timeout=timeout, check=False)
             execution = {'returncode': process.returncode, 'stdout': process.stdout, 'stderr': process.stderr}
@@ -195,7 +233,7 @@ def convert_docx_to_wps_libreoffice(docx_path, output_path=None, custom_soffice=
     except subprocess.TimeoutExpired:
         return {'status': 'timeout', 'error': f'Conversion timed out after {timeout} seconds', 'returncode': None}
     except (OSError, ValueError, RuntimeError) as exc:
-        return {'status': 'error', 'error': str(exc)}
+        return _conversion_failure(exc, locals().get('target'))
 
 
 def convert_docx_to_wps_rtf(docx_path, output_path=None):
@@ -204,13 +242,28 @@ def convert_docx_to_wps_rtf(docx_path, output_path=None):
         return {'status': 'error', 'error': 'docx_to_wps_rtf module failed to import'}
     try:
         source, target, source_bytes, source_payload = _prepare_conversion(docx_path, output_path, 'rtf')
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix='.tmp_wps_export_', dir=target.parent) as directory:
+        from wps_task_paths import ACTIVE
+        if ACTIVE.get() is not None:
+            # The converter already validates text, raw controls and source
+            # identity, then publishes through a confined private candidate.
+            result = convert_docx_to_rtf_wps(str(source), str(target))
+            result['backend'] = 'rtf'
+            return result
+        if ACTIVE.get() is None:
+            target.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='.tmp_wps_export_', dir='.' if ACTIVE.get() is not None else target.parent) as directory:
             candidate = Path(directory) / 'candidate.rtf'
-            convert_docx_to_rtf_wps(str(source), str(candidate))
-            return _publish_conversion(candidate, target, source, source_bytes, source_payload, 'rtf', 'rtf')
+            conversion = convert_docx_to_rtf_wps(str(source), str(candidate))
+            result = _publish_conversion(candidate, target, source, source_bytes, source_payload, 'rtf', 'rtf')
+            if result.get('status') in ('success', 'partial'):
+                for key in ('content_validation', 'conversion_issues', 'format_validation', 'source_format_mapping'):
+                    if key in conversion:
+                        result[key] = conversion[key]
+                if conversion.get('partial'):
+                    result.update(status='partial', partial=True)
+            return result
     except (OSError, ValueError, RuntimeError) as exc:
-        return {'status': 'error', 'error': str(exc)}
+        return _conversion_failure(exc, locals().get('target'))
 
 
 def convert_docx_to_wps(docx_path, output_path=None, backend="auto", custom_soffice=None, timeout=120):
@@ -251,9 +304,13 @@ def verify_readback(wps_path, read_wps_script=None):
     script = Path(read_wps_script) if read_wps_script else Path(__file__).with_name('read_wps.py')
     if not script.is_file():
         return {'status': 'error', 'error': 'Requested read_wps.py script is unavailable'}
-    command = [sys.executable, '-I', '-S', '-B', str(script.resolve()), str(path)]
+    from wps_task_paths import ACTIVE
+    access = ACTIVE.get()
+    directory = access.root if access is not None else path.parent
+    argument = str(path.relative_to(directory)) if access is not None else path.name
+    command = [sys.executable, '-I', '-S', '-B', str(script.resolve()), argument]
     try:
-        process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30, check=False)
+        process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30, check=False, cwd=directory)
     except subprocess.TimeoutExpired:
         return {'status': 'readback-error', 'error': 'Reader timed out', 'returncode': None}
     except OSError as exc:
@@ -269,12 +326,18 @@ def verify_readback(wps_path, read_wps_script=None):
     return result
 
 
+from wps_task_paths import cli_boundary, validate_argument
+
+
+@cli_boundary
 def main():
     parser = argparse.ArgumentParser(description="WPS document export and validation tool.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     check_parser = subparsers.add_parser("check", help="Check execution environment and backend availability.")
     check_parser.add_argument("--soffice", help="Path to custom soffice executable.")
+    check_parser.add_argument('--backend', choices=('auto', 'rtf', 'libreoffice'), default='auto',
+                              help='rtf checks the standard-library route without probing external software')
 
     inspect_parser = subparsers.add_parser("inspect", help="Validate an output candidate's signature, supported content and suffix.")
     inspect_parser.add_argument("file", help="RTF .rtf/.wps or MS-DOC .doc/.wps candidate; use read_wps.py for input reading.")
@@ -297,16 +360,20 @@ def main():
     args = parser.parse_args()
 
     if args.command == "check":
-        res = check_environment(args.soffice)
+        res = check_environment(args.soffice, args.backend)
         print(json.dumps(res, ensure_ascii=False, indent=2), flush=True)
         sys.exit(0 if res.get("status") == "environment-ok" else 1)
 
     if args.command == "inspect":
+        validate_argument(args.file)
         res = inspect_wps_structure(args.file)
         print(json.dumps(res, ensure_ascii=False, indent=2), flush=True)
         sys.exit((3 if res.get("partial") else 0) if res.get("valid") else 1)
 
     if args.command == "convert":
+        from wps_delivery import finish_delivery
+        validate_argument(args.input)
+        validate_argument(args.output or str(Path(args.input).with_suffix(".wps")), output=True)
         res = convert_docx_to_wps(
             args.input,
             args.output,
@@ -321,9 +388,10 @@ def main():
                 res.update(status="partial", partial=True)
             elif read_status != "readback-ok":
                 res.update(status="readback-failed", error="Output exists, but requested readback did not succeed")
+        finish_delivery(res, res.get('output_file') or args.output or str(Path(args.input).with_suffix('.wps')), [args.input])
         print(json.dumps(res, ensure_ascii=False, indent=2), flush=True)
         sys.exit(0 if res.get("status") == "success" else 3 if res.get("status") == "partial" else 1)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -21,8 +21,17 @@ from verify_wps_sample import verify
 def synthetic_word_package():
     """Build a tiny synthetic package with a fixed expected main-story text."""
     entries = [
-        ('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'),
-        ('_rels/.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'),
+        ('[Content_Types].xml', (
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Ove'
+            'rride PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-'
+            'officedocument.wordprocessingml.document.main+xml"/></Types>'
+        )),
+        ('_rels/.rels', (
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationshi'
+            'ps"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocume'
+            'nt/2006/relationships/officeDocument" Target="word/document.xml"/></Relationship'
+            's>'
+        )),
         ('word/document.xml', '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Harness sample text</w:t></w:r></w:p></w:body></w:document>'),
     ]
     output = io.BytesIO()

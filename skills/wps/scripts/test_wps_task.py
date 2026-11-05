@@ -7,6 +7,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from test_task_cli_support import run_main
 from run_wps_task import check_task_environment, validate_spec, create_document, main
 from read_wps import read_bytes
 
@@ -87,13 +88,13 @@ class TestWpsTaskRunner(unittest.TestCase):
                 "theme": "general",
                 "blocks": [{"type": "paragraph", "text": "CLI 生成测试。"}],
             })
-            code = main(["create", str(out_file), "--spec", spec_json, "--compact-receipt"])
+            code = run_main(main, ["create", str(out_file), "--spec", spec_json, "--compact-receipt"])
             self.assertEqual(code, 0)
             self.assertTrue(out_file.exists())
 
             # Wrong extension
             bad_file = Path(td) / "cli_test.doc"
-            code_bad = main(["create", str(bad_file), "--spec", spec_json])
+            code_bad = run_main(main, ["create", str(bad_file), "--spec", spec_json])
             self.assertEqual(code_bad, 2)
 
 

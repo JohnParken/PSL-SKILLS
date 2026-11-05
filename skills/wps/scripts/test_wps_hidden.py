@@ -1,4 +1,5 @@
 """Independent synthetic visibility expectations; no real WPS acceptance evidence."""
+from test_task_cli_support import run_task_cli
 import io
 import json
 from pathlib import Path
@@ -48,7 +49,8 @@ class HiddenTests(unittest.TestCase):
         self.assertEqual(self.read(data)['status'],'partial')
 
     def test_revision_views_remain_independent_of_hidden_selection(self):
-        body='<w:p>'+run('A')+'<w:ins>'+run('I')+run('INSERTSECRET','<w:vanish/>')+'</w:ins><w:del><w:r><w:delText>D</w:delText></w:r></w:del><w:moveFrom>'+run('F')+'</w:moveFrom><w:moveTo>'+run('T')+'</w:moveTo></w:p>'
+        body='<w:p>'+run('A')+'<w:ins>'+run('I')+run('INSERTSECRET',
+            '<w:vanish/>')+'</w:ins><w:del><w:r><w:delText>D</w:delText></w:r></w:del><w:moveFrom>'+run('F')+'</w:moveFrom><w:moveTo>'+run('T')+'</w:moveTo></w:p>'
         for view,expected in [('accepted','AIT'),('original','ADF'),('all','AIDFT')]:
             with self.subTest(view=view):
                 result=self.read(package(body),revisions=view)
@@ -104,13 +106,15 @@ class HiddenTests(unittest.TestCase):
         styles='<w:style w:type="character" w:styleId="A"><w:basedOn w:val="B"/></w:style><w:style w:type="character" w:styleId="B"><w:basedOn w:val="A"/></w:style>'
         result=self.read(styles_package('<w:p>'+run('Keep','<w:rStyle w:val="A"/>')+'</w:p>',styles))
         self.assertNotEqual(result['status'],'ok')
-        if result['text'] is not None: self.assertEqual(result['text'],'Keep')
+        if result['text'] is not None:
+            self.assertEqual(result['text'],'Keep')
 
     def test_cli_exclude_json_no_hidden_text(self):
         with tempfile.TemporaryDirectory() as directory:
-            path=Path(directory)/'sample.wps';path.write_bytes(package('<w:p>'+run('A')+run('CLISECRET','<w:vanish/>')+'</w:p>'))
+            path=Path(directory)/'sample.wps'
+            path.write_bytes(package('<w:p>'+run('A')+run('CLISECRET','<w:vanish/>')+'</w:p>'))
             command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('read_wps.py')),str(path),'--hidden-text','exclude']
-            process=subprocess.run(command,capture_output=True,text=True,timeout=10,env={'PATH':''})
+            process=run_task_cli(command,capture_output=True,text=True,timeout=10,env={'PATH':''})
             self.assertIn(process.returncode,(0,3),process.stderr)
             self.assertEqual(json.loads(process.stdout)['text'],'A')
             self.assertNotIn('CLISECRET',process.stdout+process.stderr)
@@ -153,7 +157,8 @@ class HiddenTests(unittest.TestCase):
             with zipfile.ZipFile(target,'w') as archive:
                 for name in source.namelist():
                     value=source.read(name)
-                    if name=='word/styles.xml': name='word/customStyle.xml'
+                    if name=='word/styles.xml':
+                        name='word/customStyle.xml'
                     if name in ('[Content_Types].xml','word/_rels/document.xml.rels'):
                         value=value.replace(b'styles.xml',b'customStyle.xml')
                     if foreign and name=='word/_rels/document.xml.rels':
@@ -170,4 +175,5 @@ class HiddenTests(unittest.TestCase):
         actions=[x['action'] for x in result['visibility']['runs']]
         self.assertEqual(actions,['retained','revision_excluded'])
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

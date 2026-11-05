@@ -3,6 +3,7 @@
 FIB and CLX fixture constants are independent literals, not imported from the
 parser's version table or offsets. Expected text and diagnostic offsets are fixed.
 """
+from test_task_cli_support import run_task_cli
 import hashlib
 import json
 import os
@@ -24,44 +25,67 @@ END = 0xFFFFFFFE
 FAT_SECTOR = 0xFFFFFFFD
 
 def entry(name,kind,start=END,size=0,right=FREE,child=FREE):
-    block=bytearray(128); name_bytes=name.encode('utf-16le')+bytes(2)
-    block[:len(name_bytes)]=name_bytes; struct.pack_into('<HBB3I',block,64,len(name_bytes),kind,1,FREE,right,child)
-    struct.pack_into('<IQ',block,116,start,size); return block
+    block=bytearray(128)
+    name_bytes=name.encode('utf-16le')+bytes(2)
+    block[:len(name_bytes)]=name_bytes
+    struct.pack_into('<HBB3I',block,64,len(name_bytes),kind,1,FREE,right,child)
+    struct.pack_into('<IQ',block,116,start,size)
+    return block
 
 
 def synthetic_cfb(streams,major=3):
     # This builder implements only tiny test fixtures and is not a file writer feature.
-    size=512 if major==3 else 4096; directory_count=(len(streams)+1+size//128-1)//(size//128)
+    size=512 if major==3 else 4096
+    directory_count=(len(streams)+1+size//128-1)//(size//128)
     sectors=[bytearray(size) for _ in range(1+directory_count)]
-    fat=[FREE]*(size//4); fat[0]=FAT_SECTOR
-    for index in range(1,1+directory_count): fat[index]=index+1 if index<directory_count else END
+    fat=[FREE]*(size//4)
+    fat[0]=FAT_SECTOR
+    for index in range(1,1+directory_count):
+        fat[index]=index+1 if index<directory_count else END
     small={name:content for name,content in streams.items() if 0<len(content)<4096}
-    mini_fat=[FREE]*(size//4); mini_blob=bytearray(); starts={}
+    mini_fat=[FREE]*(size//4)
+    mini_blob=bytearray()
+    starts={}
     for name,content in small.items():
-        start=len(mini_blob)//64; blocks=(len(content)+63)//64; starts[name]=start
-        for index in range(start,start+blocks): mini_fat[index]=index+1 if index+1<start+blocks else END
+        start=len(mini_blob)//64
+        blocks=(len(content)+63)//64
+        starts[name]=start
+        for index in range(start,start+blocks):
+            mini_fat[index]=index+1 if index+1<start+blocks else END
         mini_blob.extend(content+bytes(blocks*64-len(content)))
-    mini_id=END; root_start=END
+    mini_id=END
+    root_start=END
     if small:
-        mini_id=len(sectors); sectors.append(bytearray(struct.pack('<'+'I'*len(mini_fat),*mini_fat))); fat[mini_id]=END
-        root_start=len(sectors); blocks=(len(mini_blob)+size-1)//size
+        mini_id=len(sectors)
+        sectors.append(bytearray(struct.pack('<'+'I'*len(mini_fat),*mini_fat)))
+        fat[mini_id]=END
+        root_start=len(sectors)
+        blocks=(len(mini_blob)+size-1)//size
         for offset in range(blocks):
-            identifier=len(sectors); content=mini_blob[offset*size:(offset+1)*size]; sectors.append(bytearray(content+bytes(size-len(content))))
+            identifier=len(sectors)
+            content=mini_blob[offset*size:(offset+1)*size]
+            sectors.append(bytearray(content+bytes(size-len(content))))
             fat[identifier]=identifier+1 if offset+1<blocks else END
     for name,content in streams.items():
         if len(content)>=4096:
-            starts[name]=len(sectors); blocks=(len(content)+size-1)//size
+            starts[name]=len(sectors)
+            blocks=(len(content)+size-1)//size
             for offset in range(blocks):
-                identifier=len(sectors); data=content[offset*size:(offset+1)*size]; sectors.append(bytearray(data+bytes(size-len(data))))
+                identifier=len(sectors)
+                data=content[offset*size:(offset+1)*size]
+                sectors.append(bytearray(data+bytes(size-len(data))))
                 fat[identifier]=identifier+1 if offset+1<blocks else END
-        elif not content: starts[name]=END
+        elif not content:
+            starts[name]=END
     directory=entry('Root Entry',5,root_start,len(mini_blob),child=1 if streams else FREE)
     for index,(name,content) in enumerate(streams.items(),1):
         directory.extend(entry(name,2,starts[name],len(content),right=index+1 if index<len(streams) else FREE))
     directory.extend(bytes(directory_count*size-len(directory)))
-    for index in range(directory_count): sectors[index+1]=directory[index*size:(index+1)*size]
+    for index in range(directory_count):
+        sectors[index+1]=directory[index*size:(index+1)*size]
     sectors[0]=bytearray(struct.pack('<'+'I'*len(fat),*fat))
-    header=bytearray(size); header[:8]=SIGNATURE
+    header=bytearray(size)
+    header[:8]=SIGNATURE
     struct.pack_into('<5H',header,24,0x3E,major,0xFFFE,9 if major==3 else 12,6)
     struct.pack_into('<9I',header,40,directory_count if major==4 else 0,1,1,0,4096,mini_id,1 if small else 0,END,0)
     struct.pack_into('<109I',header,76,0,*([FREE]*108))
@@ -380,7 +404,7 @@ class WpsTests(unittest.TestCase):
             if hasattr(os, 'mkfifo'):
                 fifo = Path(temp) / 'pipe.wps'
                 os.mkfifo(fifo)
-                result = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name('read_wps.py')), str(fifo)],
+                result = run_task_cli([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name('read_wps.py')), str(fifo)],
                                         capture_output=True, text=True, timeout=5)
                 self.assertEqual(result.returncode, 1)
                 self.assertEqual(json.loads(result.stdout)['status'], 'unsupported')
@@ -393,7 +417,7 @@ class WpsTests(unittest.TestCase):
                 path.write_bytes(synthetic_cfb({key[0]: value for key, value in document(parts).items()}))
                 original = hashlib.sha256(path.read_bytes()).hexdigest()
                 for mode in ('json', 'text'):
-                    result = subprocess.run([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', mode],
+                    result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', mode],
                                             cwd=temp, capture_output=True, text=True, timeout=5, env={**os.environ, 'PATH': ''})
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(result.stderr, '')
@@ -401,7 +425,7 @@ class WpsTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), original)
             for data in (b'unknown', synthetic_cfb({'EncryptionInfo': b'x'}), SIGNATURE):
                 path.write_bytes(data)
-                result = subprocess.run([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', 'text'],
+                result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', 'text'],
                                         cwd=temp, capture_output=True, text=True, timeout=5)
                 self.assertEqual(result.returncode, 1)
                 self.assertEqual(result.stdout, '')

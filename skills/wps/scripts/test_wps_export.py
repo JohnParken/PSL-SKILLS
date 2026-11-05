@@ -145,7 +145,7 @@ class TestWpsExport(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             in_docx = (Path(td) / "sample.docx").resolve()
             from test_wps_ooxml import package
-            in_docx.write_bytes(package("<w:p><w:r><w:t>Hello</w:t></w:r></w:p>"))
+            in_docx.write_bytes(package("<w:p><w:r><w:t>Hello 中文</w:t></w:r></w:p><w:p><w:r><w:t>第二段</w:t></w:r></w:p>"))
             out_wps = (Path(td) / "sample.wps").resolve()
 
             def side_effect(*args, **kwargs):
@@ -182,7 +182,10 @@ class TestWpsExport(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             out_wps = (Path(td) / "result.wps").resolve()
             res = export_wps.convert_docx_to_wps(str(sample_path), output_path=str(out_wps), backend="rtf")
-            self.assertEqual(res["status"], "success")
+            self.assertEqual(res["status"], "partial")
+            unmapped = {issue.get('property') for issue in res['conversion_issues'] if issue['code'] == 'source_format_not_mapped'}
+            self.assertTrue({'keepNext', 'numPr', 'szCs'} <= unmapped)
+            self.assertEqual(res['source_format_mapping']['status'], 'detected_omissions')
             self.assertEqual(res["backend"], "rtf")
             self.assertTrue(out_wps.is_file())
             self.assertGreater(out_wps.stat().st_size, 500)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 """Output signatures, real readback, partial exits and legacy entry-point regressions."""
+from test_task_cli_support import run_task_cli, run_main
 import contextlib
 import io
 import json
@@ -45,7 +46,7 @@ class OutputContractTests(unittest.TestCase):
         self.rtf = self.rtf_source.read_bytes()
 
     def cli(self, script, *args, stdin=None):
-        return subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPT_DIR / script), *map(str, args)],
+        return run_task_cli([sys.executable, '-I', '-S', '-B', str(SCRIPT_DIR / script), *map(str, args)],
                               input=stdin, capture_output=True, text=True, check=False, timeout=30)
 
     def fake_office(self, data, code=0):
@@ -234,7 +235,7 @@ class OutputContractTests(unittest.TestCase):
         process = self.cli('run_wps_task.py', 'create', target, '--compact-receipt', stdin=json.dumps(SPEC))
         self.assertEqual(process.returncode, 0, process.stderr)
         receipt = json.loads(process.stdout)
-        self.assertEqual(receipt['target'], str(target))
+        self.assertEqual(receipt['target'], target.name)
         self.assertEqual(receipt['output_format'], 'rtf')
         self.assertFalse(receipt['binary_doc'])
         self.assertFalse(receipt['native_wps'])
@@ -290,6 +291,7 @@ class OutputContractTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), self.ooxml[:100])
 
     def test_binary_backend_validates_private_candidate_and_preserves_partial(self):
+        self.source.write_bytes(package('<w:p><w:r><w:t>Hello 中文</w:t></w:r></w:p><w:p><w:r><w:t>第二段</w:t></w:r></w:p>'))
         for partial in (False, True):
             for suffix in ('.doc', '.wps'):
                 with self.subTest(partial=partial, suffix=suffix):
@@ -421,7 +423,7 @@ class OutputContractTests(unittest.TestCase):
                     contextlib.redirect_stdout(output),
                 ):
                     with self.assertRaises(SystemExit) as raised:
-                        export_wps.main()
+                        run_main(export_wps.main)
                 self.assertEqual(raised.exception.code, expected_exit)
                 self.assertEqual(json.loads(output.getvalue())['readback']['status'], reader_status)
 

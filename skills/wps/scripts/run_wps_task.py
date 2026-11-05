@@ -5,10 +5,8 @@
 from typing import Dict, Any, Optional
 import argparse
 import json
-import os
 from pathlib import Path
 import sys
-import tempfile
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -28,7 +26,10 @@ def check_task_environment() -> int:
             raise RuntimeError("Python >=3.10 required for run_wps_task")
         import wps_rtf_builder
         import read_wps
-    except (ImportError, OSError, RuntimeError) as exc:
+        import wps_delivery
+        from wps_task_paths import write_capabilities
+        write_capabilities()
+    except (ImportError, OSError, RuntimeError, ValueError) as exc:
         print("check_kind=environment artifact_validation=not_run", file=sys.stderr)
         print(f"environment-failed: {exc}", file=sys.stderr, flush=True)
         return 2 if sys.version_info < (3, 10) else 1
@@ -85,31 +86,17 @@ def create_document(
     if not raw_bytes.startswith(b"{\\rtf"):
         raise RuntimeError("Generated document does not have a valid RTF stream header")
 
-    target_dir = output_path.parent.resolve()
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    # Atomic write pattern: write to temporary file in same directory, then rename
-    temp_fd, temp_path_str = tempfile.mkstemp(
-        dir=str(target_dir),
-        prefix=".tmp_wps_",
-        suffix=".wps",
-    )
-    temp_path = Path(temp_path_str)
-    try:
-        with os.fdopen(temp_fd, "w", encoding="ascii") as fp:
-            fp.write(raw_bytes.decode("ascii"))
-
-        # Validate the private candidate before publishing or touching the target.
-        candidate = read_bytes(temp_path.read_bytes())
+    from wps_task_paths import output_candidate, write_candidate
+    from wps_access import read_input
+    with output_candidate(output_path) as (temp_path, publish):
+        write_candidate(temp_path, raw_bytes)
+        candidate = read_bytes(read_input(temp_path))
         from wps_rtf_read import require_publishable_candidate
         require_publishable_candidate(candidate)
-        from wps_content_validation import validate_content
+        from wps_content_validation import validate_content, validate_format
         content_validation = validate_content(doc, candidate)
-        os.replace(temp_path, output_path)
-    except Exception:
-        if temp_path.exists():
-            temp_path.unlink()
-        raise
+        format_validation = validate_format(doc, candidate)
+        publish()
 
     # Readback validation
 
@@ -127,7 +114,9 @@ def create_document(
     if compact_receipt:
         return {
             "status": "success",
+            **publish.receipt,
             "content_validation": content_validation,
+            "format_validation": format_validation,
             "target": str(output_path),
             "file_size": file_size,
             "blocks_count": blocks_count,
@@ -148,7 +137,9 @@ def create_document(
 
     return {
         "status": "success",
+        **publish.receipt,
         "content_validation": content_validation,
+        "format_validation": format_validation,
         "target": str(output_path),
         "file_size": file_size,
         "blocks_count": blocks_count,
@@ -166,6 +157,10 @@ def create_document(
     }
 
 
+from wps_task_paths import cli_boundary, validate_argument
+
+
+@cli_boundary
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
@@ -197,11 +192,14 @@ def main(argv=None) -> int:
             )
             return 2
 
+        validate_argument(args.output, output=True)
         # Read specification from argument or stdin
         if args.spec:
             spec_path = Path(args.spec)
             if spec_path.is_file():
-                raw_data = spec_path.read_text(encoding="utf-8")
+                validate_argument(args.spec)
+                from wps_access import read_input
+                raw_data = read_input(spec_path).decode("utf-8")
             else:
                 raw_data = args.spec
         else:
@@ -229,12 +227,15 @@ def main(argv=None) -> int:
             return 1
 
         try:
+            from wps_delivery import finish_delivery
             result = create_document(
                 spec=spec,
                 output_path=output_file,
                 compact_receipt=args.compact_receipt,
                 theme_override=args.theme,
             )
+            inputs = [args.spec] if args.spec and Path(args.spec).is_file() else []
+            finish_delivery(result, output_file, inputs)
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
         except Exception as exc:
@@ -242,6 +243,7 @@ def main(argv=None) -> int:
                 json.dumps({
                     "status": "failed",
                     "error": str(exc),
+                    **getattr(exc, "publication", {}),
                 }, ensure_ascii=False),
                 file=sys.stderr,
             )

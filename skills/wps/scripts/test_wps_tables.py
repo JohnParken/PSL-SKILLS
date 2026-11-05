@@ -1,4 +1,5 @@
 """Independent hand-stated Word table matrices; synthetic, not WPS provenance."""
+from test_task_cli_support import run_task_cli
 from pathlib import Path
 import json
 import os
@@ -188,15 +189,17 @@ class TableTests(unittest.TestCase):
     def test_cli_json_contract_and_text_compatibility(self):
         data=package(p('START')+table(tr(tc('A')+tc('B')),2))
         with tempfile.TemporaryDirectory() as directory:
-            path=Path(directory)/'synthetic.wps';path.write_bytes(data)
+            path=Path(directory)/'synthetic.wps'
+            path.write_bytes(data)
             command=[sys.executable,'-I','-S','-B',str(Path(__file__).with_name('read_wps.py')),str(path)]
-            json_run=subprocess.run(command,capture_output=True,text=True,env={'PATH':''},timeout=10)
+            json_run=run_task_cli(command,capture_output=True,text=True,env={'PATH':''},timeout=10)
             self.assertEqual(json_run.returncode,0,json_run.stderr)
             result=json.loads(json_run.stdout)
             self.assertEqual(result['text'],'START\nA\tB')
             self.assertEqual(len(result['tables']),1)
-            text_run=subprocess.run(command+['--format','text'],capture_output=True,text=True,env={'PATH':''},timeout=10)
+            text_run=run_task_cli(command+['--format','text'],capture_output=True,text=True,env={'PATH':''},timeout=10)
             self.assertEqual(text_run.returncode,0,text_run.stderr)
             self.assertEqual(text_run.stdout,'START\nA\tB')
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

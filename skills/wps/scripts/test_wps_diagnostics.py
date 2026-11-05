@@ -14,7 +14,16 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(out['reading_assessment']['completeness'],'within_declared_scope')
         self.assertFalse(out['reading_assessment']['full_format_verified'])
     def test_partial_location_without_hidden_content(self):
-        out=summarize({'status':'partial','issues':[{'code':'hidden','stream':'word/header1.xml','offset':None,'message':'SECRET','text':'SECRET'}], 'related_stories':[{'type':'header','status':'partial','source':{'part':'word/header1.xml'},'text':'SECRET'}]})
+        out=summarize({'status':'partial',
+            'issues':[{'code':'hidden',
+            'stream':'word/header1.xml',
+            'offset':None,
+            'message':'SECRET',
+            'text':'SECRET'}],
+            'related_stories':[{'type':'header',
+            'status':'partial',
+            'source':{'part':'word/header1.xml'},
+            'text':'SECRET'}]})
         summary=out['reading_assessment']
         self.assertNotIn('SECRET',str(summary))
         self.assertEqual(summary['events'][0]['location'],{'stream':'word/header1.xml','offset':None})
@@ -185,4 +194,5 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(unread['locations_truncated'],980)
         self.assertNotIn('SECRET',str(summary))
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

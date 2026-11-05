@@ -13,9 +13,19 @@ import wps_ooxml as reader
 
 def package(body='', extra=(), document=None):
     stream = io.BytesIO()
-    files = [('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'),
-             ('_rels/.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'),
-             ('word/document.xml', document if document is not None else '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body + '</w:body></w:document>')]
+    files = [('[Content_Types].xml', (
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Ove'
+        'rride PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-'
+        'officedocument.wordprocessingml.document.main+xml"/></Types>'
+    )),
+             ('_rels/.rels', (
+                 '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationshi'
+                 'ps"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocume'
+                 'nt/2006/relationships/officeDocument" Target="word/document.xml"/></Relationship'
+                 's>'
+             )),
+             ('word/document.xml',
+                 document if document is not None else '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body + '</w:body></w:document>')]
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', UserWarning)
         with zipfile.ZipFile(stream, 'w', zipfile.ZIP_STORED) as archive:
@@ -35,7 +45,12 @@ class EnvironmentTests(unittest.TestCase):
 @unittest.skipUnless(reader.expat.version_info >= (2, 6, 0), 'requires Expat >=2.6')
 class OoxmlTests(unittest.TestCase):
     def test_text_revision_related_and_table(self):
-        body = '<w:p><w:r><w:t>中文 A</w:t><w:tab/><w:t>B</w:t></w:r><w:ins><w:r><w:t>新</w:t></w:r></w:ins><w:del><w:r><w:delText>旧</w:delText></w:r></w:del></w:p><w:tbl><w:tblGrid><w:gridCol/><w:gridCol/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>甲</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>乙</w:t></w:r></w:p></w:tc></w:tr></w:tbl>'
+        body = (
+            '<w:p><w:r><w:t>中文 A</w:t><w:tab/><w:t>B</w:t></w:r><w:ins><w:r><w:t>新</w:t></w:r'
+            '></w:ins><w:del><w:r><w:delText>旧</w:delText></w:r></w:del></w:p><w:tbl><w:tblGr'
+            'id><w:gridCol/><w:gridCol/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>甲</w:t></w:r><'
+            '/w:p></w:tc><w:tc><w:p><w:r><w:t>乙</w:t></w:r></w:p></w:tc></w:tr></w:tbl>'
+        )
         data = package(body, [('word/header1.xml', '<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>页眉</w:t></w:r></w:p></w:hdr>')])
         for view, text in [('accepted','新'), ('original','旧'), ('all','新旧')]:
             result = reader.read_bytes(data, revisions=view)
@@ -64,7 +79,8 @@ class OoxmlTests(unittest.TestCase):
             self.assertNotEqual(result['status'], 'ok')
             self.assertIsNone(result['text'])
         data = bytearray(package('<w:p><w:r><w:t>UNIQUE</w:t></w:r></w:p>'))
-        at = data.index(b'UNIQUE'); data[at] ^= 1
+        at = data.index(b'UNIQUE')
+        data[at] ^= 1
         self.assertEqual(reader.read_bytes(bytes(data))['status'], 'corrupt')
 
     def test_budget_before_xml_tree(self):
@@ -89,12 +105,20 @@ class OoxmlTests(unittest.TestCase):
         self.assertEqual(result['status'], 'partial')
         self.assertEqual(result['diagnostics'][0]['code'], 'uninterpreted_namespace')
         # A foreign wrapper also cannot smuggle legitimate Word descendants.
-        result = reader.read_bytes(package('<x:sdt xmlns:x="urn:unrelated"><w:p><w:r><w:t>HIDDEN</w:t></w:r></w:p></x:sdt><w:sdt><w:sdtContent><w:p><w:r><w:t>保留</w:t></w:r></w:p></w:sdtContent></w:sdt>'))
+        result = reader.read_bytes(package((
+            '<x:sdt xmlns:x="urn:unrelated"><w:p><w:r><w:t>HIDDEN</w:t></w:r></w:p></x:sdt><w'
+            ':sdt><w:sdtContent><w:p><w:r><w:t>保留</w:t></w:r></w:p></w:sdtContent></w:sdt>'
+        )))
         self.assertEqual(result['text'], '保留')
         self.assertEqual(result['status'], 'partial')
 
     def test_markup_compatibility_not_successful_empty(self):
-        body = '<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"><mc:Choice Requires="x"><w:p><w:r><w:t>CHOICE</w:t></w:r></w:p></mc:Choice><mc:Fallback><w:p><w:r><w:t>FALLBACK</w:t></w:r></w:p></mc:Fallback></mc:AlternateContent>'
+        body = (
+            '<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatib'
+            'ility/2006"><mc:Choice Requires="x"><w:p><w:r><w:t>CHOICE</w:t></w:r></w:p></mc:'
+            'Choice><mc:Fallback><w:p><w:r><w:t>FALLBACK</w:t></w:r></w:p></mc:Fallback></mc:'
+            'AlternateContent>'
+        )
         result = reader.read_bytes(package(body))
         self.assertEqual(result['text'], '')
         self.assertEqual(result['status'], 'partial')
@@ -108,7 +132,8 @@ class OoxmlTests(unittest.TestCase):
         for end in range(0, len(data), max(1, len(data)//40)):
             self.assertNotEqual(reader.read_bytes(data[:end])['status'], 'ok')
         for pos in (0, 2, len(data)-22, len(data)-20, len(data)-12):
-            damaged = bytearray(data); damaged[pos] ^= 0x80
+            damaged = bytearray(data)
+            damaged[pos] ^= 0x80
             self.assertNotEqual(reader.read_bytes(bytes(damaged))['status'], 'ok')
 
 

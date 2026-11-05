@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Unit tests for bounded RTF stream reading in WPS skill."""
 
+from test_task_cli_support import run_task_cli
 import json
 import os
 from pathlib import Path
@@ -113,7 +114,7 @@ class TestWpsRtfReading(unittest.TestCase):
                 str(Path(read_wps.__file__).resolve()),
                 tmp_name,
             ]
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+            proc = run_task_cli(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
             self.assertEqual(proc.returncode, 0)
             payload = json.loads(proc.stdout)
             self.assertEqual(payload["format"], "rtf")
@@ -122,7 +123,7 @@ class TestWpsRtfReading(unittest.TestCase):
 
             # Test --format text
             cmd_text = cmd + ["--format", "text"]
-            proc_text = subprocess.run(cmd_text, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+            proc_text = run_task_cli(cmd_text, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
             self.assertEqual(proc_text.returncode, 0)
             self.assertEqual(proc_text.stdout.strip(), "Sample text for CLI")
         finally:

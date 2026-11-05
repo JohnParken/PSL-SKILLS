@@ -1,4 +1,5 @@
 """Synthetic content-routing regressions; suffixes are not producer evidence."""
+from test_task_cli_support import run_task_cli
 import json
 from pathlib import Path
 import subprocess
@@ -66,7 +67,7 @@ class RoutingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'fields.wps'
             path.write_bytes(package('<w:p><w:r><w:fldChar w:fldCharType="begin"/><w:t>1</w:t></w:r></w:p>'))
-            process = subprocess.run([sys.executable, '-I', '-S', '-B',
+            process = run_task_cli([sys.executable, '-I', '-S', '-B',
                                       str(Path(__file__).with_name('read_wps.py')), str(path), '--format', 'text'],
                                      capture_output=True, text=True, timeout=10, env={'PATH': ''})
             self.assertEqual(process.returncode, 3)
@@ -77,7 +78,7 @@ class RoutingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'table.et'
             path.write_bytes(synthetic_cfb({'Workbook': b'dummy'}))
-            process = subprocess.run([sys.executable, '-I', '-S', '-B',
+            process = run_task_cli([sys.executable, '-I', '-S', '-B',
                                       str(Path(__file__).with_name('read_wps.py')), str(path), '--format', 'text'],
                                      capture_output=True, text=True, timeout=10)
             self.assertEqual(process.returncode, 1)

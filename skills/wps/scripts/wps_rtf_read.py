@@ -43,6 +43,8 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES) -> Dict[str, An
     idx = 0
 
     group_depth = 0
+    paragraph_format = {}
+    page_properties = {}
     skip_group_depth: Optional[int] = None
     codepage = "cp936"
     uc = 1
@@ -169,13 +171,16 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES) -> Dict[str, An
         if ch == "{":
             flush_hex()
             group_depth += 1
-            stack.append((skip_group_depth, uc))
+            stack.append((skip_group_depth, uc, dict(paragraph_format)))
             idx += 1
             continue
         elif ch == "}":
             flush_hex()
             if stack:
-                skip_group_depth, uc = stack.pop()
+                pending_format = paragraph_format if group_depth == 1 and current_para else None
+                skip_group_depth, uc, paragraph_format = stack.pop()
+                if pending_format is not None:
+                    paragraph_format = pending_format
                 group_depth -= 1
             else:
                 add_geometry_issue({'code': 'rtf_unmatched_group_end', 'message': 'Extra closing group delimiter'})
@@ -266,7 +271,15 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES) -> Dict[str, An
                 idx += 1
 
             # Dispatch control word
-            if word in IGNORED_DESTINATIONS:
+            if word in {'paperw', 'paperh', 'margl', 'margr', 'margt', 'margb'} and num_val is not None:
+                page_properties[word] = num_val
+            elif word == 'pard':
+                paragraph_format = {}
+            elif word in {'ql', 'qr', 'qc', 'qj'}:
+                paragraph_format['alignment'] = word
+            elif word in {'sl', 'slmult', 'fi', 'li', 'ri', 'sb', 'sa', 'outlinelevel', 'keepn', 'keep', 'pagebb'}:
+                paragraph_format[word] = num_val if num_val is not None else 1
+            elif word in IGNORED_DESTINATIONS:
                 if word in {'header', 'footer', 'pict'}:
                     add_geometry_issue({'code': 'rtf_destination_skipped', 'destination': word,
                                         'message': 'Related content or object omitted from main content'})
@@ -307,11 +320,15 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES) -> Dict[str, An
                 add_geometry_issue({'code': 'rtf_unicode_incomplete', 'message': 'Unicode control has no complete numeric operand'})
             elif word == "par":
                 flush_hex()
+                if in_table:
+                    current_cell.append('\n')
+                    continue
                 if not in_table:
                     flush_table_if_needed()
                 p_text = joined(current_para).strip()
                 if p_text and len(paragraphs) < MAX_PARAGRAPHS:
-                    paragraphs.append({"text": p_text})
+                    paragraphs.append({"text": p_text, 'format': dict(paragraph_format),
+                                       'outline_level': paragraph_format.get('outlinelevel')})
                     blocks.append({"type": "paragraph", "index": len(paragraphs) - 1})
                 current_para = []
             elif word == "trowd":
@@ -375,7 +392,8 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES) -> Dict[str, An
     flush_table_if_needed()
     final_p = joined(current_para).strip()
     if final_p and len(paragraphs) < MAX_PARAGRAPHS:
-        paragraphs.append({"text": final_p})
+        paragraphs.append({"text": final_p, 'format': dict(paragraph_format),
+                           'outline_level': paragraph_format.get('outlinelevel')})
         blocks.append({"type": "paragraph", "index": len(paragraphs) - 1})
 
     if merge_markers != captured_merge_markers:
@@ -384,6 +402,7 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES) -> Dict[str, An
     return {
         "schema_version": "rtf_readonly_v1",
         "format": "rtf",
+        "page_properties": page_properties,
         "status": "partial" if geometry_issues else "ok",
         "partial": bool(geometry_issues),
         "issues": geometry_issues,

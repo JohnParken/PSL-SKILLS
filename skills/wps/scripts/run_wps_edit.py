@@ -5,10 +5,8 @@
 from typing import Dict, Any, List, Optional
 import argparse
 import json
-import os
 from pathlib import Path
 import sys
-import tempfile
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -222,34 +220,18 @@ def execute_edit_task(
         spec["blocks"].insert(0, {"type": "paragraph", "text": "[部分内容重排副本：仅含可读取内容；原格式及未读取内容不保留，表格相对位置可能未知。]"})
     doc = build_document_from_spec(spec)
     raw_bytes = doc.render().encode("ascii")
-    target_dir = output_path.parent.resolve()
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    temp_fd, temp_path_str = tempfile.mkstemp(
-        dir=str(target_dir),
-        prefix=".tmp_wps_edit_",
-        suffix=".wps",
-    )
-    temp_path = Path(temp_path_str)
-    try:
-        with os.fdopen(temp_fd, "w", encoding="ascii") as fp:
-            fp.write(raw_bytes.decode("ascii"))
-        candidate = read_bytes(temp_path.read_bytes())
+    from wps_task_paths import output_candidate, write_candidate
+    with output_candidate(output_path, prefix='.tmp_wps_edit_', exclusive=allow_lossy_reflow) as (temp_path, publish):
+        write_candidate(temp_path, raw_bytes)
+        candidate = read_bytes(read_input(temp_path))
         from wps_rtf_read import require_publishable_candidate
         require_publishable_candidate(candidate)
-        from wps_content_validation import validate_content
+        from wps_content_validation import validate_content, validate_format
         content_validation = validate_content(doc, candidate)
+        format_validation = validate_format(doc, candidate)
         if read_input(input_path) != source_bytes:
             raise RuntimeError("Source changed during reflow; publication stopped")
-        if allow_lossy_reflow:
-            os.link(temp_path, output_path)
-            temp_path.unlink()
-        else:
-            os.replace(temp_path, output_path)
-    except Exception:
-        if temp_path.exists():
-            temp_path.unlink()
-        raise
+        publish()
 
     # Readback verification
     read_res = candidate
@@ -258,7 +240,9 @@ def execute_edit_task(
 
     return {
         "status": "success",
+        **publish.receipt,
         "content_validation": content_validation,
+        "format_validation": format_validation,
         "target": str(output_path),
         "source": str(input_path),
         "file_size": len(raw_bytes),
@@ -286,6 +270,10 @@ def execute_edit_task(
     }
 
 
+from wps_task_paths import cli_boundary, validate_argument
+
+
+@cli_boundary
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
@@ -333,6 +321,8 @@ def main(argv=None) -> int:
         parser.print_help(sys.stderr)
         return 2
 
+    validate_argument(args.input)
+    validate_argument(args.output, output=True)
     input_file = Path(args.input)
     output_file = Path(args.output)
     theme = getattr(args, "theme", "official")
@@ -385,7 +375,9 @@ def main(argv=None) -> int:
     elif args.command == "batch":
         if args.spec:
             spec_path = Path(args.spec)
-            raw = spec_path.read_text(encoding="utf-8") if spec_path.is_file() else args.spec
+            if spec_path.is_file():
+                validate_argument(args.spec)
+            raw = read_input(spec_path).decode("utf-8") if spec_path.is_file() else args.spec
         else:
             if sys.stdin.isatty():
                 parser.error("Specification required via --spec or stdin for batch mode")
@@ -402,13 +394,19 @@ def main(argv=None) -> int:
             parser.error("Batch spec must be a list of operations or a dict containing 'operations'")
 
     try:
+        from wps_delivery import finish_delivery
         res = execute_edit_task(input_file, output_file, operations, theme=theme, allow_lossy_reflow=args.allow_lossy_reflow)
+        inputs = [input_file]
+        if args.command == 'batch' and args.spec and Path(args.spec).is_file():
+            inputs.append(args.spec)
+        finish_delivery(res, output_file, inputs)
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return 3 if args.allow_lossy_reflow and res["partial"] else 0
     except Exception as exc:
         print(json.dumps({
             "status": "failed",
             "error": str(exc),
+            **getattr(exc, "publication", {}),
         }, ensure_ascii=False), file=sys.stderr)
         return 1
 

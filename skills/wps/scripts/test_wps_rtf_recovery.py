@@ -1,4 +1,5 @@
 """Independent RTF bytes exercising partial recovery, not builder round trips."""
+from test_task_cli_support import run_task_cli
 import unittest
 from pathlib import Path
 import tempfile
@@ -96,7 +97,7 @@ class RecoveryTests(unittest.TestCase):
             source.write_bytes(b'{\\rtf1 Reliable')
             script = Path(__file__).with_name('read_wps.py')
             for output_format in ('json', 'text'):
-                result = subprocess.run([sys.executable, '-I', '-S', '-B', str(script), str(source), '--format', output_format],
+                result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), str(source), '--format', output_format],
                                         capture_output=True, text=True, check=False)
                 self.assertEqual(result.returncode, 3)
                 if output_format == 'json':
