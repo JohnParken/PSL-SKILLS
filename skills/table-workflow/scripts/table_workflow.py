@@ -89,7 +89,7 @@ class Workflow:
                 self.books[path] = self.api.load(path, raw)
             except Exception as exc:
                 raise WorkflowError('Source parsing failed: ' + path + ': ' + str(exc), {
-                    'source_path': path, 'source_error_type': type(exc).__name__, 'source_status': getattr(exc, 'status', None),
+                    'source_path': path, 'source_error_type': getattr(exc, 'remote_code', None) or type(exc).__name__, 'source_status': getattr(exc, 'status', None),
                     'source_location': getattr(exc, 'location', None)}) from exc
         if 'sha256' in spec:
             require(spec['sha256'] == self.snapshots[path][1], 'Source changed; inspect and rebuild mapping: ' + path)
@@ -124,11 +124,7 @@ class Workflow:
                         preview.append({'cell': ref, 'type': self.api.analysis.typed_value(cell)[0],
                                         'value_preview': rendered[:100], 'value_truncated': len(rendered) > 100,
                                         'formula': cell.get('formula') is not None, 'cache_status': cell.get('cache_status')})
-                if hasattr(book, 'wps_merges'):
-                    merges = [node['ref'] for node in book.wps_merges[name]]
-                else:
-                    tree = self.api.xlsx.xml(book.parts[book.sheets[name]])
-                    merges = [node.get('ref') for node in tree.findall(self.api.xlsx.NS + 'mergeCells/' + self.api.xlsx.NS + 'mergeCell')]
+                merges = self.api.merges(book, name)
                 sheets.append({'name': name, 'stored_cells': len(cells), 'last_row': last_row, 'last_column': last_col,
                                'formula_count': sum(cell.get('formula') is not None for cell in cells.values()),
                                'merges': merges[:20], 'merges_omitted': max(0, len(merges) - 20), 'preview': preview,
@@ -136,7 +132,7 @@ class Workflow:
                                'unshown_positions': (end_row - first_row + 1) * (end_col - first_col + 1) - len(preview)})
             issues = getattr(book, 'wps_issues', [])
             results.append({'path': spec['path'], 'sha256': self.snapshots[spec['path']][1],
-                            'source_status': getattr(book, 'wps_source_status', 'native_loaded'),
+                            'source_status': 'native_loaded' if self.api.is_native(book) else getattr(book, 'wps_source_status', 'ok'),
                             'source_issues': issues[:5], 'source_issues_omitted': max(0, len(issues) - 5),
                             'source_coverage': getattr(book, 'wps_source_coverage', {}),
                             'sheets': sheets, 'sheets_omitted': max(0, len(names) - 8)})
@@ -153,11 +149,11 @@ class Workflow:
         require(spec['repeated_keys'] in ('reject', 'aggregate'), 'repeated_keys must be reject or aggregate')
         require(type(spec.get('accept_partial', False)) is bool, 'accept_partial must be boolean')
         book = self.load(spec)
-        if spec.get('formulas') == 'calculate' and isinstance(book, self.api.xlsx.Workbook):
+        if spec.get('formulas') == 'calculate' and self.api.is_native(book):
             # region_from_book.calculate mutates its argument. Each recomputation
             # starts from the immutable file snapshot; cached regions always see
             # the original saved values, independently of source declaration order.
-            book = self.api.xlsx.Workbook.from_bytes(self.snapshots[spec['path']][0], spec['path'])
+            book = self.api.open_snapshot(self.snapshots[spec['path']][0], spec['path'])
         if getattr(book, 'wps_source_status', 'ok') != 'ok':
             diagnostic = {'source': name, 'source_status': book.wps_source_status, 'source_issues': book.wps_issues,
                           'source_coverage': book.wps_source_coverage}
@@ -182,7 +178,7 @@ class Workflow:
         cols, headers, rows, metadata = table
         excluded = exclusions(spec.get('exclude_rows', []), metadata['header_schema']['data_first_row'], selection(spec['range'], self.api.xlsx)[2])
         _, _, _, filters = self.api.analysis.validate_query({'filters': spec.get('filters', [])}, cols, metadata['header_schema'])
-        selected = [(number, row) for number, row in rows if number not in excluded and self.api.analysis.matches(row, filters)]
+        selected = self.api.select_rows(rows, excluded, filters)
         keys = columns_for(spec['keys'], cols, metadata['header_schema'], self.api)
         side = {'rows': selected, 'indices': [cols.index(key) for key in keys]}
         _, _, diagnostics = self.api.match.index_rows(side, 'never')
@@ -211,13 +207,9 @@ class Workflow:
             text_field(spec['basis'], 'lookup basis')
             require(name not in tables and spec['left'] in tables and spec['right'] in raw_names, 'Lookup requires a new id, earlier left table and raw right dimension')
             require(spec['repeated_keys'] in ('reject', 'aggregate'), 'Lookup grouping repeated_keys must be reject or aggregate')
-            try:
-                from xlsx_lookup import lookup_regions
-            except ImportError as exc:
-                raise WorkflowError('XLSX dependency lacks lookup_regions; update the confirmed dependency') from exc
             left, _ = tables[spec['left']]
             right, _ = tables[spec['right']]
-            table, report = lookup_regions(left, right, {key: spec[key] for key in ('left_keys', 'right_keys', 'columns', 'relationship', 'max_rows')})
+            table, report = self.api.lookup(left, right, {key: spec[key] for key in ('left_keys', 'right_keys', 'columns', 'relationship', 'max_rows')})
             keys = columns_for(spec['keys'], table[0], table[3]['header_schema'], self.api)
             _, _, quality = self.api.match.index_rows({'rows': table[2], 'indices': [table[0].index(key) for key in keys]}, 'never')
             if quality['null_key_rows'] or spec['repeated_keys'] == 'reject' and quality['duplicate_key_groups']:
@@ -239,7 +231,7 @@ class Workflow:
             cell = cells.get(ref, {})
             require(cell.get('formula') is None and cell.get('type') != 'e', 'Formula/error in target header or key: ' + ref)
             return self.api.analysis.typed_value(cell)
-        schema = self.api.headers.reconstruct(book, spec['sheet'], bounds, spec['header_rows'], read_cell)
+        schema = self.api.target_headers(book, spec['sheet'], bounds, spec['header_rows'], read_cell)
         cols = [item['column'] for item in schema['columns']]
         keys = columns_for(spec['keys'], cols, schema, self.api)
         excluded = exclusions(spec.get('exclude_rows', []), schema['data_first_row'], bounds[2])
@@ -354,15 +346,15 @@ class Workflow:
                 require(self.api.xlsx.address(ref)[0] == 1 and ref == ref.upper(), 'Formula bindings use uppercase row-1 cell addresses')
                 require(dependency in metrics, 'Derived metrics must reference earlier declared metrics')
             values = {}
+            requests = []
             for key in set(target_keys.values()):
                 if any(metrics[dependency]['values'][key] is None for dependency in item['bindings'].values()):
                     require(item.get('missing', 'reject') == 'blank', 'Missing input for derived metric: ' + name)
                     values[key] = None
                     continue
-                def resolve(sheet, ref):
-                    require(sheet == 'Metrics' and ref in item['bindings'], 'Formula reference outside declared bindings')
-                    return metrics[item['bindings'][ref]]['values'][key]
-                value = self.api.formula.evaluate(item['formula'], 'Metrics', resolve)
+                requests.append((key, {ref: metrics[dependency]['values'][key] for ref, dependency in item['bindings'].items()}))
+            evaluated = self.api.evaluate_many(item['formula'], 'Metrics', [bindings for _, bindings in requests])
+            for (key, _), value in zip(requests, evaluated):
                 require(isinstance(value, Decimal) and value.is_finite(), 'Derived result must be a finite number')
                 values[key] = value
             if any(value is None for value in values.values()):
@@ -384,7 +376,7 @@ class Workflow:
                 require(plan['target'].get('overwrite', 'blank_only') == 'replace_values' or previous.get('value') in (None, ''),
                         'Target is nonblank; requires authorized replace_values: ' + ref)
                 value = metric['values'][key]
-                rounded = None if value is None else self.api.formula.evaluate('ROUND(A1,' + str(mapping['decimals']) + ')', 'Metrics', lambda _sheet, _ref: value)
+                rounded = None if value is None else self.api.evaluate_bound('ROUND(A1,' + str(mapping['decimals']) + ')', 'Metrics', {'A1': value})
                 if rounded is not None:
                     digits = ''.join(str(digit) for digit in rounded.as_tuple().digits).rstrip('0')
                     require(len(digits) <= 15 and (rounded == 0 or -307 <= rounded.adjusted() <= 307),
@@ -394,7 +386,7 @@ class Workflow:
                                'key': [{'type': kind, 'value': val} for kind, val in key],
                                'unrounded_value': value, 'value': rounded, 'unit': mapping['unit'], 'period': mapping['period'],
                                'decimals': mapping['decimals'], 'rounding': 'ROUND_HALF_UP at final write'})
-        candidate = self.api.xlsx.Workbook.from_bytes(self.snapshots[plan['target']['path']][0], plan['target']['path'])
+        candidate = self.api.open_snapshot(self.snapshots[plan['target']['path']][0], plan['target']['path'])
         require(not any(entry['value'] is None for entry in patch.values())
                 or not any(cell.get('formula') is not None for cells in candidate.cells.values() for cell in cells.values()),
                 'Blank metric writes require a formula-free template; do not recalculate missing inputs as zero')
@@ -407,6 +399,7 @@ class Workflow:
         report = {'schema_version': 'table_workflow_audit_v1', 'status': 'partial' if self.warnings else 'validated',
                   'plan': plan, 'source_fingerprints': {path: digest for path, (_, digest) in self.snapshots.items()},
                   'dependencies': {name: item['skill_sha256'] for name, item in self.api.checks.items()},
+                  'dependency_interfaces': {name: item.get('interface', {'transport': 'legacy_in_process'}) for name, item in self.api.checks.items()},
                   'target_headers': target_schema, 'metrics': metric_reports, 'writes': writes, 'warnings': self.warnings,
                   'source_regions': {name: table[3] for name, (table, _) in tables.items()}, 'lookups': lookup_reports, 'checks': checks,
                   'calculation': calculation, 'preservation': 'non-target cell values/styles/formula text checked; formula caches may recalculate',
@@ -421,30 +414,8 @@ class Workflow:
         return [{'key': [{'type': kind, 'value': value} for kind, value in key], 'physical_rows': [row for row, _ in records]}
                 for key, records in index.items()]
 
-    @staticmethod
-    def verify_preserved(original, candidate, writes):
-        require(original.sheets == candidate.sheets, 'Workbook sheet structure changed')
-        require(not set(candidate.parts) - set(original.parts), 'Unexpected workbook part added')
-        for (sheet, ref), expected in writes.items():
-            actual = candidate.cells[sheet].get(ref, {})
-            require(actual.get('formula') is None and (actual.get('value') is None if expected is None
-                    else isinstance(actual.get('value'), Decimal) and actual['value'] == expected),
-                    'Target value differs from calculated write: ' + sheet + '!' + ref)
-        for sheet, cells in original.cells.items():
-            added = set(candidate.cells[sheet]) - set(cells)
-            require(all((sheet, ref) in writes for ref in added), 'Non-target cells added to ' + sheet)
-            for ref, cell in cells.items():
-                updated = candidate.cells[sheet].get(ref, {})
-                if (sheet, ref) in writes:
-                    require(cell.get('style') == updated.get('style'), 'Target style changed')
-                elif cell.get('formula') is not None:
-                    require(all(cell.get(field) == updated.get(field) for field in ('formula', 'style', 'formula_attributes')),
-                            'Non-target formula structure changed')
-                else:
-                    require(cell == updated, 'Non-target cell changed: ' + sheet + '!' + ref)
-        for name, data in original.parts.items():
-            if name not in candidate.changed:
-                require(candidate.parts.get(name) == data, 'Untouched ZIP member changed')
+    def verify_preserved(self, original, candidate, writes):
+        return self.api.verify_preserved(original, candidate, writes)
 
     def apply(self, plan, output, audit):
         output_path, audit_path = task_path(output, output=True), task_path(audit, output=True)
@@ -460,8 +431,7 @@ class Workflow:
         try:
             candidate.save(output_path)
             self.publication['output_written'] = True
-            reopened = self.api.xlsx.Workbook.load(output_path)
-            require(reopened.parts == candidate.parts, 'Written package does not match validated package')
+            self.api.assert_written(candidate, output_path)
             self.unchanged_inputs()
             self.publication['verification'] = 'workbook_and_inputs_passed'
             report['verification'] = 'written_package_and_inputs_passed'
@@ -478,11 +448,10 @@ class Workflow:
                 self.publication['output_written'] = 'unknown'
             raise WorkflowError('Delivery incomplete; retain existing outputs for inspection, do not regenerate blindly',
                                 {'reason': str(exc), 'output_exists': output_path.exists(), 'audit_exists': audit_path.exists()}) from exc
-        from xlsx_delivery import finish_delivery
         delivery = {}
         for path in (output_path, audit_path):
             result = {}
-            finish_delivery(result, str(path), [*self.snapshots, *(str(other) for other in (output_path, audit_path) if other != path)])
+            self.api.finish_delivery(result, str(path), [*self.snapshots, *(str(other) for other in (output_path, audit_path) if other != path)])
             delivery[path.as_posix()] = result['delivery']
         residuals = any(item.get('temporary_residuals') for item in delivery.values())
         archive_failed = any(item['archive_status'] not in ('copied', 'already_archived', 'skipped') for item in delivery.values())
@@ -571,6 +540,7 @@ def main():
     parser.add_argument('--audit')
     args = parser.parse_args()
     workflow = None
+    dependencies = None
     try:
         if args.command != 'apply':
             require(args.output is None and args.audit is None, '--output/--audit only apply to the apply command')
@@ -595,13 +565,16 @@ def main():
         diagnostics = dict(getattr(exc, 'diagnostics', {}))
         if hasattr(exc, 'calculation'):
             diagnostics['calculation'] = exc.calculation
-        result = {'status': 'failed', 'error_type': type(exc).__name__, 'message': str(exc),
+        result = {'status': 'failed', 'error_type': getattr(exc, 'remote_code', None) or type(exc).__name__, 'message': str(exc),
                   'diagnostics': diagnostics, 'output_written': False, 'audit_written': False}
         if workflow is not None:
             result.update(workflow.publication, warning_count=len(workflow.warnings), warnings_preview=workflow.warnings[:3],
                           warnings_omitted=max(0, len(workflow.warnings) - 3))
         print(encode(bounded_result(result)), flush=True)
         return 1
+    finally:
+        if dependencies is not None:
+            dependencies.close()
 
 
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ XLSX_ROOT = REPO / 'skills' / 'xlsx'
 ET_ROOT = REPO / 'skills' / 'et'
 sys.path.insert(0, str(ET_ROOT / 'scripts' / 'test'))
 sys.path.insert(0, str(WORKFLOW_ROOT / 'scripts'))
-from workflow_runtime import Dependencies, read_request, snapshot
+from workflow_runtime import LegacyDependencies as Dependencies, read_request, snapshot
 from table_workflow import Workflow, WorkflowError, bounded_result, encode
 
 

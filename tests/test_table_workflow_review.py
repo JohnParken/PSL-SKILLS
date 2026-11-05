@@ -94,7 +94,7 @@ class ReviewTests(unittest.TestCase):
         self.plan['metrics'][0]['missing'] = 'omit'
         payload = {'archive_status': 'failed', 'archive_message': '归档失败', 'warnings': ['synthetic ' * 10000],
                    'temporary_residuals': ['synthetic-owned-residual']}
-        with patch('xlsx_delivery.archive_outputs', return_value=payload):
+        with patch('xlsx_delivery.archive_outputs', return_value=payload), patch.object(workflow, 'Dependencies', fixtures.Dependencies):
             code, result = self.cli()
         self.assertEqual(code, 3)
         self.assertEqual(result['status'], 'partial')

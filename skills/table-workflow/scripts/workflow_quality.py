@@ -58,6 +58,7 @@ def ratio_metric(item, metrics, target_keys, api, warnings):
     for label in ('zero_denominator', 'missing'):
         require(item.get(label, 'reject') in ('reject', 'blank'), label + ' must be reject or blank')
     values, exceptions = {}, []
+    requests = []
     for key in dict.fromkeys(target_keys.values()):
         top = metrics[item['numerator']]['values'][key]
         bottom = metrics[item['denominator']]['values'][key]
@@ -67,7 +68,10 @@ def ratio_metric(item, metrics, target_keys, api, warnings):
             values[key] = None
             exceptions.append({'key': [{'type': kind, 'value': value} for kind, value in key], 'reason': reason})
         else:
-            values[key] = api.formula.evaluate('A1/B1*C1', 'Metrics', lambda _sheet, ref: {'A1': top, 'B1': bottom, 'C1': scale}[ref])
+            requests.append((key, {'A1': top, 'B1': bottom, 'C1': scale}))
+    evaluated = api.evaluate_many('A1/B1*C1', 'Metrics', [bindings for _, bindings in requests])
+    for (key, _), value in zip(requests, evaluated):
+        values[key] = value
     if exceptions:
         warnings.append({'metric': item['id'], 'blank_ratio_results': exceptions})
     return {'values': values, 'unit': item['unit'], 'period': item['period'], 'domain': 'target_keys'}

@@ -2,7 +2,7 @@
 
 路径占位符说明：`<skill-root>` 是 table-workflow Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 table-workflow Skill 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-本页只用于维护审查，运行时正常任务不预读。仓库测试与证据以宿主确认的仓库根目录为基准，位于仓库 `tests/test_table_workflow.py` 、`tests/test_table_workflow_review.py`、初次记录 `tests/table_workflow_validation.json` 与后续复核 `tests/table_workflow_review.json`，不随 Skill 单独分发，不拼接到 `<skill-root>`。本 Skill 的执行入口为 `<skill-root>/scripts/table_workflow.py`。
+本页只用于维护审查，运行时正常任务不预读。以宿主确认的仓库根目录为基准，跨 Skill 集成回归位于 仓库 `tests/test_table_workflow.py`、仓库 `tests/test_table_workflow_review.py` 和 仓库 `tests/test_table_workflow_cli_capabilities.py`。历史证据 `tests/table_workflow_validation.json`、`tests/table_workflow_review.json` 则以宿主确认的仓库根目录为基准，不拼接到 `<skill-root>`；其中的历史版本指纹和测试数不代表本轮版本。本轮CLI验证见 `<skill-root>/scripts/docs/cli-contract.md`。部分测试依赖仓库样本，业务运行不依赖这些测试材料。
 
 验收基线 Python 3.12.11 / macOS arm64 / Expat 2.6.3；每个测试在维护专属临时目录创建合成表并清理自己创建的目录。输入含原生 XLSX、合成 BIFF8 CFB 的 ETT 和 OOXML 的 ET 后缀样例，后缀不证明真实 WPS 来源。未提供用户业务原表，没有真实 WPS/Excel 软件视觉或语义验收。
 
@@ -14,4 +14,4 @@
 
 后续针对性复核修正同文件公式策略相互影响、审计计划数字转文本、长归档诊断导致回执失败；强化目标值比对、非目标新增单元格保护、ET partial 预览与失败阶段传播。当前测试数、独立预期和实测结果以较新的复核记录为准，初次记录保留当时源文件指纹，不作为后续版本的指纹。
 
-业务质量增强的当前证据位于仓库 tests/table_workflow_quality_validation.json，回归为 tests/test_table_workflow_quality.py（仓库根基准，不随Skill发布）。新增覆盖受控关联、金额守恒、复合键类型、逐实体缺期、勾稽容差、空指标、零分母及来源链。真实公开Denham银行对账原件用于一条端到端流程，维表分类、对照表和目标模板为明确的合成测试构造；独立OOXML/Fraction预期和按分舍入分别核对，不称为多份真实附件业务验收。原件来自仓库既有公开样本，不新增分发或改写。另用真实不支持公式工作簿确认仍拒绝。Linux容器入口、真实ET/ETT附件及生产宿主目前不可用；不能用改后缀或合成CFB代替真实ET验收。
+业务质量增强的历史证据位于仓库 tests/table_workflow_quality_validation.json；当前回归为 仓库 `tests/test_table_workflow_quality.py`，部分需要仓库样本。覆盖受控关联、金额守恒、复合键类型、逐实体缺期、勾稽容差、空指标、零分母及来源链。真实公开Denham银行对账原件用于一条端到端流程，维表分类、对照表和目标模板为明确的合成测试构造；独立OOXML/Fraction预期和按分舍入分别核对，不称为多份真实附件业务验收。原件来自仓库既有公开样本，不新增分发或改写。另用真实不支持公式工作簿确认仍拒绝。Linux容器入口、真实ET/ETT附件及生产宿主目前不可用；不能用改后缀或合成CFB代替真实ET验收。
