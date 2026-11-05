@@ -61,30 +61,38 @@ class StoriesTests(unittest.TestCase):
     def test_invalid_related_utf16_only_optin(self):
         streams=document([(b'A\r',True)],{80:b'\0\xd8',84:b'\0\xdc'})
         self.assertEqual(parse_streams(streams)['text'],'A\n')
-        with self.assertRaises(ParseError) as error: self.result(streams)
+        with self.assertRaises(ParseError) as error:
+            self.result(streams)
         self.assertEqual(error.exception.status,'corrupt')
         self.assertEqual(error.exception.location['cp'],2)
 
     def test_field_and_object_policies_scoped(self):
         streams=document([(b'A\r',True)],{80:'\x13F\x14R\x15\x01\r'.encode('utf-16le')})
-        with self.assertRaises(ParseError): self.result(streams)
+        with self.assertRaises(ParseError):
+            self.result(streams)
         result=self.result(streams,field_policy='cached_result',object_policy='placeholder')
         region=result['related_stories'][0]
         self.assertEqual(region['text'],'R\ufffc\n')
         self.assertEqual(region['issues'][1]['locations'][0]['cp'],7)
         streams=document([(b'A\r',True)],{80:'\x13X'.encode('utf-16le'),84:'Y\x14Z\x15\r'.encode('utf-16le')})
-        with self.assertRaises(ParseError): self.result(streams,field_policy='cached_result')
+        with self.assertRaises(ParseError):
+            self.result(streams,field_policy='cached_result')
 
     def test_bad_counts_terminal_and_budgets(self):
         streams=document([(b'A\r',True)],{80:'乙\r'.encode('utf-16le')})
         for value in (3,0xFFFFFFFF):
-            with self.assertRaises(ParseError): self.result(replace_word(streams,80,value))
-        with patch('read_wps.MAX_UNITS',3),self.assertRaises(ParseError): self.result(streams)
-        with patch('read_wps.MAX_PARAGRAPHS',1),self.assertRaises(ParseError): self.result(streams)
+            with self.assertRaises(ParseError):
+                self.result(replace_word(streams,80,value))
+        with patch('read_wps.MAX_UNITS',3),self.assertRaises(ParseError):
+            self.result(streams)
+        with patch('read_wps.MAX_PARAGRAPHS',1),self.assertRaises(ParseError):
+            self.result(streams)
         fields=document([(b'A\r',True)],{80:'\x13X\x14Y\x15\r'.encode('utf-16le'),96:'\x13X\x14Y\x15\r'.encode('utf-16le')})
-        with patch('read_wps.MAX_FIELDS',1),self.assertRaises(ParseError): self.result(fields,field_policy='cached_result')
+        with patch('read_wps.MAX_FIELDS',1),self.assertRaises(ParseError):
+            self.result(fields,field_policy='cached_result')
         objects=document([(b'A\r',True)],{80:'\x01\r'.encode('utf-16le'),96:'\x01\r'.encode('utf-16le')})
-        with patch('read_wps.MAX_OBJECT_MARKERS',1),self.assertRaises(ParseError): self.result(objects,object_policy='placeholder')
+        with patch('read_wps.MAX_OBJECT_MARKERS',1),self.assertRaises(ParseError):
+            self.result(objects,object_policy='placeholder')
 
     def test_cli_related_text_rejected_before_input(self):
         process = subprocess.run([sys.executable, '-I', '-S', '-B',
@@ -102,4 +110,5 @@ class StoriesTests(unittest.TestCase):
         self.assertEqual(result['related_stories'][2]['text'],'批\n')
         self.assertEqual(result['text'],'A\n')
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

@@ -31,9 +31,11 @@ def fixture(compressed=False, related=False):
 
 
 def mutate(streams, offset, value, width=1, stream='WordDocument'):
-    changed=dict(streams);data=bytearray(changed[(stream,)])
+    changed=dict(streams)
+    data=bytearray(changed[(stream,)])
     data[offset:offset+width]=value.to_bytes(width,'little')
-    changed[(stream,)]=bytes(data);return changed
+    changed[(stream,)]=bytes(data)
+    return changed
 
 
 class CharacterPropertiesTests(unittest.TestCase):
@@ -68,7 +70,8 @@ class CharacterPropertiesTests(unittest.TestCase):
         result=parse_streams(document(),hidden_text='annotate')
         self.assertEqual(result['character_properties']['availability'],'missing_bte')
         self.assertEqual(result['status'],'partial')
-        with self.assertRaises(ParseError) as error: parse_streams(fixture(),hidden_text='exclude')
+        with self.assertRaises(ParseError) as error:
+            parse_streams(fixture(),hidden_text='exclude')
         self.assertEqual(error.exception.status,'unsupported')
 
     def test_container_annotate_and_default_compatible(self):
@@ -86,7 +89,8 @@ class CharacterPropertiesTests(unittest.TestCase):
             with self.subTest(offset=offset,value=value), self.assertRaises(ParseError):
                 parse_streams(mutate(fixture(),offset,value,width),hidden_text='annotate')
         # The low 22 bits select page; undefined upper ten bits are ignored.
-        streams=fixture();start=struct.unpack_from('<I',streams[('WordDocument',)],250)[0]
+        streams=fixture()
+        start=struct.unpack_from('<I',streams[('WordDocument',)],250)[0]
         good=mutate(streams,start+8,10|0xffc00000,4,'0Table')
         self.assertEqual(parse_streams(good,hidden_text='annotate')['text'],'甲乙\n')
 
@@ -94,16 +98,19 @@ class CharacterPropertiesTests(unittest.TestCase):
         with patch('wps_msdoc_charprops.MAX_CHPX_RUNS',1),self.assertRaises(ParseError) as error:
             parse_streams(fixture(),hidden_text='annotate')
         self.assertEqual(error.exception.status,'resource_limit')
-        streams=fixture();start=struct.unpack_from('<I',streams[('WordDocument',)],250)[0]
+        streams=fixture()
+        start=struct.unpack_from('<I',streams[('WordDocument',)],250)[0]
         with self.assertRaises(ParseError):
             parse_streams(mutate(streams,start+8,8,4,'0Table'),hidden_text='annotate')
 
     def test_variable_operand_is_not_scanned_as_sprm(self):
-        streams=fixture();word=bytearray(streams[('WordDocument',)])
+        streams=fixture()
+        word=bytearray(streams[('WordDocument',)])
         word[5152:5160]=b'\7\0\xc8\4\x3c\x08\1\0'
         streams[('WordDocument',)]=bytes(word)
         result=parse_streams(streams,hidden_text='annotate')
         self.assertEqual(result['character_properties']['runs'][0]['modifiers'],[])
         self.assertEqual(result['character_properties']['runs'][0]['uninterpreted_modifier_count'],1)
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from run_wps_task import create_document
+from test_task_cli_support import run_main
 from run_wps_edit import execute_edit_task, main
 from read_wps import read_bytes
 
@@ -80,7 +81,7 @@ class TestWpsEditOperations(unittest.TestCase):
 
     def test_cli_subcommands(self):
         out_text = self.td / "cli_text.wps"
-        code = main([
+        code = run_main(main, [
             "text", str(self.base_file), str(out_text),
             "--find", "原始标题", "--replace", "修订后标题",
         ])

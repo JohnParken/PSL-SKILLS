@@ -4,6 +4,32 @@
 
 from typing import List, Dict, Optional, Tuple, Any
 import re
+from copy import deepcopy
+
+
+def projection_context(result):
+    keys = ('status', 'partial', 'format', 'scope', 'issues', 'diagnostics', 'omitted_regions',
+            'reading_assessment', 'visibility', 'limitations', 'container_issues', 'heading_diagnostics')
+    context = {key: deepcopy(result[key]) for key in keys if key in result}
+    context['source_status'] = result.get('status', 'ok')
+    context['projection_scope'] = 'selected-main-paragraphs-not-complete-document'
+    return context
+
+
+def heading_entries(result):
+    paragraphs = extract_paragraphs(result)
+    metadata = result.get('paragraph_metadata', result.get('paragraphs', []))
+    entries = []
+    for index, text in enumerate(paragraphs):
+        item = metadata[index] if index < len(metadata) else None
+        outline = item.get('outline_level') if isinstance(item, dict) else None
+        if type(outline) is int and 0 <= outline <= 8:
+            entries.append({'index': index + 1, 'level': outline + 1, 'text': text, 'basis': 'stored_outline'})
+        elif outline is None:
+            level, title = detect_heading(text)
+            if level is not None:
+                entries.append({'index': index + 1, 'level': level, 'text': title, 'basis': 'text_heuristic'})
+    return entries
 
 
 HEADING_PATTERNS = [
@@ -46,17 +72,9 @@ def detect_heading(text: str) -> Tuple[Optional[int], Optional[str]]:
 def project_headings(result: Dict[str, Any]) -> Dict[str, Any]:
     """Filter document content down to structured headings hierarchy."""
     paragraphs = extract_paragraphs(result)
-    headings = []
-    for idx, p_text in enumerate(paragraphs):
-        level, title = detect_heading(p_text)
-        if level is not None and title:
-            headings.append({
-                "index": idx + 1,
-                "level": level,
-                "text": title,
-            })
+    headings = heading_entries(result)
     return {
-        "status": result.get("status", "ok"),
+        **projection_context(result),
         "mode": "heading_only",
         "total_paragraphs": len(paragraphs),
         "total_headings": len(headings),
@@ -84,7 +102,7 @@ def project_paragraph_range(result: Dict[str, Any], range_spec: str) -> Dict[str
     sliced = paragraphs[start_idx:end_idx] if start_idx < total else []
 
     return {
-        "status": result.get("status", "ok"),
+        **projection_context(result),
         "mode": "paragraph_range",
         "range": f"{start}:{end}",
         "total_paragraphs": total,
@@ -94,24 +112,24 @@ def project_paragraph_range(result: Dict[str, Any], range_spec: str) -> Dict[str
     }
 
 
-def project_section(result: Dict[str, Any], section_query: str) -> Dict[str, Any]:
+def project_section(result: Dict[str, Any], section_query: str, section_index=None) -> Dict[str, Any]:
     """Extract paragraphs under a specific heading until the next same or higher level heading."""
     paragraphs = extract_paragraphs(result)
     target = section_query.strip().lower()
-    matched_idx = -1
-    matched_level = 1
-
-    for idx, p_text in enumerate(paragraphs):
-        lvl, title = detect_heading(p_text)
-        clean = p_text.strip().lower()
-        if target in clean:
-            matched_idx = idx
-            matched_level = lvl if lvl is not None else 1
-            break
-
-    if matched_idx < 0:
+    if not target:
+        raise ValueError('Section query must not be empty')
+    headings = heading_entries(result)
+    matches = [item for item in headings if item['text'].strip().lower() == target]
+    if not matches:
+        matches = [item for item in headings if target in item['text'].strip().lower()]
+    if section_index is not None:
+        matches = [item for item in matches if item['index'] == section_index]
+    if len(matches) != 1:
         return {
-            "status": "not_found",
+            **projection_context(result),
+            "status": result.get('status', 'ok') if result.get('status') == 'partial' else ('ambiguous' if matches else 'not_found'),
+            "selection_status": 'ambiguous' if matches else 'not_found',
+            "candidates": matches,
             "mode": "section",
             "section_query": section_query,
             "total_paragraphs": len(paragraphs),
@@ -119,16 +137,21 @@ def project_section(result: Dict[str, Any], section_query: str) -> Dict[str, Any
             "text": "",
         }
 
+    match = matches[0]
+    matched_idx, matched_level = match['index'] - 1, match['level']
+    heading_map = {item['index'] - 1: item for item in headings}
     section_paragraphs = [paragraphs[matched_idx]]
     for idx in range(matched_idx + 1, len(paragraphs)):
         p_text = paragraphs[idx]
-        lvl, _ = detect_heading(p_text)
+        lvl = heading_map.get(idx, {}).get('level')
         if lvl is not None and lvl <= matched_level:
             break
         section_paragraphs.append(p_text)
 
     return {
-        "status": result.get("status", "ok"),
+        **projection_context(result),
+        "selection_status": "matched",
+        "heading_basis": match['basis'],
         "mode": "section",
         "section_query": section_query,
         "matched_heading": paragraphs[matched_idx],

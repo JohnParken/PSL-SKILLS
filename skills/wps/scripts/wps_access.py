@@ -50,6 +50,10 @@ def diagnostic_context(status, location):
 
 
 def read_input(path):
+    from wps_task_paths import ACTIVE
+    access = ACTIVE.get()
+    if access is not None:
+        return access.read(path, MAX_FILE_BYTES)
     descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0))
     try:
         with os.fdopen(descriptor, 'rb') as handle:

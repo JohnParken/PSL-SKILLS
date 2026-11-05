@@ -27,18 +27,22 @@ class OwnershipTests(unittest.TestCase):
         word.extend(bytes(5632-len(word)))
         page=5120
         struct.pack_into('<2I',word,page,4096,4098)
-        word[page+8]=0;word[page+511]=1
+        word[page+8]=0
+        word[page+511]=1
         # SEPX size low two bytes of first FC (4096), fits cbMac only after enlargement.
         struct.pack_into('<I',word,64,len(word))
         table=bytearray(streams[('0Table',)])
         sed=struct.unpack_from('<I',word,202)[0]
         # Put a zero-sized SEPX at FKP offset+10 (not text, arrays permit it).
         struct.pack_into('<I',table,sed+10,page+10)
-        start=len(table);table.extend(struct.pack('<III',4096,4098,10))
+        start=len(table)
+        table.extend(struct.pack('<III',4096,4098,10))
         struct.pack_into('<II',word,250,start,12)
-        streams[('WordDocument',)]=bytes(word);streams[('0Table',)]=bytes(table)
+        streams[('WordDocument',)]=bytes(word)
+        streams[('0Table',)]=bytes(table)
         with self.assertRaises(ParseError) as caught:
             parse_streams(streams,include_related=True,hidden_text='annotate')
         self.assertIn('Section properties overlap character FKP',str(caught.exception))
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

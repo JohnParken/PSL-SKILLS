@@ -60,7 +60,14 @@ def header_sections(word, table, story_start, story_count, main_count, read_unit
     for left,right in zip(unique_sepx,unique_sepx[1:]):
         require(left[1] <= right[0], word.location(right[0]), 'Overlapping SEPX structures')
     if hdd is None:
-        return {'sections':sections,'slots':[], 'mapping_status':'header_table_absent', 'page_mapping':'unknown', 'word_ranges': [{'stream':'WordDocument', 'offset':a, 'size':b-a} for a,b in sorted(set(sepx_spans))]}
+        return {'sections':sections,
+            'slots':[],
+            'mapping_status':'header_table_absent',
+            'page_mapping':'unknown',
+            'word_ranges': [{'stream':'WordDocument',
+            'offset':a,
+            'size':b-a} for a,
+            b in sorted(set(sepx_spans))]}
     require(sed is not None, hdd.location(), 'Header slots require a section table in supported subset', 'unsupported')
     require(len(hdd.data) == (6+6*len(sections)+2)*4, hdd.location(), 'Header slot/section count mismatch')
     cps = [hdd.number(i*4) for i in range(len(hdd.data)//4-1)]
@@ -79,4 +86,11 @@ def header_sections(word, table, story_start, story_count, main_count, read_unit
             'content_range':{'stream':'WordDocument','cp_start':story_start+a,'cp_end':story_start+b-int(b>a)},
             'inheritance_candidate_section':section-1 if section is not None and section>0 and a==b else None,
             'source':{'stream':table.stream,'offset':hdd.base+i*4}})
-    return {'sections':sections,'slots':slots,'mapping_status':'stored_slots_mapped_properties_uninterpreted','page_mapping':'unknown', 'word_ranges': [{'stream':'WordDocument', 'offset':a, 'size':b-a} for a,b in sorted(set(sepx_spans))]}
+    return {'sections':sections,
+        'slots':slots,
+        'mapping_status':'stored_slots_mapped_properties_uninterpreted',
+        'page_mapping':'unknown',
+        'word_ranges': [{'stream':'WordDocument',
+        'offset':a,
+        'size':b-a} for a,
+        b in sorted(set(sepx_spans))]}

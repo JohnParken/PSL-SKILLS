@@ -381,11 +381,15 @@ def _word_part(package, name, budget):
                 node.tag = '{'+W+'}'+node.tag.split('}',1)[1]
             attributes = {}
             for key, value in node.attrib.items():
-                if key.startswith('{'+expected_w+'}'): key='{'+W+'}'+key.split('}',1)[1]
-                elif key.startswith('{'+expected_r+'}'): key='{'+R+'}'+key.split('}',1)[1]
-                if key in attributes: raise ValueError('Duplicate normalized Word attribute')
+                if key.startswith('{'+expected_w+'}'):
+                    key='{'+W+'}'+key.split('}',1)[1]
+                elif key.startswith('{'+expected_r+'}'):
+                    key='{'+R+'}'+key.split('}',1)[1]
+                if key in attributes:
+                    raise ValueError('Duplicate normalized Word attribute')
                 attributes[key]=value
-            node.attrib.clear(); node.attrib.update(attributes)
+            node.attrib.clear()
+            node.attrib.update(attributes)
             if relation_type and relation_type.startswith(expected_r+'/'):
                 node.set('Type',R+relation_type[len(expected_r):])
     return root
@@ -409,7 +413,8 @@ def _check_wps_package(package, budget):
         raise ValueError("unsupported WPS ZIP content: invalid OOXML relationships root")
     raw_main = [node for node in relationships if node.tag == f"{{{RELATIONSHIPS}}}Relationship"
                 and node.get("Type") in (OFFICE_DOCUMENT, STRICT_R+'/officeDocument')]
-    if len(raw_main) != 1: raise ValueError('unsupported ambiguous Word document dialect')
+    if len(raw_main) != 1:
+        raise ValueError('unsupported ambiguous Word document dialect')
     package._wps_strict_word = raw_main[0].get('Type') == STRICT_R+'/officeDocument'
     relationships = _word_part(package, '_rels/.rels', budget)
     main = [node for node in relationships if node.tag == f"{{{RELATIONSHIPS}}}Relationship"
@@ -487,6 +492,22 @@ def _table(tbl: Element, revisions: str) -> list[str]:
             cells.append("\n".join(_blocks(tc, revisions)))
         rows.append("\t".join(cells))
     return rows
+
+
+def _paragraph_metadata(node, revisions, styles):
+    result = []
+    for child in node:
+        if child.tag == _tag('p'):
+            properties = styles.properties(child)
+            outline = None if properties is None else properties.find(_tag('outlineLvl'))
+            value = None if outline is None else outline.get(_tag('val'))
+            result.append({'outline_level': int(value) if value is not None and value.isdigit() and 0 <= int(value) <= 9 else None})
+        elif child.tag == _tag('tbl'):
+            result.extend({'outline_level': 9} for _ in child.findall(_tag('tr')))
+        elif child.tag.startswith('{' + W + '}') and child.tag.rsplit('}', 1)[-1] in _BLOCK_WRAPPERS:
+            if child.tag.rsplit('}', 1)[-1] not in _REVISION_TAGS[revisions]:
+                result.extend(_paragraph_metadata(child, revisions, styles))
+    return result
 
 
 def _part_text(root: Element, part: str, revisions: str) -> str:
@@ -671,7 +692,8 @@ def _read_related(package, document, revisions, budget, record_omissions, issues
                 raise ValueError('Related region count limit exceeded')
             first_issue = len(issues)
             visibility_issue_start = len(visibility.issues) if visibility is not None else 0
-            if visibility is not None: visibility.apply(entry, part, "/" + kind + "[" + str(key) + "]")
+            if visibility is not None:
+                visibility.apply(entry, part, "/" + kind + "[" + str(key) + "]")
             record_omissions(entry, part)
             nested = sorted({node.tag.rsplit('}', 1)[-1] for node in _visible_elements(entry, revisions)
                              if node.tag in (_tag('footnoteReference'), _tag('endnoteReference'),
@@ -711,7 +733,8 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
     issues = []
 
     def record_omissions(root, name):
-        unsupported = {"txbxContent", "drawing", "object", "pict", "altChunk", "instrText", "fldSimple", "fldChar", "sym", "noBreakHyphen", "softHyphen", "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange"}
+        unsupported = {"txbxContent", "drawing", "object", "pict", "altChunk", "instrText", "fldSimple", "fldChar", "sym",
+                       "noBreakHyphen", "softHyphen", "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange"}
         found = sorted({node.tag.rsplit("}", 1)[-1] for node in root.iter()
                         if node.tag.startswith("{" + W + "}")
                         and node.tag.rsplit("}", 1)[-1] in unsupported})
@@ -750,28 +773,38 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             if relationship_part in package.namelist():
                 relationships = _word_part(package, relationship_part, budget)
                 relation_ns = 'http://schemas.openxmlformats.org/package/2006/relationships'
-                if relationships.tag != '{'+relation_ns+'}Relationships': raise ValueError('Invalid styles relationship root')
+                if relationships.tag != '{'+relation_ns+'}Relationships':
+                    raise ValueError('Invalid styles relationship root')
                 relation_ids = set()
                 for relation in relationships:
                     identity = relation.get('Id')
-                    if relation.tag != '{'+relation_ns+'}Relationship' or not identity or identity in relation_ids: raise ValueError('Invalid/duplicate styles relationship ID')
+                    if relation.tag != '{'+relation_ns+'}Relationship' or not identity or identity in relation_ids:
+                        raise ValueError('Invalid/duplicate styles relationship ID')
                     relation_ids.add(identity)
                 style_relations = [x for x in relationships if x.get('Type') == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles']
-                if len(style_relations) > 1: raise ValueError('Duplicate styles relationships')
+                if len(style_relations) > 1:
+                    raise ValueError('Duplicate styles relationships')
                 if style_relations:
                     relationship = style_relations[0]
-                    if relationship.get('TargetMode', 'Internal') != 'Internal': raise ValueError('unsupported external styles relationship')
+                    if relationship.get('TargetMode', 'Internal') != 'Internal':
+                        raise ValueError('unsupported external styles relationship')
                     style_part = _related_target(relationship.get('Target'))
                     styles = _word_part(package, style_part, budget)
-                    if styles.tag != _tag('styles'): raise ValueError('Invalid styles root')
+                    if styles.tag != _tag('styles'):
+                        raise ValueError('Invalid styles root')
                     content_types = fromstring(read_part(package, '[Content_Types].xml'), budget=budget)
                     declarations = [x.get('ContentType') for x in content_types if x.get('PartName') == '/' + style_part]
-                    if declarations != ['application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml']: raise ValueError('Invalid styles content type')
+                    if declarations != ['application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml']:
+                        raise ValueError('Invalid styles content type')
 
             visibility = Visibility(hidden_text, styles, revisions)
             visibility.apply(document, part, "/document")
             record_omissions(document, part)
             pieces = _blocks(document.find(_tag("body")), revisions)
+            from wps_word_styles import WordStyles
+            style_resolver = WordStyles(styles)
+            result['paragraph_metadata'] = _paragraph_metadata(document.find(_tag('body')), revisions, style_resolver)
+            result['heading_diagnostics'] = style_resolver.issues
             from wps_ooxml_tables import TableCollector
             table_collector = TableCollector(revisions, _paragraph_text)
             table_collector.collect(document, part, '/document')

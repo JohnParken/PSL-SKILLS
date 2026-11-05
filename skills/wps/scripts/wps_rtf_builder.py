@@ -55,7 +55,7 @@ def escape_rtf_text(text: str) -> str:
             elif ch == "\r":
                 continue
             elif ch == "\n":
-                out.append("\\par ")
+                out.append("\\line ")
             elif ch == "\t":
                 out.append("\\tab ")
             else:

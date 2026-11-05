@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Map supported OOXML Word content to RTF .rtf/.wps using Python standard library."""
 
-import os
+import io
 from pathlib import Path
 import sys
 from typing import Optional, Dict, Any, List, Tuple
@@ -25,6 +25,14 @@ from wps_rtf_builder import (
 
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 NS = {"w": W_NS}
+
+
+def accepted_children(node, names):
+    for child in node:
+        if child.tag in {f'{{{W_NS}}}{name}' for name in names}:
+            yield child
+        elif child.tag in {f'{{{W_NS}}}{name}' for name in ('hyperlink', 'sdt', 'sdtContent', 'customXml', 'smartTag', 'ins', 'moveTo', 'fldSimple')}:
+            yield from accepted_children(child, names)
 
 
 def get_tag_name(element: ET.Element) -> str:
@@ -93,7 +101,7 @@ def parse_run(r_elem: ET.Element, default_font_idx: int = FONT_FANGSONG, default
             text_parts.append(child.text or "")
         elif tag == "tab":
             text_parts.append("\t")
-        elif tag == "br":
+        elif tag in ("br", "cr"):
             br_type = child.get(f"{{{W_NS}}}type")
             if br_type != "page":
                 text_parts.append("\n")
@@ -122,6 +130,7 @@ def parse_paragraph(p_elem: ET.Element) -> Tuple[Optional[RtfParagraph], bool]:
     line_spacing_mult = None
     line_spacing_exact_pt = None
     first_line_indent_chars = 0.0
+    first_line_indent_pt = None
     left_indent_pt = 0.0
     right_indent_pt = 0.0
     default_font = FONT_FANGSONG
@@ -187,7 +196,10 @@ def parse_paragraph(p_elem: ET.Element) -> Tuple[Optional[RtfParagraph], bool]:
             if flc and flc.isdigit():
                 first_line_indent_chars = float(flc) / 100.0
             elif fl and fl.isdigit():
-                first_line_indent_chars = (float(fl) / 20.0) / default_size
+                first_line_indent_pt = float(fl) / 20.0
+            hanging = ind.get(f'{{{W_NS}}}hanging')
+            if hanging and hanging.isdigit():
+                first_line_indent_pt = -float(hanging) / 20.0
             if left and left.isdigit():
                 left_indent_pt = float(left) / 20.0
             if right and right.isdigit():
@@ -200,11 +212,17 @@ def parse_paragraph(p_elem: ET.Element) -> Tuple[Optional[RtfParagraph], bool]:
         line_spacing_mult=line_spacing_mult,
         line_spacing_exact_pt=line_spacing_exact_pt,
         first_line_indent_chars=first_line_indent_chars,
+        first_line_indent_pt=first_line_indent_pt,
         left_indent_pt=left_indent_pt,
         right_indent_pt=right_indent_pt,
     )
+    outline = None if p_pr is None else p_pr.find('w:outlineLvl', NS)
+    if outline is not None:
+        level = outline.get(f'{{{W_NS}}}val')
+        if level and level.isdigit() and 0 <= int(level) <= 8:
+            para.outline_level = int(level)
 
-    for child in p_elem:
+    for child in accepted_children(p_elem, {'r'}):
         tag = get_tag_name(child)
         if tag == "r":
             # Check for page break inside run
@@ -298,7 +316,7 @@ def parse_table(tbl_elem: ET.Element) -> RtfTable:
                         valign = va_val
 
             cell_paras = []
-            for p in tc_elem.findall("w:p", NS):
+            for p in accepted_children(tc_elem, {'p'}):
                 p_obj, _ = parse_paragraph(p)
                 if p_obj:
                     # Inside tables, zero first line indent by default unless specified
@@ -327,12 +345,32 @@ def parse_docx_to_rtf_doc(docx_path: str) -> RtfDocument:
     if not input_file.is_file():
         raise FileNotFoundError(f"DOCX file not found: {docx_path}")
 
-    with zipfile.ZipFile(input_file) as zf:
+    from wps_access import read_input
+    from read_wps import read_bytes
+    from wps_ooxml import fromstring, read_part, check_archive, _related_target
+    from wps_word_styles import WordStyles, format_mapping_diagnostics
+    source_bytes = read_input(input_file)
+    source_payload = read_bytes(source_bytes)
+    if source_payload.get('format') != 'ooxml-word' or source_payload.get('status') not in ('ok', 'partial'):
+        raise ValueError('A validated OOXML Word package is required')
+    styles = None
+    with zipfile.ZipFile(io.BytesIO(source_bytes)) as zf:
+        check_archive(zf)
         if "word/document.xml" not in zf.namelist():
             raise ValueError(f"Invalid DOCX archive (missing word/document.xml): {docx_path}")
-        doc_xml = zf.read("word/document.xml")
+        doc_xml = read_part(zf, 'word/document.xml')
+        if 'word/_rels/document.xml.rels' in zf.namelist():
+            relationships = fromstring(read_part(zf, 'word/_rels/document.xml.rels'))
+            for relation in relationships:
+                if relation.get('Type') == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles':
+                    if relation.get('TargetMode', 'Internal') != 'Internal':
+                        raise ValueError('External styles are not loaded')
+                    styles = fromstring(read_part(zf, _related_target(relation.get('Target'))))
 
-    root = ET.fromstring(doc_xml)
+    root = fromstring(doc_xml)
+    resolver = WordStyles(styles)
+    resolver.apply(root)
+    mapping_issues = format_mapping_diagnostics(root)
     body = root.find("w:body", NS)
     if body is None:
         raise ValueError(f"Missing w:body in {docx_path}")
@@ -365,8 +403,18 @@ def parse_docx_to_rtf_doc(docx_path: str) -> RtfDocument:
         margin_left_pt=margin_left,
         margin_right_pt=margin_right,
     )
+    rtf_doc.conversion_issues = resolver.issues + mapping_issues
+    if sect_pr is not None:
+        page_size = sect_pr.find('w:pgSz', NS)
+        if page_size is not None:
+            for attribute, field in (('w', 'page_width_twips'), ('h', 'page_height_twips')):
+                value = page_size.get(f'{{{W_NS}}}{attribute}')
+                if value and value.isdigit() and 0 < int(value) <= 31680:
+                    setattr(rtf_doc, field, int(value))
+        if any(node.find('w:pPr/w:sectPr', NS) is not None for node in body.iter(f'{{{W_NS}}}p')):
+            rtf_doc.conversion_issues.append({'code': 'multiple_sections_not_preserved'})
 
-    for elem in body:
+    for elem in accepted_children(body, {'p', 'tbl'}):
         tag = get_tag_name(elem)
         if tag == "p":
             para, has_break = parse_paragraph(elem)
@@ -399,19 +447,58 @@ def convert_docx_to_rtf_wps(docx_path: str, output_path: str) -> Dict[str, Any]:
     rtf_doc = parse_docx_to_rtf_doc(str(in_path))
     if read_input(in_path) != source_bytes:
         raise ValueError('Source changed during conversion')
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    inspection = rtf_doc.save(str(out_path))
-    partial = source.get('status') == 'partial' or inspection['partial']
+    from wps_content_validation import validate_content, paragraph_text
+    from wps_output_contract import require_output_bytes
+    expected_text = []
+    for element in rtf_doc.elements:
+        if isinstance(element, RtfParagraph):
+            expected_text.append(paragraph_text(element))
+        elif isinstance(element, RtfTable):
+            expected_text.extend('\t'.join('\n'.join(paragraph_text(p) for p in cell.paragraphs) for cell in row.cells)
+                                 for row in element.rows)
+    normalize = lambda values: [value.strip() for value in values if value.strip()]
+    source_text = [item['text'] if isinstance(item, dict) else item for item in source['paragraphs']]
+    if normalize(source_text) != normalize(expected_text):
+        raise ValueError('DOCX readable content differs from conversion plan; original target preserved')
+    data = rtf_doc.render().encode('ascii')
+    inspection = require_output_bytes(data, out_path, 'rtf')
+    candidate = read_bytes(data)
+    content_validation = validate_content(rtf_doc, candidate, verify_merges=False)
+    from wps_content_validation import validate_format
+    format_validation = validate_format(rtf_doc, candidate)
+    from wps_task_paths import output_candidate, write_candidate
+    with output_candidate(out_path, prefix='.tmp_wps_convert_') as (temporary, publish):
+        write_candidate(temporary, data)
+        if read_input(in_path) != source_bytes:
+            raise ValueError('Source changed before conversion publication')
+        publish()
+    partial = source.get('status') == 'partial' or inspection['partial'] or bool(rtf_doc.conversion_issues)
 
     return {
         "status": "partial" if partial else "success",
+        **publish.receipt,
         "partial": partial,
+        "content_validation": content_validation,
+        "format_validation": format_validation,
+        "source_content_comparison": 'normalized-readable-main-text-matched',
+        "source_format_mapping": {
+            "status": "detected_omissions" if rtf_doc.conversion_issues else "limited_mapping_no_detected_omissions",
+            "scope": "effective_paragraph_and_run_properties; not complete source-format validation",
+            "diagnostic_field": "conversion_issues",
+            "diagnostic_count": len(rtf_doc.conversion_issues),
+            "unverified": ["themes", "numbering", "table_styles", "font_glyphs", "visual_pagination"],
+        },
+        "conversion_issues": rtf_doc.conversion_issues,
         "backend": "rtf_stream",
         "output_format": "rtf",
         "binary_doc": False,
+        "native_wps": False,
+        "full_format_verified": False,
+        "layout_verification": "not_run",
+        "structure_check": inspection,
         "source_readback": readback_summary(source),
         "readback": inspection['readback'],
         "output_file": str(out_path),
-        "file_size": out_path.stat().st_size,
+        "file_size": len(data),
         "elements_count": len(rtf_doc.elements),
     }

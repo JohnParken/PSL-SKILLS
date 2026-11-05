@@ -2,6 +2,7 @@
 
 Nothing here is a real WPS-produced sample or producer verification.
 """
+from test_task_cli_support import run_task_cli
 import json
 from pathlib import Path
 import subprocess
@@ -115,7 +116,7 @@ class ParagraphSourceTests(unittest.TestCase):
 
     def test_source_metadata_requires_json_output(self):
         source = Path(__file__).resolve().with_name('read_wps.py')
-        result = subprocess.run(
+        result = run_task_cli(
             [sys.executable, '-I', '-S', '-B', str(source),
              'synthetic.wps', '--format', 'text', '--binary-paragraph-sources'],
             capture_output=True, text=True, timeout=15,
@@ -134,7 +135,7 @@ class ParagraphSourceTests(unittest.TestCase):
             command = [sys.executable, '-I', '-S', '-B',
                        str(Path(__file__).resolve().with_name('read_wps.py')),
                        str(source), '--binary-paragraph-sources']
-            completed = subprocess.run(command, capture_output=True,
+            completed = run_task_cli(command, capture_output=True,
                                        text=True, timeout=15)
             self.assertEqual(completed.returncode, 0, completed.stderr)
             result = json.loads(completed.stdout)

@@ -681,15 +681,18 @@ def encode_result(result):
 def check_environment():
     """Report import/runtime readiness; never read or accept a task document."""
     try:
-        if sys.version_info < (3, 9):
-            raise RuntimeError('Python >=3.9 required')
+        if sys.version_info < (3, 10):
+            raise RuntimeError('Python >=3.10 required')
         import wps_cfb
         import wps_ooxml
         from xml.parsers import expat
-    except (ImportError, OSError, RuntimeError) as exc:
+        from wps_task_paths import TaskPaths
+        access = TaskPaths()
+        os.close(access.descriptor)
+    except (ImportError, OSError, RuntimeError, ValueError) as exc:
         print('check_kind=environment artifact_validation=not_run', file=sys.stderr)
         print('environment-failed: ' + str(exc), file=sys.stderr, flush=True)
-        return 2 if sys.version_info < (3, 9) else 1
+        return 2 if sys.version_info < (3, 10) else 1
     print('check_kind=environment artifact_validation=not_run')
     print('ooxml-word=' + ('available' if expat.version_info >= (2, 6, 0)
                           else 'unavailable: Expat >=2.6 required'))
@@ -697,6 +700,10 @@ def check_environment():
     return 0
 
 
+from wps_task_paths import cli_boundary, validate_argument
+
+
+@cli_boundary
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
@@ -715,6 +722,7 @@ def main():
     parser.add_argument('--heading-only', action='store_true')
     parser.add_argument('--paragraph-range', type=str)
     parser.add_argument('--section', type=str)
+    parser.add_argument('--section-index', type=int, help='1-based paragraph index disambiguating a matching section heading')
     parser.add_argument('--sheet')
     parser.add_argument('--page-size', type=int)
     parser.add_argument('--cursor')
@@ -724,17 +732,23 @@ def main():
         parser.error('--include-related requires --format json to preserve separate story regions')
     if args.binary_paragraph_sources and args.format == 'text':
         parser.error('--binary-paragraph-sources requires --format json to retain provenance ranges')
+    if args.section_index is not None and (args.section is None or args.section_index < 1):
+        parser.error('--section-index requires --section and a positive paragraph index')
     if args.check:
         if any((args.summary, args.heading_only, args.paragraph_range is not None, args.section is not None,
                 args.sheet is not None, args.page_size is not None, args.cursor is not None,
                 args.max_output_chars is not None)):
             parser.error('--check does not accept read-view options')
         return check_environment()
-    if sys.version_info < (3, 9):
-        parser.error('Python >=3.9 required')
+    if sys.version_info < (3, 10):
+        parser.error('Python >=3.10 required')
     if not args.input:
         parser.error('input required')
+    validate_argument(args.input)
     view_requested = any((args.summary, args.sheet is not None, args.page_size is not None, args.cursor is not None, args.max_output_chars is not None))
+    selective_count = sum((args.heading_only, args.paragraph_range is not None, args.section is not None))
+    if selective_count > 1 or (selective_count and view_requested):
+        parser.error('Choose one selective mode; do not combine selective reading with summary or paged read views')
     if view_requested and (args.format != 'json' or args.include_related or args.binary_paragraph_sources):
         parser.error('Read views require JSON and main content only; use full reading for related stories or paragraph sources')
     options = dict(compatibility=args.compatibility, chart_policy=args.chart_policy, text_policy=args.text_policy,
@@ -762,7 +776,7 @@ def main():
             elif args.paragraph_range is not None:
                 result = project_paragraph_range(result, args.paragraph_range)
             elif args.section is not None:
-                result = project_section(result, args.section)
+                result = project_section(result, args.section, args.section_index)
         except ValueError as exc:
             result = failure('invalid_argument', {'stage': 'selective_reading'}, str(exc))
     if args.format == 'text' and result['status'] in ('ok', 'partial') and 'text' not in result:

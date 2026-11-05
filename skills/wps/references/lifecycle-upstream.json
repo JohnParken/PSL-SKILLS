@@ -1,0 +1,36 @@
+{
+  "source": "artifact-lifecycle 20261103.1633.1524",
+  "transform": "Prepend future annotations and make the four listed sibling imports package-relative; no behavior changes.",
+  "files": [
+    {
+      "file": "router_config.py",
+      "source_sha256": "60074b4eeb4a8e105f0c77b614dbdd89ed94c6fc3afc05d511620bc75b47cfdf",
+      "installed_sha256": "ccc599ffbfdd99db94417901628511eb234a848839b6b09ccb20c3d4587394fe"
+    },
+    {
+      "file": "output_location.py",
+      "source_sha256": "6f85dfd2cbf5ced0bf15215853d97bc2659f32797bb986589ca36e32d7fec9d4",
+      "installed_sha256": "2ba4d789730651648c0c8d06e9683618f51b6be79004ec712890fcda54f3ba4c"
+    },
+    {
+      "file": "artifact_files.py",
+      "source_sha256": "83c7a6c62afc2cb66d21bc1e9edcdd142ed0b559da668b0abd99eb7c63ebe4b6",
+      "installed_sha256": "8d912ae023e5b61eab86bbe89507cf8968fb2903e22f5a4eeb8f4f70e75147f6"
+    },
+    {
+      "file": "controlled_cleanup.py",
+      "source_sha256": "4fa9e5308cc1e1b64d788a23798561a8bd742f22dbadb1a10fa3bd31743f3dec",
+      "installed_sha256": "1ec741be44c0d03288dab549fa52eecaa0c3b91497e15964914788ded4ec5e28"
+    },
+    {
+      "file": "cleanup_task.py",
+      "source_sha256": "26e2d633dbbf21822bb4b51dbbff4049a0e08934f9c02422d68f39c4eee4cc89",
+      "installed_sha256": "45b7114a1de057fe97d78cdfec336b7e69809b71d25efd7128f3d2a5f6a50135"
+    },
+    {
+      "file": "archive_deliverables.py",
+      "source_sha256": "6b93434f2be57f6a4059a624407920fe312ed9091f1afef424382280271d2713",
+      "installed_sha256": "26e7ab4cd2f66a92d830e3afb3b0ae8a69ef57c954d9841df7198ef5ecc42a77"
+    }
+  ]
+}

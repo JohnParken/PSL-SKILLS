@@ -23,7 +23,12 @@ def strict(data, exclude=()):
 @unittest.skipUnless(reader.expat.version_info >= (2,6,0),'requires Expat >=2.6')
 class StrictWordTests(unittest.TestCase):
     def test_main_tables_visibility_and_revisions(self):
-        data=package('<w:p><w:r><w:t>甲</w:t></w:r><w:r><w:rPr><w:vanish/></w:rPr><w:t>秘密</w:t></w:r><w:del><w:r><w:delText>旧</w:delText></w:r></w:del></w:p><w:tbl><w:tblGrid><w:gridCol/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>表</w:t></w:r></w:p></w:tc></w:tr></w:tbl>')
+        data=package((
+            '<w:p><w:r><w:t>甲</w:t></w:r><w:r><w:rPr><w:vanish/></w:rPr><w:t>秘密</w:t></w:r><w'
+            ':del><w:r><w:delText>旧</w:delText></w:r></w:del></w:p><w:tbl><w:tblGrid><w:gridC'
+            'ol/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>表</w:t></w:r></w:p></w:tc></w:tr></w:'
+            'tbl>'
+        ))
         result=reader.read_bytes(strict(data),hidden_text='exclude')
         self.assertEqual(result['ooxml_conformance'],'strict')
         self.assertEqual(result['text'],'甲\n表')
@@ -33,7 +38,14 @@ class StrictWordTests(unittest.TestCase):
 
     def test_related_custom_part_and_mixed_related_refused(self):
         from test_wps_ooxml_related import package as related_package, rel, root, paragraph
-        data=related_package(paragraph('正文')+'<w:sectPr><w:headerReference w:type="default" r:id="h"/></w:sectPr>', rel('h','header','custom/head.xml'), [('word/custom/head.xml','header',root('header',paragraph('页眉')))])
+        data=related_package(paragraph('正文')+'<w:sectPr><w:headerReference w:type="default" r:id="h"/></w:sectPr>',
+            rel('h',
+            'header',
+            'custom/head.xml'),
+            [('word/custom/head.xml',
+            'header',
+            root('header',
+            paragraph('页眉')))])
         result=reader.read_bytes(strict(data),include_related=True)
         self.assertEqual(result['text'],'正文')
         self.assertEqual(result['related_stories'][0]['text'],'页眉')
@@ -52,7 +64,9 @@ class StrictWordTests(unittest.TestCase):
         # Strict conversion would replace the intentionally mixed declaration.
         output=io.BytesIO()
         with zipfile.ZipFile(io.BytesIO(data)) as source,zipfile.ZipFile(output,'w') as target:
-            for name in source.namelist(): target.writestr(name, document if name=='word/document.xml' else source.read(name))
+            for name in source.namelist():
+                target.writestr(name, document if name=='word/document.xml' else source.read(name))
         self.assertEqual(reader.read_bytes(output.getvalue())['status'],'unsupported')
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()
