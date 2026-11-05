@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import os
+import stat
 from pathlib import Path
 import struct
 import sys
@@ -428,17 +429,24 @@ def write_environment():
 
 def publish_new(data, output, validator):
     """Validate a private candidate and link it atomically without replacing any name."""
-    path = Path(output)
-    require(isinstance(output, str) and not path.is_absolute() and len(path.parts) == 1
-            and path.name not in ('.', '..') and path.suffix.lower() == '.ofd',
-            'output must be a new .ofd filename directly in the confirmed task directory')
-    directory = os.open('.', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    outcome = dict(output_written=False, publication_target=str(output), publication_outcome='not_attempted',
+                   publication_verification='not_run', cleanup_complete=True, cleanup_issues=[])
+    try:
+        path = Path(output)
+        require(isinstance(output, str) and not path.is_absolute() and len(path.parts) == 1
+                and path.name not in ('.', '..') and path.suffix.lower() == '.ofd',
+                'output must be a new .ofd filename directly in the confirmed task directory')
+        directory = os.open('.', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    except (OSError, ValueError, TypeError) as exc:
+        exc.publication = outcome.copy()
+        raise
     temporary = '._ofd_candidate_' + uuid.uuid4().hex + '.ofd'
-    registered_before_creation = temporary
     descriptor = None
     identity = None
+    outcome['cleanup_complete'] = False
+    primary = None
     try:
-        descriptor = os.open(registered_before_creation, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=directory)
+        descriptor = os.open(temporary, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=directory)
         identity = os.fstat(descriptor)
         with os.fdopen(descriptor, 'w+b') as handle:
             descriptor = None
@@ -449,19 +457,55 @@ def publish_new(data, output, validator):
             actual = handle.read(len(data) + 1)
             require(actual == data, 'candidate readback mismatch')
             validator(actual)
-            os.link(temporary, path.name, src_dir_fd=directory, dst_dir_fd=directory, follow_symlinks=False)
-            final = os.stat(path.name, dir_fd=directory, follow_symlinks=False)
-            require((final.st_dev, final.st_ino) == (identity.st_dev, identity.st_ino), 'published identity changed; inspect output before retry')
+            outcome.update(output_written=None, publication_outcome='publication_uncertain')
+            try:
+                os.link(temporary, path.name, src_dir_fd=directory, dst_dir_fd=directory, follow_symlinks=False)
+            except FileExistsError:
+                outcome.update(output_written=False, publication_outcome='not_published_existing_name')
+                raise
+            outcome.update(output_written=True, publication_outcome='published_unverified')
+            try:
+                final_fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, 'O_NONBLOCK', 0), dir_fd=directory)
+                with os.fdopen(final_fd, 'rb') as final_stream:
+                    before = os.fstat(final_stream.fileno())
+                    require(stat.S_ISREG(before.st_mode) and (before.st_dev, before.st_ino) == (identity.st_dev, identity.st_ino)
+                            and before.st_size == len(data), 'published identity or size changed; inspect output before retry')
+                    require(final_stream.read(len(data) + 1) == data, 'published bytes differ from validated candidate; inspect output before retry')
+                    after = os.fstat(final_stream.fileno())
+                    named = os.stat(path.name, dir_fd=directory, follow_symlinks=False)
+                    require((before.st_size, before.st_mtime_ns, before.st_ctime_ns) == (after.st_size, after.st_mtime_ns, after.st_ctime_ns)
+                            and (named.st_dev, named.st_ino) == (identity.st_dev, identity.st_ino),
+                            'published file changed during verification; inspect output before retry')
+            except (OSError, GenerationError):
+                outcome.update(publication_outcome='published_verification_failed', publication_verification='failed')
+                raise
+            outcome.update(publication_outcome='published_verified', publication_verification='identity_and_bytes_verified')
+    except BaseException as exc:
+        primary = exc
+        raise
     finally:
-        if descriptor is not None:
-            os.close(descriptor)
+        cleanup_error = None
         try:
+            if descriptor is not None:
+                os.close(descriptor)
             if identity is not None:
                 current = os.stat(temporary, dir_fd=directory, follow_symlinks=False)
                 require((current.st_dev, current.st_ino) == (identity.st_dev, identity.st_ino), 'candidate identity changed; cleanup incomplete')
                 os.unlink(temporary, dir_fd=directory)
+            outcome['cleanup_complete'] = True
+        except FileNotFoundError:
+            outcome['cleanup_complete'] = True
+        except (OSError, GenerationError) as exc:
+            cleanup_error = exc
+            outcome['cleanup_issues'].append(dict(reason=str(exc), temporary=temporary))
         finally:
             os.close(directory)
+        if primary is not None:
+            primary.publication = outcome.copy()
+        elif cleanup_error is not None:
+            cleanup_error.publication = outcome.copy()
+            raise cleanup_error
+    return outcome
 
 
 def unique_pairs(pairs):
@@ -549,16 +593,18 @@ def main(argv=None):
         stage = 'validation'
         report['structural_validation'] = validate_model(data, spec, report, checker)
         stage = 'publication'
-        publish_new(data, args.output, lambda candidate: validate_model(candidate, spec, report, checker))
+        publication = publish_new(data, args.output, lambda candidate: validate_model(candidate, spec, report, checker))
+        report.update(publication)
         report.update(status='generated', output=args.output, cleanup='private candidate removed',
                       archive='not_requested; host must archive validated deliverables through its confirmed lifecycle')
         print(json.dumps(report, ensure_ascii=False, allow_nan=False))
         return 0
     except (GenerationError, READER.ReadError, OSError, ValueError, KeyError, TypeError, struct.error) as exc:
         print(json.dumps(dict(schema_version='ofd-generation-result-1', status='failed', stage=stage,
-                              publication_outcome=('not_published_existing_name' if isinstance(exc, FileExistsError)
+                              publication_outcome=getattr(exc, 'publication', {}).get('publication_outcome') or ('not_published_existing_name' if isinstance(exc, FileExistsError)
                                                    else 'inspect_before_retry' if stage == 'publication' else 'not_attempted'),
-                              diagnostics=[dict(code='generation_error', detail=str(exc))]), ensure_ascii=False))
+                              diagnostics=[dict(code='generation_error', detail=str(exc))],
+                              **{key: value for key, value in getattr(exc, 'publication', {}).items() if key != 'publication_outcome'}), ensure_ascii=False))
         return 1
 
 

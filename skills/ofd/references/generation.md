@@ -54,6 +54,8 @@ images是字典，每项只含path。PNG限非交错8-bit灰度/RGB及可选alph
 
 ## 输出与验收契约
 
+候选验收之后，发布成功还须重新打开最终文件核对身份、长度、字节及读取期间变化。回执分别给出 `output_written`、`publication_target`、`publication_outcome`、`publication_verification`、`cleanup_complete`、`cleanup_issues`；原有generated/failed和退出0/1不变。`published_verification_failed` 表示已写出但核验失败，保留目标供检查，不交付为合格文件、不自动删除或覆盖；`published_verified` 但清理失败仍返回failed/1，主文件保留并如实报告清理未完成。`publication_uncertain`／`output_written=null` 时先检查，不盲目重试。核验只证明检查时的状态，不能防御同权限进程任意后续修改；仍需宿主隔离。
+
 成功stdout为一个UTF-8 JSON、退出0、schema_version="ofd-generation-result-1"、status="generated"；只表示新文件已发布且通过本生成子集结构检查。报告含output、sha256、bytes、doc_id、max_unit_id、pages、fonts、images、tables、structural_validation，以及visual_validation和independent_client_validation。后两项默认not_performed，生成成功不能覆盖它们。字体权利状态、图片检查范围和缺口随报告保留。宿主保存需要交付的报告时使用独占新文件，不覆盖原件。
 
 失败stdout为同schema、status="failed"、退出1、stage和diagnostics；参数usage退出2写stderr。不返回伪造的空文件成功。publication_outcome为not_attempted或not_published_existing_name时没有本次最终文件；inspect_before_retry表示应先核查目标实际存在性与身份，不能自动重跑或删除可能已经成功发布的文件。原子建立名字不等于断电持久性或针对特权并发写者的完整沙箱。正常异常会核对候选inode再删除，仅处理本次登记项；强杀、权限变更或身份被替换时可能留候选，按原记录报告cleanup_incomplete，不扫描历史文件。
