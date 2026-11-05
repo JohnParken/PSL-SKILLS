@@ -17,6 +17,7 @@ from typing import Iterator
 from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree as ET
 
+from .compatibility import CompatibilityContext, CompatibilityError, CompatibilityScope, XML_NS
 from .images import ImageValidationError, inspect_image
 
 
@@ -39,6 +40,7 @@ CHART_NS = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 CHARTEX_NS = "http://schemas.microsoft.com/office/drawing/2014/chartex"
 A14_NS = "http://schemas.microsoft.com/office/drawing/2010/main"
 INSPECT_MCE_NAMESPACES = frozenset({P_NS, A_NS, A14_NS, MATH_NS, CHART_NS, CHARTEX_NS})
+UNDERSTOOD_MCE_NAMESPACES = INSPECT_MCE_NAMESPACES | frozenset({R_NS, PACKAGE_R_NS, CT_NS, SHEET_NS, MC_NS, XML_NS, "http://www.w3.org/2000/svg"})
 REL_BASE = R_NS + "/"
 TYPE_BASE = "application/vnd.openxmlformats-officedocument."
 PRESENTATION_TYPE = TYPE_BASE + "presentationml.presentation.main+xml"
@@ -71,7 +73,11 @@ class ValidationError(ValueError):
 
 
 def safe_xml(data: bytes, label: str = "XML", *, understood_choices: set[ET.Element] | None = None) -> ET.Element:
-    """Parse bounded UTF-8 XML and check namespace-dependent MCE attributes."""
+    """Parse bounded UTF-8 XML without pruning any branch used for safety checks.
+
+    Pass a CompatibilityContext to retain scoped MCE decisions for semantic
+    readback. A plain set still receives supported Choice membership.
+    """
     if not isinstance(data, bytes) or not data or len(data) > MAX_XML_BYTES:
         raise ValidationError(f"{label}: XML must contain 1–{MAX_XML_BYTES} bytes")
     try:
@@ -89,7 +95,8 @@ def safe_xml(data: bytes, label: str = "XML", *, understood_choices: set[ET.Elem
             raise ValidationError(f"{label}: only UTF-8 XML is supported")
     pending_namespaces: dict[str, str] = {}
     scopes: list[dict[str, str]] = []
-    choices = understood_choices if understood_choices is not None else set()
+    compatibility_scopes: list[CompatibilityScope] = []
+    choices = understood_choices if isinstance(understood_choices, CompatibilityContext) else CompatibilityContext()
     node_count = 0
     root = None
     try:
@@ -103,19 +110,19 @@ def safe_xml(data: bytes, label: str = "XML", *, understood_choices: set[ET.Elem
                 if item.tag == "{" + MC_NS + "}AlternateContent":
                     _alternate_content_branch(item, choices, label)
                 scopes.pop()
+                compatibility_scopes.pop()
                 continue
             node_count += 1
             if node_count > MAX_XML_NODES or len(scopes) >= MAX_XML_DEPTH:
                 raise ValidationError(f"{label}: XML exceeds the node or depth limit")
-            scope = dict(scopes[-1]) if scopes else {"xml": "http://www.w3.org/XML/1998/namespace"}
+            scope = dict(scopes[-1]) if scopes else {"xml": XML_NS}
             scope.update(pending_namespaces)
             pending_namespaces.clear()
             scopes.append(scope)
             if root is None:
                 root = item
-            ignorable = item.get("{" + MC_NS + "}Ignorable")
-            if ignorable is not None:
-                _namespace_tokens(ignorable, scope, label, "mc:Ignorable")
+            inherited = compatibility_scopes[-1] if compatibility_scopes else CompatibilityScope()
+            compatibility_scopes.append(choices.enter(item, scope, inherited, UNDERSTOOD_MCE_NAMESPACES, label))
             if item.tag == "{" + MC_NS + "}Choice":
                 requires = item.get("Requires", "")
                 if not requires.strip():
@@ -123,10 +130,15 @@ def safe_xml(data: bytes, label: str = "XML", *, understood_choices: set[ET.Elem
                 _namespace_tokens(requires, scope, label, "mc:Choice Requires")
                 if all(scope[prefix] in INSPECT_MCE_NAMESPACES for prefix in requires.split()):
                     choices.add(item)
+    except CompatibilityError as error:
+        raise ValidationError(str(error)) from error
     except (ET.ParseError, UnicodeError, LookupError) as error:
         raise ValidationError(f"{label}: malformed XML") from error
     if root is None or scopes:
         raise ValidationError(f"{label}: XML has no complete root")
+    _validate_mce_requirements(root, choices, label)
+    if understood_choices is not None and understood_choices is not choices:
+        understood_choices.update(choices)
     return root
 
 
@@ -155,18 +167,119 @@ def _alternate_content_branch(root: ET.Element, understood_choices: set[ET.Eleme
     return selected if selected is not None else fallback
 
 
-def _semantic_elements(root: ET.Element, understood_choices: set[ET.Element]) -> Iterator[ET.Element]:
-    """Traverse one MCE branch for text/counts; safety checks still inspect all."""
+def _semantic_roots(root: ET.Element, understood_choices: set[ET.Element]) -> Iterator[ET.Element]:
+    """Project a node to zero, one, or several retained nodes without mutation."""
+    if isinstance(understood_choices, CompatibilityContext) and root in understood_choices.ignored:
+        if root in understood_choices.process_content:
+            yield from _semantic_children(root, understood_choices)
+        return
     if root.tag == "{" + MC_NS + "}AlternateContent":
         branch = _alternate_content_branch(root, understood_choices, "PPTX")
         if branch is None:
             raise ValidationError("PPTX: AlternateContent has no supported Choice or Fallback for inspection")
-        for child in branch:
-            yield from _semantic_elements(child, understood_choices)
+        yield from _semantic_children(branch, understood_choices)
         return
     yield root
+
+
+def _validate_mce_requirements(root: ET.Element, context: CompatibilityContext, label: str) -> None:
+    """Require understanding only where MCE processing reaches the element.
+
+    Requirements on retained or ProcessContent elements apply. Requirements on
+    discarded elements or unselected branches do not. XML and package safety
+    checks remain independent of this semantic traversal.
+    """
+    if root in context.ignored and root not in context.process_content:
+        return
+    if root in context.unsupported_requirements:
+        raise ValidationError(f"{label}: mc:MustUnderstand names an unsupported namespace")
+    if root.tag == "{" + MC_NS + "}AlternateContent":
+        branch = _alternate_content_branch(root, context, label)
+        if branch is not None:
+            _validate_mce_requirements(branch, context, label)
+        return
     for child in root:
-        yield from _semantic_elements(child, understood_choices)
+        _validate_mce_requirements(child, context, label)
+
+
+def _semantic_children(root: ET.Element, understood_choices: set[ET.Element]) -> Iterator[ET.Element]:
+    """Yield effective immediate children, flattening only MCE containers."""
+    if isinstance(understood_choices, CompatibilityContext) and root in understood_choices.ignored and root not in understood_choices.process_content:
+        return
+    if root.tag == "{" + MC_NS + "}AlternateContent":
+        yield from _semantic_roots(root, understood_choices)
+        return
+    for child in root:
+        yield from _semantic_roots(child, understood_choices)
+
+
+def _semantic_elements(root: ET.Element, understood_choices: set[ET.Element]) -> Iterator[ET.Element]:
+    """Traverse the semantic view; safety checks continue to inspect raw XML."""
+    for retained in _semantic_roots(root, understood_choices):
+        yield retained
+        for child in _semantic_children(retained, understood_choices):
+            yield from _semantic_elements(child, understood_choices)
+
+
+def _semantic_tree(root: ET.Element, understood_choices: set[ET.Element]) -> ET.Element:
+    """Copy a retained subtree for consumers using find/findall or canonical XML.
+
+    The copy has no MCE controls or unknown Ignorable attributes. Its nodes need
+    no sidecar entries, so existing semantic readers may also traverse the copy.
+    """
+    context = understood_choices if isinstance(understood_choices, CompatibilityContext) else CompatibilityContext()
+    if root in context.ignored or root.tag.startswith("{" + MC_NS + "}"):
+        raise ValidationError("PPTX: a semantic subtree requires a retained root element")
+
+    def projected_contents(source: ET.Element) -> Iterator[str | ET.Element]:
+        if source.text is not None:
+            yield source.text
+        for child in source:
+            if child in context.ignored:
+                if child in context.process_content:
+                    yield from projected_contents(child)
+            elif child.tag == "{" + MC_NS + "}AlternateContent":
+                branch = _alternate_content_branch(child, understood_choices, "PPTX")
+                if branch is None:
+                    raise ValidationError("PPTX: AlternateContent has no supported Choice or Fallback for inspection")
+                yield from projected_contents(branch)
+            else:
+                yield copy_element(child)
+            if child.tail is not None:
+                yield child.tail
+
+    def copy_element(source: ET.Element) -> ET.Element:
+        ignored_attributes = context.ignored_attributes.get(source, frozenset())
+        copied = ET.Element(source.tag, {
+            name: value for name, value in source.attrib.items()
+            if not name.startswith("{" + MC_NS + "}") and name not in ignored_attributes
+        })
+        # Joining each text segment once avoids repeated concatenation when many
+        # discarded/unwrapped siblings contribute text to the same text node.
+        chunks: list[str] = []
+        previous = None
+        for item in projected_contents(source):
+            if isinstance(item, str):
+                chunks.append(item)
+                continue
+            text = "".join(chunks) if chunks else None
+            if previous is None:
+                copied.text = text
+            else:
+                previous.tail = text
+            chunks.clear()
+            copied.append(item)
+            previous = item
+        text = "".join(chunks) if chunks else None
+        if previous is None:
+            copied.text = text
+        else:
+            previous.tail = text
+        return copied
+
+    copied = copy_element(root)
+    copied.tail = root.tail
+    return copied
 
 
 @dataclass
@@ -195,7 +308,7 @@ class _Package:
     types: dict[str, str] = field(default_factory=dict)
     xml: dict[str, ET.Element] = field(default_factory=dict)
     relationships: dict[str, dict[str, _Relationship]] = field(default_factory=dict)
-    understood_choices: set[ET.Element] = field(default_factory=set)
+    understood_choices: CompatibilityContext = field(default_factory=CompatibilityContext)
 
 
 def _member_name(name: str, *, directory: bool = False) -> str:
@@ -452,7 +565,7 @@ def _integer(value: str, minimum: int, maximum: int, label: str) -> int:
     return result
 
 
-def _validate_embedded_workbook(data: bytes, label: str, budget: _Budget) -> None:
+def _validate_embedded_workbook(data: bytes, label: str, budget: _Budget) -> _Package:
     package = _load_package(data, label, budget, workbook=True)
     main_name = _root_part(package, WORKBOOK_TYPE, "{" + SHEET_NS + "}workbook")
     root = package.xml[main_name]
@@ -481,18 +594,25 @@ def _validate_embedded_workbook(data: bytes, label: str, budget: _Budget) -> Non
             raise ValidationError(f"{label}: worksheet content type mismatch")
         if len(worksheet.findall("{" + SHEET_NS + "}sheetData")) != 1:
             raise ValidationError(f"{label}: worksheet must contain one sheetData element")
+    return package
 
 
-def _shape_tree(root: ET.Element, label: str) -> ET.Element:
+def _shape_tree(root: ET.Element, label: str, understood_choices: set[ET.Element] | None = None) -> ET.Element:
+    """Check raw ID syntax, and uniqueness only among retained drawings."""
     common = root.findall("{" + P_NS + "}cSld")
     if len(common) != 1:
         raise ValidationError(f"{label}: expected one common slide element")
     trees = common[0].findall("{" + P_NS + "}spTree")
     if len(trees) != 1:
         raise ValidationError(f"{label}: expected one shape tree")
+    retained = None if understood_choices is None else {
+        element for element in _semantic_elements(root, understood_choices) if element.tag == "{" + P_NS + "}cNvPr"
+    }
     identifiers: set[int] = set()
     for element in root.iter("{" + P_NS + "}cNvPr"):
         identifier = _integer(element.get("id", ""), 1, 4294967295, label)
+        if retained is not None and element not in retained:
+            continue
         if identifier in identifiers:
             raise ValidationError(f"{label}: duplicate drawing object IDs")
         identifiers.add(identifier)
@@ -503,7 +623,7 @@ def _typed_root(package: _Package, name: str, tag: str, type_suffix: str) -> ET.
     root = package.xml.get(name)
     if root is None or root.tag != "{" + P_NS + "}" + tag or package.types.get(name) != TYPE_BASE + type_suffix:
         raise ValidationError(f"{package.label}: incorrect {tag} root or content type")
-    _shape_tree(root, package.label + " " + name)
+    _shape_tree(root, package.label + " " + name, package.understood_choices)
     return root
 
 
@@ -515,7 +635,7 @@ def _paragraph_text(root: ET.Element, understood_choices: set[ET.Element], *, ke
         pieces = []
         for item in _semantic_elements(paragraph, understood_choices):
             if item.tag in ("{" + A_NS + "}t", "{" + MATH_NS + "}t"):
-                pieces.append(item.text or "")
+                pieces.append(_semantic_tree(item, understood_choices).text or "")
             elif item.tag == "{" + A_NS + "}br":
                 pieces.append("\n")
         text = "".join(pieces)
@@ -573,12 +693,71 @@ def _master_roster(package: _Package, main_name: str) -> tuple[set[str], set[str
     return master_targets, note_targets
 
 
-def _inspect(data: bytes) -> dict:
+def _object_identity(element: ET.Element, parents: dict[ET.Element, ET.Element]) -> dict:
+    while element is not None:
+        for container in ("nvGraphicFramePr", "nvSpPr", "nvPicPr", "nvCxnSpPr"):
+            properties = element.find(f"{{{P_NS}}}{container}/{{{P_NS}}}cNvPr")
+            if properties is not None:
+                return {"object_id": properties.get("id"), "object_name": properties.get("name", "")[:512]}
+        element = parents.get(element)
+    return {}
+
+
+def _content_objects(package: _Package, slide_part: str, number: int, workbooks: dict, detail_budget) -> list[dict]:
+    from .content import ContentError, read_formula, read_table
+
+    root = package.xml[slide_part]
+    parents = {child: parent for parent in root.iter() for child in parent}
+    result = []
+    numbers = {"chart": 0, "table": 0, "formula": 0}
+    for element in _semantic_elements(root, package.understood_choices):
+        if element.tag in (f"{{{CHART_NS}}}chart", f"{{{CHARTEX_NS}}}chart"):
+            kind = "chart"
+        elif element.tag == f"{{{A_NS}}}tbl":
+            kind = "table"
+        elif element.tag == f"{{{MATH_NS}}}oMath":
+            kind = "formula"
+        else:
+            continue
+        numbers[kind] += 1
+        identity = _object_identity(element, parents)
+        location = {"slide_number": number, "object_kind": kind, "object_number": numbers[kind], "part": slide_part, **identity}
+        try:
+            if kind == "chart":
+                from .chart_read import inspect_chart
+
+                relation = package.relationships.get(slide_part, {}).get(element.get(f"{{{R_NS}}}id", ""))
+                if element.tag != f"{{{CHART_NS}}}chart" or relation is None or relation.kind != REL_BASE + "chart" or relation.external:
+                    raise ContentError("Unsupported chart reference in content inspection", "unsupported_content")
+                data = inspect_chart(package, relation.target, workbooks)
+                identity["part"] = relation.target
+            elif kind == "table":
+                semantic = _semantic_tree(element, package.understood_choices)
+                data = read_table(semantic, lambda body: _paragraph_text(body, package.understood_choices, keep_empty=True))
+            else:
+                data = read_formula(_semantic_tree(element, package.understood_choices))
+            item = {"kind": kind, "number": numbers[kind], **identity, "data": data}
+            detail_budget.consume(item)
+            result.append(item)
+        except ValueError as error:
+            details = {**location, **getattr(error, "details", {})}
+            raise ContentError(str(error), getattr(error, "code", "content_validation_failed"), **details) from error
+    return result
+
+
+def _inspect(data: bytes, *, details: bool = False, content: bool = False, expected: dict | None = None) -> dict:
+    from .content import ContentError, DetailBudget, compare_slide_input
+
+    content = content or details or expected is not None
+    detail_budget = DetailBudget()
     budget = _Budget()
     package = _load_package(data, "PPTX", budget)
+    workbooks = {}
     for name, content_type in package.types.items():
         if content_type == XLSX_TYPE:
-            _validate_embedded_workbook(package.parts[name], f"Embedded workbook {name}", budget)
+            workbook = _validate_embedded_workbook(package.parts[name], f"Embedded workbook {name}", budget)
+            if content:
+                workbooks[name] = workbook
     main_name = _root_part(package, PRESENTATION_TYPE, "{" + P_NS + "}presentation")
     presentation = package.xml[main_name]
     master_targets, note_master_targets = _master_roster(package, main_name)
@@ -590,6 +769,11 @@ def _inspect(data: bytes) -> dict:
     rosters = presentation.findall("{" + P_NS + "}sldIdLst")
     if len(rosters) != 1 or not list(rosters[0]):
         raise ValidationError("PPTX: presentation must contain a nonempty slide roster")
+    if expected is not None:
+        if len(rosters[0]) != len(expected["slides"]):
+            raise ContentError("Generated slide count differs from its source", field_path="slides")
+        if (width, height) != (expected["width_emu"], expected["height_emu"]):
+            raise ContentError("Generated slide size differs from its source", field_path="slide_size")
     slide_ids: set[int] = set()
     slide_targets: set[str] = set()
     relationships = package.relationships.get(main_name, {})
@@ -636,12 +820,19 @@ def _inspect(data: bytes) -> dict:
                 counts["tables"] += 1
             elif element.tag in ("{" + CHART_NS + "}chart", "{" + CHARTEX_NS + "}chart"):
                 counts["charts"] += 1
-        inspected_slides.append({
+        inspected_slide = {
             "number": number,
             "text": _paragraph_text(root, package.understood_choices, keep_empty=False),
             "notes": notes,
             "objects": counts,
-        })
+        }
+        if content:
+            objects = _content_objects(package, relation.target, number, workbooks, detail_budget)
+            if expected is not None:
+                compare_slide_input(expected["slides"][number - 1], objects, notes, number)
+            if details:
+                inspected_slide["native_objects"] = objects
+        inspected_slides.append(inspected_slide)
     title = ""
     core = _find_relationship(package, "", CORE_REL, required=False)
     if core is not None:
@@ -653,7 +844,9 @@ def _inspect(data: bytes) -> dict:
             raise ValidationError("PPTX: duplicate document title")
         if titles:
             title = titles[0].text or ""
-    return {
+    if expected is not None and expected["title"] != title:
+        raise ContentError("Generated title differs from its source", field_path="title")
+    result = {
         "slide_count": len(inspected_slides),
         "parts": len(package.parts),
         "slide_size": {"width_emu": width, "height_emu": height},
@@ -662,16 +855,24 @@ def _inspect(data: bytes) -> dict:
         "title": title,
         "slides": inspected_slides,
     }
+    if content:
+        result["content_validation"] = "passed"
+        result["content_object_count"] = detail_budget.count
+        result["content_checks"] = ["chart_cache_workbook", "table_structure", "formula_structure"]
+        result["source_comparison"] = "passed" if expected is not None else "not_run"
+        if expected is not None:
+            result["source_checks"] = ["slide_count", "slide_size", "title", "notes", "native_object_content"]
+    return result
 
 
-def validate_presentation(data: bytes) -> dict:
-    """Validate the supported structural contract without returning deck text."""
-    result = _inspect(data)
+def validate_presentation(data: bytes, *, content: bool = False, expected: dict | None = None) -> dict:
+    """Validate structure, and optionally the bounded native-content profile."""
+    result = _inspect(data, content=content, expected=expected)
     result.pop("title")
     result.pop("slides")
     return result
 
 
-def inspect_presentation(data: bytes) -> dict:
-    """Return slide order, native object counts, text, notes and document title."""
-    return _inspect(data)
+def inspect_presentation(data: bytes, *, details: bool = False) -> dict:
+    """Return slide summaries and optional bounded native-object content."""
+    return _inspect(data, details=details)

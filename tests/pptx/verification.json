@@ -1,24 +1,51 @@
 {
   "schema": "psl.pptx.verification.v1",
-  "verified_at_utc": "2026-11-05T06:49:15+00:00",
-  "skill_version": "20261105.1335.5039",
+  "verified_at_utc": "2026-11-05T18:18:49.527797+00:00",
+  "skill_version": "20261106.0052.1248",
   "source_repository": "JohnParken/ppt-master",
+  "source_version": "6.8.0",
   "source_commit": "5e8856be0da8e6bc85c4aa28acc614478f7b7137",
-  "target_base_commit": "319ad20cf893703a9b8d64531e5390d718419f13",
+  "target_base_commit": "14bfafe55d58fd04069a78d5196b82bfbf8f67c6",
+  "scope": "First content-integrity iteration on the current v6.8.0 stdlib skill: native readback and source comparison, exclusive complete-file publication, scoped MCE, structured diagnostics. No engine, governance, adapter or unrelated-skill changes.",
   "environment": {
     "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
     "python": "3.12.14",
     "expat": "expat_2.8.3"
   },
   "regression": {
-    "command": "python -I -S -B -m unittest discover -s tests/pptx -p 'test_*.py'",
+    "command": "python -I -S -B tools/run_skill_tests.py skills/pptx/scripts/test",
     "exit_code": 0,
-    "tests": 92,
-    "passed": 92,
+    "tests": 181,
+    "passed": 181,
     "failed": 0,
     "skipped": 0,
-    "fixture_kind": "synthetic and fixed original small image fixtures",
-    "duration_seconds": 21.645
+    "duration_seconds": 32.112,
+    "test_runner_seconds": 31.387
+  },
+  "repository_adapter_regression": {
+    "command": "python -I -S -B tools/run_skill_tests.py tests/pptx",
+    "exit_code": 0,
+    "tests": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 1.614,
+    "test_runner_seconds": 1.512
+  },
+  "combined_regression": {
+    "tests": 184,
+    "passed": 184,
+    "failed": 0,
+    "skipped": 0,
+    "prior_baseline_tests": 92,
+    "new_tests": 92
+  },
+  "new_regression_tests": {
+    "chart_and_workbook_content": 28,
+    "table_formula_and_public_content_flow": 17,
+    "input_and_conversion_diagnostics": 5,
+    "mce_semantics": 21,
+    "exclusive_publication": 21
   },
   "strict_skill_check": {
     "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/pptx --strict",
@@ -26,134 +53,272 @@
     "stdout": "OK skills/pptx"
   },
   "static_checks": {
-    "runtime_python_files": 72,
-    "python_3_10_grammar": "passed_for_runtime_and_tests",
-    "line_length_200": "passed",
-    "one_statement_per_line": "passed",
-    "stdlib_or_distributed_imports": "passed",
-    "pylint": "not_installed_not_run",
-    "test_python_files": 9
+    "upstream_manifest_files": 74,
+    "upstream_checksum_mismatches": [],
+    "runtime_python_files": 77,
+    "skill_test_python_files": 14,
+    "python_3_10_grammar": "passed",
+    "line_length_issues": [],
+    "one_statement_per_line_issues": [],
+    "stdlib_or_distributed_imports": "passed in full regression",
+    "pylint": "not_installed_not_run"
+  },
+  "upstream_audit": {
+    "manifest": "tests/pptx/upstream_manifest.json",
+    "files": 74,
+    "checksums_matched": 74,
+    "engine_files_changed": 0,
+    "manifest_changed": false
   },
   "runtime_isolation": {
     "cli_tests": "-I -S -B with PATH empty",
     "site_packages": "disabled",
-    "external_programs": "not_used",
-    "network_services": "not_used"
+    "external_programs": "not_used by runtime",
+    "network_services": "not_used by runtime"
   },
   "readonly_installation": {
+    "status": "passed in full regression",
     "permissions": "directories0555 files0444",
     "enforcement": "audit hook rejects writes/mutations in installation; source hashes unchanged",
-    "unprivileged_account": "not_verified; container rejected uid/gid mapping"
+    "unprivileged_account": "not_verified"
   },
-  "behavior_checks": [
-    "editable Chinese/English text and notes",
-    "all seven declared native chart types",
-    "native semantic table and Office Math",
-    "chart cache and embedded workbook values",
-    "PNG/JPEG original bytes and native crop/rotation",
-    "same-document SVG use and bounded expansion",
-    "unsupported CSS and ambiguous metadata rejection",
-    "no output overwrite or partial files",
-    "parallel exports and exclusive publication",
-    "JSON stdout and stderr with actual exit status",
-    "repository check adapter success/failure contracts",
-    "font-metric baseline coordinates and explicit run sizes at line breaks",
-    "expanded font families, Unicode spaces and accent fallback",
-    "tiny thick arcs retain geometry and gradient fill",
-    "split text identifiers and hyperlink-wrapped native groups",
-    "chart axis typography, language, theme font slots and inner layout",
-    "102 native charts and workbooks across 101-plus-1 slides remain unique with exact data",
-    "merge-covered cell formatting retained while hidden body text is rejected",
-    "block and inline formula native-shape fallback with unique IDs",
-    "scoped MCE selection reads text, notes and object counts once; all branches remain safety-checked",
-    "compiled formula structure and inherited-style reservation rejects long formulas, macro expansion and oversized inherited typography before slide conversion"
+  "content_checks": [
+    "all seven declared native chart types read exact cached values and verify each referenced workbook cell",
+    "cache18-to99999 mutation rejected while default structural-only validation remains unchanged",
+    "matching cache and workbook mutation rejected by comparison against original source input",
+    "sparse and unsorted point indices, null gaps, literals, decimal precision, quoted A1 references, strings and formats",
+    "source integer9007199254740993 and numeric string0.1000000000000000001 rejected before publication when float transport loses value",
+    "source floats follow already parsed Python JSON float semantics; original JSON number lexemes are not retained",
+    "table physical grid, text paragraphs, merge anchors and covered-cell integrity",
+    "OMML fraction numerator/denominator, superscripts and mathematical alphabet properties; display font/color excluded",
+    "notes, title, page count and canvas comparison; ordinary SVG text/shape/image layout is not source-compared",
+    "content checks and detailed inspection distinguish internal consistency from original-source comparison",
+    "content/profile limits fail explicitly rather than returning unchecked references as passed"
   ],
-  "manual_path_race_checks": {
-    "status": "not_rerun_in_this_upgrade",
-    "prior_verification_commit": "649fcd8eb9f47be55c212c4fd7ba358038d29f2b",
-    "note": "Descriptor-relative file I/O implementation was unchanged; existing workflow path, symlink, publication and concurrency regressions passed again."
+  "publication_checks": {
+    "registration": "planned JSON event on stderr before journal/staging creation; self-describing journal synced before staging",
+    "commit": "complete write, fsync, exact readback and identity checks before exclusive same-directory hard link",
+    "sigkill_probes": [
+      {
+        "point": "during first journal write",
+        "final_exists": false,
+        "retained": "incomplete predeclared journal only"
+      },
+      {
+        "point": "after512stagingbytes",
+        "final_exists": false,
+        "retained": "registered journal and partial staging"
+      },
+      {
+        "point": "immediately after hard-link commit",
+        "final_exists": true,
+        "final_bytes": "complete expected content"
+      }
+    ],
+    "other_checks": [
+      "real concurrent publisher collision",
+      "short writes",
+      "write/fsync failures",
+      "existing files and symlinks protected",
+      "changed/unknown temporary identities protected",
+      "post-publication failure preserves final",
+      "cleanup outcome reported separately",
+      "hard-link/capability failure has no direct-write fallback"
+    ],
+    "automatic_crash_recovery": "not_implemented; only original registration and valid identity records may be examined",
+    "bounds": "tests kill only test-owned child processes; not real OOM, power-loss, hardware-failure or hostile same-UID testing"
   },
-  "independent_development_readback": {
-    "python_pptx": "1.0.2",
-    "openpyxl": "3.1.5",
-    "runtime_dependency": false,
-    "reader_warnings": 0,
-    "results": [
-      "four-slide sample opens",
-      "canvas12192000x6858000EMU",
-      "all four notes match exactly",
-      "native chart series A18,24,29,36 and B12,17,21,26 match",
-      "native table4rows3columns with header能力/输出/边界",
-      "embedded workbook rows match chart values"
-    ]
+  "mce_checks": {
+    "features": [
+      "scoped Ignorable",
+      "ProcessContent expansion",
+      "active-content MustUnderstand",
+      "prefix rebinding",
+      "single Choice/Fallback selection",
+      "mixed text and tail preservation",
+      "semantic chart/workbook/table/formula projection"
+    ],
+    "raw_security": "original trees remain unchanged; unselected and ignored branches retain XML/relationship/security checks",
+    "unsupported": [
+      "PreserveElements",
+      "PreserveAttributes",
+      "other unimplemented MCE controls",
+      "ProcessContent wrapper with xml:base/xml:lang/xml:space"
+    ],
+    "primary_reference": {
+      "url": "https://ecma-international.org/wp-content/uploads/ECMA-376-3_5th_edition_december_2015.zip",
+      "edition": "ECMA-376 Part3 fifth edition, December2015",
+      "sections": [
+        "7.2-7.4",
+        "9.2",
+        "9.3",
+        "9.4"
+      ]
+    },
+    "drawing_identifiers": "ID syntax and range checked across original XML; uniqueness enforced only within retained semantic content"
   },
-  "not_verified": [
-    "PowerPoint/WPS desktop opening and visual layout",
-    "complete OOXML XSD conformance",
-    "real business document fixtures",
-    "real user harness registration/download/model delivery",
-    "Windows (unsupported runtime)",
-    "macOS runtime",
-    "Python3.10/3.11 execution (grammar only checked for3.10)",
-    "full other-skill regression suite",
-    "unprivileged OS account"
-  ],
-  "scope": "PPTX conversion subset rebased to6.8.0, preserving stdlib runtime, independent in-memory packaging and bounded input validation; no changes to standards checker, check adapter or unrelated skills.",
+  "independent_reviews": {
+    "publication_runtime_content_docs": {
+      "status": "passed_no_blocking_findings",
+      "method": "fresh read-only reviewer; no independent full-suite rerun",
+      "scope": "publication.py, runtime/CLI integration, table/formula source comparisons, relevant docs and existing emitter/visibility code"
+    },
+    "chart_workbook_mce": {
+      "status": "passed_after_reported_fix",
+      "method": "separate fresh read-only semantic reviewer; no code mutations; independently reproduced the finding and verified closure through public readback",
+      "scope": "native chart/workbook content integrity, supported MCE interpretation, readback and source-comparison linkage",
+      "finding": {
+        "severity": "P2",
+        "description": "drawing ID uniqueness incorrectly included mutually exclusive inactive fallback and ignored nodes",
+        "resolution": "check ID uniqueness only within retained semantic content while validating ID syntax/range and raw XML/relationships in all branches",
+        "independent_closure": "selected/fallback ID reuse accepted; invalid inactive ID0 rejected; duplicate retained IDs rejected"
+      },
+      "remaining_blockers": [],
+      "nonblocking_followup": "CLI can additionally expose chart point_index/reference/cell in future; current diagnostics retain page/object/field/part location"
+    }
+  },
+  "independent_documentation_execution": {
+    "status": "passed_with_documentation_gap_corrected",
+    "method": "fresh agent read public Skill docs/assets only; no implementation or repository tests; isolated public CLI with PATH empty",
+    "fixture": "two-page synthetic engineering report; title内容验收样例; chart本周/上周,完成事项12/9;3x3 table with vertical merge;block frac12/15;inline x^2",
+    "commands": [
+      {
+        "arguments": [
+          "check"
+        ],
+        "exit_code": 0,
+        "stdout_bytes": 653,
+        "stderr_bytes": 0
+      },
+      {
+        "arguments": [
+          "--help"
+        ],
+        "exit_code": 0,
+        "stdout_bytes": 506,
+        "stderr_bytes": 0
+      },
+      {
+        "arguments": [
+          "create",
+          "--help"
+        ],
+        "exit_code": 0,
+        "stdout_bytes": 244,
+        "stderr_bytes": 0
+      },
+      {
+        "arguments": [
+          "create",
+          "-",
+          "report.pptx"
+        ],
+        "attempt": 1,
+        "exit_code": 2,
+        "stdout_bytes": 295,
+        "stderr_bytes": 137,
+        "result": "unsupported rowspan field; slide2; no output published"
+      },
+      {
+        "arguments": [
+          "create",
+          "-",
+          "report.pptx"
+        ],
+        "attempt": 2,
+        "exit_code": 0,
+        "stdout_bytes": 1107,
+        "stderr_bytes": 417,
+        "result": "row_span accepted; stderr contains exactly the documented planned-publication event"
+      },
+      {
+        "arguments": [
+          "inspect",
+          "report.pptx",
+          "--details"
+        ],
+        "exit_code": 0,
+        "stdout_bytes": 4850,
+        "stderr_bytes": 0
+      }
+    ],
+    "independent_comparisons": 60,
+    "passed_comparisons": 60,
+    "bytes": 15180,
+    "sha256": "8497525113db737361f92642a2b7fb676c763595d55627882ec64ff572acd8e0",
+    "slides": 2,
+    "parts": 25,
+    "native_content_objects": 4,
+    "expected_results": {
+      "chart_values": [
+        "12",
+        "9"
+      ],
+      "chart_workbook_references": 3,
+      "table_size": [
+        3,
+        3
+      ],
+      "merge": {
+        "row": 2,
+        "column": 2,
+        "row_span": 2,
+        "column_span": 1
+      },
+      "fraction": {
+        "numerator": "12",
+        "denominator": "15"
+      },
+      "superscript": {
+        "base": "x",
+        "exponent": "2"
+      },
+      "notes": [
+        [
+          "内部评审材料"
+        ],
+        [
+          "下一步复核"
+        ]
+      ]
+    },
+    "publication": {
+      "published": true,
+      "cleanup_complete": true,
+      "temporary_files": 0
+    },
+    "documentation_fix": "Added explicit row_span/col_span, covered-slot rules and complete merged-table payload. Agent reread the revised section; successful fixture agrees with it.",
+    "chronology": "Second creation succeeded after validation feedback, before doc update arrived. Existing successful artifact was inspected after doc revision and was not regenerated.",
+    "visual_validation": "not_run",
+    "desktop_validation": "not_run",
+    "fixture_cleanup": "11 owned files and the freshly created task directory removed after identity/inventory checks; no user artifacts removed",
+    "fixture_committed": false
+  },
+  "description_review": {
+    "unicode_characters": 126,
+    "changed": true,
+    "result": "Selection text now includes bounded native-content details and data checks; arbitrary editing, full import and visual acceptance remain excluded."
+  },
   "version_clock": {
-    "sampled_america_new_york": "2026-11-05T01:35:50.397564-05:00",
+    "sampled_america_new_york": "2026-11-05T12:52:12.486054-05:00",
     "calendar_hours_added": 12,
     "fractional_seconds": "truncated_to_hundredths"
   },
-  "source_version": "6.8.0",
-  "previous_source_version": "6.5.0",
-  "previous_source_commit": "c951bf4a3a4af7cbc2382447f3d2e7719b292bd2",
-  "upstream_audit": {
-    "manifest": "tests/pptx/upstream_manifest.json",
-    "files": 74,
-    "python_ast_equal": 50,
-    "adapted_python": 14,
-    "exact_data_and_license": 9,
-    "local_namespace_shim": 1,
-    "source_comparison": "complete untruncated Git trees and per-file Git blob verification"
+  "prior_verification": {
+    "skill_version": "20261105.1335.5039",
+    "source_upgrade_tests": 92,
+    "note": "Previous6.8upgrade evidence and third-party development-reader results were not reused as new execution evidence; current runtime remains stdlib only."
   },
-  "description_review": {
-    "unicode_characters": 123,
-    "changed": false,
-    "result": "Current limited SVG creation and structural readback scope remains accurate; arbitrary existing PPTX editing remains excluded."
-  },
-  "new_regression_tests": {
-    "rendering": 9,
-    "native_objects": 7,
-    "mce_inspection_and_inline_budget": 10,
-    "total": 26
-  },
-  "review_checks": {
-    "mce_and_registry": "passed independent read-only review",
-    "formula_budget": "original200/400term probes reject at128KiB;6inline/blockshortformulas pass conversion/packaging/inspection in memory"
-  },
-  "final_affected_regression": {
-    "command": "python -I -S -B -m unittest discover -s tests/pptx -p 'test_v680_*.py'",
-    "tests": 26,
-    "passed": 26,
-    "failed": 0,
-    "skipped": 0,
-    "exit_code": 0,
-    "duration_seconds": 11.106
-  },
-  "independent_documentation_execution": {
-    "status": "passed_after_documentation_fix",
-    "method": "Fresh agent read only public Skill docs and invoked public CLI; did not read implementation or repository tests.",
-    "fixture": "Two-page synthetic engineering weekly report; chart categories本周/上周, series完成事项12/9;3-column table;block and inline frac12/15;notes内部评审材料.",
-    "check_exit": 0,
-    "create_exit": 0,
-    "inspect_exit": 0,
-    "stderr_bytes": 0,
-    "slides": 2,
-    "bytes": 15657,
-    "sha256": "5b62d150d5bcf373a6d13ec4d62b37a694a4273d360c90db425088bf811422c9",
-    "documentation_fix": "Added explicit data-pptx-inline-formula tspan syntax; repeated creation using a new output path after initial run used plain inline text.",
-    "public_inspection_limits": "Chart data, table dimensions and mathematical structure are not exposed by inspect; formula text1215 is not a fraction-structure verification. Separate regression tests inspect native XML and workbooks.",
-    "visual_validation": "not_run",
-    "fixture_committed": false
-  }
+  "not_verified": [
+    "PowerPoint/WPS desktop opening and visual layout",
+    "complete OOXML XSD or MCE conformance",
+    "real business document fixtures",
+    "real user harness registration/download/model delivery",
+    "actual OOM kill, power loss, hardware failure or hostile same-UID directory writers",
+    "Windows (unsupported runtime)",
+    "macOS runtime",
+    "Python3.10/3.11 execution (3.10 grammar only)",
+    "full other-skill regression suite",
+    "unprivileged OS account"
+  ]
 }
