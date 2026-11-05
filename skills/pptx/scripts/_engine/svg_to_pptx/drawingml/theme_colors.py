@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Theme-color contracts shared by SVG conversion and PPTX package assembly."""
 
 from __future__ import annotations
@@ -282,4 +282,3 @@ def rewrite_chart_accent_colors(data: bytes, spec: ThemeColorSpec | None) -> byt
     text = _SRGB_PAIR_RE.sub(lambda match: replacement(match, paired=True), text)
     text = _SRGB_EMPTY_RE.sub(lambda match: replacement(match, paired=False), text)
     return text.encode("utf-8")
-

@@ -13,6 +13,7 @@ import stat
 import zipfile
 import zlib
 from dataclasses import dataclass, field
+from typing import Iterator
 from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree as ET
 
@@ -36,6 +37,8 @@ MATH_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 SHEET_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 CHART_NS = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 CHARTEX_NS = "http://schemas.microsoft.com/office/drawing/2014/chartex"
+A14_NS = "http://schemas.microsoft.com/office/drawing/2010/main"
+INSPECT_MCE_NAMESPACES = frozenset({P_NS, A_NS, A14_NS, MATH_NS, CHART_NS, CHARTEX_NS})
 REL_BASE = R_NS + "/"
 TYPE_BASE = "application/vnd.openxmlformats-officedocument."
 PRESENTATION_TYPE = TYPE_BASE + "presentationml.presentation.main+xml"
@@ -67,7 +70,7 @@ class ValidationError(ValueError):
     """Input is corrupt, unsafe to inspect, or outside the supported subset."""
 
 
-def safe_xml(data: bytes, label: str = "XML") -> ET.Element:
+def safe_xml(data: bytes, label: str = "XML", *, understood_choices: set[ET.Element] | None = None) -> ET.Element:
     """Parse bounded UTF-8 XML and check namespace-dependent MCE attributes."""
     if not isinstance(data, bytes) or not data or len(data) > MAX_XML_BYTES:
         raise ValidationError(f"{label}: XML must contain 1–{MAX_XML_BYTES} bytes")
@@ -86,6 +89,7 @@ def safe_xml(data: bytes, label: str = "XML") -> ET.Element:
             raise ValidationError(f"{label}: only UTF-8 XML is supported")
     pending_namespaces: dict[str, str] = {}
     scopes: list[dict[str, str]] = []
+    choices = understood_choices if understood_choices is not None else set()
     node_count = 0
     root = None
     try:
@@ -96,6 +100,8 @@ def safe_xml(data: bytes, label: str = "XML") -> ET.Element:
                 pending_namespaces[prefix] = namespace
                 continue
             if event == "end":
+                if item.tag == "{" + MC_NS + "}AlternateContent":
+                    _alternate_content_branch(item, choices, label)
                 scopes.pop()
                 continue
             node_count += 1
@@ -115,6 +121,8 @@ def safe_xml(data: bytes, label: str = "XML") -> ET.Element:
                 if not requires.strip():
                     raise ValidationError(f"{label}: mc:Choice requires a nonempty Requires attribute")
                 _namespace_tokens(requires, scope, label, "mc:Choice Requires")
+                if all(scope[prefix] in INSPECT_MCE_NAMESPACES for prefix in requires.split()):
+                    choices.add(item)
     except (ET.ParseError, UnicodeError, LookupError) as error:
         raise ValidationError(f"{label}: malformed XML") from error
     if root is None or scopes:
@@ -126,6 +134,39 @@ def _namespace_tokens(value: str, scope: dict[str, str], label: str, attribute: 
     for prefix in value.split():
         if not ID_RE.fullmatch(prefix) or not scope.get(prefix):
             raise ValidationError(f"{label}: {attribute} names an undeclared namespace prefix")
+
+
+def _alternate_content_branch(root: ET.Element, understood_choices: set[ET.Element], label: str) -> ET.Element | None:
+    """Select the first supported Choice, preserving prefix scope from parsing."""
+    selected = None
+    fallback = None
+    choice_count = 0
+    for child in root:
+        if child.tag == "{" + MC_NS + "}Choice" and fallback is None:
+            choice_count += 1
+            if selected is None and child in understood_choices:
+                selected = child
+        elif child.tag == "{" + MC_NS + "}Fallback" and fallback is None:
+            fallback = child
+        else:
+            raise ValidationError(f"{label}: invalid mc:AlternateContent branch order or child")
+    if not choice_count:
+        raise ValidationError(f"{label}: mc:AlternateContent must contain at least one Choice")
+    return selected if selected is not None else fallback
+
+
+def _semantic_elements(root: ET.Element, understood_choices: set[ET.Element]) -> Iterator[ET.Element]:
+    """Traverse one MCE branch for text/counts; safety checks still inspect all."""
+    if root.tag == "{" + MC_NS + "}AlternateContent":
+        branch = _alternate_content_branch(root, understood_choices, "PPTX")
+        if branch is None:
+            raise ValidationError("PPTX: AlternateContent has no supported Choice or Fallback for inspection")
+        for child in branch:
+            yield from _semantic_elements(child, understood_choices)
+        return
+    yield root
+    for child in root:
+        yield from _semantic_elements(child, understood_choices)
 
 
 @dataclass
@@ -154,6 +195,7 @@ class _Package:
     types: dict[str, str] = field(default_factory=dict)
     xml: dict[str, ET.Element] = field(default_factory=dict)
     relationships: dict[str, dict[str, _Relationship]] = field(default_factory=dict)
+    understood_choices: set[ET.Element] = field(default_factory=set)
 
 
 def _member_name(name: str, *, directory: bool = False) -> str:
@@ -372,7 +414,7 @@ def _load_package(data: bytes, label: str, budget: _Budget, *, workbook: bool = 
         elif content_type.startswith("image/"):
             raise ValidationError(f"{label}: only PNG and JPEG media are supported")
         elif content_type.endswith("+xml") or content_type in ("application/xml", "text/xml"):
-            package.xml[name] = safe_xml(payload, f"{label} part {name}")
+            package.xml[name] = safe_xml(payload, f"{label} part {name}", understood_choices=package.understood_choices)
         else:
             raise ValidationError(f"{label}: unsupported binary package content")
     _load_relationships(package)
@@ -465,11 +507,13 @@ def _typed_root(package: _Package, name: str, tag: str, type_suffix: str) -> ET.
     return root
 
 
-def _paragraph_text(root: ET.Element, *, keep_empty: bool) -> list[str]:
+def _paragraph_text(root: ET.Element, understood_choices: set[ET.Element], *, keep_empty: bool) -> list[str]:
     paragraphs = []
-    for paragraph in root.iter("{" + A_NS + "}p"):
+    for paragraph in _semantic_elements(root, understood_choices):
+        if paragraph.tag != "{" + A_NS + "}p":
+            continue
         pieces = []
-        for item in paragraph.iter():
+        for item in _semantic_elements(paragraph, understood_choices):
             if item.tag in ("{" + A_NS + "}t", "{" + MATH_NS + "}t"):
                 pieces.append(item.text or "")
             elif item.tag == "{" + A_NS + "}br":
@@ -480,13 +524,15 @@ def _paragraph_text(root: ET.Element, *, keep_empty: bool) -> list[str]:
     return paragraphs
 
 
-def _notes_text(root: ET.Element) -> list[str]:
+def _notes_text(root: ET.Element, understood_choices: set[ET.Element]) -> list[str]:
     paragraphs = []
-    for shape in root.iter("{" + P_NS + "}sp"):
+    for shape in _semantic_elements(root, understood_choices):
+        if shape.tag != "{" + P_NS + "}sp":
+            continue
         placeholder = shape.find("{" + P_NS + "}nvSpPr/{" + P_NS + "}nvPr/{" + P_NS + "}ph")
         if placeholder is not None and placeholder.get("type") in ("sldImg", "sldNum", "dt", "ftr", "hdr"):
             continue
-        paragraphs.extend(_paragraph_text(shape, keep_empty=True))
+        paragraphs.extend(_paragraph_text(shape, understood_choices, keep_empty=True))
     return paragraphs
 
 
@@ -579,9 +625,9 @@ def _inspect(data: bytes) -> dict:
             if note_master.target not in note_master_targets:
                 raise ValidationError("PPTX: notes use an unlisted notes master")
             _typed_root(package, note_master.target, "notesMaster", "presentationml.notesMaster+xml")
-            notes = _notes_text(note_root)
+            notes = _notes_text(note_root, package.understood_choices)
         counts = {"shapes": 0, "images": 0, "tables": 0, "charts": 0}
-        for element in root.iter():
+        for element in _semantic_elements(root, package.understood_choices):
             if element.tag in ("{" + P_NS + "}sp", "{" + P_NS + "}cxnSp"):
                 counts["shapes"] += 1
             elif element.tag == "{" + P_NS + "}pic":
@@ -592,7 +638,7 @@ def _inspect(data: bytes) -> dict:
                 counts["charts"] += 1
         inspected_slides.append({
             "number": number,
-            "text": _paragraph_text(root, keep_empty=False),
+            "text": _paragraph_text(root, package.understood_choices, keep_empty=False),
             "notes": notes,
             "objects": counts,
         })

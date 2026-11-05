@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Theme typography contracts shared by SVG conversion and PPTX assembly."""
 
 from __future__ import annotations
@@ -196,51 +196,6 @@ def load_theme_font_spec(
     default_family = rows.get("font_family")
     major_family = rows.get("title_family") or default_family
     minor_family = rows.get("body_family") or default_family
-    if not major_family or not minor_family:
-        return None
-    return ThemeFontSpec(
-        major=_font_face(major_family, language),
-        minor=_font_face(minor_family, language),
-        major_family=major_family,
-        minor_family=minor_family,
-        cs_scripts=_complex_theme_scripts(language),
-    )
-
-
-def load_theme_font_spec_from_pages(
-    project_path: Path,
-    language: str | None = None,
-) -> ThemeFontSpec | None:
-    """Derive major/minor theme fonts from the first svg_output page.
-
-    The page root's ``font-family`` is the minor (body) face; the family of
-    the largest text on the page is the major (title) face.
-    """
-    pages = sorted((project_path / "svg_output").glob("*.svg"))
-    if not pages:
-        return None
-    try:
-        root = ET.parse(str(pages[0])).getroot()
-    except ET.ParseError:
-        return None
-    minor_family = root.get("font-family") or _inline_style_property(
-        root.get("style", ""), "font-family"
-    )
-    major_family = None
-    largest = -1.0
-    for element in root.iter():
-        if not isinstance(element.tag, str) or element.tag.split("}")[-1] != "text":
-            continue
-        size = _svg_font_size_px(element)
-        family = element.get("font-family") or _inline_style_property(
-            element.get("style", ""), "font-family"
-        )
-        if not minor_family and family:
-            minor_family = family
-        if size is not None and size > largest and family:
-            largest, major_family = size, family
-    minor_family = minor_family or major_family
-    major_family = major_family or minor_family
     if not major_family or not minor_family:
         return None
     return ThemeFontSpec(
@@ -500,4 +455,3 @@ def apply_master_text_style_spec(
                     f"{master_path}"
                 )
     return len(master_paths)
-

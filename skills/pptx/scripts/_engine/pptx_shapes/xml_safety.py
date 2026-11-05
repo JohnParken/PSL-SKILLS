@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 #!/usr/bin/env python3
 """Safety checks for opaque DrawingML fragments copied between PPTX parts."""
 

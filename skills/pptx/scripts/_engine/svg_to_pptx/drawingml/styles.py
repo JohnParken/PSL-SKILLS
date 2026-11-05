@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Fill, stroke, and shadow XML builders for DrawingML conversion."""
 
 from __future__ import annotations
@@ -781,4 +781,3 @@ def get_stroke_opacity(
         base *= parse_opacity(stroke_op)
 
     return base if base < 1.0 else None
-

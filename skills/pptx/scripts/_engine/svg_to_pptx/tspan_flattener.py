@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """In-memory flattening of positional ``<tspan>`` elements.
 
 DrawingML's text-run model has no way to express "jump to a new x/y inside

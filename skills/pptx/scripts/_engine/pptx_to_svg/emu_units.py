@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """EMU <-> pixel conversion and DrawingML unit constants.
 
 Mirrors svg_to_pptx/drawingml/utils.py and pptx_package/dimensions.py, in reverse.

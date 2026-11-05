@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """Semantic shape text subset of the upstream authoring module."""
 from __future__ import annotations
 from xml.etree import ElementTree as ET

@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """SVG path parsing, normalization, and DrawingML path command generation.
 
 See references/svg-effects.md §6.9 for the project freeform grammar.
@@ -848,4 +848,3 @@ def path_commands_to_drawingml(
 
     path_inner = '\n'.join(parts)
     return path_inner, min_x, min_y, width, height
-

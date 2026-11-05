@@ -1,10 +1,10 @@
 {
   "schema": "psl.pptx.verification.v1",
-  "verified_at_utc": "2026-11-04T08:26:30Z",
-  "skill_version": "20261104.1519.0362",
+  "verified_at_utc": "2026-11-05T06:49:15+00:00",
+  "skill_version": "20261105.1335.5039",
   "source_repository": "JohnParken/ppt-master",
-  "source_commit": "c951bf4a3a4af7cbc2382447f3d2e7719b292bd2",
-  "target_base_commit": "b85f536145e2cf02f0216c3ca5dd592b0cdacba7",
+  "source_commit": "5e8856be0da8e6bc85c4aa28acc614478f7b7137",
+  "target_base_commit": "319ad20cf893703a9b8d64531e5390d718419f13",
   "environment": {
     "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
     "python": "3.12.14",
@@ -13,11 +13,12 @@
   "regression": {
     "command": "python -I -S -B -m unittest discover -s tests/pptx -p 'test_*.py'",
     "exit_code": 0,
-    "tests": 66,
-    "passed": 66,
+    "tests": 92,
+    "passed": 92,
     "failed": 0,
     "skipped": 0,
-    "fixture_kind": "synthetic and fixed original small image fixtures"
+    "fixture_kind": "synthetic and fixed original small image fixtures",
+    "duration_seconds": 21.645
   },
   "strict_skill_check": {
     "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/pptx --strict",
@@ -25,12 +26,13 @@
     "stdout": "OK skills/pptx"
   },
   "static_checks": {
-    "runtime_python_files": 69,
-    "python_3_10_grammar": "passed",
+    "runtime_python_files": 72,
+    "python_3_10_grammar": "passed_for_runtime_and_tests",
     "line_length_200": "passed",
     "one_statement_per_line": "passed",
     "stdlib_or_distributed_imports": "passed",
-    "pylint": "not_installed_not_run"
+    "pylint": "not_installed_not_run",
+    "test_python_files": 9
   },
   "runtime_isolation": {
     "cli_tests": "-I -S -B with PATH empty",
@@ -54,26 +56,35 @@
     "no output overwrite or partial files",
     "parallel exports and exclusive publication",
     "JSON stdout and stderr with actual exit status",
-    "repository check adapter success/failure contracts"
+    "repository check adapter success/failure contracts",
+    "font-metric baseline coordinates and explicit run sizes at line breaks",
+    "expanded font families, Unicode spaces and accent fallback",
+    "tiny thick arcs retain geometry and gradient fill",
+    "split text identifiers and hyperlink-wrapped native groups",
+    "chart axis typography, language, theme font slots and inner layout",
+    "102 native charts and workbooks across 101-plus-1 slides remain unique with exact data",
+    "merge-covered cell formatting retained while hidden body text is rejected",
+    "block and inline formula native-shape fallback with unique IDs",
+    "scoped MCE selection reads text, notes and object counts once; all branches remain safety-checked",
+    "compiled formula structure and inherited-style reservation rejects long formulas, macro expansion and oversized inherited typography before slide conversion"
   ],
-  "manual_path_race_checks": [
-    "parent changed to symlink after path check: publication rejected without outside write",
-    "input replaced with symlink after path check: read rejected",
-    "existing output retained byte-for-byte"
-  ],
+  "manual_path_race_checks": {
+    "status": "not_rerun_in_this_upgrade",
+    "prior_verification_commit": "649fcd8eb9f47be55c212c4fd7ba358038d29f2b",
+    "note": "Descriptor-relative file I/O implementation was unchanged; existing workflow path, symlink, publication and concurrency regressions passed again."
+  },
   "independent_development_readback": {
     "python_pptx": "1.0.2",
     "openpyxl": "3.1.5",
     "runtime_dependency": false,
+    "reader_warnings": 0,
     "results": [
-      "four-slide sample opens in parser",
+      "four-slide sample opens",
       "canvas12192000x6858000EMU",
-      "two chart series values match authored values",
-      "native table4rows3columns and header match",
-      "all four note texts match",
-      "embedded workbook rows match chart values",
-      "whitespace and formula-like strings preserved as strings",
-      "no workbook reader warnings after Normal-style fix"
+      "all four notes match exactly",
+      "native chart series A18,24,29,36 and B12,17,21,26 match",
+      "native table4rows3columns with header能力/输出/边界",
+      "embedded workbook rows match chart values"
     ]
   },
   "not_verified": [
@@ -87,5 +98,62 @@
     "full other-skill regression suite",
     "unprivileged OS account"
   ],
-  "scope": "No changes to standards checker or unrelated business skills; PPTX runtime has no third-party Python packages."
+  "scope": "PPTX conversion subset rebased to6.8.0, preserving stdlib runtime, independent in-memory packaging and bounded input validation; no changes to standards checker, check adapter or unrelated skills.",
+  "version_clock": {
+    "sampled_america_new_york": "2026-11-05T01:35:50.397564-05:00",
+    "calendar_hours_added": 12,
+    "fractional_seconds": "truncated_to_hundredths"
+  },
+  "source_version": "6.8.0",
+  "previous_source_version": "6.5.0",
+  "previous_source_commit": "c951bf4a3a4af7cbc2382447f3d2e7719b292bd2",
+  "upstream_audit": {
+    "manifest": "tests/pptx/upstream_manifest.json",
+    "files": 74,
+    "python_ast_equal": 50,
+    "adapted_python": 14,
+    "exact_data_and_license": 9,
+    "local_namespace_shim": 1,
+    "source_comparison": "complete untruncated Git trees and per-file Git blob verification"
+  },
+  "description_review": {
+    "unicode_characters": 123,
+    "changed": false,
+    "result": "Current limited SVG creation and structural readback scope remains accurate; arbitrary existing PPTX editing remains excluded."
+  },
+  "new_regression_tests": {
+    "rendering": 9,
+    "native_objects": 7,
+    "mce_inspection_and_inline_budget": 10,
+    "total": 26
+  },
+  "review_checks": {
+    "mce_and_registry": "passed independent read-only review",
+    "formula_budget": "original200/400term probes reject at128KiB;6inline/blockshortformulas pass conversion/packaging/inspection in memory"
+  },
+  "final_affected_regression": {
+    "command": "python -I -S -B -m unittest discover -s tests/pptx -p 'test_v680_*.py'",
+    "tests": 26,
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "duration_seconds": 11.106
+  },
+  "independent_documentation_execution": {
+    "status": "passed_after_documentation_fix",
+    "method": "Fresh agent read only public Skill docs and invoked public CLI; did not read implementation or repository tests.",
+    "fixture": "Two-page synthetic engineering weekly report; chart categories本周/上周, series完成事项12/9;3-column table;block and inline frac12/15;notes内部评审材料.",
+    "check_exit": 0,
+    "create_exit": 0,
+    "inspect_exit": 0,
+    "stderr_bytes": 0,
+    "slides": 2,
+    "bytes": 15657,
+    "sha256": "5b62d150d5bcf373a6d13ec4d62b37a694a4273d360c90db425088bf811422c9",
+    "documentation_fix": "Added explicit data-pptx-inline-formula tspan syntax; repeated creation using a new output path after initial run used plain inline text.",
+    "public_inspection_limits": "Chart data, table dimensions and mathematical structure are not exposed by inspect; formula text1215 is not a fraction-structure verification. Separate regression tests inspect native XML and workbooks.",
+    "visual_validation": "not_run",
+    "fixture_committed": false
+  }
 }

@@ -1,4 +1,4 @@
-# Adapted from PPT Master c951bf4 (MIT); see assets/licenses/ppt_master.txt.
+# Adapted from PPT Master 5e8856b (MIT); see assets/licenses/ppt_master.txt.
 """In-memory expansion of project icons and static local ``<use>`` elements.
 
 The icon placeholder ``<use data-icon="...">`` is a project-internal SVG
