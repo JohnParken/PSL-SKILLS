@@ -27,6 +27,17 @@ SUSPICIOUS = {"readme", "readme.md", "cache", "__pycache__", "log", "logs", "tmp
 DIRECTORY_NAME = re.compile(r"[A-Za-z_](?:[A-Za-z_-]*[A-Za-z_])?")
 FILE_NAME_START = re.compile(r"[A-Za-z_]")
 TEMP_SUFFIXES = {".pyc", ".pyo", ".log", ".tmp", ".bak"}
+TEST_SCRIPT_SUFFIXES = {".py", ".sh", ".bash", ".ps1", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
+
+
+def is_test_script(path: Path) -> bool:
+    """Recognize conventional test names, not production check/validate commands."""
+    stem = path.stem.lower()
+    return path.suffix.lower() in TEST_SCRIPT_SUFFIXES and (
+        stem in {"test", "tests", "spec"}
+        or stem.startswith(("test_", "spec_"))
+        or stem.endswith(("_test", "_tests", "_spec", ".test", ".spec"))
+    )
 
 
 def _without_comment(value: str) -> str:
@@ -233,7 +244,9 @@ def _root_resources(text: str, rel: str, skill: Path, issues: list[Issue]) -> No
     required_notice = ("<skill-root>", "占位符", "主入口", "SKILL.md", "file_path",
                        "相对", "基准", "去掉", "替换", "完整路径", "停止")
     if not all(word in notice for word in required_notice):
-        issues.append(Issue("error", "root-notice", rel, "Explain the root placeholder, entry file_path, relative read base, filename removal, full-path substitution and stop condition in every Markdown file."))
+        issues.append(Issue("error", "root-notice", rel,
+                            "Explain the root placeholder, entry file_path, relative read base, filename removal, "
+                            "full-path substitution and stop condition in every Markdown file."))
     if re.search(r"<skill[_-]dir>|<skill_root>|\.\./SKILL\.md", text):
         issues.append(Issue("error", "path-style", rel, "Use <skill-root> consistently."))
     for value in re.findall(r"`([^`\n]+)`", prose):
@@ -375,6 +388,10 @@ def check_skill(skill: Path) -> list[Issue]:
             if len(body.splitlines()) > 500:
                 issues.append(Issue("warning", "body-length", "SKILL.md", f"Skill body has {len(body.splitlines())} lines; recommended maximum is 500."))
     pyfiles = [p for p in files if p.suffix == ".py"]
+    for path in files:
+        if is_test_script(path) and not path.is_relative_to(skill / "scripts" / "test"):
+            issues.append(Issue("error", "test-layout", path.relative_to(skill).as_posix(),
+                                "Skill test scripts must be under scripts/test; production flows must not call tests (review separately)."))
     if pyfiles and skill / "requirements.txt" not in files:
         issues.append(Issue("error", "requirements", "requirements.txt", "Python scripts require requirements.txt."))
     for pyfile in pyfiles:

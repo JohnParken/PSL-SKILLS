@@ -10,7 +10,7 @@ import unittest
 import zipfile
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import check_skill
 
 
@@ -30,6 +30,39 @@ def make_skill(root: Path, body: str = "Instructions.\n", front: str | None = No
 
 
 class CheckSkillTests(unittest.TestCase):
+    def test_misplaced_test_scripts_fail_both_modes_without_execution(self):
+        names = ("scripts/test_sample.py", "scripts/sample_test.py", "references/sample.test.js", "scripts/spec_sample.sh")
+        for name in names:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                skill = make_skill(Path(tmp))
+                (skill / "requirements.txt").write_text("# Standard library only.\n", encoding="utf-8")
+                target = skill / name
+                target.parent.mkdir(parents=True)
+                target.write_text("raise RuntimeError('must not execute')\n", encoding="utf-8")
+                before = target.read_bytes()
+                issues = check_skill.check_skill(skill)
+                self.assertTrue(any(i.rule == "test-layout" and i.path == name and i.level == "error" for i in issues))
+                for options in ([], ["--strict"]):
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(1, check_skill.main([str(skill), *options]))
+                self.assertEqual(before, target.read_bytes())
+
+    def test_test_subdirectory_and_runtime_checks_are_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp))
+            (skill / "requirements.txt").write_text("# Standard library only.\n", encoding="utf-8")
+            for name in ("scripts/test/test_sample.py", "scripts/test/nested/sample_test.py", "scripts/check.py", "scripts/validate.py"):
+                target = skill / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("pass\n", encoding="utf-8")
+            self.assertEqual([], check_skill.check_skill(skill))
+
+    def test_test_name_classifier_does_not_classify_data_or_checks(self):
+        for name in ("test_suite.py", "sheet_test.py", "suite.test.ts", "suite.spec.mjs", "test.ps1"):
+            self.assertTrue(check_skill.is_test_script(Path(name)), name)
+        for name in ("test_data.json", "test_results.md", "check_environment.py", "validate_output.py", "latest.py"):
+            self.assertFalse(check_skill.is_test_script(Path(name)), name)
+
     def test_file_name_errors_in_all_resource_directories_are_readonly(self):
         for folder in ("scripts", "references", "assets/nested"):
             for name in ("[Content_Types].xml", ".rels", "1data.xml", "-data.xml", "中文.xml", "édata.xml"):
@@ -136,7 +169,9 @@ class CheckSkillTests(unittest.TestCase):
 
     def test_clean_skill_and_python_dependency_metadata(self):
         with tempfile.TemporaryDirectory() as tmp:
-            skill = make_skill(Path(tmp), "See `<skill-root>/references/guide.md`.\n", "---\nname: 'sample-skill'\nversion: '20261023.0608.1120'\ndescription: \"" + DESCRIPTION + "\"\ndependency:\n  python:\n    - requests\n---\n")
+            skill = make_skill(Path(tmp), "See `<skill-root>/references/guide.md`.\n",
+                               "---\nname: 'sample-skill'\nversion: '20261023.0608.1120'\ndescription: \""
+                               + DESCRIPTION + "\"\ndependency:\n  python:\n    - requests\n---\n")
             (skill / "requirements.txt").write_text("requests\n", encoding="utf-8")
             (skill / "scripts").mkdir()
             (skill / "scripts" / "ok.py").write_text("x = 1\n", encoding="utf-8")

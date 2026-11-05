@@ -15,7 +15,7 @@
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261105.1335.5039 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；显式依赖 xlsx，ET 来源另依赖 et | 20261104.1601.0533 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、公式预检、逐格溯源与审计；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261103.1633.1524 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
-| [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261029.2024.0082 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
+| [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261105.1556.4829 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构
 
@@ -241,7 +241,7 @@ python3 -I -S -B "<skill-root>/scripts/check_skill.py" skills/docx --strict
 运行检查器自身的单元测试：
 
 ```console
-python3 -I -S -B -m unittest discover -s "<skill-root>/scripts" -p 'test_check_skill.py' -v
+python3 -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_check_skill.py' -v
 ```
 
 ## 能力边界
@@ -283,7 +283,7 @@ print(version)
 
 ```console
 python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict
-python3 -I -S -B -m unittest discover -s skills/skill-development-standards/scripts -p 'test_check_skill.py' -v
+python3 -I -S -B -m unittest discover -s skills/skill-development-standards/scripts/test -p 'test_check_skill.py' -v
 ```
 
 在仓库根目录运行 XLSX 自带测试：
@@ -385,7 +385,7 @@ XLSX十个受支持写文件CLI在业务处理前检查输入、配置和输出�
 
 ## 最终收尾规则（20261029.2053.4764）
 
-任务结束时必须清理本轮全部中间文件，包括脚本、配置、回读结果、日志、暂存、锁、回执和清单；仅将当前与历史交付物作为任务生成的留存文件。用户原件与其他任务文件仍受保护，不属于可删除中间文件。创建前完整登记，普通内部暂存由创建函数收尾；若删除失败、归属不明或强杀留下未确认残留，报告收尾未完成，不声称只剩交付物，也不扫描删除未知文件。待重试不是任务结束；最终停止后按原清单完成清理，不永久保留恢复材料。
+任务结束时必须清理本轮全部中间文件，包括脚本、配置、回读结果、日志、暂存、锁、回执和清单；仅将当前与历史交付物作为任务生成的留存文件。用户原件、主文件与其他任务文件仍受保护，不属于可删除中间文件。创建前完整登记，普通内部暂存由创建函数收尾；生成或编辑失败后，待生产进程退出立即按原清单清理归属明确且安全可删的临时项，不因可能重试而保留。删除失败、仍占用、身份变化或状态不明时保护相关文件并报告收尾未完成，不扫描删除未知文件；再次生成从原始输入建立新任务。
 
 自动DOCX新建/编辑与XLSX在主文件验收后，即使归档失败/跳过也清理。公共CLI clean最后删除清单；底层cleanup_task只是内部阶段，最终API使用finalize_cleanup。清单删除后不能继续resume/clean；实际残留返回cleanup_incomplete，DOCX与XLSX自动入口退出3，不能把主文件成功当成收尾完成。
 
