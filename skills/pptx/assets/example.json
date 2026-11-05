@@ -1,0 +1,26 @@
+{
+  "schema": "psl.pptx.v1",
+  "title": "PSL 标准库 PPTX 示例",
+  "width": 1280,
+  "height": 720,
+  "text_flow": "preserve",
+  "native_objects": true,
+  "slides": [
+    {
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1280 720\"><rect width=\"1280\" height=\"720\" fill=\"#0F172A\"/><rect x=\"72\" y=\"100\" width=\"10\" height=\"112\" fill=\"#38BDF8\"/><text x=\"112\" y=\"155\" font-family=\"Arial\" font-size=\"44\" fill=\"#FFFFFF\">PSL PPTX · 标准库演示</text><text x=\"112\" y=\"212\" font-family=\"Arial\" font-size=\"25\" fill=\"#CBD5E1\">可编辑文字、矢量图形、原生图表与表格</text><g transform=\"translate(112 310)\"><rect width=\"1030\" height=\"230\" rx=\"20\" fill=\"#1E293B\"/><text x=\"34\" y=\"60\" font-size=\"27\" fill=\"#F8FAFC\"><tspan x=\"34\" y=\"60\">1. 只使用 Python 标准库</tspan><tspan x=\"34\" y=\"118\">2. 生成后检查 OOXML 结构与关系</tspan><tspan x=\"34\" y=\"176\">3. 视觉效果需在目标演示软件中验收</tspan></text></g><a href=\"#slide-2\"><text x=\"112\" y=\"632\" font-size=\"24\" fill=\"#38BDF8\">下一页：可编辑柱形图 →</text></a></svg>",
+      "notes": "此示例由标准库在内存中组包。\n文字、矩形和链接保留为 PowerPoint 对象。"
+    },
+    {
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1280 720\"><rect width=\"1280\" height=\"720\" fill=\"#F8FAFC\"/><text x=\"80\" y=\"82\" font-size=\"36\" fill=\"#0F172A\">季度收入：原生图表</text><g data-pptx-replace-with=\"chart\" data-pptx-native-authority=\"json\"><metadata type=\"application/json\">{\"type\":\"column\",\"x\":80,\"y\":140,\"width\":1120,\"height\":480,\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"产品 A\",\"values\":[18,24,29,36]},{\"name\":\"产品 B\",\"values\":[12,17,21,26]}]}</metadata></g></svg>",
+      "notes": "图表数据保存在内嵌 XLSX 工作簿中；数据为虚构示例。"
+    },
+    {
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1280 720\"><rect width=\"1280\" height=\"720\" fill=\"#F8FAFC\"/><text x=\"80\" y=\"82\" font-size=\"36\" fill=\"#0F172A\">实现能力：原生表格</text><g data-pptx-replace-with=\"table\" data-pptx-native-authority=\"json\"><metadata type=\"application/json\">{\"schema\":\"ppt-master.semantic-table.v2\",\"x\":80,\"y\":160,\"width\":1120,\"height\":330,\"columns\":[\"能力\",\"输出\",\"边界\"],\"rows\":[[\"文字与矢量\",\"可编辑形状\",\"支持的 SVG 子集\"],[\"图表与表格\",\"原生对象\",\"结构及数据回读验证\"],[\"图片\",\"原字节嵌入\",\"PNG/JPEG；不重压缩\"]]}</metadata></g><text x=\"80\" y=\"594\" font-size=\"23\" fill=\"#475569\">结构校验与实际视觉验收分别报告。</text></svg>",
+      "notes": "这是一张真正的 PowerPoint 表格，可继续编辑单元格。"
+    },
+    {
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1280 720\"><rect width=\"1280\" height=\"720\" fill=\"#0F172A\"/><text x=\"80\" y=\"82\" font-size=\"36\" fill=\"#FFFFFF\">数学内容：原生公式</text><g data-pptx-replace-with=\"formula\"><metadata type=\"application/json\">{\"x\":120,\"y\":210,\"width\":1040,\"height\":160,\"latex\":\"\\\\frac{a}{b} + x^2\",\"font_size\":48,\"color\":\"#FFFFFF\"}</metadata></g><text x=\"120\" y=\"500\" font-size=\"26\" fill=\"#CBD5E1\">仅支持转换引擎定义的 LaTeX 子集。</text></svg>",
+      "notes": "公式输出为 Office Math；未使用 LaTeX 外部程序。"
+    }
+  ]
+}
