@@ -119,16 +119,18 @@ class NextIterationTests(unittest.TestCase):
 
     def test_style_chain_direct_override_and_page_size(self):
         styles = ('<w:style w:type="paragraph" w:styleId="Base"><w:pPr><w:spacing w:line="560" w:lineRule="exact"/>'
-                  '<w:ind w:firstLine="400"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:sz w:val="40"/><w:b/></w:rPr></w:style>'
+                  '<w:jc w:val="center"/><w:ind w:firstLine="400"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:sz w:val="40"/><w:b/></w:rPr></w:style>'
                   '<w:style w:type="paragraph" w:styleId="Custom"><w:basedOn w:val="Base"/>'
                   '<w:pPr><w:spacing w:after="120"/></w:pPr></w:style>')
         body = ('<w:p><w:pPr><w:pStyle w:val="Custom"/></w:pPr><w:r><w:rPr><w:b w:val="0"/></w:rPr><w:t>Heading</w:t></w:r></w:p>'
+                '<w:p><w:pPr><w:pStyle w:val="Custom"/><w:jc w:val="right"/></w:pPr><w:r><w:t>Override</w:t></w:r></w:p>'
                 '<w:sectPr><w:pgSz w:w="15840" w:h="12240"/></w:sectPr>')
         with tempfile.TemporaryDirectory() as directory:
             source, target = Path(directory) / 'in.docx', Path(directory) / 'out.wps'
             source.write_bytes(styled_package(body, styles))
             document = parse_docx_to_rtf_doc(str(source))
             paragraph = document.elements[0]
+            self.assertEqual([item.align for item in document.elements], ['center', 'right'])
             self.assertEqual((paragraph.line_spacing_exact_pt, paragraph.first_line_indent_pt), (28, 20))
             self.assertEqual((paragraph.runs[0].size_pt, paragraph.runs[0].bold), (20, False))
             self.assertEqual(project_headings(read_bytes(source.read_bytes()))['headings'][0]['level'], 1)

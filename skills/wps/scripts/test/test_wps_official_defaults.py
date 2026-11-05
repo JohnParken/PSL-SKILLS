@@ -45,9 +45,10 @@ class OfficialDefaultsTests(unittest.TestCase):
         self.assertIn(escape_rtf_text('方正小标宋简体'), raw)
         self.assertIn(r'\dbch\af9\loch\f5\fs44', document.elements[0].to_rtf())
         self.assertNotIn(r'\b ', document.elements[0].to_rtf())
+        self.assertIn(r'\pard\qc', document.elements[0].to_rtf())
         self.assertIn(r'\dbch\af9\loch\f5\fs28', document.elements[1].to_rtf())
-        for index, font, size, alignment, bold in ((2, 9, 36, 'qc', False), (3, 1, 32, 'ql', False),
-                                                  (4, 3, 32, 'ql', True), (5, 2, 32, 'ql', False)):
+        for index, font, size, alignment, bold in ((2, 1, 32, 'ql', False), (3, 3, 32, 'ql', False),
+                                                  (4, 2, 32, 'ql', False), (5, 2, 32, 'ql', False)):
             paragraph = document.elements[index].to_rtf()
             self.assertIn(f'\\{alignment}\\sl276\\slmult1', paragraph)
             self.assertIn(f'\\dbch\\af{font}\\loch\\f5\\fs{size}', paragraph)

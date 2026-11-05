@@ -50,9 +50,9 @@ JSON
 |---|---|---|---|
 | title | 方正小标宋简体22pt | 居中／否 | 0／12 |
 | subtitle | 方正小标宋简体14pt | 居中／否 | 0／8 |
-| heading 1 | 方正小标宋简体18pt | 居中／否 | 0／0 |
-| heading 2 | 黑体16pt | 左／否 | 0／0 |
-| heading 3 | 楷体16pt | 左／是 | 0／0 |
+| heading 1 | 黑体16pt | 左／否 | 0／0 |
+| heading 2 | 楷体16pt | 左／否 | 0／0 |
+| heading 3 | 仿宋16pt | 左／否 | 0／0 |
 | heading 4–9 | 仿宋16pt | 左／否 | 0／0 |
 
 页码使用 WPS 既有字段 `page_numbering`，显式 true/false 优先；business/general 仍默认开启。公文页眉页脚与启用后的页码采用仿宋／Times New Roman、16pt、左对齐、1.15倍行距。PAGE 域中的1仅为占位结果，实际页码由阅读器更新。读取器不提取页眉页脚和执行域，因此这些文档仍可能返回partial，不能抹去诊断。

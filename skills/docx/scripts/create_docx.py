@@ -91,18 +91,18 @@ _STYLE_DEFAULTS = {
         "line_spacing_pt": 28, "space_before_pt": 0, "space_after_pt": 0,
     },
     "heading1": {
-        "font_east_asia": "方正小标宋简体", "font_latin": "Times New Roman", "size_pt": 18,
-        "bold": False, "align": "center", "first_line_chars": 0,
-        "space_before_pt": 0, "space_after_pt": 0,
-    },
-    "heading2": {
         "font_east_asia": "黑体", "font_latin": "Times New Roman", "size_pt": 16,
         "bold": False, "align": "left", "first_line_chars": 0,
         "space_before_pt": 0, "space_after_pt": 0,
     },
-    "heading3": {
+    "heading2": {
         "font_east_asia": "楷体", "font_latin": "Times New Roman", "size_pt": 16,
-        "bold": True, "align": "left", "first_line_chars": 0,
+        "bold": False, "align": "left", "first_line_chars": 0,
+        "space_before_pt": 0, "space_after_pt": 0,
+    },
+    "heading3": {
+        "font_east_asia": "仿宋", "font_latin": "Times New Roman", "size_pt": 16,
+        "bold": False, "align": "left", "first_line_chars": 0,
         "space_before_pt": 0, "space_after_pt": 0,
     },
     "heading4": {
@@ -112,8 +112,8 @@ _STYLE_DEFAULTS = {
     },
 }
 _STYLE_DEFAULTS.update({
-    "title": {**_STYLE_DEFAULTS["heading1"], "size_pt": 22, "space_after_pt": 12},
-    "subtitle": {**_STYLE_DEFAULTS["heading1"], "size_pt": 14, "space_after_pt": 8},
+    "title": {**_STYLE_DEFAULTS["heading1"], "font_east_asia": "方正小标宋简体", "align": "center", "size_pt": 22, "space_after_pt": 12},
+    "subtitle": {**_STYLE_DEFAULTS["heading1"], "font_east_asia": "方正小标宋简体", "align": "center", "size_pt": 14, "space_after_pt": 8},
 })
 _TABLE_STYLE_DEFAULTS = {
     "table_body": {

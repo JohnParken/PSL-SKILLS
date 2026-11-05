@@ -108,3 +108,9 @@ python -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p "test_*.p
 ## 公开 .wps 候选样本（非生产来源认证）
 
 候选公开文件的来源、固定 sha256、上游 5 个原始测试断言、另一套标准库 MS-DOC 正文解码与 24 段全文一致性已记录于 `<skill-root>/references/wps-public-candidate-evidence.json`。维护 CI 是独立 job，只在运行时按固定提交取样本，保持生产 WPS Skill 不联网、零第三方依赖。它提高了公开文件的**文本算法交叉验证**证据，但没有证明原始创建软件版本或 WPS 可视化语义，不能改写原有“真实原生 WPS 验收未完成”的结论。样本含对象标记时 CP 与最终转换文本无法可靠一一对齐，保留 `unavailable_after_text_transform` 和 `partial`，不伪造格式证据。
+
+## 公文默认标题样式统一（2026-11-05）
+
+版本 20261105.1536.1792。公文主标题小标宋 22pt 居中，正文一至四级标题左对齐、16pt，依次黑体、楷体、仿宋、仿宋。显式段落对齐仍优先。标准参照 GB/T 9704—2012 第 7.3.1、7.3.3 条，正文标题左对齐属项目约定。保留字体声明及自然分页策略。既有 DOCX 转 RTF 样式解析器经回归验证可保留继承居中与显式右对齐。
+
+macOS、Python 3.12.14、-I -S -B。DOCX 全量 399 项、WPS 全量 435 项通过，随后补强断言的 DOCX 生成 16 项和 WPS 转换 9 项通过。DOCX 严格检查通过。WPS 严格检查发现本轮前已有的忽略缓存，不清理历史文件。未运行专用 Pylint、Linux/Windows 或 Word/WPS 实机视觉验收。description 人工复核仍符合能力范围，无新依赖。Main-agent work：实现、说明同步及验收。Subagent execution record：本轮未调用子代理。

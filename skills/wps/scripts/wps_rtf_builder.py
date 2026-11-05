@@ -619,9 +619,9 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
         )
         title_font = FONT_XIAOBIAOSONG
         title_size = 22.0
-        h1_font, h1_size = FONT_XIAOBIAOSONG, 18.0
-        h2_font, h2_size = FONT_SIMHEI, 16.0
-        h3_font, h3_size = FONT_KAITI, 16.0
+        h1_font, h1_size = FONT_SIMHEI, 16.0
+        h2_font, h2_size = FONT_KAITI, 16.0
+        h3_font, h3_size = FONT_FANGSONG, 16.0
         body_font, body_size = FONT_FANGSONG, 16.0
         body_indent = 2.0
         line_spacing_exact = 28.0
@@ -757,9 +757,9 @@ def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
             text = block.get("text", "")
             if theme == "official":
                 font, size = {1: (h1_font, h1_size), 2: (h2_font, h2_size), 3: (h3_font, h3_size)}.get(level, (FONT_FANGSONG, 16.0))
-                p = RtfParagraph(align="center" if level == 1 else "left", first_line_indent_chars=0,
+                p = RtfParagraph(align="left", first_line_indent_chars=0,
                                  line_spacing_mult=1.15, keep_with_next=True, widow_control=None)
-                p.add_text(text, font=font, size_pt=size, bold=level == 3, latin_font=latin_font)
+                p.add_text(text, font=font, size_pt=size, bold=False, latin_font=latin_font)
             elif level == 1:
                 p = RtfParagraph(
                     align="left",

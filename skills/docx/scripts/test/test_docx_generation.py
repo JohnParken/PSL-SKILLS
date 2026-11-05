@@ -81,8 +81,13 @@ class GenerationTests(unittest.TestCase):
         style = next(node for node in styles.findall(W + 'style')
                      if node.get(W + 'styleId') == 'Heading1')
         self.assertEqual(style.find(W + 'pPr/' + W + 'outlineLvl').get(W + 'val'), '0')
-        self.assertEqual(style.find(W + 'rPr/' + W + 'rFonts').get(W + 'eastAsia'), '方正小标宋简体')
-        self.assertEqual(style.find(W + 'rPr/' + W + 'sz').get(W + 'val'), '36')
+        self.assertEqual(style.find(W + 'rPr/' + W + 'rFonts').get(W + 'eastAsia'), '黑体')
+        self.assertEqual(style.find(W + 'rPr/' + W + 'sz').get(W + 'val'), '32')
+        self.assertEqual(style.find(W + 'pPr/' + W + 'jc').get(W + 'val'), 'left')
+        title = next(node for node in styles.findall(W + 'style') if node.get(W + 'styleId') == 'Title')
+        self.assertEqual(title.find(W + 'pPr/' + W + 'jc').get(W + 'val'), 'center')
+        self.assertEqual(title.find(W + 'rPr/' + W + 'sz').get(W + 'val'), '44')
+        self.assertEqual(title.find(W + 'rPr/' + W + 'rFonts').get(W + 'eastAsia'), '方正小标宋简体')
 
     def test_placeholder_refusal_preserves_old_output_and_cleans_stage(self):
         output = Path('existing.docx')
