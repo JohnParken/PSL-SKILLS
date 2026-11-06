@@ -17,7 +17,7 @@ from stdlib_xlsx import Workbook, MAX_BYTES, MAX_MEMBERS, xml
 
 MAX_FILE_BYTES = 32 * 1024 * 1024
 COMPOUND_SIGNATURE = bytes.fromhex('D0CF11E0A1B11AE1')
-GUIDANCE = '不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill 的 scripts/read_wps.py；本入口不会自动调用该技能。'
+GUIDANCE = '不支持读取 WPS 格式：.wps 使用 wps skill，.et/.ett 使用 et skill；请依据实际主入口定位，本入口不会自动调用。'
 
 
 def identify(path):
@@ -30,9 +30,10 @@ def identify(path):
         return {**result, 'status': 'limit_exceeded', 'message': 'Input exceeds 32 MiB inspection limit'}
     if result['extension'] in ('.wps', '.et', '.ett') or data.startswith(COMPOUND_SIGNATURE):
         return {**result, 'container': 'compound_binary' if data.startswith(COMPOUND_SIGNATURE) else 'not_inspected',
-                'status': 'unsupported', 'recommended_skill': 'wps',
+                'status': 'unsupported', 'recommended_skill': ('et' if result['extension'] in ('.et', '.ett')
+                                                               else 'wps' if result['extension'] == '.wps' else 'wps_or_et'),
                 'message': GUIDANCE if result['extension'] in ('.wps', '.et', '.ett') else
-                'CFB 内容不是原生 XLSX/XLSM，不支持读取；请使用 wps skill 的 scripts/read_wps.py 识别。CFB 签名不证明 WPS 来源。'}
+                'CFB 内容不是原生 XLSX/XLSM，不支持读取；请按实际内容确认文字或表格并分别使用 wps skill 或 et skill；CFB 签名不证明 WPS 来源。'}
     if not data:
         return {**result, 'status': 'invalid', 'message': 'Empty input'}
     if not data.startswith((b'PK\x03\x04', b'PK\x05\x06', b'PK\x07\x08')):
@@ -94,7 +95,7 @@ def main():
         print(json.dumps({'status': 'failed', 'message': str(exc)}))
         return 1
     print(json.dumps(result, ensure_ascii=False))
-    return 1 if result.get('recommended_skill') == 'wps' else 0
+    return 1 if result.get('recommended_skill') in ('wps', 'et', 'wps_or_et') else 0
 
 
 if __name__ == '__main__':

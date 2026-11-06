@@ -4,7 +4,7 @@
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
-不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
+不支持读取 WPS 格式；`.wps` 使用 wps skill，`.et/.ett` 使用 et skill；本入口明确拒绝，不自动调用或转换。
 
-二进制正文及 WPS 家族识别由 wps 技能负责。旧 `<skill-root>/scripts/office/binary_doc.py` 路径仅保留明确拒绝的兼容入口，不打开或解析文件。
+二进制文字由 wps 技能处理，ET/ETT 表格由 et 技能处理。旧 `<skill-root>/scripts/office/binary_doc.py` 路径仅保留明确拒绝的兼容入口，不打开或解析文件。
 不要调用旧入口或更改输入扩展名绕过路由。实际格式版本及支持范围以 wps 技能的当前说明和诊断为准。

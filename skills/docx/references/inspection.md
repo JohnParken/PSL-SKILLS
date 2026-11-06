@@ -10,9 +10,9 @@
 交付归档：编辑 CLI 和 公开交付 API（`<skill-root>/references/delivery.md#公开交付-api`） 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 当轮统一归档（`<skill-root>/references/delivery.md`） 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
 
 
-不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill；本入口明确拒绝，不自动调用或转换。
+不支持读取 WPS 格式；`.wps` 使用 wps skill，`.et/.ett` 使用 et skill；本入口明确拒绝，不自动调用或转换。
 
-`.wps`、`.et`、`.ett` 统一交给 wps 技能；本技能文本及 JSON 读取均拒绝这些后缀。伪装为 DOCX/DOTX 的 CFB 内容同样明确引导 wps。
+`.wps` 交给 wps 技能，`.et`、`.ett` 交给 et 技能；本技能文本及 JSON 读取均拒绝这些后缀。伪装为 DOCX/DOTX 的 CFB 须按实际内容确定文字或表格，不凭容器签名确定技能。
 
 ## 轻量读取 Fast Path（优先用于内容问答）
 

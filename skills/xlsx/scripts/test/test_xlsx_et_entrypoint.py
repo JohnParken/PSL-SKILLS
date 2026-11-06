@@ -24,6 +24,7 @@ class FamilyRoutingTests(unittest.TestCase):
                 self.assertEqual(report['status'], 'unsupported')
                 self.assertNotIn('sheets', report)
                 self.assertIn('wps skill', report['message'])
+                self.assertIn('et skill', report['message'])
     def test_identify_and_analysis_explicit_refusal(self):
         with tempfile.TemporaryDirectory() as tmp:
             for suffix in ('.WPS', '.ET', '.ETT'):
@@ -39,6 +40,9 @@ class FamilyRoutingTests(unittest.TestCase):
                     self.assertEqual(report['status'], 'unsupported')
                     self.assertIn('不支持读取 WPS 格式', report['message'])
                     self.assertIn('wps skill', report['message'])
+                    self.assertIn('et skill', report['message'])
+                    if script == 'xlsx_identify.py':
+                        self.assertEqual(report['recommended_skill'], 'wps' if suffix == '.WPS' else 'et')
 
     def test_unknown_native_is_not_wps(self):
         with tempfile.TemporaryDirectory() as tmp:

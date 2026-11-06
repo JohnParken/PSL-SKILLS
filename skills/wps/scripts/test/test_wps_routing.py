@@ -34,6 +34,8 @@ class RoutingTests(unittest.TestCase):
             self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
             result = self.result(sheet, suffix)
             self.assertEqual(result['status'], 'unsupported')
+            self.assertIn('et skill', result['message'])
+            self.assertNotIn('skills/et/', result['message'])
 
     def test_ambiguity_and_encryption(self):
         streams = {path[0]: data for path, data in document().items()}

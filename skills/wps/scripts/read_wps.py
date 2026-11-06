@@ -610,7 +610,7 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
             raise ParseError('invalid_or_unsupported', {'stage': 'OOXML package'}, str(exc)) from exc
         if family == 'spreadsheet':
             raise ParseError('unsupported', {'stage': 'OOXML package'},
-                             'Spreadsheets (.et/.ett) have migrated to the et skill; use skills/et/scripts/read_et.py')
+                             'Spreadsheets (.et/.ett) use the et skill; locate its actual SKILL.md and resolve scripts from that skill root.')
         return read_ooxml_bytes(data, revisions=revisions or 'accepted', include_related=include_related, hidden_text=hidden_text)
     if data.lstrip().startswith(b'{\\rtf'):
         from wps_rtf_read import parse_rtf_bytes
@@ -648,7 +648,7 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
         return result
     if workbooks:
         raise ParseError('unsupported', {'stage': 'routing'},
-                         'Spreadsheets (.et/.ett) have migrated to the et skill; use skills/et/scripts/read_et.py')
+                         'Spreadsheets (.et/.ett) use the et skill; locate its actual SKILL.md and resolve scripts from that skill root.')
     raise ParseError('unsupported', {'stage': 'routing'},
                      'Require WordDocument payload; no supported document found')
 

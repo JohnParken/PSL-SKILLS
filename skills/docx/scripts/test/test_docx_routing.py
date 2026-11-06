@@ -42,6 +42,7 @@ class RoutingTests(unittest.TestCase):
                     message = run.stderr
                 self.assertIn('不支持读取 WPS 格式', message)
                 self.assertIn('wps skill', message)
+                self.assertIn('et skill', message)
 
     def test_unknown_native_is_not_wps(self):
         with tempfile.TemporaryDirectory() as folder:

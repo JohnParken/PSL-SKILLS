@@ -29,7 +29,7 @@ class UnsupportedInputError(ValueError):
     """The input belongs outside the native document reader."""
 
 
-WPS_UNSUPPORTED_MESSAGE = '不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill 的 scripts/read_wps.py；本入口不会自动调用该技能。'
+WPS_UNSUPPORTED_MESSAGE = '不支持读取 WPS 格式：.wps 使用 wps skill，.et/.ett 使用 et skill；请依据实际主入口定位，本文档读取器不会自动调用。'
 
 def _check_native_input(path):
     """Suffix sets skill ownership; signature still gates the native parser."""
@@ -43,7 +43,7 @@ def _check_native_input(path):
     finally:
         os.close(descriptor)
     if prefix == CFB_SIGNATURE:
-        raise UnsupportedInputError("不支持读取 CFB 二进制内容；它不是原生 DOCX/DOTX，请使用 wps skill 的 scripts/read_wps.py 识别其有限支持范围；CFB 签名不证明 WPS 来源。")
+        raise UnsupportedInputError("不支持读取 CFB 二进制内容；它不是原生 DOCX/DOTX，请按实际内容确认文字或表格并分别使用 wps skill 或 et skill；CFB 签名不证明 WPS 来源。")
 
 
 _REVISION_TAGS = {

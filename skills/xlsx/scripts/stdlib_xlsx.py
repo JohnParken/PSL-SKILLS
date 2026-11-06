@@ -27,7 +27,7 @@ class UnsupportedInputError(ValueError):
     """The input is outside native spreadsheet reading support."""
 
 
-WPS_UNSUPPORTED_MESSAGE = '不支持读取 WPS 格式（.wps/.et/.ett），请使用 wps skill 的 scripts/read_wps.py；本入口不会自动调用该技能。'
+WPS_UNSUPPORTED_MESSAGE = '不支持读取 WPS 格式：.wps 使用 wps skill，.et/.ett 使用 et skill；请依据实际主入口定位，本入口不会自动调用。'
 
 MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -143,7 +143,7 @@ class Workbook:
             raise ValueError("Only .xlsx and .xlsm packages are supported")
         with open(path, "rb") as probe:
             if probe.read(8) == bytes.fromhex("d0cf11e0a1b11ae1"):
-                raise UnsupportedInputError("不支持读取 CFB 二进制内容；它不是原生 XLSX/XLSM，请使用 wps skill 的 scripts/read_wps.py 识别其有限支持范围；CFB 签名不证明 WPS 来源。")
+                raise UnsupportedInputError("不支持读取 CFB 二进制内容；它不是原生 XLSX/XLSM，请按实际内容确认文字或表格并分别使用 wps skill 或 et skill；CFB 签名不证明 WPS 来源。")
         return cls._load_archive(path)
 
     @classmethod

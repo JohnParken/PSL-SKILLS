@@ -3,4 +3,4 @@
 
 def read_ms_doc(path):
     """Reject the retired API without opening the input."""
-    raise ValueError("不支持读取 WPS 格式（.wps/.et/.ett）或旧二进制正文，请使用 wps skill 的 scripts/read_wps.py")
+    raise ValueError("不支持读取 WPS 格式或旧二进制正文：.wps 使用 wps skill，.et/.ett 使用 et skill；请依据实际主入口定位")
