@@ -78,8 +78,8 @@ images是字典，每项只含path。PNG限非交错8-bit灰度/RGB及可选alph
 
 ## Skill 内的自备字体
 
-也可由用户将字体放入 `<skill-root>/assets/user_fonts/`，配置 `{"main":{"skill_font":"MyFont.ttf"}}`。只接受单个ASCII文件名及.ttf扩展名，不接受路径、子目录、符号链接或与bundled/path混用；按名称精确读取，不遍历寻找字体。字体目录基于本次真实Skill位置，不是任务目录。运行只读，不复制、移动或修改字体；安装目录不可写时使用原任务目录path流程，勿降级权限保护。读取OFD仍不依赖此目录。
+仅部署前管理可预置字体于 `<skill-root>/assets/user_fonts/`，之后配置 `{"main":{"skill_font":"MyFont.ttf"}}`。只接受单个ASCII文件名及.ttf扩展名，不接受路径、子目录、符号链接或与bundled/path混用；按名称精确读取，不遍历寻找字体。字体目录基于本次真实Skill位置，不是任务目录。运行只读，不复制、移动或修改字体；安装目录不可写时使用原任务目录path流程，勿降级权限保护。读取OFD仍不依赖此目录。
 
-此目录用于安装本地的私人字体，不要求许可证文件或逐次确认，法律授权状态仍为not assessed；fsType、静态glyf、大小与缺字检查不变。字体文件不会自动进入git：仓库根.gitignore仅忽略本目录用户文件，保留NOTICE.txt；不要强制git add。分发必须使用维护入口 `<skill-root>/scripts/package_ofd.py`，它排除整个私人fonts目录中的用户文件，仅保留NOTICE.txt；不能用递归压缩整个Skill的方法发布。git忽略不等于通用ZIP工具会排除，手工复制安装目录仍可能泄露字体。内置朱雀位于assets而非私人目录，完整原版及许可继续分发。
+普通任务不向 Skill 目录写入，使用任务目录内明确的 `path`；此目录仅供部署前管理预置私人字体，不要求许可证文件或逐次确认，法律授权状态仍为not assessed；fsType、静态glyf、大小与缺字检查不变。字体文件不会自动进入git：仓库根.gitignore仅忽略本目录用户文件，保留NOTICE.txt；不要强制git add。分发必须使用维护入口 `<skill-root>/scripts/package_ofd.py`，它排除整个私人fonts目录中的用户文件，仅保留NOTICE.txt；不能用递归压缩整个Skill的方法发布。git忽略不等于通用ZIP工具会排除，手工复制安装目录仍可能泄露字体。内置朱雀位于assets而非私人目录，完整原版及许可继续分发。
 
 维护时在已确认任务目录运行 `python -I -S -B "<skill-root>/scripts/package_ofd.py" ./new-ofd.zip`，目标必须为新文件，禁止覆盖既有包；不自动上传或提交。文件放入Skill私人目录后不必每次再复制到任务目录，但搬迁或升级安装时需自行保留私人文件，不将其混入公共发行包。

@@ -81,6 +81,36 @@ class ResultTests(unittest.TestCase):
         self.assertEqual(result['source_status'], 'partial')
         self.assertEqual(result['columns'][0]['numeric']['sum'], '63.0')
 
+    def test_uncertain_coverage_preserved_and_conflicts_rejected(self):
+        data = self.with_coverage(missing=True)
+        coverage = 'unverified_due_to_best_effort_salvage'
+        data['cell_value_coverage'] = coverage
+        data['reading_assessment']['cell_values']['coverage'] = coverage
+        _, _, _, metadata = self.run_region(data, formulas='cached')
+        self.assertEqual(metadata['source_cell_value_coverage'], coverage)
+        self.assertTrue(metadata['source_omissions_affect_cell_values'])
+        self.assertEqual(metadata['source_issues'], data['issues'])
+        self.assertEqual(metadata['source_reading_assessment'], data['reading_assessment'])
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'result.json'
+            path.write_text(json.dumps(data), encoding='utf-8')
+            process = subprocess.run([sys.executable, '-I', '-S', '-B',
+                                      str(Path(__file__).resolve().parents[1] / 'xlsx_analysis.py'),
+                                      'profile', str(path), '--sheet', 'Data', '--formulas', 'cached'],
+                                     capture_output=True, text=True, encoding='utf-8', check=False)
+            self.assertEqual(process.returncode, 0)
+            parsed = json.loads(process.stdout)
+            self.assertEqual(parsed['source_status'], 'partial')
+            self.assertEqual(parsed['source_cell_value_coverage'], coverage)
+        for change in ('false_omissions', 'false_complete'):
+            bad = copy.deepcopy(data)
+            if change == 'false_omissions':
+                bad['omissions_affect_cell_values'] = False
+            else:
+                bad['status'] = 'ok'
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                self.run_region(bad, formulas='cached')
+
     def test_missing_cache_elsewhere_is_preserved_as_source_scope(self):
         data = self.with_coverage(missing=True)
         data['sheets'][0]['cells']['A4'] = {

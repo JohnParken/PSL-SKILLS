@@ -303,6 +303,35 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(audit['status'], 'partial')
             self.assertEqual(audit['warnings'][0]['source_issues'][0]['code'], 'synthetic_metadata_omission')
 
+    def test_unknown_drawing_partial_inspects_but_never_computes(self):
+        from test_wps_embedded_charts import art, chart_workbook
+        from test_wps_cfb import synthetic_cfb
+        data = synthetic_cfb({'Workbook': chart_workbook(drawing=art(0xF002, art(0xF123, b'abc', 0)))})
+        Path('prior.et').write_bytes(data)
+        result = Workflow(self.api).inspect({'files': [{'path': 'prior.et'}]})
+        self.assertEqual(result['status'], 'partial')
+        source = result['files'][0]
+        self.assertEqual(source['source_status'], 'partial')
+        self.assertEqual(source['source_coverage']['cell_value_coverage'], 'unverified_due_to_best_effort_salvage')
+        self.assertTrue(any(issue['code'] == 'unknown_officeart_atoms' for issue in source['source_issues']))
+        command = [sys.executable, '-I', '-S', '-B', str(WORKFLOW_ROOT / 'scripts' / 'table_workflow.py'),
+                   'inspect', '--xlsx-root', str(XLSX_ROOT), '--et-root', str(ET_ROOT)]
+        child = subprocess.run(command, input=encode({'files': [{'path': 'prior.et'}]}), capture_output=True, text=True)
+        self.assertEqual(child.returncode, 3, child.stdout + child.stderr)
+        self.assertEqual(json.loads(child.stdout)['files'][0]['source_coverage']['cell_value_coverage'],
+                         'unverified_due_to_best_effort_salvage')
+        self.plan['sources']['prior'].update(path='prior.et', sha256=self.digest('prior.et'), accept_partial=True)
+        with self.assertRaisesRegex(WorkflowError, 'Partial ET'):
+            self.prepare()
+        apply_command = [sys.executable, '-I', '-S', '-B', str(WORKFLOW_ROOT / 'scripts' / 'table_workflow.py'),
+                         'apply', '--xlsx-root', str(XLSX_ROOT), '--et-root', str(ET_ROOT),
+                         '--output', 'filled.xlsx', '--audit', 'audit.json']
+        child = subprocess.run(apply_command, input=encode(self.plan), capture_output=True, text=True)
+        self.assertEqual(child.returncode, 1, child.stdout + child.stderr)
+        self.assertEqual(json.loads(child.stdout)['status'], 'failed')
+        self.assertFalse(Path('filled.xlsx').exists())
+        self.assertFalse(Path('audit.json').exists())
+
     def test_inspection_bounded_and_computation_uses_last_row(self):
         self.replace_source([['机构', '金额']] + [['甲', 1]] * 2000 + [['乙', 50]])
         result = bounded_result(Workflow(self.api).inspect({'files': [{'path': 'current.xlsx'}]}))

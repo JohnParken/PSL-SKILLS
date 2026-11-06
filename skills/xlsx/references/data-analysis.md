@@ -143,9 +143,10 @@ Exit 0 indicates completed analysis; exit 1 returns JSON `status: failed`.
 ## Identify contents, including ET/ETT candidates
 
 `<skill-root>/scripts/xlsx_identify.py` inspects native OOXML inputs. WPS family suffixes and CFB signatures
-return `unsupported` with `recommended_skill: wps`; this does not validate the binary container or extract cells.
-The legacy `recommended_skill: wps` marker is retained by this identification CLI;
-route ET/ETT to the separately installed et skill and WPS text to wps. Never rename input to bypass routing.
+return `unsupported`: `.wps` uses `recommended_skill: wps`, `.et/.ett` uses `et`, and a CFB signature
+with another suffix uses `wps_or_et` pending content identification. These values replace the older generic
+`wps` marker; consumers must handle all three. The inspection does not validate the binary container or
+extract cells. Locate the selected Skill independently; never rename input to bypass routing.
 
 ## Analyze a WPS result without conversion
 
@@ -167,7 +168,10 @@ are preserved as `source_cell_value_coverage`, `source_omissions_affect_cell_val
 `source_reading_assessment`. No replacement assessment schema is generated. These optional
 source assertions pass identity/type and consistency checks within the existing 16 MiB JSON
 and depth-64 limits; malformed or conflicting assertions fail. Older valid result JSON may
-omit them, in which case no completeness claim is inferred or added.
+omit them, in which case no completeness claim is inferred or added. Unverified saved-value coverage
+is preserved with its issues and partial source status; it must never be treated as complete. The analysis
+CLI retains its existing exit 0 for a successful analysis, including a partial source: inspect `source_status`
+and coverage separately. ET extraction itself returns exit 3 for partial; the codes describe different stages.
 
 Coverage describes the original extraction's declared scope, not completeness of the selected
 analysis region or freshness of formula caches. Missing caches outside the selected region

@@ -22,7 +22,8 @@ def source_coverage(result):
     fields = {}
     if 'cell_value_coverage' in result:
         coverage = result['cell_value_coverage']
-        if coverage not in ('complete_within_declared_sheets', 'missing_formula_caches'):
+        if coverage not in ('complete_within_declared_sheets', 'missing_formula_caches',
+                            'unverified_due_to_best_effort_salvage'):
             raise ValueError('Invalid WPS cell value coverage')
         fields['cell_value_coverage'] = coverage
     if 'omissions_affect_cell_values' in result:
@@ -31,8 +32,10 @@ def source_coverage(result):
             raise ValueError('Invalid WPS cell value omissions flag')
         fields['omissions_affect_cell_values'] = omissions
     if len(fields) == 2 and fields['omissions_affect_cell_values'] != (
-            fields['cell_value_coverage'] == 'missing_formula_caches'):
+            fields['cell_value_coverage'] != 'complete_within_declared_sheets'):
         raise ValueError('Conflicting WPS cell value coverage')
+    if fields.get('cell_value_coverage') == 'unverified_due_to_best_effort_salvage' and result.get('status') != 'partial':
+        raise ValueError('Unverified cell coverage requires partial status')
     if 'reading_assessment' in result:
         assessment = result['reading_assessment']
         if (not isinstance(assessment, dict)
@@ -50,14 +53,17 @@ def source_coverage(result):
             raise ValueError('Conflicting WPS reading assessment completeness')
         cell_values = assessment.get('cell_values', {})
         if ('coverage' in cell_values and cell_values['coverage'] not in
-                ('complete_within_declared_sheets', 'missing_formula_caches')):
+                ('complete_within_declared_sheets', 'missing_formula_caches',
+                            'unverified_due_to_best_effort_salvage')):
             raise ValueError('Invalid WPS reading assessment cell coverage')
+        if cell_values.get('coverage') == 'unverified_due_to_best_effort_salvage' and result.get('status') != 'partial':
+            raise ValueError('Unverified cell coverage requires partial status')
         if ('omissions_affect_cell_values' in cell_values
                 and type(cell_values['omissions_affect_cell_values']) is not bool):
             raise ValueError('Invalid WPS reading assessment cell omissions flag')
         if ('coverage' in cell_values and 'omissions_affect_cell_values' in cell_values
                 and cell_values['omissions_affect_cell_values'] !=
-                (cell_values['coverage'] == 'missing_formula_caches')):
+                (cell_values['coverage'] != 'complete_within_declared_sheets')):
             raise ValueError('Conflicting WPS reading assessment cell coverage')
         for key, original_key in (('coverage', 'cell_value_coverage'),
                                   ('omissions_affect_cell_values', 'omissions_affect_cell_values')):

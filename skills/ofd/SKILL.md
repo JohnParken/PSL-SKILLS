@@ -1,6 +1,6 @@
 ---
 name: ofd
-version: "20261106.1031.3059"
+version: "20261106.1235.5861"
 description: 读取 OFD 1.0、1.1、1.2 的结构与文字；仅在明确指定 OFD 时生成基础 OFD 1.0 多页文件，含固定文字、线框、图片及简单表格。可离线用随包朱雀仿宋预览示例或自备字体，缺字明确拒绝。不编辑第三方文件，不做 OCR、签章、复杂排版或格式转换。
 ---
 
@@ -12,7 +12,7 @@ description: 读取 OFD 1.0、1.1、1.2 的结构与文字；仅在明确指定 
 
 读取入口继续只读。仅在用户明确指定 OFD 格式并要求新建时，按 `<skill-root>/references/generation.md` 使用独立生成入口；它只接受显式 JSON 模型，不接受第三方 OFD 作为编辑输入。基础生成仍处于有限结构验收阶段，尚未完成 OFD 客户端页面视觉验收，不能承诺任意客户端可打开或任意文字正确排版。
 
-离线示例可显式选择 `fonts: {"example":{"bundled":"zhuque-fangsong-v0.212"}}`；完整原版字体与许可在本包内，不安装字体、不扫描系统、不自动回退。仅需示例字体时加载 `<skill-root>/references/bundled-fonts.md`；自备字体可用任务目录内明确路径，或放入 `<skill-root>/assets/user_fonts/` 后以 `{"skill_font":"MyFont.ttf"}` 显式引用ASCII文件名，不要求提交许可证或逐次确认；提供文件不等于取得授权，仍核验逐字覆盖与技术嵌入限制。
+离线示例可显式选择 `fonts: {"example":{"bundled":"zhuque-fangsong-v0.212"}}`；完整原版字体与许可在本包内，不安装字体、不扫描系统、不自动回退。仅需示例字体时加载 `<skill-root>/references/bundled-fonts.md`；普通任务的自备字体使用任务目录内明确路径；仅部署前管理可预置 `<skill-root>/assets/user_fonts/` 并以 `{"skill_font":"MyFont.ttf"}` 显式引用，不要求提交许可证或逐次确认；提供文件不等于取得授权，仍核验逐字覆盖与技术嵌入限制。
 
 ## 执行环境约束与首步自检
 
