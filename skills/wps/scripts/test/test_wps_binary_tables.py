@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from read_wps import parse_streams, ParseError, read_bytes
+from wps_binary_tables import initial_cell_properties, table_width_operand
 from test_wps import document, synthetic_cfb
 
 
@@ -56,6 +57,37 @@ def fixture(text='甲\x07乙\x07\x07\r', compressed=False):
 
 
 class BinaryTableTests(unittest.TestCase):
+    def test_local_width_operands_decode_or_preserve_invalid_without_guessing(self):
+        source = {'stream': 'Data', 'offset': 29}
+        width = table_width_operand(0xD635, b'\x01\x03\x03\xe8\x03', source)
+        self.assertEqual((width['interpretation'], width['first_cell'], width['limit_cell'],
+                          width['width_type'], width['width_raw']), ('decoded', 1, 3, 3, 1000))
+        margin = table_width_operand(0xD634, b'\x00\x01\x05\x03\x0f\x00', source)
+        self.assertEqual((margin['interpretation'], margin['sides_mask'], margin['width_raw']), ('decoded', 5, 15))
+        for sprm, raw in [(0xD635, b'\0' * 4), (0xD635, b'\x02\x01\x03\0\0'),
+                          (0xD635, b'\x00\x01\x03\xff\xff'),
+                          (0xD634, b'\x00\x01\x10\x03\0\0'),
+                          (0xD634, b'\x00\x01\x01\x00\x01\0')]:
+            with self.subTest(sprm=sprm, raw=raw):
+                result = table_width_operand(sprm, raw, source)
+                self.assertEqual(result['interpretation'], 'invalid_or_unsupported')
+                self.assertEqual(result['raw_hex'], raw.hex())
+                self.assertEqual(result['source'], source)
+
+    def test_initial_tc80_flags_are_bounded_and_not_final_merges(self):
+        first = struct.pack('<Hh', 2 | (1 << 5), 123) + bytes(16)
+        second = struct.pack('<Hh', 1 | (2 << 5), 456) + bytes(16)
+        result = initial_cell_properties(first + second, 2)
+        self.assertEqual([cell['horizontal_merge_initial'] for cell in result['cells']], [2, 1])
+        self.assertEqual([cell['vertical_merge_initial'] for cell in result['cells']], [1, 2])
+        self.assertEqual([cell['preferred_width_raw'] for cell in result['cells']], [123, 456])
+        self.assertEqual(result['complete_tc80_records'], 2)
+        short = initial_cell_properties(first + second[:3], 2)
+        self.assertEqual(short['complete_tc80_records'], 1)
+        self.assertEqual(short['incomplete_tc80_bytes'], 3)
+        self.assertEqual(short['columns_without_complete_tc80'], 1)
+        self.assertEqual(initial_cell_properties(first + second, 1)['complete_tc80_records'], 1)
+
     def test_explicit_cells_and_row_with_original_text_preserved(self):
         streams, _ = fixture()
         out = parse_streams(streams)
@@ -117,7 +149,9 @@ class BinaryTableTests(unittest.TestCase):
         word[page + 20 + 13 * 3] = 200
         pointer = word[page + 20 + 13 * 2] * 2
         original = bytes(word[page + pointer + 2:page + pointer + 16])
-        definition = b'\x08\xd6\x08\0\2\0\0\xe8\3\xd0\7'
+        definition = (b'\x08\xd6\x08\0\2\0\0\xe8\3\xd0\7\x15\x36\x01\x15\x36\x00'
+                      b'\x35\xd6\x05\x00\x01\x03\xe8\x03'
+                      b'\x34\xd6\x06\x00\x01\x01\x03\x0f\x00\x15\x36\x00')
         # Use nonzero cb encoding for the resulting odd-length grpprl.
         group = original + definition
         word[page + pointer:page + pointer + 1 + len(group)] = bytes(((len(group) + 1) // 2,)) + group
@@ -126,6 +160,11 @@ class BinaryTableTests(unittest.TestCase):
         self.assertEqual(result['rows'][0]['initial_definition']['column_count'], 2)
         self.assertEqual(result['rows'][0]['initial_definition']['edges_twips'], [0, 1000, 2000])
         self.assertEqual(result['rows'][0]['merges'], 'unknown')
+        self.assertEqual(result['rows'][0]['uninterpreted_table_modifier_ids'],
+                         {'0x3615': 3, '0xd635': 1, '0xd634': 1})
+        operands = result['rows'][0]['local_width_operands']
+        self.assertEqual([(item['sprm'], item['width_raw']) for item in operands],
+                         [('0xd635', 1000), ('0xd634', 15)])
 
     def test_budget_fails_explicitly(self):
         streams, _ = fixture()

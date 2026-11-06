@@ -24,6 +24,12 @@
 
 依据微软 MS-DOC 的表格概述、PapxFkp、PapxInFkp、直接段落格式及 TDefTableOperand 实现有限读取；定位与使用范围见格式依据 (`<skill-root>/references/format-evidence.json`)。这些是开发材料，运行时不联网。
 
+`initial_definition.initial_cell_properties` 逐项保留完整 TC80 的原始 TCGRF、初始横向/纵向合并位及原始首选宽度，另计不完整记录；依据 MS-DOC TC80 与 TCGRF（https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/9dd62a79-8c0b-4b11-99ee-05742ae7cf6d 、https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/11bf5b1c-943f-421d-bbf3-39088cd1b8dd）。这是表格定义的初始状态；后续修饰符未应用，不能当最终合并范围或渲染宽度，结果仍为 partial。
+
+每行 `uninterpreted_table_modifier_ids` 汇总已定界但未应用的表格修饰符编号及次数，最多 64 类；超出的记录数由 `uninterpreted_table_modifier_ids_omitted` 标注。编号不表示操作数的语义已解析或实际视觉样式已恢复。
+
+`local_width_operands` 最多保留每行 128 个已定界的 `0xD635` 首选单元格宽度及 `0xD634` 默认内边距操作数，含源流偏移和原始十六进制；格式与取值符合对应子集时给出单元格范围、单位、宽度及边掩码，否则标记 `invalid_or_unsupported`，不因非关键格式语义无效丢弃正文。超出上限由 `local_width_operands_omitted` 计数。局部操作数未经样式级联、后续覆盖及实际布局计算，不代表最终宽度；原 partial 不变。依据 MS-DOC TableCellWidthOperand（https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/e0d4c0db-623d-4a6f-94d2-48e05f34f564）、CSSAOperand（https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/fd43c8b3-8d6e-484a-8bc5-efebf377f422）。
+
 当前验证为独立字面量构造的合成 PAPX/FKP 样例，包括中文、压缩文本、代理对、空单元格、多段文字、初始列边界、属性缺失/未知、嵌套深度、PRM、损坏和预算。另有两份工行官网原件的有限核验：价格表恢复9行（单元格数为10、10、10、10、10、4、5、5、5），大连采购表恢复2行、每行5个单元格；独立struct实现的BTE/FKP/PRL与FIB/CLX步行结果一致（仅共享CFB分配层），正文及原件哈希不变。价格表的5处HugePapx已按有界PrcData读取；不证明WPS生产者、完整表格、合并或客户端视觉效果。macOS/Python3.13验证，Linux/Windows未测。
 
 ## 固定段落属性与保守停止

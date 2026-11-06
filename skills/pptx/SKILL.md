@@ -1,6 +1,6 @@
 ---
 name: pptx
-version: "20261105.1644.0317"
+version: "20261106.1003.4668"
 description: 用于将已有内容与受限 SVG 页面制作成可编辑的 PPTX 演示文稿，适合需要文本、形状、图片、表格、图表及基础公式的汇报材料；也可读取支持范围内的 PPTX 文本与备注并检查包结构。不提供任意现有演示文稿的编辑、完整格式导入或桌面显示效果验证。
 ---
 
@@ -74,6 +74,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 ## 读取与验证流程
 
 完成首步自检后，对用户明确提供的任务相对路径运行 `inspect` 或 `validate`。
+默认严格校验 PNG。若仅因 PNG 的 IEND 后零填充而失败，可显式运行 `inspect 文件.pptx --allow-png-zero-padding`：只允许每个图片至多 1024 个零字节，仍校验 PNG 数据与 CRC；返回 `structural_validation=partial`、逐文件诊断与退出码 3，不表示文件符合 PNG 标准或客户端可正常显示。`validate` 与创建维持严格校验；非零尾随、超限及损坏仍拒绝。
 `inspect` 返回标题及逐页 `text`、`notes`、`objects`；文本包含受支持的段落、表格单元格和公式文本，不包含图表工作簿数值的完整导出。
 公式等备用显示内容按支持的命名空间选择一条 MCE 分支读取，避免重复文本与计数；所有分支仍接受结构与关系检查。
 `validate` 只返回包结构摘要；两者均不渲染页面、不执行宏，也不证明所有 OOXML 语义或桌面显示正确。

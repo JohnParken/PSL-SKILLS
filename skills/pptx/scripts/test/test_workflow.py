@@ -110,7 +110,7 @@ class WorkflowTests(unittest.TestCase):
             result = json.loads(process.stdout)
         except json.JSONDecodeError:
             self.fail(f"stdout was not one JSON document: {process.stdout!r}; stderr={process.stderr!r}")
-        self.assertEqual(result["ok"], process.returncode == 0, (process.stdout, process.stderr, process.returncode))
+        self.assertEqual(result["ok"], process.returncode in (0, 3), (process.stdout, process.stderr, process.returncode))
         return process, result
 
     def assert_failure(self, *arguments: str, payload: dict | str | None = None) -> dict:
@@ -127,6 +127,24 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(result["site_packages"])
         self.assertEqual(result["third_party_python_dependencies"], [])
         self.assertEqual(list(self.root.iterdir()), [])
+
+    def test_inspect_nonstandard_png_requires_opt_in_and_reports_partial(self) -> None:
+        self.invoke("create", "-", "base.pptx", payload=config())
+        members = parts((self.root / "base.pptx").read_bytes())
+        content_types = ET.fromstring(members['[Content_Types].xml'])
+        ns = 'http://schemas.openxmlformats.org/package/2006/content-types'
+        ET.SubElement(content_types, '{' + ns + '}Default', {'Extension': 'png', 'ContentType': 'image/png'})
+        members['[Content_Types].xml'] = ET.tostring(content_types, encoding='utf-8', xml_declaration=True)
+        members['ppt/media/padded.png'] = image_png() + bytes(46)
+        with zipfile.ZipFile(self.root / 'padded.pptx', 'w') as archive:
+            for name, payload in members.items():
+                archive.writestr(name, payload)
+        self.assert_failure('inspect', 'padded.pptx')
+        self.assert_failure('validate', 'padded.pptx')
+        process, result = self.invoke('inspect', 'padded.pptx', '--allow-png-zero-padding')
+        self.assertEqual(process.returncode, 3)
+        self.assertEqual(result['structural_validation'], 'partial')
+        self.assertEqual(result['diagnostics'][0]['bytes'], 46)
 
     def test_editable_text_notes_and_roundtrip_inspection(self) -> None:
         process, result = self.invoke("create", "-", "deck.pptx", payload=config())

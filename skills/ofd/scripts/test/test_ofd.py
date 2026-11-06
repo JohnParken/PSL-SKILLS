@@ -60,6 +60,24 @@ class ReaderTests(unittest.TestCase):
         write_package(self.path, fixture() if files is None else files)
         return READER.read_ofd(self.path)
 
+    def test_glyph_mapping_nodes_link_to_stored_xml_without_claiming_interpretation(self):
+        files = fixture()
+        page = files['Doc/Pages/P.xml']
+        files['Doc/Pages/P.xml'] = page.replace(
+            b'</ofd:TextObject>',
+            b'<ofd:CGTransform CodePosition="0" CodeCount="2" GlyphCount="2">'
+            b'<ofd:Glyphs>10 20</ofd:Glyphs></ofd:CGTransform></ofd:TextObject>')
+        result = self.read(files)
+        obj = result['documents'][0]['pages'][0]['objects'][0]
+        self.assertEqual(obj['kind'], 'TextObject')
+        self.assertEqual(len(obj['glyph_transform_nodes']), 1)
+        part = next(item for item in result['structure']['xml_parts'] if item['source'] == 'Doc/Pages/P.xml')
+        node = part['nodes'][obj['glyph_transform_nodes'][0]]
+        self.assertTrue(node['tag'].endswith('}CGTransform'))
+        self.assertEqual(node['attributes']['GlyphCount'], '2')
+        self.assertIn('glyph_mapping_not_interpreted', [d['code'] for d in result['diagnostics']])
+        self.assertEqual(result['status'], 'partial')
+
     def test_duplicate_page_content_rejected(self):
         with self.assertRaisesRegex(READER.ReadError, 'duplicate Content'):
             self.read(fixture(page_extra='<ofd:Content/>'))

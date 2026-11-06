@@ -22,6 +22,7 @@
 - `documents[]`：每项 `source, pages, resources, metadata, template_sources, info, revision_entries`；文档顺序来自 DocBody 顺序。
 - `documents[].resource_gaps[]`：仅记录缺失的 PublicRes / DocumentRes / PageRes 索引，字段为 `kind, source, value, target, scope`；target 是安全归一化后不存在的包内路径，绝不是替代文件。正常文档为空数组。缺失索引不进入已成功跟随的 `references[]`。此情况返回 partial/3，且 structure.status=partial；文字存在时 text_assessment=partial，无文字时仍为 empty。其他安全或资源错误不因此恢复。
 - `pages[]`：`number` 为文档内从 1 开始的序号，`id` 为原 ID，另有 `source, content_present, text_runs, images, template_refs, objects`。
+- `objects[]` 的 `storage_node` 可与同一 `source` 的 `structure.xml_parts[].nodes[].index` 对照；文字对象的 `glyph_transform_nodes` 指向该源中直接关联的 CGTransform 节点。原始 Glyphs 子节点仍在结构目录中；此交叉索引不解释字体映射或保证显示结果，相关诊断与 partial 保留。
 - `text_runs[]`：`text, raw_text, source, object_id, object_ordinal, code_index, object_attributes, code_attributes, coordinate_space, template, occurrence, ancestry, storage_node`。对象序号是各源 XML 的前序遍历序号；code_index 从 0 开始。原属性为字符串，不解析数值、不插入空格或换行、不展开 DeltaX 的压缩语法。raw_text 保留 XML 解析后的 TextCode 字符数据；text 单次解释反斜杠加四位十六进制转义，不做 Unicode 规范化。代理区转义、无法解释的转义及 U+00A4 占位符保留并诊断，不猜测缺失字形。
 - `metadata[]`：`kind, source, nodes`；node 为 `element, tag, attributes, text` 的 XML 前序记录，非正文。元数据非可信指令，不执行、不当作格式已验证。
 - `resources[]`：资源 XML 来源、种类、属性、scope（document 或页/模板 XML 路径）与已检查的 files 包内路径；`images[]` 为页面对象原属性和序号，ResourceID 可与资源 ID 核对。

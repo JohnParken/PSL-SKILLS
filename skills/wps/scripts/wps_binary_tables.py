@@ -34,6 +34,47 @@ LAYOUT_PROPERTIES = {
 }
 
 
+def initial_cell_properties(raw, columns):
+    """Expose only complete initial TC80 records, never infer the final grid."""
+    count = min(columns, len(raw) // 20)
+    cells = []
+    for index in range(count):
+        record = raw[index * 20:(index + 1) * 20]
+        flags = int.from_bytes(record[:2], 'little')
+        cells.append({'index': index, 'tcgrf_raw_hex': bytes(record[:2]).hex(),
+                      'horizontal_merge_initial': flags & 3,
+                      'vertical_merge_initial': (flags >> 5) & 3,
+                      'preferred_width_raw': int.from_bytes(record[2:4], 'little', signed=True)})
+    return {'cells': cells, 'complete_tc80_records': count,
+            'columns_without_complete_tc80': columns - count,
+            'incomplete_tc80_bytes': len(raw) % 20 if count < columns else 0,
+            'scope': 'initial_definition_only; later modifiers not applied'}
+
+
+def table_width_operand(sprm, raw, source):
+    """Decode bounded local operands; invalid semantics remain raw and partial."""
+    raw = bytes(raw)
+    result = {'sprm': hex(sprm), 'source': source, 'raw_hex': raw.hex(),
+              'interpretation': 'invalid_or_unsupported', 'scope': 'local_modifier_only'}
+    if sprm == 0xD635 and len(raw) == 5:
+        first, limit, units = raw[:3]
+        width = int.from_bytes(raw[3:5], 'little', signed=True)
+        valid = first <= limit <= 63 and first < 63 and units in (0, 1, 2, 3)
+        valid = valid and (units == 0 or (units == 1 and width == 0)
+                           or (units == 2 and 0 <= width <= 5000)
+                           or (units == 3 and 0 <= width <= 31680))
+        if valid:
+            result.update(interpretation='decoded', first_cell=first, limit_cell=limit,
+                          width_type=units, width_raw=width)
+    elif sprm == 0xD634 and len(raw) == 6:
+        first, limit, sides, units = raw[:4]
+        width = int.from_bytes(raw[4:6], 'little')
+        if (first, limit) == (0, 1) and not sides & ~15 and units in (0, 3) and width <= 31680 and (units != 0 or width == 0):
+            result.update(interpretation='decoded', first_cell=first, limit_cell=limit,
+                          sides_mask=sides, width_type=units, width_raw=width)
+    return result
+
+
 def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                    table_ranges=(), word_ranges=(), piece_properties=False, data_region=None):
     """Return observed depth-one rows only when every paragraph has direct evidence."""
@@ -198,8 +239,11 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                                 properties_region.location(cursor), 'Table definition edges not ordered')
                         # Retain initial boundaries only. TC80 and later table changes
                         # can alter display/merges; never promote these to a grid.
+                        tc_start = cursor + 1 + 2 * (columns + 1)
+                        tc_bytes = properties_region.view(tc_start, definition_end - tc_start)
                         props['initial_definition'] = {'column_count': columns, 'edges_twips': edges,
-                            'remaining_property_bytes': definition_end - cursor - 1 - 2 * (columns + 1)}
+                            'remaining_property_bytes': len(tc_bytes),
+                            'initial_cell_properties': initial_cell_properties(tc_bytes, columns)}
                         cursor = definition_end
                         continue
                     if sprm not in TABLE_PROPERTIES:
@@ -210,8 +254,22 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                                 width = properties_region.number(cursor, 1)
                                 cursor += 1
                             require(cursor + width <= stop, properties_region.location(cursor), 'Truncated table property')
+                            if sprm in (0xD634, 0xD635):
+                                operands = props.setdefault('local_width_operands', [])
+                                if len(operands) < 128:
+                                    operands.append(table_width_operand(sprm, properties_region.view(cursor, width),
+                                                                        properties_region.location(cursor)))
+                                else:
+                                    props['local_width_operands_omitted'] = props.get('local_width_operands_omitted', 0) + 1
                             cursor += width
                             props['uninterpreted_table_modifiers'] = props.get('uninterpreted_table_modifiers', 0) + 1
+                            kinds = props.setdefault('uninterpreted_table_modifier_ids', {})
+                            key = hex(sprm)
+                            if key in kinds or len(kinds) < 64:
+                                kinds[key] = kinds.get(key, 0) + 1
+                            else:
+                                props['uninterpreted_table_modifier_ids_omitted'] = props.get(
+                                    'uninterpreted_table_modifier_ids_omitted', 0) + 1
                             continue
                         result['unresolved_property_count'] += 1
                         if len(result['unresolved_properties']) < 100:
@@ -282,7 +340,11 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                             'row_properties_source': props['source'], 'merges': 'unknown',
                             'external_properties_source': props.get('external_properties_source'),
                             'initial_definition': props.get('initial_definition'),
-                            'uninterpreted_table_modifiers': props.get('uninterpreted_table_modifiers', 0)})
+                            'uninterpreted_table_modifiers': props.get('uninterpreted_table_modifiers', 0),
+                            'uninterpreted_table_modifier_ids': props.get('uninterpreted_table_modifier_ids', {}),
+                            'uninterpreted_table_modifier_ids_omitted': props.get('uninterpreted_table_modifier_ids_omitted', 0),
+                            'local_width_operands': props.get('local_width_operands', []),
+                            'local_width_operands_omitted': props.get('local_width_operands_omitted', 0)})
                     else:
                         result['unresolved_markers'].append({'cp': cp, 'stream': 'WordDocument'})
                     chunks, cells, row_start = [], [], None

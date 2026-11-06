@@ -35,6 +35,9 @@ def parser() -> argparse.ArgumentParser:
     for command in ("inspect", "validate"):
         command_parser = commands.add_parser(command, help=f"{command.title()} a supported PPTX package")
         command_parser.add_argument("input", help="Task-relative .pptx filename")
+        if command == "inspect":
+            command_parser.add_argument("--allow-png-zero-padding", action="store_true",
+                                        help="Inspect with bounded non-standard PNG zero padding; report partial")
     return result
 
 
@@ -49,9 +52,10 @@ def main(argv: list[str] | None = None) -> int:
         elif command == "create":
             value = create(args.config, args.output)
         else:
-            value = read_presentation(args.input, inspect=command == "inspect")
+            value = read_presentation(args.input, inspect=command == "inspect",
+                                      allow_png_zero_padding=getattr(args, 'allow_png_zero_padding', False))
         print(json.dumps({"schema": RESULT_SCHEMA, "ok": True, "command": command, **value}, ensure_ascii=False, allow_nan=False))
-        return 0
+        return 3 if value.get('structural_validation') == 'partial' else 0
     except (ValueError, RuntimeError, OSError, OverflowError, RecursionError, TypeError, KeyError, IndexError) as error:
         if isinstance(error, TaskError):
             code = error.code

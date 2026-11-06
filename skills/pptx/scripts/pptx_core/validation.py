@@ -396,7 +396,8 @@ def _load_relationships(package: _Package) -> None:
                     raise ValidationError(f"{package.label}: XML references an unresolved relationship")
 
 
-def _load_package(data: bytes, label: str, budget: _Budget, *, workbook: bool = False) -> _Package:
+def _load_package(data: bytes, label: str, budget: _Budget, *, workbook: bool = False,
+                  allow_png_zero_padding: bool = False, diagnostics: list | None = None) -> _Package:
     package = _Package(label, _read_zip(data, label, budget))
     _load_content_types(package)
     for name, content_type in package.types.items():
@@ -410,7 +411,34 @@ def _load_package(data: bytes, label: str, budget: _Budget, *, workbook: bool = 
             try:
                 inspect_image(payload, IMAGE_FORMATS[content_type])
             except ImageValidationError as error:
-                raise ValidationError(f"{label}: invalid PNG/JPEG image") from error
+                # Non-standard IEND padding is accepted only in explicit inspection mode.
+                # Find IEND through bounded chunk framing, then fully validate the prefix.
+                if not allow_png_zero_padding or IMAGE_FORMATS[content_type] != 'png':
+                    raise ValidationError(f"{label}: invalid PNG/JPEG image") from error
+                offset = 8
+                while offset + 12 <= len(payload):
+                    size = int.from_bytes(payload[offset:offset + 4], 'big')
+                    end = offset + 12 + size
+                    if end > len(payload):
+                        break
+                    if payload[offset + 4:offset + 8] == b'IEND':
+                        tail = payload[end:]
+                        if not tail or len(tail) > 1024 or any(tail):
+                            break
+                        try:
+                            inspect_image(payload[:end], 'png')
+                        except ImageValidationError:
+                            break
+                        if diagnostics is not None:
+                            diagnostics.append({'code': 'png_trailing_zero_padding', 'part': name,
+                                                'bytes': len(tail)})
+                        break
+                    offset = end
+                else:
+                    end = 0
+                if not (offset + 12 <= len(payload) and payload[offset + 4:offset + 8] == b'IEND'
+                        and diagnostics and diagnostics[-1].get('part') == name):
+                    raise ValidationError(f"{label}: invalid PNG/JPEG image") from error
         elif content_type.startswith("image/"):
             raise ValidationError(f"{label}: only PNG and JPEG media are supported")
         elif content_type.endswith("+xml") or content_type in ("application/xml", "text/xml"):
@@ -573,9 +601,11 @@ def _master_roster(package: _Package, main_name: str) -> tuple[set[str], set[str
     return master_targets, note_targets
 
 
-def _inspect(data: bytes) -> dict:
+def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
     budget = _Budget()
-    package = _load_package(data, "PPTX", budget)
+    diagnostics: list = []
+    package = _load_package(data, "PPTX", budget, allow_png_zero_padding=allow_png_zero_padding,
+                            diagnostics=diagnostics)
     for name, content_type in package.types.items():
         if content_type == XLSX_TYPE:
             _validate_embedded_workbook(package.parts[name], f"Embedded workbook {name}", budget)
@@ -653,7 +683,7 @@ def _inspect(data: bytes) -> dict:
             raise ValidationError("PPTX: duplicate document title")
         if titles:
             title = titles[0].text or ""
-    return {
+    result = {
         "slide_count": len(inspected_slides),
         "parts": len(package.parts),
         "slide_size": {"width_emu": width, "height_emu": height},
@@ -662,6 +692,10 @@ def _inspect(data: bytes) -> dict:
         "title": title,
         "slides": inspected_slides,
     }
+    if diagnostics:
+        result['structural_validation'] = 'partial'
+        result['diagnostics'] = diagnostics
+    return result
 
 
 def validate_presentation(data: bytes) -> dict:
@@ -672,6 +706,6 @@ def validate_presentation(data: bytes) -> dict:
     return result
 
 
-def inspect_presentation(data: bytes) -> dict:
+def inspect_presentation(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
     """Return slide order, native object counts, text, notes and document title."""
-    return _inspect(data)
+    return _inspect(data, allow_png_zero_padding=allow_png_zero_padding)

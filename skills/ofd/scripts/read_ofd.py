@@ -885,7 +885,13 @@ def read_ofd(path, *, task_root=None, version_policy="known"):
                             issue('object_outside_content', object_source, name)
                             continue
                         if name.endswith('Object'):
-                            append_to(page['objects'], dict(kind=name, source=object_source, ordinal=ordinal, attributes=dict(node.attrib)))
+                            obj = dict(kind=name, source=object_source, ordinal=ordinal,
+                                       storage_node=package.node_indexes[object_source][node],
+                                       attributes=dict(node.attrib))
+                            if name == 'TextObject':
+                                obj['glyph_transform_nodes'] = [package.node_indexes[object_source][child]
+                                                                for child in node.findall(q('CGTransform'))]
+                            append_to(page['objects'], obj)
                             if name not in ('TextObject', 'ImageObject', 'PathObject', 'CompositeObject'):
                                 issue('uninterpreted_object', object_source, name)
                         if name == 'TextObject':

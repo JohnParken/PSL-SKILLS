@@ -25,6 +25,7 @@ sys.path.insert(0, str(SCRIPTS))
 from pptx_core.package import ConvertedSlide, build_presentation
 from pptx_core.validation import ValidationError, inspect_presentation, safe_xml, validate_presentation
 from test_package import NAMESPACES, SHAPE, read_parts, slide_xml
+from test_images import png_rgba
 
 
 P_NS = NAMESPACES["p"]
@@ -121,6 +122,27 @@ class PresentationValidationTests(unittest.TestCase):
             title="Quarter & Forecast",
         )
         self.parts = read_parts(self.original)
+
+    def test_nonstandard_png_padding_is_explicit_bounded_and_diagnosed(self) -> None:
+        add_default(self.parts, 'png', 'image/png')
+        name = 'ppt/media/sample.png'
+        for padding in (1, 46, 1024):
+            self.parts[name] = png_rgba() + bytes(padding)
+            data = zipped(self.parts)
+            with self.assertRaises(ValidationError):
+                inspect_presentation(data)
+            result = inspect_presentation(data, allow_png_zero_padding=True)
+            self.assertEqual(result['structural_validation'], 'partial')
+            self.assertEqual(result['diagnostics'], [
+                {'code': 'png_trailing_zero_padding', 'part': name, 'bytes': padding}
+            ])
+        corrupt = bytearray(png_rgba())
+        corrupt[-1] ^= 1
+        for image in (png_rgba() + b'\x00\x01', png_rgba() + bytes(1025),
+                      bytes(corrupt) + b'\x00', png_rgba()[:-4] + b'\x00'):
+            self.parts[name] = image
+            with self.subTest(length=len(image)), self.assertRaises(ValidationError):
+                inspect_presentation(zipped(self.parts), allow_png_zero_padding=True)
 
     def test_readback_reports_only_verified_structural_scope(self) -> None:
         original_copy = bytes(self.original)
