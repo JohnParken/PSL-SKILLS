@@ -1,0 +1,310 @@
+{
+  "scope": "Repository documentation only; no Skill implementation or existing release artifact changed.",
+  "repository": "JohnParken/PSL-SKILLS",
+  "baseline_commit": "14bfafe55d58fd04069a78d5196b82bfbf8f67c6",
+  "verified_at_utc_date": "2026-11-05",
+  "source_tree_complete": true,
+  "expected_skill_count": 10,
+  "skill_coverage": [
+    {
+      "skill": "artifact-lifecycle",
+      "version": "20261105.1644.0317",
+      "document": "docs/skills/artifact-lifecycle.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "bank-writing",
+      "version": "20261102.1954.3193",
+      "document": "docs/skills/bank-writing.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "docx",
+      "version": "20261105.1717.1148",
+      "document": "docs/skills/docx.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "et",
+      "version": "20261105.1717.1148",
+      "document": "docs/skills/et.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "ofd",
+      "version": "20261105.1644.0317",
+      "document": "docs/skills/ofd.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "pptx",
+      "version": "20261105.1644.0317",
+      "document": "docs/skills/pptx.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "skill-development-standards",
+      "version": "20261105.1556.4829",
+      "document": "docs/skills/skill-development-standards.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "table-workflow",
+      "version": "20261105.1717.1148",
+      "document": "docs/skills/table-workflow.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "wps",
+      "version": "20261105.1717.1148",
+      "document": "docs/skills/wps.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    },
+    {
+      "skill": "xlsx",
+      "version": "20261105.1736.5039",
+      "document": "docs/skills/xlsx.md",
+      "present": true,
+      "version_cited": true,
+      "baseline_cited": true,
+      "function_section": true,
+      "architecture_section": true,
+      "flow_section": true,
+      "mermaid_diagrams": 2
+    }
+  ],
+  "materialized_source_files": 196,
+  "materialized_source_git_blob_checks": "passed",
+  "source_mismatches": [],
+  "relative_links_checked": 283,
+  "link_errors": [],
+  "anchor_errors": [],
+  "unverified_source_anchors": [],
+  "mermaid": {
+    "engine": "Mermaid 12.3.0",
+    "mode": "parse only, JSDOM",
+    "diagrams": [
+      {
+        "file": "docs/README.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/README.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/artifact-lifecycle.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/artifact-lifecycle.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/bank-writing.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/bank-writing.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/docx.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/docx.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/et.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/et.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/ofd.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/ofd.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/pptx.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/pptx.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/skill-development-standards.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/skill-development-standards.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/table-workflow.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/table-workflow.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/wps.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/wps.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/xlsx.md",
+        "diagram": 1,
+        "status": "passed",
+        "type": "flowchart-v2"
+      },
+      {
+        "file": "docs/skills/xlsx.md",
+        "diagram": 2,
+        "status": "passed",
+        "type": "flowchart-v2"
+      }
+    ]
+  },
+  "visual_rendering": {
+    "status": "blocked",
+    "reason": "Chromium cannot open its local process socket in this container (Operation not permitted). No visual rendering pass is claimed."
+  },
+  "business_tests": {
+    "status": "not_run",
+    "reason": "Documentation-only task; no business implementation changed. Historical test references are not new test runs."
+  },
+  "remote_changes": "none",
+  "original_report_context": "Original fields describe generation and validation of the supplied archive; local application checks are recorded separately below.",
+  "local_application_check": {
+    "baseline": "14bfafe55d58fd04069a78d5196b82bfbf8f67c6",
+    "relative_links": 283,
+    "linked_baseline_files": 191,
+    "linked_sources_equal_git_baseline": true,
+    "diagram_manual_semantic_review_count": 22,
+    "local_mermaid_parser": "not_available; no package installed",
+    "local_visual_rendering": "not_run",
+    "business_tests": "not_run; documentation only",
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.11",
+    "archive_sha256": "2087d7ff214b4911a9a2510e579799e68c20c6e4d0f66b42019dfa8834050a5b",
+    "archive_bytes": 136762,
+    "archive_crc": "passed",
+    "archive_manifest_sha256": "passed",
+    "original_patch_apply_check": "passed",
+    "initial_installed_files_equal_bundle": "passed",
+    "added_files": 12,
+    "existing_docs_preserved": true,
+    "skill_sources_unchanged": true,
+    "local_wording_adjustments": [
+      "ET and OFD result-channel wording distinguishes stdout results from stderr diagnostics"
+    ],
+    "library_artifact": "PSL-SKILLS-skill-docs-14bfafe.zip"
+  }
+}

@@ -1,0 +1,136 @@
+# PPTX：受限 SVG 到可编辑演示文稿
+
+本文对应仓库基线 [`14bfafe55d58fd04069a78d5196b82bfbf8f67c6`](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)，Skill 版本为 `20261105.1644.0317`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md) 与 [输入契约](../../skills/pptx/references/input-contract.md)。
+
+## 功能与适用范围
+
+PPTX Skill 将已确认内容与受限 SVG 页面转换为新 `.pptx`。文本、形状、图片、有限原生图表、语义表格和 Office 数学对象可在兼容客户端中继续编辑。JSON 负责稿件配置与备注，SVG 负责显式页面布局，转换器生成 DrawingML 并在内存组装 OOXML 包。
+
+它还可读取受支持的现有 Transitional PPTX，提取标题、逐页文本、备注和对象计数，或仅检查包结构。不提供任意现有 PPTX 导入、原位编辑、模板回填、无损转换、旧式 `.ppt`、OCR、PDF 导出或桌面页面渲染。
+
+转换逻辑来自 PPT Master v6.8.0 的选定子集，不能将上游完整产品能力视为本 Skill 的能力。源码虽然包含形状和 SVG 辅助模块，公开入口仍只有 `check`、`create`、`inspect`、`validate`。
+
+## 架构
+
+```mermaid
+flowchart TD
+    A["JSON 配置、SVG 与 PNG/JPEG"] --> B["pptx.py：公开 CLI"]
+    B --> C["runtime.py：环境、路径与严格输入校验"]
+    C --> D["svg_limits.py：引用展开预算"]
+    C --> E["images.py：图片结构检查"]
+    C --> F["SVG 到 DrawingML 转换子集"]
+    F --> G["原生图表、表格、公式与文字度量"]
+    G --> H["共享 PackagePartRegistry：跨页部件命名"]
+    F --> I["package.py：内存 OOXML 组包"]
+    H --> I
+    I --> J["validation.py：结构与关系检查"]
+    J --> K["runtime.py：独占写出并读回比对"]
+    K --> L["新 PPTX 与 JSON 回执"]
+    M["已有受支持 PPTX"] --> B
+    C --> N["validation.py：inspect 或 validate"]
+    N --> O["内容摘要或结构摘要；不渲染"]
+```
+
+`runtime.render_deck()` 为整稿共享 `PackagePartRegistry`，按页调用 `convert_svg_to_slide_shapes()`，再将转换结果交给 `build_presentation()`。转换中的诊断重定向到 stderr，避免污染 JSON stdout。SVG 以字符串在内存传递，正常创建不落中间文件。
+
+### 主要模块与入口
+
+| 源码 | 职责 |
+|---|---|
+| [pptx.py](../../skills/pptx/scripts/pptx.py) | 参数分发、统一结果 schema 和错误 JSON；业务成功退出 0，失败退出 2 |
+| [pptx_core/runtime.py](../../skills/pptx/scripts/pptx_core/runtime.py) | 环境与目录边界、严格 JSON/SVG 校验、资源准备、创建及读取编排、独占发布 |
+| [pptx_core/svg_limits.py](../../skills/pptx/scripts/pptx_core/svg_limits.py) | 在展开 `use` 等引用前限制节点、深度和成本，拒绝循环/异常引用 |
+| [pptx_core/images.py](../../skills/pptx/scripts/pptx_core/images.py) | 标准库 PNG/JPEG 验证，保留原始图像字节 |
+| [_engine/svg_to_pptx/drawingml/converter.py](../../skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py) | 受支持 SVG 到可编辑 DrawingML 的核心转换 |
+| [_engine/svg_to_pptx/native_objects](../../skills/pptx/scripts/_engine/svg_to_pptx/native_objects/) | 原生图表/表格、嵌入数据工作簿和有限公式转换 |
+| [_engine/pptx_ooxml/package.py](../../skills/pptx/scripts/_engine/pptx_ooxml/package.py) | `PackagePartRegistry`，在整稿分配不冲突的图表等部件名 |
+| [pptx_core/package.py](../../skills/pptx/scripts/pptx_core/package.py) | 幻灯片、母版、主题、备注、内容类型与关系的内存组包 |
+| [pptx_core/validation.py](../../skills/pptx/scripts/pptx_core/validation.py) | ZIP/XML、媒体、关系、内嵌工作簿和受支持 PPTX 结构校验；MCE 分支选择及内容摘要 |
+
+## 任务流程
+
+```mermaid
+flowchart TD
+    A["确认内容依据、任务目录与 Skill 位置"] --> B["check 环境及内存样例导出"]
+    B --> C{"自检标记与真实退出码满足？"}
+    C -->|"否"| X["报告缺口并停止"]
+    C -->|"是"| D{"创建还是读取？"}
+    D -->|"创建"| E["整理逐页内容并构造 JSON 与受限 SVG"]
+    E --> F["严格校验、引用预算、图片和原生对象检查"]
+    F --> G["内存转换与 OOXML 组包"]
+    G --> H["结构验证后独占写出新文件并读回"]
+    H --> I["inspect 最终文件，核对内容、页数和哈希"]
+    I --> J["说明视觉未验收，交接公共生命周期归档"]
+    D -->|"读取"| K["inspect 或 validate"]
+    K --> L{"结构与安全检查通过？"}
+    L -->|"否"| Y["明确失败，不返回假空内容"]
+    L -->|"是"| M["返回声明范围内的摘要"]
+```
+
+自检通过后仍需对实际最终文件验收。布局修订从原始内容创建不同输出文件，不能称作任意原 PPTX 编辑。文件哈希与创建回执不一致时停止交付并调查变化，不用对象数量代替数据与文本核对。
+
+## 输入与调用契约
+
+命令中的 `<skill-root>` 从本轮实际读取 PPTX `SKILL.md` 的真实路径确定；相对路径先按宿主确认的读取基准解析，再去掉文件名并整体替换。业务工作目录始终是宿主确认的任务目录；无法定位安装根时停止，不猜路径。
+
+```console
+python -I -S -B "<skill-root>/scripts/pptx.py" check
+python -I -S -B "<skill-root>/scripts/pptx.py" create presentation.json report.pptx
+python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx
+```
+
+配置也可通过 `create - report.pptx` 的实际进程 stdin 传入。创建配置与读取 PPTX 是不同输入，现有 PPTX 不能当作创建配置或可编辑模板。
+
+| 配置字段 | 约束 |
+|---|---|
+| `schema` | 固定 `psl.pptx.v1` |
+| `title` | 默认 `Presentation`，最多 512 字符 |
+| `width` / `height` | 默认 1280 × 720；每边 96–5376 px |
+| `text_flow` | `preserve`、`reflow` 或 `split`；默认保留 SVG 布局意图 |
+| `native_objects` | 默认 true；原生图表和表格要求开启 |
+| `slides` | 1–200 页；每页必须且只能有 `svg` 或 `svg_path`，可有纯文本 `notes` |
+
+未知字段、重复键、非法 Unicode、非有限数字和超过 64 层的 JSON 拒绝。每页 SVG 标准命名空间和 `viewBox` 必须与统一画布一致。配置、SVG 及其图片路径都相对任务工作目录，而不是配置或 SVG 所在目录；拒绝绝对路径、父目录、盘符、反斜杠与符号链接。
+
+输出必须是尚不存在的 `.pptx`，父目录已存在。脚本不覆盖、不自动改名、不创建父目录；正常创建在内存完成转换和结构验证后，以独占方式写最终文件并读回字节比较。不得把这一过程描述成原文件原位修改或任意时点的原子整文件可见性保证。
+
+### SVG 与原生对象子集
+
+- 允许基本形状、路径、文本/tspan、组、图片、同文档引用、有限渐变、裁剪和标记等；采用元素及属性允许列表，不是浏览器 SVG 渲染器。拒绝 CSS 类、style 元素、filter、mask、事件、动画和外部图标库标记。
+- 图片只支持 PNG/JPEG，保留原字节嵌入，尺寸/裁剪由 DrawingML 表达，不重编码或像素裁剪。拒绝 APNG、GIF、WebP、SVG/EMF 图片和 EXIF orientation 非 1 的 JPEG。PNG 检查 CRC 与展开扫描线，JPEG 不完整解码像素。
+- 原生标记使用 `data-pptx-replace-with`，类型为 `chart`、`table`、`formula`，每个标记只能有一个受限 JSON 载体，不能嵌套。图表和表格须声明 JSON 为原生内容依据。
+- 图表仅开放 column、bar、line、area、pie、doughnut、scatter，数据保存于内嵌工作簿，不接入外部数据源；不提供已有图表原位编辑。
+- 表格使用 `ppt-master.semantic-table.v2`，上限 100 行、50 列、5000 个解析后单元格。合并覆盖格可有样式但必须没有独立正文，不静默丢弃被遮盖内容。
+- 公式转换成原生 Office 数学对象，LaTeX 最多 8192 字符且只支持有限语法。备用显示由提供的 SVG 或行内文本形成，不自动绘制缺失预览，也不承诺任意 LaTeX 支持。
+- 文字布局依赖随包字宽和字体度量数据，没有随包字体文件、系统字体扫描或外部字体塑形；客户端字体替代仍影响最终显示。
+
+初次构造原生对象可参考 [四页配置示例](../../skills/pptx/assets/example.json)，具体字段以 [输入契约](../../skills/pptx/references/input-contract.md) 为准。示例覆盖不等于任意对象类型均支持。
+
+## 输出、读取与失败边界
+
+正常业务 stdout 是单个 `psl.pptx.result.v1` JSON。成功 `ok=true`、退出 0；失败 `ok=false`、退出 2，并附 `error.code`、`error.message`，stderr 给出诊断。参数错误也经 JSON 契约处理；`--help` 为文本帮助，其成功不证明业务环境可用。
+
+创建回执包含 `output`、`bytes`、`sha256`、`slide_count` 和 `structural_validation=passed`；`visual_validation=not_run`、`temporary_files=0` 必须保留。`archive_status=handoff_required` 明确尚未归档。
+
+`inspect` 已执行结构验证，额外返回标题及逐页 `text`、`notes`、`objects`；只需要结构结论时使用 `validate`，无需为同一结论重复执行两种读取。二者均返回页数、部件数、画布及哈希，不渲染页面，不验证全部 OOXML 语义。
+
+读取有以下重要限制：
+
+1. 文本包括支持的段落、表格单元格和数学文本，但不返回完整图表数据、表格维度或数学树。分式 `12/15` 的拼接可能成为 `1215`，不能据摘要证明数学结构正确。
+2. 对 MCE `AlternateContent` 只读取首个支持的 Choice，否则读取 Fallback，避免重复文本/计数；所有分支仍接受安全与关系检查。没有可读分支则失败，不是完整 MCE 解释器。
+3. 宏、ActiveX、OLE、非 XLSX 嵌入对象、不支持的媒体、危险外部数据关系、损坏引用和资源超限明确失败。
+4. 当前没有公开的 partial 恢复契约。失败不能被改成空文本或部分成功；需要部分读取时必须另行定义、实现和验证契约。
+
+主要预算：配置 32 MiB、单页 SVG 8 MiB、全稿展开/原生预留保守预算 128 MiB；预计展开节点每页 20000、深度 128。单图 32 MiB、最大单边 32768 px、总像素 6400 万。读取 ZIP 上限 128 MiB、单成员 64 MiB；外层及内嵌包共用 256 MiB 展开和 5000 成员预算，单 XML 16 MiB、深度 128、节点 100000。预算是安全上限，不是进程峰值内存承诺；以源码和输入契约中的各阶段限制共同约束。
+
+## 依赖、归档与验证限制
+
+- [requirements.txt](../../skills/pptx/requirements.txt)：Python 3.10+、仅标准库，需 zlib、Expat 2.6+ 和 POSIX 描述符相对文件操作。当前目标为 Linux，Windows 不支持；不安装包、不调用外部程序或网络服务。
+- `check` 必须实际退出 0，完整 JSON 含 `ok=true`、`status=environment-ok`、`in_memory_export=passed`。`check_kind=environment`、`artifact_validation=not_run` 表明这里只验内存样例，不是用户产物。
+- 写入任务可用 `check --write-probe` 独占创建、读回并清理探针，要求 `write_probe=passed`；任务根探针不代替输出子目录权限检查，纯读取无需探针。
+- 宿主须返回同次调用的完整 stdout、stderr 和真实退出码；未启动、超时、强杀、截断与脚本业务失败分别报告，不解析截断 JSON 或伪造成功。
+- 业务验收后，按宿主发现的真实 `artifact-lifecycle` 入口交接最终清单、来源和验证结果。公共能力不可用报告归档 skipped；失败保留主文件，不重新生成或删除已验收 PPTX。归档与业务成功分别判断。
+- [来源记录](../../skills/pptx/references/provenance.md) 固定 PPT Master v6.8.0 来源提交 `5e8856be0da8e6bc85c4aa28acc614478f7b7137`，记录保留的标准库适配、静态数据与 MIT/Apache 等许可。没有移植上游完整工作流、浏览器审查、渲染、任意模板导入或媒体流程。
+- [随包测试](../../skills/pptx/scripts/test/) 与仓库级来源清单属于维护证据。结构、合成对象、独立内容预期、真实业务样本、PowerPoint/WPS 显示、只读安装及宿主触发验收必须分别报告，不能相互替代。
+
+本文只审阅固定基线入口、核心实现及引用契约，未运行 PPTX 自检、创建、读取、维护回归或桌面视觉检查。源码中的验证步骤是实现行为说明，不表示本轮已执行并通过。
