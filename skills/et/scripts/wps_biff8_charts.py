@@ -18,9 +18,10 @@ DRAWING_CONTAINERS = {0xF000, 0xF002, 0xF003, 0xF004}
 DRAWING_ATOMS = {0xF006, 0xF008, 0xF009, 0xF00A, 0xF00B, 0xF010, 0xF011}
 
 
-def drawing_frame(data, expected_root):
+def drawing_frame(data, expected_root, *, allow_unknown_atoms=False):
     """Check exact OfficeArt framing, bounded nesting and an explicit type subset."""
     count = 0
+    unknown = []
 
     def walk(start, end, depth):
         nonlocal count
@@ -39,7 +40,9 @@ def drawing_frame(data, expected_root):
                     raise ValueError('OfficeArt container version must be 15')
                 walk(start + 8, stop, depth + 1)
             elif kind not in DRAWING_ATOMS or flags & 15 == 15:
-                raise ValueError('Unsupported OfficeArt record ' + hex(kind))
+                if not allow_unknown_atoms or flags & 15 == 15:
+                    raise ValueError('Unsupported OfficeArt record ' + hex(kind))
+                unknown.append({'record_type': hex(kind), 'offset': start, 'length': size})
             start = stop
 
     if len(data) < 8:
@@ -48,6 +51,7 @@ def drawing_frame(data, expected_root):
     if kind != expected_root or flags != 15 or size != len(data) - 8:
         raise ValueError('Drawing root type/length/version mismatch')
     walk(0, len(data), 0)
+    return unknown
 
 
 def chart_end(records, index):

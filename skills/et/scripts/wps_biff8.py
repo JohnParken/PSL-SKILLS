@@ -341,6 +341,7 @@ class Reader:
         self.salvage_issues={}
         self.chart_policy=chart_policy; self.embedded_charts=[]; self.drawing_group_seen=False
         self.note_drawings = []
+        self.opaque_objects = []
         self.compatibility=compatibility
         self.passive_issues = {}
         self.dxf_property_count = 0
@@ -613,7 +614,12 @@ class Reader:
                 self.metadata_record(record,LEGACY_VALIDATED_GLOBAL_METADATA,'globals')
             elif kind==0x00EB and self.chart_policy=="opaque":
                 require(not self.drawing_group_seen,'Duplicate drawing group unsupported')
-                drawing_frame(payload,0xF000)
+                unknown = drawing_frame(payload,0xF000, allow_unknown_atoms=self.compatibility == "data")
+                if unknown:
+                    self.salvage_data_uncertain=True
+                    self.issue({"code":"unknown_officeart_atoms", "scope":"globals", "record_offset":offset,
+                                "records":unknown, "cell_value_impact":"unknown",
+                                "message":"Unknown drawing atoms retained raw; object semantics and value impact are unverified."})
                 self.drawing_group_seen=True
                 self.metadata_record(record,{kind:'MsoDrawingGroupOpaque'},'globals')
             elif kind in self.global_metadata:
@@ -677,7 +683,7 @@ class Reader:
             require(bound['offset'] in offset_index and offset_index[bound['offset']]==position,'Worksheet offset gap/overlap or unbound records')
             sheet,position=self.sheet(position,bound); sheets[bound['name']]=sheet
         require(position==len(self.records),'Trailing/unbound BIFF records are not ignored')
-        require(not self.drawing_group_seen or self.embedded_charts or self.note_drawings,
+        require(not self.drawing_group_seen or self.embedded_charts or self.note_drawings or self.opaque_objects,
                 'Drawing group without supported embedded chart or note drawing')
         for sheet in sheets.values():
             for cell in sheet['cells'].values():
@@ -694,6 +700,7 @@ class Reader:
                 'biff_parsed':True,
                 'chart_policy':self.chart_policy,'charts_decoded':False,'embedded_charts':self.embedded_charts,
                 **({'note_drawings': self.note_drawings} if self.note_drawings else {}),
+                **({'opaque_objects': self.opaque_objects} if self.opaque_objects else {}),
                 'native_et_ett_parsed':False,'wps_compatibility_verified':False,'formulas_executed':False,'external_links_followed':False,
                 'date_system':date_system,'code_page_raw':self.code_page,
                 'format_string_header_flags':self.format_string_flags,'sheets':[sheets[item['name']] for item in bounds],
@@ -754,12 +761,23 @@ class Reader:
                 cells[pending].update(type='blank',value=None,cache_status='missing')
                 self.issue({'sheet':bound['name'],'cell':pending,'code':'missing_formula_string_cache','expected':'String after Formula and optional group definition'}); pending=None
             if drawing_pending:
-                require(kind==0x005D and len(payload)==26 and payload[:6]==b'\x15\x00\x12\x00\x05\x00'
-                        and payload[10:]==bytes(16),'Only a chart Obj with FtCmo and FtEnd is supported')
-                identity=struct.unpack_from('<H',payload,6)[0]
-                require(identity and identity not in object_ids,'Duplicate/invalid chart object ID')
-                object_ids.add(identity); chart_pending=identity; drawing_pending=False
-                self.metadata_record(record,{kind:'ObjChartOpaque'},bound['name'])
+                require(kind==0x005D and len(payload)==26 and payload[:4]==b'\x15\x00\x12\x00'
+                        and payload[10:]==bytes(16),'Only bounded FtCmo/FtEnd objects are supported')
+                object_type, identity=struct.unpack_from('<HH',payload,4)
+                require(identity and identity not in object_ids,'Duplicate/invalid object ID')
+                object_ids.add(identity); drawing_pending=False
+                if object_type == 5:
+                    chart_pending=identity
+                    self.metadata_record(record,{kind:'ObjChartOpaque'},bound['name'])
+                else:
+                    require(self.compatibility == 'data', 'Unsupported drawing object type')
+                    self.metadata_record(record,{kind:'ObjUnknownOpaque'},bound['name'])
+                    self.opaque_objects.append({'sheet':bound['name'], 'record_offset':offset,
+                                                'object_id':identity, 'object_type_raw':object_type})
+                    self.salvage_data_uncertain=True
+                    self.issue({'sheet':bound['name'], 'record_offset':offset, 'code':'unknown_drawing_object',
+                                'object_type_raw':object_type, 'object_id':identity, 'cell_value_impact':'unknown',
+                                'message':'Object retained raw, not interpreted or executed; cell-value impact is unknown.'})
                 continue
             if chart_pending is not None:
                 require(len(self.embedded_charts)<128,'Embedded chart count exceeds 128')
@@ -792,7 +810,12 @@ class Reader:
                                 'message': 'Framed note objects retained raw; comment text, author and display are omitted from cell values. No formulas or external content executed.'})
                     index = stop
                     continue
-                drawing_frame(payload,0xF002)
+                unknown = drawing_frame(payload,0xF002, allow_unknown_atoms=self.compatibility == "data")
+                if unknown:
+                    self.salvage_data_uncertain=True
+                    self.issue({"code":"unknown_officeart_atoms", "sheet":bound['name'], "record_offset":offset,
+                                "records":unknown, "cell_value_impact":"unknown",
+                                "message":"Unknown drawing atoms retained raw; object semantics and value impact are unverified."})
                 self.metadata_record(record,{kind:'MsoDrawingOpaque'},bound['name'])
                 drawing_pending=True
                 continue
