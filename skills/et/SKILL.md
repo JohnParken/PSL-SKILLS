@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261107.1659.5866"
+version: "20261107.1943.5370"
 description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，预览表头区域，并按指定范围筛选、排序、去重、统计及分组汇总，提供质量诊断；支持 BIFF8 与 OOXML 子集并保留 partial。公式不重算，不修改原表；原生 XLSX 使用对应技能。
 ---
 
@@ -69,17 +69,19 @@ python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据"
 python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1
 ```
 
-尚不确定表头时，先用 `--preview` 查看明确矩形内的物理位置、空白/缺失、保存缓存与合并锚点，再确定表头和数据范围。预览不推断表头、不计算统计、不填充内容；不得将预览 schema 当完整读取结果消费。分页、覆盖和遗漏说明见 `<skill-root>/references/table-analysis.md#表头区域预览`。
+尚不确定表头时，先用 `--preview` 查看明确矩形内的物理位置、空白/缺失、保存缓存与合并锚点，再确定表头和数据范围。预览不推断表头、不计算统计、不填充内容；不得将预览 schema 当完整读取结果消费。分页、覆盖和遗漏说明见 `<skill-root>/references/table-preview.md`。
 
 默认返回列统计与前 100 行；统计覆盖整个指定区域的数据行，预览分页不缩小汇总范围。数字用 Decimal，文本编号、布尔、空文本、空白与缺失分别处理；公式默认仅展示保存值并从计算排除，计入缺口。只有明确采用缓存时，才在查询中设置 `formula_policy=cached`；缓存未证明最新，错误或缺失缓存仍排除并报告，不当零。
 
-分析同时返回 `quality_report`：列出数值纳入/排除分母、缺失与缓存状态、有界位置样本、表头标签和分组覆盖。它是事实诊断，不是业务正确性评分；样本截断不缩小统计范围。解释总额前核对质量报告和源 partial，详见 `<skill-root>/references/table-analysis.md#统计质量报告`。
+分析同时返回 `quality_report`：列出数值纳入/排除分母、缺失与缓存状态、有界位置样本、表头标签和分组覆盖。它是事实诊断，不是业务正确性评分；样本截断不缩小统计范围。解释总额前核对质量报告和源 partial，详见 `<skill-root>/references/basic-statistics.md`。
 
 筛选、分组、排序、去重、选列与文本合并标签填充使用 `--query ./query.json`；格式及边界见 `<skill-root>/references/table-analysis.md`。默认不填充合并区域、不自动隐藏或筛掉源行、不识别小计/总计。区域内穿插合计或重复表头时，可用 `exclude_rows` 明确列出原始物理行号；先核对范围和排除项，不凭标签猜测业务口径。XLSX 可传递覆盖不确定的结果与诊断；跨表计算仍保守拒绝，不能伪装成完整数据。结果 `et_table_analysis_v1` 保留源 partial/诊断及分析缺口，分别报告选区诊断和最终匹配数据数量；输出仅 stdout，成功 0、部分结果 3、失败 1、用法错误 2，不写回 ET。
 
 | 按需场景 | 读取参考 |
 |---|---|
-| 表头区域预览、统计质量、区域筛选、排序、去重、分组汇总及合并文本标签处理 | 表格分析（`<skill-root>/references/table-analysis.md`） |
+| 只看表头/矩形保存值与合并 | `<skill-root>/references/table-preview.md`，不预读复杂查询 |
+| 基础区域列统计与质量分母 | `<skill-root>/references/basic-statistics.md` |
+| 区域筛选、排序、去重、分组汇总及合并文本标签处理 | `<skill-root>/references/table-analysis.md` |
 | CodePage、DXF、条件格式、数据验证、批注绘图、分页、表样式、静态名称或 Print_Titles 的读取边界 | 高级电子表格路由（`<skill-root>/references/advanced-spreadsheet-routing.md`） |
 | 显式最大兼容 salvage、富字符串/缓存/XF 审计 | 显式部分读取（`<skill-root>/references/advanced-spreadsheet-routing.md#biff8-临时最大兼容仅显式低层入口`） |
 | 默认读取已满足任务 | 继续保存值、缓存和缺口核对，不加载高级说明 |

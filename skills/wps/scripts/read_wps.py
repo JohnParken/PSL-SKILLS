@@ -727,6 +727,7 @@ def main():
     parser.add_argument('--page-size', type=int)
     parser.add_argument('--cursor')
     parser.add_argument('--max-output-chars', type=int)
+    parser.add_argument('--max-output-bytes', type=int)
     args = parser.parse_args()
     if args.include_related and args.format == 'text':
         parser.error('--include-related requires --format json to preserve separate story regions')
@@ -737,7 +738,7 @@ def main():
     if args.check:
         if any((args.summary, args.heading_only, args.paragraph_range is not None, args.section is not None,
                 args.sheet is not None, args.page_size is not None, args.cursor is not None,
-                args.max_output_chars is not None)):
+                args.max_output_chars is not None, args.max_output_bytes is not None)):
             parser.error('--check does not accept read-view options')
         return check_environment()
     if sys.version_info < (3, 10):
@@ -745,7 +746,7 @@ def main():
     if not args.input:
         parser.error('input required')
     validate_argument(args.input)
-    view_requested = any((args.summary, args.sheet is not None, args.page_size is not None, args.cursor is not None, args.max_output_chars is not None))
+    view_requested = any((args.summary, args.sheet is not None, args.page_size is not None, args.cursor is not None, args.max_output_chars is not None, args.max_output_bytes is not None))
     selective_count = sum((args.heading_only, args.paragraph_range is not None, args.section is not None))
     if selective_count > 1 or (selective_count and view_requested):
         parser.error('Choose one selective mode; do not combine selective reading with summary or paged read views')
@@ -762,7 +763,7 @@ def main():
             result = read_bytes(data, source=str(args.input), **options)
             result = project(result, data, options, summary=args.summary, sheet=args.sheet,
                              page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
-                             max_chars=12000 if args.max_output_chars is None else args.max_output_chars)
+                             max_chars=12000 if args.max_output_chars is None else args.max_output_chars, max_bytes=args.max_output_bytes)
         except (ParseError, OSError) as exc:
             result = failure(getattr(exc, 'status', 'io_error'), getattr(exc, 'location', {'stage': 'input'}), str(exc))
     else:
@@ -795,7 +796,15 @@ def main():
         except ParseError as exc:
             result = failure(exc.status, exc.location, str(exc))
             encoded = json.dumps(result, ensure_ascii=False)
-        print(encoded, file=sys.stderr if args.format == 'text' else sys.stdout)
+        if args.max_output_bytes is not None and args.max_output_bytes >= 512:
+            from wps_read_view import check_serialized_bytes
+            try:
+                check_serialized_bytes(encoded, args.max_output_bytes)
+            except ParseError as exc:
+                result = failure(exc.status, exc.location, str(exc))
+                encoded = json.dumps(result, ensure_ascii=False)
+        from wps_read_view import print_json_record
+        print_json_record(encoded, max_bytes=args.max_output_bytes, stream=sys.stderr if args.format == 'text' else sys.stdout)
     return 0 if result['status'] == 'ok' else 3 if result['status'] == 'partial' else 1
 
 

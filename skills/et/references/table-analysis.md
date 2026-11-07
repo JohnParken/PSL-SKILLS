@@ -12,9 +12,12 @@
 - 操作及统计顺序（`<skill-root>/references/table-analysis.md#操作及统计顺序`）
 - 统计质量报告（`<skill-root>/references/table-analysis.md#统计质量报告`）
 - 输出与限制（`<skill-root>/references/table-analysis.md#输出与限制`）
+- 可选字节预算与续读（`<skill-root>/references/table-analysis.md#可选字节预算与续读`）
 - 验证依据（`<skill-root>/references/table-analysis.md#验证依据`）
 
 ## 入口与范围
+
+基础区域统计直接读 `<skill-root>/references/basic-statistics.md`；本页用于复杂查询与组合操作，保留它们所需的完整共同契约。
 
 先遵守主入口的任务目录、输入边界及执行环境约束（`<skill-root>/SKILL.md#执行环境约束与首步自检`）。输入及可选查询 JSON 使用任务目录下相对路径；仅依赖 Python 3.9+ 标准库，不安装包、不联网、不调用办公软件。确认输入可读；仅读 stdout 不创建探针或归档清单。
 
@@ -64,17 +67,7 @@ python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.ett --sheet "数据
 
 ## 表头区域预览
 
-先选择较小的明确矩形，查看原始位置和合并关系后再确定表头；`--preview` 不需要声明表头，不自动寻找标题或合计行：
-
-```console
-python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.ett --sheet "数据" --range A1:G8 --preview
-```
-
-返回 `et_table_preview_v1`，按物理行列列出矩形内保存值、类型、公式存在标记与缓存状态；数字不经过 float，blank 与 missing 保持不同，不填充或计算。`merges` 包含整个所选矩形相交的合并范围、锚点、是否被选区裁切及 `anchor_in_page`；锚点不在当前页时不读取或复制其值。预览可说明被裁切的合并，而后续正式表头重建仍拒绝裁切或跨越声明表头边界的合并。
-
-默认最多返回 10 行，`--query` 在预览模式下仅接受 `offset`、`limit`，例如 `{"offset": 0, "limit": 8}`；limit 为 1..50，单页最多 10000 个位置，矩形仍受 200000 个位置/256 列限制。其他分析参数、`--header-rows` 不与预览混用，明确失败而非忽略。按 `row_page.next_offset` 续读；每页仍完整解析源文件，没有快照缓存或绑定游标。拼接前确认每页 `source_sha256` 相同，工作表、范围、解析条件及 limit 不变，只调整 offset；API 调用方自行固定同一 source 对象。
-
-`row_page.total` 是所选矩形物理行数，包含没有保存单元格的行；`truncated` 表示当前页不覆盖整个选择，末页 offset 非零时仍为 true，`next_offset=null` 仅表示无下一页。公式表达式、格式解释、样式、可见性、源筛选和其他对象未在网格中还原，逐项见 `metadata_omitted`；源诊断完整保留。状态和退出码沿用源读取结果，缓存显示不证明缓存最新；该视图不做统计，也不交给只接受原 schema 的分析器。JSON 输出仍受 16 MiB 上限约束，不能截断后消费。
+只查看候选表头与合并范围时直接读自包含 `<skill-root>/references/table-preview.md`，无需本页复杂查询。预览 schema 不可替代原读取或统计结果。
 
 ## 类型与缓存
 
@@ -148,6 +141,20 @@ sum 和 median 在有界 Decimal 精度下精确计算，不经过 float；mean 
 | 输出 JSON | 16 MiB；超出时输出失败，收窄预览/选择范围后重做，不能截取输出继续分析 |
 
 原容器、单元格、文字及元数据预算不变。此入口不计算新公式、不联表、不重建透视表、不推断小计，不编辑、导出或写回办公文件；需要这些能力时另行明确交接及验证。
+
+## 可选字节预算与续读
+
+在原命令添加 `--max-output-bytes 24000`，可对 `--preview` 或分析结果按 UTF-8 字节预算分页；512..16777216，包含真实紧凑 JSON 的全部字段、转义与末尾换行。不传此参数和 `--cursor` 时默认 CLI/API、原字段及16MiB序列化上限不变。仅传游标时预算默认12000；预算不是token数。
+
+新模式保留原 schema、partial、源诊断、统计质量报告和分母，另加 `output_page_revision=1`、`has_more`、`coverage` 与 `next_cursor`。`row_page`/`group_page` 另加 `has_more`、`next_offset`；旧 total/offset/returned/truncated 含义保留。`coverage` 对每条结果流声明是否请求、初始 offset 和覆盖范围；偏移之前的行不属于本次输出覆盖，不能据末页声称已经返回整个结果表。`limit=0` 或 `group_limit=0` 表示不请求对应结果流，仍完整计算统计，不产生该流的续读；独立预览仍要求limit为1..50。
+
+原查询的 offset/group_offset 是本次输出起点，limit/group_limit 是**每页上限**。将返回的完整 `next_cursor` 正确引用为 `--cursor` 参数，输入、sheet、range、header-rows、preview模式及查询文件内容保持不变；可以调整字节预算。游标绑定源字节SHA256、完整查询与模式、分页修订号，源或语义参数变化、损坏游标均拒绝；游标不是授权或签名。新模式拒绝所请求结果流超过total的起始offset；等于total可为空页。旧非游标模式的offset行为保持不变。
+
+每次续读仍完整解析源文件、处理整个指定区域，并在分页前完成排除行、筛选、排序、去重、分组与统计。分页只限制返回的 rows/groups，不缩小 profiles、totals、quality_report、缓存纳入/排除分母；不通过重设range来凑预算。仍遵守原200000位置、256列、10000组以及候选预览行数上限，不创建无界全量结果列表。行结果先占预算，组结果可在后续页续读；只有顶层 `has_more=false` 才结束本次请求的全部结果流。
+
+整行/整组是最小输出单元，不切开长单元格。header、query、merges、源诊断、quality_report及统计等必要元数据不分页、不裁剪；放不下时明确返回 `output_view_error`/退出1。没有任何行/组能前进时同样失败，不返回带不前进游标的空成功页。有效预算也约束失败JSON；提高预算、明确减少展示列/每页行数，或使用旧完整输出。不要为减少输出而改变统计口径。预览页的合并anchor_in_page和returned_positions按实际返回行重算，合并定义仍覆盖整个选区。
+
+新增回归入口 `<skill-root>/scripts/test/test_et_output_budget.py` 验证真实stdout字节、emoji/转义、超长元数据/单行、源与查询变化、末页移除游标、完整续读、partial/质量分母、默认兼容和独立安装。仅本地macOS/Python3.12验证，不宣称Linux/Windows或真实宿主token测量已完成。
 
 ## 验证依据
 

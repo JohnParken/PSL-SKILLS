@@ -47,9 +47,11 @@ def main(argv=None):
     parser.add_argument('--query', help='Bounded JSON processing options; --preview accepts only offset/limit')
     parser.add_argument('--preview', action='store_true', help='Preview the explicit rectangle before choosing header rows; query accepts only offset/limit')
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--max-output-bytes', type=int)
+    parser.add_argument('--cursor')
     args = parser.parse_args(argv)
     if args.check:
-        if any((args.input, args.sheet, args.cell_range, args.header_rows, args.query, args.preview)):
+        if any((args.input, args.sheet, args.cell_range, args.header_rows, args.query, args.preview, args.max_output_bytes is not None, args.cursor is not None)):
             parser.error('--check does not accept input or table options')
         return check_environment()
     if sys.version_info < (3, 9):
@@ -65,13 +67,29 @@ def main(argv=None):
             query['header_rows'] = args.header_rows
         data = read_input(args.input)
         source = read_bytes(data, source=str(args.input))
-        result = preview(source, query) if args.preview else analyze(source, query)
-        result['source_sha256'] = hashlib.sha256(data).hexdigest()
-        encoded = encode_result(result)
+        if args.max_output_bytes is not None or args.cursor is not None:
+            from et_output_page import page
+            from wps_read_view import encoded as encode_page
+            result = page(source, data, query, is_preview=args.preview,
+                          max_bytes=12000 if args.max_output_bytes is None else args.max_output_bytes, cursor=args.cursor)
+            encoded = encode_page(result)
+        else:
+            result = preview(source, query) if args.preview else analyze(source, query)
+            result['source_sha256'] = hashlib.sha256(data).hexdigest()
+            encoded = encode_result(result)
     except (ParseError, OSError) as error:
         result = failure(getattr(error, 'status', 'io_error'), getattr(error, 'location', {'stage': 'input'}), str(error))
         encoded = json.dumps(result, ensure_ascii=False)
-    print(encoded)
+    budget = 12000 if args.cursor is not None and args.max_output_bytes is None else args.max_output_bytes
+    if budget is not None and budget >= 512:
+        from wps_read_view import check_serialized_bytes
+        try:
+            check_serialized_bytes(encoded, budget)
+        except ParseError as error:
+            result = failure(error.status, error.location, str(error))
+            encoded = json.dumps(result, ensure_ascii=False)
+    from wps_read_view import print_json_record
+    print_json_record(encoded, max_bytes=budget)
     return 0 if result.get('status') == 'ok' else 3 if result.get('status') == 'partial' else 1
 
 

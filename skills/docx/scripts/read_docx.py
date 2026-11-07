@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import io
+from contextlib import nullcontext
 import json
 import os
 import re
 import stat
 import sys
 import zipfile
+import zlib
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
@@ -17,7 +21,7 @@ if __package__ in (None, ""):
 
 from office import xmlio as SafeET
 from office.runtime import check_runtime
-from office.archiveio import open_archive
+from office.archiveio import open_archive, _preflight, MAX_ARCHIVE_BYTES
 from office.helpers import atomic_write_bytes, check_archive, read_part
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -438,12 +442,22 @@ def _body_entries(body, revisions, styles, *, tables="summary"):
 def read_docx_compact(path: str | Path, *, mode="compact", revisions="accepted",
                       include_related=False, paragraph_range=None, section=None,
                       section_occurrence=None, tables="summary"):
+    """Return the legacy unpaged compact view; use read_docx_page for bound pages."""
+    return _read_docx_compact(path, mode=mode, revisions=revisions, include_related=include_related,
+                              paragraph_range=paragraph_range, section=section,
+                              section_occurrence=section_occurrence, tables=tables)
+
+
+def _read_docx_compact(path: str | Path, *, mode="compact", revisions="accepted",
+                      include_related=False, paragraph_range=None, section=None,
+                      section_occurrence=None, tables="summary", _package=None):
     """Read a low-overhead subset. Indices are 1-based; paragraph bounds inclusive.
 
     This is a lossy read-only inspection format, never a DOCX edit interchange.
     Paragraph indexing excludes table cell paragraphs and related parts.
     """
-    _check_native_input(path)
+    if _package is None:
+        _check_native_input(path)
     if revisions not in _REVISION_TAGS:
         raise ValueError("revisions must be 'accepted', 'original', or 'all'")
     if mode not in ("compact", "summary", "headings"):
@@ -459,7 +473,7 @@ def read_docx_compact(path: str | Path, *, mode="compact", revisions="accepted",
             raise ValueError("paragraph range must be two positive 1-based inclusive indices")
     budget = SafeET.XmlBudget()
     try:
-        with open_archive(path) as package:
+        with (open_archive(path) if _package is None else nullcontext(_package)) as package:
             check_archive(package)
             try:
                 document = SafeET.fromstring(read_part(package, "word/document.xml"), budget=budget)
@@ -530,6 +544,154 @@ def read_docx_compact(path: str | Path, *, mode="compact", revisions="accepted",
             "stats": stats, "blocks": entries, "related": related,
             "limitations": ["main-body-paragraph-indices-exclude-table-cells",
                             "styles-not-fully-resolved", "not-page-layout", "not-lossless-edit-format"]}
+
+
+def _snapshot_input(path):
+    """Read one bounded, no-symlink task-relative snapshot without reopening data."""
+    from archive_deliverables import validate_input_path
+    path = validate_input_path(Path(path))
+    if path.suffix.lower() not in (".docx", ".dotx"):
+        raise ValueError("bound pages require a .docx or .dotx input")
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY") or os.open not in os.supports_dir_fd:
+        raise ValueError("bound pages require safe dir_fd/O_NOFOLLOW support")
+    descriptors = []
+    try:
+        directory = os.open(".", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        descriptors.append(directory)
+        for part in path.parts[:-1]:
+            directory = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
+            descriptors.append(directory)
+        descriptor = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0), dir_fd=directory)
+        descriptors.append(descriptor)
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode) or not 0 <= before.st_size <= MAX_ARCHIVE_BYTES:
+            raise ValueError("bound page input must be a regular file within the ZIP compressed size limit")
+        chunks = []
+        remaining = before.st_size + 1
+        while remaining:
+            chunk = os.read(descriptor, min(1024 * 1024, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        after = os.fstat(descriptor)
+        identity = lambda info: (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        raw = b"".join(chunks)
+        if identity(before) != identity(after) or len(raw) != before.st_size:
+            raise ValueError("input changed while reading snapshot")
+        if raw.startswith(CFB_SIGNATURE):
+            raise UnsupportedInputError("CFB binary content is not native DOCX/DOTX")
+        return raw
+    finally:
+        for descriptor in reversed(descriptors):
+            os.close(descriptor)
+
+
+def serialize_docx_page(data):
+    """Canonical UTF-8 page representation; the budget includes its final LF."""
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
+
+
+def _page_cursor(source, options, position):
+    payload = f"1.{source}.{options}.{position}"
+    return payload + "." + hashlib.sha256(payload.encode("ascii")).hexdigest()
+
+
+def _cursor_position(cursor, source, options, total):
+    if not isinstance(cursor, str) or not re.fullmatch(r"1\.[0-9a-f]{64}\.[0-9a-f]{64}\.[1-9][0-9]{0,8}\.[0-9a-f]{64}", cursor):
+        raise ValueError("invalid continuation cursor")
+    _, old_source, old_options, position, _ = cursor.split(".")
+    if cursor != _page_cursor(old_source, old_options, int(position)):
+        raise ValueError("continuation cursor checksum mismatch")
+    if source != old_source:
+        raise ValueError("continuation source bytes changed")
+    if options != old_options:
+        raise ValueError("continuation reading options changed")
+    if not 0 < int(position) < total:
+        raise ValueError("continuation cursor position is out of range")
+    return int(position)
+
+
+def read_docx_page(path: str | Path, *, max_output_bytes=12000, cursor=None, mode="compact",
+                   revisions="accepted", include_related=False, paragraph_range=None, section=None,
+                   section_occurrence=None, tables="summary"):
+    """Return a UTF-8-bounded compact page bound to source bytes and view options.
+
+    Source paths are relative to the confirmed task directory. Budgets may change
+    between pages. Cursors detect mismatch/corruption, not malicious forgery.
+    This paginates the lossy selected view, never an entire lossless document.
+    """
+    if type(max_output_bytes) is not int or not 128 <= max_output_bytes <= _FASTPATH_MAX_CHARS:
+        raise ValueError("--max-output-bytes must be between 128 and 2000000")
+    if mode not in ("compact", "summary", "headings") or revisions not in _REVISION_TAGS or tables not in ("summary", "rows"):
+        raise ValueError("invalid bound page reading options")
+    if type(include_related) is not bool or (section is not None and not isinstance(section, str)):
+        raise ValueError("invalid related/section option types")
+    if section_occurrence is not None and (type(section_occurrence) is not int or section_occurrence < 1 or section is None):
+        raise ValueError("section occurrence requires a section and positive integer")
+    if paragraph_range is not None:
+        if (not isinstance(paragraph_range, tuple) or len(paragraph_range) != 2
+                or any(type(x) is not int for x in paragraph_range)
+                or not 1 <= paragraph_range[0] <= paragraph_range[1]):
+            raise ValueError("paragraph range requires two positive inclusive integer indices")
+    if paragraph_range is not None and section is not None:
+        raise ValueError("paragraph range and section are mutually exclusive")
+    if include_related and (paragraph_range is not None or section is not None or mode == "headings"):
+        raise ValueError("related parts are unsupported with scoped or heading-only reads")
+    options = dict(mode=mode, revisions=revisions, include_related=include_related,
+                   paragraph_range=paragraph_range, section=section.strip() if section is not None else None,
+                   section_occurrence=section_occurrence, tables=tables)
+    option_hash = hashlib.sha256(json.dumps(options, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    raw = _snapshot_input(path)
+    source = hashlib.sha256(raw).hexdigest()
+    with io.BytesIO(raw) as stream:
+        _preflight(stream, len(raw))
+        try:
+            with zipfile.ZipFile(stream, "r") as package:
+                data = _read_docx_compact(path, _package=package, **options)
+        except zlib.error as exc:
+            raise ValueError("Invalid compressed ZIP data: decompression failed") from exc
+    blocks = data["blocks"]
+    total = len(blocks)
+    start = _cursor_position(cursor, source, option_hash, total) if cursor is not None else 0
+    base = {k: v for k, v in data.items() if k != "blocks"}
+    base.update(page_version=1, source_sha256=source, total_blocks=total, start_block=start)
+    omissions = []
+    if mode != "compact":
+        omissions.append("headings-only-view")
+    if tables == "summary" and mode == "compact" and any(e["type"] == "table" and e["row_count"] > e["preview_rows"] for e in blocks):
+        omissions.append("table-rows-after-preview-omitted")
+    omissions.append("related-counts-or-previews" if include_related else "related-parts-not-requested")
+
+    def page(stop):
+        more = stop < total
+        result = dict(base, blocks=blocks[start:stop], truncated=more, next_block=stop if more else None,
+                      has_more=more, next_cursor=_page_cursor(source, option_hash, stop) if more else None,
+                      coverage={"block_start": start, "block_end_exclusive": stop, "selected_total_blocks": total,
+                                "selected_view_complete": start == 0 and not more, "document_complete": False,
+                                "tables": tables, "omissions": omissions})
+        return result
+
+    result = page(start)
+    # Size is monotonic except the final page (which drops the cursor). Check the
+    # complete tail first so an exactly fitting final page is never rejected.
+    complete = page(total)
+    if len(serialize_docx_page(complete).encode("utf-8")) <= max_output_bytes:
+        return complete
+    if len(serialize_docx_page(result).encode("utf-8")) > max_output_bytes:
+        raise ValueError("--max-output-bytes is too small for complete page metadata/diagnostics")
+    low, high = start + 1, total - 1
+    while low <= high:
+        stop = (low + high) // 2
+        candidate = page(stop)
+        if len(serialize_docx_page(candidate).encode("utf-8")) > max_output_bytes:
+            high = stop - 1
+        else:
+            result = candidate
+            low = stop + 1
+    if not result["blocks"] and start < total:
+        raise ValueError("single block exceeds --max-output-bytes with complete metadata; increase budget or narrow selection")
+    return result
 
 
 def _limited_text(value, max_chars):
@@ -612,15 +774,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--section-occurrence", type=int, help="disambiguate repeated section heading")
     parser.add_argument("--compact-json", action="store_true", help="small structured JSON without raw OOXML")
     parser.add_argument("--tables", choices=("summary", "rows"), default="summary", help="compact table preview or paged rows")
-    parser.add_argument("--start-block", type=int, default=0, help="zero-based cursor for paged compact JSON")
+    parser.add_argument("--start-block", type=int, default=None, help="zero-based cursor for paged compact JSON")
     parser.add_argument("--max-output-chars", type=int, help="limit returned text/compact JSON characters")
+    parser.add_argument("--max-output-bytes", type=int, help="UTF-8 budget for bound compact JSON, including metadata and final LF")
+    parser.add_argument("--cursor", help="source/options-bound continuation token; repeat the same reading options")
     args = parser.parse_args(argv)
+    bound_page = args.max_output_bytes is not None or args.cursor is not None
+    if bound_page:
+        if not (args.compact_json or args.summary):
+            parser.error("--max-output-bytes/--cursor requires --compact-json or --summary")
+        if args.max_output_chars is not None or args.start_block is not None or args.delivery:
+            parser.error("bound pages cannot combine --max-output-chars, --start-block or --delivery")
     using_fastpath = bool(args.summary or args.heading_only or args.paragraph_range or args.section or args.compact_json)
     if args.max_output_chars is not None and not 128 <= args.max_output_chars <= _FASTPATH_MAX_CHARS:
         parser.error("--max-output-chars must be between 128 and 2000000")
     if args.section_occurrence is not None and (args.section is None or args.section_occurrence < 1):
         parser.error("--section-occurrence requires --section and a positive index")
-    if args.start_block < 0 or (args.start_block and not args.compact_json):
+    if args.start_block is not None and (args.start_block < 0 or (args.start_block and not args.compact_json)):
         parser.error("--start-block requires --compact-json and must be nonnegative")
     if args.tables != "summary" and not args.compact_json:
         parser.error("--tables rows requires --compact-json")
@@ -631,7 +801,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.delivery and (args.check or args.output is None):
         parser.error("--delivery requires -o and cannot be used with --check")
     if args.check:
-        if args.input is not None or args.output is not None or args.revisions is not None or args.include_related or args.format != "text" or using_fastpath or args.max_output_chars is not None or args.start_block or args.tables != "summary":
+        if (args.input is not None or args.output is not None or args.revisions is not None
+                or args.include_related or args.format != "text" or using_fastpath
+                or args.max_output_chars is not None or args.start_block or args.tables != "summary"):
             parser.error("--check does not accept input, output or reading options")
         if not check_runtime():
             print("check_kind=environment artifact_validation=not_run", file=sys.stderr, flush=True)
@@ -669,11 +841,15 @@ def main(argv: list[str] | None = None) -> int:
                     parser.error("--paragraph-range requires START:END, 1-based inclusive")
                 paragraph_range = (int(match.group(1)), int(match.group(2)))
             mode = "summary" if args.summary else "headings" if args.heading_only else "compact"
-            data = read_docx_compact(args.input, mode=mode, revisions=args.revisions or "accepted",
+            reader = read_docx_page if bound_page else read_docx_compact
+            extra = {"max_output_bytes": args.max_output_bytes if args.max_output_bytes is not None else 12000, "cursor": args.cursor} if bound_page else {}
+            data = reader(args.input, mode=mode, revisions=args.revisions or "accepted",
                                      include_related=args.include_related, paragraph_range=paragraph_range,
                                      section=args.section, section_occurrence=args.section_occurrence,
-                                     tables="rows" if args.section and not args.compact_json else args.tables)
-            if args.summary:
+                                     tables="rows" if args.section and not args.compact_json else args.tables, **extra)
+            if bound_page:
+                text = serialize_docx_page(data)
+            elif args.summary:
                 data["blocks"] = data["blocks"][:100]
                 data["headings_truncated"] = data["stats"]["heading_count"] > 100
                 text = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
@@ -681,7 +857,7 @@ def main(argv: list[str] | None = None) -> int:
                     raise ValueError("summary exceeds output limit; increase --max-output-chars")
             elif args.compact_json:
                 text = _limited_compact(data, args.max_output_chars or _FASTPATH_DEFAULT_CHARS,
-                                        start_block=args.start_block)
+                                        start_block=args.start_block or 0)
             else:
                 text = _limited_text(_compact_plain(data), args.max_output_chars)
         elif args.format == "json":
@@ -698,6 +874,8 @@ def main(argv: list[str] | None = None) -> int:
                 result = finalize_delivery(args.output, [args.input], status='read_exported')
                 result.update(format="docx-compact" if using_fastpath and (args.compact_json or args.summary) else args.format, output_written=True)
                 print(json.dumps(result, ensure_ascii=False))
+        elif bound_page:
+            sys.stdout.buffer.write(text.encode("utf-8"))
         else:
             sys.stdout.write(text)
     except UnsupportedInputError as exc:

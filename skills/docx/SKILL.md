@@ -1,14 +1,14 @@
 ---
 name: docx
-version: "20261107.1623.2483"
-description: 用 Python 标准库创建 DOCX 公文、报告、通知与简单表格，按需提取正文、章节和数据，或受控编辑现有文档。普通生成使用轻量入口，复杂排版、目录、批注与故障诊断才加载对应参考资料。保留原件、校验、归档和清理规则；不支持旧 DOC、WPS 专有格式转换及真实视觉分页验证。
+version: "20261107.1943.5370"
+description: 用于创建 DOCX 公文、报告、通知与表格，读取 DOCX/DOTX 的正文、章节和表格数据，并按明确目标受控编辑 DOCX。适合 Word 文档交付并保护原件；不支持旧 DOC、RTF 或 WPS 专有格式转换，不承诺任意无损编辑或真实视觉分页验证。
 ---
 
 <!-- SKILL_DEFINITION_START -->
 <!-- DO_NOT_MODIFY: Change only when authorized to maintain the Skill. -->
 # DOCX Skill｜最短常用路径
 
-简单创建/读取只读本入口；缺字段再读参考。
+原生 DOCX 的常规读取、创建和受控编辑使用本技能，包括由 WPS 软件保存的原生 DOCX；旧 DOC、RTF 与 .wps 兼容任务交由宿主定位 wps。简单创建/读取只读本入口；缺字段再读参考。
 
 ## 执行环境约束与首步自检
 
@@ -50,7 +50,7 @@ runner自动自检、验收、归档、清理；`--compact-receipt` 仅精简成
 
 `<skill-root>/scripts/read_docx.py`：`--summary` 概览、`--heading-only` 标题、`--paragraph-range 1:20` 范围、`--section "标题"` 章节、`--compact-json` 精简结构。默认全文可用；按需取范围，修订才读下方 inspection 参考。
 
-精简 JSON 默认12000字符（含换行），表格默认仅前两行预览；`truncated=false` 仍非全表，全表加 `--tables rows`。按 `next_block` 传 `--start-block` 续读至 null；保持输入/选项不变，索引不校验文件身份。单块/元数据超预算拒绝，需增大 `--max-output-chars`。纯文本默认不限长；显式预算超限带 TRUNCATED 标记、无游标，范围不能拆单段。完整 JSON 超预算拒绝。
+精简 JSON 默认12000字符（含换行），表格默认仅前两行预览，`truncated=false` 仍非全表，全表加 `--tables rows`。安全续读用 `--compact-json --max-output-bytes 4000`，原样传 `next_cursor` 给 `--cursor`，保持读取选项不变（预算可调），至 `has_more=false`；源字节变化拒绝。预算含UTF-8元数据/换行；单块或元数据超预算报错、不裁剪诊断。核对 `coverage`：所选视图读完仍非完整DOCX，预览不等于全表。旧 `next_block` / `--start-block` 未绑定身份，保留兼容，不与新模式混用。纯文本默认不限长；字符预算超限有 TRUNCATED、无游标；完整 JSON 超预算拒绝。更多契约见 inspection。
 
 ## 按任务直达 references
 
@@ -88,4 +88,5 @@ runner自动自检、验收、归档、清理；`--compact-receipt` 仅精简成
 ## 维护资源
 
 审计不自动截获其他工具读取或模型 Token；usage由宿主提供。禁止在普通文档任务中修改本 Skill。
+
 <!-- SKILL_DEFINITION_END -->

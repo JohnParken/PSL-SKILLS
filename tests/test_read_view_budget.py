@@ -12,15 +12,21 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / 'skills/xlsx/scripts'))
-sys.path.insert(0, str(ROOT / 'skills/wps/scripts'))
-sys.path.insert(0, str(ROOT / 'skills/et/scripts'))
-sys.path.insert(0, str(ROOT / 'skills/et/scripts/test'))
-import xlsx_read_view
-import wps_read_view
-from stdlib_xlsx import Workbook
-from wps_access import ParseError
-
+IS_COPY_WORKER = '--copy-worker' in sys.argv
+if IS_COPY_WORKER:
+    sys.path.insert(0, str(ROOT / 'skills/xlsx/scripts'))
+    # Each copy runs in its own isolated interpreter; never share same-name imports.
+    COPY = sys.argv.pop()
+    assert COPY in ('wps', 'et')
+    sys.path.insert(0, str(ROOT / 'skills' / COPY / 'scripts'))
+    sys.path.insert(0, str(ROOT / 'skills/et/scripts/test'))
+    import xlsx_read_view
+    import wps_read_view
+    from stdlib_xlsx import Workbook
+    import wps_access
+    from wps_access import ParseError
+    assert Path(wps_read_view.__file__).resolve() == ROOT / "skills" / COPY / "scripts/wps_read_view.py"
+    assert Path(wps_access.__file__).resolve() == ROOT / "skills" / COPY / "scripts/wps_access.py"
 
 def canonical(value):
     return json.dumps(value, ensure_ascii=False, default=str, allow_nan=False, separators=(',', ':'))
@@ -51,6 +57,8 @@ class BudgetOracleTests(unittest.TestCase):
         def candidate(count):
             value = copy.deepcopy(whole)
             value.update(items=all_items[:count], returned_items=count, truncated=count < len(all_items), next_cursor=None)
+            if 'has_more' in value:
+                value['has_more'] = value['truncated']
             if value['truncated']:
                 key = 'sha256' if skill == 'xlsx' else 'source'
                 token = {key: whole['source_sha256'], 'scope': binding, 'next': count, 'revision': whole['projection_revision']}
@@ -64,7 +72,11 @@ class BudgetOracleTests(unittest.TestCase):
             budgets.update((size - 1, size, size + 1))
         for budget in sorted(x for x in budgets if x >= 512):
             expected = None
-            if len(canonical(candidate(0))) + 1 <= budget:
+            if skill != 'xlsx' and len(canonical(candidate(len(all_items)))) + 1 <= budget:
+                # A final page drops its cursor and may fit although an earlier
+                # prefix does not. Check it independently, before prefix fitting.
+                expected = candidate(len(all_items))
+            elif len(canonical(candidate(0))) + 1 <= budget:
                 for count in range(1, len(all_items) + 1):
                     value = candidate(count)
                     if len(canonical(value)) + 1 > budget:
@@ -135,6 +147,33 @@ class BudgetOracleTests(unittest.TestCase):
                 self.assertIn('legacy cursor', result['message'])
                 self.assertNotIn('items', result)
 
+    def test_real_wps_text_cli_budget_and_continuation(self):
+        with tempfile.TemporaryDirectory(prefix='wps-text-budget-') as directory:
+            task = Path(directory)
+            text = 'Hello bounded reading. ' * 40
+            (task / 'input.wps').write_text('{\\rtf1\\ansi ' + text + '}', encoding='ascii')
+            command = [sys.executable, '-I', '-S', '-B', str(ROOT / 'skills/wps/scripts/read_wps.py'), './input.wps']
+            full = subprocess.run(command, cwd=task, capture_output=True, text=True, check=True)
+            expected = json.loads(full.stdout)['text']
+            parts = []
+            cursor = None
+            while True:
+                args = command + ['--page-size', '31', '--max-output-chars', '12000']
+                if cursor:
+                    args += ['--cursor', cursor]
+                result = subprocess.run(args, cwd=task, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertLessEqual(len(result.stdout), 12000)
+                value = json.loads(result.stdout)
+                parts.append(value['text'])
+                cursor = value['next_cursor']
+                if cursor is None:
+                    break
+            self.assertEqual(''.join(parts), expected)
+            rejected = subprocess.run(command + ['--cursor', 'invalid'], cwd=task, capture_output=True, text=True)
+            self.assertEqual(rejected.returncode, 1)
+            self.assertEqual(json.loads(rejected.stdout)['status'], 'output_view_error')
+
     def test_wps_summary_does_not_sort_and_keeps_diagnostics(self):
         _, source = self.inputs()
         with patch.object(wps_read_view, 'position', side_effect=AssertionError('Summary sorted cell coordinates')):
@@ -159,5 +198,31 @@ class BudgetOracleTests(unittest.TestCase):
         self.assertEqual(''.join(parts), source['text'])
 
 
+class IsolatedCopyTests(unittest.TestCase):
+    """Repository maintenance wrapper; both discovery and direct runs isolate imports."""
+
+    def run_copy(self, selected):
+        result = subprocess.run(
+            [sys.executable, '-I', '-S', '-B', __file__, '--copy-worker', selected],
+            capture_output=True, text=True, encoding='utf-8',
+        )
+        print('Isolated copy: ' + selected + '\n' + result.stdout + result.stderr, flush=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_wps_copy(self):
+        self.run_copy('wps')
+
+    def test_et_copy(self):
+        self.run_copy('et')
+
+
+def load_tests(loader, tests, pattern):
+    # Do not instantiate the oracle in the parent or wrappers in a child.
+    target = BudgetOracleTests if IS_COPY_WORKER else IsolatedCopyTests
+    return loader.loadTestsFromTestCase(target)
+
+
 if __name__ == '__main__':
+    if IS_COPY_WORKER:
+        sys.argv.remove('--copy-worker')
     unittest.main()

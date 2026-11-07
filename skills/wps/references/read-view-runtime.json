@@ -1,0 +1,16 @@
+{
+  "component": "wps_read_view.py",
+  "source_repository_path": "skills/wps/scripts/wps_read_view.py",
+  "source_version": "20261107.1827.5323",
+  "runtime_revision": "utf8-output-budget-v1",
+  "projection_revision": 2,
+  "sha256": "7fe372eed98ed89c9b430552e2c73efd5a292bbd94465ffc3ae06482175deab1",
+  "copies": [
+    "skills/wps/scripts/wps_read_view.py",
+    "skills/et/scripts/wps_read_view.py"
+  ],
+  "intentional_differences": [],
+  "dependencies": "local wps_access.ParseError; Python standard library; no sibling-skill import",
+  "license": "Repository-authored runtime; no separate license declaration found for this component; no new license grant.",
+  "maintenance": "Update both copies together; run repository tests/test_read_view_copy.py and tests/test_read_view_budget.py."
+}

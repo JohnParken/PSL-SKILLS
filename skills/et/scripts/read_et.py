@@ -122,11 +122,12 @@ def main():
     parser.add_argument('--page-size', type=int)
     parser.add_argument('--cursor')
     parser.add_argument('--max-output-chars', type=int)
+    parser.add_argument('--max-output-bytes', type=int)
     args = parser.parse_args()
 
     if args.check:
         if any((args.summary, args.sheet is not None, args.page_size is not None,
-                args.cursor is not None, args.max_output_chars is not None)):
+                args.cursor is not None, args.max_output_chars is not None, args.max_output_bytes is not None)):
             parser.error('--check does not accept read-view options')
         return check_environment()
 
@@ -136,7 +137,7 @@ def main():
         parser.error('input required')
 
     view_requested = any((args.summary, args.sheet is not None, args.page_size is not None,
-                         args.cursor is not None, args.max_output_chars is not None))
+                         args.cursor is not None, args.max_output_chars is not None, args.max_output_bytes is not None))
     if view_requested and (args.format != 'json' or args.include_related):
         parser.error('Read views require JSON and main content only; use full reading for related stories or paragraph sources')
     if args.include_related:
@@ -150,7 +151,7 @@ def main():
             result = read_bytes(data, source=str(args.input), **options)
             result = project(result, data, options, summary=args.summary, sheet=args.sheet,
                              page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
-                             max_chars=12000 if args.max_output_chars is None else args.max_output_chars)
+                             max_chars=12000 if args.max_output_chars is None else args.max_output_chars, max_bytes=args.max_output_bytes)
         except (ParseError, OSError) as exc:
             result = failure(getattr(exc, 'status', 'io_error'),
                              getattr(exc, 'location', {'stage': 'input'}), str(exc))
@@ -166,7 +167,15 @@ def main():
     except ParseError as exc:
         result = failure(exc.status, exc.location, str(exc))
         encoded = json.dumps(result, ensure_ascii=False)
-    print(encoded, file=sys.stdout)
+    if args.max_output_bytes is not None and args.max_output_bytes >= 512:
+        from wps_read_view import check_serialized_bytes
+        try:
+            check_serialized_bytes(encoded, args.max_output_bytes)
+        except ParseError as exc:
+            result = failure(exc.status, exc.location, str(exc))
+            encoded = json.dumps(result, ensure_ascii=False)
+    from wps_read_view import print_json_record
+    print_json_record(encoded, max_bytes=args.max_output_bytes)
     return 0 if result.get('status') == 'ok' else 3 if result.get('status') == 'partial' else 1
 
 
