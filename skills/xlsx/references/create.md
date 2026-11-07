@@ -5,6 +5,8 @@
 Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
+小型静态值表先用主入口的完整快速路径（`<skill-root>/SKILL.md#简单静态创建仅本入口`），无需预读本页。超出该范围时再使用下述完整创建契约。
+
 Read Standard-library calculation and file contract (`<skill-root>/references/write-contract.md`) for the JSON schema and CLI.
 仅生成静态值时无需公式参考；包含公式才读公式计算（`<skill-root>/references/formula-calculation.md`）。
 Plan sheet names, input values, calculations and formatting first. Use `create` with
