@@ -1,0 +1,385 @@
+{
+  "checked_utc": "2026-11-07T12:56:05.435112+00:00",
+  "head": "55e9d202148aacb3050b33bd465ef948c708aac1",
+  "scope": "Unify archive-success guidance to cloud space; local working-tree changes only.",
+  "version": "20261107.1943.5370",
+  "skills": [
+    "artifact-lifecycle",
+    "bank-writing",
+    "docx",
+    "et",
+    "ofd",
+    "pptx",
+    "table-workflow",
+    "wps",
+    "xlsx"
+  ],
+  "environment": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.12",
+    "execution_flags": [
+      "-I",
+      "-S",
+      "-B"
+    ]
+  },
+  "contract": {
+    "success": "🎉 文件归档成功，请到云空间查看。 ☁️✨",
+    "partial": "部分文件归档成功，请到云空间查看已归档文件；其余文件归档未完成。",
+    "failed": "🥺 本次归档未完成，请先核对文件结果。 📄",
+    "skipped_or_not_attempted": "本次未执行归档，请先核对文件结果。",
+    "handoff_required": "文件待交接归档，归档完成后再提示到云空间查看。",
+    "unknown": "归档结果尚未确认，请先核对文件结果。",
+    "success_condition": "Nonempty complete file list; aggregate copied; every item copied/already_archived.",
+    "partial_condition": "Aggregate failed and both successful and unsuccessful entries. All-copied entries under failed aggregate do not establish partial success.",
+    "empty_list": "archive_outputs([]) fails. Copied summary with an empty or malformed list is unknown, never success.",
+    "machine_fields": "Existing archive_message, archive_status, business states, JSON channels and exit codes retained.",
+    "host_upload": "User confirms a subsequent host upload mechanism. Successful archival prompts cloud-space viewing without claiming verified upload completion/timing."
+  },
+  "tests": {
+    "total": 2209,
+    "passed": 2209,
+    "failed": 0,
+    "skipped": 0,
+    "suites": {
+      "artifact-lifecycle": 16,
+      "docx": 417,
+      "xlsx": 396,
+      "wps": 441,
+      "et": 480,
+      "ofd": 150,
+      "pptx": 99,
+      "table-workflow": 174,
+      "artifact_lifecycle_parity": 1,
+      "xlsx_lifecycle_parity": 1,
+      "wps_lifecycle_parity": 1,
+      "archive_notice_contract": 3,
+      "skill_selection_current": 6,
+      "skill_loading_benchmark": 24
+    },
+    "reruns": "Initial DOCX entry byte-budget failure and then missing archive_status guard were corrected. Final full DOCX passes. Loading freshness failure during edits passed after freeze.",
+    "new_contract_coverage": "Four independent read-only runtime copies; 24 notice cases and 8 real archive scenarios each; failed primary and bounded workflow receipt propagation."
+  },
+  "strict": {
+    "original_tree": "failed only due to pre-existing caches in WPS and ET; not reported as passed",
+    "existing_caches": {
+      "wps": {
+        "directories": 1,
+        "pyc": 55
+      },
+      "et": {
+        "directories": 1,
+        "pyc": 69
+      }
+    },
+    "isolated_copies_without_caches": {
+      "skills": [
+        "artifact-lifecycle",
+        "bank-writing",
+        "docx",
+        "et",
+        "ofd",
+        "pptx",
+        "table-workflow",
+        "wps",
+        "xlsx"
+      ],
+      "passed": 9,
+      "other_diagnostics": 0
+    },
+    "cache_policy": "Unknown existing caches preserved; no source-tree cleanup or publish ZIP replacement."
+  },
+  "snapshots": {
+    "current_profiles": 57,
+    "current_status": "fresh",
+    "current_exit_code": 0,
+    "selection_cases_manually_reviewed": 31,
+    "historical_expected_stale": [
+      "runtime_loading_profiles_history_20261107.json",
+      "runtime_loading_profiles_before_archive_notice_20261107.json"
+    ],
+    "before_archive_snapshot_sha256": "560f7ccee8f2c1acf576565fe32cdebefee05c6f51ece89a4b2f498934fdb053"
+  },
+  "preservation": {
+    "initial_tracked_modified": 40,
+    "initial_untracked_status_entries": 17,
+    "baseline_files": 58,
+    "prior_files_byte_identical": 48,
+    "intentional_updates_to_prior_modified_files": [
+      "README.md",
+      "skills/artifact-lifecycle/SKILL.md",
+      "skills/bank-writing/SKILL.md",
+      "skills/docx/SKILL.md",
+      "skills/et/SKILL.md",
+      "skills/wps/SKILL.md",
+      "skills/xlsx/SKILL.md",
+      "tests/runtime_loading_profiles.json",
+      "tests/skill_loading_benchmark.md",
+      "tests/skill_selection_current_cases.json"
+    ],
+    "other_prior_files": "All other prior modified/untracked file bytes preserved; unknown OFD acceptance directory unchanged."
+  },
+  "static_checks": {
+    "git_diff_check": "passed",
+    "ast_and_200_character_lines": "All 9 task-modified Python files parsed; no lines over 200 characters. Pylint remains unrun.",
+    "pylint": "unavailable on PATH and selected Python; not installed or claimed passed"
+  },
+  "limitations": [
+    "This run is macOS only; Linux/Windows not rerun.",
+    "Host upload, cloud visibility timing, and Office visual validation not performed.",
+    "No new cross-Skill runtime dependencies, no commits/pushes, no ZIP rebuilds."
+  ],
+  "task_files_sha256": {
+    "AGENTS.md": "3a7502620524f31d7e09547084d94179e1ea081ebc130a02a3ec697a59bf6a59",
+    "README.md": "e03987e6fc2173bbe9cb14e09e609d1bddf7363a586ea68c696ea64e82dd1b59",
+    "docs/skills/artifact-lifecycle.md": "7bb3bb43afaf757397d5a79b2547ae6f7df26b1071181e0e8c438243d6bdfc19",
+    "docs/skills/bank-writing.md": "4a2c13145384f5fbf5aa2d8b397d1536eae8fc82ff82a662f65c802bc5a34a06",
+    "docs/skills/docx.md": "2eda5ff191e9429ab737c4201a325d83d8fc8d7d7d3cdebb74f1e7a823215a94",
+    "docs/skills/et.md": "25d5e410cabdfc489af7a312d367938408706192a2393bb910e60f2868f7aac5",
+    "docs/skills/ofd.md": "017566d43e0f655dfa622565154754e40b07de5201a77d8e0bc059a7cd1838ad",
+    "docs/skills/pptx.md": "592a63bf338160301d9789fca38dc023857d039363d8d464f394803aab61ecc4",
+    "docs/skills/table-workflow.md": "e9e31d6cf4e14847f568c894f368e4545aab13fcd1bee1e41b64bfee1a10047f",
+    "docs/skills/wps.md": "adb96a8bd6cef13721dd713bd0ecbb0e39a2a1ddba5ddb39313a2fecd29cb8f8",
+    "docs/skills/xlsx.md": "cd775d3fa3ea00e0cc0f78b21df6db42a425244deb0ecec6b49ac17caee11954",
+    "skills/artifact-lifecycle/SKILL.md": "c7ac7798ca03eb36b8024ea569056e75670cb4f164b48897ff495e0856cd1a87",
+    "skills/artifact-lifecycle/references/contract.md": "b6e28714fa8bb911e5f3bbce6e057a8f4964843788d194c6247c0470d2531b9e",
+    "skills/artifact-lifecycle/references/reuse.md": "ccfa05a461738080ed7f6038923274862b0b7c16c01c74e129b616886f2ba533",
+    "skills/artifact-lifecycle/references/upstream.json": "ca0bb443a80d713e0bcbf626dca9e4be448eb84965b8ab8a84214bd5ea91181c",
+    "skills/artifact-lifecycle/scripts/archive_deliverables.py": "92e282779d79e615cbb84759140fd82a7f11f004538a751d96551da64163cbb3",
+    "skills/bank-writing/SKILL.md": "92be42eb040ccb3c6591499728a27d9946b47d37fcfbba7f3c2b312d5d669415",
+    "skills/bank-writing/references/docx-handoff.md": "1658777e5e309dc2bc8b6629bb7d93f93d35e8526b4ec3063ca94428471fed84",
+    "skills/docx/SKILL.md": "68c56e4708f8213699328099a5a205d3a8c58491d49b23e7f58a949556f01617",
+    "skills/docx/references/delivery.md": "612a9800d95fbaa14eb18d0edc5f2cb925b8f5a3c88d230fa12f13cdcdf8fa8a",
+    "skills/docx/scripts/archive_deliverables.py": "212b72da3d78f3258c5635c68d409403c976bdd5cfc72906e6e47c0021a45393",
+    "skills/docx/scripts/test/test_archive_deliverables.py": "c5b28727137bb536848bf32c0fa66d4aa71875f4513f301b82ab0b0446508b20",
+    "skills/docx/scripts/test/test_docx_compact_receipt.py": "5a25e79f7b20ed3ba23a7d0b056c94d96ef180db74d88754efb3cfac1bfed858",
+    "skills/et/SKILL.md": "ab8ba2c109be630f8c53ca1b807228393138def1ae489922f5924d3249572540",
+    "skills/ofd/SKILL.md": "8d9ddff43d93656160f290fe64531c31b8a2dddcbd23abb0aa3aeae936e91a89",
+    "skills/ofd/references/generation.md": "29b94a9191274994a84757a89ee6e9ea2b0c2eb4d36bc5e3a66023589ffb51d3",
+    "skills/pptx/SKILL.md": "98a193364ffc60788c5239ad88bb497c48a7bb6b290cd3b1475b5d92e2904b4d",
+    "skills/table-workflow/SKILL.md": "0823020968528fc9f8531f420a5c37f6440c74c5d46ebce74d3af3aee77afd8f",
+    "skills/table-workflow/scripts/table_workflow.py": "0731670a8ce16e7caa3f930622cb379fc51415c97bc35befc96657ee66b35ce3",
+    "skills/wps/SKILL.md": "2ffd69ddd154d2f858600791e27b9957af4b7ef59c2cbd70ff1bfaf116231b8e",
+    "skills/wps/references/delivery.md": "f60b9c116addd004601910edeaad30c25665c8f3e72b84cde11f2cb09a98ec4a",
+    "skills/wps/references/lifecycle-upstream.json": "c0641a3bbcbdb34ad6f67d66c485600c15c4122e3e1544a9e1fbefe6e37a461e",
+    "skills/wps/scripts/_wps_artifact_runtime/archive_deliverables.py": "5c271d57de2c1059daefcee87939cb29ef1e2bcec120fd60bf804f04640c945e",
+    "skills/wps/scripts/wps_delivery.py": "a9628efcf61e28e5212280c477f1c7d6ada8b121a78afc89c78083fb61991e12",
+    "skills/xlsx/SKILL.md": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+    "skills/xlsx/references/delivery-lifecycle.md": "7124ea3eb9c918ebd5ed18a08f6f0459705a2234a9942c92e4b0ea64a500a253",
+    "skills/xlsx/references/lifecycle-upstream.json": "eb243bbb4284d9fe62059151cc484d016dbb15f491a4b1f7450cd2e5eefc5c2c",
+    "skills/xlsx/scripts/_artifact_runtime/archive_deliverables.py": "5c271d57de2c1059daefcee87939cb29ef1e2bcec120fd60bf804f04640c945e",
+    "tests/runtime_loading_profiles.json": "46aca79a4910a7b9080735a4932a163bbef3afc72616312dfd77a00cf4033136",
+    "tests/runtime_loading_profiles_before_archive_notice_20261107.json": "560f7ccee8f2c1acf576565fe32cdebefee05c6f51ece89a4b2f498934fdb053",
+    "tests/skill_loading_benchmark.md": "6b1dbc4d4501bf212e53caf03a2876d293caa658f5b58ee136c5dd5bcb8bab39",
+    "tests/skill_selection_current_cases.json": "a55cca7ed624f1b938033cf17425c685685987bda708b3faba6b270527d645b7",
+    "tests/test_archive_notice_contract.py": "0c9627ef146464c7d7289ce0b376d161ea82b68263fdfb6ddc98c9d3ef38c53b"
+  },
+  "log_evidence": {
+    "artifact-lifecycle.log": {
+      "sha256": "82262f77e96f6b84e10149812c8f64f2d88f34f5d6f4500a73a5e870219fcec5",
+      "bytes": 2312,
+      "tests": 16,
+      "seconds": 0.06,
+      "passed": true
+    },
+    "checker-help.log": {
+      "sha256": "08fb411940a002595822c6578219252f262eebc255f67237bff2dca9baeb69e6",
+      "bytes": 244
+    },
+    "docx-final.log": {
+      "sha256": "cfbb1f561ef39385d6d1e78025d4fb6a0da0817383ce99bddf761afd1d8edd7d",
+      "bytes": 91679,
+      "tests": 417,
+      "seconds": 17.595,
+      "passed": false
+    },
+    "docx-frozen.log": {
+      "sha256": "272f5143bbde1c77b287a97f30e4cc17043034d2cf3fb8466b145205ba92a099",
+      "bytes": 65748,
+      "tests": 417,
+      "seconds": 17.737,
+      "passed": true
+    },
+    "docx.log": {
+      "sha256": "d6d3c11bdcb482d2e77eb2f9bc1370809285a1ee3ef9e78162a3db41bdb5cb6a",
+      "bytes": 66322,
+      "tests": 417,
+      "seconds": 17.613,
+      "passed": false
+    },
+    "environment.log": {
+      "sha256": "534e2c91885558fb573fd11c343f5da3ad1202df3dc4b63f84cb5f38990d8a2b",
+      "bytes": 15
+    },
+    "et.log": {
+      "sha256": "e8700821e32002ba92841fc5783bcb2e2054c50014c933d0465a08468e418e6c",
+      "bytes": 76330,
+      "tests": 480,
+      "seconds": 5.006,
+      "passed": true
+    },
+    "ofd.log": {
+      "sha256": "41d552aea71695d89b229fd706f9bcec5d5013b6835488dde07b77df96f4ce36",
+      "bytes": 21191,
+      "tests": 150,
+      "seconds": 1.104,
+      "passed": true
+    },
+    "pptx.log": {
+      "sha256": "a357ab302efc1a820de57fdaa6f13f538d37f5251c0c641398dbc27e29480c55",
+      "bytes": 14970,
+      "tests": 99,
+      "seconds": 10.376,
+      "passed": true
+    },
+    "runtime_loading_profiles-check.log": {
+      "sha256": "92f551fb73c791f364fb70debaf822fce0a3cedbcb467e80161e2cdfceb9c5a0",
+      "bytes": 163
+    },
+    "runtime_loading_profiles-frozen.log": {
+      "sha256": "92f551fb73c791f364fb70debaf822fce0a3cedbcb467e80161e2cdfceb9c5a0",
+      "bytes": 163
+    },
+    "runtime_loading_profiles_before_archive_notice_20261107-check.log": {
+      "sha256": "2e2588f59d7908223ddbea35c2321761d939a4983356ecb569f833f0a43a1e64",
+      "bytes": 53994
+    },
+    "runtime_loading_profiles_before_archive_notice_20261107-frozen.log": {
+      "sha256": "2e2588f59d7908223ddbea35c2321761d939a4983356ecb569f833f0a43a1e64",
+      "bytes": 53994
+    },
+    "runtime_loading_profiles_history_20261107-check.log": {
+      "sha256": "e6b7d26bff5ac6596d47514f2cd8b16d5a4f2bc481543f4401e875200e1865bb",
+      "bytes": 44377
+    },
+    "runtime_loading_profiles_history_20261107-frozen.log": {
+      "sha256": "e6b7d26bff5ac6596d47514f2cd8b16d5a4f2bc481543f4401e875200e1865bb",
+      "bytes": 44377
+    },
+    "strict-clean-frozen.log": {
+      "sha256": "4adfdf1859055a8993dc3fe630a70012fe47f39954ed8bc2c666ac34f833278f",
+      "bytes": 1081
+    },
+    "strict-clean.log": {
+      "sha256": "d253995f322c3e26cfa009757790d10d9664ee9d8c1c1afb0e2c8da0aacb64c7",
+      "bytes": 1018
+    },
+    "strict-original.log": {
+      "sha256": "2c3c23b9564c3a35712a4f8e40c475ea62d7573aa07468a16026f138b6fa4758",
+      "bytes": 17393
+    },
+    "test_archive_notice_contract-final.log": {
+      "sha256": "a122b3cf8e96b687d3ce043d84f77e16bbf667cc5a05bc0a9f9439d6fc99e119",
+      "bytes": 747,
+      "tests": 3,
+      "seconds": 0.188,
+      "passed": true
+    },
+    "test_archive_notice_contract.log": {
+      "sha256": "124765af1372791ca1c667777b86ab157ef39e488625eda98dedae7d379cae6f",
+      "bytes": 747,
+      "tests": 3,
+      "seconds": 0.186,
+      "passed": true
+    },
+    "test_artifact_lifecycle_parity-final.log": {
+      "sha256": "e0178544eaecc076808846e315b4ee7aa4a70014ad59e611cb6c1da0eff9c526",
+      "bytes": 300,
+      "tests": 1,
+      "seconds": 0.0,
+      "passed": true
+    },
+    "test_artifact_lifecycle_parity.log": {
+      "sha256": "10db5e9f4d06b93bcbd8e80dd59bfcf1ad69ef62831cb1157b9cb873d8f6a26c",
+      "bytes": 300,
+      "tests": 1,
+      "seconds": 0.001,
+      "passed": true
+    },
+    "test_skill_loading_benchmark-final.log": {
+      "sha256": "9604193a0ac5aeb0e52cfba879be20f77f304721b611343363a7bd1924c2b3a2",
+      "bytes": 4234,
+      "tests": 24,
+      "seconds": 23.256,
+      "passed": false
+    },
+    "test_skill_loading_benchmark-frozen.log": {
+      "sha256": "c6372584ad6d738bc3731e6324409a7434dd6b37e6cebf843a3ab0449d25d137",
+      "bytes": 3678,
+      "tests": 24,
+      "seconds": 25.242,
+      "passed": true
+    },
+    "test_skill_selection_current-final.log": {
+      "sha256": "832f512b0adf1360255ebb432914045dc1ea7a8f47980419658012e623b20549",
+      "bytes": 1107,
+      "tests": 6,
+      "seconds": 0.004,
+      "passed": true
+    },
+    "test_skill_selection_current-frozen.log": {
+      "sha256": "832f512b0adf1360255ebb432914045dc1ea7a8f47980419658012e623b20549",
+      "bytes": 1107,
+      "tests": 6,
+      "seconds": 0.004,
+      "passed": true
+    },
+    "test_table_workflow*.log": {
+      "sha256": "15f638854e3d59e809b9ae02457f67497654cea58d5f7e73394c11c26721073f",
+      "bytes": 27466,
+      "tests": 174,
+      "seconds": 25.574,
+      "passed": true
+    },
+    "test_wps_lifecycle_parity-final.log": {
+      "sha256": "b0bcd032cc6e06c006fa50d45796e7fb668793a19408011f301db21f735d9940",
+      "bytes": 264,
+      "tests": 1,
+      "seconds": 0.001,
+      "passed": true
+    },
+    "test_wps_lifecycle_parity.log": {
+      "sha256": "b0bcd032cc6e06c006fa50d45796e7fb668793a19408011f301db21f735d9940",
+      "bytes": 264,
+      "tests": 1,
+      "seconds": 0.001,
+      "passed": true
+    },
+    "test_xlsx_lifecycle_parity-final.log": {
+      "sha256": "e86bdb86dc8cd61d73d65eb0143a753c56c4331ba07254a13c5283ee749f49f4",
+      "bytes": 300,
+      "tests": 1,
+      "seconds": 0.001,
+      "passed": true
+    },
+    "test_xlsx_lifecycle_parity.log": {
+      "sha256": "e86bdb86dc8cd61d73d65eb0143a753c56c4331ba07254a13c5283ee749f49f4",
+      "bytes": 300,
+      "tests": 1,
+      "seconds": 0.001,
+      "passed": true
+    },
+    "wps-final.log": {
+      "sha256": "0d27e627c1a38a1d6627a073529e6f1d0108d53e28017716976942829bb4da66",
+      "bytes": 68310,
+      "tests": 441,
+      "seconds": 5.061,
+      "passed": false
+    },
+    "wps.log": {
+      "sha256": "993720d358e5540998cba9d5b91dc2431de24ba3b7806685ced3da4ba289a3f6",
+      "bytes": 68310,
+      "tests": 441,
+      "seconds": 5.058,
+      "passed": false
+    },
+    "xlsx.log": {
+      "sha256": "561b70bc43c0e637865202170e293b69e7a53bc41a3c45f773be8b4a8be41ebc",
+      "bytes": 58279,
+      "tests": 396,
+      "seconds": 13.153,
+      "passed": true
+    }
+  },
+  "temporary_cleanup": "Completed: removed only this task's validation log/copy directory and temporary baseline backup; original unknown OFD directory and existing WPS/ET caches retained."
+}

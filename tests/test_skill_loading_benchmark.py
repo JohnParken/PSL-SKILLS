@@ -1,4 +1,10 @@
 """Repository-level loading measurement tests; not shipped as Skill runtime."""
+import copy
+import hashlib
+import json
+import subprocess
+import sys
+from unittest import mock
 import importlib.util
 import tempfile
 import unittest
@@ -36,9 +42,10 @@ class LoadingBenchmarkTests(unittest.TestCase):
 
     def test_changed_read_sets_follow_documented_routes(self):
         allowed = {'xlsx-static-create', 'repeated-create-cold',
-                   'repeated-create-retained', 'repeated-create-compacted', 'pptx-notes-pagination'}
+                   'repeated-create-retained', 'repeated-create-compacted', 'pptx-notes-pagination',
+                   'et-header-preview', 'et-direct-statistics', 'mixed-pptx-et-read', 'xlsx-summary', 'mixed-format-read'}
         for name, (before, after) in BENCH.PROFILES.items():
-            if name not in allowed:
+            if name not in allowed and not name.startswith('xlsx-specialized-'):
                 self.assertEqual(before, after, name)
 
     def test_all_planned_resources_exist_on_both_sides(self):
@@ -55,7 +62,7 @@ class LoadingBenchmarkTests(unittest.TestCase):
                     'table-partial-et-source', 'ofd-basic-create', 'ofd-partial-page-read', 'mixed-pptx-et-read'}
         self.assertTrue(required <= BENCH.PROFILES.keys())
         self.assertEqual(BENCH.PROFILES['et-direct-statistics'][1],
-                         ['et/SKILL.md', 'et/references/table-analysis.md'])
+                         ['et/SKILL.md', 'et/references/basic-statistics.md'])
         for paths in BENCH.PROFILES['table-partial-et-source']:
             self.assertIn('et/SKILL.md', paths)
             self.assertNotIn('wps/SKILL.md', paths)
@@ -112,6 +119,127 @@ class LoadingBenchmarkTests(unittest.TestCase):
         self.assertEqual(report['host_usage']['status'], 'not_measured')
         self.assertEqual(report['tokenizer']['status'], 'not_measured')
         self.assertIsNone(report['profiles']['xlsx-static-create']['delta_after_minus_before']['tokens'])
+
+
+class SnapshotFreshnessTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.report = BENCH.build_report()
+
+    def check(self, snapshot):
+        # The independent recomputation is real once per class; mutation tests
+        # isolate the comparator rather than invoking Git hundreds of times.
+        with mock.patch.object(BENCH, 'build_report', return_value=self.report):
+            return BENCH.check_snapshot(snapshot)
+
+    def test_history_is_preserved_byte_for_byte(self):
+        history = Path(__file__).with_name('runtime_loading_profiles_history_20261107.json').read_bytes()
+        self.assertEqual(hashlib.sha256(history).hexdigest(),
+                         'aea64b2970ccd3c46043d8b0656d34080d302e2731c37c45253daf9b67e840cd')
+
+    def test_fresh_report(self):
+        self.assertEqual(self.check(self.report)['status'], 'fresh')
+
+    def test_every_after_hash_is_checked(self):
+        for name, profile in self.report['profiles'].items():
+            for index in range(len(profile['after']['files'])):
+                changed = copy.deepcopy(self.report)
+                changed['profiles'][name]['after']['files'][index]['sha256'] = 'stale'
+                with self.subTest(profile=name, event=index):
+                    self.assertEqual(self.check(changed)['status'], 'stale')
+
+    def test_baseline_hash_commit_and_plan_are_checked(self):
+        for field in ('sha256', 'path'):
+            changed = copy.deepcopy(self.report)
+            changed['profiles']['docx-simple']['before']['files'][0][field] = 'stale'
+            self.assertEqual(self.check(changed)['status'], 'stale')
+        changed = copy.deepcopy(self.report)
+        changed['baseline_commit'] = '0' * 40
+        self.assertEqual(self.check(changed)['status'], 'stale')
+
+    def test_missing_and_added_profiles(self):
+        changed = copy.deepcopy(self.report)
+        del changed['profiles']['docx-simple']
+        self.assertEqual(self.check(changed)['status'], 'stale')
+        changed = copy.deepcopy(self.report)
+        changed['profiles']['unexpected'] = changed['profiles']['docx-simple']
+        self.assertEqual(self.check(changed)['status'], 'stale')
+
+    def test_old_schema_and_benchmark_change(self):
+        for key, value in (('schema_version', 2), ('benchmark_sha256', '0' * 64)):
+            changed = copy.deepcopy(self.report)
+            changed[key] = value
+            self.assertEqual(self.check(changed)['status'], 'stale')
+
+    def test_counts_order_repetition_and_capability_notes(self):
+        for side in ('before', 'after'):
+            changed = copy.deepcopy(self.report)
+            changed['profiles']['repeated-create-cold'][side]['files'].pop()
+            self.assertEqual(self.check(changed)['status'], 'stale')
+        changed = copy.deepcopy(self.report)
+        changed['profiles']['xlsx-formula-partial']['after']['files'].reverse()
+        self.assertEqual(self.check(changed)['status'], 'stale')
+        changed = copy.deepcopy(self.report)
+        changed['profiles']['pptx-summary']['baseline_capability_note'] = None
+        self.assertEqual(self.check(changed)['status'], 'stale')
+        changed = copy.deepcopy(self.report)
+        changed['profiles']['docx-simple']['after']['chars'] += 1
+        self.assertEqual(self.check(changed)['status'], 'stale')
+
+    def test_real_file_change_and_missing_resource(self):
+        original = BENCH.read_resource
+        for missing in (False, True):
+            def changed(name, revision=None, root=BENCH.ROOT):
+                if name == 'docx/SKILL.md' and revision is None:
+                    if missing:
+                        raise ValueError('missing profile resource: docx/SKILL.md')
+                    return original(name, revision, root) + b'changed'
+                return original(name, revision, root)
+            with mock.patch.object(BENCH, 'read_resource', side_effect=changed):
+                self.assertEqual(BENCH.check_snapshot(self.report)['status'], 'stale')
+
+    def test_actual_profile_addition_and_removal(self):
+        for remove in (False, True):
+            profiles = dict(BENCH.PROFILES)
+            if remove:
+                profiles.pop('docx-simple')
+            else:
+                profiles['new-profile'] = (['docx/SKILL.md'], ['docx/SKILL.md'])
+            with mock.patch.object(BENCH, 'PROFILES', profiles):
+                self.assertEqual(BENCH.check_snapshot(self.report)['status'], 'stale')
+
+    def test_committed_current_and_history_cli(self):
+        for filename, status, code in (('runtime_loading_profiles.json', 'fresh', 0),
+                                      ('runtime_loading_profiles_history_20261107.json', 'stale', 1)):
+            result = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(BENCH.__file__)),
+                                     '--check-snapshot', str(Path(__file__).with_name(filename))], capture_output=True, text=True)
+            self.assertEqual(result.returncode, code, result.stderr)
+            self.assertEqual(json.loads(result.stdout)['status'], status)
+
+    def test_invalid_snapshot_cli_is_structured_nonzero(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'bad.json'
+            for content in ('not JSON', '[]'):
+                path.write_text(content, encoding='utf-8')
+                result = subprocess.run([sys.executable, '-I', '-S', '-B', BENCH.__file__, '--check-snapshot', str(path)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(json.loads(result.stdout)['status'], 'stale')
+
+    def test_specialized_routes_keep_required_union(self):
+        self.assertEqual(BENCH.PROFILES['xlsx-summary'][1], ['xlsx/SKILL.md'])
+        self.assertNotIn('xlsx/references/bounded-reading.md', BENCH.PROFILES['mixed-format-read'][1])
+        self.assertEqual(len(BENCH.SPECIALIZED_REFERENCES), 17)
+        for reference in BENCH.SPECIALIZED_REFERENCES:
+            before, after = BENCH.PROFILES['xlsx-specialized-' + reference]
+            self.assertIn('xlsx/references/data-analysis.md', before)
+            self.assertNotIn('xlsx/references/data-analysis.md', after)
+            self.assertIn('xlsx/references/analysis-contract.md', after)
+            self.assertIn('xlsx/references/' + reference + '.md', after)
+        for paths in BENCH.PROFILES['xlsx-specialized-institution-hierarchy']:
+            self.assertIn('xlsx/references/management-wide.md', paths)
+        for paths in BENCH.PROFILES['xlsx-specialized-result-export']:
+            self.assertIn('xlsx/references/task-delivery.md', paths)
 
 
 if __name__ == '__main__':

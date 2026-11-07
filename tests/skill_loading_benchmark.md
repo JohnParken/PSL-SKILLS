@@ -11,7 +11,19 @@ python -I -S -B tests/benchmark_skill_loading.py
 python -I -S -B -m unittest discover -s tests -p 'test_skill_loading_benchmark.py' -v
 ```
 
-第一条只向 stdout 输出 JSON。需要更新快照时，将其保存至 `tests/runtime_loading_profiles.json`，最后检查逐文件 SHA256 是否仍匹配工作区。报告期间不要并发修改被测文件。默认只需标准库，无需安装依赖。
+第一条只向 stdout 输出 JSON。先等被测 Skill 冻结并人工核对读取计划，再保存当前快照；已有历史证据不能覆写。运行以下校验，fresh 退出0，stale或无法读取/重算退出1，stdout始终给出结构化JSON：
+
+```console
+python -I -S -B tests/benchmark_skill_loading.py --check-snapshot tests/runtime_loading_profiles.json
+python -I -S -B tests/benchmark_skill_loading.py --check-snapshot tests/runtime_loading_profiles_history_20261107.json
+python -I -S -B -m unittest discover -s tests -p 'test_skill_selection_current.py' -v
+```
+
+第二条故意校验历史证据，预期stale/退出1，不能为使其通过而刷新。历史副本逐字保留原快照，SHA256为 `aea64b2970ccd3c46043d8b0656d34080d302e2731c37c45253daf9b67e840cd`；原快照在本轮开始前已过期，不能把该过期归因于本轮新问题。原 `skill_selection_cases.json` 与 `skill_selection_results.json` 继续保留历史内容。
+
+schema 3 绑定评测脚本SHA256、固定baseline提交、profile全集、场景说明与能力边界、两侧有序读取事件及每文件哈希/字符/字节/可选token与汇总。校验重新从Git读取baseline、从工作区读取after，不信任快照自身提供的路径或哈希。丢失/新增profile、路径/顺序/重复事件变动、缺文件、两侧文件变化、脚本变化、旧schema均拒绝。Python版本和平台保留为生成时信息，不作为文件新鲜度要求。只检查计划中列出的文件，不证明未读取的运行时代码或其他业务资源未变；业务回归独立执行。报告生成与检查期间不得并发改文件，这不是原子文件系统快照。
+
+默认只需标准库，无需安装依赖。带token快照须以相同encoding、已装库版本和离线缓存参数复查；省略参数时不能认证旧token值，会标为stale，而不换算估计。
 
 可选精确 token 计数只使用预先安装的 tiktoken 和已有缓存（维护依赖，不增加 Skill 运行依赖）：
 
@@ -51,3 +63,14 @@ python -I -B tests/benchmark_skill_loading.py --encoding cl100k_base --tokenizer
 PPTX的新视图与table-workflow后续表名发现并非baseline已有能力；报告的 `baseline_capability_note` 明确说明。before/after读文件数相同不等于功能相同，新增说明变长也不代表总体任务更慢。分页输出量、公开RPC请求数/耗时与回归正确性另行记录，不能混成token收益。DOCX表格/块续读和ET直接分析原已支持，本轮主要修正入口覆盖说明与分流。
 
 OFD新建仍读取生成契约，保留字体使用权、资源限制、视觉未验证与归档交接；本轮仅扩展该场景评测，不据此声称修改或重新验收OFD生成器。更新快照前须等待所有被测入口修改完成。
+
+
+## 当前直达路由与人工选择期望
+
+XLSX纯概况after使用入口完整命令，不预读bounded-reading；baseline无该完整命令仍读该参考，混合读取按同一条件取并集。ET表头预览before读取table-analysis，after读取table-preview；基础列统计after读取basic-statistics，复杂query仍读取table-analysis。PPTX+ET基础统计混合任务取对应并集。baseline已支持ET预览和统计，但没有本轮新分页预算，不能称为完整功能对等对比。17项XLSX专项before经data-analysis再读专项，after读analysis-contract与专项；机构层级两侧保留management-wide依赖，结果导出两侧保留task-delivery。场景使用已有输入/配置，不包含额外公式重算、创建配置或可选导出；真正任务有这些条件时必须另取所需参考，不能机械套本计划。
+
+`skill_selection_current_cases.json` 是人工编写的当前能力边界期望，不是模型选路观测。当前10个入口逐个绑定entry_sha256，包含各技能正反、软件品牌与真实格式、旧DOC/原生DOCX、银行短句、已有runner回执、简单单表与跨表、混合读取等31例。测试核对真实catalog、入口哈希、正反/混合覆盖、重复或矛盾期望；任一入口变动即失败提醒，须先人工复核含义再更新哈希，不能自动刷新以掩盖未复核。该测试不计算或宣称准确率、召回率或宿主token节省。
+
+## 归档提示维护后的当前快照（2026-11-07）
+
+归档提示与入口版本更新后，人工复核31个选择案例和57个读取计划，任务/格式边界及计划路径不变，仅刷新当前入口哈希与加载快照。更新前的当前快照逐字保存在 `runtime_loading_profiles_before_archive_notice_20261107.json`；它与原 `runtime_loading_profiles_history_20261107.json` 均为历史证据，预期检查为 stale，不为通过而改写。新快照仍只测计划读取字节/字符，不代表宿主 token、选路或云端上传验证。

@@ -1,0 +1,888 @@
+{
+  "checked_utc": "2026-11-07T11:39:33.598222+00:00",
+  "base_head": "55e9d202148aacb3050b33bd465ef948c708aac1",
+  "scope": "Local Skill adaptation only; no Deep Agents host changes, commit, push or ZIP replacement.",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+  "tests": {
+    "skill:docx": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/docx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 417,
+      "skipped": 0,
+      "seconds": 18.15,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "7207f7c65a8dd87ce233456e0448697d5ea8b6b8c5ea1cebfceaa8ddb39b7937"
+    },
+    "skill:et": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/et/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 480,
+      "skipped": 0,
+      "seconds": 5.184,
+      "stdout_sha256": "b2bc81ed4abba0b90443fbc20eb5d80085fd284343c0a4cf67501bf57e3c56e7",
+      "stderr_sha256": "351cef6413e012e6ebdecb161a70314edf8e0eca3431e2989558820ef87fdba7"
+    },
+    "skill:wps": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/wps/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 441,
+      "skipped": 0,
+      "seconds": 5.224,
+      "stdout_sha256": "b32a754d2ab461f4a0f9c248613b26608faa568b21f69a0a22a0ff89190aadf7",
+      "stderr_sha256": "5fb27fe2772f9492bc4859f5a09b99e942ab6eaa115261c9f45d76035775fce8"
+    },
+    "skill:xlsx": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/xlsx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 396,
+      "skipped": 0,
+      "seconds": 13.937,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b8a3ea77dc48d646a1ee067af964ef33a81b91a57460a1b207b1f9ec4bb94206"
+    },
+    "skill:artifact-lifecycle": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/artifact-lifecycle/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 16,
+      "skipped": 0,
+      "seconds": 0.105,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b9c801aa69cbcf1ae4d938c52f0941bcd54ca6b1a05f4e71d0e08e39a1f2910e"
+    },
+    "skill:ofd": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/ofd/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 150,
+      "skipped": 0,
+      "seconds": 1.245,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "1ef41a6747ac6f5f89aebb6e8bc8b2a378c0461139ed9ba98c8bd61dde0e69aa"
+    },
+    "skill:pptx": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/pptx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 99,
+      "skipped": 0,
+      "seconds": 10.659,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "79746cabadc3710142e8698c4b584cd032acea31830a35ee76ffc541086b01a6"
+    },
+    "skill:skill-development-standards": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/skill-development-standards/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 31,
+      "skipped": 0,
+      "seconds": 0.157,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2375655a920cd01405b76629ee0252cede16acc8a102af1ccdd4a3e4658fe07c"
+    },
+    "repo:test_artifact_lifecycle_parity.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_artifact_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.027,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+    },
+    "repo:test_check_execution.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_check_execution.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 12,
+      "skipped": 0,
+      "seconds": 0.724,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "26d9a960f7dfa113ebe8944be12f638f79a58187ac25b059555f0ce63e7ea969"
+    },
+    "repo:test_complex_json_templates.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_complex_json_templates.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 7,
+      "skipped": 0,
+      "seconds": 2.105,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "15f684e6adef10f5cbd40cbcf7cf4d1a161103a3968a0b7688aa93425954ad49"
+    },
+    "repo:test_read_view_budget.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_read_view_budget.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 2.837,
+      "stdout_sha256": "27b3ef7f1baa96ebd031f769642f3836637a6039ba47b6c2e920f7ef8193bdfe",
+      "stderr_sha256": "c14b0efbc2bedc74e6cc12f277aa7a297cff1aa31575119696b9a65017b26221",
+      "nested_tests": 14,
+      "count_note": "Two wrapper tests each run seven isolated-copy tests; nested tests not added to aggregate."
+    },
+    "repo:test_read_view_copy.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_read_view_copy.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 0.179,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "839abd8c52f8f8be708912ad80df0ad02d99d1a172eccbb8a2aa1fd91ab8a04f"
+    },
+    "repo:test_self_check_contracts.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_self_check_contracts.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 9,
+      "skipped": 0,
+      "seconds": 0.796,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b8e54744a5549aa3365448297399611dff09ed324791fb99b16e469898e372ee"
+    },
+    "repo:test_skill_loading_benchmark.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_loading_benchmark.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 24,
+      "skipped": 0,
+      "seconds": 25.259,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f878cbf6a4df3b4fd6cfa901b97c4234cddf103c950c565d7395850447fde160"
+    },
+    "repo:test_skill_selection_current.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_selection_current.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 6,
+      "skipped": 0,
+      "seconds": 0.032,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f7eadc47e1c00264ad4e27c90eb6707e02e8f03a8264bff3303b1aaa601fe83"
+    },
+    "repo:test_skill_test_runner.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_test_runner.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 5,
+      "skipped": 0,
+      "seconds": 0.152,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e1a2af0c7b9da08b3dd2b61a819284bbf364b713148392b8574dda0d0bdfcefa"
+    },
+    "repo:test_table_workflow.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 44,
+      "skipped": 0,
+      "seconds": 2.406,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b8a3a18abf2bf53d9134d48682e727a36ac60bc8662ac1ca87fa375a2e5c2dd2"
+    },
+    "repo:test_table_workflow_cli_capabilities.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_cli_capabilities.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 75,
+      "skipped": 0,
+      "seconds": 16.619,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2e21f3654b82a44a03537caab233cf20cbc3813a39a616a07380539429509c4c"
+    },
+    "repo:test_table_workflow_large_tables.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_large_tables.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 7,
+      "skipped": 0,
+      "seconds": 4.123,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "65bbf4116698a8ec5873d1b3f5c74921f72eaeea4dd646369ee6559a39865bde"
+    },
+    "repo:test_table_workflow_names.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_names.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 4,
+      "skipped": 0,
+      "seconds": 0.037,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5afdca71f939b5e8fdd7208d1210934ea9a708b4c300cda27eef97261a81784d"
+    },
+    "repo:test_table_workflow_quality.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_quality.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 27,
+      "skipped": 0,
+      "seconds": 1.487,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "62b96ab95af843fa7a75fff3616459aba2ff7e5511b817b8371cdad319a77a23"
+    },
+    "repo:test_table_workflow_review.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_review.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 17,
+      "skipped": 0,
+      "seconds": 1.92,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b33dcd170fc54a05933c4ed2c662a0af48e728fcb4146347ff5273b044687c09"
+    },
+    "repo:test_wps_docx_official_parity.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_docx_official_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 0.063,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2a50b4749107e50e3993c9a59df48e8d8cebd81e26a286e83bb83d7fe81b2d90"
+    },
+    "repo:test_wps_et_pipeline.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_et_pipeline.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 3,
+      "skipped": 0,
+      "seconds": 0.196,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "76a8dee26e8344d6e85683b9620d0e397923bbc740be73e3bdd00310f3a7843a"
+    },
+    "repo:test_wps_lifecycle_parity.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.028,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+    },
+    "repo:test_xlsx_lifecycle_parity.py": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_xlsx_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.027,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+    }
+  },
+  "strict_original": {
+    "docx": {
+      "exit_code": 0,
+      "errors": [],
+      "warning_count": 0,
+      "status": "passed"
+    },
+    "et": {
+      "exit_code": 1,
+      "errors": [],
+      "warning_count": 70,
+      "status": "historical_cache_warnings"
+    },
+    "wps": {
+      "exit_code": 1,
+      "errors": [],
+      "warning_count": 56,
+      "status": "historical_cache_warnings"
+    },
+    "xlsx": {
+      "exit_code": 0,
+      "errors": [],
+      "warning_count": 0,
+      "status": "passed"
+    },
+    "bank-writing": {
+      "exit_code": 0,
+      "errors": [],
+      "warning_count": 0,
+      "status": "passed"
+    },
+    "artifact-lifecycle": {
+      "exit_code": 0,
+      "errors": [],
+      "warning_count": 0,
+      "status": "passed"
+    }
+  },
+  "limitations": [
+    "Real Deep Agents model routing, provider usage, Linux, Windows and Office visual rendering not executed.",
+    "Pylint unavailable; AST and targeted source-format checks are not full lint.",
+    "Original WPS/ET historical cache warnings preserved; independent clean-copy strict is recorded separately."
+  ],
+  "protected_preexisting": [
+    ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/",
+    "tests/skill_standards_audit_20261105.json",
+    "tests/test_script_migration_20261105.json"
+  ],
+  "static_checks": [
+    {
+      "file": "skills/docx/scripts/read_docx.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/docx/scripts/test/test_docx_bound_pages.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/et/scripts/analyze_et.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/et/scripts/et_output_page.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/et/scripts/read_et.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/et/scripts/test/test_et_output_budget.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/et/scripts/wps_read_view.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/wps/scripts/read_wps.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "skills/wps/scripts/wps_read_view.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "tests/benchmark_skill_loading.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "tests/test_read_view_budget.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "tests/test_read_view_copy.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "tests/test_skill_loading_benchmark.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    },
+    {
+      "file": "tests/test_skill_selection_current.py",
+      "ast": "passed",
+      "lines_over_200": [],
+      "statement_semicolon_lines": []
+    }
+  ],
+  "final_skill_file_hashes": {
+    "skills/artifact-lifecycle/SKILL.md": "39bfd7b02caf99ad5b27604337779731f6ba7173fd71e731263a0f700057890e",
+    "skills/bank-writing/SKILL.md": "abd1601c34bcb9f62c7f9d6aa703e4046708de523b271530c664d06301106098",
+    "skills/docx/SKILL.md": "93be4864189e2f6e8046f4307d6b5d5153ac28434920852c2247677f3b72b7fd",
+    "skills/docx/references/inspection.md": "3915fe54540c5fd983ae93a2c229837a89e4901e1132ab1f8baa3022ab9c487c",
+    "skills/docx/scripts/read_docx.py": "a2b96959bc541d4ff082291e9bd573341ee31911ec8af5eeacedeed3a4b2ad27",
+    "skills/docx/scripts/test/test_docx_bound_pages.py": "aae4a7e9682d6fa63eb9f4a59268a88d1bde130e3c69cd2b076c5a73decf08cf",
+    "skills/et/SKILL.md": "d40e8be2a1875f49d00888c6ce83e5e22c745fd2568e08748f9862bb3d6599f1",
+    "skills/et/references/basic-statistics.md": "520f9deec8745921409a0fab42475eb71847401424aaae571b92ca2d7e008bab",
+    "skills/et/references/bounded-reading.md": "e469a6aff7bbac70f20a2ab842cd2d0837423ba708c998fe97b7ea7374df68c6",
+    "skills/et/references/read-view-runtime.json": "7cb922128ef6463ebb8d36cd3cf391c11d6e8197c95991e8d6528d1436dac08d",
+    "skills/et/references/table-analysis.md": "5209653aa55ace0eaf56505534f2fc2f12667cd31d58b99e336201dd362ddaf8",
+    "skills/et/references/table-preview.md": "3490bf097bc770c8cb5bb9961a0548e6c8685d11e9dd4ed3bafae5360b40eb20",
+    "skills/et/scripts/analyze_et.py": "30a436bda19b44921966b76cd61c775ed9972378ff6686ffc7eb7e8b6e65f5f2",
+    "skills/et/scripts/et_output_page.py": "d6913e820a3d7e634063b5b825aa193925ca42ca449ddaa4b2dd59c85b53e662",
+    "skills/et/scripts/read_et.py": "14be60bb8e10fbbb6a6d282c0f4a84c7e1cd591da6e8064106e9f3511fe844c6",
+    "skills/et/scripts/test/test_et_output_budget.py": "0090787bc5e6fd63ca0806a9aa2db0431befbfed0698a78e5c69b41d30864203",
+    "skills/et/scripts/wps_read_view.py": "7fe372eed98ed89c9b430552e2c73efd5a292bbd94465ffc3ae06482175deab1",
+    "skills/wps/SKILL.md": "25c01d10ac165823df4fd3d18eda7113a224398855963a7518e12a72d78cb70f",
+    "skills/wps/references/bounded-reading.md": "f7d3e970cf3a9fe9886d72c12556fd7e8bfdd5e5563cbe99ba481e1b6216c52c",
+    "skills/wps/references/read-view-runtime.json": "7cb922128ef6463ebb8d36cd3cf391c11d6e8197c95991e8d6528d1436dac08d",
+    "skills/wps/scripts/read_wps.py": "e49d84c33da25aa9c11bc630c989721693ea5094def10a5247a648c8c011b94f",
+    "skills/wps/scripts/wps_read_view.py": "7fe372eed98ed89c9b430552e2c73efd5a292bbd94465ffc3ae06482175deab1",
+    "skills/xlsx/SKILL.md": "448bd92b52e244c62be118c9c794847714ac312e04eb2024db7b6763846642c5",
+    "skills/xlsx/references/advanced-statistics.md": "9f8fb8c7f005c7f9bd0e762376ca75282685b82128463a4f62abdd2da7e40a49",
+    "skills/xlsx/references/analysis-contract.md": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+    "skills/xlsx/references/customer-structure.md": "62e495adc579dbf41c7f3ec0e95ab47f726c194fde1ec0d84d66812063f2dc5a",
+    "skills/xlsx/references/daily-analysis.md": "a743439a6bec90a3580f603931b354e8ad70fa6b42147af1c9f8accfe6038163",
+    "skills/xlsx/references/data-analysis.md": "45115e20e4c3d0ab3e6218eade58f0ffc5169a90d746cf0b8543bb386eab8fe9",
+    "skills/xlsx/references/deposit-analysis.md": "7a5e16f813696a5430cbe3d251f1341c7ca431fc4e9f62605ece995b63774866",
+    "skills/xlsx/references/header-candidates.md": "334961bddb43df407793be4108822c8c0c3241e1a919561a633f4f774d448a16",
+    "skills/xlsx/references/institution-hierarchy.md": "df96163329deb19e6674006a2cfe52a086ce5bbda63d594926af20fe926197b1",
+    "skills/xlsx/references/management-dashboard.md": "31d566434596adb88e32904e1b8c7259f4fdf97ea8ac506990c40b2721cce1e0",
+    "skills/xlsx/references/management-policy.md": "232c736016c79ac067c6d801f7468d41b42099cee844064aa0f996be6c5be03f",
+    "skills/xlsx/references/management-reconciliation.md": "899e94a373ba55ff74c8e4c718841a0c3f52ccad11c63b4bacf002acf03e8313",
+    "skills/xlsx/references/management-wide.md": "9391fc07c4b88927cb48b035794196932ee2ec13e799763a7e3bd5e21a0c5738",
+    "skills/xlsx/references/maturity-distribution.md": "7b0c9307123690801ec2b05a7d47e9f52f9778729543fbe5aeadbc1382d66eac",
+    "skills/xlsx/references/multi-level-headers.md": "8013387d1ee5e3cea2b5aacff3aec5d1aa9969808c6322f08865eed8f4246609",
+    "skills/xlsx/references/period-comparison.md": "faa02dc83a692065525d01e68f72298afd974ae32321b3b1d1fe21b3750a3f39",
+    "skills/xlsx/references/rank-share.md": "beff9d2201ccc68f248c907d66cddf190733f42c50a49571c6dcda9a85502daa",
+    "skills/xlsx/references/result-export.md": "48701b03897e82f02179828c65036811741f67a5f96797850001fef3f08b7b61",
+    "skills/xlsx/references/row-processing.md": "53dda8cc4a1bb747d3f0e1617ca011bba81a6dacb2f8e9c8ad9f6aad38ae3df2",
+    "skills/xlsx/references/table-matching.md": "ac3f42af44d361bfe5b1c4dfaec7197c04a9916d79aaf73545ca11deab0090de"
+  },
+  "versions": {
+    "docx": "20261107.1831.2979",
+    "et": "20261107.1830.1351",
+    "wps": "20261107.1831.2979",
+    "xlsx": "20261107.1830.1351",
+    "bank-writing": "20261107.1831.2979",
+    "artifact-lifecycle": "20261107.1831.2979"
+  },
+  "git_head_after": "55e9d202148aacb3050b33bd465ef948c708aac1",
+  "diff_check_exit": 0,
+  "protected_preexisting_still_present": {
+    ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/": true,
+    "tests/skill_standards_audit_20261105.json": true,
+    "tests/test_script_migration_20261105.json": true
+  },
+  "summary": {
+    "suite_processes": 27,
+    "passed_processes": 27,
+    "failed_processes": 0,
+    "tests_reported_total": 2279,
+    "skipped": 0,
+    "additional_nested_budget_tests": 14,
+    "count_note": "2279 reported test executions include two budget wrappers; 14 nested budget executions are separately noted and not added. Counts are executions, not asserted unique test semantics.",
+    "unresolved_runtime_failures": []
+  },
+  "independent_acceptance": {
+    "path": "tests/deepagents_adaptation_acceptance_details.json",
+    "sha256": "5cd5c5a9d773c7c61e18aa70c69d87e35bbbc7b865bcaeafd247c3cd6bcb32c4",
+    "summary": {
+      "verified_passed": "Six strict isolated clean copies; independent readonly runtime selfchecks; real default reads; WPS 192 pages; ET 18 pages /343 unique cells; DOCX 3 pages/3 blocks and source/options rejection; independent ET frozen oracles; XLSX 28 numeric cells independently matched; synthetic generation/readback; task-local archive/conflict",
+      "expected_refusals": "Too-small budgets preserve complete diagnostics; wrong-format routes; invalid cursor/source/options; invalid generation",
+      "corrected_initial_probe_errors": {
+        "archive_success": "invalid commonParam object corrected to documented list; successful archive",
+        "archive_conflict": "same invalid initial config; corrected config verifies conflict",
+        "et_analysis_bounded": "nonexistent sheet 1 corrected to actual source sheet name"
+      },
+      "unresolved_runtime_failures": [],
+      "not_verified": [
+        "Linux, Windows, real Deep Agents/provider usage and cloud storage unverified",
+        "WPS real samples have provenance/hash checks, not independent full semantic oracle",
+        "Generated outputs are synthetic, not real-format semantic evidence",
+        "XLSX generated content readback executed but independent exact value assertion not added in this run",
+        "Bank-writing routing manually inspected, no live host model routing experiment",
+        "First runner generation used invalid local router configuration and safely skipped archive; lifecycle archive separately rerun with valid configuration",
+        "ET analysis continuation not exhaustively traversed by this supplemental CLI check; complete ET read pagination covered"
+      ],
+      "case_outcomes": {
+        "passed": 229,
+        "expected_budget_rejection": 4,
+        "refused": 13,
+        "corrected_test_configuration": 3
+      },
+      "source_and_originals_preserved": true,
+      "all_owned_temp_directories_removed": true
+    }
+  },
+  "snapshot_checks": {
+    "runtime_loading_profiles.json": {
+      "exit_code": 0,
+      "status": "fresh",
+      "issue_count": 0,
+      "sha256": "560f7ccee8f2c1acf576565fe32cdebefee05c6f51ece89a4b2f498934fdb053"
+    },
+    "runtime_loading_profiles_history_20261107.json": {
+      "exit_code": 1,
+      "status": "stale",
+      "issue_count": 301,
+      "sha256": "aea64b2970ccd3c46043d8b0656d34080d302e2731c37c45253daf9b67e840cd"
+    }
+  },
+  "selection_evidence": {
+    "kind": "human_authored_expectations_not_model_or_host_measurement",
+    "current_cases": 31,
+    "catalog_size": 10,
+    "real_model_selection": "not_measured"
+  },
+  "source_hashes_reverified_after_all_checks": true,
+  "completed_utc": "2026-11-07T11:42:36.232524+00:00"
+}

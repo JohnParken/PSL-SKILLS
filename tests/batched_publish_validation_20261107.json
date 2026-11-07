@@ -1,0 +1,1381 @@
+{
+  "checked_utc": "2026-11-07T13:46:54Z",
+  "scope": "Final combined source validation and per-batch exact-index checks for authorized Git publication. This evidence is recorded before the final evidence commit/push; remote results must be checked separately.",
+  "base_head": "55e9d202148aacb3050b33bd465ef948c708aac1",
+  "validated_skills_tree": "0cd453035f60e6b4c60bb182025a479f618cbb47",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+  "summary": {
+    "suite_processes": 28,
+    "tests_reported": 2282,
+    "failures": [],
+    "skipped": 0
+  },
+  "tests": {
+    "skill-docx": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/docx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 417,
+      "skipped": 0,
+      "seconds": 17.728,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "aa5964287895e401df3c960ee5cfd64fbafe7ef129212ce6fc77131373fa725c"
+    },
+    "skill-et": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/et/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 480,
+      "skipped": 0,
+      "seconds": 5.09,
+      "stdout_sha256": "b2bc81ed4abba0b90443fbc20eb5d80085fd284343c0a4cf67501bf57e3c56e7",
+      "stderr_sha256": "2239f644bff24caf2ae1f736b67f28dcf647d7a06ccc5ba6b42e2b9e2405fcfa"
+    },
+    "skill-wps": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/wps/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 441,
+      "skipped": 0,
+      "seconds": 5.152,
+      "stdout_sha256": "d014f4a34eb886f0678051b85b440fbbfb8af57f1ae4402fcd36becb78d75495",
+      "stderr_sha256": "a5d62a478bcfafe9466418cdd28f0c56fea408ddcdad28debc2ddcf7184cd5f2"
+    },
+    "skill-xlsx": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/xlsx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 396,
+      "skipped": 0,
+      "seconds": 13.405,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "58e4ea3a57567b9d4f5761319531f43af665d0874bd8a0e21a8e942925f235fe"
+    },
+    "skill-artifact-lifecycle": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/artifact-lifecycle/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 16,
+      "skipped": 0,
+      "seconds": 0.103,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "6cb102900f41b3f28ff7722febc212a42dfbf3eda0e00d742c6025c46274e855"
+    },
+    "skill-ofd": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/ofd/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 150,
+      "skipped": 0,
+      "seconds": 1.217,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "c48a8fc00bd33e353bf3e18902e138c906972df42887b480198cef9d6d637be8"
+    },
+    "skill-pptx": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/pptx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 99,
+      "skipped": 0,
+      "seconds": 10.497,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "18e9f2194610414fd6606128444f61821375cf1a62ffca28b60ee029033b4dbf"
+    },
+    "skill-skill-development-standards": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/skill-development-standards/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 31,
+      "skipped": 0,
+      "seconds": 0.156,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "8454153a04089e9e80c6f5696625865815ce3469929b9872f9842ee4c8af4a3a"
+    },
+    "repo-test_archive_notice_contract": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_archive_notice_contract.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 3,
+      "skipped": 0,
+      "seconds": 0.214,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "64d48eef3f34907aa5c2f76c693ce87a57a274e4133b337af9e7ac36f7dd3bcc"
+    },
+    "repo-test_artifact_lifecycle_parity": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_artifact_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.027,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "445221b98f22d14309aaea4fee1a9f41c9659ced4c922d71fbc0dcbbde571045"
+    },
+    "repo-test_check_execution": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_check_execution.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 12,
+      "skipped": 0,
+      "seconds": 0.724,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "422234e95d894619abb8f367efcbc00deee88ccd0bc7238267f9de2d39e2d649"
+    },
+    "repo-test_complex_json_templates": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_complex_json_templates.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 7,
+      "skipped": 0,
+      "seconds": 2.075,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "45a0e045d6af2574e08f68d7f391909d37e4292207d628ebfb488cf2ec4c8878"
+    },
+    "repo-test_read_view_budget": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_read_view_budget.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 2.801,
+      "stdout_sha256": "f628d30eb683984edbe9cb21da40e305876c0892812d9cea95b0356fa62d07d0",
+      "stderr_sha256": "1249b405f9d579beb808f3d0f6c9546bc23a535c053f58fb62d7fba199126fdb"
+    },
+    "repo-test_read_view_copy": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_read_view_copy.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 0.179,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "839abd8c52f8f8be708912ad80df0ad02d99d1a172eccbb8a2aa1fd91ab8a04f"
+    },
+    "repo-test_self_check_contracts": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_self_check_contracts.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 9,
+      "skipped": 0,
+      "seconds": 0.787,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "df39494b808e5c513df692d3853dba1608e360d3be48da2509d3f1ea4caf84f0"
+    },
+    "repo-test_skill_loading_benchmark": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_loading_benchmark.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 24,
+      "skipped": 0,
+      "seconds": 25.177,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "d171f6fe7849ce0f5e6612a5ffe0edf4c6597bbb1eecb7ab7939f9801d53bf09"
+    },
+    "repo-test_skill_selection_current": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_selection_current.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 6,
+      "skipped": 0,
+      "seconds": 0.032,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f7eadc47e1c00264ad4e27c90eb6707e02e8f03a8264bff3303b1aaa601fe83"
+    },
+    "repo-test_skill_test_runner": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_test_runner.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 5,
+      "skipped": 0,
+      "seconds": 0.148,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "13509727116728d8ef613c27c793aaafffb59df82f3f91530c1a77f538b8cdfb"
+    },
+    "repo-test_table_workflow": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 44,
+      "skipped": 0,
+      "seconds": 2.377,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a51eead87758076f3f80553eb574246d45081a1c027b1f8ce6ea62452d97dc6b"
+    },
+    "repo-test_table_workflow_cli_capabilities": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_cli_capabilities.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 75,
+      "skipped": 0,
+      "seconds": 16.229,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a730c63882f753b744f5e7c82963f3c9f77afa37573617ebe18522a6c4c9f13b"
+    },
+    "repo-test_table_workflow_large_tables": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_large_tables.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 7,
+      "skipped": 0,
+      "seconds": 4.093,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2782541ddab885976c73b1a93ac43647525391cca2d6a8045f2677d42775baa9"
+    },
+    "repo-test_table_workflow_names": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_names.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 4,
+      "skipped": 0,
+      "seconds": 0.036,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5afdca71f939b5e8fdd7208d1210934ea9a708b4c300cda27eef97261a81784d"
+    },
+    "repo-test_table_workflow_quality": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_quality.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 27,
+      "skipped": 0,
+      "seconds": 1.471,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "7972f2f7d64ae37f267d4b6f6f80262233a40cf8861c6cc751da40882cb52ea0"
+    },
+    "repo-test_table_workflow_review": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_review.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 17,
+      "skipped": 0,
+      "seconds": 1.891,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ef03a0c8eb405e9f0b1a2123830b7534a87d286f256d2db2f4d698f76fb6c438"
+    },
+    "repo-test_wps_docx_official_parity": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_docx_official_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 0.06,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2a50b4749107e50e3993c9a59df48e8d8cebd81e26a286e83bb83d7fe81b2d90"
+    },
+    "repo-test_wps_et_pipeline": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_et_pipeline.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 3,
+      "skipped": 0,
+      "seconds": 0.194,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a86791b94d23bc5b447ee905bd479ef67a18a1fe64521a646eb6e7d63e1a2f7f"
+    },
+    "repo-test_wps_lifecycle_parity": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.028,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+    },
+    "repo-test_xlsx_lifecycle_parity": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_xlsx_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.027,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+    },
+    "snapshot-current": {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tests/benchmark_skill_loading.py",
+        "--check-snapshot",
+        "tests/runtime_loading_profiles.json"
+      ],
+      "exit_code": 0,
+      "tests_reported": null,
+      "skipped": 0,
+      "seconds": 2.467,
+      "stdout_sha256": "92f551fb73c791f364fb70debaf822fce0a3cedbcb467e80161e2cdfceb9c5a0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "nested_budget_executions": 14,
+  "count_note": "Counts are executions, not unique semantic cases. Two wrappers in the total each run seven nested budget tests, noted separately.",
+  "strict": {
+    "strict-original-artifact-lifecycle": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-clean-artifact-lifecycle": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-bank-writing": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-clean-bank-writing": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-docx": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-clean-docx": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-et": {
+      "exit_code": 1,
+      "warnings": 70,
+      "errors": 0
+    },
+    "strict-clean-et": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-ofd": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-clean-ofd": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-pptx": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-clean-pptx": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-table-workflow": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-clean-table-workflow": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-wps": {
+      "exit_code": 1,
+      "warnings": 56,
+      "errors": 0
+    },
+    "strict-clean-wps": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-original-xlsx": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "strict-clean-xlsx": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  },
+  "strict_note": "Original WPS/ET failure is exclusively existing __pycache__/pyc warnings; clean-copy checks are separate and do not imply source cleanup.",
+  "independent_deployment": {
+    "scope": "Eight production-only Skill installs in separate parents, no tests/caches; read-only directories 0555 and files 0444; task directories separate. Eleven selfchecks including explicit XLSX/ET workflow dependencies. Full repo suite also exercised bound pagination independent copies and four archive distribution notice/real archive outcomes.",
+    "selfchecks": {
+      "docx": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "444c8c0f88e1439c24a37cfcb8cf5129442d78e5df9ee4fe5d951b089e094904"
+      },
+      "et": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "b2bc81ed4abba0b90443fbc20eb5d80085fd284343c0a4cf67501bf57e3c56e7"
+      },
+      "et-analysis": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "b2bc81ed4abba0b90443fbc20eb5d80085fd284343c0a4cf67501bf57e3c56e7"
+      },
+      "wps": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "d448329e27fffb4fddf933a167d1655e9bc5f11455f3a503f38d5690e1627718"
+      },
+      "wps-create": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "b214b09cda757727e900a3dabc1d0dfd974adb586600bd3c89d28b0398c413a9"
+      },
+      "xlsx": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "5d53881e71789f01dc9ca24e60809a0a6feb6084bc4a17d4aa5edc1070fe5a1b"
+      },
+      "artifact-lifecycle": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "a27e065745a3be06eca3133e8a4f8f1c344be72394c35523d4284abfd3af931d"
+      },
+      "ofd": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "9901f405d77023e1fa66b7088f981093664444026fb73914f59489adb1c17708"
+      },
+      "ofd-create": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "36320dfdf3e5fbaaa10a8bb74f09ce2e0592149f505eb3c73e6bdc5443198309"
+      },
+      "pptx": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "32c7b505ca3712a471c1a98de068b091986d9b838f534ca54ecd13c0fb26ea07"
+      },
+      "table-workflow": {
+        "exit_code": 0,
+        "stderr_empty": true,
+        "stdout_sha256": "6460eb973e8b7c31eadc61e19ac481a122949935960fa146b7db80f0f8d0ed5f"
+      }
+    },
+    "archive_contract": "Four independent read-only runtime distributions: 24 user-notice cases and 8 real archive outcomes per copy; original files preserved."
+  },
+  "batch_checks": [
+    {
+      "batch": 1,
+      "commit": "4cae8b3f8bb59f966331fef1dd495589c969b0b9",
+      "checks": [
+        {
+          "name": "docx-bounded",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "19b28d3bec4c4aed2b830be3797fa55c380c5c7c76594949c1158b14f00d1d4e"
+        },
+        {
+          "name": "et-budget",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "ddf7d418493ea87aec0d5e236544e3cfc312100cba9ca8831942b512913081ef"
+        },
+        {
+          "name": "read-view-budget",
+          "exit_code": 0,
+          "stdout_sha256": "e9b0cc93bd5a36331a0aeb995fd60140b06d34d814648ecd83bde4f4bc0bd7a7",
+          "stderr_sha256": "420281a1fe86ca9b0c9cfbf9ee8bd2d19a71a8c127d0d7ada23eea691126f86e"
+        },
+        {
+          "name": "read-view-copy",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "fbacb7e7ad55a35739ba07b68406dcae7939de03b4239cca3c7e921c194dc0bc"
+        },
+        {
+          "name": "strict",
+          "exit_code": 0,
+          "stdout_sha256": "5144a63733ca54bab833fece25fc05b974659f8830ed53795cef4c23eb06b5fe",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "batch": 2,
+      "commit": "d387e869ae61bf9147f297cc2ee254dcba339b89",
+      "checks": [
+        {
+          "name": "strict",
+          "exit_code": 0,
+          "stdout_sha256": "bc3e85d59d1bc90c5815297101ae8f2dbf6b2a3dcd13ec7c5e3549d4b9224cad",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "loading-baseline",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "2c128fb7a4799dc316da616c119a8e3eb9c5c3f4abbdfd62b75ff2daafeaa699"
+        }
+      ]
+    },
+    {
+      "batch": 3,
+      "commit": "a21b30a46d38fa4eb9a752c3739011b8cfe4dae6",
+      "checks": [
+        {
+          "name": "test_archive_notice_contract",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "816f939293d2d29bb3f36783eb45fd1a543f08ada6778160c7c18480678f6778"
+        },
+        {
+          "name": "test_artifact_lifecycle_parity",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "445221b98f22d14309aaea4fee1a9f41c9659ced4c922d71fbc0dcbbde571045"
+        },
+        {
+          "name": "test_wps_lifecycle_parity",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+        },
+        {
+          "name": "test_xlsx_lifecycle_parity",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+        },
+        {
+          "name": "test_archive_deliverables",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "22d69ce538ec230bdfb938ff614fc877ebd7bef3ca5649142d02814830de564b"
+        },
+        {
+          "name": "test_docx_compact_receipt",
+          "exit_code": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "e875abf6a7a40cfc98bba33c780de9b29e8394bff2aba08bc5d10289187dc8ee"
+        },
+        {
+          "name": "strict",
+          "exit_code": 0,
+          "stdout_sha256": "68c6feff0e72ab43e1b470c40ec6970794eba7c86b1fd999b472391bb6960f09",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "static_checks": {
+    "skills/docx/scripts/test/test_docx_bound_pages.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/et/scripts/et_output_page.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/et/scripts/test/test_et_output_budget.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "tests/test_archive_notice_contract.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "tests/test_read_view_copy.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "tests/test_skill_selection_current.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/artifact-lifecycle/scripts/archive_deliverables.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/docx/scripts/archive_deliverables.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/docx/scripts/read_docx.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/docx/scripts/test/test_archive_deliverables.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/docx/scripts/test/test_docx_compact_receipt.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/et/scripts/analyze_et.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/et/scripts/read_et.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/et/scripts/wps_read_view.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/table-workflow/scripts/table_workflow.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/wps/scripts/_wps_artifact_runtime/archive_deliverables.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/wps/scripts/read_wps.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/wps/scripts/wps_delivery.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/wps/scripts/wps_read_view.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "skills/xlsx/scripts/_artifact_runtime/archive_deliverables.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "tests/benchmark_skill_loading.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "tests/test_read_view_budget.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    },
+    "tests/test_skill_loading_benchmark.py": {
+      "ast": "passed",
+      "lines_over_200": [],
+      "semicolon_statements": []
+    }
+  },
+  "pylint": {
+    "status": "not_run",
+    "reason": "not installed on PATH or selected isolated interpreter; no packages installed"
+  },
+  "preservation": {
+    "original_tracked_and_untracked_files_unchanged_by_tests": true,
+    "all_preexisting_changes_preserved": true,
+    "intentional_followup_change": "README clarifies historical uncommitted/unpushed statements and links this publication evidence.",
+    "untracked_retained": [
+      ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/",
+      "tests/skill_standards_audit_20261105.json",
+      "tests/test_script_migration_20261105.json"
+    ],
+    "real_samples_added": false,
+    "release_zips_changed": false
+  },
+  "validated_final_file_sha256": {
+    "skills/docx/scripts/test/test_docx_bound_pages.py": "aae4a7e9682d6fa63eb9f4a59268a88d1bde130e3c69cd2b076c5a73decf08cf",
+    "skills/et/references/basic-statistics.md": "520f9deec8745921409a0fab42475eb71847401424aaae571b92ca2d7e008bab",
+    "skills/et/references/read-view-runtime.json": "7cb922128ef6463ebb8d36cd3cf391c11d6e8197c95991e8d6528d1436dac08d",
+    "skills/et/references/table-preview.md": "3490bf097bc770c8cb5bb9961a0548e6c8685d11e9dd4ed3bafae5360b40eb20",
+    "skills/et/scripts/et_output_page.py": "d6913e820a3d7e634063b5b825aa193925ca42ca449ddaa4b2dd59c85b53e662",
+    "skills/et/scripts/test/test_et_output_budget.py": "0090787bc5e6fd63ca0806a9aa2db0431befbfed0698a78e5c69b41d30864203",
+    "skills/wps/references/read-view-runtime.json": "7cb922128ef6463ebb8d36cd3cf391c11d6e8197c95991e8d6528d1436dac08d",
+    "skills/xlsx/references/analysis-contract.md": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+    "tests/archive_notice_validation_20261107.json": "8cda2da6f07f7122539d3ec770439fafae11c0feea29b80580c7a5dc62dfd70c",
+    "tests/deepagents_adaptation_acceptance_details.json": "5cd5c5a9d773c7c61e18aa70c69d87e35bbbc7b865bcaeafd247c3cd6bcb32c4",
+    "tests/deepagents_adaptation_validation.json": "0e3977701423abb58f7556af1abf88e5d6b6d2b075a8e7b0583569d413813520",
+    "tests/runtime_loading_profiles_before_archive_notice_20261107.json": "560f7ccee8f2c1acf576565fe32cdebefee05c6f51ece89a4b2f498934fdb053",
+    "tests/runtime_loading_profiles_history_20261107.json": "aea64b2970ccd3c46043d8b0656d34080d302e2731c37c45253daf9b67e840cd",
+    "tests/skill_selection_current_cases.json": "a55cca7ed624f1b938033cf17425c685685987bda708b3faba6b270527d645b7",
+    "tests/test_archive_notice_contract.py": "0c9627ef146464c7d7289ce0b376d161ea82b68263fdfb6ddc98c9d3ef38c53b",
+    "tests/test_read_view_copy.py": "0e3697b88ab7f6e1432784b6b29e073de0230fcd765e958140650adbe35edc4f",
+    "tests/test_skill_selection_current.py": "bb5be582515c1094e84bba91865ea6d832bb7e11d75b3dec1eff77a8288e88b8",
+    "AGENTS.md": "3a7502620524f31d7e09547084d94179e1ea081ebc130a02a3ec697a59bf6a59",
+    "README.md": "775b80e5f70983a0efc1d398befd0380d2a670d7a20de20c8832400ca40d4ace",
+    "docs/skills/artifact-lifecycle.md": "7bb3bb43afaf757397d5a79b2547ae6f7df26b1071181e0e8c438243d6bdfc19",
+    "docs/skills/bank-writing.md": "4a2c13145384f5fbf5aa2d8b397d1536eae8fc82ff82a662f65c802bc5a34a06",
+    "docs/skills/docx.md": "2eda5ff191e9429ab737c4201a325d83d8fc8d7d7d3cdebb74f1e7a823215a94",
+    "docs/skills/et.md": "25d5e410cabdfc489af7a312d367938408706192a2393bb910e60f2868f7aac5",
+    "docs/skills/ofd.md": "017566d43e0f655dfa622565154754e40b07de5201a77d8e0bc059a7cd1838ad",
+    "docs/skills/pptx.md": "592a63bf338160301d9789fca38dc023857d039363d8d464f394803aab61ecc4",
+    "docs/skills/table-workflow.md": "e9e31d6cf4e14847f568c894f368e4545aab13fcd1bee1e41b64bfee1a10047f",
+    "docs/skills/wps.md": "adb96a8bd6cef13721dd713bd0ecbb0e39a2a1ddba5ddb39313a2fecd29cb8f8",
+    "docs/skills/xlsx.md": "cd775d3fa3ea00e0cc0f78b21df6db42a425244deb0ecec6b49ac17caee11954",
+    "skills/artifact-lifecycle/SKILL.md": "c7ac7798ca03eb36b8024ea569056e75670cb4f164b48897ff495e0856cd1a87",
+    "skills/artifact-lifecycle/references/contract.md": "b6e28714fa8bb911e5f3bbce6e057a8f4964843788d194c6247c0470d2531b9e",
+    "skills/artifact-lifecycle/references/reuse.md": "ccfa05a461738080ed7f6038923274862b0b7c16c01c74e129b616886f2ba533",
+    "skills/artifact-lifecycle/references/upstream.json": "ca0bb443a80d713e0bcbf626dca9e4be448eb84965b8ab8a84214bd5ea91181c",
+    "skills/artifact-lifecycle/scripts/archive_deliverables.py": "92e282779d79e615cbb84759140fd82a7f11f004538a751d96551da64163cbb3",
+    "skills/bank-writing/SKILL.md": "92be42eb040ccb3c6591499728a27d9946b47d37fcfbba7f3c2b312d5d669415",
+    "skills/bank-writing/references/docx-handoff.md": "1658777e5e309dc2bc8b6629bb7d93f93d35e8526b4ec3063ca94428471fed84",
+    "skills/docx/SKILL.md": "68c56e4708f8213699328099a5a205d3a8c58491d49b23e7f58a949556f01617",
+    "skills/docx/references/delivery.md": "612a9800d95fbaa14eb18d0edc5f2cb925b8f5a3c88d230fa12f13cdcdf8fa8a",
+    "skills/docx/references/inspection.md": "3915fe54540c5fd983ae93a2c229837a89e4901e1132ab1f8baa3022ab9c487c",
+    "skills/docx/scripts/archive_deliverables.py": "212b72da3d78f3258c5635c68d409403c976bdd5cfc72906e6e47c0021a45393",
+    "skills/docx/scripts/read_docx.py": "a2b96959bc541d4ff082291e9bd573341ee31911ec8af5eeacedeed3a4b2ad27",
+    "skills/docx/scripts/test/test_archive_deliverables.py": "c5b28727137bb536848bf32c0fa66d4aa71875f4513f301b82ab0b0446508b20",
+    "skills/docx/scripts/test/test_docx_compact_receipt.py": "5a25e79f7b20ed3ba23a7d0b056c94d96ef180db74d88754efb3cfac1bfed858",
+    "skills/et/SKILL.md": "ab8ba2c109be630f8c53ca1b807228393138def1ae489922f5924d3249572540",
+    "skills/et/references/bounded-reading.md": "e469a6aff7bbac70f20a2ab842cd2d0837423ba708c998fe97b7ea7374df68c6",
+    "skills/et/references/table-analysis.md": "5209653aa55ace0eaf56505534f2fc2f12667cd31d58b99e336201dd362ddaf8",
+    "skills/et/scripts/analyze_et.py": "30a436bda19b44921966b76cd61c775ed9972378ff6686ffc7eb7e8b6e65f5f2",
+    "skills/et/scripts/read_et.py": "14be60bb8e10fbbb6a6d282c0f4a84c7e1cd591da6e8064106e9f3511fe844c6",
+    "skills/et/scripts/wps_read_view.py": "7fe372eed98ed89c9b430552e2c73efd5a292bbd94465ffc3ae06482175deab1",
+    "skills/ofd/SKILL.md": "8d9ddff43d93656160f290fe64531c31b8a2dddcbd23abb0aa3aeae936e91a89",
+    "skills/ofd/references/generation.md": "29b94a9191274994a84757a89ee6e9ea2b0c2eb4d36bc5e3a66023589ffb51d3",
+    "skills/pptx/SKILL.md": "98a193364ffc60788c5239ad88bb497c48a7bb6b290cd3b1475b5d92e2904b4d",
+    "skills/table-workflow/SKILL.md": "0823020968528fc9f8531f420a5c37f6440c74c5d46ebce74d3af3aee77afd8f",
+    "skills/table-workflow/scripts/table_workflow.py": "0731670a8ce16e7caa3f930622cb379fc51415c97bc35befc96657ee66b35ce3",
+    "skills/wps/SKILL.md": "2ffd69ddd154d2f858600791e27b9957af4b7ef59c2cbd70ff1bfaf116231b8e",
+    "skills/wps/references/bounded-reading.md": "f7d3e970cf3a9fe9886d72c12556fd7e8bfdd5e5563cbe99ba481e1b6216c52c",
+    "skills/wps/references/delivery.md": "f60b9c116addd004601910edeaad30c25665c8f3e72b84cde11f2cb09a98ec4a",
+    "skills/wps/references/lifecycle-upstream.json": "c0641a3bbcbdb34ad6f67d66c485600c15c4122e3e1544a9e1fbefe6e37a461e",
+    "skills/wps/scripts/_wps_artifact_runtime/archive_deliverables.py": "5c271d57de2c1059daefcee87939cb29ef1e2bcec120fd60bf804f04640c945e",
+    "skills/wps/scripts/read_wps.py": "e49d84c33da25aa9c11bc630c989721693ea5094def10a5247a648c8c011b94f",
+    "skills/wps/scripts/wps_delivery.py": "a9628efcf61e28e5212280c477f1c7d6ada8b121a78afc89c78083fb61991e12",
+    "skills/wps/scripts/wps_read_view.py": "7fe372eed98ed89c9b430552e2c73efd5a292bbd94465ffc3ae06482175deab1",
+    "skills/xlsx/SKILL.md": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+    "skills/xlsx/references/advanced-statistics.md": "9f8fb8c7f005c7f9bd0e762376ca75282685b82128463a4f62abdd2da7e40a49",
+    "skills/xlsx/references/customer-structure.md": "62e495adc579dbf41c7f3ec0e95ab47f726c194fde1ec0d84d66812063f2dc5a",
+    "skills/xlsx/references/daily-analysis.md": "a743439a6bec90a3580f603931b354e8ad70fa6b42147af1c9f8accfe6038163",
+    "skills/xlsx/references/data-analysis.md": "45115e20e4c3d0ab3e6218eade58f0ffc5169a90d746cf0b8543bb386eab8fe9",
+    "skills/xlsx/references/delivery-lifecycle.md": "7124ea3eb9c918ebd5ed18a08f6f0459705a2234a9942c92e4b0ea64a500a253",
+    "skills/xlsx/references/deposit-analysis.md": "7a5e16f813696a5430cbe3d251f1341c7ca431fc4e9f62605ece995b63774866",
+    "skills/xlsx/references/header-candidates.md": "334961bddb43df407793be4108822c8c0c3241e1a919561a633f4f774d448a16",
+    "skills/xlsx/references/institution-hierarchy.md": "df96163329deb19e6674006a2cfe52a086ce5bbda63d594926af20fe926197b1",
+    "skills/xlsx/references/lifecycle-upstream.json": "eb243bbb4284d9fe62059151cc484d016dbb15f491a4b1f7450cd2e5eefc5c2c",
+    "skills/xlsx/references/management-dashboard.md": "31d566434596adb88e32904e1b8c7259f4fdf97ea8ac506990c40b2721cce1e0",
+    "skills/xlsx/references/management-policy.md": "232c736016c79ac067c6d801f7468d41b42099cee844064aa0f996be6c5be03f",
+    "skills/xlsx/references/management-reconciliation.md": "899e94a373ba55ff74c8e4c718841a0c3f52ccad11c63b4bacf002acf03e8313",
+    "skills/xlsx/references/management-wide.md": "9391fc07c4b88927cb48b035794196932ee2ec13e799763a7e3bd5e21a0c5738",
+    "skills/xlsx/references/maturity-distribution.md": "7b0c9307123690801ec2b05a7d47e9f52f9778729543fbe5aeadbc1382d66eac",
+    "skills/xlsx/references/multi-level-headers.md": "8013387d1ee5e3cea2b5aacff3aec5d1aa9969808c6322f08865eed8f4246609",
+    "skills/xlsx/references/period-comparison.md": "faa02dc83a692065525d01e68f72298afd974ae32321b3b1d1fe21b3750a3f39",
+    "skills/xlsx/references/rank-share.md": "beff9d2201ccc68f248c907d66cddf190733f42c50a49571c6dcda9a85502daa",
+    "skills/xlsx/references/result-export.md": "48701b03897e82f02179828c65036811741f67a5f96797850001fef3f08b7b61",
+    "skills/xlsx/references/row-processing.md": "53dda8cc4a1bb747d3f0e1617ca011bba81a6dacb2f8e9c8ad9f6aad38ae3df2",
+    "skills/xlsx/references/table-matching.md": "ac3f42af44d361bfe5b1c4dfaec7197c04a9916d79aaf73545ca11deab0090de",
+    "skills/xlsx/scripts/_artifact_runtime/archive_deliverables.py": "5c271d57de2c1059daefcee87939cb29ef1e2bcec120fd60bf804f04640c945e",
+    "tests/benchmark_skill_loading.py": "1d8d064fc763178baa1976508906fe42a869c31b6e729d6459e252d06df2c5e4",
+    "tests/runtime_loading_profiles.json": "46aca79a4910a7b9080735a4932a163bbef3afc72616312dfd77a00cf4033136",
+    "tests/skill_loading_benchmark.md": "6b1dbc4d4501bf212e53caf03a2876d293caa658f5b58ee136c5dd5bcb8bab39",
+    "tests/test_read_view_budget.py": "6aa297831f58b56591957ca38a2c1fc2a66d26ef51916ebfdc74ac36a04d3125",
+    "tests/test_skill_loading_benchmark.py": "582381a5a3b8edfab1f70cbf65312e869f8b110393cd0418f4480fa6f0c4d61f"
+  },
+  "limitations": [
+    "macOS only; Linux and Windows not executed",
+    "No host upload, cloud visibility, real host model routing, provider token usage, or Office visual verification",
+    "Existing caches and unrelated untracked files preserved; no release ZIP replacement",
+    "No new real sample semantic or Office visual acceptance; earlier real-sample evidence stays historical.",
+    "Existing CI workflows run on pull requests or manual dispatch, not pushes; remote check status is not established by local test success."
+  ],
+  "temporary_cleanup": "Only this task-owned validation directory will be removed after publication verification; original unknown files and caches are preserved.",
+  "final_precommit_rerun": {
+    "completed_utc": "2026-11-07T13:54:30Z",
+    "tests_reported": 2282,
+    "failed_processes": 0,
+    "skipped": 0,
+    "source_hashes_unchanged": true,
+    "checks": {
+      "skill-docx": {
+        "exit_code": 0,
+        "tests_reported": 417,
+        "skipped": 0,
+        "seconds": 17.85,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "b703f87bf207d840c3c3a823c1eb5dd585b9e237422c976d7caa42a76bcaf1dc"
+      },
+      "skill-et": {
+        "exit_code": 0,
+        "tests_reported": 480,
+        "skipped": 0,
+        "seconds": 5.102,
+        "stdout_sha256": "b2bc81ed4abba0b90443fbc20eb5d80085fd284343c0a4cf67501bf57e3c56e7",
+        "stderr_sha256": "d46bca16a3c56230f41633b7e2f5db671b7b6a72f06bf46d27a0b258f8f4bebb"
+      },
+      "skill-wps": {
+        "exit_code": 0,
+        "tests_reported": 441,
+        "skipped": 0,
+        "seconds": 5.202,
+        "stdout_sha256": "d014f4a34eb886f0678051b85b440fbbfb8af57f1ae4402fcd36becb78d75495",
+        "stderr_sha256": "f599fb3f4f67e38acf6bcaea9b3adcfe9f5eab8a5369d1ff579824d95126ec26"
+      },
+      "skill-xlsx": {
+        "exit_code": 0,
+        "tests_reported": 396,
+        "skipped": 0,
+        "seconds": 13.413,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "a3dbe497cc124e28d9b0dda626e91c527772f8c43efd475581f766f92cb761c3"
+      },
+      "skill-artifact-lifecycle": {
+        "exit_code": 0,
+        "tests_reported": 16,
+        "skipped": 0,
+        "seconds": 0.103,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "6cb102900f41b3f28ff7722febc212a42dfbf3eda0e00d742c6025c46274e855"
+      },
+      "skill-ofd": {
+        "exit_code": 0,
+        "tests_reported": 150,
+        "skipped": 0,
+        "seconds": 1.223,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "a931634cce0b2719413773acaf47a6f609a3474096292c0c048f053af78e48c4"
+      },
+      "skill-pptx": {
+        "exit_code": 0,
+        "tests_reported": 99,
+        "skipped": 0,
+        "seconds": 10.564,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "77b713126bbd6a4a843942f699bb7e26eadb290fb1c5cedc5ac6d3b5715c6786"
+      },
+      "skill-skill-development-standards": {
+        "exit_code": 0,
+        "tests_reported": 31,
+        "skipped": 0,
+        "seconds": 0.155,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "0591c8cf96cdae32213a2aacf5a4b735b1b3c6d22eb9f929bbb7d9f3c43e2bf8"
+      },
+      "repo-test_archive_notice_contract": {
+        "exit_code": 0,
+        "tests_reported": 3,
+        "skipped": 0,
+        "seconds": 0.214,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "64d48eef3f34907aa5c2f76c693ce87a57a274e4133b337af9e7ac36f7dd3bcc"
+      },
+      "repo-test_artifact_lifecycle_parity": {
+        "exit_code": 0,
+        "tests_reported": 1,
+        "skipped": 0,
+        "seconds": 0.028,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "445221b98f22d14309aaea4fee1a9f41c9659ced4c922d71fbc0dcbbde571045"
+      },
+      "repo-test_check_execution": {
+        "exit_code": 0,
+        "tests_reported": 12,
+        "skipped": 0,
+        "seconds": 0.728,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "f7ee8fa6d4981eb67c804408b8389066fadf1b518d3bc2f7bab9bee10429caa2"
+      },
+      "repo-test_complex_json_templates": {
+        "exit_code": 0,
+        "tests_reported": 7,
+        "skipped": 0,
+        "seconds": 2.096,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "74c3f012a94c5639abb8725283a202972a735e8487b46c7bc968c04bb0481699"
+      },
+      "repo-test_read_view_budget": {
+        "exit_code": 0,
+        "tests_reported": 2,
+        "skipped": 0,
+        "seconds": 2.976,
+        "stdout_sha256": "c41df54a5b4b403c1f2b8e89bdb2ce4fefec3efa8d2cddf96a923d9fe8182f45",
+        "stderr_sha256": "0c62df79e6051a42cb9842ff6f39aca70f473df14dcaddc47937257a0516b4da"
+      },
+      "repo-test_read_view_copy": {
+        "exit_code": 0,
+        "tests_reported": 2,
+        "skipped": 0,
+        "seconds": 0.183,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "1f20c9dce3f68fe61c0fc6dd75419e964ef1ddf9740344626a5a84a354105de6"
+      },
+      "repo-test_self_check_contracts": {
+        "exit_code": 0,
+        "tests_reported": 9,
+        "skipped": 0,
+        "seconds": 0.802,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "5776b87b6cc005fc59ab3829574799b8cff324c2d9e13150ab9e68661272e2b3"
+      },
+      "repo-test_skill_loading_benchmark": {
+        "exit_code": 0,
+        "tests_reported": 24,
+        "skipped": 0,
+        "seconds": 25.355,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "0ef6ca064b4b73e59704d33da97fc41021820d2826c7f239d23ba6154cc6fdb0"
+      },
+      "repo-test_skill_selection_current": {
+        "exit_code": 0,
+        "tests_reported": 6,
+        "skipped": 0,
+        "seconds": 0.031,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "5f7eadc47e1c00264ad4e27c90eb6707e02e8f03a8264bff3303b1aaa601fe83"
+      },
+      "repo-test_skill_test_runner": {
+        "exit_code": 0,
+        "tests_reported": 5,
+        "skipped": 0,
+        "seconds": 0.151,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "4a415cb009bdd451c710023f7cbfe340aac8b78ba22df0142dd057aadf68fec3"
+      },
+      "repo-test_table_workflow": {
+        "exit_code": 0,
+        "tests_reported": 44,
+        "skipped": 0,
+        "seconds": 2.402,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "3dcac62a19ef7c47a4901b01822e3e2408e0990f08dd9257117fbcc9e1b0f117"
+      },
+      "repo-test_table_workflow_cli_capabilities": {
+        "exit_code": 0,
+        "tests_reported": 75,
+        "skipped": 0,
+        "seconds": 16.408,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "834818c5c872fdb0b4b8b7fedd12f5c7b2565f3ade783d5c2d6e136e9af785df"
+      },
+      "repo-test_table_workflow_large_tables": {
+        "exit_code": 0,
+        "tests_reported": 7,
+        "skipped": 0,
+        "seconds": 4.073,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "2f0d4944cc41e714302670ec0bd5e9dafa9f27561520aa033dd6dbc7de6d83f7"
+      },
+      "repo-test_table_workflow_names": {
+        "exit_code": 0,
+        "tests_reported": 4,
+        "skipped": 0,
+        "seconds": 0.037,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "5afdca71f939b5e8fdd7208d1210934ea9a708b4c300cda27eef97261a81784d"
+      },
+      "repo-test_table_workflow_quality": {
+        "exit_code": 0,
+        "tests_reported": 27,
+        "skipped": 0,
+        "seconds": 1.484,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "6f1f7f29a508114344266afc7409a891f30d0fea75890ab6d7a04b02ee1c3b31"
+      },
+      "repo-test_table_workflow_review": {
+        "exit_code": 0,
+        "tests_reported": 17,
+        "skipped": 0,
+        "seconds": 1.918,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "2bb69a4039b22781627ce739df359db5be58766c2701edda61121e77db1c8612"
+      },
+      "repo-test_wps_docx_official_parity": {
+        "exit_code": 0,
+        "tests_reported": 2,
+        "skipped": 0,
+        "seconds": 0.061,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "2a50b4749107e50e3993c9a59df48e8d8cebd81e26a286e83bb83d7fe81b2d90"
+      },
+      "repo-test_wps_et_pipeline": {
+        "exit_code": 0,
+        "tests_reported": 3,
+        "skipped": 0,
+        "seconds": 0.195,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "3833a41696775bd88c3e7a9a595e957b488a88accbb9a49a5382c07dab50007c"
+      },
+      "repo-test_wps_lifecycle_parity": {
+        "exit_code": 0,
+        "tests_reported": 1,
+        "skipped": 0,
+        "seconds": 0.03,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+      },
+      "repo-test_xlsx_lifecycle_parity": {
+        "exit_code": 0,
+        "tests_reported": 1,
+        "skipped": 0,
+        "seconds": 0.028,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+      },
+      "snapshot-current": {
+        "exit_code": 0,
+        "tests_reported": null,
+        "skipped": 0,
+        "seconds": 2.494,
+        "stdout_sha256": "92f551fb73c791f364fb70debaf822fce0a3cedbcb467e80161e2cdfceb9c5a0",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  }
+}

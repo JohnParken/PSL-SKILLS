@@ -131,6 +131,49 @@ CAPABILITY_CHANGES = {
 }
 
 
+# Final entry routes: a plan, not evidence of actual host selection or caching.
+PROFILES['xlsx-summary'] = (PROFILES['xlsx-summary'][0], ['xlsx/SKILL.md'])
+PROFILES['mixed-format-read'] = (PROFILES['mixed-format-read'][0],
+                                  ['xlsx/SKILL.md', 'et/SKILL.md', 'et/references/bounded-reading.md', 'wps/SKILL.md'])
+SCENARIOS['xlsx-summary'] = 'Structure-only native XLSX summary using the complete entry command; no cell values or pagination.'
+
+for _name, _reference in {
+    'et-header-preview': 'table-preview',
+    'et-direct-statistics': 'basic-statistics',
+}.items():
+    PROFILES[_name] = (PROFILES[_name][0], ['et/SKILL.md', f'et/references/{_reference}.md'])
+PROFILES['mixed-pptx-et-read'] = (PROFILES['mixed-pptx-et-read'][0],
+                                  ['pptx/SKILL.md', 'et/SKILL.md', 'et/references/basic-statistics.md'])
+PROFILES['et-complex-query'] = (['et/SKILL.md', 'et/references/table-analysis.md'],
+                                ['et/SKILL.md', 'et/references/table-analysis.md'])
+SCENARIOS['et-complex-query'] = 'Explicit filtering, grouping and sorting query; retain source partial and query semantics.'
+SPECIALIZED_REFERENCES = (
+    'maturity-distribution', 'customer-structure', 'deposit-analysis', 'management-policy',
+    'management-reconciliation', 'management-dashboard', 'management-wide', 'institution-hierarchy',
+    'daily-analysis', 'rank-share', 'advanced-statistics', 'period-comparison', 'table-matching',
+    'row-processing', 'header-candidates', 'multi-level-headers', 'result-export',
+)
+for _reference in SPECIALIZED_REFERENCES:
+    _required = [f'xlsx/references/{_reference}.md']
+    if _reference == 'institution-hierarchy':
+        _required += ['xlsx/references/management-wide.md']
+    if _reference == 'result-export':
+        _required += ['xlsx/references/task-delivery.md']
+    PROFILES['xlsx-specialized-' + _reference] = (
+        ['xlsx/SKILL.md', 'xlsx/references/data-analysis.md'] + _required,
+        ['xlsx/SKILL.md', 'xlsx/references/analysis-contract.md'] + _required,
+    )
+    SCENARIOS['xlsx-specialized-' + _reference] = (
+        f'Explicit {_reference} task using existing inputs/configuration; no optional export or formula recalculation. '
+        'Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.'
+    )
+CAPABILITY_CHANGES.update({
+    'et-header-preview': 'Baseline supports preview, but not the new bounded output cursor/budget; file-size changes do not prove feature-equivalent savings.',
+    'et-direct-statistics': 'Baseline supports regional statistics, but not the new bounded output cursor/budget; statistics correctness is tested separately.',
+    'et-complex-query': 'Baseline supports queries, but not the new bounded output cursor/budget.',
+})
+
+
 def validate_name(name):
     if not isinstance(name, str):
         raise ValueError('profile paths must be strings')
@@ -213,7 +256,8 @@ def build_report(baseline=BASELINE, encoder=None, tokenizer=None):
                               before=before, after=after,
                               delta_after_minus_before={unit: None if after[unit] is None else after[unit] - before[unit]
                                                         for unit in ('chars', 'bytes', 'tokens', 'read_events')})
-    return dict(schema_version=2, method='planned reference read events, not observed model routing', baseline_commit=revision,
+    return dict(schema_version=3, benchmark_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                method='planned reference read events, not observed model routing', baseline_commit=revision,
                 after_source='working tree; per-file SHA256 recorded', platform=platform.system(), python=platform.python_version(),
                 tokenizer=tokenizer or dict(status='not_measured'), host_usage=dict(status='not_measured',
                 reason='No Deep Agents trace, provider usage or model-visible tool payload captured.'), profiles=profiles,
@@ -226,20 +270,64 @@ def build_report(baseline=BASELINE, encoder=None, tokenizer=None):
                              'Runtime output budgets, RPC counts and correctness require their separate regression reports.'])
 
 
+def check_snapshot(snapshot, baseline=BASELINE, encoder=None, tokenizer=None):
+    """Recompute both sides; snapshot content is evidence to check, not authority."""
+    issues = []
+
+    def compare(saved, current, path):
+        if type(saved) is not type(current):
+            issues.append(dict(path=path, reason='type_changed'))
+        elif isinstance(current, dict):
+            for key in sorted(saved.keys() - current.keys()):
+                issues.append(dict(path=f'{path}.{key}', reason='unexpected_field'))
+            for key in sorted(current.keys() - saved.keys()):
+                issues.append(dict(path=f'{path}.{key}', reason='missing_field'))
+            for key in sorted(current.keys() & saved.keys()):
+                compare(saved[key], current[key], f'{path}.{key}')
+        elif isinstance(current, list):
+            if len(saved) != len(current):
+                issues.append(dict(path=path, reason='length_changed'))
+            for index, (old, new) in enumerate(zip(saved, current)):
+                compare(old, new, f'{path}[{index}]')
+        elif saved != current:
+            issues.append(dict(path=path, reason='value_changed'))
+
+    try:
+        current = build_report(baseline, encoder, tokenizer)
+        if not isinstance(snapshot, dict):
+            raise ValueError('snapshot must be a JSON object')
+        # Environment records describe the original measurement, not file freshness.
+        excluded = {'platform', 'python'}
+        compare({k: v for k, v in snapshot.items() if k not in excluded},
+                {k: v for k, v in current.items() if k not in excluded}, 'snapshot')
+    except (ValueError, OSError, subprocess.CalledProcessError) as exc:
+        issues.append(dict(path='sources', reason='unavailable', detail=str(exc)))
+    return dict(status='stale' if issues else 'fresh', issues=issues,
+                scope='Current planned read sets, benchmark implementation and both-side file evidence; not observed host behavior.')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', default=BASELINE)
+    parser.add_argument('--check-snapshot', type=Path, help='Validate saved evidence against current plans and files; stale exits 1')
     parser.add_argument('--encoding', help='Optional installed tiktoken encoding; exact file token counts only')
     parser.add_argument('--tokenizer-cache', help='Existing offline tiktoken cache; never downloaded or modified')
     args = parser.parse_args()
     try:
         encoder, metadata = load_tokenizer(args.encoding, args.tokenizer_cache)
-        report = build_report(args.baseline, encoder, metadata)
+        if args.check_snapshot:
+            snapshot = json.loads(args.check_snapshot.read_text(encoding='utf-8'))
+            report = check_snapshot(snapshot, args.baseline, encoder, metadata)
+        else:
+            report = build_report(args.baseline, encoder, metadata)
     except (ValueError, OSError, ImportError, subprocess.CalledProcessError) as exc:
-        print(f'benchmark failed: {exc}', file=sys.stderr)
+        if args.check_snapshot:
+            print(json.dumps(dict(status='stale', issues=[dict(path='snapshot', reason='unreadable', detail=str(exc))])))
+        else:
+            print(f'benchmark failed: {exc}', file=sys.stderr)
         return 1
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0
+    return 1 if report.get('status') == 'stale' else 0
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
+  "benchmark_sha256": "1d8d064fc763178baa1976508906fe42a869c31b6e729d6459e252d06df2c5e4",
   "method": "planned reference read events, not observed model routing",
   "baseline_commit": "4b5a61f51d12d2a9d293898c2f862cbf7271dc8d",
   "after_source": "working tree; per-file SHA256 recorded",
@@ -58,7 +59,7 @@
       }
     },
     "xlsx-summary": {
-      "scenario": "Planned whole-file reads for the named operation.",
+      "scenario": "Structure-only native XLSX summary using the complete entry command; no cell values or pagination.",
       "baseline_capability_note": null,
       "behavior_validation": "not_measured_by_loading_benchmark",
       "before": {
@@ -92,26 +93,19 @@
             "bytes": 13728,
             "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
             "tokens": null
-          },
-          {
-            "path": "xlsx/references/bounded-reading.md",
-            "chars": 2573,
-            "bytes": 5491,
-            "sha256": "ce459e3cbd43a4f9d5311ff6ab85b1588e4fe9ca9cd3d84b6b11cff42d80ba7c",
-            "tokens": null
           }
         ],
-        "read_events": 2,
-        "unique_files": 2,
-        "chars": 10030,
-        "bytes": 19219,
+        "read_events": 1,
+        "unique_files": 1,
+        "chars": 7457,
+        "bytes": 13728,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -2801,
-        "bytes": -1534,
+        "chars": -5374,
+        "bytes": -7025,
         "tokens": null,
-        "read_events": 0
+        "read_events": -1
       }
     },
     "xlsx-static-create": {
@@ -748,13 +742,6 @@
             "tokens": null
           },
           {
-            "path": "xlsx/references/bounded-reading.md",
-            "chars": 2573,
-            "bytes": 5491,
-            "sha256": "ce459e3cbd43a4f9d5311ff6ab85b1588e4fe9ca9cd3d84b6b11cff42d80ba7c",
-            "tokens": null
-          },
-          {
             "path": "et/SKILL.md",
             "chars": 6843,
             "bytes": 14401,
@@ -776,17 +763,17 @@
             "tokens": null
           }
         ],
-        "read_events": 5,
-        "unique_files": 5,
-        "chars": 25840,
-        "bytes": 51720,
+        "read_events": 4,
+        "unique_files": 4,
+        "chars": 23267,
+        "bytes": 46229,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -5805,
-        "bytes": -6867,
+        "chars": -8378,
+        "bytes": -12358,
         "tokens": null,
-        "read_events": 0
+        "read_events": -1
       }
     },
     "repeated-create-cold": {
@@ -1746,7 +1733,7 @@
     },
     "et-header-preview": {
       "scenario": "Inspect a declared rectangular header area including blanks and merged anchors; do not infer header rows.",
-      "baseline_capability_note": null,
+      "baseline_capability_note": "Baseline supports preview, but not the new bounded output cursor/budget; file-size changes do not prove feature-equivalent savings.",
       "behavior_validation": "not_measured_by_loading_benchmark",
       "before": {
         "files": [
@@ -1781,29 +1768,29 @@
             "tokens": null
           },
           {
-            "path": "et/references/table-analysis.md",
-            "chars": 10326,
-            "bytes": 19874,
-            "sha256": "5209653aa55ace0eaf56505534f2fc2f12667cd31d58b99e336201dd362ddaf8",
+            "path": "et/references/table-preview.md",
+            "chars": 3085,
+            "bytes": 6323,
+            "sha256": "3490bf097bc770c8cb5bb9961a0548e6c8685d11e9dd4ed3bafae5360b40eb20",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 17169,
-        "bytes": 34275,
+        "chars": 9928,
+        "bytes": 20724,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1183,
-        "bytes": 2261,
+        "chars": -6058,
+        "bytes": -11290,
         "tokens": null,
         "read_events": 0
       }
     },
     "et-direct-statistics": {
       "scenario": "Call analyze_et for the complete declared region; output pages do not change statistics or quality denominators.",
-      "baseline_capability_note": null,
+      "baseline_capability_note": "Baseline supports regional statistics, but not the new bounded output cursor/budget; statistics correctness is tested separately.",
       "behavior_validation": "not_measured_by_loading_benchmark",
       "before": {
         "files": [
@@ -1838,22 +1825,22 @@
             "tokens": null
           },
           {
-            "path": "et/references/table-analysis.md",
-            "chars": 10326,
-            "bytes": 19874,
-            "sha256": "5209653aa55ace0eaf56505534f2fc2f12667cd31d58b99e336201dd362ddaf8",
+            "path": "et/references/basic-statistics.md",
+            "chars": 5888,
+            "bytes": 11952,
+            "sha256": "520f9deec8745921409a0fab42475eb71847401424aaae571b92ca2d7e008bab",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 17169,
-        "bytes": 34275,
+        "chars": 12731,
+        "bytes": 26353,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1183,
-        "bytes": 2261,
+        "chars": -3255,
+        "bytes": -5661,
         "tokens": null,
         "read_events": 0
       }
@@ -2420,6 +2407,63 @@
             "tokens": null
           },
           {
+            "path": "et/references/basic-statistics.md",
+            "chars": 5888,
+            "bytes": 11952,
+            "sha256": "520f9deec8745921409a0fab42475eb71847401424aaae571b92ca2d7e008bab",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 18386,
+        "bytes": 38720,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -2748,
+        "bytes": -4487,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "et-complex-query": {
+      "scenario": "Explicit filtering, grouping and sorting query; retain source partial and query semantics.",
+      "baseline_capability_note": "Baseline supports queries, but not the new bounded output cursor/budget.",
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "et/SKILL.md",
+            "chars": 6447,
+            "bytes": 13693,
+            "sha256": "a0ba13cfa57d2db54298ee09e1f30282cfdf5ebb27671f4f0e4c8cb52680cf53",
+            "tokens": null
+          },
+          {
+            "path": "et/references/table-analysis.md",
+            "chars": 9539,
+            "bytes": 18321,
+            "sha256": "a35ac4159968617b96ee0b4b3d0fc9f2a8a4792fca081e639ada104bcb9a748f",
+            "tokens": null
+          }
+        ],
+        "read_events": 2,
+        "unique_files": 2,
+        "chars": 15986,
+        "bytes": 32014,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "et/SKILL.md",
+            "chars": 6843,
+            "bytes": 14401,
+            "sha256": "ab8ba2c109be630f8c53ca1b807228393138def1ae489922f5924d3249572540",
+            "tokens": null
+          },
+          {
             "path": "et/references/table-analysis.md",
             "chars": 10326,
             "bytes": 19874,
@@ -2427,15 +2471,1250 @@
             "tokens": null
           }
         ],
-        "read_events": 3,
-        "unique_files": 3,
-        "chars": 22824,
-        "bytes": 46642,
+        "read_events": 2,
+        "unique_files": 2,
+        "chars": 17169,
+        "bytes": 34275,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1690,
-        "bytes": 3435,
+        "chars": 1183,
+        "bytes": 2261,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-maturity-distribution": {
+      "scenario": "Explicit maturity-distribution task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/maturity-distribution.md",
+            "chars": 7260,
+            "bytes": 7826,
+            "sha256": "05d2a98878e8d5895e17cde1be344299706e166a8e10cac0a589ef807c3dc7ad",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 33923,
+        "bytes": 40117,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/maturity-distribution.md",
+            "chars": 7361,
+            "bytes": 7985,
+            "sha256": "7b0c9307123690801ec2b05a7d47e9f52f9778729543fbe5aeadbc1382d66eac",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 16926,
+        "bytes": 26831,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-customer-structure": {
+      "scenario": "Explicit customer-structure task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/customer-structure.md",
+            "chars": 8448,
+            "bytes": 9008,
+            "sha256": "d6f89ccc96dd1db894f27246deea710261300d5c6572c1bf7b18f085b29b0bd3",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 35111,
+        "bytes": 41299,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/customer-structure.md",
+            "chars": 8549,
+            "bytes": 9167,
+            "sha256": "62e495adc579dbf41c7f3ec0e95ab47f726c194fde1ec0d84d66812063f2dc5a",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 18114,
+        "bytes": 28013,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-deposit-analysis": {
+      "scenario": "Explicit deposit-analysis task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/deposit-analysis.md",
+            "chars": 8331,
+            "bytes": 8907,
+            "sha256": "cd03d1bbcc005e14079aac6c400319976a29cea93ae89471a8c3cdc534768558",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 34994,
+        "bytes": 41198,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/deposit-analysis.md",
+            "chars": 8432,
+            "bytes": 9066,
+            "sha256": "7a5e16f813696a5430cbe3d251f1341c7ca431fc4e9f62605ece995b63774866",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 17997,
+        "bytes": 27912,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-management-policy": {
+      "scenario": "Explicit management-policy task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-policy.md",
+            "chars": 6789,
+            "bytes": 7353,
+            "sha256": "d6b1a68e9aeca55b483925616b32184a9945f10fa20a7395bf02aef0e795b7b8",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 33452,
+        "bytes": 39644,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-policy.md",
+            "chars": 6890,
+            "bytes": 7512,
+            "sha256": "232c736016c79ac067c6d801f7468d41b42099cee844064aa0f996be6c5be03f",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 16455,
+        "bytes": 26358,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-management-reconciliation": {
+      "scenario": "Explicit management-reconciliation task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-reconciliation.md",
+            "chars": 4994,
+            "bytes": 5554,
+            "sha256": "a09f3d2b1838bc6dee6cc7647d5f42455c6e147299862e9f7fc8e6fdcc52dffa",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 31657,
+        "bytes": 37845,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-reconciliation.md",
+            "chars": 5095,
+            "bytes": 5713,
+            "sha256": "899e94a373ba55ff74c8e4c718841a0c3f52ccad11c63b4bacf002acf03e8313",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 14660,
+        "bytes": 24559,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-management-dashboard": {
+      "scenario": "Explicit management-dashboard task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-dashboard.md",
+            "chars": 5062,
+            "bytes": 5622,
+            "sha256": "06e7897635e33babaa478e6c6d177d5ba9ae5e154f5bb381e0656961e8af2497",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 31725,
+        "bytes": 37913,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-dashboard.md",
+            "chars": 5163,
+            "bytes": 5781,
+            "sha256": "31d566434596adb88e32904e1b8c7259f4fdf97ea8ac506990c40b2721cce1e0",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 14728,
+        "bytes": 24627,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-management-wide": {
+      "scenario": "Explicit management-wide task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-wide.md",
+            "chars": 7123,
+            "bytes": 7681,
+            "sha256": "b828ea0908c44abedf7aa61a484ab9033719d98115733ef67dbe9fcc6c10272e",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 33786,
+        "bytes": 39972,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-wide.md",
+            "chars": 7224,
+            "bytes": 7840,
+            "sha256": "9391fc07c4b88927cb48b035794196932ee2ec13e799763a7e3bd5e21a0c5738",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 16789,
+        "bytes": 26686,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-institution-hierarchy": {
+      "scenario": "Explicit institution-hierarchy task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/institution-hierarchy.md",
+            "chars": 5205,
+            "bytes": 5767,
+            "sha256": "7413a3905c80d201a40dae63f4069c0d8efc55e8c7d6be4d3cfee83e48110495",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-wide.md",
+            "chars": 7123,
+            "bytes": 7681,
+            "sha256": "b828ea0908c44abedf7aa61a484ab9033719d98115733ef67dbe9fcc6c10272e",
+            "tokens": null
+          }
+        ],
+        "read_events": 4,
+        "unique_files": 4,
+        "chars": 38991,
+        "bytes": 45739,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/institution-hierarchy.md",
+            "chars": 5306,
+            "bytes": 5926,
+            "sha256": "df96163329deb19e6674006a2cfe52a086ce5bbda63d594926af20fe926197b1",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/management-wide.md",
+            "chars": 7224,
+            "bytes": 7840,
+            "sha256": "9391fc07c4b88927cb48b035794196932ee2ec13e799763a7e3bd5e21a0c5738",
+            "tokens": null
+          }
+        ],
+        "read_events": 4,
+        "unique_files": 4,
+        "chars": 22095,
+        "bytes": 32612,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16896,
+        "bytes": -13127,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-daily-analysis": {
+      "scenario": "Explicit daily-analysis task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/daily-analysis.md",
+            "chars": 6158,
+            "bytes": 6716,
+            "sha256": "cde0f4b7feaad7261b020b81013fefe718281574dc5abf88e7a22136e5b0e26b",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 32821,
+        "bytes": 39007,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/daily-analysis.md",
+            "chars": 6259,
+            "bytes": 6875,
+            "sha256": "a743439a6bec90a3580f603931b354e8ad70fa6b42147af1c9f8accfe6038163",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 15824,
+        "bytes": 25721,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-rank-share": {
+      "scenario": "Explicit rank-share task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/rank-share.md",
+            "chars": 5025,
+            "bytes": 5583,
+            "sha256": "d73385a7748bfdfabc05abba078fb38290e4e036dbfba2303c5e847a8efeb4e4",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 31688,
+        "bytes": 37874,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/rank-share.md",
+            "chars": 5123,
+            "bytes": 5753,
+            "sha256": "beff9d2201ccc68f248c907d66cddf190733f42c50a49571c6dcda9a85502daa",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 14688,
+        "bytes": 24599,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -17000,
+        "bytes": -13275,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-advanced-statistics": {
+      "scenario": "Explicit advanced-statistics task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/advanced-statistics.md",
+            "chars": 4771,
+            "bytes": 5342,
+            "sha256": "ef7892de86db7df6916eaa48740c3176b70e815d8ab144f4641b247b47dd8b66",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 31434,
+        "bytes": 37633,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/advanced-statistics.md",
+            "chars": 4872,
+            "bytes": 5501,
+            "sha256": "9f8fb8c7f005c7f9bd0e762376ca75282685b82128463a4f62abdd2da7e40a49",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 14437,
+        "bytes": 24347,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-period-comparison": {
+      "scenario": "Explicit period-comparison task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/period-comparison.md",
+            "chars": 4948,
+            "bytes": 5506,
+            "sha256": "668c20567187c801d64a874d7c48f5d7298246ee106ae39153625ff620a24ba9",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 31611,
+        "bytes": 37797,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/period-comparison.md",
+            "chars": 5049,
+            "bytes": 5665,
+            "sha256": "faa02dc83a692065525d01e68f72298afd974ae32321b3b1d1fe21b3750a3f39",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 14614,
+        "bytes": 24511,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-table-matching": {
+      "scenario": "Explicit table-matching task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/table-matching.md",
+            "chars": 4302,
+            "bytes": 4860,
+            "sha256": "c99473cda4eb99e921556f8caa9423894b675abfdbe507984897b539957bdc75",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 30965,
+        "bytes": 37151,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/table-matching.md",
+            "chars": 4403,
+            "bytes": 5019,
+            "sha256": "ac3f42af44d361bfe5b1c4dfaec7197c04a9916d79aaf73545ca11deab0090de",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 13968,
+        "bytes": 23865,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-row-processing": {
+      "scenario": "Explicit row-processing task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/row-processing.md",
+            "chars": 4875,
+            "bytes": 5433,
+            "sha256": "729d2ba5ac98b6d6234b1c36602ca10b69568121f3d6e14049d7c3910682a3f9",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 31538,
+        "bytes": 37724,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/row-processing.md",
+            "chars": 4973,
+            "bytes": 5603,
+            "sha256": "53dda8cc4a1bb747d3f0e1617ca011bba81a6dacb2f8e9c8ad9f6aad38ae3df2",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 14538,
+        "bytes": 24449,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -17000,
+        "bytes": -13275,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-header-candidates": {
+      "scenario": "Explicit header-candidates task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/header-candidates.md",
+            "chars": 3811,
+            "bytes": 4369,
+            "sha256": "637fd1c7e02d0c801b94b3c3f6d808c441885b2077ee1775f2f507aaf404d676",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 30474,
+        "bytes": 36660,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/header-candidates.md",
+            "chars": 3912,
+            "bytes": 4528,
+            "sha256": "334961bddb43df407793be4108822c8c0c3241e1a919561a633f4f774d448a16",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 13477,
+        "bytes": 23374,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-multi-level-headers": {
+      "scenario": "Explicit multi-level-headers task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/multi-level-headers.md",
+            "chars": 6744,
+            "bytes": 7434,
+            "sha256": "faee263c50a7ed9af4c32e59b899444214da0242c1afc25965216bf5d8741c9a",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 33407,
+        "bytes": 39725,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/multi-level-headers.md",
+            "chars": 6845,
+            "bytes": 7593,
+            "sha256": "8013387d1ee5e3cea2b5aacff3aec5d1aa9969808c6322f08865eed8f4246609",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 16410,
+        "bytes": 26439,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16997,
+        "bytes": -13286,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "xlsx-specialized-result-export": {
+      "scenario": "Explicit result-export task using existing inputs/configuration; no optional export or formula recalculation. Result-export alone writes the requested XLSX and reads delivery rules; other scenarios return stdout.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10258,
+            "bytes": 15262,
+            "sha256": "55eb6ab980167df745abec6251e2292bc831d2e3a86c5618aacbacacfeaa14ae",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 16405,
+            "bytes": 17029,
+            "sha256": "ec38b53d8bc8575510199098383b6cf0dda8b3c7e9250748f654dabadacfc22b",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/result-export.md",
+            "chars": 5443,
+            "bytes": 6001,
+            "sha256": "30737233922b12cda89f19f3b9d3f9b0e53d14666007a5a8f7cc35a60c463a06",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/task-delivery.md",
+            "chars": 1337,
+            "bytes": 2905,
+            "sha256": "3ccad0af1710c658a5957296c52c3bad8599f8d83d31b2b46a0d4602f3574ca0",
+            "tokens": null
+          }
+        ],
+        "read_events": 4,
+        "unique_files": 4,
+        "chars": 33443,
+        "bytes": 41197,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7457,
+            "bytes": 13728,
+            "sha256": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/analysis-contract.md",
+            "chars": 2108,
+            "bytes": 5118,
+            "sha256": "b3b7ae65fac3a676ab46db9325e67261aa679c4f88e83eccc809bb68f0e7644f",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/result-export.md",
+            "chars": 5544,
+            "bytes": 6160,
+            "sha256": "48701b03897e82f02179828c65036811741f67a5f96797850001fef3f08b7b61",
+            "tokens": null
+          },
+          {
+            "path": "xlsx/references/task-delivery.md",
+            "chars": 1405,
+            "bytes": 3089,
+            "sha256": "a6f2f35df0fba6b06d3f3c5de7b0993ca24a5157cfc612e542bf254e3e1fe20b",
+            "tokens": null
+          }
+        ],
+        "read_events": 4,
+        "unique_files": 4,
+        "chars": 16514,
+        "bytes": 28095,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -16929,
+        "bytes": -13102,
         "tokens": null,
         "read_events": 0
       }
