@@ -17,7 +17,7 @@
 ```console
 python -I -S -B "<skill-root>/scripts/xlsx_cli.py" capabilities
 python -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./输入.xlsx
-python -I -S -B "<skill-root>/scripts/xlsx_cli.py" run edit ./模板.xlsx ./修改.json ./结果.xlsx
+python -I -S -B "<skill-root>/scripts/xlsx_cli.py" run edit ./模板.xlsx ./修改.json 结果.xlsx
 python -I -S -B "<skill-root>/scripts/xlsx_cli.py" call
 python -I -S -B "<skill-root>/scripts/xlsx_cli.py" serve
 ```
@@ -48,14 +48,14 @@ capabilities输出普通JSON（接口版本、skill、operations、限制），�
 | patch | handle,spec | 内存修改并返回新公开快照，不写源文件 |
 | calculate | handle | calculation及view；必须判断calculated_subset、issues和retained_not_refreshed |
 | verify | original,candidate,writes:{(sheet,ref):expected} | 核验目标值、非目标单元格/样式/公式及未改ZIP成员；通过返回true |
-| publish | handle,output | 独占新相对文件；保存后回读ZIP成员一致，返回output_written/verification/sha256 |
+| publish | handle,output | 独占新裸文件名，固定任务根目录；保存后回读ZIP成员一致，返回output_written/verification/sha256 |
 | delivery | output,protected_inputs:list | 对已验收最终文件复用原归档，返回delivery，不重算或删除调用方文件 |
 
 ## 仅元数据与批量类型值
 
 open_metadata 与 open 接受相同 raw/source，执行相同完整解析、安全检查、64MiB输入与会话预算，但不构造或传输 cells/merges 快照。返回 schema_version=workbook_metadata_v1、handle、sheet_names、native、source_status、source_issues、source_coverage、input_schema。名称保持原顺序，元数据不是计算输入。句柄仍可供 region 等能力使用，使用完必须 release；不能把小响应当作少读ZIP或跳过未选表校验。旧open/create/extract及typed_value响应不变。
 
-typed_values 不重算公式、不决定缓存是否可用，也不替消费方授权公式/错误键；消费方仍先执行原边界检查。接口v1新增能力须在 capabilities 中逐项确认，不能静默逐格回退或读取私有对象。
+typed_values 不重算公式、不决定缓存是否可用，也不替消费方授权公式/错误键；消费方仍先执行原边界检查。新增能力须在 capabilities 中逐项确认，不能静默逐格回退或读取私有对象。
 
 ## 公开工作簿快照
 
@@ -67,7 +67,7 @@ publish不隐式声称业务验收或自动归档：workflow须先verify、发�
 
 ## 版本与兼容策略
 
-当前能力接口为 `interface_version=1`，协议为 `psl_capabilities_v1`。Skill 的时间戳版本记录本次维护，不等于接口版本。新增操作或可选响应字段保持 v1；删改参数、类型、退出码或状态含义须提供新接口版本及迁移期，不能直接替换 v1。调用方先查询 capabilities 并检查所需 operations；缺能力停止，不自动降级到私有 API 或猜测安装位置。旧 CLI/API 保留，其退出码不能统一套用为新接口的退出码。
+XLSX 能力接口为 `interface_version=2`，并声明 `delivery_filename_only=true`；类型化报文仍为 `psl_capabilities_v1`，编码和帧结构未变。v2 将 publish/delivery 的 output 收紧为任务根目录裸文件名，拒绝 `./` 或任何目录；旧调用需保持已确认任务 cwd 并改传裸文件名，不静默截取路径或回退旧宽路径 API。读取、计算、partial 与退出码保持原契约。Skill 时间戳与接口版本分开；调用方先核对版本、身份、标志与全部所需 operations。
 
 同一协议的标准库编码器为 `<skill-root>/scripts/xlsx_cli_protocol.py`；三个独立 Skill 各含受控同内容副本，跨表测试逐字节检查一致性。它仅负责传输，不能替代业务 schema、授权或来源完整性校验；禁止 pickle、动态类恢复或执行对象。
 

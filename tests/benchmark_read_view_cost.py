@@ -9,6 +9,7 @@ from contextlib import ExitStack
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import platform
 import re
@@ -101,7 +102,12 @@ def cli_cases(commit=None):
         task = base / 'task'
         task.mkdir()
         book, _ = fixture(40)
-        book.save(task / 'data.xlsx')
+        previous = Path.cwd()
+        try:
+            os.chdir(task)
+            book.save('data.xlsx')
+        finally:
+            os.chdir(previous)
         body = b''.join(rec(0x203, cell(i, 0) + struct.pack('<d', i + 1)) for i in range(40))
         (task / 'data.et').write_bytes(synthetic_cfb({'Workbook': workbook([body], extra_global=rec(0x42, struct.pack('<H', 936)))}))
         for skill, script, input_name in (('xlsx', 'stdlib_xlsx.py', 'data.xlsx'), ('wps', 'read_wps.py', 'data.et')):

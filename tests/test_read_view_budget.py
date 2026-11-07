@@ -3,6 +3,7 @@ import base64
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 import struct
@@ -128,7 +129,12 @@ class BudgetOracleTests(unittest.TestCase):
         from test_wps_cfb import synthetic_cfb
         with tempfile.TemporaryDirectory(prefix='read-view-cursor-') as directory:
             task = Path(directory)
-            Workbook.create({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': 1}, 'A2': {'value': 2}}}]}).save(task / 'data.xlsx')
+            previous = Path.cwd()
+            try:
+                os.chdir(task)
+                Workbook.create({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': 1}, 'A2': {'value': 2}}}]}).save('data.xlsx')
+            finally:
+                os.chdir(previous)
             body = b''.join(rec(0x203, cell(i, 0) + struct.pack('<d', i + 1)) for i in range(2))
             (task / 'data.et').write_bytes(synthetic_cfb({'Workbook': workbook([body])}))
             for skill, script, name in [('xlsx', 'stdlib_xlsx.py', 'data.xlsx'), ('et', 'read_et.py', 'data.et')]:

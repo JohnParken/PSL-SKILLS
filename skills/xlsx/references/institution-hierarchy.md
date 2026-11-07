@@ -70,7 +70,7 @@ respectively. Use exclusive creation for these copies; do not overwrite existing
 files. Create the workbook and then run the rollup:
 
 ```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./hierarchy-facts.json ./fictional_hierarchy.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./hierarchy-facts.json fictional_hierarchy.xlsx
 python3 -I -S -B "<skill-root>/scripts/xlsx_management.py" fictional_hierarchy.xlsx --sheet Facts --query hierarchy.json --xlsx hierarchy_report.xlsx
 ```
 

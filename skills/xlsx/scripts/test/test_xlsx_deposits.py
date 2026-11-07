@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from task_directory import TaskDirectory
 from unittest.mock import patch
 import subprocess
 import sys
@@ -43,7 +44,7 @@ def snapshot_spec(rows):
 
 class DepositTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        self.temp=TaskDirectory(); self.addCleanup(self.temp.cleanup)
         self.folder=Path(self.temp.name); self.left=self.folder/'left.xlsx'; self.right=self.folder/'right.xlsx'
         self.before,self.after=rows_example(); self.config=config_example()
         self.save()

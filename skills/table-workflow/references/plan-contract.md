@@ -2,7 +2,7 @@
 
 路径占位符说明：`<skill-root>` 是 table-workflow Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 table-workflow Skill 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-在已确认任务目录执行。输入/输出相对任务目录；脚本为 `<skill-root>/scripts/table_workflow.py`。主入口共同自检、授权与 partial 边界始终适用。所有 JSON 使用标准序列化经 stdin 提交，重复键、未知字段和非有限数值拒绝；不手拼长 JSON。
+在已确认任务目录执行。输入相对任务目录；输出 XLSX 与审计 JSON 各只收一个裸文件名，固定写入任务根目录，不带 `./` 或目录；脚本为 `<skill-root>/scripts/table_workflow.py`。主入口共同自检、授权与 partial 边界始终适用。所有 JSON 使用标准序列化经 stdin 提交，重复键、未知字段和非有限数值拒绝；不手拼长 JSON。
 
 ## 目录
 
@@ -78,7 +78,7 @@
 
 ```console
 python -I -S -B "<skill-root>/scripts/table_workflow.py" plan --xlsx-root "XLSX_ROOT_CONFIRMED" --et-root "ET_ROOT_CONFIRMED"
-python -I -S -B "<skill-root>/scripts/table_workflow.py" apply --xlsx-root "XLSX_ROOT_CONFIRMED" --et-root "ET_ROOT_CONFIRMED" --output ./填报.xlsx --audit ./核验.json
+python -I -S -B "<skill-root>/scripts/table_workflow.py" apply --xlsx-root "XLSX_ROOT_CONFIRMED" --et-root "ET_ROOT_CONFIRMED" --output 填报.xlsx --audit 核验.json
 ```
 
 依赖根参数须根据各自实际主入口读取结果替换；无 ET 来源可省略 et-root。模型不必打印完整计划给用户反复审批；口径已明确时执行，有歧义才询问，审计中保留全部最终计划。

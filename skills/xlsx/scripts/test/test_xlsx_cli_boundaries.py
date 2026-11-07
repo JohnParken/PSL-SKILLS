@@ -53,7 +53,7 @@ class CliBoundaryTests(unittest.TestCase):
     def test_every_write_cli_rejects_paths_before_business_processing(self):
         Path('link').symlink_to(self.root / 'outside', target_is_directory=True)
         for output in ('../outside/result.xlsx', str(self.root / 'outside/result.xlsx'),
-                       'link/result.xlsx', 'C:\\outside\\result.xlsx'):
+                       'reports/result.xlsx', './result.xlsx', 'nested/../result.xlsx', 'link/result.xlsx', 'C:\\outside\\result.xlsx'):
             for script, args in self.commands(output):
                 with self.subTest(script=script, output=output):
                     code, result = self.invoke(script, args)
@@ -77,16 +77,16 @@ class CliBoundaryTests(unittest.TestCase):
         self.assertIn('input', result['message'])
         self.assertEqual(Path('input.json').read_text(), '{}')
 
-    def test_relative_subdirectory_success_and_no_overwrite(self):
+    def test_root_filename_success_and_no_overwrite(self):
         Path('reports').mkdir()
         Path('input.json').write_text(json.dumps({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': 42}}}]}))
-        code, result = self.invoke('stdlib_xlsx.py', ['create', 'input.json', 'reports/report.xlsx'])
+        code, result = self.invoke('stdlib_xlsx.py', ['create', 'input.json', 'report.xlsx'])
         self.assertEqual(code, 0)
         self.assertTrue(result['output_written'])
-        before = Path('reports/report.xlsx').read_bytes()
-        code, result = self.invoke('stdlib_xlsx.py', ['create', 'input.json', 'reports/report.xlsx'])
+        before = Path('report.xlsx').read_bytes()
+        code, result = self.invoke('stdlib_xlsx.py', ['create', 'input.json', 'report.xlsx'])
         self.assertEqual(code, 1)
-        self.assertEqual(Path('reports/report.xlsx').read_bytes(), before)
+        self.assertEqual(Path('report.xlsx').read_bytes(), before)
 
     def test_runner_argument_error_preserves_exit_and_redacts_streams(self):
         code, result = run_task({'script': 'stdlib_xlsx.py', 'arguments': ['create', 'input.json', 'out.xlsx', '--private-secret'], 'output': 'out.xlsx'})

@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from task_directory import TaskDirectory
 import subprocess
 import sys
 import tempfile
@@ -107,7 +108,7 @@ class HeaderTests(unittest.TestCase):
     def test_profile_group_filter_and_dedup_sort_by_paths(self):
         from xlsx_analysis import profile, summarize
         from xlsx_rows import select_rows
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             path = Path(directory)/'table.xlsx'
             chinese_book().save(path)
             before = path.read_bytes()
@@ -131,7 +132,7 @@ class HeaderTests(unittest.TestCase):
         from xlsx_analysis import summarize
         from xlsx_rows import select_rows
         book = merged_book({'A1':'同名','B1':'同名','A2':1,'B2':2}, [])
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             path=Path(directory)/'duplicate.xlsx'
             book.save(path)
             with self.assertRaisesRegex(ValueError,'matched 2'):
@@ -148,7 +149,7 @@ class HeaderTests(unittest.TestCase):
         from xlsx_analysis import profile
         book = merged_book({'A3':'placeholder','A4':1,'B4':2},['A3:B3'])
         book.patch({'sheets':[{'name':'报表','cells':{'A3':{'formula':'"金额"'}}}]})
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             original=Path(directory)/'uncached.xlsx'
             book.save(original)
             for policy in ('reject','cached'):
@@ -162,7 +163,7 @@ class HeaderTests(unittest.TestCase):
             self.assertEqual(result['header_schema']['columns'][1]['path'][0]['value'],'金额')
 
     def test_cli_reconstruction_and_row_processing(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             path=Path(directory)/'report.xlsx'
             chinese_book().save(path)
             query=Path(directory)/'query.json'
@@ -186,7 +187,7 @@ class HeaderTests(unittest.TestCase):
 
     def test_explicit_header_options_bounds_and_legacy_compatibility(self):
         from xlsx_analysis import profile
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             path=Path(directory)/'table.xlsx'
             merged_book({'A1':'旧表头','A2':7},[]).save(path)
             self.assertEqual(profile(path,'报表')['columns'][0]['header']['value'],'旧表头')

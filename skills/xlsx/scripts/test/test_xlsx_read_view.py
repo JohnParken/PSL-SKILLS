@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from task_directory import TaskDirectory
 import subprocess
 import sys
 import tempfile
@@ -81,7 +82,7 @@ class ReadViewTests(unittest.TestCase):
         self.assertEqual(refs, [f'A{i}' for i in range(1, 31)])
 
     def test_snapshot_and_from_bytes_retain_package_rejections(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             path = Path(tmp) / 'source.xlsx'
             self.book({'A1': {'value': 7}}).save(path)
             data = snapshot(path)
@@ -95,7 +96,7 @@ class ReadViewTests(unittest.TestCase):
     def test_snapshot_resource_and_changed_file_detection(self):
         from unittest.mock import patch
         from types import SimpleNamespace
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             path = Path(tmp) / 'input.xlsx'
             path.write_bytes(b'abc')
             with patch('xlsx_read_view.MAX_SOURCE_BYTES', 2), self.assertRaises(ValueError):
@@ -107,7 +108,7 @@ class ReadViewTests(unittest.TestCase):
 
     def test_cli_changed_file_rejects_cursor_and_csv_view_is_explicit(self):
         script = str((Path(__file__).resolve().parents[1] / 'stdlib_xlsx.py'))
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             path = Path(tmp) / 'source.xlsx'
             self.book({'A1': {'value': 1}, 'A2': {'value': 2}}).save(path)
             command = [sys.executable, '-I', '-S', '-B', script, 'read', './source.xlsx', '--page-size', '1']
@@ -127,7 +128,7 @@ class ReadViewTests(unittest.TestCase):
 
     def test_cli_defaults_unchanged_opt_in_valid_and_failures_json(self):
         script = str((Path(__file__).resolve().parents[1] / 'stdlib_xlsx.py'))
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             self.book({'A1': {'value': '00001'}}).save(Path(tmp) / 'source.xlsx')
             def run(*args):
                 child = subprocess.run([sys.executable, '-I', '-S', '-B', script, 'read', *args], cwd=tmp, capture_output=True, text=True)

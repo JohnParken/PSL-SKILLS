@@ -14,7 +14,7 @@ def main(argv=None):
         return cleanup_main(arguments)
     parser = argparse.ArgumentParser(description='Archive explicit completed XLSX task outputs')
     parser.add_argument('command', choices=['archive'])
-    parser.add_argument('outputs', nargs='+', type=Path)
+    parser.add_argument('outputs', nargs='+')
     parser.add_argument('--protect-input', action='append', default=[], type=Path)
     parser.add_argument('--replace-existing', action='store_true',
                         help='Replace archives only for this explicitly authorized output list')

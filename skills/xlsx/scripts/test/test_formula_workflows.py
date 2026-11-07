@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import subprocess
 import sys
 import tempfile
+import os
 import unittest
 import uuid
 
@@ -23,15 +24,18 @@ class FormulaWorkflowTests(unittest.TestCase):
         self.root = Path(tempfile.gettempdir()) / ('xlsx_formulas_' + uuid.uuid4().hex)
         self.owned = []
         self.root.mkdir()
+        self.previous = Path.cwd()
+        os.chdir(self.root)
         self.addCleanup(self.cleanup)
 
     def cleanup(self):
         for path in reversed(self.owned):
             path.unlink(missing_ok=True)
+        os.chdir(self.previous)
         self.root.rmdir()
 
     def path(self, name):
-        path = self.root / name
+        path = Path(name)
         self.assertFalse(path.exists())
         self.owned.append(path)
         return path
@@ -68,7 +72,7 @@ class FormulaWorkflowTests(unittest.TestCase):
         self.assertFalse(result['formula_calculation']['output_written'])
         self.assertFalse(result['formula_calculation']['excel_equivalence_verified'])
         self.assertEqual(source.read_bytes(), before)
-        self.assertEqual(list(self.root.iterdir()), [source])
+        self.assertEqual([p.resolve() for p in self.root.iterdir()], [source.resolve()])
         self.assertEqual(Workbook.load(source).cells['Data']['B2']['value'], 999)
 
     def test_empty_string_result_is_not_a_missing_cache(self):

@@ -202,20 +202,20 @@ class XlsxPathIntegrationTests(unittest.TestCase):
                 tabular_script = installed / "scripts" / "xlsx_tabular.py"
                 self.assert_success(self.run_cli(
                     tabular_script, task_cwd, "import", "./数据 files/source data.csv",
-                    "./数据 files/imported report.xlsx", "--sheet", "Data",
+                    "imported report.xlsx", "--sheet", "Data",
                     "--numeric-columns", "B",
                 ))
                 calculated = self.assert_success(self.run_cli(
-                    copied_script, task_cwd, "calculate", "./数据 files/imported report.xlsx",
-                    "./数据 files/calculated report.xlsx",
+                    copied_script, task_cwd, "calculate", "imported report.xlsx",
+                    "calculated report.xlsx",
                 ))
                 self.assertTrue(calculated["output_written"])
                 self.assert_success(self.run_cli(
-                    tabular_script, task_cwd, "export", "./数据 files/calculated report.xlsx",
-                    "./数据 files/exported data.csv", "--sheet", "Data",
+                    tabular_script, task_cwd, "export", "calculated report.xlsx",
+                    "exported data.csv", "--sheet", "Data",
                 ))
                 csv_read = self.assert_success(self.run_cli(
-                    copied_script, task_cwd, "read", "./数据 files/exported data.csv"
+                    copied_script, task_cwd, "read", "exported data.csv"
                 ))
                 self.assertEqual(csv_read["rows"], [["item", "amount"], ["tea", "2"], ["coffee", "3"]])
                 self.assertEqual(tree_snapshot(installed), before)

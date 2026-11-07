@@ -604,6 +604,8 @@ class Workbook:
         self.changed.update(removed | {path, "[Content_Types].xml"})
 
     def save(self, path):
+        from xlsx_delivery import validate_delivery_output
+        path = validate_delivery_output(path)
         self.flush()
         if getattr(self, "_created_here", False):
             # DOM edits during calculation emit lowercase encoding names. Only

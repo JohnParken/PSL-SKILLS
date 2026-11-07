@@ -1,6 +1,6 @@
 """Additive CLI delivery metadata; never change primary success or calculation status."""
 from pathlib import Path
-from _artifact_runtime.archive_deliverables import archive_outputs, archive_user_message, archive_user_notice, validate_input_path, validate_output_path
+from _artifact_runtime.archive_deliverables import archive_outputs, archive_user_message, archive_user_notice, validate_input_path, validate_output_path, validate_delivery_output
 
 
 def validate_cli_paths(arguments):
@@ -11,7 +11,7 @@ def validate_cli_paths(arguments):
     for field in ('output', 'xlsx'):
         value = getattr(arguments, field, None)
         if value is not None:
-            output = validate_output_path(Path(value), protected_inputs=inputs)
+            output = validate_delivery_output(value, protected_inputs=inputs)
             if output.exists():
                 raise ValueError('Output already exists; choose a new filename')
 
@@ -19,7 +19,7 @@ def validate_cli_paths(arguments):
 def finish_delivery(result, output, protected_inputs=()):
     """Archive only the just-written final file; existing inputs are never owned temps."""
     try:
-        delivery = archive_outputs([Path(output)], [Path(p) for p in protected_inputs if p is not None])
+        delivery = archive_outputs([output], [Path(p) for p in protected_inputs if p is not None])
     except Exception as exc:
         delivery = {'archive_status': 'failed', 'files': [], 'warnings': [str(exc)]}
         delivery['archive_message'] = archive_user_message(delivery)

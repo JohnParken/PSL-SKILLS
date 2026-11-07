@@ -31,11 +31,11 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit original.xlsx patch.
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" calculate original.xlsx calculated.xlsx
 ```
 
-Output files must not exist; original inputs are never overwritten. Preserve the
+Output arguments must be bare filenames (no `./`, directories, absolute or parent paths). Files are written directly into the confirmed task working directory and must not exist; original inputs are never overwritten. Preserve the
 `.xlsm` extension when editing a macro-enabled workbook. Creation is XLSX only.
-Redirect command stdout to a new task-relative report file if persistent JSON is
+Redirect command stdout to a new bare-named report file in the task root if persistent JSON is
 needed. Shell redirection is a write operation independent of the CLI: perform the
-output-directory probe first. The `> report.json` examples assume a fresh filename
+task-root write probe first. The `> report.json` examples assume a fresh filename
 and a POSIX shell with `set -C` (noclobber) enabled; never use `>|` to bypass it.
 When capturing stdout through Python instead, create the report with exclusive `x`
 mode. Check the command exit status before using the captured report; a failure

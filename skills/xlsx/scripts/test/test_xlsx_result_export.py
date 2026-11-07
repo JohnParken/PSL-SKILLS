@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from task_directory import TaskDirectory
 import subprocess
 import sys
 import tempfile
@@ -22,7 +23,7 @@ from xlsx_result_export import export_result
 
 class ExportTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory()
+        self.temp=TaskDirectory()
         self.addCleanup(self.temp.cleanup)
         self.input=Path(self.temp.name)/'input.xlsx'
         self.output=Path(self.temp.name)/'report.xlsx'

@@ -153,6 +153,20 @@ class WireTests(unittest.TestCase):
         with patch('workflow_runtime.Dependencies.run_process', side_effect=[result, bad]), self.assertRaisesRegex(ValueError, 'Incompatible'):
             Dependencies(str(fixtures.XLSX_ROOT))
 
+    def test_old_or_unrestricted_xlsx_delivery_contract_is_rejected(self):
+        child = subprocess.run([sys.executable, '-I', '-S', '-B', str(fixtures.XLSX_ROOT/'scripts/xlsx_cli.py'),
+                                'capabilities'], capture_output=True, text=True, check=True)
+        current = json.loads(child.stdout)
+        self.assertEqual(current['interface_version'], 2)
+        self.assertIs(current['delivery_filename_only'], True)
+        ready = subprocess.CompletedProcess([], 0, json.dumps({'status': 'ready', 'check_kind': 'environment',
+                                                             'artifact_validation': 'not_run'}), '')
+        for changes in ({'interface_version': 1}, {'delivery_filename_only': False}, {'delivery_filename_only': None}):
+            bad = subprocess.CompletedProcess([], 0, json.dumps(current | changes), '')
+            with self.subTest(changes=changes), patch('workflow_runtime.Dependencies.run_process', side_effect=[ready, bad]):
+                with self.assertRaises(ValueError):
+                    Dependencies(str(fixtures.XLSX_ROOT))
+
     def test_missing_address_batch_capability_is_rejected(self):
         child = subprocess.run([sys.executable, '-I', '-S', '-B', str(fixtures.XLSX_ROOT/'scripts/xlsx_cli.py'),
                                 'capabilities'], capture_output=True, text=True, check=True)

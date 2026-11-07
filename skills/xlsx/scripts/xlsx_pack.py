@@ -43,6 +43,8 @@ def validate_xml_files(source_dir: str) -> list[str]:
 
 
 def pack(source_dir: str, xlsx_path: str) -> None:
+    from xlsx_delivery import validate_delivery_output
+    xlsx_path = validate_delivery_output(xlsx_path)
     if not os.path.isdir(source_dir):
         print(f"ERROR: Directory not found: {source_dir}", file=sys.stderr)
         sys.exit(1)

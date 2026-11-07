@@ -1,6 +1,8 @@
 # table-workflow：多源表格分析与模板填报
 
-> 核对日期：2026-11-07；源码基线：[6e4cca7a78a57acebe38448962c99cbc4814b409](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261107.1943.5370`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，本轮定点回归另见 [核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；源码基线：[6e317cf](https://github.com/JohnParken/PSL-SKILLS/tree/6e317cf3d28972e214ffa119bf04d60302db7126) 加本轮未提交输出契约变更；Skill 版本：`20261108.0102.2369`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+
+所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
 ## 功能与职责
 
@@ -24,7 +26,7 @@ flowchart TD
     C --> D["workflow_runtime.Dependencies：路径、快照、自检、能力检查"]
     C --> E["workflow_quality.py：缺期、ratio 与业务勾稽"]
     D --> F["workflow_cli_client.py：有界类型化协议客户端"]
-    F --> G["xlsx_cli.py serve：interface_version=1"]
+    F --> G["xlsx_cli.py serve：interface_version=2"]
     D --> H["et_cli.py read：仅 ET/ETT 来源"]
     H --> I["完整 ET 提取 JSON：保留 partial 与覆盖诊断"]
     I --> G
@@ -58,7 +60,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["确认本轮附件、任务目录和依赖真实根目录"] --> B["check：环境、自检与 v1 所需能力"]
+    A["确认本轮附件、任务目录和依赖真实根目录"] --> B["check：环境、XLSX v2 与 ET v1 能力"]
     B --> C{"依赖和安全条件满足？"}
     C -->|"否"| D["停止依赖操作并报告缺失条件"]
     C -->|"是"| E["names / inspect：表名分页或结构预览与 SHA"]
@@ -75,7 +77,7 @@ flowchart TD
     O --> P["分别交付业务状态、归档及清理结果"]
 ```
 
-1. **确认环境和路径。** 从实际读取的三个 `SKILL.md` 定位根目录；必传已确认的 `--xlsx-root`，ET/ETT 来源另传 `--et-root`。不猜相邻位置。任务输入/输出仅用任务目录下相对路径；拒绝绝对数据路径、父目录、符号链接。任务目录不能位于任一 Skill 安装目录内。
+1. **确认环境和路径。** 从实际读取的三个 `SKILL.md` 定位根目录；必传已确认的 `--xlsx-root`，ET/ETT 来源另传 `--et-root`。不猜相邻位置。输入仅用任务目录下相对路径，输出 XLSX 与审计 JSON 仅收不同裸文件名；拒绝绝对数据路径、父目录、符号链接。任务目录不能位于任一 Skill 安装目录内。
 2. **自检。** `check` 要求退出 `0`、`status=environment-ok`；依赖 XLSX 自检为 `ready`，ET 自检为 `environment-ok` 且 OOXML 分支 available。写文件时加 `--write` 并要求 `task_writable=true`。每次 CLI 调用仍检查依赖；自检不是产物或归档验收。
 3. **识别。** 表多时先用 `names` 获取完整表名分页，再按 sheet/range 定位。`inspect` stdin 只接明确的文件列表，可限定 sheet/range。默认每表前 4 行、8 列，每文件最多 8 表，保留 SHA、截断与遗漏计数。它不是计算输入；任何 ET 来源 partial 会使 inspect 同样 partial/退出 `3`。
 4. **映射和试算。** 使用真实 SHA 构造计划，仅在歧义处询问。`plan` 在内存完整计算全部声明区域、生成候选并验证，不写文件。stdout 仅摘要，不能拿预览代替统计。
@@ -122,7 +124,7 @@ flowchart TD
 
 ### 公开能力链路
 
-依赖必须声明 `interface_version=1`、协议 `psl_capabilities_v1`、匹配的 Skill 身份及全部所需 operations。XLSX 使用顺序 `serve` 会话，不逐行启动解释器；名称发现使用 XLSX `open_metadata`（用完 release）或 ET `metadata`，不先搬运 cells；仍完整解析与校验，未选表损坏也可能拒绝。计算来源的 ET 使用 `et_cli.py read`，将完整提取 JSON 交给 XLSX `extract` 校验，不能以 ET 分析结果或预览替代。
+XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，ET 仍为 `interface_version=1`；两者报文协议为 `psl_capabilities_v1`、匹配的 Skill 身份及全部所需 operations。XLSX 使用顺序 `serve` 会话，不逐行启动解释器；名称发现使用 XLSX `open_metadata`（用完 release）或 ET `metadata`，不先搬运 cells；仍完整解析与校验，未选表损坏也可能拒绝。计算来源的 ET 使用 `et_cli.py read`，将完整提取 JSON 交给 XLSX `extract` 校验，不能以 ET 分析结果或预览替代。
 
 目标键先按物理行顺序拒绝公式/错误，再用 `typed_values` 每批最多10000格转换并重建复合键；长度/类型不符即拒绝，空键/重复键/前导零与 Decimal 规则不变。inspect 地址边界使用 `address_many` 分批，最终金额舍入按输出映射使用 `evaluate_many`，空值不送入公式引擎。新增能力必须逐项协商，缺失停止，不静默逐格回退或依赖私有对象。
 

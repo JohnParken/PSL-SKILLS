@@ -94,6 +94,8 @@ def export_table(source, output, sheet, cell_range=None, formula_mode='reject', 
     """Export raw scalar values, with explicit policies for formulas and text."""
     if formula_mode not in ('reject', 'cached') or text_mode not in ('safe', 'raw'):
         raise ValueError('Invalid formula/text policy')
+    from xlsx_delivery import validate_delivery_output
+    output = validate_delivery_output(output, protected_inputs=[source])
     separator = delimiter(output)
     book = Workbook.load(source)
     if sheet not in book.cells:

@@ -13,6 +13,8 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 from xlsx_cli_protocol import PROTOCOL, dumps, loads
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from task_directory import TaskDirectory
 from stdlib_xlsx import Workbook
 from formula_engine import FormulaError
 from xlsx_cli import Session, capabilities, verify
@@ -59,7 +61,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(loads(child.stdout.strip())['result'], (1, 1))
 
     def test_run_reuses_legacy_success_and_failure_streams(self):
-        with tempfile.TemporaryDirectory() as task:
+        with TaskDirectory() as task:
             book = Workbook.create({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': '000123'}, 'B1': {'value': 1}}}]})
             book.save(Path(task)/'source.xlsx')
             for arguments in (['read', 'source.xlsx'], ['read', 'missing.xlsx'], ['unknown-command'], ['--help']):
@@ -77,7 +79,7 @@ class ContractTests(unittest.TestCase):
             ('publish', {'handle': 0, 'output': 'must-not-exist.xlsx'})]
         raw = b''.join(dumps({'protocol': PROTOCOL, 'id': number, 'operation': operation, 'parameters': parameters})+b'\n'
                        for number, (operation, parameters) in enumerate(requests, 1))
-        with tempfile.TemporaryDirectory() as task:
+        with TaskDirectory() as task:
             child = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS/'xlsx_cli.py'), 'serve'],
                                    input=raw, cwd=task, capture_output=True)
             replies = [loads(line) for line in child.stdout.splitlines()]

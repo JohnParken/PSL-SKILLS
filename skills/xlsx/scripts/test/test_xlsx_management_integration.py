@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from task_directory import TaskDirectory
 import sys
 import tempfile
 import unittest
@@ -35,7 +36,7 @@ def policy_config(metric='eligible_principal'):
 
 class ManagementIntegrationTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        self.temp=TaskDirectory(); self.addCleanup(self.temp.cleanup)
         self.folder=Path(self.temp.name)
 
     def save(self,name,spec):

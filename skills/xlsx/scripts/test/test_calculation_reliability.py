@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import sys
 import tempfile
+import os
 import unittest
 import uuid
 from unittest.mock import patch
@@ -26,15 +27,18 @@ class CalculationReliabilityTests(unittest.TestCase):
         self.root = Path(tempfile.gettempdir()) / ('xlsx_reliability_' + uuid.uuid4().hex)
         self.owned = []
         self.root.mkdir()
+        self.previous = Path.cwd()
+        os.chdir(self.root)
         self.addCleanup(self.cleanup)
 
     def cleanup(self):
         for path in reversed(self.owned):
             path.unlink(missing_ok=True)
+        os.chdir(self.previous)
         self.root.rmdir()
 
     def path(self, name):
-        path = self.root / name
+        path = Path(name)
         self.assertFalse(path.exists())
         self.owned.append(path)
         return path

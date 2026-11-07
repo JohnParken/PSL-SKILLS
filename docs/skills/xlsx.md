@@ -1,6 +1,8 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 核对日期：2026-11-07；源码基线：[6e4cca7a78a57acebe38448962c99cbc4814b409](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261107.1943.5370`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，本轮定点回归另见 [核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；源码基线：[6e317cf](https://github.com/JohnParken/PSL-SKILLS/tree/6e317cf3d28972e214ffa119bf04d60302db7126) 加本轮未提交输出契约变更；Skill 版本：`20261108.0102.2369`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+
+所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
 ## 功能与适用范围
 
@@ -49,7 +51,7 @@ flowchart TD
 
 | 模块 | 职责与入口 |
 | --- | --- |
-| [xlsx_cli.py](../../skills/xlsx/scripts/xlsx_cli.py) | `run` 转交标准主 CLI；`capabilities` 查询 v1 能力；`call/serve` 承载公开类型化操作、仅元数据与批量值/地址操作及不透明句柄；格式所有方实现模板保护 `verify` |
+| [xlsx_cli.py](../../skills/xlsx/scripts/xlsx_cli.py) | `run` 转交标准主 CLI；`capabilities` 查询 v2 裸文件名能力；`call/serve` 承载公开类型化操作、仅元数据与批量值/地址操作及不透明句柄；格式所有方实现模板保护 `verify` |
 | [stdlib_xlsx.py](../../skills/xlsx/scripts/stdlib_xlsx.py) | `check/read/create/edit/calculate`；`Workbook` 负责包校验、类型解析、创建、局部补丁、全簿计算及独占保存 |
 | [formula_engine.py](../../skills/xlsx/scripts/formula_engine.py) | 解析受限公式及绑定引用；固定 Decimal 上下文；不执行宏、输入代码或外链 |
 | [xlsx_analysis.py](../../skills/xlsx/scripts/xlsx_analysis.py) | `profile/summarize`；区域类型化、筛选与分组勾稽；支持显式 `reject/cached/calculate` 公式政策 |
@@ -102,7 +104,7 @@ flowchart TD
 
 ### 版本化公开能力
 
-接口 `interface_version=1`、协议 `psl_capabilities_v1` 与 Skill 时间戳版本相互独立。调用方先检查 `capabilities` 的协议、版本、Skill 身份及所需 operations；缺能力即停止，不自动回退私有 Python 对象。
+接口 `interface_version=2`、`delivery_filename_only=true`、协议 `psl_capabilities_v1` 与 Skill 时间戳版本相互独立。调用方先检查 `capabilities` 的协议、版本、Skill 身份及所需 operations；缺能力即停止，不自动回退私有 Python 对象。
 
 公开操作覆盖 `open/create/extract/region`、`open_metadata` 仅元数据、`typed_values/address_many` 批量值/地址转换、表头与类型操作、批量筛选/表达式计算、分组/关联，以及 `patch/calculate/verify/publish/delivery`。标准 `run` 保留原 CLI 行为；`call` 单次请求，`serve` 多轮同进程会话。句柄只在当前进程有效；公开 view 只含分离的单元格/合并信息与来源诊断，不泄漏 ZIP/XML 私有对象，修改 view 不能修改工作簿。
 

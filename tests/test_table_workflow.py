@@ -253,6 +253,19 @@ class WorkflowTests(unittest.TestCase):
             Workflow(self.api).apply(self.base_plan(), 'filled.xlsx', 'audit.json')
         self.assertEqual(Path('filled.xlsx').read_bytes(), b'other task')
 
+    def test_output_and_audit_require_bare_filenames_before_any_publication(self):
+        Path('nested').mkdir()
+        for name in ('./result', 'nested/result', 'nested/../result', '../result',
+                     str(Path('result').resolve()), 'C:\\result', 'C:result'):
+            for output, audit in ((name + '.xlsx', 'audit.json'), ('filled.xlsx', name + '.json')):
+                with self.subTest(output=output, audit=audit), self.assertRaises(ValueError):
+                    Workflow(self.api).apply(self.plan, output, audit)
+                self.assertFalse(Path('filled.xlsx').exists())
+                self.assertFalse(Path('audit.json').exists())
+                self.assertFalse(Path('result.xlsx').exists())
+                self.assertFalse(Path('result.json').exists())
+                self.assertEqual(list(Path('nested').iterdir()), [])
+
     def test_path_escape_symlink_duplicate_json_and_unknown_fields(self):
         for path in ('../current.xlsx', str(Path('current.xlsx').resolve())):
             with self.subTest(path=path), self.assertRaises(ValueError):

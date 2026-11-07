@@ -28,7 +28,7 @@ inspect返回有界预览、不是计算输入；plan完整试算不写文件；
 
 ## 版本与兼容策略
 
-当前能力接口为 `interface_version=1`，协议为 `psl_capabilities_v1`。Skill 的时间戳版本记录本次维护，不等于接口版本。新增操作或可选响应字段保持 v1；删改参数、类型、退出码或状态含义须提供新接口版本及迁移期，不能直接替换 v1。调用方先查询 capabilities 并检查所需 operations；缺能力停止，不自动降级到私有 API 或猜测安装位置。旧 CLI/API 保留，其退出码不能统一套用为新接口的退出码。
+XLSX 能力接口为 `interface_version=2`，并声明 `delivery_filename_only=true`；类型化报文仍为 `psl_capabilities_v1`，编码和帧结构未变。v2 将 publish/delivery 的 output 收紧为任务根目录裸文件名，拒绝 `./` 或任何目录；旧调用需保持已确认任务 cwd 并改传裸文件名，不静默截取路径或回退旧宽路径 API。读取、计算、partial 与退出码保持原契约。Skill 时间戳与接口版本分开；调用方先核对版本、身份、标志与全部所需 operations。 本 workflow 明确要求 XLSX v2 及裸文件名标志；ET 为只读接口，仍要求 interface_version=1。依赖旧版本或缺标志时在业务执行前停止，须升级成套 XLSX 与 workflow；不为兼容重新开放输出目录。
 
 同一协议的标准库编码器为 `<skill-root>/scripts/table_workflow_cli_protocol.py`；三个独立 Skill 各含受控同内容副本，跨表测试逐字节检查一致性。它仅负责传输，不能替代业务 schema、授权或来源完整性校验；禁止 pickle、动态类恢复或执行对象。
 
@@ -64,7 +64,7 @@ Final verification on Python 3.12.11/macOS: workflow 158, XLSX 373, ET 453, repo
 
 新增 names 命令使用单文件请求 path，可选 limit（1..100，默认32）、offset（非负整数，默认0）和 sha256。非零 offset 必须提供前页 sha256；来源变化或偏移越界即拒绝。响应 table_workflow_names_v1 返回完整名称、total_names、next_offset、names_omitted 和来源状态；名称页不包含单元格，不代表完整读取。按实际返回数续读，next_offset=null 表示已列出全部可读表名，source partial 仍为 partial/退出3。名称页按23000字符预算提前停止，单个名称或文件身份超预算明确失败，不截断名称或返回无法推进的游标。旧 inspect schema 和预览默认值不变。
 
-最终金额舍入按输出映射复用已有公开 evaluate_many（接口v1必需能力）；空值不送入公式引擎，Decimal和错误语义不变，不改提供方默认行为。
+最终金额舍入按输出映射复用已有公开 evaluate_many（XLSX 必需能力）；空值不送入公式引擎，Decimal和错误语义不变，不改提供方默认行为。
 
 inspect 的存储格边界复用 XLSX 公开 address_many，按最多10000地址分批；启动时必须协商该 operation，旧提供方缺失时明确停止，无私有导入或静默逐格回退。显式 LegacyDependencies 迁移适配器仍使用原地址核心。
 

@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from task_directory import TaskDirectory
 from xml.etree import ElementTree as ET
 from unittest.mock import patch
 
@@ -38,7 +39,7 @@ class WorkbookTests(unittest.TestCase):
         self.assertEqual(ET.fromstring(data)[0].attrib, root[0].attrib)
 
     def test_new_report_all_parts_use_preferred_xml_format(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             book = Workbook.create(spec({'A1': {'value': '收支 & <统计>'}, 'B1': {'formula': '1+2'}}))
             book.calculate()
             output = Path(directory) / 'report.xlsx'
@@ -61,7 +62,7 @@ class WorkbookTests(unittest.TestCase):
 
     def test_source_aliases_create_standard_package_without_template_writes(self):
         template = SCRIPTS.parent / 'assets' / 'minimal_xlsx'
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             root = Path(directory)
             installed = root / 'skill' / 'assets' / 'minimal_xlsx'
             shutil.copytree(template, installed)
@@ -103,7 +104,7 @@ class WorkbookTests(unittest.TestCase):
             {'name': 'Summary', 'cells': {'A1': {'formula': "Sales!D1+1"}}}]})
         report = book.calculate()
         self.assertEqual(report['calculated_count'], 2)
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             path = Path(directory) / 'out.xlsx'
             book.save(path)
             again = Workbook.load(path)
@@ -172,7 +173,7 @@ class WorkbookTests(unittest.TestCase):
             {'name': 'Other', 'cells': {'A1': {'value': 'untouched'}}}]})
         book.calculate()
         book.parts['custom/binary.bin'] = bytes(range(256))
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             original = Path(directory) / 'original.xlsx'
             output = Path(directory) / 'edited.xlsx'
             book.save(original)
@@ -208,14 +209,14 @@ class WorkbookTests(unittest.TestCase):
         book._index()
         self.assertIsNone(book.cells['Sales']['A1']['formula'])
         self.assertEqual(book.cells['Sales']['A2']['value'], ' 中文 & < > ')
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             path = Path(directory) / 'spec.json'
             path.write_text('{"sheets":[],"sheets":[]}', encoding='utf-8')
             with self.assertRaises(ValueError):
                 read_spec(path)
 
     def test_cli_standard_library_only(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             directory = Path(directory)
             source = directory / 'spec.json'
             output = directory / 'result.xlsx'
@@ -262,7 +263,7 @@ class WorkbookTests(unittest.TestCase):
             b'application/vnd.ms-excel.sheet.macroEnabled.main+xml')
         # Opaque test sentinel verifies preservation only, not executable VBA validity.
         book.parts['xl/vbaProject.bin'] = b'opaque-vba-preservation-sentinel'
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             path = Path(directory) / 'macros.xlsm'
             with self.assertRaises(ValueError):
                 book.save(Path(directory) / 'wrong.xlsx')
@@ -276,7 +277,7 @@ class WorkbookTests(unittest.TestCase):
                 self.assertEqual(archive.read('xl/vbaProject.bin'), b'opaque-vba-preservation-sentinel')
 
     def test_cli_incomplete_and_csv_read(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with TaskDirectory() as directory:
             directory = Path(directory)
             source = directory / 'spec.json'
             output = directory / 'incomplete.xlsx'

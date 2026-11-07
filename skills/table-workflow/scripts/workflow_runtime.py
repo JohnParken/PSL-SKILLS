@@ -39,6 +39,9 @@ def text_field(value, label):
 
 def task_path(value, *, output=False):
     require(isinstance(value, str) and bool(value) and '\\' not in value and '\0' not in value, 'Invalid task path')
+    if output:
+        require('/' not in value and ':' not in value and value not in ('.', '..'),
+                'Output must be a filename only in the task working directory')
     path = Path(value)
     require(not path.is_absolute() and '..' not in path.parts and bool(path.parts), 'Use task-relative paths without parent traversal')
     current = Path('.')
@@ -281,8 +284,10 @@ class Dependencies(LegacyDependencies):
             capability = self.run_process(name, [str(root / 'scripts' / entry), 'capabilities'])
             advertised = json.loads(capability.stdout)
             from table_workflow_cli_protocol import PROTOCOL
-            require(advertised.get('protocol') == PROTOCOL and advertised.get('interface_version') == 1
+            require(advertised.get('protocol') == PROTOCOL and advertised.get('interface_version') == (2 if name == 'xlsx' else 1)
                     and advertised.get('skill') == name, 'Incompatible dependency capability interface')
+            if name == 'xlsx':
+                require(advertised.get('delivery_filename_only') is True, 'Dependency lacks filename-only delivery capability')
             needed = ({'open', 'create', 'extract', 'region', 'target_headers', 'resolve_column', 'address', 'column_name',
                        'address_many', 'typed_value', 'typed_values', 'open_metadata', 'release', 'validate_query', 'matches', 'index_rows', 'summarize', 'lookup', 'evaluate',
                        'patch', 'calculate', 'verify', 'publish', 'delivery', 'evaluate_many', 'select_rows'} if name == 'xlsx' else {'read', 'metadata'})

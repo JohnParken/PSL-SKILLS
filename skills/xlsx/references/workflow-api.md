@@ -12,7 +12,7 @@
 
 调用方负责授权、相对任务路径、快照指纹、来源完整性、业务口径和结果状态。ET 的 source_status/issues/coverage/reading_assessment 继续保留；若原生产者没有覆盖断言，不生成替代断言或推断为完全成功。多张表共享快照可省去重复解析和落盘 JSON，但不证明宿主 token 缓存。
 
-文件交付通常使用 XLSX runner；拥有已验证 Workbook 的编排器可在内存 patch/calculate、拒绝 incomplete/failed 后 save 到独占新文件，回读验收成功后调用 `<skill-root>/scripts/xlsx_delivery.py` 的 finish_delivery(result,output,protected_inputs)。它只归档最终文件，保留 delivery 的原状态及机器话术；不负责调用方辅助文件的清理。没有辅助文件不重复登记；如有辅助文件，必须先接公共生命周期。归档失败不重算，任何 temporary_residuals 都不能声称清理成功。
+文件交付通常使用 XLSX runner；拥有已验证 Workbook 的编排器可在内存 patch/calculate、拒绝 incomplete/failed 后 save 到任务根目录的独占新文件（只传裸文件名，不带 `./` 或目录），回读验收成功后调用 `<skill-root>/scripts/xlsx_delivery.py` 的 finish_delivery(result,output,protected_inputs)。它只归档最终文件，保留 delivery 的原状态及机器话术；不负责调用方辅助文件的清理。没有辅助文件不重复登记；如有辅助文件，必须先接公共生命周期。归档失败不重算，任何 temporary_residuals 都不能声称清理成功。
 
 接口可用性仍须实查；旧安装缺这些函数应报告依赖版本不满足，不把独立分发误解为内置 ET 或无需 XLSX。跨 Skill 集成测试位于仓库 `tests/test_table_workflow*.py`，以宿主确认的仓库根目录为基准，不随单个 Skill 分发，也不拼接到 `<skill-root>`。
 

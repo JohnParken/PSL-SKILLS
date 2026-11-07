@@ -36,6 +36,8 @@ import shutil
 import os
 import tempfile
 import argparse
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 # ── LibreOffice discovery ───────────────────────────────────────────────────
@@ -92,6 +94,13 @@ def recalculate(
 
     The message explains what happened (success or failure reason).
     """
+    from xlsx_delivery import validate_delivery_output
+    try:
+        output_path = validate_delivery_output(output_path, protected_inputs=[input_path])
+        if output_path.exists():
+            raise ValueError('Output already exists; choose a new filename')
+    except (ValueError, OSError, TypeError) as exc:
+        return False, str(exc)
     soffice = find_soffice()
     if not soffice:
         return False, (
@@ -162,7 +171,8 @@ def recalculate(
 
         # Copy recalculated file to final destination
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-        shutil.copy(tmp_output, output_path)
+        with open(tmp_output, "rb") as source, open(output_path, "xb") as destination:
+            shutil.copyfileobj(source, destination)
 
     return True, f"Recalculation complete. LibreOffice {version}. Output: {output_path}"
 

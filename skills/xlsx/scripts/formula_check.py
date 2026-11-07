@@ -34,6 +34,8 @@ Exit code:
 """
 
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import zipfile
 import xml.etree.ElementTree as ET
 import re
@@ -353,13 +355,18 @@ def main() -> None:
         print("Usage: <skill_dir>/scripts/formula_check.py <input.xlsx> [--json] [--report [-o FILE]] [--sheet NAME] [--summary]")
         sys.exit(1)
 
+    if output_file:
+        from xlsx_delivery import validate_delivery_output
+        output_file = validate_delivery_output(output_file, protected_inputs=[args_clean[0]])
+        if output_file.exists():
+            raise ValueError('Output already exists; choose a new filename')
     results = check(args_clean[0], sheet_filter=sheet_filter)
 
     if use_report:
         report = build_report(results)
         output = json.dumps(report, indent=2, ensure_ascii=False)
         if output_file:
-            with open(output_file, "w", encoding="utf-8") as f:
+            with open(output_file, "x", encoding="utf-8") as f:
                 f.write(output + "\n")
         else:
             print(output)
@@ -425,4 +432,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (ValueError, OSError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        raise SystemExit(1)

@@ -10,7 +10,7 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, finalize_failed_cleanup, _unique_object
-from _artifact_runtime.archive_deliverables import validate_output_path, choose_delivery_output
+from _artifact_runtime.archive_deliverables import validate_output_path, validate_delivery_output, choose_delivery_output
 
 SCRIPTS = {'stdlib_xlsx.py', 'xlsx_tabular.py', 'xlsx_result_export.py', 'xlsx_management.py',
            'xlsx_dashboard.py', 'xlsx_deposits.py', 'xlsx_deposit_structure.py',
@@ -96,7 +96,7 @@ def _run_task(specification):
             or not all(isinstance(k, str) and re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,31}', k) for k in configs)
             or not isinstance(inputs, list) or not all(isinstance(x, str) for x in inputs)):
         raise ValueError('Invalid task script, arguments, config names or inputs')
-    output = validate_output_path(Path(specification['output']))
+    output = validate_delivery_output(specification['output'])
     try:
         if final_argument(script, arguments) != str(output):
             raise ValueError('Declared output must match the command output exactly')

@@ -1,4 +1,4 @@
-"""Stable version-one capability CLI, backed by the existing XLSX algorithms."""
+"""Stable version-two capability CLI, backed by the existing XLSX algorithms."""
 import argparse
 from copy import deepcopy
 from decimal import Decimal
@@ -16,7 +16,7 @@ import xlsx_match as matching
 import xlsx_lookup as lookup
 import formula_engine as formula
 from xlsx_wps_result import load_result_bytes
-from xlsx_delivery import finish_delivery, validate_input_path, validate_output_path
+from xlsx_delivery import finish_delivery, validate_input_path, validate_output_path, validate_delivery_output
 
 OPERATIONS = ('open', 'open_metadata', 'create', 'extract', 'release', 'region', 'target_headers', 'resolve_column',
               'address', 'address_many', 'column_name', 'typed_value', 'typed_values', 'validate_query', 'matches', 'index_rows',
@@ -24,7 +24,7 @@ OPERATIONS = ('open', 'open_metadata', 'create', 'extract', 'release', 'region',
 
 
 def capabilities():
-    return {'protocol': PROTOCOL, 'interface_version': 1, 'skill': 'xlsx', 'operations': list(OPERATIONS),
+    return {'protocol': PROTOCOL, 'interface_version': 2, 'delivery_filename_only': True, 'skill': 'xlsx', 'operations': list(OPERATIONS),
             'transport': 'bounded_json_lines', 'max_frame_bytes': MAX_FRAME,
             'handles': 'process_local; opaque; release or close stdin', 'max_handles': 64,
             'max_typed_values': 10000, 'metadata_schema': 'workbook_metadata_v1'}
@@ -184,13 +184,14 @@ class Session:
             return True
         if operation == 'publish':
             book = self.book(p['handle'])
-            output = validate_output_path(Path(p['output']), protected_inputs=[])
+            output = validate_delivery_output(p['output'], protected_inputs=[])
             book.save(output)
             require(core.Workbook.load(output).parts == book.parts, 'Written package does not match validated package')
             return {'output_written': True, 'verification': 'written_package_passed',
                     'sha256': hashlib.sha256(output.read_bytes()).hexdigest()}
         if operation == 'delivery':
-            output = validate_input_path(Path(p['output']))
+            output = validate_delivery_output(p['output'])
+            validate_input_path(output)
             result = {}
             finish_delivery(result, str(output), p['protected_inputs'])
             return result

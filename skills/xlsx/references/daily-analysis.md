@@ -27,7 +27,7 @@ average facts spec (`<skill-root>/assets/fictional_daily_average_facts.json`) in
 `./daily.json` and `./daily-facts.json`, respectively, using exclusive creation. Then run:
 
 ```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./daily-facts.json ./daily.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./daily-facts.json daily.xlsx
 python3 -I -S -B "<skill-root>/scripts/xlsx_daily.py" average daily.xlsx --sheet DailyFacts --query daily.json --xlsx average_report.xlsx
 ```
 
@@ -36,7 +36,7 @@ flow facts spec (`<skill-root>/assets/fictional_daily_flow_facts.json`) illustra
 Copy them exclusively to new task files `./flow.json` and `./flow-facts.json`, respectively:
 
 ```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./flow-facts.json ./flow.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./flow-facts.json flow.xlsx
 python3 -I -S -B "<skill-root>/scripts/xlsx_daily.py" accumulate flow.xlsx --sheet DailyFacts --query flow.json --xlsx flow_report.xlsx
 ```
 

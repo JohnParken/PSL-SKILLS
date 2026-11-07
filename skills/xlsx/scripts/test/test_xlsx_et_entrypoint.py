@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from task_directory import TaskDirectory
 import subprocess
 import sys
 import tempfile
@@ -13,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from stdlib_xlsx import Workbook
 class FamilyRoutingTests(unittest.TestCase):
     def test_family_and_disguised_cfb_are_refused(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             root = Path(tmp)
             for suffix in ('.et', '.ET', '.ett', '.ETT', '.wps', '.WPS', '.xlsx'):
                 path = root / ('input'+suffix)
@@ -26,7 +27,7 @@ class FamilyRoutingTests(unittest.TestCase):
                 self.assertIn('wps skill', report['message'])
                 self.assertIn('et skill', report['message'])
     def test_identify_and_analysis_explicit_refusal(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             for suffix in ('.WPS', '.ET', '.ETT'):
                 path = Path(tmp) / ('input' + suffix)
                 path.write_bytes(b'')
@@ -45,7 +46,7 @@ class FamilyRoutingTests(unittest.TestCase):
                         self.assertEqual(report['recommended_skill'], 'wps' if suffix == '.WPS' else 'et')
 
     def test_unknown_native_is_not_wps(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             path = Path(tmp) / 'unknown.xlsx'
             path.write_bytes(b'unknown input')
             from xlsx_identify import identify
@@ -57,7 +58,7 @@ class FamilyRoutingTests(unittest.TestCase):
             self.assertNotIn('wps skill', str(caught.exception))
 
     def test_ooxml_under_family_suffix_is_not_read(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with TaskDirectory() as tmp:
             native = Path(tmp)/'native.xlsx'
             Workbook.create({'sheets':[{'name':'Data','cells':{}}]}).save(native)
             path = native.with_suffix('.et'); path.write_bytes(native.read_bytes())

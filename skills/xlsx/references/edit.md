@@ -7,7 +7,7 @@ before using this reference; internal resources and task data have different pat
 
 Use `read` to inspect the actual sheet names, addresses, formulas, raw values and style
 indices. Follow Standard-library calculation and file contract (`<skill-root>/references/write-contract.md`) to build a JSON patch and
-run `python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./output.xlsx`. The output must have a new filename.
+run `python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json output.xlsx`. The output must have a new filename.
 
 Only list intended cells. Existing styles remain when style is omitted. Writing null
 clears a cell's value/formula but retains its style. Write a merged region's top-left
