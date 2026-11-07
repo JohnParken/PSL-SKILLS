@@ -81,7 +81,7 @@ runner自动自检、验收、归档、清理；`--compact-receipt` 仅精简成
 
 ## 验收与收尾
 
-核对 `status=verified`、`task_status`、`output`、非空主文件及 `warnings`；静态验收非视觉验收。按 `archive_status` 与明细展示 `archive_user_notice`：全部成功用“🎉 文档已经放到你的云空间啦，随时都能找到～ ☁️✨”；失败说明未归档，有真实下载方式才提示下载；skipped说明跳过，未知/部分成功如实报告。保留主文件链接，隐藏内部路径/ID/日志。
+核对 `status=verified`、`task_status`、`output`、非空主文件及 warnings；静态验收非视觉验收。`archive_status=copied` 且完整非空清单全 copied/already_archived 才提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”。不等映射确认，不承诺上传时效。保留 archive_message，展示 archive_user_notice；失败/部分/跳过/待交接/未知如实报告，不套全部成功。业务/归档/清理独立，业务失败不称成功。隐藏归档路径/目录/ID/日志，保留主文件链接，不虚构下载。见 `<skill-root>/references/delivery.md`。
 
 核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；`cleanup_incomplete`/退出3如实说明，不乱删或重发。`/large_tool_results/` 仅用宿主 `read_file`，不得绕过。
 

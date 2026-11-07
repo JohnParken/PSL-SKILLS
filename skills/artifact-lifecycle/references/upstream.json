@@ -1,5 +1,5 @@
 {
-  "origin": "DOCX 20261103.1633.1524; explicit archive user notice",
+  "origin": "DOCX 20261107.1943.5370; unified cloud-space archive notice",
   "policy": "Explicit vendored distribution; repository parity test must pass for changes to either copy. No runtime cross-skill imports.",
   "files": [
     {
@@ -30,7 +30,7 @@
     {
       "file": "archive_deliverables.py",
       "mode": "before-main",
-      "sha256": "6b93434f2be57f6a4059a624407920fe312ed9091f1afef424382280271d2713"
+      "sha256": "92e282779d79e615cbb84759140fd82a7f11f004538a751d96551da64163cbb3"
     }
   ]
 }

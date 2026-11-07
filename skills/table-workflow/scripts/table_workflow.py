@@ -580,6 +580,7 @@ def bounded_result(result, limit=24000):
     if 'delivery' in result:
         compact['delivery'] = {path: {'archive_status': item.get('archive_status', 'unknown'),
                                      'archive_message': item.get('archive_message'),
+                                     'archive_user_notice': item.get('archive_user_notice'),
                                      'temporary_residual_count': len(item.get('temporary_residuals', [])),
                                      'details_omitted_due_to_budget': True} for path, item in result['delivery'].items()}
     if 'files' in result:

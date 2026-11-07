@@ -182,3 +182,9 @@ flowchart TD
 - 默认依赖路径：[workflow_runtime.py](../../skills/table-workflow/scripts/workflow_runtime.py)、[workflow_cli_client.py](../../skills/table-workflow/scripts/workflow_cli_client.py)、[CLI 契约](../../skills/table-workflow/scripts/docs/cli-contract.md)。
 - 格式所有方：[XLSX 公开 CLI](../../skills/xlsx/scripts/xlsx_cli.py)、[XLSX 能力契约](../../skills/xlsx/scripts/docs/cli-contract.md)、[xlsx 导读](xlsx.md)、[ET 主入口](../../skills/et/SKILL.md)。
 - 证据边界：[validation.md](../../skills/table-workflow/references/validation.md)。
+
+## 归档提示更新（2026-11-07）
+
+以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+
+归档经稳定 CLI 复用 XLSX 内置实现；核对 delivery 中 XLSX 与核验 JSON 两项实际结果，两项均成功才提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”；仅一项成功提示“部分文件归档成功，请到云空间查看已归档文件；其余文件归档未完成。”并说明另一项状态。两项均未成功按实际失败、跳过或未知报告；压缩回执保留每项 archive_user_notice，机器 archive_message 不变。归档失败保留主文件、不重跑。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。

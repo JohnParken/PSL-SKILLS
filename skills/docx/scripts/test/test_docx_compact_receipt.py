@@ -36,7 +36,7 @@ class CompactReceiptTests(unittest.TestCase):
                 obj = json.loads(r.stdout)
                 self.assertEqual(obj['status'], 'verified')
                 self.assertEqual(obj['archive_user_notice'],
-                                 '🎉 文档已经放到你的云空间啦，随时都能找到～ ☁️✨')
+                                 '🎉 文件归档成功，请到云空间查看。 ☁️✨')
                 self.assertEqual(obj['task_status'], 'completed')
                 self.assertEqual(obj['output'], '验收.docx')
                 self.assertTrue(obj['cleanup']['cleanup_complete'])
@@ -87,7 +87,7 @@ class CompactReceiptTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 receipt = json.loads(result.stdout)
                 self.assertEqual(receipt['archive_status'], 'failed' if failed else 'skipped')
-                self.assertIn('没能' if failed else '未执行', receipt['archive_user_notice'])
+                self.assertIn('未完成' if failed else '未执行', receipt['archive_user_notice'])
                 self.assertNotIn('已经放到', receipt['archive_user_notice'])
 
     def test_error_keeps_full_diagnostics(self):

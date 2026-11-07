@@ -12,7 +12,7 @@ description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公
 
 还可对已读出的指定区域做类型明确的筛选、排序、去重、列统计与分组汇总，输出派生 JSON；原始文件及读取结果不变。统计不等于完整格式认证、公式重算或原格式写回。
 
-多份来源计算后填入另附 XLSX 模板时，交由独立 table-workflow 技能编排，ET 仍只读。交接原始完整读取 schema 与 partial/缓存诊断，不能将 et_table_analysis_v1 或预览直接当原工作簿；单表读取与统计继续本入口，不加载跨表流程。
+多份来源计算后填入另附 XLSX 模板时，交由独立 table-workflow 技能编排，ET 仍只读。纯文本或仅 stdout 不归档；文件交接继承提供方已验证的归档状态与用户提示，成功即提示去云空间查看，非成功如实报告，不虚构文件链接或暴露内部归档信息。交接原始完整读取 schema 与 partial/缓存诊断，不能将 et_table_analysis_v1 或预览直接当原工作簿；单表读取与统计继续本入口，不加载跨表流程。
 
 维护CLI或接入跨技能编排时，按需读取 `<skill-root>/scripts/docs/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。回归脚本集中在 `<skill-root>/scripts/test/`。
 

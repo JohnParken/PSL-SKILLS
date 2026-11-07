@@ -34,7 +34,7 @@ python -I -S -B "<skill-root>/scripts/lifecycle.py" check
 2. **业务技能生成并验收。** 本技能不执行任意脚本，不判断正文或格式正确；临时Python须先退出，才能由外层收尾。失败时用failed封存并clean，删除本轮临时文件及清单，不冒称业务成功。
 3. **归档最终清单。** 验收通过后，仅archive本轮最终文件并保护全部输入。代码读取配置并复制，不移动主文件；默认拒绝同名归档覆盖并返回archive_conflict；只有明确授权的独立归档调用才可使用--replace-existing。归档失败保留主文件、记录诊断，不因此重跑生成。
 4. **封存后清理。** 成功须有真实业务验收与归档处理结果，seal后clean。核对 `cleanup_complete`、manifest_removed、deleted/retained/failed和 `deliverables_unchanged`；归档失败也可以明确记录failed后收尾，不能混淆主文件、归档和清理状态。
-5. **交付。** 提供实际主文件链接。核对结果后按归档用户话术 (`<skill-root>/references/contract.md#归档用户话术`)回复，不展示内部路径、目录、ID、原始JSON或配置日志。归档失败/跳过与清理未完成分别如实提示；内部诊断保留。
+5. **交付。** 归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。核对非空完整清单，汇总 copied 且全部项 copied/already_archived 才是全部成功；保留 archive_message，按实际结果展示 archive_user_notice。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。详见 `<skill-root>/references/contract.md#归档用户话术`。
 
 只有自行编排plan/archive/seal/clean或恢复原登记项时才读命令契约；只核对已有runner结果不再加载本页。同一任务只复用已确认仍在上下文、且真实路径/版本或指纹未变的参考；不要因链接主动递归预读或重复读取。环境、任务或版本变化、上下文缺失时重新核对必要约束。宿主是否预加载、缓存、截断或计费由宿主决定，本说明不能强制去重；复用参考不等于复用其他任务的素材或授权。
 

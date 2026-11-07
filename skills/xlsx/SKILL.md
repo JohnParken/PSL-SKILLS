@@ -90,6 +90,6 @@ python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./清单.xlsx
 
 业务、归档、清理分别核对：`task_status=completed` 且 `cleanup.cleanup_complete=true`、`manifest=null` 表示 runner 登记项清理完成，不证明目录无其他残留。退出3或 `cleanup_incomplete` 报收尾未完成；业务失败/部分计算清理成功可为 `failed_cleaned`，仍保留原失败/退出2。`child_execution` 未启动/超时/信号或 `output_may_exist` 状态不明时先核对原任务，不能盲目重跑。
 
-核对完整 `delivery`，保留 warnings 和每文件结果：归档失败保留主文件、不重算、不回滚。`archive_status=copied` 且全部文件 copied/already_archived 才用成功话术“🎉 文档已经放到你的云空间啦，随时都能找到～ ☁️✨”；主文件验收成功且宿主支持下载、归档失败时用“🥺 文档已生成，但这次没能放进你的云空间。先下载保存，别耽误使用呀～ 📄”。可按产物改称表格；优先核对 `archive_user_notice`，保留机器 `archive_message`，不转贴内部归档路径、ID或日志。skipped、未知、部分成功分别如实报告，不套全部成功；保留实际主交付链接，不虚构下载能力。
+归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。核对非空完整清单，汇总 copied 且全部项 copied/already_archived 才是全部成功；保留 archive_message，按实际结果展示 archive_user_notice。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。详细话术见 `<skill-root>/references/delivery-lifecycle.md#归档用户话术`。
 
 全部本轮中间文件（脚本、配置、回读结果、日志、暂存、锁、回执、清单）均须收尾；自建额外文件先读生命周期并在创建前登记，不能补认领历史文件。成功或失败均待生产进程退出即清理本轮可安全删除项，不因重试保留；重新生成从原始输入建立新任务。用户原件、主文件、历史交付物和其他任务文件受保护。归属不明、占用、身份变化、强杀残留或删除失败时保留并报告 cleanup_incomplete，只按原清单恢复，不扫描删除未知文件。不重复调用已由 runner 处理的归档/清理。

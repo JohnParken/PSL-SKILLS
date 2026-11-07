@@ -122,3 +122,9 @@ DOCX 是显式、可选的能力交接，不是默认运行时依赖。宿主必
 - [素材读取边界](../../skills/bank-writing/references/source-access.md)
 - [文本到 DOCX 的授权交接](../../skills/bank-writing/references/docx-handoff.md)
 - [相关 docx 入口](../../skills/docx/SKILL.md)
+
+## 归档提示更新（2026-11-07）
+
+以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+
+纯文本或仅 stdout 不归档；文件交接继承提供方已验证的归档状态与用户提示，成功即提示去云空间查看，非成功如实报告，不虚构文件链接或暴露内部归档信息。

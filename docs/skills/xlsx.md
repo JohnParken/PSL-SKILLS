@@ -148,3 +148,9 @@ flowchart TD
 - 对外接口：[CLI 契约](../../skills/xlsx/scripts/docs/cli-contract.md)、[CLI 实现](../../skills/xlsx/scripts/xlsx_cli.py)。
 - 交付与清理：[runner](../../skills/xlsx/scripts/run_xlsx_task.py)、[生命周期契约](../../skills/xlsx/references/delivery-lifecycle.md)、[副本来源](../../skills/xlsx/references/lifecycle-upstream.json)。
 - 组合场景：[table-workflow 导读](table-workflow.md)。
+
+## 归档提示更新（2026-11-07）
+
+以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+
+归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。

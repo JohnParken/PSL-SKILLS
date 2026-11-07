@@ -14,7 +14,7 @@ Python集成可从本独立包的scripts导入：
 |---|---|
 | router_config | read_environment_parameter(name, environ=...)、get_common_parameter(raw,name)，返回原值、不拼路径 |
 | output_location | resolve_output_location(raw)，questionId校验、相对归档位置及fallback原因 |
-| archive_deliverables | archive_outputs(outputs,protected_inputs,replace_existing=False)、finalize_delivery、archive_user_message、choose_delivery_output（仅选择名称，不预留路径） |
+| archive_deliverables | archive_outputs(outputs,protected_inputs,replace_existing=False)、finalize_delivery、archive_user_message（机器文案）、archive_user_notice（用户提示）、choose_delivery_output（仅选择名称，不预留路径） |
 | artifact_files | 既有内部路径检查和单文件原子复制原语，公开调用优先archive_outputs |
 | controlled_cleanup | TaskFiles、plan_cleanup、seal_cleanup、finalize_cleanup（最终收尾）；cleanup_task仅内部清理阶段 |
 | cleanup_task | 保留DOCX来源的兼容CLI；公共默认使用lifecycle.py |

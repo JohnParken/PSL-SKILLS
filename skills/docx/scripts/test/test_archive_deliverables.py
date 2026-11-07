@@ -41,14 +41,14 @@ class ArchiveOutputsTests(unittest.TestCase):
     def test_user_notice_maps_status_without_exposing_diagnostics(self):
         copied = {'archive_status': 'copied', 'files': [{'archive_status': 'copied'}]}
         self.assertEqual(delivery.archive_user_notice(copied),
-                         '🎉 文档已经放到你的云空间啦，随时都能找到～ ☁️✨')
-        for state, expected in (('skipped', '未执行'), ('failed', '没能'), ('unknown', '尚未确认')):
+                         '🎉 文件归档成功，请到云空间查看。 ☁️✨')
+        for state, expected in (('skipped', '未执行'), ('failed', '未完成'), ('unknown', '尚未确认')):
             result = {'archive_status': state, 'files': [], 'warnings': ['/private/secret-id']}
             notice = delivery.archive_user_notice(result)
             self.assertIn(expected, notice)
             self.assertNotIn('/private', notice)
             self.assertNotIn('下载', notice)
-        self.assertIn('部分', delivery.archive_user_notice({**copied, 'archive_status': 'failed'}))
+        self.assertNotIn('归档成功', delivery.archive_user_notice({**copied, 'archive_status': 'failed'}))
         self.assertIn('尚未确认', delivery.archive_user_notice({'archive_status': 'copied', 'files': []}))
 
     def test_archive_copy_is_verified_and_corruption_is_reported(self):

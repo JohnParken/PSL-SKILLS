@@ -180,3 +180,9 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 - 统一入口与格式路由：[SKILL.md](../../skills/wps/SKILL.md)、[read_wps.py](../../skills/wps/scripts/read_wps.py)、[wps_output_contract.py](../../skills/wps/scripts/wps_output_contract.py)。
 - 创建、编辑及计划校验：[run_wps_task.py](../../skills/wps/scripts/run_wps_task.py)、[run_wps_edit.py](../../skills/wps/scripts/run_wps_edit.py)、[wps_content_validation.py](../../skills/wps/scripts/wps_content_validation.py)。
 - 后端与状态传播：[export_wps.py](../../skills/wps/scripts/export_wps.py)、[wps_task_paths.py](../../skills/wps/scripts/wps_task_paths.py)、[wps_delivery.py](../../skills/wps/scripts/wps_delivery.py)。
+
+## 归档提示更新（2026-11-07）
+
+以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+
+归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。

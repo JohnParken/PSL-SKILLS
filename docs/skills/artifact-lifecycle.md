@@ -138,3 +138,9 @@ flowchart TD
 - [Skill 主入口](../../skills/artifact-lifecycle/SKILL.md)、[命令与失败恢复契约](../../skills/artifact-lifecycle/references/contract.md)
 - [复用与验证说明](../../skills/artifact-lifecycle/references/reuse.md)、[来源清单](../../skills/artifact-lifecycle/references/upstream.json)
 - [统一 CLI](../../skills/artifact-lifecycle/scripts/lifecycle.py)、[归档实现](../../skills/artifact-lifecycle/scripts/archive_deliverables.py)、[清理实现](../../skills/artifact-lifecycle/scripts/controlled_cleanup.py)
+
+## 归档提示更新（2026-11-07）
+
+以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+
+归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。

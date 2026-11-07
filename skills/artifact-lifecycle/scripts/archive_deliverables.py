@@ -95,19 +95,26 @@ def archive_user_message(result: dict) -> str:
 
 
 def archive_user_notice(result: dict) -> str:
-    """Public wording; no internal paths or unsupported download promises."""
+    """Guide users to cloud space after archival; do not assert upload completion."""
     state = archive_user_message(result)
     if state == '归档完成':
-        return '🎉 文档已经放到你的云空间啦，随时都能找到～ ☁️✨'
+        return '🎉 文件归档成功，请到云空间查看。 ☁️✨'
     if state == '归档未执行':
-        return '本次未执行归档，文件未放入云空间。'
+        return '本次未执行归档，请先核对文件结果。'
+    if result.get('archive_status') == 'handoff_required':
+        return '文件待交接归档，归档完成后再提示到云空间查看。'
+    if result.get('archive_status') == 'not_attempted':
+        return '本次未执行归档，请先核对文件结果。'
     if state == '归档未完成':
-        files = result.get('files', [])
-        if any(item.get('archive_status') in ('copied', 'already_archived')
-               for item in files if isinstance(item, dict)):
-            return '部分文件已放入云空间，其余文件归档未完成，请核对结果。'
-        return '🥺 本次没能放进你的云空间，请先保存已生成的文件。 📄'
-    return '归档结果尚未确认，请核对后再确认文件是否已放入云空间。'
+        files = result.get('files')
+        if isinstance(files, list) and files and all(isinstance(item, dict) for item in files):
+            succeeded = sum(item.get('archive_status') in ('copied', 'already_archived') for item in files)
+            # A failed summary can invalidate otherwise copied entries (for example,
+            # a primary file changed after verification). Do not call that a partial success.
+            if 0 < succeeded < len(files):
+                return '部分文件归档成功，请到云空间查看已归档文件；其余文件归档未完成。'
+        return '🥺 本次归档未完成，请先核对文件结果。 📄'
+    return '归档结果尚未确认，请先核对文件结果。'
 
 
 def _archive_summary(summary: dict) -> dict:
