@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-本文对应仓库基线 [`14bfafe55d58fd04069a78d5196b82bfbf8f67c6`](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)，Skill 版本为 `20261105.1717.1148`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-07。本文对应仓库基线 [`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)，Skill 版本为 `20261107.1943.5370`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 ## 功能与适用范围
 
@@ -9,7 +9,7 @@ ET Skill 离线读取 `.et/.ett` 中的工作表、单元格保存值和公式�
 - 二进制分支：读取 CFB 容器内唯一的 `Workbook` / `Book` 流，解析受支持的 BIFF8 记录子集。
 - ZIP 分支：识别并读取受支持的 OOXML 电子表格子集。原生 XLSX 业务任务仍按入口约定交给 XLSX Skill。
 - 分析分支：使用已读取的类型化保存值生成派生 JSON，不修改原表或输入提取对象。
-- 跨表计算后填入另一份 XLSX 模板由 `table-workflow` 编排；ET 只提供原始完整提取结果及诊断。
+- 跨表计算后填入另一份 XLSX 模板由 `table-workflow` 编排；ET 只提供原始完整提取结果及诊断；名称发现可使用仅元数据接口。
 
 不提供新建、编辑、办公格式转换、版面恢复、公式重算、宏执行或外链访问。CFB 容器识别、BIFF8 子集读取和完整 WPS 兼容是三个不同层次；未知容器、原生私有格式和未支持的记录不能被当作已支持。
 
@@ -17,7 +17,7 @@ ET Skill 离线读取 `.et/.ett` 中的工作表、单元格保存值和公式�
 
 ```mermaid
 flowchart TD
-    A["宿主确认的 ET 或 ETT 输入"] --> B["et_cli.py：run 或协议 read"]
+    A["宿主确认的 ET 或 ETT 输入"] --> B["et_cli.py：run / read / metadata"]
     B --> C["read_et.py：按内容路由"]
     C --> D["wps_cfb.py：CFB 容器校验"]
     D --> E["wps_biff8.py：BIFF8 子集"]
@@ -31,6 +31,8 @@ flowchart TD
     K --> L["et_table_preview.py：物理网格预览"]
     K --> M["et_table_analysis.py：统计与分组"]
     M --> N["et_table_quality.py：质量诊断"]
+    L --> P["et_output_page.py：UTF-8 字节预算与游标"]
+    M --> P
     I --> O["公开能力契约：跨 Skill 消费"]
 ```
 
@@ -40,13 +42,14 @@ flowchart TD
 
 | 源码 | 主要职责 |
 |---|---|
-| [et_cli.py](../../skills/et/scripts/et_cli.py) | `run` 兼容原读取 CLI；`capabilities` 查询接口；`read` 从 stdin 接收协议请求 |
+| [et_cli.py](../../skills/et/scripts/et_cli.py) | `run` 兼容原读取 CLI；`capabilities` 查询接口；`read/metadata` 从 stdin 接收协议请求 |
 | [read_et.py](../../skills/et/scripts/read_et.py) | `read_bytes` / `read`、环境检查、容器识别、原始 JSON 编码与状态退出码 |
 | [wps_access.py](../../skills/et/scripts/wps_access.py) | 受限文件读取、容器策略和错误上下文 |
 | [wps_cfb.py](../../skills/et/scripts/wps_cfb.py)、[wps_biff8.py](../../skills/et/scripts/wps_biff8.py) | CFB 流校验及 BIFF8 记录、单元格、缓存和元数据子集 |
 | [wps_ooxml_sheet.py](../../skills/et/scripts/wps_ooxml_sheet.py)、[wps_ooxml.py](../../skills/et/scripts/wps_ooxml.py) | OOXML 表格解析及有界 ZIP/XML 读取 |
 | [wps_diagnostics.py](../../skills/et/scripts/wps_diagnostics.py)、[wps_read_view.py](../../skills/et/scripts/wps_read_view.py) | 提取评估、遗漏诊断、绑定来源的有界输出 |
 | [analyze_et.py](../../skills/et/scripts/analyze_et.py) | 分析或预览 CLI；查询文件读取和源文件 SHA-256 |
+| [et_output_page.py](../../skills/et/scripts/et_output_page.py) | 预览/分析结果的可选 UTF-8 字节预算分页；保留完整统计和源诊断 |
 | [et_table_data.py](../../skills/et/scripts/et_table_data.py) | schema、选区、表头、类型、缓存策略与合并区域处理 |
 | [et_table_analysis.py](../../skills/et/scripts/et_table_analysis.py) | `analyze(result, query)`、类型化过滤、稳定排序、统计和分组 |
 | [et_table_preview.py](../../skills/et/scripts/et_table_preview.py)、[et_table_quality.py](../../skills/et/scripts/et_table_quality.py) | 物理网格预览及有界位置样本、统计分母、缓存缺口 |
@@ -65,7 +68,7 @@ flowchart TD
     F -->|"读取或抽查"| G["完整结果或明确的有界投影"]
     F -->|"统计"| H["明确工作表、矩形、表头与缓存政策"]
     H --> I["排除指定行、可选文本填充、筛选、去重、排序"]
-    I --> J["全体匹配行统计与分组，再做输出分页"]
+    I --> J["全体匹配行统计与分组，再按可选字节预算分页"]
     G --> K["核对类型、覆盖、来源与诊断"]
     J --> K
     K --> L["交付结果并保留源 partial 和计算缺口"]
@@ -107,10 +110,11 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 
 ### 跨 Skill 接口
 
-[CLI 契约](../../skills/et/scripts/docs/cli-contract.md) 定义 `psl_capabilities_v1`、`interface_version=1`、`operations=[read]`，接口版本与 Skill 时间戳版本分开管理。
+[CLI 契约](../../skills/et/scripts/docs/cli-contract.md) 定义 `psl_capabilities_v1`、`interface_version=1`、`operations=[read,metadata]`，接口版本与 Skill 时间戳版本分开管理。
 
 - `read` 请求含 `raw: bytes`、`source: str`、可选兼容策略；`source` 只是标签，不会触发文件扫描。
 - 响应 `result.extraction` 是原生产者编码的完整 UTF-8 JSON 字节，另有 `exit_code`；不能只检查协议层 `ok`。
+- `metadata` 接受与 `read` 相同的输入，仍完整解析并执行原 16 MiB 结果预算校验；返回 `workbook_metadata_v1` 的原序表名、源状态/诊断/覆盖及 `exit_code`，不传输单元格。未知 schema 或不完整解析标记拒绝，不能用名称元数据统计。
 - 编码器 [et_cli_protocol.py](../../skills/et/scripts/et_cli_protocol.py) 保留 Decimal、bytes、tuple 和字典类型；禁用浮点字面量、重复键和对象执行式反序列化。
 - 消费方先查询能力，再核对协议、请求 ID、schema、退出码和 partial。分页、预览及分析结果不能冒充原始工作簿。
 
@@ -123,11 +127,20 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 | 读取或分析失败 / 1 | 停止依赖操作，不将失败当作空表；失败状态可能细分原因 |
 | 参数错误 / 2 | 常规 usage 与 stderr，不能假定有业务 JSON |
 
-默认 `data` 策略可保留有明确结构边界的非单元格元数据并报告 partial，例如部分条件格式、批注绘图分片和数据验证记录；这些内容不应用到保存值，也不表示完整规则语义、打印布局或批注正文均已理解。未知数据、加密、结构错误和资源超限仍拒绝。Salvage 不是自动失败回退，只有明确请求最大限度部分读取时才按高级参考使用独立 BIFF 入口。
+默认 `data` 策略可保留有明确结构边界的非单元格元数据并报告 partial，例如部分条件格式、批注绘图分片和数据验证记录；这些内容不应用到保存值，也不表示完整规则语义、打印布局或批注正文均已理解。有严格帧边界的未知 OfficeArt atom 或 FtCmo/FtEnd 对象在 data 策略下可保留原始证据，但其值影响未知，标记 `unverified_due_to_best_effort_salvage`、`omissions_affect_cell_values=true` 和源 partial；strict 仍拒绝。这不表示自动启用独立 salvage 入口。其余未知数据、加密、结构错误和资源超限仍按拒绝契约处理。Salvage 不是自动失败回退，只有明确请求最大限度部分读取时才按高级参考使用独立 BIFF 入口。
 
 关键预算包括：原输入 64 MiB、原结果 JSON 16 MiB；协议帧 128 MiB；查询 64 KiB；分析矩形最多 200000 个位置、256 列；最多 10000 组。分析行/组预览默认各 100，物理网格预览默认 10 行、最多 50 行及 10000 个位置。完整边界以 [表格分析](../../skills/et/references/table-analysis.md) 和源码常量为准。
 
-[有界读取](../../skills/et/references/bounded-reading.md) 在完整解析后投影，每页都会重新读取和解析输入，不是底层流式读取或缓存快照。游标绑定来源 SHA-256、选项和投影修订；源变化须重启。截断 JSON、单元格或诊断超预算均不能假报完整成功。矩形预览采用 offset，需要自行核对各页 `source_sha256` 一致。
+[有界读取](../../skills/et/references/bounded-reading.md) 在完整解析后投影，每页都会重新读取和解析输入，不是底层流式读取或缓存快照。游标绑定来源 SHA-256、选项和投影修订；源变化须重启。截断 JSON、单元格或诊断超预算均不能假报完整成功。旧矩形预览采用 offset，须核对各页 `source_sha256` 一致；新增游标模式进一步绑定来源及查询。
+
+### UTF-8 字节预算与续读
+
+- 读取视图新增 `--max-output-bytes`（512..16777216），与原字符预算同时生效；真实 JSON、转义和末尾换行都计入。仅指定字节预算也启用视图；新增 `has_more` 与 `next_cursor` 一致，概况无后续页不表示已返回全部值。字符/字节都不是 token。
+- `analyze_et.py` 的分析和 `--preview` 同样接受 `--max-output-bytes` 与 `--cursor`，保留原 schema，增加 `output_page_revision=1`、coverage、has_more/next_cursor。只传游标时预算默认 12000；无新参数时旧 CLI/API 不变。
+- 游标绑定源 SHA-256、完整查询、范围、表头与模式；续读可调整预算，不能更改统计口径。每次仍完整解析并计算全部匹配数据，只有 rows/groups 分页，profiles/totals/质量报告及源 partial 不裁剪。limit/group_limit 是每页上限；0 表示不请求该结果流。
+- 逐整行/整组输出，行优先、组可后续返回；顶层 `has_more=false` 才结束所请求的全部流。不可省略的元数据或单行/组放不下时明确 `output_view_error`/退出1，不切开值、不返回无法推进的空成功页。有效字节预算也约束失败 JSON。
+
+详见 [读取预算](../../skills/et/references/bounded-reading.md)、[分析续读](../../skills/et/references/table-analysis.md#可选字节预算与续读) 和 [预览](../../skills/et/references/table-preview.md)。BIFF 未解释绘图对象仍保留诊断并传播源 partial，不因输出投影或统计完成升级为完整支持。
 
 ## 依赖、验证与维护限制
 
@@ -145,10 +158,13 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 - [表格分析及统计口径](../../skills/et/references/table-analysis.md)
 - [公开能力与编码契约](../../skills/et/scripts/docs/cli-contract.md)
 - [结果预算编码](../../skills/et/scripts/wps_result.py)
+- [字节预算与分页定点回归](../../skills/et/scripts/test/test_et_output_budget.py)、[元数据回归](../../skills/et/scripts/test/test_metadata_api.py)
 - [随包测试目录](../../skills/et/scripts/test/)
 
 ## 归档提示更新（2026-11-07）
 
-以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+本节与全文均按 2026-11-07 的上述源码基线核对；历史测试记录不代表本轮重跑。
 
 纯文本或仅 stdout 不归档；文件交接继承提供方已验证的归档状态与用户提示，成功即提示去云空间查看，非成功如实报告，不虚构文件链接或暴露内部归档信息。
+
+本轮字节预算/分析分页合成回归的命令、数量和结果见 [文档核验记录](../skill-docs-validation-20261107.json)，不替代真实 ET 样本或全量回归。

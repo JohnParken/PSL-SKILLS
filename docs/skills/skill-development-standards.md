@@ -1,6 +1,6 @@
 # skill-development-standards：开发规范与只读结构检查
 
-> 源码基线：[`14bfafe55d58fd04069a78d5196b82bfbf8f67c6`](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)；Skill 版本：`20261105.1556.4829`。本文说明规范、工具及其边界，不修改或替代原规范。
+> 文档核对日期：2026-11-07；源码基线：[`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261105.1556.4829`。本文说明规范、工具及其边界，不修改或替代原规范。
 
 ## 功能与适用范围
 
@@ -61,7 +61,8 @@ flowchart TD
     D --> E{"环境与目标可读性是否满足"}
     E -->|"否"| F["停止依赖操作并报告缺口"]
     E -->|"是"| G["在授权范围修改说明、脚本、资源或测试"]
-    G --> H["运行目标结构检查"]
+    G --> R["同步核对 README、docs、路由、命令和验证说明"]
+    R --> H["运行目标结构检查"]
     H --> I["运行受影响测试与最小功能示例"]
     I --> J["人工核对能力、契约、依赖和未覆盖要求"]
     J --> K{"是否有本轮引入的问题"}
@@ -136,7 +137,7 @@ python -I -S -B -m unittest discover -s skills/skill-development-standards/scrip
 - **独立运行**：基础 Skill 的自有运行时和资源随包自包含，不隐式依赖相邻安装目录；外部解释器、工具和服务仍需声明与自检。
 - **跨 Skill 协作**：通过公开 CLI、API 或文件契约交接，保留授权、输入来源、类型/精度、partial 和遗漏；接口兼容版本与时间戳发布版本分开。
 - **受控基础副本**：公共运行时副本需记录来源、版本、哈希或等效追踪、许可证和有意差异，并做一致性回归；不得复制其他 Skill 的业务实现来掩盖依赖。
-- **内容与资源一致**：维护时同时核对 description、入口、引用、依赖、CLI、README 和验收证据，不能把未实现或未验证能力写成支持。
+- **内容与资源一致**：按仓库 AGENTS.md，每次优化同时核对并同步 README 与 docs 中受影响的说明、图示和入口；规范本体还要求核对 description、入口、引用、依赖、CLI 和验收证据，不能把未实现或未验证能力写成支持。
 - **业务、归档、清理分离**：有文件交付物按 [artifact-lifecycle](../../skills/artifact-lifecycle/SKILL.md) 设计收尾；已有 runner 不重复登记。失败后待生产进程退出清理明确属于本轮的临时项，未知项保留并报告。
 - **安装目录只读**：任务输入、输出和临时文件位于宿主确认的任务目录；不能为生成外部格式改名或写回 Skill 源资源。
 - **测试与生产隔离**：Skill 自有测试在 `scripts/test/`；真正仓库级联合测试可在 `tests/`，但不成为单包运行依赖。
@@ -152,8 +153,12 @@ python -I -S -B -m unittest discover -s skills/skill-development-standards/scrip
 
 ## 可追溯源码
 
-- [固定基线的规范目录](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6/skills/skill-development-standards)
+- [固定基线的规范目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/skill-development-standards)
 - [仓库约定](../../AGENTS.md)、[规范正文](../../skills/skill-development-standards/SKILL.md)
 - [结构检查实现](../../skills/skill-development-standards/scripts/check_skill.py)
 - [检查器测试](../../skills/skill-development-standards/scripts/test/test_check_skill.py)
 - [依赖声明](../../skills/skill-development-standards/requirements.txt)
+
+## 仓库导读同步要求
+
+[AGENTS.md](../../AGENTS.md) 要求每次功能或代码优化同步检查根 README 与 docs 中受影响的能力、接口、架构/流程、示例和证据；无需修改时在交付中说明已检查及原因。仓库级 [check_project_docs.py](../../tools/check_project_docs.py) 检查当前 Skill 覆盖、导读版本及本地链接/锚点，不随单个 Skill 分发，也不替代 check_skill.py、人工语义核对、Mermaid 解析或业务验收。仅改仓库导读不提升未变更 Skill 版本；历史证据保留原基线。

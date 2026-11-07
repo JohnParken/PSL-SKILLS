@@ -1,6 +1,13 @@
 # PSL-SKILLS
 
-面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取及显式请求下的基础 OFD 1.0 生成、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
+面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取及显式请求下的基础 OFD 1.0 生成、受限 SVG 到原生 PPTX 的创建与有界读取、多源表格模板填报、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
+
+## 文档导航与当前基线
+
+- [架构与功能文档](docs/README.md)：10 个独立 Skill 的模块、架构图、流程图和输入输出边界。
+- 当前导读核对至源码 `6e4cca7a78a57acebe38448962c99cbc4814b409`（2026-11-07 UTC）。Skill 版本以各自 `SKILL.md` 为准；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
+- [本轮文档核验](docs/skill-docs-validation-20261107.json) 与 [文档防漂移检查](tools/check_project_docs.py) 分别记录实际检查结果和可重复检查入口。
+- 本项目维护 Skill 层，不修改 Deep Agents 宿主或加载机制。基础包自包含；组合型 workflow 通过声明的公开契约协作，不能推断存在自动路由服务或 token 节省保证。
 
 ## 收录内容
 
@@ -25,10 +32,14 @@ PSL-SKILLS/
 ├── .agents/skills/skill-development-standards  # 指向规范目录的相对链接
 ├── README.md
 ├── docs/
+│   ├── README.md                  # 当前源码基线、10 个 Skill 索引与整体流程
+│   ├── skills/                    # 各 Skill 的功能、架构图与流程图
 │   ├── check-execution.md         # 自检结果与执行回传入口契约
-│   └── linux-release-acceptance.md # 云端 Linux 生产发布验收清单与方案
+│   └── linux-release-acceptance.md # 历史三包 Linux 验收方案及当前源码入口
 ├── tools/
-│   └── run_skill_check.py         # 仓库级自检适配器（执行固定环境入口并输出分离通道 JSON）
+│   ├── run_skill_check.py         # 固定环境入口与分离通道 JSON
+│   ├── run_skill_tests.py         # 测试发现、零测试/失败拒绝
+│   └── check_project_docs.py      # 导读覆盖、版本与本地链接核对
 ├── tests/                         # 单元测试、自检契约回归、生命周期一致性与版本验收记录
 ├── licenses/
 │   └── minimax-skills-MIT.txt
@@ -59,6 +70,7 @@ PSL-SKILLS/
     │   ├── scripts/               # ET/ETT 读取、BIFF8、OOXML 与合成回归
     │   └── references/            # 表格格式、样本来源、保存值与验证限制
     ├── ofd/                       # OFD 三版本只读提取及显式模型的基础 OFD 1.0 生成
+    ├── pptx/                      # 受限 SVG 创建、整包验证、有界文本/备注读取
     └── artifact-lifecycle/        # 交付物原子归档与受控临时文件清理公共技能
         ├── SKILL.md
         ├── requirements.txt
@@ -75,6 +87,7 @@ PSL-SKILLS/
 - **table-workflow**：Python >=3.12（维护基线3.12.11），仅标准库；单独安装完整 xlsx，含ET来源时再安装完整 et，通过实际读取主入口所得绝对根路径传参，不猜相邻位置。
 - **et**：Python 3.9 及以上标准库；OOXML 表格分支另需 Expat >=2.6。
 - **ofd**：读取需 Python >=3.10，生成另需 Python >=3.12.11；均只用自带标准库（含 zlib、Expat >=2.6.0），并检查各入口实际需要的描述符相对安全文件操作能力。零第三方包、零外部软件；缺失能力时停止，不安装组件或降低安全要求。
+- **pptx**：Python >=3.10 标准库，含 zlib、Expat >=2.6.0 及 POSIX 描述符相对安全 I/O；Linux 为目标平台，Windows 不支持，不依赖外部程序。macOS 上已有维护回归不等于目标 Linux 当前版本验收。
 - **artifact-lifecycle**：Python 3.10 及以上标准库（需 POSIX 锁与文件描述符操作能力）；零第三方包、零外部软件。
 - **skill-development-standards**：Python 3.10 及以上标准库（需系统 IANA 时区支持以生成规范版本时间戳）；零第三方包依赖。
 - 办公格式处理与生命周期纯 Python 主流程无需安装第三方 Python 包；WPS 二进制导出可选使用系统 LibreOffice。脚本使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存；纯文本写作不需要 Python。
@@ -90,13 +103,13 @@ PSL-SKILLS/
 
 读取 [bank-writing](skills/bank-writing/SKILL.md) 完成构思、起草、改写、整合或审校；摘要、参考范文仿写和先摘要再仿写按需读取专项参考，普通写作不增加额外流程。范文与目标事实分开，摘要保留关键限定，严格篇幅实际计数，直接交付文本。内容末尾的 DOCX 导出询问放在正文外；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
 
-前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；本次在 macOS 实测，云端 Linux 与 Windows 未验证。
+前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；当时在 macOS 实测，云端 Linux 与 Windows 未验证。
 
-当前版本仅修订能力描述，正文与参考资料沿用上述已评测版本；名称与描述的独立选择模拟见[描述评测记录](tests/bank_writing_description_evaluation/summary.json)，不代表宿主自动注册或触发验收。
+描述调整时的独立选择模拟见[描述评测记录](tests/bank_writing_description_evaluation/summary.json)，不代表宿主自动注册或触发验收。当前入口还包含按任务直达参考与归档交接约定；纯文本写作本身不触发文件归档。
 
 ### 多源表格填报
 
-[table-workflow](skills/table-workflow/SKILL.md) 负责“来源表 + 已有目标模板 → 指标映射 → 聚合与期间比较 → XLSX 副本及核验 JSON”。先有界 inspect，再按需读取计划契约；plan 在内存试算，apply 才写入最终文件并归档。格式读取、表头/统计、公式、写入仍复用 ET/XLSX。简单建表或单表读取不加载本流程。
+[table-workflow](skills/table-workflow/SKILL.md) 负责“来源表 + 已有目标模板 → 指标映射 → 聚合与期间比较 → XLSX 副本及核验 JSON”。需要发现单文件全部表名时先用源 SHA 绑定的 `names` 续读；结构/表头定位使用有界 `inspect`，再按需读取计划契约；plan 在内存试算，apply 才写入最终文件并归档。格式读取、表头/统计、公式、写入仍复用 ET/XLSX。公开 CLI v1 会协商 `open_metadata`/`metadata`、`typed_values`、`address_many` 及既有 `evaluate_many` 等必需能力；缺失即停止，不猜兄弟目录或回退到私有导入。简单建表或单表读取不加载本流程。
 
 支持受控 one-to-one/many-to-one 维表补列后按键聚合，匹配唯一目标键；可配置业务勾稽与容差、缺期和空值政策，默认失败阻断、显式降级保留 partial。明确单位、期间、重复键、空值、小计及缓存政策；不支持任意明细级多表连接或原生ET写回。未知/数据性 partial、模板不支持公式、未刷新图表/透视/外链缓存均不得作为完整成功交付。模型负责业务语义，脚本不凭列名猜测口径。
 
@@ -152,6 +165,8 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 成功验收并核实文件后，在交付文件链接后简短提示“本次已按公文格式生成。还支持商务、学术排版，也可按需调整字体、字号和页边距。”用户指定主题或覆盖样式时按实际结果描述；提示不写入文档，用户要求只返回文件或不再提示时省略。完整规则见 [生成后格式引导](skills/docx/references/generation-runtime.md#生成后格式引导)。
 
+读取大表格时，compact 默认只含前两行；全文需要原有纯文本读取，或 `--compact-json --tables rows` 按行续读。可选 `--max-output-bytes` 计真实 UTF-8 JSON 与末尾换行，返回源 SHA/参数绑定的 `next_cursor`；元数据或单块放不下时明确失败，不静默截断。旧 `next_block` 路径和新绑定游标的区别见 [读取契约](skills/docx/references/inspection.md#utf-8-预算与绑定续读)。预算不是 token 数，也不替代宿主完整回传检查。
+
 ### WPS 文字（.wps/.rtf）
 
 独立入口见 [wps](skills/wps/SKILL.md)。简单读取与标题/正文/基础表格创建只需主入口；其他任务按操作直达参考，不递归预读全部指南。支持读取受限的 WPS 文字/RTF、内容重排编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和将 DOCX 导出为 WPS 兼容格式。生成结果默认使用 `.wps` 后缀，用户显式请求 `.rtf` 时保留；内容仍是 RTF 流，回执明确标注，不能称为金山原生 WPS 二进制。首次操作按任务类型分别自检：
@@ -162,7 +177,7 @@ python3 -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 python3 -I -S -B "<skill-root>/scripts/export_wps.py" check
 ```
 
-读取正文可使用全量 JSON、纯文本或大纲/章节切片；创建命令和共同边界见 WPS 主入口，编辑/导出按需加载其直达参考；仅创建支持 `--compact-receipt`，不省略现有 partial/警告。ET/ETT交给et，原生XLSX/XLSM交给xlsx，不自动转换。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
+读取正文可使用全量 JSON、纯文本或大纲/章节切片；可选 `--max-output-bytes` 为有界视图增加真实 UTF-8 JSON 字节预算，保留完整诊断及源绑定续读，详见 [有界读取](skills/wps/references/bounded-reading.md)；创建命令和共同边界见 WPS 主入口，编辑/导出按需加载其直达参考；仅创建支持 `--compact-receipt`，不省略现有 partial/警告。ET/ETT交给et，原生XLSX/XLSM交给xlsx，不自动转换。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
 
 WPS新建默认公文参照当前DOCX：上下25.4mm、左右31.8mm，仿宋16pt／Times New Roman、固定28pt、首行2字、零段前段后；标题层级、页眉页脚和默认关闭页码同步。未明确要求新页时自然分页，保留用户显式配置。RTF与OOXML不是同一格式，不保证字体回退或跨阅读器分页一致；现有DOCX→RTF导出不解析完整样式继承，不作为统一排版的捷径。仓库对照回归见 [测试](tests/test_wps_docx_official_parity.py)，350项历史测试结果、缓存告警与未验证范围见 [排版对齐记录](tests/wps_docx_official_alignment_20261104.json)。后续 DOC 回读与格式匹配修复的377项 WPS、2项对照测试、8份已有输入回归及真实二进制导出未通过的范围，见 [导出契约验证](tests/wps_export_contract_validation_20261104.json)。默认 `.wps`、显式 `.rtf` 的命名与回读回归见 [后缀验证记录](tests/wps_default_suffix_validation_20261104.json)。
 
@@ -178,11 +193,13 @@ python3 -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据
 python3 -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1
 ```
 
-尚不确定表头时，先用 `--preview` 查看明确矩形内的物理位置、空白/缺失、保存缓存与合并锚点，再选择表头和数据范围。预览返回独立 `et_table_preview_v1`，不推断表头、不填值、不计算统计；默认最多 10 行，分页和遗漏见 [表头区域预览](skills/et/references/table-analysis.md#表头区域预览)。
+尚不确定表头时，先用 `--preview` 查看明确矩形内的物理位置、空白/缺失、保存缓存与合并锚点，再选择表头和数据范围。预览返回独立 `et_table_preview_v1`，不推断表头、不填值、不计算统计；默认最多 10 行，分页和遗漏见 [表头区域预览](skills/et/references/table-preview.md)。
 
 区域内穿插已确认的小计、总计或重复表头时，可在 `--query` 的 JSON 中用 `exclude_rows` 列出原始物理行号；不自动识别这些行。排除项必须位于所选数据行内，结果保留原始行号和单独的排除计数；被排除的合并锚点不会向其他行填充标签。选区诊断与最终匹配数据数量分别报告，排除行不会隐藏源 partial。
 
 分析默认排除公式参与计算；显式选择缓存政策才使用已保存缓存，错误或缺失缓存保留诊断，不补零。合并区域默认不填充；可显式填充普通文本标签并记录来源，数字和公式标签不扩散。统计覆盖全部匹配行，行与分组预览有界，源 partial 不升级为完整成功。筛选、排序、去重、分组等查询及限制见 [统计与结果表处理](skills/et/references/table-analysis.md)。
+
+基础表头和统计可按入口直达 [基础统计](skills/et/references/basic-statistics.md)，复杂筛选/排序/分组再读完整查询参考。读取、预览和分析可选 UTF-8 字节预算；分析分页保留全区域统计、质量分母、覆盖及绑定游标，不以返回页缩小计算范围。
 
 分析的 `quality_report` 覆盖全部匹配数据，报告数值纳入/排除分母、缺失与缓存状态、有界位置样本、表头标签及分组覆盖；样本截断不缩小统计范围。它是事实诊断，不是业务正确性评分，也不证明公式缓存最新；仍需保留源 partial 和选区诊断。字段与边界见 [统计质量报告](skills/et/references/table-analysis.md#统计质量报告)。
 
@@ -205,6 +222,18 @@ python3 -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
 
 OFD 离线分发包沿用仓库现有位置 `skills/ofd-<version>.zip`；完整目录独立安装，不依赖相邻 wps/docx/xlsx。版本化 ZIP 按现有 `.gitignore` 规则不纳入版本控制，源目录和 README 是维护入口。
 
+### PPTX
+
+独立入口见 [pptx](skills/pptx/SKILL.md)。在满足其环境约束的解释器中先自检，再检查用户提供的相对文件路径：
+
+```console
+python3 -I -S -B "<skill-root>/scripts/pptx.py" check
+python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect ./input.pptx --summary
+python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect ./input.pptx --slides 1-3 --notes omit --max-output-bytes 12000
+```
+
+`inspect` 默认仍返回完整结果；选页、备注省略与字节预算不绕过未选页、关系和媒体的整包安全检查。分页只在完整幻灯片边界切分，继续时原样传回 `--cursor` 并重复原选项，单页过大明确失败。有限 PNG 零填充兼容需显式启用，结果保留 partial 并退出 3；不是对任意损坏文件的恢复。创建只接受声明的 SVG/配置子集并拒绝覆盖，不代表任意 PPTX 编辑或视觉验收。详细接口见 [PPTX 文档](docs/skills/pptx.md)。
+
 ### 交付物归档与受控清理（artifact-lifecycle）
 
 独立入口见 [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md)。用于在任务生成业务交付物后，统一进行临时文件登记、交付物原子归档与安全清理。
@@ -217,9 +246,9 @@ python3 -I -S -B "<skill-root>/scripts/lifecycle.py" check
 
 标准五步工作流：
 1. **登记（plan）**：在创建临时文件前显式登记本轮中间文件路径（如 worker.py、spec.json），保护输入原件与历史交付物。
-2. **生成并验收**：业务技能生成文档并执行验证；失败时标记 `status=failed` 并自动清理已登记文件。
+2. **生成并验收**：业务技能生成文档并执行验证；失败时等待生产进程退出，再按原清单以 `failed` 封存并调用清理，不把公共 CLI 当作自动捕获任意业务失败的 runner。
 3. **原子归档（archive）**：对最终交付物执行归档，默认原子独占发布，同名保留历史副本；仅在明确授权时可使用 `--replace-existing`。
-4. **封存与清理（seal & clean）**：seal 封存清单，clean 彻底删除登记的临时文件并最终移除清单文件（`manifest_removed=true`）。
+4. **封存与清理（seal & clean）**：seal 封存清单，clean 仅删除本轮已登记、归属和身份检查通过且可安全删除的临时文件；全部收尾后移除清单（`manifest_removed=true`）。未知、占用或身份变化项保留并报告 `cleanup_incomplete`。
 5. **交付**：核对完整归档结果后，归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
 
 ### Skill 开发规范与检查器（skill-development-standards）
@@ -275,7 +304,17 @@ print(version)
 
 ## 开发验证
 
-本项目主流程保持纯 Python 标准库。每次更新内容时，必须人工核对 description、正文、引用说明、README、依赖和实际 CLI 行为是否一致，按需同步优化描述；结构检查不能替代能力与证据核对。
+维护中的业务主流程保持各自声明的依赖边界，不将维护工具依赖混入独立包。每次功能或代码优化，必须检查并同步相关 README、docs、架构/流程图、示例和验证记录，核对 description、正文、引用说明、依赖及实际 CLI 行为；无需文档变更时说明已检查及原因，不强制无关改动。结构检查不能替代能力与证据核对。
+
+从仓库根运行文档防漂移检查及其回归：
+
+```console
+python3 -I -S -B tools/check_project_docs.py
+python3 -I -S -B -m unittest discover -s tests -p 'test_project_docs.py' -v
+git diff --check
+```
+
+检查覆盖当前 Skill 清单、导读版本、仓库内相对链接与锚点；不联网验证外部链接，不执行全部示例，也不代替 Mermaid 解析、图意审阅或业务测试。
 
 仓库维护约定见 [AGENTS.md](AGENTS.md)。新建、修改、导入、迁移或发布 skill 前，先读取 [Skill 开发规范](skills/skill-development-standards/SKILL.md)。规范附带标准库检查器和测试；`.agents/skills/skill-development-standards` 通过相对符号链接指向同一份规范。
 
@@ -310,7 +349,7 @@ python -I -S -B tools/run_skill_tests.py skills/pptx/scripts/test
 python -I -S -B tools/run_skill_tests.py tests/pptx
 ```
 
-PPTX 的本次 Linux 验证记录见 [标准库 PPTX 验证记录](tests/pptx/verification.json)：92 项回归（新增 26 项）、严格结构检查，以及开发阶段独立读取器的内容核对。桌面视觉、真实业务样本、Windows 与专用宿主触发未验证；开发核对工具不属于运行依赖。
+PPTX 的历史 Linux 基线验证记录见 [标准库 PPTX 验证记录](tests/pptx/verification.json)：92 项回归（新增 26 项）、严格结构检查，以及开发阶段独立读取器的内容核对。桌面视觉、真实业务样本、Windows 与专用宿主触发未验证；开发核对工具不属于运行依赖。
 
 ## 迁移来源与许可
 
@@ -337,13 +376,13 @@ PPTX 的本次 Linux 验证记录见 [标准库 PPTX 验证记录](tests/pptx/ve
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
 | .csv/.tsv | 数据读取与交换 | 按已实现数据导出路径交换 | 无工作簿样式/结构保真 |
 | .ofd | 1.0/1.1/1.2 XML 结构、存储文字、页资源与复合引用 | 仅显式请求时按 JSON 模型生成基础 OFD 1.0 多页文件；不编辑第三方 OFD | 固定文字、线框、受限图片与简单网格；字体覆盖及嵌入限制逐次检查；无自动排版或格式转换，不作全文/视觉或全规范认证 |
-| .wps/.rtf/.doc | 按真实 RTF、MS-DOC 或 OOXML 结构读取有限子集 | 新建/重排及纯 Python 导出只写 .rtf/.wps；.doc 导出需 LibreOffice 实际生成并验签 | 输入读取不按后缀拒绝可靠内容；RTF 不是二进制 DOC 或金山原生 WPS；不承诺完整格式或视觉还原 |
+| .wps/.rtf/.doc | 按真实 RTF、MS-DOC 或 OOXML 结构读取有限子集 | 新建/重排及纯 Python 导出只写 .rtf/.wps；.doc 导出需 LibreOffice 实际生成并核对文件格式签名 | 输入读取不按后缀拒绝可靠内容；RTF 不是二进制 DOC 或金山原生 WPS；不承诺完整格式或视觉还原 |
 | .et/.ett | et 按实际结构读取 BIFF8/OOXML 有限子集及保存值/公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计、分组汇总及质量报告 | 只读预览或分析输出派生 JSON；不生成、编辑或转换办公文件 | 不自动识别表头、小计或总计；质量报告不认证业务正确性；公式默认排除，显式使用的缓存未证明最新；保留 partial，不写回原表 |
 | 约定schema的.json | 配置、读取结果、分析衔接 | 按各入口固定schema写出 | 非任意JSON编辑器 |
 
-仓库没有 PDF、旧式 PPT、ODT/ODS/ODP、RTF 专用技能或通用转换器；PPTX 的新建与读取仅覆盖上表明确子集。旧DOC/XLS内部结构只能由wps识别其有限MS-DOC/BIFF子集，不能称完整支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。后续优先补充有合法来源的真实样本与独立内容预期，再按实际办公需求规划 PDF、PPTX 扩展等能力；不要通过后缀或依赖推断已支持。
+仓库没有 PDF、旧式 PPT、ODT/ODS/ODP、RTF 专用技能或通用转换器；PPTX 的新建与读取仅覆盖上表明确子集。旧 DOC 的有限 MS-DOC 文字子集由 wps 读取；ET/ETT 的 BIFF8/OOXML 表格子集由独立 et 读取，不因此扩大为通用旧式 XLS 支持。外部同名软件生成的真实DOCX/XLSX仍按原生格式处理。后续优先补充有合法来源的真实样本与独立内容预期，再按实际办公需求规划 PDF、PPTX 扩展等能力；不要通过后缀或依赖推断已支持。
 
-本批四技能任务选择的固定正反例见 `tests/skill_selection_cases.json`。20 项人工边界核对及未见标准答案的独立选择模拟均匹配预期；这是有限用例的选择评测，不是真实宿主自动触发验收。
+当前十技能正反与混合选路场景见 [当前人工边界期望](tests/skill_selection_current_cases.json)，它不是模型准确率。旧四技能的 [固定正反例](tests/skill_selection_cases.json) 与 20 项选择模拟保留为历史证据，不作为当前十技能或真实宿主自动触发验收。
 
 OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不计为有效授权验收。此前本批 OFD ZIP 含该项派生元数据和说明，不应使用，保留但停止交付；仅从清理后的源码重建新的本地 OFD 包，不读取旧 ZIP，不上传。其他合成回归与允许样本证据单独保留。
 
@@ -354,7 +393,7 @@ OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不�
 
 仓库维护与接入可用 [run_skill_check.py](tools/run_skill_check.py) 执行固定自检入口并输出独立回传 JSON；[入口清单、用法及边界](docs/check-execution.md)列出全部 Skill 和未验证范围。该适配器不随独立 Skill 发布，不安装或修改项目专属 execute 工具；原 Skill 命令仍可直接执行，宿主按原生接口回传。
 
-适配器支持的 9 个环境自检入口包括：
+适配器登记的 9 个环境自检入口包括（不是全部 Skill 自检的全集）：
 - `docx-read`：`docx/scripts/read_docx.py --check`
 - `docx-task`：`docx/scripts/run_docx_task.py check`
 - `docx-create`：`docx/scripts/create_docx.py --check`
@@ -364,16 +403,20 @@ OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不�
 - `xlsx`：`xlsx/scripts/stdlib_xlsx.py check`
 - `pptx`：`pptx/scripts/pptx.py check`
 - `artifact-lifecycle`：`artifact-lifecycle/scripts/lifecycle.py check`
-以及 1 个结构检查入口 `skill-structure`（调用 `check_skill.py --strict`）。
+以及 1 个结构检查入口 `skill-structure`（调用 `check_skill.py --strict`）。适配器当前结构白名单不包含 et/table-workflow；两者使用各自真实自检入口，结构检查直接调用 `check_skill.py`。不为凑齐适配器注册而改动业务契约。
 
 ## 云端 Linux 生产发布验收规范
 
-针对云端 Linux 生产环境上线，仓库在 [docs/linux-release-acceptance.md](docs/linux-release-acceptance.md) 制定了生产级全流程验收清单与方案，明确：
+[Linux 验收清单](docs/linux-release-acceptance.md) 原方案固定于 2026-10-29 的三个历史 ZIP，不是当前十技能已通过报告，也不表示这些 ZIP 等同当前源码；当前源码验收应按该页新增的入口选择测试。原方案明确：
 - 固定发布包 SHA-256 哈希校验与完整解包校验。
 - 采用非 root 运行用户、安装目录只读、任务目录可写以及 `/tmp` 限制等真实生产环境约束。
 - 业务成功、业务失败、序列化失败、语法错误、归档受阻、删除受阻等 9 类案例的独立验证标准。
 - 外部控制器强制中断（SIGKILL、进程组终止、整容器强停与宿主重启）下的文件保护与恢复验收，明确被 SIGKILL 的进程无法自行执行收尾，必须由外部恢复控制器核验清单与回执后完成清理，避免使用模糊进程名或破坏交付物。
 - 宿主集成 10 项能力验证（空参数/重复 call_id、双通道回传、退出码保留、结果截断标记、`/large_tool_results/` 专有读取、脱敏保护及云空间真实状态反馈）。
+
+## 历史维护与验收记录
+
+以下日期化记录保留各轮版本、测试数、平台及发布状态，后续源码变更不回写历史事实。当前使用以本文前半部、各 Skill 主入口及 [当前架构文档](docs/README.md) 为准。
 
 ## 三技能上线修复（2026-10-29）
 

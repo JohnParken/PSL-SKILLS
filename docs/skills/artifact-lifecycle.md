@@ -1,6 +1,6 @@
 # artifact-lifecycle：显式归档与受控清理
 
-> 源码基线：[`14bfafe55d58fd04069a78d5196b82bfbf8f67c6`](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)；Skill 版本：`20261105.1644.0317`。本文描述固定基线的实际实现，不是清理任意目录的操作授权。
+> 文档核对日期：2026-11-07；源码基线：[`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261107.1943.5370`。本文描述固定基线的实际实现，不是清理任意目录的操作授权。
 
 ## 功能与职责
 
@@ -8,7 +8,7 @@
 
 业务 Skill 负责生成、编辑和格式验收；本 Skill 负责将最终文件复制到配置指向的归档位置，并清理本轮创建且可以安全确认的登记项。主文件成功、归档结果和清理结果是三种独立状态。归档不是上传、分享或宿主下载能力。
 
-纯对话和仅读 stdout 不需要清单。DOCX/XLSX 已有自动收尾路径时继续使用原 runner，直接核对其结果，不为同一批文件再调用本 Skill。
+纯对话和仅读 stdout 不需要清单。任何已有自动收尾的流程（DOCX/XLSX 只是示例）继续使用原 runner，直接核对其结果，不为同一批文件再调用本 Skill。
 
 ## 代码架构
 
@@ -56,7 +56,7 @@ flowchart TD
     E --> F["业务 Skill 创建、生成或编辑并验收"]
     F --> G{"业务验收是否成功"}
     G -->|"是"| H["archive：复制已验收的最终文件"]
-    H --> I["记录 copied、skipped 或 failed"]
+    H --> I["核对汇总与完整文件清单；保留机器文案和用户提示"]
     I --> J["seal：真实结果、验证声明和归档状态"]
     G -->|"否"| K["等待生产进程退出；seal 为 failed"]
     J --> L["clean：核对保护与指纹后删除登记项"]
@@ -130,17 +130,17 @@ flowchart TD
 - `check` 会创建、读回并清理本次独占探针，检测清理所需平台能力；它不解析归档配置、不创建归档目录，也不证明内容正确、归档可用或可下载。
 - [test_lifecycle.py](../../skills/artifact-lifecycle/scripts/test/test_lifecycle.py) 提供合成测试，包括配置裁剪、完整 CLI、输入与链接保护、同名冲突、失败后清理、指纹变化、平台能力缺失、损坏清单和 stdout JSON。测试是维护代码，生产流程不得调用。
 - [reuse.md](../../skills/artifact-lifecycle/references/reuse.md) 中的测试数量与 macOS 记录是历史证据，不代表本轮重跑，更不能替代 Linux、Windows、生产云存储或真实宿主回传验收。
-- 本轮是源码审阅与仓库文档编写，未运行归档、删除、全量测试、独立发布包测试或跨平台验收。
+- 本轮是源码审阅与仓库文档编写，另在隔离合成副本中执行归档提示契约回归，见 [核验记录](../skill-docs-validation-20261107.json)。未操作用户业务文件，未执行全量测试、已有发布 ZIP 测试或跨平台验收。
 
 ## 可追溯源码
 
-- [固定基线的 artifact-lifecycle 目录](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6/skills/artifact-lifecycle)
+- [固定基线的 artifact-lifecycle 目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/artifact-lifecycle)
 - [Skill 主入口](../../skills/artifact-lifecycle/SKILL.md)、[命令与失败恢复契约](../../skills/artifact-lifecycle/references/contract.md)
 - [复用与验证说明](../../skills/artifact-lifecycle/references/reuse.md)、[来源清单](../../skills/artifact-lifecycle/references/upstream.json)
 - [统一 CLI](../../skills/artifact-lifecycle/scripts/lifecycle.py)、[归档实现](../../skills/artifact-lifecycle/scripts/archive_deliverables.py)、[清理实现](../../skills/artifact-lifecycle/scripts/controlled_cleanup.py)
 
-## 归档提示更新（2026-11-07）
+## 归档结果与用户提示
 
-以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+仅汇总 `copied` 而清单缺失、为空或有异常项时，不能宣布全部成功；汇总 `failed` 即使明细看似全成功也不能改判部分成功。混合成功/失败明细才提示部分归档。`handoff_required`、`not_attempted`、`skipped` 和未知分别说明。
 
-归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。

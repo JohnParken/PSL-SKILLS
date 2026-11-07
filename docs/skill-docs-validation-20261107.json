@@ -1,0 +1,855 @@
+{
+  "scope": "Repository documentation and documentation-check tooling only; no Skill source, version or release archive changes.",
+  "checked_utc": "2026-11-07T14:47:11.460139+00:00",
+  "baseline_commit": "6e4cca7a78a57acebe38448962c99cbc4814b409",
+  "skills_tree": "0cd453035f60e6b4c60bb182025a479f618cbb47",
+  "remote_main_verified": "6e4cca7a78a57acebe38448962c99cbc4814b409",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+  "historical_evidence_preserved": [
+    "docs/skill-docs-validation.json",
+    "tests/batched_publish_validation_20261107.json"
+  ],
+  "tests": [
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_project_docs.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 13,
+      "seconds": 0.049,
+      "stdout_sha256": "82a957ccff2d4236ede4af8c5be10f71190e57d33aebd4a383aa634c671b259f",
+      "stderr_sha256": "688b916b8b9c48c28d39d2abac1e5188ac1b896ea6921a8213ea1c07e58fedaa",
+      "result_tail": "test_coverage_omission (test_project_docs.DocumentationChecks.test_coverage_omission) ... ok\ntest_duplicate_heading (test_project_docs.DocumentationChecks.test_duplicate_heading) ... ok\ntest_duplicate_intro_versions (test_project_docs.DocumentationChecks.test_duplicate_intro_versions) ... ok\ntest_duplicate_table_rows (test_project_docs.DocumentationChecks.test_duplicate_table_rows) ... ok\ntest_duplicate_versions (test_project_docs.DocumentationChecks.test_duplicate_versions) ... ok\ntest_escape (test_project_docs.DocumentationChecks.test_escape) ... ok\ntest_fenced_examples_ignored (test_project_docs.DocumentationChecks.test_fenced_examples_ignored) ... ok\ntest_malformed_frontmatter (test_project_docs.DocumentationChecks.test_malformed_frontmatter) ... ok\ntest_missing_link_and_anchor (test_project_docs.DocumentationChecks.test_missing_link_and_anchor) ... ok\ntest_plain_intro_and_later_history (test_project_docs.DocumentationChecks.test_plain_intro_and_later_history) ... ok\ntest_reference_and_unicode_anchor (test_project_docs.DocumentationChecks.test_reference_and_unicode_anchor) ... ok\ntest_valid (test_project_docs.DocumentationChecks.test_valid) ... ok\ntest_version_drift (test_project_docs.DocumentationChecks.test_version_drift) ... ok\n\n----------------------------------------------------------------------\nRan 13 tests in 0.021s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_loading_benchmark.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 24,
+      "seconds": 25.237,
+      "stdout_sha256": "05ffda8689d737fbe8abfd5da07f559f29600103099d70956a34be6275f4c789",
+      "stderr_sha256": "c09ea02df9bcad919952eb2e4d0f51c88a88996296e4af18fabba840e1704284",
+      "result_tail": "n_are_checked) ... ok\ntest_committed_current_and_history_cli (test_skill_loading_benchmark.SnapshotFreshnessTests.test_committed_current_and_history_cli) ... ok\ntest_counts_order_repetition_and_capability_notes (test_skill_loading_benchmark.SnapshotFreshnessTests.test_counts_order_repetition_and_capability_notes) ... ok\ntest_every_after_hash_is_checked (test_skill_loading_benchmark.SnapshotFreshnessTests.test_every_after_hash_is_checked) ... ok\ntest_fresh_report (test_skill_loading_benchmark.SnapshotFreshnessTests.test_fresh_report) ... ok\ntest_history_is_preserved_byte_for_byte (test_skill_loading_benchmark.SnapshotFreshnessTests.test_history_is_preserved_byte_for_byte) ... ok\ntest_invalid_snapshot_cli_is_structured_nonzero (test_skill_loading_benchmark.SnapshotFreshnessTests.test_invalid_snapshot_cli_is_structured_nonzero) ... ok\ntest_missing_and_added_profiles (test_skill_loading_benchmark.SnapshotFreshnessTests.test_missing_and_added_profiles) ... ok\ntest_old_schema_and_benchmark_change (test_skill_loading_benchmark.SnapshotFreshnessTests.test_old_schema_and_benchmark_change) ... ok\ntest_real_file_change_and_missing_resource (test_skill_loading_benchmark.SnapshotFreshnessTests.test_real_file_change_and_missing_resource) ... ok\ntest_specialized_routes_keep_required_union (test_skill_loading_benchmark.SnapshotFreshnessTests.test_specialized_routes_keep_required_union) ... ok\n\n----------------------------------------------------------------------\nRan 24 tests in 25.188s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_selection_current.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 6,
+      "seconds": 0.03,
+      "stdout_sha256": "8775211e3725c2cb0ebc1bb9657979daed590fde4fa515da3584ada4d7f4d117",
+      "stderr_sha256": "196527183f1814707ba69e6d2664ef89b3c17892639fb24092b4636ea9ec0080",
+      "result_tail": "test_brand_format_and_runner_boundaries_present (test_skill_selection_current.CurrentSelectionCasesTests.test_brand_format_and_runner_boundaries_present) ... ok\ntest_current_catalog_hashes_and_coverage (test_skill_selection_current.CurrentSelectionCasesTests.test_current_catalog_hashes_and_coverage) ... ok\ntest_every_entry_change_requires_manual_review (test_skill_selection_current.CurrentSelectionCasesTests.test_every_entry_change_requires_manual_review) ... ok\ntest_missing_positive_negative_and_mixed_cases (test_skill_selection_current.CurrentSelectionCasesTests.test_missing_positive_negative_and_mixed_cases) ... ok\ntest_new_and_removed_skills_require_review (test_skill_selection_current.CurrentSelectionCasesTests.test_new_and_removed_skills_require_review) ... ok\ntest_unknown_contradictory_and_duplicate_cases_fail (test_skill_selection_current.CurrentSelectionCasesTests.test_unknown_contradictory_and_duplicate_cases_fail) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.004s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_test_runner.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 5,
+      "seconds": 0.146,
+      "stdout_sha256": "6494cc21ae0708865741f023db80ea8869fd6ff10418519d1ff145c8cf922ef1",
+      "stderr_sha256": "8ddbf0d983438f536c2cdfb2d32f00cf775740444ad70feaf9dd08977fba9644",
+      "result_tail": "test_empty_discovery_is_not_success (test_skill_test_runner.TestRunnerTests.test_empty_discovery_is_not_success) ... ok\ntest_failures_keep_nonzero_exit_and_diagnostics (test_skill_test_runner.TestRunnerTests.test_failures_keep_nonzero_exit_and_diagnostics) ... ok\ntest_import_error_cannot_be_reported_as_a_passing_suite (test_skill_test_runner.TestRunnerTests.test_import_error_cannot_be_reported_as_a_passing_suite) ... ok\ntest_nonmatching_pattern_cannot_be_reported_as_a_passing_suite (test_skill_test_runner.TestRunnerTests.test_nonmatching_pattern_cannot_be_reported_as_a_passing_suite) ... ok\ntest_real_tests_are_counted_and_run (test_skill_test_runner.TestRunnerTests.test_real_tests_are_counted_and_run) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.120s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_check_execution.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 12,
+      "seconds": 0.736,
+      "stdout_sha256": "2b03175127ff50b01d514483cb9f0e2958e422519135d341bda2cebd57ea3ae2",
+      "stderr_sha256": "0ca73ef98f85db7e7a10ff9e6a21d62cf1db9c7346a1d0f8f5ccc72d511201ec",
+      "result_tail": "output_is_explicit_not_silently_replaced (test_check_execution.ExecutionTests.test_non_utf8_output_is_explicit_not_silently_replaced) ... ok\ntest_nonzero_exit_preserves_both_channels_and_json (test_check_execution.ExecutionTests.test_nonzero_exit_preserves_both_channels_and_json) ... ok\ntest_parser_error_returns_envelope_without_faking_child_stderr (test_check_execution.ExecutionTests.test_parser_error_returns_envelope_without_faking_child_stderr) ... ok\ntest_real_cli_envelope_can_be_returned_as_tool_result (test_check_execution.ExecutionTests.test_real_cli_envelope_can_be_returned_as_tool_result) ... ok\ntest_signal_is_not_reported_as_normal_exit (test_check_execution.ExecutionTests.test_signal_is_not_reported_as_normal_exit) ... ok\ntest_structure_check_does_not_claim_environment_or_artifact_acceptance (test_check_execution.ExecutionTests.test_structure_check_does_not_claim_environment_or_artifact_acceptance) ... ok\ntest_success_retains_warning_without_mixing_channels (test_check_execution.ExecutionTests.test_success_retains_warning_without_mixing_channels) ... ok\ntest_timeout_preserves_partial_channels_without_fake_exit (test_check_execution.ExecutionTests.test_timeout_preserves_partial_channels_without_fake_exit) ... ok\ntest_truncation_marks_channel_and_does_not_accept_marker (test_check_execution.ExecutionTests.test_truncation_marks_channel_and_does_not_accept_marker) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 0.690s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_archive_notice_contract.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 3,
+      "seconds": 0.229,
+      "stdout_sha256": "8ff48651d23a1f3446e49d3f2358ccf1cbde92aae897a55b8cb29aad9a5e7051",
+      "stderr_sha256": "60593ac3a69937d16f056a060e9f1f002c9178df17ef044b51c38a6709cb2e7e",
+      "result_tail": "test_four_readonly_distributions_match_without_neighbor_skills (test_archive_notice_contract.IndependentArchiveNoticeTests.test_four_readonly_distributions_match_without_neighbor_skills) ... ok\ntest_workflow_compact_receipt_keeps_each_notice_and_business_state (test_archive_notice_contract.IndependentArchiveNoticeTests.test_workflow_compact_receipt_keeps_each_notice_and_business_state) ... ok\ntest_wps_failed_primary_is_not_archived_or_called_successful (test_archive_notice_contract.IndependentArchiveNoticeTests.test_wps_failed_primary_is_not_archived_or_called_successful) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.192s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/docx/scripts/test",
+        "-p",
+        "test_docx_bound_pages.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 18,
+      "seconds": 1.109,
+      "stdout_sha256": "a4bf5ae5db745ea83fad6d5a4e05524a7b36455979d2b3472587d84f73989aee",
+      "stderr_sha256": "17a2ad82a462d97bf66ea97acbfee246bf784d6ed32075d97497c95d5a8d349b",
+      "result_tail": "nd_trip_cli_and_api_with_adjustable_budget (test_docx_bound_pages.BoundPageTests.test_rows_round_trip_cli_and_api_with_adjustable_budget) ... ok\ntest_saved_output_matches_wire_and_preserves_input (test_docx_bound_pages.BoundPageTests.test_saved_output_matches_wire_and_preserves_input) ... ok\ntest_section_whitespace_normalized_but_occurrence_bound (test_docx_bound_pages.BoundPageTests.test_section_whitespace_normalized_but_occurrence_bound) ... ok\ntest_snapshot_is_used_for_both_hash_and_parse (test_docx_bound_pages.BoundPageTests.test_snapshot_is_used_for_both_hash_and_parse) ... ok\ntest_source_and_each_read_option_changes_are_rejected (test_docx_bound_pages.BoundPageTests.test_source_and_each_read_option_changes_are_rejected) ... ok\ntest_summary_and_related_coverage (test_docx_bound_pages.BoundPageTests.test_summary_and_related_coverage) ... ok\ntest_table_preview_is_not_complete_document (test_docx_bound_pages.BoundPageTests.test_table_preview_is_not_complete_document) ... ok\ntest_unicode_exact_stdout_budget_and_single_block (test_docx_bound_pages.BoundPageTests.test_unicode_exact_stdout_budget_and_single_block) ... ok\ntest_wire_is_utf8_under_ascii_stdout_encoding (test_docx_bound_pages.BoundPageTests.test_wire_is_utf8_under_ascii_stdout_encoding) ... ok\ntest_zip_and_xml_safety_remain_enforced (test_docx_bound_pages.BoundPageTests.test_zip_and_xml_safety_remain_enforced) ... ok\n\n----------------------------------------------------------------------\nRan 18 tests in 1.058s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/et/scripts/test",
+        "-p",
+        "test_et_output_budget.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 16,
+      "seconds": 0.347,
+      "stdout_sha256": "fd26630b318753f949391f0f68f9fece4d4241135ed6ccefc690173b36ea6d91",
+      "stderr_sha256": "f359acefe80ecfecd8441a08044c72bb0d3727548f409d8b66215420101b6695",
+      "result_tail": "_as_explicit_budget_failure) ... ok\ntest_cli_stdout_bytes_errors_defaults_and_standalone_install (test_et_output_budget.OutputBudgetTests.test_cli_stdout_bytes_errors_defaults_and_standalone_install) ... ok\ntest_group_only_long_keys_fail_and_groups_continue_after_rows (test_et_output_budget.OutputBudgetTests.test_group_only_long_keys_fail_and_groups_continue_after_rows) ... ok\ntest_preview_pages_have_exact_coverage_and_preserve_merges (test_et_output_budget.OutputBudgetTests.test_preview_pages_have_exact_coverage_and_preserve_merges) ... ok\ntest_read_budget_and_scope_changes (test_et_output_budget.OutputBudgetTests.test_read_budget_and_scope_changes) ... ok\ntest_read_bytes_bound_unicode_and_preserve_every_value (test_et_output_budget.OutputBudgetTests.test_read_bytes_bound_unicode_and_preserve_every_value) ... ok\ntest_read_long_cell_and_diagnostics_refuse_without_clipping (test_et_output_budget.OutputBudgetTests.test_read_long_cell_and_diagnostics_refuse_without_clipping) ... ok\ntest_terminal_cursor_disappearance_cells_and_text (test_et_output_budget.OutputBudgetTests.test_terminal_cursor_disappearance_cells_and_text) ... ok\ntest_wide_preview_row_is_not_silently_split (test_et_output_budget.OutputBudgetTests.test_wide_preview_row_is_not_silently_split) ... ok\ntest_zero_limit_and_offset_coverage (test_et_output_budget.OutputBudgetTests.test_zero_limit_and_offset_coverage) ... ok\n\n----------------------------------------------------------------------\nRan 16 tests in 0.270s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/pptx/scripts/test",
+        "-p",
+        "test_bounded_inspection.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 8,
+      "seconds": 3.364,
+      "stdout_sha256": "10238b4e2a450fbeee327f486d7a198871f6add26d0368e3a459029c85e0501e",
+      "stderr_sha256": "5765bb27b6fb67b57688b99a358cfbca1f1bc145a4bed04d82b490178e08b813",
+      "result_tail": "test_independent_readonly_without_cache (test_bounded_inspection.BoundedInspectionTests.test_independent_readonly_without_cache) ... ok\ntest_invalid_ranges_cursors_and_budgets (test_bounded_inspection.BoundedInspectionTests.test_invalid_ranges_cursors_and_budgets) ... ok\ntest_long_notes_recoverable_and_not_truncated (test_bounded_inspection.BoundedInspectionTests.test_long_notes_recoverable_and_not_truncated) ... ok\ntest_multibyte_error_json_budget_retains_full_stderr (test_bounded_inspection.BoundedInspectionTests.test_multibyte_error_json_budget_retains_full_stderr) ... ok\ntest_pages_reassemble_and_cursor_binding (test_bounded_inspection.BoundedInspectionTests.test_pages_reassemble_and_cursor_binding) ... ok\ntest_selection_and_summary (test_bounded_inspection.BoundedInspectionTests.test_selection_and_summary) ... ok\ntest_unselected_media_partial_diagnostics_and_budget (test_bounded_inspection.BoundedInspectionTests.test_unselected_media_partial_diagnostics_and_budget) ... ok\ntest_unselected_slide_relationship_still_rejected (test_bounded_inspection.BoundedInspectionTests.test_unselected_slide_relationship_still_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 3.297s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/xlsx/scripts/test",
+        "-p",
+        "test_bulk_metadata_api.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 4,
+      "seconds": 0.122,
+      "stdout_sha256": "9a6bc0a48fcc868722a08f0b0494d5f0dbfd5cbb92b27b9794db09ca72879ab2",
+      "stderr_sha256": "f3f7deb9792838a75f47e2a42d1957f482ff43bdc761c84bca576dc564d337f9",
+      "result_tail": "test_batch_exact_scalar_equivalence_and_limits (test_bulk_metadata_api.BulkMetadataTests.test_batch_exact_scalar_equivalence_and_limits) ... ok\ntest_metadata_bypasses_view_and_preserves_open_diagnostics (test_bulk_metadata_api.BulkMetadataTests.test_metadata_bypasses_view_and_preserves_open_diagnostics) ... ok\ntest_metadata_rejects_corrupt_second_sheet_and_limits (test_bulk_metadata_api.BulkMetadataTests.test_metadata_rejects_corrupt_second_sheet_and_limits) ... ok\ntest_wire_batch_error_has_no_partial_result_and_recovers (test_bulk_metadata_api.BulkMetadataTests.test_wire_batch_error_has_no_partial_result_and_recovers) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.058s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/xlsx/scripts/test",
+        "-p",
+        "test_write_index.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 10,
+      "seconds": 0.057,
+      "stdout_sha256": "42de81a12e0892cd6c88a70b70393bea8d121055f74e07b8953968295cae96e4",
+      "stderr_sha256": "212a91a51a3b9b967b5f8d029ea05edabdc28e18006b84e6f8c374cf53343b0e",
+      "result_tail": "test_create_order_style_and_boundaries (test_write_index.WriteIndexTests.test_create_order_style_and_boundaries) ... ok\ntest_direct_dom_changes_between_operations (test_write_index.WriteIndexTests.test_direct_dom_changes_between_operations) ... ok\ntest_dom_comments_extensions_and_insert_order (test_write_index.WriteIndexTests.test_dom_comments_extensions_and_insert_order) ... ok\ntest_failed_patch_does_not_retain_an_index (test_write_index.WriteIndexTests.test_failed_patch_does_not_retain_an_index) ... ok\ntest_invalid_address_and_duplicate_spec_rejected (test_write_index.WriteIndexTests.test_invalid_address_and_duplicate_spec_rejected) ... ok\ntest_lazy_malformed_row_error_parity (test_write_index.WriteIndexTests.test_lazy_malformed_row_error_parity) ... ok\ntest_merges_and_untouched_package_parts (test_write_index.WriteIndexTests.test_merges_and_untouched_package_parts) ... ok\ntest_repeated_patch_and_calculation (test_write_index.WriteIndexTests.test_repeated_patch_and_calculation) ... ok\ntest_unknown_formula_and_values_only_failure (test_write_index.WriteIndexTests.test_unknown_formula_and_values_only_failure) ... ok\ntest_unordered_duplicate_rows_and_mismatched_cells (test_write_index.WriteIndexTests.test_unordered_duplicate_rows_and_mismatched_cells) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.018s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_table_workflow_cli_capabilities.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 75,
+      "seconds": 15.929,
+      "stdout_sha256": "2f8ae9a7d7fe167057757b4b8e545364df2a1ae64dbae688d3d002a702560a2a",
+      "stderr_sha256": "60cad5ab9aed8f544b343080f021fd84c1e673b05f6dc23a2bcc43fc54f6a84c",
+      "result_tail": "ilure) ... ok\ntest_bound_formula_range_matches_legacy_without_regex_inference (test_table_workflow_cli_capabilities.WireTests.test_bound_formula_range_matches_legacy_without_regex_inference) ... ok\ntest_default_adapter_never_imports_dependency_python_modules (test_table_workflow_cli_capabilities.WireTests.test_default_adapter_never_imports_dependency_python_modules) ... ok\ntest_missing_address_batch_capability_is_rejected (test_table_workflow_cli_capabilities.WireTests.test_missing_address_batch_capability_is_rejected) ... ok\ntest_missing_capability_stops_before_input_or_output (test_table_workflow_cli_capabilities.WireTests.test_missing_capability_stops_before_input_or_output) ... ok\ntest_old_dependency_keeps_legacy_cli_but_requires_explicit_upgrade_for_workflow (test_table_workflow_cli_capabilities.WireTests.test_old_dependency_keeps_legacy_cli_but_requires_explicit_upgrade_for_workflow) ... ok\ntest_protocol_unknown_operation_version_and_expired_handle (test_table_workflow_cli_capabilities.WireTests.test_protocol_unknown_operation_version_and_expired_handle) ... ok\ntest_readonly_independent_roots_and_no_external_programs (test_table_workflow_cli_capabilities.WireTests.test_readonly_independent_roots_and_no_external_programs) ... ok\ntest_wire_lossless_and_rejects_unsafe_values (test_table_workflow_cli_capabilities.WireTests.test_wire_lossless_and_rejects_unsafe_values) ... ok\n\n----------------------------------------------------------------------\nRan 75 tests in 15.873s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_table_workflow_names.py"
+      ],
+      "exit_code": 0,
+      "tests_reported": 4,
+      "seconds": 0.035,
+      "stdout_sha256": "7af205c122e1922e7e1574e6e21f9681f1ae24d4992cd1cb4775c97039da6655",
+      "stderr_sha256": "998aa39c85b23b927341f8f5ead9ac125574ca24fba1e854a2a948fff719faa0",
+      "result_tail": "test_invalid_continuations (test_table_workflow_names.NameDiscoveryTests.test_invalid_continuations) ... ok\ntest_long_names_budget_partial (test_table_workflow_names.NameDiscoveryTests.test_long_names_budget_partial) ... ok\ntest_ninth_and_continuation (test_table_workflow_names.NameDiscoveryTests.test_ninth_and_continuation) ... ok\ntest_single_and_empty_end (test_table_workflow_names.NameDiscoveryTests.test_single_and_empty_end) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nOK\n"
+    }
+  ],
+  "status": "completed_with_declared_verification_limits",
+  "execution_note": "An initial test filename test_et_output_page.py did not exist; it was rejected before execution and corrected to the actual test_et_output_budget.py. No zero-test success is counted.",
+  "documentation_check": {
+    "ok": true,
+    "skills": {
+      "artifact-lifecycle": "20261107.1943.5370",
+      "bank-writing": "20261107.1943.5370",
+      "docx": "20261107.1943.5370",
+      "et": "20261107.1943.5370",
+      "ofd": "20261107.1943.5370",
+      "pptx": "20261107.1943.5370",
+      "skill-development-standards": "20261105.1556.4829",
+      "table-workflow": "20261107.1943.5370",
+      "wps": "20261107.1943.5370",
+      "xlsx": "20261107.1943.5370"
+    },
+    "pages_checked": 15,
+    "local_links_checked": 421,
+    "issues": [],
+    "limitations": "Structural checks only; no semantic claims, Mermaid rendering, external links or complete CommonMark validation."
+  },
+  "summary": {
+    "suite_processes": 13,
+    "tests_reported": 198,
+    "failures": [],
+    "skipped_reported": 0
+  },
+  "cli_help_checks": [
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "skills/docx/scripts/read_docx.py",
+        "--help"
+      ],
+      "exit_code": 0,
+      "required_tokens": [
+        "--max-output-bytes",
+        "--cursor",
+        "--tables"
+      ],
+      "passed": true,
+      "stdout_sha256": "0bd55baf5ee255b85af282d04dfe450d74f86526d9991fcea0da3c6e6f4b29cd",
+      "scope": "Parser/help presence only, not execution of documentation examples or business acceptance"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "skills/et/scripts/analyze_et.py",
+        "--help"
+      ],
+      "exit_code": 0,
+      "required_tokens": [
+        "--max-output-bytes",
+        "--cursor",
+        "--preview"
+      ],
+      "passed": true,
+      "stdout_sha256": "e0bbbe488158ea7d4e7daf5c8e4e0c924b2f21ffcb4f7d433178df6a48a4e408",
+      "scope": "Parser/help presence only, not execution of documentation examples or business acceptance"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "skills/wps/scripts/read_wps.py",
+        "--help"
+      ],
+      "exit_code": 0,
+      "required_tokens": [
+        "--max-output-bytes",
+        "--cursor"
+      ],
+      "passed": true,
+      "stdout_sha256": "4a9e1ac4aaa17ab51a3e3db44f155763cbbef1657246af77319bdde3d93b028d",
+      "scope": "Parser/help presence only, not execution of documentation examples or business acceptance"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "skills/pptx/scripts/pptx.py",
+        "inspect",
+        "--help"
+      ],
+      "exit_code": 0,
+      "required_tokens": [
+        "--slides",
+        "--notes",
+        "--max-output-bytes",
+        "--allow-png-zero-padding"
+      ],
+      "passed": true,
+      "stdout_sha256": "6a1f789df76680d909c7d8be2ce59a6239426f33ffc855fdc67ea88ed144b3d0",
+      "scope": "Parser/help presence only, not execution of documentation examples or business acceptance"
+    },
+    {
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "skills/table-workflow/scripts/table_workflow.py",
+        "--help"
+      ],
+      "exit_code": 0,
+      "required_tokens": [
+        "names",
+        "--xlsx-root",
+        "--et-root"
+      ],
+      "passed": true,
+      "stdout_sha256": "ec7c54905c3c136ae8d79e1e5ed017f747a7f1c2823327621d882965e14db0bc",
+      "scope": "Parser/help presence only, not execution of documentation examples or business acceptance"
+    }
+  ],
+  "mermaid": {
+    "parser_status": "not_run",
+    "reason": "No installed Mermaid parser found in the selected Mac environment. No packages installed for this task; previous 2026-11-05 parser results remain historical.",
+    "manual_semantic_review": "passed",
+    "visual_rendering": "not_run",
+    "diagrams": [
+      {
+        "file": "docs/README.md",
+        "diagram": 1,
+        "sha256": "1e8db0223f9502cafa2497b7fb688ee6b5600d69c5915dd4c090a1e639c9b521",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/README.md",
+        "diagram": 2,
+        "sha256": "e2559442bd69430b85691dc34f7233ed1ffe3da52aa28e03d50cd9f2debf60fa",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/artifact-lifecycle.md",
+        "diagram": 1,
+        "sha256": "eb4c2b734e85445cb095657cedb43ddcb6741c6807272d4f51d277aa1416be66",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/artifact-lifecycle.md",
+        "diagram": 2,
+        "sha256": "46232c43df44fed8fca26eb2f724a9f0c50781caf4082402bc36ea7e5af072ef",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/bank-writing.md",
+        "diagram": 1,
+        "sha256": "09de52020fd6939e4efa1fb9a56fdaa6ae5c1a4bb1f0615d8c683a6f2f02e241",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/bank-writing.md",
+        "diagram": 2,
+        "sha256": "e958cc87b458585dd23e1d75ad3db95c35fd7001ab8b4c3f71d52cbdbb59b919",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/docx.md",
+        "diagram": 1,
+        "sha256": "b2afdbb4d21cd632ad685560c6d391b20a3c4ec5b1d7354c6a00d5de5889d1d6",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/docx.md",
+        "diagram": 2,
+        "sha256": "70ba4a0e5edeef9a2832e7cdff476bb0935db41b2b42e82e433423a7daa63a1d",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/et.md",
+        "diagram": 1,
+        "sha256": "1fa0e71ff623f0e1b4a6c9ca06a6b30f63df9808ec53269168b0e08a640d5ea5",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/et.md",
+        "diagram": 2,
+        "sha256": "6b5f0b0fefc83a426da8bdf4baf19fcdfeb7030b85df5ab089d95a44a8297da6",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/ofd.md",
+        "diagram": 1,
+        "sha256": "ef12fc9c3008eb2f02bd3ec938a80e7494f8a9261e27066f6b8e6073192d1992",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/ofd.md",
+        "diagram": 2,
+        "sha256": "7fd6f9d0d769defd0bc72ba45eeeb94e78285ca20420c1ee89e04a037a4952f1",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/pptx.md",
+        "diagram": 1,
+        "sha256": "dc6aa66cafd2509ee8d53e2523a0b54c13a5a1d58d53fb75be2bf945e253534a",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/pptx.md",
+        "diagram": 2,
+        "sha256": "068628d712eb0d4b66849406db8f78c87eb0069666280e90830780467e5f1d78",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/skill-development-standards.md",
+        "diagram": 1,
+        "sha256": "4288c57759d7f3b496b1bb30720c5bdacc85b3446871a83a8ea6de6146fed19c",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/skill-development-standards.md",
+        "diagram": 2,
+        "sha256": "b9c323bf2059d611ea99403ea74d8d87e55692372e17b1947f2b11eb10e2d34b",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/table-workflow.md",
+        "diagram": 1,
+        "sha256": "f0c7b64657b35ddefa70fa152494028f1dc5dac117a04179abf9939f21d31ae0",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/table-workflow.md",
+        "diagram": 2,
+        "sha256": "e3c19d4b6269868ee80058bc80c0bb0101a8899c7ab528a86336b8a0d132f3a1",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/wps.md",
+        "diagram": 1,
+        "sha256": "1c56988be4b669d7cc4615719d098b62be368841de2af37880aa9601adc0c5a4",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/wps.md",
+        "diagram": 2,
+        "sha256": "90f94b313610adc54a2d57a1d2d11b615056a498ddd69a46a27f81a5566378f4",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/xlsx.md",
+        "diagram": 1,
+        "sha256": "1881fc4b719e6b7f29e8c7de22e022036e4def52cb54684ab0653b948b5c6195",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      },
+      {
+        "file": "docs/skills/xlsx.md",
+        "diagram": 2,
+        "sha256": "861bc94daa0472ed7e12adf65c2474b28e437b2ebfc1db0f014f12e690c2b62a",
+        "manual_review": "Reviewed module/entry labels and conditional call versus handoff flows against linked implementation; no parser or visual pass claimed."
+      }
+    ],
+    "diagram_count": 22
+  },
+  "python_static_checks": [
+    {
+      "file": "tools/check_project_docs.py",
+      "ast_parse": "passed",
+      "max_line_length_200": "passed",
+      "no_semicolon_statements": "passed"
+    },
+    {
+      "file": "tests/test_project_docs.py",
+      "ast_parse": "passed",
+      "max_line_length_200": "passed",
+      "no_semicolon_statements": "passed"
+    }
+  ],
+  "pylint": "not_run; no installed pylint command; AST and targeted line/statement checks are not a full lint result",
+  "git_diff_check": {
+    "exit_code": 0,
+    "status": "passed"
+  },
+  "skill_sources_and_historical_evidence_unchanged": true,
+  "source_citations": {
+    "docs/README.md": [],
+    "docs/skills/artifact-lifecycle.md": [
+      "skills/artifact-lifecycle/SKILL.md",
+      "skills/artifact-lifecycle/references/contract.md",
+      "skills/artifact-lifecycle/references/reuse.md",
+      "skills/artifact-lifecycle/references/upstream.json",
+      "skills/artifact-lifecycle/requirements.txt",
+      "skills/artifact-lifecycle/scripts/archive_deliverables.py",
+      "skills/artifact-lifecycle/scripts/artifact_files.py",
+      "skills/artifact-lifecycle/scripts/cleanup_task.py",
+      "skills/artifact-lifecycle/scripts/controlled_cleanup.py",
+      "skills/artifact-lifecycle/scripts/lifecycle.py",
+      "skills/artifact-lifecycle/scripts/output_location.py",
+      "skills/artifact-lifecycle/scripts/router_config.py",
+      "skills/artifact-lifecycle/scripts/test/test_lifecycle.py",
+      "skills/wps/references/lifecycle-upstream.json",
+      "skills/xlsx/references/lifecycle-upstream.json",
+      "skills/xlsx/scripts/test/test_xlsx_archive_sync.py"
+    ],
+    "docs/skills/bank-writing.md": [
+      "skills/bank-writing/SKILL.md",
+      "skills/bank-writing/references/activity-planning.md",
+      "skills/bank-writing/references/audit-and-compliance.md",
+      "skills/bank-writing/references/banking-regulations-sop.md",
+      "skills/bank-writing/references/business-analysis.md",
+      "skills/bank-writing/references/comprehensive-writing.md",
+      "skills/bank-writing/references/credit-investigation.md",
+      "skills/bank-writing/references/digital-product-requirements.md",
+      "skills/bank-writing/references/docx-handoff.md",
+      "skills/bank-writing/references/editing-and-integration.md",
+      "skills/bank-writing/references/email-communication.md",
+      "skills/bank-writing/references/email-scenarios.md",
+      "skills/bank-writing/references/industry-research.md",
+      "skills/bank-writing/references/official-documents.md",
+      "skills/bank-writing/references/pr-and-crisis-management.md",
+      "skills/bank-writing/references/source-access.md",
+      "skills/bank-writing/references/speech-and-report.md",
+      "skills/bank-writing/references/style-imitation.md",
+      "skills/bank-writing/references/summary-and-imitation.md",
+      "skills/bank-writing/references/summary-reading.md",
+      "skills/bank-writing/references/writing-review.md",
+      "skills/docx/SKILL.md"
+    ],
+    "docs/skills/docx.md": [
+      "skills/docx/SKILL.md",
+      "skills/docx/references/comments-management.md",
+      "skills/docx/references/controlled-flow.md",
+      "skills/docx/references/delivery.md",
+      "skills/docx/references/generation-core.md",
+      "skills/docx/references/inspection.md",
+      "skills/docx/references/ooxml-editing.md",
+      "skills/docx/references/pagination-governance.md",
+      "skills/docx/references/structure-editing.md",
+      "skills/docx/references/table-media-editing.md",
+      "skills/docx/requirements.txt",
+      "skills/docx/scripts/archive_deliverables.py",
+      "skills/docx/scripts/controlled_cleanup.py",
+      "skills/docx/scripts/create_docx.py",
+      "skills/docx/scripts/docx_task_state.py",
+      "skills/docx/scripts/edit_docx.py",
+      "skills/docx/scripts/edit_structure.py",
+      "skills/docx/scripts/edit_tables.py",
+      "skills/docx/scripts/manage_comments.py",
+      "skills/docx/scripts/office/archiveio.py",
+      "skills/docx/scripts/office/validate.py",
+      "skills/docx/scripts/office/validators/generation.py",
+      "skills/docx/scripts/office/validators/structure.py",
+      "skills/docx/scripts/office/xmlio.py",
+      "skills/docx/scripts/read_docx.py",
+      "skills/docx/scripts/replace_image.py",
+      "skills/docx/scripts/run_docx_edit.py",
+      "skills/docx/scripts/run_docx_task.py",
+      "skills/docx/scripts/test/test_docx_bound_pages.py",
+      "skills/docx/scripts/validate_layout.py"
+    ],
+    "docs/skills/et.md": [
+      "skills/et/SKILL.md",
+      "skills/et/references/bounded-reading.md",
+      "skills/et/references/et-ett-readonly.md",
+      "skills/et/references/et-real-validation.md",
+      "skills/et/references/table-analysis.md",
+      "skills/et/references/table-preview.md",
+      "skills/et/requirements.txt",
+      "skills/et/scripts/analyze_et.py",
+      "skills/et/scripts/docs/cli-contract.md",
+      "skills/et/scripts/et_cli.py",
+      "skills/et/scripts/et_cli_protocol.py",
+      "skills/et/scripts/et_output_page.py",
+      "skills/et/scripts/et_table_analysis.py",
+      "skills/et/scripts/et_table_data.py",
+      "skills/et/scripts/et_table_preview.py",
+      "skills/et/scripts/et_table_quality.py",
+      "skills/et/scripts/read_et.py",
+      "skills/et/scripts/test/test_et_output_budget.py",
+      "skills/et/scripts/test/test_metadata_api.py",
+      "skills/et/scripts/wps_access.py",
+      "skills/et/scripts/wps_biff8.py",
+      "skills/et/scripts/wps_cfb.py",
+      "skills/et/scripts/wps_diagnostics.py",
+      "skills/et/scripts/wps_ooxml.py",
+      "skills/et/scripts/wps_ooxml_sheet.py",
+      "skills/et/scripts/wps_read_view.py",
+      "skills/et/scripts/wps_result.py"
+    ],
+    "docs/skills/ofd.md": [
+      "skills/ofd/SKILL.md",
+      "skills/ofd/references/boundaries.md",
+      "skills/ofd/references/compatibility.md",
+      "skills/ofd/references/contract.md",
+      "skills/ofd/references/generation.md",
+      "skills/ofd/references/output-views.md",
+      "skills/ofd/references/validation.md",
+      "skills/ofd/requirements.txt",
+      "skills/ofd/scripts/check_generated_ofd.py",
+      "skills/ofd/scripts/generate_ofd.py",
+      "skills/ofd/scripts/ofd_generation_assets.py",
+      "skills/ofd/scripts/package_ofd.py",
+      "skills/ofd/scripts/read_ofd.py"
+    ],
+    "docs/skills/pptx.md": [
+      "skills/pptx/SKILL.md",
+      "skills/pptx/assets/example.json",
+      "skills/pptx/references/bounded-reading.md",
+      "skills/pptx/references/input-contract.md",
+      "skills/pptx/references/provenance.md",
+      "skills/pptx/requirements.txt",
+      "skills/pptx/scripts/_engine/pptx_ooxml/package.py",
+      "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py",
+      "skills/pptx/scripts/pptx.py",
+      "skills/pptx/scripts/pptx_core/images.py",
+      "skills/pptx/scripts/pptx_core/inspection.py",
+      "skills/pptx/scripts/pptx_core/package.py",
+      "skills/pptx/scripts/pptx_core/runtime.py",
+      "skills/pptx/scripts/pptx_core/svg_limits.py",
+      "skills/pptx/scripts/pptx_core/validation.py",
+      "skills/pptx/scripts/test/test_bounded_inspection.py"
+    ],
+    "docs/skills/skill-development-standards.md": [
+      "skills/artifact-lifecycle/SKILL.md",
+      "skills/skill-development-standards/SKILL.md",
+      "skills/skill-development-standards/requirements.txt",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/skill-development-standards/scripts/test/test_check_skill.py"
+    ],
+    "docs/skills/table-workflow.md": [
+      "skills/et/SKILL.md",
+      "skills/table-workflow/SKILL.md",
+      "skills/table-workflow/references/plan-contract.md",
+      "skills/table-workflow/references/quality-and-lookups.md",
+      "skills/table-workflow/references/validation.md",
+      "skills/table-workflow/requirements.txt",
+      "skills/table-workflow/scripts/docs/cli-contract.md",
+      "skills/table-workflow/scripts/table_workflow.py",
+      "skills/table-workflow/scripts/table_workflow_cli_protocol.py",
+      "skills/table-workflow/scripts/workflow_cli_client.py",
+      "skills/table-workflow/scripts/workflow_quality.py",
+      "skills/table-workflow/scripts/workflow_runtime.py",
+      "skills/xlsx/references/formula-calculation.md",
+      "skills/xlsx/scripts/docs/cli-contract.md",
+      "skills/xlsx/scripts/formula_engine.py",
+      "skills/xlsx/scripts/xlsx_analysis.py",
+      "skills/xlsx/scripts/xlsx_cli.py"
+    ],
+    "docs/skills/wps.md": [
+      "skills/wps/SKILL.md",
+      "skills/wps/references/binary-tables.md",
+      "skills/wps/references/bounded-reading.md",
+      "skills/wps/references/delivery.md",
+      "skills/wps/references/editing.md",
+      "skills/wps/references/export-acceptance-criteria.md",
+      "skills/wps/references/export-libreoffice-backend.md",
+      "skills/wps/references/export-rtf-backend.md",
+      "skills/wps/references/format.md",
+      "skills/wps/references/generation.md",
+      "skills/wps/references/lifecycle-upstream.json",
+      "skills/wps/references/reading-assessment.md",
+      "skills/wps/requirements.txt",
+      "skills/wps/scripts/docx_to_wps_rtf.py",
+      "skills/wps/scripts/export_wps.py",
+      "skills/wps/scripts/read_wps.py",
+      "skills/wps/scripts/run_wps_edit.py",
+      "skills/wps/scripts/run_wps_job.py",
+      "skills/wps/scripts/run_wps_task.py",
+      "skills/wps/scripts/test/test_wps_binary_tables.py",
+      "skills/wps/scripts/test/test_wps_entry_workflows.py",
+      "skills/wps/scripts/wps_access.py",
+      "skills/wps/scripts/wps_cfb.py",
+      "skills/wps/scripts/wps_content_validation.py",
+      "skills/wps/scripts/wps_delivery.py",
+      "skills/wps/scripts/wps_diagnostics.py",
+      "skills/wps/scripts/wps_ooxml.py",
+      "skills/wps/scripts/wps_output_contract.py",
+      "skills/wps/scripts/wps_read_view.py",
+      "skills/wps/scripts/wps_rtf_builder.py",
+      "skills/wps/scripts/wps_rtf_read.py",
+      "skills/wps/scripts/wps_selective.py",
+      "skills/wps/scripts/wps_task_paths.py"
+    ],
+    "docs/skills/xlsx.md": [
+      "skills/table-workflow/scripts/docs/cli-contract.md",
+      "skills/xlsx/SKILL.md",
+      "skills/xlsx/references/bounded-reading.md",
+      "skills/xlsx/references/data-analysis.md",
+      "skills/xlsx/references/delivery-lifecycle.md",
+      "skills/xlsx/references/formula-calculation.md",
+      "skills/xlsx/references/lifecycle-upstream.json",
+      "skills/xlsx/references/result-boundaries.md",
+      "skills/xlsx/references/task-delivery.md",
+      "skills/xlsx/references/validate.md",
+      "skills/xlsx/references/write-contract.md",
+      "skills/xlsx/requirements.txt",
+      "skills/xlsx/scripts/docs/cli-contract.md",
+      "skills/xlsx/scripts/formula_engine.py",
+      "skills/xlsx/scripts/run_xlsx_task.py",
+      "skills/xlsx/scripts/stdlib_xlsx.py",
+      "skills/xlsx/scripts/test/test_bulk_metadata_api.py",
+      "skills/xlsx/scripts/test/test_write_index.py",
+      "skills/xlsx/scripts/xlsx_analysis.py",
+      "skills/xlsx/scripts/xlsx_appearance.py",
+      "skills/xlsx/scripts/xlsx_cli.py",
+      "skills/xlsx/scripts/xlsx_cli_protocol.py",
+      "skills/xlsx/scripts/xlsx_delivery.py",
+      "skills/xlsx/scripts/xlsx_headers.py",
+      "skills/xlsx/scripts/xlsx_lifecycle.py",
+      "skills/xlsx/scripts/xlsx_lookup.py",
+      "skills/xlsx/scripts/xlsx_match.py",
+      "skills/xlsx/scripts/xlsx_read_view.py",
+      "skills/xlsx/scripts/xlsx_tabular.py",
+      "skills/xlsx/scripts/xlsx_wps_result.py",
+      "skills/xlsx/scripts/xlsx_xml.py"
+    ]
+  },
+  "document_and_tool_sha256": {
+    "README.md": "b0ad5c9baddbd10ecc45c669a803928e59bfbc2ac7e502eafa3926c1b701543e",
+    "AGENTS.md": "b5e5dc07c0317ffc3f09f942ee0606d6c92118b194e45dde1dc46d948ee6aba8",
+    "docs/README.md": "3a86591002f4cea501399f1bb7dc646883c87889ba8bbb35a215d1f19fb638ac",
+    "docs/check-execution.md": "61ef1e72d66a11a36f4fd4a474544e721ddff01cb315d411d8277f9f38abba94",
+    "docs/linux-release-acceptance.md": "babc74a6421b326df53cae08bc6b90df154b5351d49bed2e004a43f14c26d3bb",
+    "docs/skills/artifact-lifecycle.md": "96c7e5f68ba2d2c1df702cdcf90ee90e2c4bd2bde5c3c9134c8d35a06e37e4eb",
+    "docs/skills/bank-writing.md": "fafc92a92690a3928355dfd07da50e1312350b0b99ccd16262b52109e32c0e77",
+    "docs/skills/docx.md": "5626fca9567cc05441e43c3b5edd3ddd1b1559ec0905054065974ee6f0542000",
+    "docs/skills/et.md": "329e069092819f4b73916c6104dda2daba2b86c30a6167d4ba210653cd8c49a0",
+    "docs/skills/ofd.md": "c46d00b815911edb4bfdf9b84cc4e6b95a371583b96520c8f1dc3c38a42e18da",
+    "docs/skills/pptx.md": "2ca715a8ad696a789a30ae0917e7cd698cca842446eb7450e60fbb7bba7f48d7",
+    "docs/skills/skill-development-standards.md": "552a8c9d223e02572b25efa41519095473f2461dcdd67e47e033e975cddaf9e3",
+    "docs/skills/table-workflow.md": "43b42c99233602db95965a5c6b053e21219c1ced718dd070f9531673530a8538",
+    "docs/skills/wps.md": "40d08ede86eb3dfc1db65456845003f90fcf900e55d271936a474c748b1761e4",
+    "docs/skills/xlsx.md": "38f71a74196974bef75eac2d1c670eb4c93aa583bc8a727c90f4c023a942ac5b",
+    "tools/check_project_docs.py": "13f19028a3f6886f7d29d4c5daf5cacff54aa1b72a902f52f31cfcfb7cf10e70",
+    "tests/test_project_docs.py": "068cc1ff8478c035d7db786d092ebd986a92b969c890e0265fb6d17e06bc7d79"
+  },
+  "not_verified": [
+    "Full business regression on current source; selected suites only",
+    "Linux and Windows execution for this documentation maintenance",
+    "New real-user or restricted OFD sample acceptance",
+    "Office/PPTX/OFD visual rendering and arbitrary format fidelity",
+    "Real Deep Agents model routing, provider token usage and result delivery",
+    "Cloud upload or visibility latency",
+    "Mermaid parser and rendered visual layout",
+    "External HTTP links availability and every prose command example",
+    "Remote CI for this documentation change"
+  ],
+  "existing_contract_discrepancies": [
+    "table-workflow reference/audit wording says formula precision 34; actual formula engine is 28. Current guide describes actual 28.",
+    "table-workflow reference self-check timeout says 60 seconds; CLI backend default is 120. Guide preserves distinction.",
+    "XLSX public CLI OutputLimit may serialize ok=false while call exits 0; consumer must inspect both. Runtime not changed by this documentation task."
+  ],
+  "publication": {
+    "committed": false,
+    "pushed": false,
+    "release_zip_updated": false,
+    "state_as_of": "2026-11-07T14:47:11.460139+00:00"
+  },
+  "prepublication_recheck": {
+    "checked_utc": "2026-11-07T15:01:25.007399+00:00",
+    "baseline_commit": "6e4cca7a78a57acebe38448962c99cbc4814b409",
+    "suite_processes": 13,
+    "tests_reported": 198,
+    "failed_suites": [],
+    "skipped_reported": 0,
+    "duration_seconds": 48.66,
+    "commands": "Repeated the exact 13 commands in tests using Python 3.12.12 with -I -S -B.",
+    "workspace_strict_check": {
+      "exit_code": 1,
+      "errors": 0,
+      "warnings": 126,
+      "reason": "Existing ET/WPS __pycache__ directories and 124 cached files, last modified 2026-11-03 UTC; preserved unchanged."
+    },
+    "tracked_source_clean_copy_strict_check": {
+      "exit_code": 0,
+      "skills_checked": 10,
+      "source": "git archive HEAD skills; no Skill source changes in worktree",
+      "temporary_copy_removed": true
+    },
+    "review_corrections": [
+      "Aligned DOCX and PPTX regression wording with the recorded executed suites; no capability or business-code changes."
+    ],
+    "mermaid": "Manual flow review only; no parser or visual rendering run.",
+    "documentation_check": {
+      "ok": true,
+      "skills": {
+        "artifact-lifecycle": "20261107.1943.5370",
+        "bank-writing": "20261107.1943.5370",
+        "docx": "20261107.1943.5370",
+        "et": "20261107.1943.5370",
+        "ofd": "20261107.1943.5370",
+        "pptx": "20261107.1943.5370",
+        "skill-development-standards": "20261105.1556.4829",
+        "table-workflow": "20261107.1943.5370",
+        "wps": "20261107.1943.5370",
+        "xlsx": "20261107.1943.5370"
+      },
+      "pages_checked": 15,
+      "local_links_checked": 423,
+      "issues": [],
+      "limitations": "Structural checks only; no semantic claims, Mermaid rendering, external links or complete CommonMark validation."
+    },
+    "final_doc_check_utc": "2026-11-07T15:01:56.447411+00:00"
+  }
+}

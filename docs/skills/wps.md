@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 源码基线：[14bfafe55d58fd04069a78d5196b82bfbf8f67c6](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)；Skill 版本：`20261105.1717.1148`。本文是仓库级说明，不替代 [SKILL.md](../../skills/wps/SKILL.md) 的运行约束，也不表示本次已执行转换或客户端验收。
+> 核对日期：2026-11-07；源码基线：[6e4cca7a78a57acebe38448962c99cbc4814b409](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261107.1943.5370`。本文是仓库级说明，不替代 [SKILL.md](../../skills/wps/SKILL.md) 的运行约束，也不表示本次已执行转换或客户端验收。
 
 ## 功能与格式边界
 
@@ -28,7 +28,7 @@ flowchart TD
     B --> C["wps_rtf_read：RTF 子集"]
     B --> D["wps_cfb 与 MS-DOC 解析：有界二进制证据"]
     B --> E["wps_ooxml：OOXML Word 子集"]
-    B --> F["诊断摘要、选择性读取与有界视图"]
+    B --> F["诊断与选择性读取；字符/UTF-8 字节预算及续页"]
     A --> G["run_wps_task：JSON 声明式创建"]
     A --> H["run_wps_edit：读取后受控重排"]
     H --> B
@@ -68,7 +68,7 @@ flowchart TD
     B --> C{"选择任务"}
     C -->|"读取"| D["按签名解析并保留范围和诊断"]
     D --> E{"读取结果"}
-    E -->|"ok"| F["返回声明范围内内容"]
+    E -->|"ok"| F["按选区/预算返回内容及续页标记"]
     E -->|"partial"| G["返回可靠内容并说明遗漏"]
     E -->|"失败"| H["停止依赖操作并报告原因"]
     C -->|"创建"| I["JSON 规范化并构建 RTF"]
@@ -124,8 +124,9 @@ JSON
 选择性读取与有界投影不等于完整读取：
 
 - 段落范围为 1-based、两端包含；章节按检测到的标题边界选择，重复标题可用 `--section-index` 明确定位。
-- `wps_read_view_v1` 保留原状态、partial 和主要诊断，同时明确 `coverage/metadata_omitted/truncated/next_cursor`。游标绑定源 SHA-256、选项及投影版本，源文件或范围变化后拒绝复用。
-- MS-DOC 可选存储 CP 来源、隐藏文字证据及一级表格证据，不是页码、有效样式或完整逻辑表格。OOXML 修订读取视图与 MS-DOC 存储文本策略不同，不能互换。
+- `wps_read_view_v1` 保留原状态、partial 和主要诊断，同时明确 `coverage/metadata_omitted/truncated/next_cursor`。游标绑定源 SHA-256、选项及 `projection_revision=2`，源文件或范围变化后拒绝复用。旧修订游标须重新开始；每次续读仍完整解析，不是流式读取或跨调用缓存。
+- 有界视图可加 `--max-output-bytes`（512..16777216），与原字符预算同时生效，按真实 JSON 加换行的 UTF-8 字节核算，包含中文、emoji、转义及游标。仅指定字节预算也启用视图；默认字符预算仍12000。新增 `has_more` 与 next_cursor 一致，概况 has_more=false 不表示返回全文。诊断或单个输出单元放不下时完整返回 output_view_error，不裁剪；预算也约束失败 JSON，参数错误仍为 stderr/退出2。详见 [有界读取](../../skills/wps/references/bounded-reading.md)。
+- MS-DOC 可选存储 CP 来源、隐藏文字证据及一级表格证据，不是页码、有效样式或完整逻辑表格。一级表格证据增加完整初始 TC80 记录的合并标志、宽度原值及有限局部宽度操作数；后续修饰未应用，merges 仍可为 unknown，不能据此推断最终网格、有效列宽或版式。见 [二进制表格证据](../../skills/wps/references/binary-tables.md)。OOXML 修订读取视图与 MS-DOC 存储文本策略不同，不能互换。
 - 加密、结构损坏、安全校验或资源限制按失败契约停止；有可靠正文的 partial 不应被丢弃，但也不能自动用于无损编辑。
 
 详细字段与例外见 [读取结果契约](../../skills/wps/references/reading-assessment.md) 和 [格式边界](../../skills/wps/references/format.md)。
@@ -163,7 +164,7 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 
 创建、编辑和导出 CLI 自动调用 `wps_delivery`；裸读取、`inspect/check` 和底层 API 不自动归档。只有发布核验及内部清理通过后才归档，归档前后再次核对主文件哈希。`delivery.archive_status` 单独表示 copied、skipped 或 failed；缺少有效宿主配置时 skipped，不能据业务退出 `0` 声称云空间成功。
 
-归档只是本地受控复制，真实云空间展示取决于宿主映射。失败保留主文件，不重跑生成或删除历史文件解决冲突。默认 stdin 不产生额外配置；确需落盘 JSON 时使用受控 job，创建前登记，仅清理自己的已确认文件，保护用户原配置。详见 [交付契约](../../skills/wps/references/delivery.md) 与 [公共副本来源记录](../../skills/wps/references/lifecycle-upstream.json)。
+归档复制成功即按 archive_user_notice 提示去云空间查看，无需等待宿主映射确认；这不宣称已验证上传完成或展示时效。失败保留主文件，不重跑生成或删除历史文件解决冲突。默认 stdin 不产生额外配置；确需落盘 JSON 时使用受控 job，创建前登记，仅清理自己的已确认文件，保护用户原配置。详见 [交付契约](../../skills/wps/references/delivery.md) 与 [公共副本来源记录](../../skills/wps/references/lifecycle-upstream.json)。
 
 ## 依赖与验证限制
 
@@ -176,13 +177,14 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 
 ## 源码追溯
 
-- 固定基线：[WPS 源目录](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6/skills/wps)。
+- 固定基线：[WPS 源目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/wps)。
 - 统一入口与格式路由：[SKILL.md](../../skills/wps/SKILL.md)、[read_wps.py](../../skills/wps/scripts/read_wps.py)、[wps_output_contract.py](../../skills/wps/scripts/wps_output_contract.py)。
 - 创建、编辑及计划校验：[run_wps_task.py](../../skills/wps/scripts/run_wps_task.py)、[run_wps_edit.py](../../skills/wps/scripts/run_wps_edit.py)、[wps_content_validation.py](../../skills/wps/scripts/wps_content_validation.py)。
+- 新边界回归（本轮未执行）：[入口流程](../../skills/wps/scripts/test/test_wps_entry_workflows.py)、[二进制表格](../../skills/wps/scripts/test/test_wps_binary_tables.py)。
 - 后端与状态传播：[export_wps.py](../../skills/wps/scripts/export_wps.py)、[wps_task_paths.py](../../skills/wps/scripts/wps_task_paths.py)、[wps_delivery.py](../../skills/wps/scripts/wps_delivery.py)。
 
 ## 归档提示更新（2026-11-07）
 
-以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+本节与全文均按 2026-11-07 的上述源码基线核对；历史测试记录不代表本轮重跑。
 
 归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。

@@ -1,6 +1,6 @@
 # bank-writing：银行专业写作与文本交接
 
-> 源码基线：[`14bfafe55d58fd04069a78d5196b82bfbf8f67c6`](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)；Skill 版本：`20261102.1954.3193`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
+> 文档核对日期：2026-11-07；源码基线：[`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261107.1943.5370`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
 
 ## 功能与职责
 
@@ -80,6 +80,7 @@ flowchart TD
     J -->|"否"| K["文本任务结束"]
     J -->|"是"| L["交接最终正文、格式要求与待核信息"]
     L --> M["独立 docx 流程；失败仍保留文本"]
+    M --> N["继承已核对的业务、归档、清理状态和用户提示"]
 ```
 
 关键歧义妨碍结果时才询问，非关键细节可使用稳妥默认值。简单任务不强制展示分析、先给提纲或反复询问导出。多轮编辑保持用户已确认部分，只有事实变更必然影响其他位置时才做最小联动并说明。
@@ -116,15 +117,13 @@ DOCX 是显式、可选的能力交接，不是默认运行时依赖。宿主必
 
 ## 可追溯源码
 
-- [固定基线的 bank-writing 目录](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6/skills/bank-writing)
+- [固定基线的 bank-writing 目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/bank-writing)
 - [主入口与默认文本边界](../../skills/bank-writing/SKILL.md)
 - [多轮编辑与来源冲突规则](../../skills/bank-writing/references/editing-and-integration.md)
 - [素材读取边界](../../skills/bank-writing/references/source-access.md)
 - [文本到 DOCX 的授权交接](../../skills/bank-writing/references/docx-handoff.md)
 - [相关 docx 入口](../../skills/docx/SKILL.md)
 
-## 归档提示更新（2026-11-07）
-
-以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+## 归档结果与用户提示
 
 纯文本或仅 stdout 不归档；文件交接继承提供方已验证的归档状态与用户提示，成功即提示去云空间查看，非成功如实报告，不虚构文件链接或暴露内部归档信息。

@@ -1,8 +1,22 @@
-# 三个最终包的云端 Linux 上线验收
+# 历史三包 Linux 验收方案与当前源码入口
 
-## 当前状态与适用范围
+## 当前源码的验收入口（2026-11-07）
 
-本清单是待执行方案，不是 Linux 通过报告。本次会话可用执行器为 Darwin arm64；未发现 Docker、Podman、Lima、Colima 或云端命令工具，尚未提供 SSH 目标和容器入口。仅发现 ssh 客户端不能证明存在已授权的远端环境。待提供连接方式、容器名和允许写入的隔离测试目录后执行。
+下面原方案固定于 2026-10-29 三个 ZIP，保留哈希、当时测试目录及未执行状态，不代表当前十技能或最新分发包。当前源码基线为 `6e4cca7a78a57acebe38448962c99cbc4814b409`，现行模块与依赖见 [文档索引](README.md)。若验收当前源码，先固定实际 commit/Skill 版本、独立安装目录和合法样本，按当前主入口完成自检，不使用下列旧 ZIP 哈希验证新包。
+
+各 Skill 自带测试已迁入 `skills/<目标>/scripts/test/`。在已确认的仓库维护目录中，使用满足目标 Skill 要求的解释器运行：
+
+```console
+python -I -S -B tools/run_skill_tests.py skills/docx/scripts/test
+python -I -S -B tools/run_skill_tests.py skills/xlsx/scripts/test
+python -I -S -B tools/check_project_docs.py
+```
+
+其他目标按实际测试目录选择；跨 Skill 集成位于仓库 `tests/`，不随独立业务包运行。独立安装、只读目录、能力协商、partial、源绑定续读、归档及清理应按当前契约额外覆盖。完整归档成功即提示云空间，但上传/展示时效仍需真实宿主另行核验。当前验证按 [本轮记录](skill-docs-validation-20261107.json) 分别报告平台与未执行项；历史 Linux、macOS 结果不互相替代。
+
+## 原三包方案状态与适用范围
+
+以下为 2026-10-29 留存的待执行方案，不是 Linux 通过报告。当时会话可用执行器为 Darwin arm64；未发现 Docker、Podman、Lima、Colima 或云端命令工具，尚未提供 SSH 目标和容器入口。仅发现 ssh 客户端不能证明存在已授权的远端环境。待提供连接方式、容器名和允许写入的隔离测试目录后执行。
 
 已有 macOS 回归不能替代 Linux；既有 os._exit 故障注入也不能替代真实 SIGKILL、整容器强停及宿主恢复验收。不要将任何未执行项填写为通过。本轮未修改三个分发包。
 

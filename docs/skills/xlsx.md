@@ -1,6 +1,6 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 源码基线：[14bfafe55d58fd04069a78d5196b82bfbf8f67c6](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)；Skill 版本：`20261105.1736.5039`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。仅作源码与契约审查，本次未执行办公操作、业务自检或测试套件。
+> 核对日期：2026-11-07；源码基线：[6e4cca7a78a57acebe38448962c99cbc4814b409](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261107.1943.5370`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，本轮定点回归另见 [核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 ## 功能与适用范围
 
@@ -32,7 +32,8 @@ flowchart TD
     D --> F
     E --> G["formula_engine.py：Decimal 公式子集"]
     E --> H["xlsx_xml.py 与 minimal_xlsx 模板"]
-    F --> I["xlsx_wps_result.py：完整 ET JSON 校验"]
+    E --> W["操作内行/单元格索引：patch 与计算写回"]
+    F --> I["xlsx_wps_result.py：完整 ET JSON 与源 partial 校验"]
     E --> J["xlsx_delivery.py：文件归档结果"]
     D --> J
     C --> K["随包 _artifact_runtime：配置登记与清理"]
@@ -42,11 +43,13 @@ flowchart TD
 
 `xlsx_cli.py` 是公开跨进程边界；内部复用既有算法，不另造一套解析器或公式引擎。基础 Skill 自包含；`_artifact_runtime` 是公共生命周期实现的受控副本，不依赖相邻安装目录，其来源、变换和哈希记录在 [lifecycle-upstream.json](../../skills/xlsx/references/lifecycle-upstream.json)。
 
+`Workbook.patch()` 与计算缓存写回按每次操作建立行/单元格 DOM 索引；有序节点复用定位并有序插入，异常排列等情况回到既有扫描路径。索引不跨操作保存，不缓存值或改变公开 DOM 修改路径，因此不把它当作持久缓存、流式解析或通用性能保证。实现与边界回归见 [stdlib_xlsx.py](../../skills/xlsx/scripts/stdlib_xlsx.py) 和 [test_write_index.py](../../skills/xlsx/scripts/test/test_write_index.py)。
+
 ### 主要模块与入口
 
 | 模块 | 职责与入口 |
 | --- | --- |
-| [xlsx_cli.py](../../skills/xlsx/scripts/xlsx_cli.py) | `run` 转交标准主 CLI；`capabilities` 查询 v1 能力；`call/serve` 承载公开类型化操作与不透明句柄；格式所有方实现模板保护 `verify` |
+| [xlsx_cli.py](../../skills/xlsx/scripts/xlsx_cli.py) | `run` 转交标准主 CLI；`capabilities` 查询 v1 能力；`call/serve` 承载公开类型化操作、仅元数据与批量值/地址操作及不透明句柄；格式所有方实现模板保护 `verify` |
 | [stdlib_xlsx.py](../../skills/xlsx/scripts/stdlib_xlsx.py) | `check/read/create/edit/calculate`；`Workbook` 负责包校验、类型解析、创建、局部补丁、全簿计算及独占保存 |
 | [formula_engine.py](../../skills/xlsx/scripts/formula_engine.py) | 解析受限公式及绑定引用；固定 Decimal 上下文；不执行宏、输入代码或外链 |
 | [xlsx_analysis.py](../../skills/xlsx/scripts/xlsx_analysis.py) | `profile/summarize`；区域类型化、筛选与分组勾稽；支持显式 `reject/cached/calculate` 公式政策 |
@@ -92,7 +95,7 @@ flowchart TD
 - 读取保留原存储类型、公式与缓存来源。`xlsx_read_view_v1` 是独立视图 schema，不能代替旧完整 JSON 交给分析器。概况不含全部值；`truncated=true` 表示视图未取完，不等于源解析失败。游标绑定输入 SHA、选区及 `projection_revision=2`，输入/参数变化后须重新开始。
 - 分析区域返回列 ID、类型化表头、物理行和元数据。精确求和上限为 1000 位；均值为 34 位有效数字、`ROUND_HALF_EVEN`，报告 `mean_rounded`。隐藏/过滤行默认纳入，日期序列不自动解释成日历。
 - 公式策略默认 `reject`；`cached` 仅显式使用未验证的旧缓存，缺缓存或错误单元格拒绝；原生文件可 `calculate`，先在内存重算全簿，再分析，任意工作表的未支持公式/错误/循环都会阻断，不回退缓存。
-- ET JSON 仅接受 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1` 的原始类型化提取结果，保留 `source_status/issues/coverage`。分析完成不消除源 `partial`；ET JSON 不能在此重算。
+- ET JSON 仅接受 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1` 的原始类型化提取结果，保留 `source_status/issues/coverage`。分析完成不消除源 `partial`；`unverified_due_to_best_effort_salvage` 仅在源 partial 且覆盖字段一致时接受，保留“单元格值覆盖未经验证”的诊断，不制造完整覆盖；workflow 的 `accept_partial` 仍有独立覆盖门禁，未知值影响不能放行。ET JSON 不能在此重算。
 - CSV/TSV 导入默认文字，数值列显式指定且限制为 Excel 可支持的有效数字；导出默认防护可能被表格软件解释为公式的文本，记录转义计数。选择原始文本或缓存导出需按对应契约明确决定。
 
 公式子集包括基础算术、比较、A1/区域引用、`SUM/COUNT/AVERAGE/MIN/MAX/IF/ROUND` 及受限条件汇总、`SUMPRODUCT`。**公式标量计算当前为 28 位有效数字**，不是分析均值的 34 位；精确汇总与最终舍入另有约定，详见 [formula-calculation.md](../../skills/xlsx/references/formula-calculation.md) 与 [formula_engine.py](../../skills/xlsx/scripts/formula_engine.py)。
@@ -101,7 +104,9 @@ flowchart TD
 
 接口 `interface_version=1`、协议 `psl_capabilities_v1` 与 Skill 时间戳版本相互独立。调用方先检查 `capabilities` 的协议、版本、Skill 身份及所需 operations；缺能力即停止，不自动回退私有 Python 对象。
 
-公开操作覆盖 `open/create/extract/region`、表头与类型操作、批量筛选/表达式计算、分组/关联，以及 `patch/calculate/verify/publish/delivery`。标准 `run` 保留原 CLI 行为；`call` 单次请求，`serve` 多轮同进程会话。句柄只在当前进程有效；公开 view 只含分离的单元格/合并信息与来源诊断，不泄漏 ZIP/XML 私有对象，修改 view 不能修改工作簿。
+公开操作覆盖 `open/create/extract/region`、`open_metadata` 仅元数据、`typed_values/address_many` 批量值/地址转换、表头与类型操作、批量筛选/表达式计算、分组/关联，以及 `patch/calculate/verify/publish/delivery`。标准 `run` 保留原 CLI 行为；`call` 单次请求，`serve` 多轮同进程会话。句柄只在当前进程有效；公开 view 只含分离的单元格/合并信息与来源诊断，不泄漏 ZIP/XML 私有对象，修改 view 不能修改工作簿。
+
+`open_metadata` 完整解析并遵守相同输入/会话预算，仅省去 cells/merges 的构造与跨进程传输；返回 `workbook_metadata_v1`、原序表名、来源诊断和不透明句柄，用完 `release`。`typed_values` 与 `address_many` 每批最多 10000 项，保留顺序及重复项，任一错误整批拒绝；旧标量操作不变。消费方先检查新增能力，不能静默逐格回退。
 
 线上使用有界 UTF-8 JSON 行，Decimal、bytes、tuple、dict 分别使用明确标签编码，禁止 pickle、动态恢复类及执行对象。帧上限 128 MiB、深度 64；最多 64 个活跃句柄、累计 `open` 输入 256 MiB、会话 200000 请求。必须同时校验协议、关联 ID、`ok` 和业务状态。`patch/calculate/publish` 出错后对应句柄失效。详见 [公开 CLI 契约](../../skills/xlsx/scripts/docs/cli-contract.md) 与 [协议编码器](../../skills/xlsx/scripts/xlsx_cli_protocol.py)。
 
@@ -145,12 +150,13 @@ flowchart TD
 
 - 任务路由与边界：[SKILL.md](../../skills/xlsx/SKILL.md)、[写入与结果](../../skills/xlsx/references/write-contract.md)、[结果解释](../../skills/xlsx/references/result-boundaries.md)。
 - 数据/输出范围：[数据分析](../../skills/xlsx/references/data-analysis.md)、[有界读取](../../skills/xlsx/references/bounded-reading.md)。
+- 新能力定点回归：[批量值与元数据](../../skills/xlsx/scripts/test/test_bulk_metadata_api.py)、[写索引](../../skills/xlsx/scripts/test/test_write_index.py)。
 - 对外接口：[CLI 契约](../../skills/xlsx/scripts/docs/cli-contract.md)、[CLI 实现](../../skills/xlsx/scripts/xlsx_cli.py)。
 - 交付与清理：[runner](../../skills/xlsx/scripts/run_xlsx_task.py)、[生命周期契约](../../skills/xlsx/references/delivery-lifecycle.md)、[副本来源](../../skills/xlsx/references/lifecycle-upstream.json)。
 - 组合场景：[table-workflow 导读](table-workflow.md)。
 
 ## 归档提示更新（2026-11-07）
 
-以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
+本节与全文均按 2026-11-07 的上述源码基线核对；历史测试记录不代表本轮重跑。
 
 归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。

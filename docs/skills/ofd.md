@@ -1,6 +1,6 @@
 # OFD：结构读取与受限固定版式生成
 
-本文对应仓库基线 [`14bfafe55d58fd04069a78d5196b82bfbf8f67c6`](https://github.com/JohnParken/PSL-SKILLS/tree/14bfafe55d58fd04069a78d5196b82bfbf8f67c6)，Skill 版本为 `20261105.1644.0317`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
+文档核对日期：2026-11-07。本文对应仓库基线 [`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)，Skill 版本为 `20261107.1943.5370`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
 
 ## 功能与适用范围
 
@@ -19,7 +19,7 @@ flowchart TD
     A["OFD 文件"] --> B["read_ofd.py：安全文件与 ZIP/XML 读取"]
     B --> C["类型化引用：文档、页面、模板、资源"]
     C --> D["structure 与 text_sources：结构及存储文字"]
-    C --> E["text_runs：页面与复合引用出现记录"]
+    C --> E["text_runs 与 objects：页面出现及存储节点交叉索引"]
     D --> F["ofd-read-3：状态、覆盖与诊断"]
     E --> F
     F --> G["可选 ofd-view-1：概况或指定页"]
@@ -35,7 +35,7 @@ flowchart TD
 
 `read_ofd.py` 的 `Package` 管理 ZIP 成员、引用解析、XML 缓存、资源角色和累计预算；`read_ofd()` 构建业务结果。`catalogue_structure()` 将 XML 存储与页面出现拆开，避免把同一复合对象的多次出现误当重复数据而删除。
 
-生成器复用本包读取器的安全输入和环境检查，不复用其结果作为唯一验收依据。独立检查器不导入读取器或生成器，生成过程还将结果与显式输入模型比对；这种独立结构检查仍不是 OFD 客户端视觉验收。
+读取器、生成器、独立检查器及所需静态资源随本包部署，不隐式依赖相邻 Skill 或仓库测试；公共归档另由宿主显式定位。生成器复用本包读取器的安全输入和环境检查，不复用其结果作为唯一验收依据。独立检查器不导入读取器或生成器，生成过程还将结果与显式输入模型比对；这种独立结构检查仍不是 OFD 客户端视觉验收。
 
 ### 主要模块与入口
 
@@ -87,6 +87,7 @@ python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd --view page-text 
 
 - `structure`、`text_sources`：已读取 XML 逻辑结构及存储的 TextCode 来源；结构覆盖、命名空间解析和文字解释分别报告。
 - `documents[].pages[].text_runs`：页面出现记录，保留来源、对象 ID、原始 TextCode、属性、模板标记、祖先及复合引用链。
+- `pages[].objects[].storage_node` 对应同一 `source` 的 `structure.xml_parts[].nodes[].index`；文字对象的 `glyph_transform_nodes` 指向直接关联的 CGTransform 节点，原 Glyphs 子节点仍在结构目录。只是可追溯交叉索引，不解释字体映射或保证显示，诊断与 partial 必须保留。
 - `resources`、`metadata`、`references`、`members`：资源和元数据登记、实际跟随引用及 ZIP 元信息；二进制载荷元信息不等于载荷解码或有效性证明。
 - `status`、`diagnostics`、`text_assessment`、`coverage`、`sha256`：全局状态、缺口、来源指纹与声明范围。子状态不能覆盖全局 partial。
 
@@ -152,8 +153,6 @@ python -I -S -B "<skill-root>/scripts/generate_ofd.py" ./layout.json new-documen
 
 本文只进行固定基线源码与契约审阅，未运行 OFD 自检、业务生成、样本读取、维护测试或客户端验收。测试存在于 [scripts/test](../../skills/ofd/scripts/test/)，不属于普通业务运行依赖；历史通过不等于本轮通过。
 
-## 归档提示更新（2026-11-07）
+## 归档结果与用户提示
 
-以下仅适用于本次版本 20261107.1943.5370，其余架构说明仍为上述历史基线。
-
-归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
