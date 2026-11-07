@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261106.1124.4686"
+version: "20261107.1623.2483"
 description: 用 Python 标准库创建 DOCX 公文、报告、通知与简单表格，按需提取正文、章节和数据，或受控编辑现有文档。普通生成使用轻量入口，复杂排版、目录、批注与故障诊断才加载对应参考资料。保留原件、校验、归档和清理规则；不支持旧 DOC、WPS 专有格式转换及真实视觉分页验证。
 ---
 
@@ -48,7 +48,9 @@ runner自动自检、验收、归档、清理；`--compact-receipt` 仅精简成
 
 ## 文件定位与读取规则
 
-读取 `<skill-root>/scripts/read_docx.py`：`--summary` 概览、`--heading-only` 标题、`--paragraph-range 1:20` 范围、`--section "标题"` 章节、`--compact-json` 精简结构。默认全文可用；按需取范围，修订才读inspection。
+`<skill-root>/scripts/read_docx.py`：`--summary` 概览、`--heading-only` 标题、`--paragraph-range 1:20` 范围、`--section "标题"` 章节、`--compact-json` 精简结构。默认全文可用；按需取范围，修订才读下方 inspection 参考。
+
+精简 JSON 默认12000字符（含换行），表格默认仅前两行预览；`truncated=false` 仍非全表，全表加 `--tables rows`。按 `next_block` 传 `--start-block` 续读至 null；保持输入/选项不变，索引不校验文件身份。单块/元数据超预算拒绝，需增大 `--max-output-chars`。纯文本默认不限长；显式预算超限带 TRUNCATED 标记、无游标，范围不能拆单段。完整 JSON 超预算拒绝。
 
 ## 按任务直达 references
 

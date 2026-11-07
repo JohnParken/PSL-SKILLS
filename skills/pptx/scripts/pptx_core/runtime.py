@@ -578,10 +578,15 @@ def create(config: str, output: str) -> dict:
     }
 
 
-def read_presentation(value: str, *, inspect: bool = False, allow_png_zero_padding: bool = False) -> dict:
+def read_presentation(value: str, *, inspect: bool = False, allow_png_zero_padding: bool = False,
+                      inspection_options: dict | None = None) -> dict:
     data = read_limited(task_path(value), MAX_PPTX_BYTES)
     result = inspect_presentation(data, allow_png_zero_padding=allow_png_zero_padding) if inspect else validate_presentation(data)
-    return {"input": value, "sha256": hashlib.sha256(data).hexdigest(), **result}
+    result = {"input": value, "sha256": hashlib.sha256(data).hexdigest(), **result}
+    if inspection_options is not None:
+        from .inspection import bounded_result
+        result = bounded_result(result, data, allow_png_zero_padding=allow_png_zero_padding, **inspection_options)
+    return result
 
 
 def environment() -> dict:

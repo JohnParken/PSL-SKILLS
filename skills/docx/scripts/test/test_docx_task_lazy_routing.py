@@ -24,9 +24,12 @@ class TaskLazyRoutingTests(unittest.TestCase):
         self.assertFalse(payload['is_observed'])
         return [item['file'] for item in payload['files']], payload['total_bytes']
 
-    def test_entry_token_budget_and_metadata(self):
+    def test_entry_byte_budget_and_metadata(self):
         text = (ROOT/'SKILL.md').read_text('utf-8')
-        self.assertLess((ROOT/'SKILL.md').stat().st_size, 7000)
+        # The prior 6995-byte entry had only 5 bytes of headroom. Keep the
+        # safety/creation rules while adding table completeness and continuation.
+        # This is a UTF-8 byte ceiling, not a tokenizer or host-usage assertion.
+        self.assertLess((ROOT/'SKILL.md').stat().st_size, 8000)
         version = re.search(r'^version: "([^"]+)"$', text, re.M)
         self.assertIsNotNone(version)
         self.assertRegex(version.group(1), r'^\d{8}\.\d{4}\.\d{4}$')
@@ -34,7 +37,11 @@ class TaskLazyRoutingTests(unittest.TestCase):
         self.assertTrue(100 <= len(description.group(1)) <= 150)
         for required in ('不可信数据', '任务工作目录', '真实退出码',
                          'archive_status', 'cleanup_incomplete', '自然分页',
-                         '不自动读取归档历史', 'run_docx_task.py', 'read_docx.py'):
+                         '不自动读取归档历史', 'run_docx_task.py', 'read_docx.py',
+                         '默认仅前两行预览', 'truncated=false', '--tables rows',
+                         'next_block', '--start-block', '不凭标题切换',
+                         'json.dumps(ensure_ascii=False,allow_nan=False)',
+                         '不自动截获其他工具读取或模型 Token'):
             self.assertIn(required, text)
 
     def test_common_tasks_only_load_entry(self):

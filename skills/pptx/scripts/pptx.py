@@ -36,6 +36,11 @@ def parser() -> argparse.ArgumentParser:
         command_parser = commands.add_parser(command, help=f"{command.title()} a supported PPTX package")
         command_parser.add_argument("input", help="Task-relative .pptx filename")
         if command == "inspect":
+            command_parser.add_argument("--summary", action="store_true", help="Return object and paragraph counts instead of text")
+            command_parser.add_argument("--slides", help="Ascending 1-based ranges, for example 1-3,5")
+            command_parser.add_argument("--notes", choices=("include", "omit"), default="include")
+            command_parser.add_argument("--max-output-bytes", type=int, help="Whole JSON UTF-8 budget including newline (512..67108864)")
+            command_parser.add_argument("--cursor", help="Opaque continuation; repeat all original options")
             command_parser.add_argument("--allow-png-zero-padding", action="store_true",
                                         help="Inspect with bounded non-standard PNG zero padding; report partial")
     return result
@@ -43,6 +48,7 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     command = None
+    args = None
     try:
         args = parser().parse_args(argv)
         command = args.command
@@ -52,8 +58,13 @@ def main(argv: list[str] | None = None) -> int:
         elif command == "create":
             value = create(args.config, args.output)
         else:
+            options = None
+            if command == "inspect" and (args.summary or args.slides is not None or args.notes != "include"
+                                         or args.max_output_bytes is not None or args.cursor is not None):
+                options = {key: getattr(args, key) for key in ("summary", "slides", "notes", "max_output_bytes", "cursor")}
             value = read_presentation(args.input, inspect=command == "inspect",
-                                      allow_png_zero_padding=getattr(args, 'allow_png_zero_padding', False))
+                                      allow_png_zero_padding=getattr(args, 'allow_png_zero_padding', False),
+                                      inspection_options=options)
         print(json.dumps({"schema": RESULT_SCHEMA, "ok": True, "command": command, **value}, ensure_ascii=False, allow_nan=False))
         return 3 if value.get('structural_validation') == 'partial' else 0
     except (ValueError, RuntimeError, OSError, OverflowError, RecursionError, TypeError, KeyError, IndexError) as error:
@@ -70,8 +81,18 @@ def main(argv: list[str] | None = None) -> int:
             code = "conversion_or_validation_failed"
             message = str(error)
         # Avoid exposing machine-specific installation paths from lower layers.
-        message = message.replace(str(SCRIPTS_ROOT.parent), "<skill-root>")[:4000]
-        print(json.dumps({"schema": RESULT_SCHEMA, "ok": False, "command": command, "error": {"code": code, "message": message}}, ensure_ascii=False))
+        message = message.replace(str(SCRIPTS_ROOT.parent), "<skill-root>")
+        budget = getattr(args, "max_output_bytes", None)
+        bounded_error = isinstance(budget, int) and 512 <= budget <= 67108864
+        if not bounded_error:
+            message = message[:4000]
+        failure = {"schema": RESULT_SCHEMA, "ok": False, "command": command, "error": {"code": code, "message": message}}
+        if bounded_error:
+            while len((json.dumps(failure, ensure_ascii=False) + "\n").encode("utf-8")) > budget:
+                failure["error"]["message"] = failure["error"]["message"][:-32]
+                failure["error"]["message_truncated"] = True
+                failure["error"]["full_diagnostic"] = "stderr"
+        print(json.dumps(failure, ensure_ascii=False))
         print(f"pptx: {code}: {message}", file=sys.stderr)
         return 2
 
