@@ -1,0 +1,186 @@
+{
+  "checked_utc": "2026-11-07T07:42:27.707145+00:00",
+  "baseline_commit": "4b5a61f51d12d2a9d293898c2f862cbf7271dc8d",
+  "baseline_verified": "Local main and GitHub main agreed before editing; no commit or push.",
+  "scope": "Skill instructions, conditional references, maintenance benchmark and regression tests only; no Deep Agents or production runtime change.",
+  "versions": {
+    "xlsx": "20261107.1432.4161",
+    "wps": "20261107.1437.5855"
+  },
+  "description_review": {
+    "xlsx": {
+      "characters": 134,
+      "changed": false
+    },
+    "wps": {
+      "characters": 127,
+      "changed": true,
+      "reason": "Distinguish ET/ETT from native XLSX/XLSM routing."
+    }
+  },
+  "macos": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.12",
+    "checks": {
+      "xlsx_suite": {
+        "passed": 380,
+        "failed": 0,
+        "skipped": 0
+      },
+      "wps_suite": {
+        "passed": 441,
+        "failed": 0,
+        "skipped": 0
+      },
+      "loading_benchmark": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0
+      },
+      "wps_et_pipeline": {
+        "passed": 3
+      },
+      "wps_docx_parity": {
+        "passed": 2
+      },
+      "xlsx_strict": {
+        "status": "passed"
+      },
+      "wps_original_strict": {
+        "status": "warning_failure",
+        "reason": "55 pre-existing __pycache__ cache warnings; not removed."
+      },
+      "wps_clean_copy_strict": {
+        "status": "passed"
+      },
+      "xlsx_read_only_independent_copy": {
+        "passed": 6,
+        "test_resources": "excluded",
+        "source_hashes": "unchanged"
+      },
+      "wps_read_only_independent_copy": {
+        "passed": 4,
+        "test_resources": "excluded",
+        "source_hashes": "unchanged",
+        "note": "Strengthened after the Linux run; final targeted rerun passed on macOS."
+      }
+    }
+  },
+  "linux": {
+    "platform": "Linux x86_64 kernel 6.18.57",
+    "python": "3.12.14",
+    "expat": "2.8.3",
+    "transfer": {
+      "sha256": "f13108fbf52bc0451724bba7fa49db5b59605dfd9f7c408a9108d8734362234e",
+      "manifest_files_verified": 781
+    },
+    "checks": {
+      "xlsx_suite": {
+        "passed": 380,
+        "failed": 0,
+        "skipped": 0
+      },
+      "wps_suite": {
+        "passed": 438,
+        "failed": 0,
+        "skipped": 3,
+        "skip_reason": "Three historical DOCX/complex-table fixture files were not included in the verification bundle."
+      },
+      "et_suite": {
+        "passed": 457,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xlsx_wps_strict": {
+        "status": "passed"
+      },
+      "cross_skill": {
+        "passed": 16,
+        "failed": 0,
+        "suites": {
+          "xlsx_lifecycle_parity": 1,
+          "wps_lifecycle_parity": 1,
+          "wps_docx_parity": 2,
+          "wps_et_pipeline": 3,
+          "self_check_contracts": 9
+        }
+      },
+      "loading_benchmark_snapshot": {
+        "passed": 6,
+        "errors": 2,
+        "reason": "Bundle intentionally excludes .git; two baseline tests could not query git history. Final benchmark verified 10/10 on macOS."
+      }
+    },
+    "scope_note": "Final WPS entry text hash verified; final test-only hardening of WPS copy to read-only/no-test-resources was subsequently rerun on macOS, not Linux.",
+    "entry_sha256": {
+      "xlsx": "52edb19db320a0c9f06b1950b1b04349c6428f2856dc5182df4996fe21b892ff",
+      "wps": "9df15edf147d0a9dd682f46e10a98a1d7d82d8c3580b3f3f6039a3bfac52aa64"
+    }
+  },
+  "real_public_xlsx_recheck": {
+    "command": "python -I -S -B tests/xlsx_real_business_20261103/verify_real_business.py",
+    "platform": "macOS/Python3.12.12",
+    "assertions": "passed",
+    "source_manifest": "tests/xlsx_real_business_20261103/sources.json",
+    "workbook_statuses": {
+      "stanton_budget_q1.xlsx": "incomplete",
+      "denham_cashbook.xlsx": "incomplete",
+      "denham_bank_reconciliation.xlsx": "calculated_subset",
+      "ofgem_ed2_pcfm_v5.xlsx": "load_rejected",
+      "ofgem_gas_pcfm_draft.xlsx": "failed"
+    },
+    "independently_verified_original_formulas": 30,
+    "selected_sumproduct_checks": 5,
+    "derived_transaction_checks": 9,
+    "bank_business_values": 7,
+    "recalculated_group_summary_reconciliation": "passed",
+    "source_hashes_unchanged": true,
+    "scope_note": "Expected partial/rejection/failure boundaries retained; selected-formula success does not mean whole-workbook compatibility or Excel visual acceptance."
+  },
+  "loading_measurement": {
+    "report": "tests/runtime_loading_profiles.json",
+    "kind": "planned whole-file read events and character/UTF-8 byte proxies",
+    "xlsx_static_create": {
+      "before_files": 4,
+      "after_files": 1,
+      "before_characters": 21287,
+      "after_characters": 6204
+    },
+    "wps_static_create": {
+      "before_files": 1,
+      "after_files": 1,
+      "before_characters": 9273,
+      "after_characters": 5151
+    },
+    "tokenizer_tokens": null,
+    "deep_agents_usage": null,
+    "reason": "No usable installed offline tokenizer or Deep Agents trace/provider usage was available. No character/byte-to-token conversion."
+  },
+  "independent_review": "No blocking behavior/contract defect found. The noted WPS independent-test coverage gap was corrected and rerun.",
+  "static_checks": {
+    "git_diff_check": "passed",
+    "python_ast": "passed",
+    "new_python_lines_over_200": 0,
+    "new_python_semicolon_statement_tokens": 0,
+    "pylint": "not_run; unavailable"
+  },
+  "unverified": [
+    "Real Deep Agents routing, repeated reads, prompt/token usage and provider billing",
+    "Windows",
+    "WPS/Word/Excel visual pagination",
+    "LibreOffice binary export in this change"
+  ],
+  "preserved": [
+    "Existing untracked .ofd-user-acceptance directory",
+    "Existing tests/skill_standards_audit_20261105.json",
+    "Existing tests/test_script_migration_20261105.json",
+    "Existing cache files and release ZIPs"
+  ],
+  "commands": [
+    "python -I -S -B tools/run_skill_tests.py skills/xlsx/scripts/test",
+    "python -I -S -B tools/run_skill_tests.py skills/wps/scripts/test",
+    "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/xlsx skills/wps --strict",
+    "python -I -S -B -m unittest discover -s tests -p test_skill_loading_benchmark.py -v"
+  ],
+  "temporary_files": "Only this task-owned verification transfer files and isolated test workspaces were removed; no historical artifacts deleted."
+}

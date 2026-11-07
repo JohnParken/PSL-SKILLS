@@ -8,8 +8,8 @@
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1954.3193 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261106.1124.4686 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261106.1235.5861 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261106.1124.4686 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et技能 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261107.1432.4161 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261107.1437.5855 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261106.1235.5861 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261106.1235.5861 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261106.1003.4668 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
@@ -110,7 +110,7 @@ PSL-SKILLS/
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
 ```
 
-按 [计算与文件契约](skills/xlsx/references/python-calculation.md) 准备输入，确认输入可读、输出目录可写后，在任务目录执行：
+小型已知值清单使用 [主入口简单静态创建](skills/xlsx/SKILL.md#简单静态创建仅本入口)，单入口包含 stdin 规格、回读、归档与清理，无需预读多个参考。含公式、既有文件修改或复杂外观时，再按主入口路由加载所需契约。以下是低层兼容命令示例，写文件交付优先使用 runner；先确认输入可读、输出目录可写：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
@@ -154,7 +154,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 ### WPS 文字（.wps/.rtf）
 
-独立入口见 [wps](skills/wps/SKILL.md)。支持读取受限的 WPS 文字/RTF、定点编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和兼容导出 DOCX。生成结果默认使用 `.wps` 后缀，用户显式请求 `.rtf` 时保留；内容仍是 RTF 流，回执明确标注，不能称为金山原生 WPS 二进制。首次操作按任务类型分别自检：
+独立入口见 [wps](skills/wps/SKILL.md)。简单读取与标题/正文/基础表格创建只需主入口；其他任务按操作直达参考，不递归预读全部指南。支持读取受限的 WPS 文字/RTF、内容重排编辑，以及生成 RTF 文档（可使用 `.wps` 后缀）和将 DOCX 导出为 WPS 兼容格式。生成结果默认使用 `.wps` 后缀，用户显式请求 `.rtf` 时保留；内容仍是 RTF 流，回执明确标注，不能称为金山原生 WPS 二进制。首次操作按任务类型分别自检：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/read_wps.py" --check
@@ -162,7 +162,7 @@ python3 -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 python3 -I -S -B "<skill-root>/scripts/export_wps.py" check
 ```
 
-读取正文可使用全量 JSON、纯文本或大纲/章节切片；创建、编辑与导出命令及其边界见 WPS 主入口。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
+读取正文可使用全量 JSON、纯文本或大纲/章节切片；创建命令和共同边界见 WPS 主入口，编辑/导出按需加载其直达参考；仅创建支持 `--compact-receipt`，不省略现有 partial/警告。ET/ETT交给et，原生XLSX/XLSM交给xlsx，不自动转换。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
 
 WPS新建默认公文参照当前DOCX：上下25.4mm、左右31.8mm，仿宋16pt／Times New Roman、固定28pt、首行2字、零段前段后；标题层级、页眉页脚和默认关闭页码同步。未明确要求新页时自然分页，保留用户显式配置。RTF与OOXML不是同一格式，不保证字体回退或跨阅读器分页一致；现有DOCX→RTF导出不解析完整样式继承，不作为统一排版的捷径。仓库对照回归见 [测试](tests/test_wps_docx_official_parity.py)，350项历史测试结果、缓存告警与未验证范围见 [排版对齐记录](tests/wps_docx_official_alignment_20261104.json)。后续 DOC 回读与格式匹配修复的377项 WPS、2项对照测试、8份已有输入回归及真实二进制导出未通过的范围，见 [导出契约验证](tests/wps_export_contract_validation_20261104.json)。默认 `.wps`、显式 `.rtf` 的命名与回读回归见 [后缀验证记录](tests/wps_default_suffix_validation_20261104.json)。
 
@@ -445,3 +445,7 @@ DOCX 标准新建/编辑与 XLSX 标准任务入口在生成前定点检查主�
 
 源码回归 591 项通过（DOCX 269、XLSX 304、公共生命周期 16、来源一致性 2）；三包严格检查、CRC、源码逐字节核对及只读安装回归 52 项通过，安装内容哈希未变。description 能力与适用范围人工核对后保持不变。验证为 macOS/Python 3.12.14 和隔离合成样本，未执行云端 Linux/Windows、真实生产宿主、Office 视觉或模型触发验收；专用命名 linter 不可用。新版本三包保留于 skills 目录，旧包未覆盖。证据：[同名保护验收](tests/archive_collision_20261029_2203_2365.json)。本轮主代理完成实现、审查与验收，未调用子代理。
 
+
+### Skill 层按需加载优化验收
+
+XLSX 简单静态创建改为单入口闭环，WPS 保留读取/基础创建并按任务直达低频参考；不修改 Deep Agents 加载机制。评测方法及真实宿主复验清单见 [加载评测说明](tests/skill_loading_benchmark.md)，当前静态计划见 [读取快照](tests/runtime_loading_profiles.json)，macOS/Linux 回归、独立复制及公开样本核对见 [本轮验收记录](tests/skill_loading_validation_20261107.json)。字符/字节变化不是 token 节省；真实模型路由与 provider usage 尚未测量。
