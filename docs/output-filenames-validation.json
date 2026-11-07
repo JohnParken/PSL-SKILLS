@@ -1,0 +1,1058 @@
+{
+  "status": "passed_with_documented_source_cache_warnings",
+  "base_head": "6e317cf3d28972e214ffa119bf04d60302db7126",
+  "checked_utc": "2026-11-07T18:12:30.524053+00:00",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+  "skill_version": "20261108.0102.2369",
+  "publication": "Not committed, pushed or repackaged",
+  "tests": [
+    {
+      "name": "skill-docx",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/docx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 421,
+      "skipped": 0,
+      "seconds": 19.95,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "10619ee83a76a3ff5aa239ed837cb858b90b1f510252ad03575201f440a43e4e",
+      "result_tail": "----------------------------------------------------------------------\nRan 421 tests in 19.805s\n\nOK\n"
+    },
+    {
+      "name": "skill-et",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/et/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 480,
+      "skipped": 0,
+      "seconds": 5.192,
+      "stdout_sha256": "b2bc81ed4abba0b90443fbc20eb5d80085fd284343c0a4cf67501bf57e3c56e7",
+      "stderr_sha256": "61fc3a6f5ab7d0cee1e1b48f7cc41b6ac1882f0e2ce1d41544248d5938b32d0a",
+      "result_tail": "check_kind=environment artifact_validation=not_run\nooxml-sheet=available\nenvironment-ok\n----------------------------------------------------------------------\nRan 480 tests in 5.057s\n\nOK\n"
+    },
+    {
+      "name": "skill-wps",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/wps/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 447,
+      "skipped": 0,
+      "seconds": 6.613,
+      "stdout_sha256": "d014f4a34eb886f0678051b85b440fbbfb8af57f1ae4402fcd36becb78d75495",
+      "stderr_sha256": "4ff9191ae9bea4d263622d47a374bbca9ba3d9e9d424adcd110322d0f38b1d99",
+      "result_tail": "t_lossless\",\n  \"layout_verification\": \"not_run\",\n  \"native_wps\": false,\n  \"output_format\": \"rtf\",\n  \"binary_doc\": false,\n  \"partial\": false,\n  \"spec_warnings\": [],\n  \"spec_warning_count\": 0,\n  \"lossy_reflow_authorized\": false,\n  \"order_status\": \"available_source_order\",\n  \"losses\": [\n    \"Original formatting, fields, objects and pagination are not preserved\"\n  ],\n  \"source_omitted_regions\": [],\n  \"source_issues\": [],\n  \"source_diagnostics\": [],\n  \"source_reading_assessment\": {\n    \"schema_version\": \"wps_reading_assessment_v1\",\n    \"outcome\": \"ok\",\n    \"completeness\": \"within_declared_scope\",\n    \"scope\": \"unspecified\",\n    \"full_format_verified\": false,\n    \"events\": [],\n    \"events_truncated\": 0,\n    \"regions\": [],\n    \"visibility\": {\n      \"policy\": \"not_available\",\n      \"recorded_run_decisions\": {},\n      \"by_part\": {},\n      \"positions\": \"See original visibility.runs source paths; not duplicated\",\n      \"coverage\": \"recorded decisions only; unrecorded runs are not inferred\"\n    },\n    \"coverage\": [\n      {\n        \"category\": \"related_content\",\n        \"state\": \"unknown\",\n        \"evidence_count\": 0,\n        \"locations\": [],\n        \"locations_truncated\": 0\n      },\n      {\n        \"category\": \"binary_tables\",\n        \"state\": \"unknown\",\n        \"evidence_count\": 0,\n        \"locations\": [],\n        \"locations_truncated\": 0\n      },\n      {\n        \"category\": \"objects\",\n        \"state\": \"unknown\",\n        \"evidence_count\": 0,\n        \"locations\": [],\n        \"locations_truncated\": 0\n      }\n    ],\n    \"position_policy\": \"Only recorded positions are reported; absent positions are unknown\",\n    \"text_policy\": \"No omitted or excluded document text is copied into this summary\"\n  },\n  \"paragraphs_count\": 3,\n  \"tables_count\": 1,\n  \"delivery\": {\n    \"status\": \"completed\",\n    \"archive_status\": \"skipped\",\n    \"used_fallback\": true,\n    \"fallback_reason\": \"missing_router_config\",\n    \"files\": [\n      {\n        \"output\": \"cli_text.wps\",\n        \"archive_output\": null,\n        \"archive_status\": \"skipped\"\n      }\n    ],\n    \"warnings\": [],\n    \"archive_message\": \"归档未执行\",\n    \"archive_user_notice\": \"本次未执行归档，请先核对文件结果。\"\n  }\n}\ncheck_kind=environment artifact_validation=not_run\nenvironment-ok\n{\n  \"status\": \"success\",\n  \"output_written\": true,\n  \"publication_target\": \"cli_test.wps\",\n  \"publication_outcome\": \"published_verified\",\n  \"publication_verification\": \"identity_and_bytes_verified\",\n  \"cleanup_complete\": true,\n  \"cleanup_issues\": [],\n  \"published_sha256\": \"4498f25306bb3121018a062d17ec2484d59a352a60cf38263f907d126a1b102d\",\n  \"content_validation\": {\n    \"status\": \"verified_within_scope\",\n    \"basis\": \"normalized_document_tree\",\n    \"verified\": [\n      \"main_text\",\n      \"block_order\",\n      \"physical_cell_text\",\n      \"supported_merge_flags\"\n    ],\n    \"normalization\": \"outer paragraph/cell whitespace stripped; adjacent tables compared as consecutive physical rows\",\n    \"unverified\": [\n      \"field_freshness\",\n      \"formatting\",\n      \"related_content\",\n      \"visual_pagination\"\n    ]\n  },\n  \"format_validation\": {\n    \"status\": \"verified_raw_controls\",\n    \"verified\": [\n      \"page_dimensions\",\n      \"page_margins\",\n      \"main_paragraph_alignment_spacing_indent_keep_outline\"\n    ],\n    \"unverified\": [\n      \"font_glyphs\",\n      \"table_formatting\",\n      \"related_content_formatting\",\n      \"actual_page_breaks\",\n      \"client_rendering\"\n    ]\n  },\n  \"target\": \"cli_test.wps\",\n  \"file_size\": 814,\n  \"blocks_count\": 1,\n  \"readback_status\": \"partial\",\n  \"layout_verification\": \"not_run\",\n  \"native_wps\": false,\n  \"output_format\": \"rtf\",\n  \"binary_doc\": false,\n  \"partial\": true,\n  \"spec_warnings\": [],\n  \"spec_warning_count\": 0,\n  \"issues\": [\n    {\n      \"code\": \"rtf_destination_skipped\",\n      \"destination\": \"footer\",\n      \"message\": \"Related content or object omitted from main content\"\n    }\n  ],\n  \"receipt\": {\n    \"format\": \"wps_rtf\",\n    \"theme\": \"general\"\n  },\n  \"delivery\": {\n    \"status\": \"completed\",\n    \"archive_status\": \"skipped\",\n    \"used_fallback\": true,\n    \"fallback_reason\": \"missing_router_config\",\n    \"files\": [\n      {\n        \"output\": \"cli_test.wps\",\n        \"archive_output\": null,\n        \"archive_status\": \"skipped\"\n      }\n    ],\n    \"warnings\": [],\n    \"archive_message\": \"归档未执行\",\n    \"archive_user_notice\": \"本次未执行归档，请先核对文件结果。\"\n  }\n}\n{\"status\": \"failed\", \"error\": \"Output filename must have a .wps or .rtf extension\"}\n----------------------------------------------------------------------\nRan 447 tests in 6.481s\n\nOK\n"
+    },
+    {
+      "name": "skill-xlsx",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/xlsx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 401,
+      "skipped": 0,
+      "seconds": 15.947,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "7a68cfcad3b527c5b981697c3f9157e821705f850cad73c3590da3f63bf68de3",
+      "result_tail": "----------------------------------------------------------------------\nRan 401 tests in 15.797s\n\nOK\n"
+    },
+    {
+      "name": "skill-artifact-lifecycle",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/artifact-lifecycle/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 17,
+      "skipped": 0,
+      "seconds": 0.106,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2fc360fec359898c1884b60c32bdaad8da561844f857fc2d3eb1decd5ca24605",
+      "result_tail": "----------------------------------------------------------------------\nRan 17 tests in 0.060s\n\nOK\n"
+    },
+    {
+      "name": "skill-ofd",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/ofd/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 152,
+      "skipped": 0,
+      "seconds": 1.504,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "78ebe40fc22e3c3f53997ed5069384648ba806c25bd253ad657a7a1f1c575dd1",
+      "result_tail": "----------------------------------------------------------------------\nRan 152 tests in 1.380s\n\nOK\n"
+    },
+    {
+      "name": "skill-pptx",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/pptx/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 100,
+      "skipped": 0,
+      "seconds": 11.533,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "466dad9e2831ee475ff9165f61025594887db43fbe8448713068b44e1c8ee8bc",
+      "result_tail": "----------------------------------------------------------------------\nRan 100 tests in 11.375s\n\nOK\n"
+    },
+    {
+      "name": "skill-skill-development-standards",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/skill-development-standards/scripts/test",
+        "-p",
+        "test_*.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 31,
+      "skipped": 0,
+      "seconds": 0.154,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "046de6d4d238de31888c5a2a2816070524f563c84a9c813ed0e25d2aafde2084",
+      "result_tail": "----------------------------------------------------------------------\nRan 31 tests in 0.110s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_artifact_lifecycle_parity",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_artifact_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.028,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431",
+      "result_tail": "----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_check_execution",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_check_execution.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 12,
+      "skipped": 0,
+      "seconds": 0.737,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "119ab702eb074ed583d5e034d6096632e7685e9ec5bb4807eb25194f6db2ed1c",
+      "result_tail": "----------------------------------------------------------------------\nRan 12 tests in 0.689s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_complex_json_templates",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_complex_json_templates.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 7,
+      "skipped": 0,
+      "seconds": 2.115,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "49bed9737f088e13d43f59e36769d30da7412cd63117917ea351c9faa1ab732e",
+      "result_tail": "----------------------------------------------------------------------\nRan 7 tests in 2.076s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_read_view_budget",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_read_view_budget.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 2.916,
+      "stdout_sha256": "d20999baee4ab84b5a353d60f25c6febe441add40ddc8664dc46f922c175cecd",
+      "stderr_sha256": "aceb69f104f0982de72b941218bc0f3bfa7d529ff738e9e462e4d698c438fb90",
+      "result_tail": "Isolated copy: et\n.......\n----------------------------------------------------------------------\nRan 7 tests in 1.355s\n\nOK\n\nIsolated copy: wps\n.......\n----------------------------------------------------------------------\nRan 7 tests in 1.403s\n\nOK\n\n----------------------------------------------------------------------\nRan 2 tests in 2.875s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_read_view_copy",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_read_view_copy.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 0.186,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ec85ce855267fbdbffa5e57531fa222d6b929860f115d1beaafbcfe78e69b3d1",
+      "result_tail": "----------------------------------------------------------------------\nRan 2 tests in 0.157s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_self_check_contracts",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_self_check_contracts.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 9,
+      "skipped": 0,
+      "seconds": 0.809,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f727f28d5a6e94335304cba5bf8deef6c90b7154185275ddbc75a9a16b1dafec",
+      "result_tail": "----------------------------------------------------------------------\nRan 9 tests in 0.780s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_skill_selection_current",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_selection_current.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 6,
+      "skipped": 0,
+      "seconds": 0.032,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f7eadc47e1c00264ad4e27c90eb6707e02e8f03a8264bff3303b1aaa601fe83",
+      "result_tail": "----------------------------------------------------------------------\nRan 6 tests in 0.004s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_skill_test_runner",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_test_runner.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 5,
+      "skipped": 0,
+      "seconds": 0.152,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "40c1dc0a383666dae421c52176696144dc17e6480d2ab432250906278baf86dc",
+      "result_tail": "----------------------------------------------------------------------\nRan 5 tests in 0.125s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_table_workflow",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 45,
+      "skipped": 0,
+      "seconds": 2.459,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "cf35510a691357175b1c2337728b09bf3a87792e2c342171cf5487559078aec6",
+      "result_tail": "----------------------------------------------------------------------\nRan 45 tests in 2.405s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_table_workflow_cli_capabilities",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_cli_capabilities.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 77,
+      "skipped": 0,
+      "seconds": 16.641,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "dd400e2a9eef83642f4d9b6d8e92eccca276c339657c439970c13ab9818c0a1e",
+      "result_tail": "----------------------------------------------------------------------\nRan 77 tests in 16.582s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_table_workflow_large_tables",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_large_tables.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 7,
+      "skipped": 0,
+      "seconds": 4.182,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "09677f2b755266dcca285a14a0c6bedbf6de7a9570dd144c1403ecd77145b931",
+      "result_tail": "----------------------------------------------------------------------\nRan 7 tests in 4.122s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_table_workflow_names",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_names.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 4,
+      "skipped": 0,
+      "seconds": 0.037,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5afdca71f939b5e8fdd7208d1210934ea9a708b4c300cda27eef97261a81784d",
+      "result_tail": "----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_table_workflow_quality",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_quality.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 27,
+      "skipped": 0,
+      "seconds": 1.52,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "35fb8fddee72b9aad777251ba9fc1c67488f93a12f581d27edf9cbdb536e8813",
+      "result_tail": "----------------------------------------------------------------------\nRan 27 tests in 1.417s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_table_workflow_review",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_table_workflow_review.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 17,
+      "skipped": 0,
+      "seconds": 1.958,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "1649a4e5e1971e8dda42577ff438b406690c3ab1db4b28eaaef611172e140ce1",
+      "result_tail": "----------------------------------------------------------------------\nRan 17 tests in 1.902s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_wps_docx_official_parity",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_docx_official_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 2,
+      "skipped": 0,
+      "seconds": 0.063,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2a50b4749107e50e3993c9a59df48e8d8cebd81e26a286e83bb83d7fe81b2d90",
+      "result_tail": "----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_wps_et_pipeline",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_et_pipeline.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 3,
+      "skipped": 0,
+      "seconds": 0.201,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "8ad8b442798e07f78b0df31f1fa248a5ecb5078fc3ade859fa6fc4ce2f342e14",
+      "result_tail": "----------------------------------------------------------------------\nRan 3 tests in 0.123s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_wps_lifecycle_parity",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_wps_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.028,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431",
+      "result_tail": "----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_xlsx_lifecycle_parity",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_xlsx_lifecycle_parity.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 1,
+      "skipped": 0,
+      "seconds": 0.028,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431",
+      "result_tail": "----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n"
+    },
+    {
+      "name": "source-strict",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/artifact-lifecycle",
+        "skills/bank-writing",
+        "skills/docx",
+        "skills/et",
+        "skills/ofd",
+        "skills/pptx",
+        "skills/skill-development-standards",
+        "skills/table-workflow",
+        "skills/wps",
+        "skills/xlsx",
+        "--strict"
+      ],
+      "exit_code": 1,
+      "tests_reported": null,
+      "skipped": 0,
+      "seconds": 0.759,
+      "stdout_sha256": "e988cf725e59286f45f388ac71d0290f047cdfc2bdb0390081a44556dd92cb57",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_tail": "on-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_paragraph_evidence.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_failure_diagnostics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_word_visibility.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_edit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_tables.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_headers.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_export.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/docx_to_wps_rtf.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_paragraph_evidence.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_selective.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/read_wps.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_access.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_headers.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_msdoc_charprops.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_cfb.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_refs.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_sample_acceptance.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_shapes.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_doc_extensions.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_ownership.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_diagnostics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_rtf_builder.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_ooxml.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/verify_wps_sample.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_lazy_render.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_strict_word.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_charprops.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/run_wps_edit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_stories.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/export_wps.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nOK skills/xlsx\n"
+    },
+    {
+      "name": "repo-test_skill_loading_benchmark",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_loading_benchmark.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 24,
+      "skipped": 0,
+      "seconds": 25.373,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "4161433be178d272eba1f64632aea14f16bfae7860f6e39399949256d1992bd9",
+      "result_tail": "----------------------------------------------------------------------\nRan 24 tests in 25.331s\n\nOK\n"
+    },
+    {
+      "name": "snapshot-current",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tests/benchmark_skill_loading.py",
+        "--check-snapshot",
+        "tests/runtime_loading_profiles.json"
+      ],
+      "exit_code": 0,
+      "tests_reported": null,
+      "skipped": 0,
+      "seconds": 2.482,
+      "stdout_sha256": "92f551fb73c791f364fb70debaf822fce0a3cedbcb467e80161e2cdfceb9c5a0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_tail": "{\n  \"status\": \"fresh\",\n  \"issues\": [],\n  \"scope\": \"Current planned read sets, benchmark implementation and both-side file evidence; not observed host behavior.\"\n}\n"
+    },
+    {
+      "name": "project-docs",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tools/check_project_docs.py",
+        "--json"
+      ],
+      "exit_code": 0,
+      "tests_reported": null,
+      "skipped": 0,
+      "seconds": 0.041,
+      "stdout_sha256": "8bdc3fe0d16a2b1e7a498f3540602ebac8df82209db61ff8778031c3cebaafa7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_tail": "{\n  \"ok\": true,\n  \"skills\": {\n    \"artifact-lifecycle\": \"20261108.0102.2369\",\n    \"bank-writing\": \"20261108.0102.2369\",\n    \"docx\": \"20261108.0102.2369\",\n    \"et\": \"20261108.0102.2369\",\n    \"ofd\": \"20261108.0102.2369\",\n    \"pptx\": \"20261108.0102.2369\",\n    \"skill-development-standards\": \"20261108.0102.2369\",\n    \"table-workflow\": \"20261108.0102.2369\",\n    \"wps\": \"20261108.0102.2369\",\n    \"xlsx\": \"20261108.0102.2369\"\n  },\n  \"pages_checked\": 16,\n  \"local_links_checked\": 427,\n  \"issues\": [],\n  \"limitations\": \"Structural checks only; no semantic claims, Mermaid rendering, external links or complete CommonMark validation.\"\n}\n"
+    },
+    {
+      "name": "repo-test_archive_notice_contract",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_archive_notice_contract.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 3,
+      "skipped": 0,
+      "seconds": 0.216,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "769127a348ca77d9131a48170e29b654cf035f9b33fbe175dac1221078482fb4",
+      "result_tail": "----------------------------------------------------------------------\nRan 3 tests in 0.187s\n\nOK\n"
+    },
+    {
+      "name": "repo-test_project_docs",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_project_docs.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "tests_reported": 13,
+      "skipped": 0,
+      "seconds": 0.048,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "92293be5479a405ce586c0f0e2c2d55174a39365e849a6e6e6e62abc9e4b8149",
+      "result_tail": "----------------------------------------------------------------------\nRan 13 tests in 0.020s\n\nOK\n"
+    },
+    {
+      "name": "independent-clean-strict",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/skill-development-standards/scripts/check_skill.py",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/artifact-lifecycle",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/bank-writing",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/docx",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/et",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/ofd",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/pptx",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/skill-development-standards",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/table-workflow",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/wps",
+        "/var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/xlsx",
+        "--strict"
+      ],
+      "exit_code": 0,
+      "tests_reported": null,
+      "skipped": 0,
+      "seconds": 0.729,
+      "stdout_sha256": "255ebf4b83b203cac8e4a0b050d2bb131bf16e6f7a96889a86144dad247f218f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_tail": "OK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/artifact-lifecycle\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/bank-writing\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/docx\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/et\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/ofd\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/pptx\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/skill-development-standards\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/table-workflow\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/wps\nOK /var/folders/fs/79xs505n7lxdbz62kfkm3_jc0000gn/T/psl-output-final-_pn6ftyh/skills/xlsx\n"
+    },
+    {
+      "name": "git-diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "tests_reported": null,
+      "skipped": 0,
+      "seconds": 0.028,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_tail": ""
+    }
+  ],
+  "strict": {
+    "source": {
+      "exit_code": 1,
+      "warning_count": 126,
+      "note": "Original cache warnings are preserved, not deleted."
+    },
+    "independent": {
+      "exit_code": 0,
+      "skills_checked": 10,
+      "files_copied": 759,
+      "source": "Tracked current files plus this task new Skill files, no existing caches; no ZIP replacement."
+    }
+  },
+  "limitations": [
+    "macOS results do not replace Linux or Windows execution.",
+    "No real LibreOffice, Office visual validation, live host/model routing or cloud-space upload/display verification.",
+    "No Pylint installation; AST and bounded style checks are separate from full lint.",
+    "Filename validation is not an OS sandbox; an already constructed Path object has lost its original ./ spelling."
+  ],
+  "static": {
+    "ast_python_files": 108,
+    "over_200_character_lines": [
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_appearance.py",
+        "line": 190,
+        "length": 242
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_appearance.py",
+        "line": 196,
+        "length": 262
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_customers.py",
+        "line": 96,
+        "length": 361
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_customers.py",
+        "line": 137,
+        "length": 294
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_dashboard.py",
+        "line": 83,
+        "length": 314
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_dashboard.py",
+        "line": 92,
+        "length": 317
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_dashboard.py",
+        "line": 109,
+        "length": 254
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_deposit_structure.py",
+        "line": 64,
+        "length": 407
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_deposit_structure.py",
+        "line": 89,
+        "length": 319
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_deposits.py",
+        "line": 110,
+        "length": 358
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_deposits.py",
+        "line": 155,
+        "length": 292
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_hierarchy.py",
+        "line": 138,
+        "length": 211
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management.py",
+        "line": 286,
+        "length": 262
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management_integration.py",
+        "line": 31,
+        "length": 207
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management_integration.py",
+        "line": 33,
+        "length": 267
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management_policy.py",
+        "line": 31,
+        "length": 211
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management_policy.py",
+        "line": 34,
+        "length": 256
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management_policy.py",
+        "line": 35,
+        "length": 209
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management_policy.py",
+        "line": 101,
+        "length": 358
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_management_policy.py",
+        "line": 165,
+        "length": 255
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_match.py",
+        "line": 108,
+        "length": 202
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_maturity.py",
+        "line": 28,
+        "length": 214
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_maturity.py",
+        "line": 34,
+        "length": 361
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_maturity.py",
+        "line": 72,
+        "length": 358
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_maturity.py",
+        "line": 78,
+        "length": 454
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_rank_share.py",
+        "line": 122,
+        "length": 242
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_reconcile.py",
+        "line": 93,
+        "length": 280
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_reconcile.py",
+        "line": 106,
+        "length": 211
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_reconcile.py",
+        "line": 123,
+        "length": 284
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_safety_regressions.py",
+        "line": 41,
+        "length": 203
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_xlsx_tabular.py",
+        "line": 138,
+        "length": 211
+      }
+    ],
+    "pylint": "not_run_not_installed",
+    "over_200_character_lines_note": "All 31 listed long lines are unchanged pre-existing test fixture lines. No newly added/modified Python line exceeds 200 characters; no unrelated formatting rewrite.",
+    "new_or_changed_over_200_character_lines": []
+  },
+  "summary": {
+    "suite_processes": 29,
+    "tests_reported": 2317,
+    "skipped": 0,
+    "failures": [],
+    "nested_read_budget_tests": "ET and WPS seven each run separately by the repo 2-test wrapper; not double-counted."
+  },
+  "initial_attempts": [
+    {
+      "name": "repo-test_skill_loading_benchmark",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_skill_loading_benchmark.py",
+        "-q"
+      ],
+      "exit_code": 1,
+      "tests_reported": 24,
+      "skipped": 0,
+      "seconds": 23.006,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "bc19b91a5f29192c208ff4da16dd2cc6d659127ca04cbfae8788812cb3d4db2e",
+      "result_tail": "======================================================================\nFAIL: test_committed_current_and_history_cli (test_skill_loading_benchmark.SnapshotFreshnessTests.test_committed_current_and_history_cli)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yangxuezhen/git/PSL-SKILLS/tests/test_skill_loading_benchmark.py\", line 216, in test_committed_current_and_history_cli\n    self.assertEqual(result.returncode, code, result.stderr)\nAssertionError: 1 != 0 : \n\n----------------------------------------------------------------------\nRan 24 tests in 22.963s\n\nFAILED (failures=1)\n"
+    },
+    {
+      "name": "snapshot-current",
+      "command": [
+        "python",
+        "-I",
+        "-S",
+        "-B",
+        "tests/benchmark_skill_loading.py",
+        "--check-snapshot",
+        "tests/runtime_loading_profiles.json"
+      ],
+      "exit_code": 1,
+      "tests_reported": null,
+      "skipped": 0,
+      "seconds": 2.586,
+      "stdout_sha256": "c8332a522d0928b4b0dde1ccde4b433c3d151a18782739d46b5b51f6e7e6e862",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_tail": "{\n  \"status\": \"stale\",\n  \"issues\": [\n    {\n      \"path\": \"snapshot.profiles.docx-archive-failure.after.bytes\",\n      \"reason\": \"value_changed\"\n    },\n    {\n      \"path\": \"snapshot.profiles.docx-archive-failure.after.chars\",\n      \"reason\": \"value_changed\"\n    },\n    {\n      \"path\": \"snapshot.profiles.docx-archive-failure.after.files[1].bytes\",\n      \"reason\": \"value_changed\"\n    },\n    {\n      \"path\": \"snapshot.profiles.docx-archive-failure.after.files[1].chars\",\n      \"reason\": \"value_changed\"\n    },\n    {\n      \"path\": \"snapshot.profiles.docx-archive-failure.after.files[1].sha256\",\n      \"reason\": \"value_changed\"\n    },\n    {\n      \"path\": \"snapshot.profiles.docx-archive-failure.delta_after_minus_before.bytes\",\n      \"reason\": \"value_changed\"\n    },\n    {\n      \"path\": \"snapshot.profiles.docx-archive-failure.delta_after_minus_before.chars\",\n      \"reason\": \"value_changed\"\n    }\n  ],\n  \"scope\": \"Current planned read sets, benchmark implementation and both-side file evidence; not observed host behavior.\"\n}\n"
+    }
+  ],
+  "initial_attempt_note": "Two final prose corrections landed after the first snapshot was built. The freshness guard correctly failed; recomputed the actual snapshot and reran all affected checks without changing assertions.",
+  "final_source_inventory_sha256": "96ea1d4a0c42316bff6406a141870220959740c96bf29a12b30c1208e4ba0d1b",
+  "source_inventory_files": 759,
+  "description_review": "All ten descriptions manually reviewed against current scope; no selection/format capability change required. Current human-authored selection expectations retained; entry hashes refreshed. No model routing measurement.",
+  "preserved_untracked": [
+    ".ofd-user-acceptance-8498c0151ed644868ec75147effe7a51/",
+    "tests/skill_standards_audit_20261105.json",
+    "tests/test_script_migration_20261105.json"
+  ]
+}

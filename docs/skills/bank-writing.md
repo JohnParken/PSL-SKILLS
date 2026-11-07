@@ -1,6 +1,8 @@
 # bank-writing：银行专业写作与文本交接
 
-> 文档核对日期：2026-11-07；源码基线：[`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261107.1943.5370`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
+> 文档核对日期：2026-11-07；源码基线：[`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)；Skill 版本：`20261108.0102.2369`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
+
+本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
 ## 功能与职责
 

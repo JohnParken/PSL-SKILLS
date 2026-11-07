@@ -4,8 +4,9 @@
 
 ## 文档导航与当前基线
 
+- [裸文件名输出契约与迁移](docs/output-filenames.md)：全 Skill 输出范围、接口版本与兼容边界。
 - [架构与功能文档](docs/README.md)：10 个独立 Skill 的模块、架构图、流程图和输入输出边界。
-- 当前导读核对至源码 `6e4cca7a78a57acebe38448962c99cbc4814b409`（2026-11-07 UTC）。Skill 版本以各自 `SKILL.md` 为准；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
+- 当前导读基于源码 `6e317cf3d28972e214ffa119bf04d60302db7126` 加本轮未提交的裸文件名输出变更（2026-11-07 UTC）。Skill 版本以各自 `SKILL.md` 为准；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
 - [本轮文档核验](docs/skill-docs-validation-20261107.json) 与 [文档防漂移检查](tools/check_project_docs.py) 分别记录实际检查结果和可重复检查入口。
 - 本项目维护 Skill 层，不修改 Deep Agents 宿主或加载机制。基础包自包含；组合型 workflow 通过声明的公开契约协作，不能推断存在自动路由服务或 token 节省保证。
 
@@ -13,16 +14,16 @@
 
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261107.1943.5370 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261107.1943.5370 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261107.1943.5370 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261107.1943.5370 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261107.1943.5370 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261107.1943.5370 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261107.1943.5370 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
-| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261107.1943.5370 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
-| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261107.1943.5370 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
-| [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261105.1556.4829 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261108.0102.2369 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261108.0102.2369 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261108.0102.2369 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261108.0102.2369 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261108.0102.2369 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261108.0102.2369 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261108.0102.2369 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
+| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261108.0102.2369 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261108.0102.2369 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
+| [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261108.0102.2369 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构
 
@@ -97,7 +98,7 @@ PSL-SKILLS/
 
 将目标 skill 的**完整目录**交给支持 Agent Skills 的宿主加载；具体安装位置由宿主决定。也可以让代理先读取对应 `SKILL.md`，再根据任务读取其引用文档并调用脚本。只复制 `SKILL.md` 或单个脚本会丢失必要模块和模板。
 
-业务输入、输出和临时文件应放在宿主确认的任务工作目录中，不写入 skill 安装目录。脚本和资源以实际读取的 `SKILL.md` 所在目录定位；任务数据使用任务目录内的相对路径。下文的 `<skill-root>` 是占位符，须从对应 Skill 主入口 `SKILL.md` 的真实 `file_path`（相对读取路径先按宿主确认的读取基准解析）去掉文件名确定并整体替换，不能取参考文档目录；无法定位时停止，完整路径须正确引用。`python3` 必须指向满足版本要求的解释器。
+业务交付输出只传裸文件名，由脚本固定写入宿主确认的任务根目录 `./`；拒绝 `./文件名`、子目录、绝对、父目录及 Windows 路径，不自动截取 basename。输入路径保持原契约，内部归档 `output/{questionId}` 和受控临时工作区不变；不把内部目录或临时文件作为交付物。业务输入、输出和临时文件不写入 skill 安装目录。脚本和资源以实际读取的 `SKILL.md` 所在目录定位；任务数据使用任务目录内的相对路径。下文的 `<skill-root>` 是占位符，须从对应 Skill 主入口 `SKILL.md` 的真实 `file_path`（相对读取路径先按宿主确认的读取基准解析）去掉文件名确定并整体替换，不能取参考文档目录；无法定位时停止，完整路径须正确引用。`python3` 必须指向满足版本要求的解释器。
 
 ### 银行专业写作
 
@@ -109,7 +110,7 @@ PSL-SKILLS/
 
 ### 多源表格填报
 
-[table-workflow](skills/table-workflow/SKILL.md) 负责“来源表 + 已有目标模板 → 指标映射 → 聚合与期间比较 → XLSX 副本及核验 JSON”。需要发现单文件全部表名时先用源 SHA 绑定的 `names` 续读；结构/表头定位使用有界 `inspect`，再按需读取计划契约；plan 在内存试算，apply 才写入最终文件并归档。格式读取、表头/统计、公式、写入仍复用 ET/XLSX。公开 CLI v1 会协商 `open_metadata`/`metadata`、`typed_values`、`address_many` 及既有 `evaluate_many` 等必需能力；缺失即停止，不猜兄弟目录或回退到私有导入。简单建表或单表读取不加载本流程。
+[table-workflow](skills/table-workflow/SKILL.md) 负责“来源表 + 已有目标模板 → 指标映射 → 聚合与期间比较 → XLSX 副本及核验 JSON”。需要发现单文件全部表名时先用源 SHA 绑定的 `names` 续读；结构/表头定位使用有界 `inspect`，再按需读取计划契约；plan 在内存试算，apply 才写入最终文件并归档。格式读取、表头/统计、公式、写入仍复用 ET/XLSX。XLSX 能力接口 v2（裸文件名标志）及 ET v1 会协商 `open_metadata`/`metadata`、`typed_values`、`address_many` 及既有 `evaluate_many` 等必需能力；缺失即停止，不猜兄弟目录或回退到私有导入。简单建表或单表读取不加载本流程。
 
 支持受控 one-to-one/many-to-one 维表补列后按键聚合，匹配唯一目标键；可配置业务勾稽与容差、缺期和空值政策，默认失败阻断、显式降级保留 partial。明确单位、期间、重复键、空值、小计及缓存政策；不支持任意明细级多表连接或原生ET写回。未知/数据性 partial、模板不支持公式、未刷新图表/透视/外链缓存均不得作为完整成功交付。模型负责业务语义，脚本不凭列名猜测口径。
 
@@ -131,7 +132,7 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./report.json ./re
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
 ```
 
-输出路径必须尚不存在。创建示例见 [calculation_example.json](skills/xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
+输出必须是尚不存在的裸文件名，固定写入任务根目录。创建示例见 [calculation_example.json](skills/xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
 
 标准任务入口 `run_xlsx_task.py` 支持从配置与 stdin 接收完整规格，并在生成前定点检测主输出与归档副本同名，自动递增版本命名（如“_第2版.xlsx”）；业务成功或失败均立即清理本轮登记的中间文件和清单。复杂 JSON 建议通过 Python `json.dumps` 序列化后由 stdin 传入，详见 [复杂 JSON 调用](skills/xlsx/references/complex-json.md)。
 
@@ -159,7 +160,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 示例文件名须按实际任务替换：优先采用用户指定名称，否则按文档标题或主题命名，避免默认使用 `output.docx`；详见 [交付文件命名](skills/docx/references/generation-runtime.md#交付文件命名)。
 
-新建命令只接收输出文件名，不带 `./` 或目录。新建主文件固定生成到任务工作目录 `./`，生成及所要求的验证成功后，Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得有效 `questionId`，复制一份到 `./output/{questionId}/`。标准新建与编辑入口自动定点检测同名主文件及归档副本，自动递增版本命名（如“_第2版.docx”），以实际返回的 `output` 路径交付。归档默认原子独占发布，同名保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。字符串参数取值后自动 strip 两端空白，再进行原有校验；内部内容及非字符串类型保持。配置缺失或无效时跳过归档并记录固定原因码；归档失败保留主文件、主流程成功状态和退出码 0，仅通过 `archive_status=failed` 与 `warnings` 报告归档警告。JSON 的 `output` 指向主文件，`archive_output` 和 `archive_status` 说明副本路径和归档结果。宿主配置为外层参数列表：提取 `name="commonParam"` 项的 `value`，解析内层列表后提取 `questionId`；兼容原字典外层配置，内层支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation-runtime.md#输出目录与文件名)。新建与五个编辑 CLI 均调用公开交付 API，再由同一个 `archive_outputs()` 自动归档。DOCX 所有新建临时文件直接平铺在宿主任务目录 `./`，不创建独立临时工作目录；生成辅助文件采用 `docx-task-<随机值>.*` 独占命名，包编辑和检查在内存处理。标准新建由 run_docx_task.py 包裹 `create_document_delivery()`，自定义交付或编辑使用对应 `*_delivery()`，接口见 [公开交付 API](skills/docx/references/delivery.md#公开交付-api)；底层 API 仅用于中间处理。归档处理必须执行，失败只警告；`--check` 不能代替归档。编辑命令仍接收相对输出路径；当轮其他最终交付物用显式清单归档，不扫描历史或临时文件，见 [统一归档](skills/docx/references/delivery.md)。
+新建命令只接收输出文件名，不带 `./` 或目录。新建主文件固定生成到任务工作目录 `./`，生成及所要求的验证成功后，Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得有效 `questionId`，复制一份到 `./output/{questionId}/`。标准新建与编辑入口自动定点检测同名主文件及归档副本，自动递增版本命名（如“_第2版.docx”），以实际返回的 `output` 路径交付。归档默认原子独占发布，同名保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。字符串参数取值后自动 strip 两端空白，再进行原有校验；内部内容及非字符串类型保持。配置缺失或无效时跳过归档并记录固定原因码；归档失败保留主文件、主流程成功状态和退出码 0，仅通过 `archive_status=failed` 与 `warnings` 报告归档警告。JSON 的 `output` 指向主文件，`archive_output` 和 `archive_status` 说明副本路径和归档结果。宿主配置为外层参数列表：提取 `name="commonParam"` 项的 `value`，解析内层列表后提取 `questionId`；兼容原字典外层配置，内层支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation-runtime.md#输出目录与文件名)。新建与五个编辑 CLI 均调用公开交付 API，再由同一个 `archive_outputs()` 自动归档。DOCX 所有新建临时文件直接平铺在宿主任务目录 `./`，不创建独立临时工作目录；生成辅助文件采用 `docx-task-<随机值>.*` 独占命名，包编辑和检查在内存处理。标准新建由 run_docx_task.py 包裹 `create_document_delivery()`，自定义交付或编辑使用对应 `*_delivery()`，接口见 [公开交付 API](skills/docx/references/delivery.md#公开交付-api)；底层 API 仅用于中间处理。归档处理必须执行，失败只警告；`--check` 不能代替归档。编辑和读取报告命令也只接收裸文件名；当轮其他最终交付物用显式清单归档，不扫描历史或临时文件，见 [统一归档](skills/docx/references/delivery.md)。
 
 `--verify` 核对生成子集的内容与 XML 排版意图，不等同于页面视觉验收；字体显示、实际分页和页码仍需在文档阅读器中检查。
 

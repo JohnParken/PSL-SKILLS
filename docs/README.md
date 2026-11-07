@@ -2,11 +2,13 @@
 
 本文档集逐一说明仓库中的 10 个 Skill：功能范围、实际模块、执行流程、输入输出、依赖、失败与部分结果边界。架构图描述当前实现与任务交接，不表示存在统一的自动路由服务。
 
+本轮输出契约：业务交付只接收裸文件名，固定写任务根目录 `./`，不接受 `./文件名` 或任何输出目录。输入、内部归档和受控临时工作区不变；详见各技能当前入口与 [输出契约和迁移](output-filenames.md)。源码为 6e317cf 加本轮未提交修改，旧日期验收记录不代表本轮测试。
+
 ## 阅读基线
 
 - 仓库：[JohnParken/PSL-SKILLS](https://github.com/JohnParken/PSL-SKILLS)。
-- 源码基线：[6e4cca7a78a57acebe38448962c99cbc4814b409](https://github.com/JohnParken/PSL-SKILLS/commit/6e4cca7a78a57acebe38448962c99cbc4814b409)，核对于 2026-11-07 UTC；对应当时的 `main`。
-- 覆盖依据：该提交下所有 `skills/*/SKILL.md`，不将历史分发 ZIP、测试夹具或参考文件当作额外 Skill。
+- 当前源码基线：[6e317cf](https://github.com/JohnParken/PSL-SKILLS/commit/6e317cf3d28972e214ffa119bf04d60302db7126) 加本轮未提交修改，核对日期 2026-11-07 UTC；实际验证见 [本轮记录](output-filenames-validation.json)。
+- 覆盖依据：当前工作树中所有 `skills/*/SKILL.md`，不将历史分发 ZIP、测试夹具或参考文件当作额外 Skill。
 - 本目录是仓库维护文档，链接相对于当前 Markdown 文件。不是新的 Skill 入口，也不改变各 Skill 的主入口、版本、运行时依赖或授权要求。
 - 图表使用 Mermaid。支持 Mermaid 的 Markdown 阅读器可直接显示；不支持时，代码块仍保留完整结构与连线说明。
 
@@ -14,16 +16,16 @@
 
 | Skill | 基线版本 | 文档内容与核心边界 |
 | --- | --- | --- |
-| [bank-writing](skills/bank-writing.md) | 20261107.1943.5370 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
-| [docx](skills/docx.md) | 20261107.1943.5370 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
-| [xlsx](skills/xlsx.md) | 20261107.1943.5370 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261107.1943.5370 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
-| [et](skills/et.md) | 20261107.1943.5370 | ET/ETT 的 BIFF8/OOXML 保存值读取、表头与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261107.1943.5370 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建，不渲染或验签。 |
-| [pptx](skills/pptx.md) | 20261107.1943.5370 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
-| [table-workflow](skills/table-workflow.md) | 20261107.1943.5370 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
-| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261107.1943.5370 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
-| [skill-development-standards](skills/skill-development-standards.md) | 20261105.1556.4829 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
+| [bank-writing](skills/bank-writing.md) | 20261108.0102.2369 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
+| [docx](skills/docx.md) | 20261108.0102.2369 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
+| [xlsx](skills/xlsx.md) | 20261108.0102.2369 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [wps](skills/wps.md) | 20261108.0102.2369 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
+| [et](skills/et.md) | 20261108.0102.2369 | ET/ETT 的 BIFF8/OOXML 保存值读取、表头与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261108.0102.2369 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建，不渲染或验签。 |
+| [pptx](skills/pptx.md) | 20261108.0102.2369 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
+| [table-workflow](skills/table-workflow.md) | 20261108.0102.2369 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
+| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261108.0102.2369 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
+| [skill-development-standards](skills/skill-development-standards.md) | 20261108.0102.2369 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
 ## 整体架构图
 

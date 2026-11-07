@@ -3,16 +3,16 @@
   "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
   "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。",
   "entry_sha256": {
-    "artifact-lifecycle": "c7ac7798ca03eb36b8024ea569056e75670cb4f164b48897ff495e0856cd1a87",
-    "bank-writing": "92be42eb040ccb3c6591499728a27d9946b47d37fcfbba7f3c2b312d5d669415",
-    "docx": "68c56e4708f8213699328099a5a205d3a8c58491d49b23e7f58a949556f01617",
-    "et": "ab8ba2c109be630f8c53ca1b807228393138def1ae489922f5924d3249572540",
-    "ofd": "8d9ddff43d93656160f290fe64531c31b8a2dddcbd23abb0aa3aeae936e91a89",
-    "pptx": "98a193364ffc60788c5239ad88bb497c48a7bb6b290cd3b1475b5d92e2904b4d",
-    "skill-development-standards": "36ec3802a8af6f85ba72cdc846fca75ec4e723eb3416fc8cce0dc2c9a7eafbac",
-    "table-workflow": "0823020968528fc9f8531f420a5c37f6440c74c5d46ebce74d3af3aee77afd8f",
-    "wps": "2ffd69ddd154d2f858600791e27b9957af4b7ef59c2cbd70ff1bfaf116231b8e",
-    "xlsx": "37ec97ee1b78ebf5a7e7d093ba332863c181711ce1537df6b30e1cd43fb175dc"
+    "artifact-lifecycle": "abd1a87f7659dd6fe32c13a988e411a1a87eeff1c00f5c931e2f6968829f67b5",
+    "bank-writing": "83317df3c37dfa1eabadc28b38ed28d2b97e2ff958a7e89c44c606d8df7d8435",
+    "docx": "2236dd9739b50da6ca6e194918201a6dc351b9aa59e94196203b40349bfc20d5",
+    "et": "04a97aaa4fa96bdf0bace9cd4b97bd1011c15450db922a8f69dc7c6b3607c773",
+    "ofd": "70743ca2b4b36d8c9b35ecb0edb2298f6b521ce2a8d576d7ef12f87fccc61922",
+    "pptx": "5ed6b5df12efd1ab1f9e473432241067ac619fbe6d58a08d8c895112feab11f0",
+    "skill-development-standards": "9554aeb9e6dbbbc37d73ef136c3d2e115348a98558e0ddce53d72d0a0ed6d463",
+    "table-workflow": "549a1cc01465077fbc8fb4b9c799fafa5b9487fcb6d5ccc8a0c2deb4dd14dc13",
+    "wps": "4569dd9e594d4b7c0c543f6c68042f9c182d6d6f831e12baa89d367c1a2824e7",
+    "xlsx": "add4a6ad725e38a729f19746a96573124954725ff1188ced6ddb43a681d0333d"
   },
   "cases": [
     {
