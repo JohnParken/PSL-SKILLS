@@ -183,6 +183,8 @@ XLSX/XLSM. Dates, private streams and opaque charts retain source limits.
 
 ## Specialized task directory
 
+专项可从主入口直接选择，不必先读本文件；专项与 `<skill-root>/references/analysis-contract.md` 并读。此目录仅供已在本页的任务发现额外能力，不是必经导航。
+
 Read the selected reference before invoking its script. Paths use the confirmed `<skill-root>`; inputs and outputs remain in the task directory.
 
 | Task | Action | Reference |
