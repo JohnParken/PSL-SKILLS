@@ -74,6 +74,63 @@ SCENARIOS = {
 }
 
 
+# These route comparisons include unsupported baseline requests explicitly.
+# Equal read sets do not imply equal capabilities or successful model execution.
+ITERATION_PROFILES = {
+    'docx-complete-table-read': ['docx/SKILL.md'],
+    'pptx-full-inspect': ['pptx/SKILL.md'],
+    'pptx-summary': ['pptx/SKILL.md'],
+    'pptx-selected-slides': ['pptx/SKILL.md'],
+    'pptx-notes-pagination': ['pptx/SKILL.md'],
+    'pptx-partial-inspect': ['pptx/SKILL.md'],
+    'et-overview': ['et/SKILL.md', 'et/references/bounded-reading.md'],
+    'et-header-preview': ['et/SKILL.md', 'et/references/table-analysis.md'],
+    'et-direct-statistics': ['et/SKILL.md', 'et/references/table-analysis.md'],
+    'et-full-evidence': ['et/SKILL.md', 'et/references/spreadsheet-consumption.md'],
+    'et-partial-pagination': ['et/SKILL.md', 'et/references/bounded-reading.md', 'et/references/reading-assessment.md'],
+    'table-inspect-many-sheets': ['table-workflow/SKILL.md', 'xlsx/SKILL.md'],
+    'table-plan-apply': ['table-workflow/SKILL.md', 'table-workflow/references/plan-contract.md',
+                         'xlsx/SKILL.md', 'xlsx/references/edit.md', 'xlsx/references/write-contract.md'],
+    'table-partial-et-source': ['table-workflow/SKILL.md', 'table-workflow/references/plan-contract.md',
+                                'xlsx/SKILL.md', 'et/SKILL.md', 'et/references/spreadsheet-consumption.md'],
+    'ofd-basic-create': ['ofd/SKILL.md', 'ofd/references/generation.md'],
+    'ofd-partial-page-read': ['ofd/SKILL.md', 'ofd/references/output-views.md', 'ofd/references/boundaries.md'],
+    'mixed-pptx-et-read': ['pptx/SKILL.md', 'et/SKILL.md', 'et/references/table-analysis.md'],
+}
+for _name, _paths in ITERATION_PROFILES.items():
+    PROFILES[_name] = (_paths, _paths)
+PROFILES['pptx-notes-pagination'] = (ITERATION_PROFILES['pptx-notes-pagination'],
+                                     ['pptx/SKILL.md', 'pptx/references/bounded-reading.md'])
+
+SCENARIOS.update({
+    'docx-complete-table-read': 'Read more than two table rows with --tables rows; follow next_block without treating compact preview as complete.',
+    'pptx-full-inspect': 'Keep legacy full inspection and complete package safety validation.',
+    'pptx-summary': 'Request structure only; omit body/notes while retaining validation and partial diagnostics.',
+    'pptx-selected-slides': 'Inspect explicitly selected slides; an unsafe unselected package part must still fail.',
+    'pptx-notes-pagination': 'Select notes explicitly, page valid bounded JSON, and reject changed source/options or an oversized single page.',
+    'pptx-partial-inspect': 'Explicit PNG zero-padding tolerance retains structural_validation=partial and exit 3 in every selected view.',
+    'et-overview': 'Ask for sheet names and size only; choose summary rather than outputting cell values first.',
+    'et-header-preview': 'Inspect a declared rectangular header area including blanks and merged anchors; do not infer header rows.',
+    'et-direct-statistics': 'Call analyze_et for the complete declared region; output pages do not change statistics or quality denominators.',
+    'et-full-evidence': 'Use original extraction schema for complete evidence or external consumers, preserving types and source diagnostics.',
+    'et-partial-pagination': 'Follow the cell cursor while preserving source partial/exit 3, omissions and unchanged-source checks.',
+    'table-inspect-many-sheets': 'Discover the ninth and later sheet names within the output cap; then inspect a chosen sheet, not all previews.',
+    'table-plan-apply': 'Use explicit source and template semantics; public provider capabilities preserve decimal precision and protected cells.',
+    'table-partial-et-source': 'Carry ET source coverage through inspection and enforce the existing plan acceptance gate.',
+    'ofd-basic-create': 'Create only when explicitly requested; preserve font rights, resource bounds, publication and archive handoff.',
+    'ofd-partial-page-read': 'Select a bounded page/text view without hiding source partial, unreturned regions or lack of visual validation.',
+    'mixed-pptx-et-read': 'Union only selected-slide inspection and direct ET region analysis instructions; no recursive reference loading.',
+})
+
+CAPABILITY_CHANGES = {
+    'docx-complete-table-read': 'Baseline implementation supported full table rows and block continuation; entry guidance was incomplete.',
+    'pptx-summary': 'Baseline has full inspect only; the requested projection is unavailable before this iteration.',
+    'pptx-selected-slides': 'Baseline has full inspect only; explicit selected-slide projection is unavailable before this iteration.',
+    'pptx-notes-pagination': 'Baseline has no output budget/cursor or notes selection; equal file counts are not feature parity.',
+    'table-inspect-many-sheets': 'Baseline shows at most eight previews and cannot discover later names through this workflow entry.',
+}
+
+
 def validate_name(name):
     if not isinstance(name, str):
         raise ValueError('profile paths must be strings')
@@ -151,7 +208,9 @@ def build_report(baseline=BASELINE, encoder=None, tokenizer=None):
     for name, (before_paths, after_paths) in PROFILES.items():
         before = measure(before_paths, revision, encoder=encoder)
         after = measure(after_paths, encoder=encoder)
-        profiles[name] = dict(scenario=SCENARIOS.get(name, 'Planned whole-file reads for the named operation.'), before=before, after=after,
+        profiles[name] = dict(scenario=SCENARIOS.get(name, 'Planned whole-file reads for the named operation.'),
+                              baseline_capability_note=CAPABILITY_CHANGES.get(name), behavior_validation='not_measured_by_loading_benchmark',
+                              before=before, after=after,
                               delta_after_minus_before={unit: None if after[unit] is None else after[unit] - before[unit]
                                                         for unit in ('chars', 'bytes', 'tokens', 'read_events')})
     return dict(schema_version=2, method='planned reference read events, not observed model routing', baseline_commit=revision,
@@ -162,7 +221,9 @@ def build_report(baseline=BASELINE, encoder=None, tokenizer=None):
                              'No automatic cache, route choice, task correctness or host savings is established by this report.',
                              'Repeated-read scenarios are assumptions, not observed host caching or billing.',
                              'ET profiles correct stale WPS routing in BOTH comparison sides.',
-                             'Platform is the measurement platform, not a declaration of Linux runtime validation.'])
+                             'Platform is the measurement platform, not a declaration of Linux runtime validation.',
+                             'New capability scenarios may be unsupported at baseline; see baseline_capability_note.',
+                             'Runtime output budgets, RPC counts and correctness require their separate regression reports.'])
 
 
 def main():

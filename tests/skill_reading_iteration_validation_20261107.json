@@ -1,0 +1,329 @@
+{
+  "checked_utc": "2026-11-07T09:37:18.078761+00:00",
+  "iteration_base_commit": "122ce8ac60949bc78d189cfbe29aaacf45a7cdfb",
+  "publication": {
+    "previous_changes_committed_and_pushed_before_iteration": true,
+    "remote": "https://github.com/JohnParken/PSL-SKILLS.git",
+    "branch": "main",
+    "remote_sha_verified_after_push": "122ce8ac60949bc78d189cfbe29aaacf45a7cdfb",
+    "commits": [
+      {
+        "sha": "3f3cda92f8e693cd03a07d798293a93d2ad34c82",
+        "theme": "XLSX static creation quick path"
+      },
+      {
+        "sha": "3e11112878db7c870816b41b482bf3b610a6d2ea",
+        "theme": "WPS entry and task routing"
+      },
+      {
+        "sha": "122ce8ac60949bc78d189cfbe29aaacf45a7cdfb",
+        "theme": "Loading benchmark and verification"
+      }
+    ],
+    "prepublication_macos_tests_passed": 838,
+    "ci": {
+      "commit_statuses": [],
+      "pull_request_workflow_runs": [],
+      "workflow_triggers": "Existing repository workflows are pull_request/workflow_dispatch, not push; no CI pass claimed."
+    },
+    "new_iteration_committed": false,
+    "new_iteration_pushed": false,
+    "release_zips_updated": false
+  },
+  "scope": "Skill code/instructions and necessary repository tests/docs only; Deep Agents loader unchanged.",
+  "versions_and_description_review": {
+    "docx": {
+      "version": "20261107.1623.2483",
+      "description_characters": 138,
+      "description_changed": false
+    },
+    "et": {
+      "version": "20261107.1623.2483",
+      "description_characters": 130,
+      "description_changed": false
+    },
+    "pptx": {
+      "version": "20261107.1625.3130",
+      "description_characters": 123,
+      "description_changed": false
+    },
+    "xlsx": {
+      "version": "20261107.1626.3621",
+      "description_characters": 134,
+      "description_changed": false
+    },
+    "table-workflow": {
+      "version": "20261107.1623.3255",
+      "description_characters": 123,
+      "description_changed": false
+    }
+  },
+  "changes": {
+    "et": "Removed WPS text examples; route overview, header preview, direct region statistics and full-schema evidence independently.",
+    "docx": "Explain two-row compact previews versus --tables rows, next_block, unchanged input, single-block refusal and plain-text truncation.",
+    "pptx": "Opt-in summary/slides/notes/bounded JSON/cursor; default full inspect preserved; complete package validation precedes projection.",
+    "table_workflow": "Bounded single-file names with SHA-bound offset continuation; address_many batches of 10000; evaluate_many final rounding.",
+    "xlsx": "Additive public interface-v1 address_many reuses scalar core; new workflow requires advertised capability.",
+    "ofd": "Added loading evaluation scenarios only; no OFD runtime/generator change."
+  },
+  "macos": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.12",
+    "expat": "2.6.3",
+    "isolated_flags": [
+      "-I",
+      "-S",
+      "-B"
+    ],
+    "tests": {
+      "docx": {
+        "collected": 399,
+        "passed": 399,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 16.885
+      },
+      "et": {
+        "collected": 458,
+        "passed": 458,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 4.498
+      },
+      "pptx": {
+        "collected": 99,
+        "passed": 99,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 10.636
+      },
+      "xlsx": {
+        "collected": 382,
+        "passed": 382,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 21.301
+      },
+      "table_workflow": {
+        "collected": 167,
+        "passed": 167,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 97.629
+      },
+      "skill_loading_benchmark": {
+        "collected": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 4.974
+      },
+      "artifact_lifecycle_parity": {
+        "collected": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.029
+      },
+      "wps_et_pipeline": {
+        "collected": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.196
+      },
+      "wps_docx_official_parity": {
+        "collected": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.063
+      },
+      "xlsx_lifecycle_parity": {
+        "collected": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.028
+      },
+      "wps_lifecycle_parity": {
+        "collected": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.029
+      },
+      "self_check_contracts": {
+        "collected": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.808
+      },
+      "read_view_budget": {
+        "collected": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.293
+      },
+      "complex_json_templates": {
+        "collected": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 2.187
+      },
+      "check_execution": {
+        "collected": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.741
+      },
+      "skill_test_runner": {
+        "collected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 0.166
+      }
+    },
+    "total_collected": 1564,
+    "total_passed": 1564,
+    "total_failed": 0,
+    "total_skipped": 0,
+    "verification_elapsed_seconds": 166.871
+  },
+  "strict": {
+    "original_tree": {
+      "docx": "passed",
+      "pptx": "passed",
+      "xlsx": "passed",
+      "table-workflow": "passed",
+      "et": "exit 1: 70 pre-existing cache warnings (directory plus 69 pyc); no new errors, caches preserved"
+    },
+    "cache_free_complete_independent_copies": {
+      "docx": "passed",
+      "et": "passed",
+      "pptx": "passed",
+      "xlsx": "passed",
+      "table-workflow": "passed"
+    },
+    "docx_production_copy_without_tests": "Reading/self-check passed; strict reports 23 expected missing maintenance-test reference links when tests are deliberately excluded."
+  },
+  "independent_runtime": {
+    "docx": "No-test/no-cache production copy: self-check, two-row preview with truncated=false, 42 rows across 5 pages, oversized-block rejection and plain-text truncation passed.",
+    "pptx": "No-test/no-cache copy, empty PATH, installation write guard and unchanged contents passed; 512-byte JSON errors and multibyte diagnostics covered.",
+    "xlsx_and_workflow": "Standalone provider regression and complete workflow suite include explicit roots, read-only independent combination, missing capabilities and partial sources.",
+    "et": "Cache-free independent copy full 458 tests and strict passed."
+  },
+  "public_xlsx_samples": {
+    "command": "python -I -S -B tests/xlsx_real_business_20261103/verify_real_business.py",
+    "status": "assertions passed",
+    "seconds": 4.75,
+    "source_manifest": "tests/xlsx_real_business_20261103/sources.json",
+    "all_five_source_hashes_unchanged": true,
+    "workbook_statuses": {
+      "stanton_budget_q1": "incomplete",
+      "denham_cashbook": "incomplete",
+      "denham_bank_reconciliation": "calculated_subset",
+      "ofgem_ed2_pcfm_v5": "load_rejected",
+      "ofgem_gas_pcfm_draft": "failed"
+    },
+    "verified_original_formulas": 30,
+    "selected_sumproduct_checks": 5,
+    "derived_transaction_checks": 9,
+    "scope": "Expected incomplete/rejection/failure boundaries are successful assertions, not full-workbook compatibility."
+  },
+  "performance": {
+    "fixture": "Synthetic single Data sheet, integer values in A1:A10000; default four-row one-column preview.",
+    "operation": "Workflow(dependency).inspect only; excludes dependency initialization/self-check and fixture creation.",
+    "observed_rpc_requests": 10,
+    "observed_seconds": 0.160219584,
+    "request_bytes": 186482,
+    "response_bytes": 1347852,
+    "operation_breakdown_from_code_not_individual_metrics": {
+      "open": 1,
+      "address_many": 1,
+      "column_name": 4,
+      "typed_value": 4
+    },
+    "address_batch_size": 10000,
+    "baseline_evidence": "Prior read-only mock counted 10000 scalar address calls; no before/after wall-clock speedup measurement.",
+    "plan_benchmark": {
+      "fixture": "4000 synthetic rows; two groups with expected 2000 each",
+      "cli_requests": 46,
+      "cli_median_seconds": 0.54759,
+      "legacy_median_seconds": 0.145015,
+      "scope": "Includes dependency self-check and parsing; CLI and legacy are different backends, not an optimization speedup ratio."
+    }
+  },
+  "loading": {
+    "report": "tests/runtime_loading_profiles.json",
+    "baseline_commit": "4b5a61f51d12d2a9d293898c2f862cbf7271dc8d",
+    "planned_scenarios": 39,
+    "after_read_events_hashed": 84,
+    "after_hashes_match": true,
+    "tokenizer": "not_measured",
+    "deep_agents_usage": "not_measured",
+    "docx_entry_bytes_before": 6995,
+    "docx_entry_bytes_after": 7458,
+    "docx_static_byte_ceiling": 8000,
+    "docx_budget_rationale": "Retain safety/creation rules while adding completeness guidance; byte-only regression explicitly named and strengthened with semantic assertions.",
+    "new_features_at_baseline": "Missing capabilities called out per profile; equal file counts do not imply feature parity."
+  },
+  "static_and_review": {
+    "changed_python_ast_files": 15,
+    "python_ast": "passed",
+    "new_python_lines_over_200": 0,
+    "pylint": "not_run; unavailable; no full naming/C0321 lint claim",
+    "git_diff_check": "passed",
+    "independent_review": "No reproducible blocking defect found in current contracts and code.",
+    "verification_source_aggregate_sha256": "7b0c61e5f6b6a3d5f613aebabcc8cd12eee088c0d81ba73537b2d2cf74bfabf1",
+    "verification_sources_unchanged": true
+  },
+  "unverified": [
+    "Linux for this new iteration (prior publication evidence remains separate)",
+    "Windows",
+    "Real PPTX or new ET production samples",
+    "Office/WPS visual acceptance",
+    "Actual Deep Agents routing/provider token usage/billing"
+  ],
+  "preserved": [
+    "Existing .ofd-user-acceptance-8498c0151ed644868ec75147effe7a51 directory",
+    "tests/skill_standards_audit_20261105.json",
+    "tests/test_script_migration_20261105.json",
+    "Historical caches and release ZIPs"
+  ],
+  "temporary_resources": "Only task-owned test fixtures and independent copies were cleaned; no source upload or release packaging.",
+  "changed_file_sha256": {
+    "README.md": "ccd442a42bb1a541fce58f9ae878dc2979267f1dd2f112294386ba6c07bded25",
+    "skills/docx/SKILL.md": "9de1eff1ab7397d8185bff4d2e4cdb0820cb84883ae05b5d06bbec5c52721f24",
+    "skills/docx/scripts/test/test_docx_task_lazy_routing.py": "f89254eb1d318ee2ae519143b99790cfc618cae817fef42b3c2e86d2a65ba20b",
+    "skills/et/SKILL.md": "ee8d4c0f2ef645e9eec15d203d6c7271a570c49afc0c99ec5bd5518e0b965dc0",
+    "skills/et/references/bounded-reading.md": "6f5e6e6b06f63e74990445c7647d0fad90c92cf1170806580fd7e324e99cf5bb",
+    "skills/et/scripts/test/test_wps_read_view.py": "785f44c24f4cb868dea543b4155d015fa6bf98afcdd1ea1a463c95cdee6a69c8",
+    "skills/pptx/SKILL.md": "3516846ebf86b78edd7800640fb330fdb02425f59b3830c82c0d54cfa7f5733f",
+    "skills/pptx/references/bounded-reading.md": "7fdeffe7640fa69bfb2764248962d76f6bd75e59e3d163de4d59868db8ca275f",
+    "skills/pptx/scripts/pptx.py": "cb6110ab8e387e6be37f1a71e24eaed1442f1d14be8945dbbf7458a0b6b97740",
+    "skills/pptx/scripts/pptx_core/inspection.py": "6a18688893d79c56b9fa627161480a5c556deffbf3fe09ff635676e81166560a",
+    "skills/pptx/scripts/pptx_core/runtime.py": "db762d3e6b6f8e26c777b237095af6221144802322fced66bc0c0390599debf2",
+    "skills/pptx/scripts/test/test_bounded_inspection.py": "cd02d72dafe1189a8beeba63bee4baa47b43917b6ae1a256442371f8b03f82c9",
+    "skills/table-workflow/SKILL.md": "c14ae7c93d9ef86c606b4752d6830883822d9b66ff13c96fb2112c088e3b61c8",
+    "skills/table-workflow/scripts/docs/cli-contract.md": "58a5061580947ee87946cc9d76cc2918d23d87cfcc5109dd84e59d9c4daee733",
+    "skills/table-workflow/scripts/table_workflow.py": "1ad680f56b9e0a8d1e892c69b82daaa783824756a6775e693591abc2d6383fc7",
+    "skills/table-workflow/scripts/workflow_runtime.py": "bec63c226de56483ec8513e5ad67facb0f1a106afea9bb15bf26ea2d4c72cfea",
+    "skills/xlsx/SKILL.md": "fca30c296f51d83d46c0155b329c8e1237f69c2bbe211ea6d3ec95b126acbedc",
+    "skills/xlsx/scripts/docs/cli-contract.md": "53b5045bb553d8a299cbf58712b8c8b97c948cb3c2030e3beefaaf11e1aa3a1a",
+    "skills/xlsx/scripts/test/test_cli_contract.py": "fe8ebccf63a15ca595dcc37d2a4d248d76782a332b6750e2626ef795322f0b54",
+    "skills/xlsx/scripts/xlsx_cli.py": "d43f60e6a7f9b97c798b4e26d690b9b40434b1afd61fb9fa0ef5c35bea8e39e0",
+    "tests/benchmark_skill_loading.py": "aa3d0cd71c2290bbe5c354569c629fee68d65c99229d08cbad2500ab1d8e2c45",
+    "tests/runtime_loading_profiles.json": "aea64b2970ccd3c46043d8b0656d34080d302e2731c37c45253daf9b67e840cd",
+    "tests/skill_loading_benchmark.md": "a911e6ca64bea9ec67820b7b3540cfe4054008965db0f70d60de78037348a386",
+    "tests/test_skill_loading_benchmark.py": "6658cc3031021908b795085a4efd296c6d9f4ad0cf60431cb9cd885d65a61d6f",
+    "tests/test_table_workflow.py": "d0d3213f55e6e7b62645f066fbfc997b534887674a91db55b3364541afd05eba",
+    "tests/test_table_workflow_cli_capabilities.py": "29c7ebddb306ed9cf5ea6a7fa77072e6434e3441d1a9768f6c2018f1b2b2719a",
+    "tests/test_table_workflow_names.py": "c1cd92c6fcd5a15968131947a908d567caa98466583a3a500c7a7891ca295f98"
+  }
+}

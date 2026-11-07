@@ -42,3 +42,12 @@ python -I -B tests/benchmark_skill_loading.py --encoding cl100k_base --tokenizer
 - 实际平台、Python/Expat 条件、单独 Skill 部署和 Linux 验证结果。
 
 本轮快照若为 Darwin，仅证明在 macOS 执行静态测量；Linux、真实模型轨迹与 provider usage 未由该快照验证。
+
+
+## 后续有界读取与跨表场景
+
+新增 DOCX 完整表格、PPTX 完整/概况/选页/备注分页/partial、ET 概况/表头/直接统计/原始证据/partial续读、跨表名称发现/计划填报/partial来源、OFD新建/partial分页及PPTX+ET混合任务。仍按整文件读取计划计数，不因任务命名就声称实际执行通过。
+
+PPTX的新视图与table-workflow后续表名发现并非baseline已有能力；报告的 `baseline_capability_note` 明确说明。before/after读文件数相同不等于功能相同，新增说明变长也不代表总体任务更慢。分页输出量、公开RPC请求数/耗时与回归正确性另行记录，不能混成token收益。DOCX表格/块续读和ET直接分析原已支持，本轮主要修正入口覆盖说明与分流。
+
+OFD新建仍读取生成契约，保留字体使用权、资源限制、视觉未验证与归档交接；本轮仅扩展该场景评测，不据此声称修改或重新验收OFD生成器。更新快照前须等待所有被测入口修改完成。

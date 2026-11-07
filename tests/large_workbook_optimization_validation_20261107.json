@@ -1,0 +1,689 @@
+{
+  "checked_utc": "2026-11-07T10:04:48.098292+00:00",
+  "base_commit": "122ce8ac60949bc78d189cfbe29aaacf45a7cdfb",
+  "baseline": "Exact current working-tree runtime snapshot at task start, including earlier authorized uncommitted iteration; not simply base_commit.",
+  "scope": "XLSX/ET/table-workflow Skill code, public contracts, regressions, benchmarks and necessary documentation only; no Deep Agents edits.",
+  "publication": {
+    "committed": false,
+    "pushed": false,
+    "release_zips_updated": false
+  },
+  "protection": {
+    "existing_uncommitted_changes_preserved": true,
+    "three_unknown_historical_items_not_touched": true,
+    "user_failure_et_not_provided": true
+  },
+  "implementation": {
+    "dom_index": "Operation-local ordered row/cell indexes for create->patch, patch and calculate. Dropped at operation end; public cell_node stays uncached. Unordered/duplicate/malformed layouts fall back to old scan preserving errors. No persistent invalidation problem.",
+    "bulk_target_keys": "Public interface-v1 typed_values, up to10000 cells per batch, scalar typed_value core reused. Consumer preserves order/types/Decimal and rejects formula/error keys before conversion, then nulls/duplicates via existing index.",
+    "metadata": "Additive XLSX open_metadata and ET metadata, workbook_metadata_v1. Whole input parsing/safety and ET full encode_result budget retained. Names use source SHA before parse, metadata cache tied to immutable snapshot, release XLSX handle and never hydrate full cells.",
+    "compatibility": "Old operations and default outputs preserved. New workflow explicitly requires new capabilities; absent/incompatible providers stop, no private module import or silent fallback. LegacyDependencies remains explicit."
+  },
+  "versions_and_description_review": {
+    "xlsx": {
+      "version": "20261107.1659.5866",
+      "description_characters": 134,
+      "description_changed": false,
+      "manual_review": "Performance/transport only; no new user task or format coverage, existing selection boundary remains accurate."
+    },
+    "et": {
+      "version": "20261107.1659.5866",
+      "description_characters": 130,
+      "description_changed": false,
+      "manual_review": "Performance/transport only; no new user task or format coverage, existing selection boundary remains accurate."
+    },
+    "table-workflow": {
+      "version": "20261107.1659.5866",
+      "description_characters": 123,
+      "description_changed": false,
+      "manual_review": "Performance/transport only; no new user task or format coverage, existing selection boundary remains accurate."
+    }
+  },
+  "macos_tests": [
+    {
+      "suite": "xlsx",
+      "exit_code": 0,
+      "collected": 396,
+      "passed": 396,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 15.079061167081818
+    },
+    {
+      "suite": "et",
+      "exit_code": 0,
+      "collected": 464,
+      "passed": 464,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 5.376307333004661
+    },
+    {
+      "suite": "workflow",
+      "exit_code": 0,
+      "collected": 174,
+      "passed": 174,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 27.584376999991946
+    },
+    {
+      "suite": "xlsx_lifecycle",
+      "exit_code": 0,
+      "collected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 0.03305545903276652
+    },
+    {
+      "suite": "loading",
+      "exit_code": 0,
+      "collected": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 6.3116412909002975
+    }
+  ],
+  "full_suite_total": 1047,
+  "new_regression_tests": 27,
+  "test_coverage": [
+    "insertion order, styles, merges, untouched members, unusual DOM and failed/repeated mutation",
+    "batch size0/10000/10001 and cross-batch10000 composite-key rows, exact Decimal and leading zeros",
+    "duplicate/null/error/formula target keys, source SHA mismatch and metadata caching",
+    "nonselected corrupted sheet refusal, unknown schema/status, partial and missing-cache retention",
+    "missing capabilities, truncated/short/invalid results, lossless protocol, independent read-only deployments"
+  ],
+  "static": {
+    "focused_syntax_and_layout": [
+      {
+        "file": "skills/xlsx/scripts/stdlib_xlsx.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/xlsx/scripts/xlsx_cli.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/et/scripts/et_cli.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/table-workflow/scripts/workflow_runtime.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/table-workflow/scripts/table_workflow.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "tests/test_table_workflow_large_tables.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "tests/benchmark_large_workbooks.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/xlsx/scripts/test/benchmark_write_index.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_bulk_metadata_api.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/xlsx/scripts/test/test_write_index.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/et/scripts/test/test_wps_template_metadata.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      },
+      {
+        "file": "skills/et/scripts/test/test_metadata_api.py",
+        "syntax": "passed",
+        "lines_over_200": [],
+        "semicolon_statements": []
+      }
+    ],
+    "git_diff_check": "passed",
+    "pylint": "not available in installed Python3.12.12; no full Pylint/naming pass claimed",
+    "raw_tree_strict": {
+      "xlsx": "passed",
+      "table-workflow": "passed",
+      "et": {
+        "exit_code": 1,
+        "errors": 0,
+        "warnings": 70,
+        "reason": "pre-existing __pycache__ retained"
+      }
+    },
+    "cache_free_strict": "all three passed; see independent evidence"
+  },
+  "benchmarks": {
+    "write_index_three_repeats": {
+      "environment": {
+        "platform": "macOS-27.2-arm64-arm-64bit",
+        "machine": "arm64",
+        "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+        "expat": "expat_2.6.3"
+      },
+      "source_sha256": {
+        "before": "2e88aea34d8acd1ed36ddafebe50aad66893b92b637a01d55aca1ec36e0f0ecc",
+        "after": "1f34e8476b8ac01e54c6480cc555d340877b1190ec9ffebc33b15cee4992c846"
+      },
+      "rows": 3000,
+      "create_cells": 9000,
+      "source_cells": 6000,
+      "patch_cells": 3000,
+      "formula_count": 3000,
+      "repeats": 3,
+      "scope": "Synthetic in-memory operations, no ZIP I/O. Create includes template read; patch/calculate exclude Workbook construction. Fresh indexes included. Same current sibling runtime/assets for both versions. Default Python GC.",
+      "operations": {
+        "create": {
+          "before_seconds": [
+            31.000521167065017,
+            31.29557700001169,
+            31.292280707973987
+          ],
+          "after_seconds": [
+            0.12255412503145635,
+            0.1251439170446247,
+            0.12862545798998326
+          ],
+          "before_median_seconds": 31.292280707973987,
+          "after_median_seconds": 0.1251439170446247,
+          "parts_parity": "separate same-size one-repeat run below"
+        },
+        "patch": {
+          "before_seconds": [
+            15.599830583087169,
+            15.304686542018317,
+            15.683437917032279
+          ],
+          "after_seconds": [
+            0.11398445803206414,
+            0.11804458301048726,
+            0.1184235829859972
+          ],
+          "before_median_seconds": 15.599830583087169,
+          "after_median_seconds": 0.11804458301048726,
+          "parts_parity": "separate same-size one-repeat run below"
+        },
+        "calculate": {
+          "before_seconds": [
+            17.452533666975796,
+            17.12113633309491,
+            16.735573916928843
+          ],
+          "after_seconds": [
+            0.11984979209955782,
+            0.12287770805414766,
+            0.12016770790796727
+          ],
+          "before_median_seconds": 17.12113633309491,
+          "after_median_seconds": 0.12016770790796727,
+          "parts_parity": "separate same-size one-repeat run below"
+        }
+      }
+    },
+    "write_index_same_size_full_parts_parity": {
+      "environment": {
+        "platform": "macOS-27.2-arm64-arm-64bit",
+        "machine": "arm64",
+        "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+        "expat": "expat_2.6.3"
+      },
+      "source_sha256": {
+        "before": "2e88aea34d8acd1ed36ddafebe50aad66893b92b637a01d55aca1ec36e0f0ecc",
+        "after": "1f34e8476b8ac01e54c6480cc555d340877b1190ec9ffebc33b15cee4992c846"
+      },
+      "rows": 3000,
+      "create_cells": 9000,
+      "source_cells": 6000,
+      "patch_cells": 3000,
+      "formula_count": 3000,
+      "repeats": 1,
+      "scope": "Synthetic in-memory operations, no ZIP I/O. Create includes template read; patch/calculate exclude Workbook construction. Fresh indexes included. Same current sibling runtime/assets for both versions. Default Python GC.",
+      "operations": {
+        "create": {
+          "before_seconds": [
+            30.059079207945615
+          ],
+          "before_median_seconds": 30.059079207945615,
+          "after_seconds": [
+            0.12503458291757852
+          ],
+          "after_median_seconds": 0.12503458291757852,
+          "parts_equal": true,
+          "median_ratio_before_over_after": 240.40612210271652
+        },
+        "patch": {
+          "before_seconds": [
+            14.713743333006278
+          ],
+          "before_median_seconds": 14.713743333006278,
+          "after_seconds": [
+            0.11206941597629339
+          ],
+          "after_median_seconds": 0.11206941597629339,
+          "parts_equal": true,
+          "median_ratio_before_over_after": 131.29133586382525
+        },
+        "calculate": {
+          "before_seconds": [
+            16.313644833047874
+          ],
+          "before_median_seconds": 16.313644833047874,
+          "after_seconds": [
+            0.12718475004658103
+          ],
+          "after_median_seconds": 0.12718475004658103,
+          "parts_equal": true,
+          "median_ratio_before_over_after": 128.2673026999939
+        }
+      }
+    },
+    "workflow_same_input_three_repeats": {
+      "platform": "macOS-27.2-arm64-arm-64bit",
+      "python": "3.12.12",
+      "expat": "expat_2.6.3",
+      "repeats": 3,
+      "target_rows": 3000,
+      "target_key_columns": 2,
+      "names_stored_cells": 20000,
+      "scope": "Workflow.names/target: immutable input snapshot, CLI startup, complete parsing, IPC and result validation; excludes dependency self-check/capability startup, fixture generation, ZIP writing and model/host usage",
+      "source_hashes": {
+        "before": {
+          "skills/xlsx/scripts/stdlib_xlsx.py": "2e88aea34d8acd1ed36ddafebe50aad66893b92b637a01d55aca1ec36e0f0ecc",
+          "skills/xlsx/scripts/xlsx_cli.py": "d43f60e6a7f9b97c798b4e26d690b9b40434b1afd61fb9fa0ef5c35bea8e39e0",
+          "skills/table-workflow/scripts/table_workflow.py": "1ad680f56b9e0a8d1e892c69b82daaa783824756a6775e693591abc2d6383fc7",
+          "skills/table-workflow/scripts/workflow_runtime.py": "bec63c226de56483ec8513e5ad67facb0f1a106afea9bb15bf26ea2d4c72cfea"
+        },
+        "after": {
+          "skills/xlsx/scripts/stdlib_xlsx.py": "1f34e8476b8ac01e54c6480cc555d340877b1190ec9ffebc33b15cee4992c846",
+          "skills/xlsx/scripts/xlsx_cli.py": "495958c21edadb28239f8a01c7999abd2c9db89b8a6283a459f5c50cf73f72f5",
+          "skills/table-workflow/scripts/table_workflow.py": "cf9dabfbc794cb6627aa9886bd86088fee7b8af118597e967b85aa50d5efa12f",
+          "skills/table-workflow/scripts/workflow_runtime.py": "d00797e40e177af63907f27052186a75a0e95dff7132493a00bb5c73fd0069f0"
+        }
+      },
+      "scenarios": {
+        "target": {
+          "before": {
+            "runs": [
+              {
+                "seconds": 0.6172342080390081,
+                "transport": {
+                  "requests": 6008,
+                  "request_bytes": 1680769,
+                  "response_bytes": 2201909
+                }
+              },
+              {
+                "seconds": 0.6079363339813426,
+                "transport": {
+                  "requests": 6008,
+                  "request_bytes": 1680769,
+                  "response_bytes": 2201909
+                }
+              },
+              {
+                "seconds": 0.6097908749943599,
+                "transport": {
+                  "requests": 6008,
+                  "request_bytes": 1680769,
+                  "response_bytes": 2201909
+                }
+              }
+            ],
+            "median_seconds": 0.6097908749943599
+          },
+          "after": {
+            "runs": [
+              {
+                "seconds": 0.2112290000077337,
+                "transport": {
+                  "requests": 9,
+                  "request_bytes": 955974,
+                  "response_bytes": 1717072
+                }
+              },
+              {
+                "seconds": 0.21060208301059902,
+                "transport": {
+                  "requests": 9,
+                  "request_bytes": 955974,
+                  "response_bytes": 1717072
+                }
+              },
+              {
+                "seconds": 0.21297500003129244,
+                "transport": {
+                  "requests": 9,
+                  "request_bytes": 955974,
+                  "response_bytes": 1717072
+                }
+              }
+            ],
+            "median_seconds": 0.2112290000077337
+          }
+        },
+        "names": {
+          "before": {
+            "runs": [
+              {
+                "seconds": 0.2305712919915095,
+                "transport": {
+                  "requests": 1,
+                  "request_bytes": 129696,
+                  "response_bytes": 2295867
+                }
+              },
+              {
+                "seconds": 0.23190654104109854,
+                "transport": {
+                  "requests": 1,
+                  "request_bytes": 129696,
+                  "response_bytes": 2295867
+                }
+              },
+              {
+                "seconds": 0.22719200002029538,
+                "transport": {
+                  "requests": 1,
+                  "request_bytes": 129696,
+                  "response_bytes": 2295867
+                }
+              }
+            ],
+            "median_seconds": 0.2305712919915095
+          },
+          "after": {
+            "runs": [
+              {
+                "seconds": 0.08615025004837662,
+                "transport": {
+                  "requests": 2,
+                  "request_bytes": 129823,
+                  "response_bytes": 366
+                }
+              },
+              {
+                "seconds": 0.08584308391436934,
+                "transport": {
+                  "requests": 2,
+                  "request_bytes": 129823,
+                  "response_bytes": 366
+                }
+              },
+              {
+                "seconds": 0.088224041974172,
+                "transport": {
+                  "requests": 2,
+                  "request_bytes": 129823,
+                  "response_bytes": 366
+                }
+              }
+            ],
+            "median_seconds": 0.08615025004837662
+          }
+        }
+      },
+      "input_sha256": {
+        "target.xlsx": "d10be7a8825aafe6a7c670f49a86e6e2a3b48f79efb8201cb081b7e4d28f858d",
+        "names.xlsx": "d57cbaab34ea661d4f99825be4ab5807a23dbfcdbcc08a8dc3cf6256adfcb61a"
+      }
+    },
+    "limits": "Synthetic sample timings, before then after, no randomization or cold-cache control. Byte counts are wire bytes, not model tokens. DOM index retains O(n) ordered insertion movement for non-append cases; no universal speedup/space claim.",
+    "reproduce": "Use skills/xlsx/scripts/test/benchmark_write_index.py --before <saved-old-core> and tests/benchmark_large_workbooks.py --before-root <saved-old-tree>; each accepts explicit scope/count parameters. Runtime hashes pin measured inputs; isolated temporary baseline removed after validation."
+  },
+  "real_and_independent": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+    "execution": "host exec running Python isolated subprocesses; not Deep Agents integration",
+    "linux": "not run; unavailable",
+    "real_samples": [
+      {
+        "filename": "12753063.et",
+        "sha256": "4f7e219556345742a6cbba5a32786b0015c079116ffb22a9519fb421578ed315",
+        "digest_verified_before_copy": true,
+        "names": [
+          "Sheet1",
+          "Sheet2",
+          "Sheet3"
+        ],
+        "old_exit": 3,
+        "metadata_exit": 3,
+        "partial_diagnostics_equal": true,
+        "coverage": "complete_within_declared_sheets",
+        "issue_count": 57,
+        "independent_names": "Prior attempt independently decoded BoundSheet framing and names using validated CFB stream; matched all three; not independent full-file validation",
+        "original_unchanged": true
+      },
+      {
+        "filename": "P020250219356392777243.xlsx",
+        "sha256": "80664a8d6fed6a6ce38bd0aee00cd6c17dc9ddc03daa32cf802f2899d271240f",
+        "digest_verified_before_copy": true,
+        "names": [
+          "Sheet0"
+        ],
+        "title_A1": "南京市市级项目预算绩效目标表",
+        "independent_expected": "Prior acceptance tests/real_sample_check_20261106.md plus direct workbook XML names",
+        "old_metadata_equal": true,
+        "zip_crc_ok": true,
+        "targeted_A1_edit": "passed",
+        "changed_parts": [
+          "xl/worksheets/sheet1.xml"
+        ],
+        "other_members_exact_bytes_equal": true,
+        "touched_sheet_non_target_xml_equal_excluding_A1_and_dimension": true,
+        "touched_sheet_byte_identical": false,
+        "original_unchanged": true
+      },
+      {
+        "filename": "7030038e87b44e0f898e127e9fd63df5.xlsx",
+        "sha256": "73f85396abaf5344a3c168d55eecc729b3cdd8f28e441469082afcf05968dd01",
+        "digest_verified_before_copy": true,
+        "names": [
+          "意见反馈表"
+        ],
+        "title_A1": "附件2",
+        "independent_expected": "Prior acceptance tests/real_sample_check_20261106.md plus direct workbook XML names",
+        "old_metadata_equal": true,
+        "zip_crc_ok": true,
+        "targeted_A1_edit": "passed",
+        "changed_parts": [
+          "xl/worksheets/sheet1.xml"
+        ],
+        "other_members_exact_bytes_equal": true,
+        "touched_sheet_non_target_xml_equal_excluding_A1_and_dimension": true,
+        "touched_sheet_byte_identical": false,
+        "original_unchanged": true
+      }
+    ],
+    "strict_cache_free": {
+      "xlsx": {
+        "exit_code": 0,
+        "stdout": "OK xlsx (cache-free independently copied installation)\n",
+        "stderr": ""
+      },
+      "et": {
+        "exit_code": 0,
+        "stdout": "OK et (cache-free independently copied installation)\n",
+        "stderr": ""
+      },
+      "table-workflow": {
+        "exit_code": 0,
+        "stdout": "OK table-workflow (cache-free independently copied installation)\n",
+        "stderr": ""
+      }
+    },
+    "independent": {
+      "exit_code": 0,
+      "stderr": "",
+      "empty_PATH": true,
+      "separate_readonly_install_roots": true,
+      "result": {
+        "names": [
+          {
+            "schema_version": "table_workflow_names_v1",
+            "operation": "names",
+            "status": "partial",
+            "path": "12753063.et",
+            "sha256": "4f7e219556345742a6cbba5a32786b0015c079116ffb22a9519fb421578ed315",
+            "source_status": "partial",
+            "source_partial_count": 1,
+            "complete_data_for_computation": false,
+            "offset": 0,
+            "total_names": 3,
+            "names": [
+              "Sheet1",
+              "Sheet2",
+              "Sheet3"
+            ],
+            "next_offset": null,
+            "names_omitted": 0,
+            "next": "Continue names with the same path and sha256; inspect this file for source diagnostics and sheet previews"
+          },
+          {
+            "schema_version": "table_workflow_names_v1",
+            "operation": "names",
+            "status": "inspected",
+            "path": "P020250219356392777243.xlsx",
+            "sha256": "80664a8d6fed6a6ce38bd0aee00cd6c17dc9ddc03daa32cf802f2899d271240f",
+            "source_status": "native_loaded",
+            "source_partial_count": 0,
+            "complete_data_for_computation": false,
+            "offset": 0,
+            "total_names": 1,
+            "names": [
+              "Sheet0"
+            ],
+            "next_offset": null,
+            "names_omitted": 0,
+            "next": "Continue names with the same path and sha256; inspect this file for source diagnostics and sheet previews"
+          },
+          {
+            "schema_version": "table_workflow_names_v1",
+            "operation": "names",
+            "status": "inspected",
+            "path": "7030038e87b44e0f898e127e9fd63df5.xlsx",
+            "sha256": "73f85396abaf5344a3c168d55eecc729b3cdd8f28e441469082afcf05968dd01",
+            "source_status": "native_loaded",
+            "source_partial_count": 0,
+            "complete_data_for_computation": false,
+            "offset": 0,
+            "total_names": 1,
+            "names": [
+              "意见反馈表"
+            ],
+            "next_offset": null,
+            "names_omitted": 0,
+            "next": "Continue names with the same path and sha256; inspect this file for source diagnostics and sheet previews"
+          }
+        ],
+        "target_keys": "001,002 exact",
+        "private_provider_imports": false,
+        "metrics": {
+          "requests": 14,
+          "request_bytes": 42463,
+          "response_bytes": 4264
+        }
+      },
+      "install_bytes_unchanged": true
+    },
+    "cleanup": "owned temporary copies removed"
+  },
+  "source_sha256": {
+    "skills/xlsx/scripts/stdlib_xlsx.py": "1f34e8476b8ac01e54c6480cc555d340877b1190ec9ffebc33b15cee4992c846",
+    "skills/xlsx/scripts/xlsx_cli.py": "495958c21edadb28239f8a01c7999abd2c9db89b8a6283a459f5c50cf73f72f5",
+    "skills/et/scripts/et_cli.py": "4ee955d27f0449e8cd5fd1edfa08d417755032e4b234ad05c52cbac553e33a2b",
+    "skills/table-workflow/scripts/workflow_runtime.py": "d00797e40e177af63907f27052186a75a0e95dff7132493a00bb5c73fd0069f0",
+    "skills/table-workflow/scripts/table_workflow.py": "cf9dabfbc794cb6627aa9886bd86088fee7b8af118597e967b85aa50d5efa12f"
+  },
+  "not_verified": [
+    "Current change set on Linux or Windows; macOS has no docker/podman/limactl and no source upload was authorized.",
+    "Actual Deep Agents model-visible tool results, loader routing, token usage or production integration.",
+    "User-specific failing ET: not supplied. Official ET metadata test is not a substitute.",
+    "Excel/WPS desktop visual rendering, complete format compatibility or independent full ET semantics."
+  ],
+  "cleanup": "Only task-owned temporary baseline, logs and fixtures removed after evidence consolidated; original samples, old unknown files and pre-existing caches retained.",
+  "publication_preflight": {
+    "checked_utc": "2026-11-07T10:24:24.767427+00:00",
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.12",
+    "expat": "2.6.3",
+    "flags": [
+      "-I",
+      "-S",
+      "-B"
+    ],
+    "suite_counts": {
+      "docx": 399,
+      "et": 464,
+      "pptx": 99,
+      "xlsx": 396,
+      "table_workflow": 174,
+      "loading": 12,
+      "artifact_lifecycle_parity": 1,
+      "wps_et_pipeline": 3,
+      "wps_docx_official_parity": 2,
+      "xlsx_lifecycle_parity": 1,
+      "wps_lifecycle_parity": 1,
+      "self_check_contracts": 9,
+      "read_view_budget": 6,
+      "complex_json_templates": 7,
+      "check_execution": 12,
+      "skill_test_runner": 5
+    },
+    "total_passed": 1591,
+    "failed": 0,
+    "skipped": 0,
+    "source_bytes_unchanged_during_tests": true,
+    "raw_strict": {
+      "docx": "passed",
+      "pptx": "passed",
+      "xlsx": "passed",
+      "table-workflow": "passed",
+      "et": "failed: 70 pre-existing cache warnings, no errors; preserved"
+    },
+    "cache_free_strict": "All five passed; only temporary copies excluded caches; owned copies removed.",
+    "changed_python_ast": "23 files passed; no lines over 200 characters or semicolon statement tokens. Not full Pylint.",
+    "pylint": "Not run: not installed; no packages installed.",
+    "self_checks": "DOCX, ET, PPTX, XLSX and table-workflow passed with expected success markers.",
+    "git_diff_check": "passed before publication",
+    "evidence_hash_review": "Latest five source_sha256 values match current runtime. Earlier reading iteration is historical; later workbook iteration supersedes overlapping files.",
+    "documentation_sync": "README version rows now match current Skill headers; historical publication fields explicitly scoped to checked_utc.",
+    "not_rerun": [
+      "Linux or Windows",
+      "Real sample or visual acceptance",
+      "Performance benchmarks; existing pinned measurements retained",
+      "Actual Deep Agents or model token usage"
+    ],
+    "publication": "Pre-commit verification only. Final remote SHA and CI must be checked after push."
+  }
+}

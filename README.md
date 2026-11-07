@@ -7,13 +7,13 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261102.1954.3193 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261106.1124.4686 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261107.1432.4161 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261107.1623.2483 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261107.1659.5866 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261107.1437.5855 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261106.1235.5861 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261107.1659.5866 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261106.1235.5861 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261106.1003.4668 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；有界文本/备注读取及包结构验证；无任意编辑或视觉验收 |
-| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261105.1717.1148 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、公式预检、逐格溯源与审计；不支持 ET 写回或任意明细连接 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261107.1625.3130 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
+| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261107.1659.5866 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261105.1644.0317 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261105.1556.4829 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
@@ -448,4 +448,21 @@ DOCX 标准新建/编辑与 XLSX 标准任务入口在生成前定点检查主�
 
 ### Skill 层按需加载优化验收
 
-XLSX 简单静态创建改为单入口闭环，WPS 保留读取/基础创建并按任务直达低频参考；不修改 Deep Agents 加载机制。评测方法及真实宿主复验清单见 [加载评测说明](tests/skill_loading_benchmark.md)，当前静态计划见 [读取快照](tests/runtime_loading_profiles.json)，macOS/Linux 回归、独立复制及公开样本核对见 [本轮验收记录](tests/skill_loading_validation_20261107.json)。字符/字节变化不是 token 节省；真实模型路由与 provider usage 尚未测量。
+XLSX 简单静态创建改为单入口闭环，WPS 保留读取/基础创建并按任务直达低频参考；不修改 Deep Agents 加载机制。评测方法及真实宿主复验清单见 [加载评测说明](tests/skill_loading_benchmark.md)，当前静态计划见 [读取快照](tests/runtime_loading_profiles.json)，上一轮 XLSX/WPS 的 macOS/Linux 回归、独立复制及公开样本核对见 [上一轮验收记录](tests/skill_loading_validation_20261107.json)。字符/字节变化不是 token 节省；真实模型路由与 provider usage 尚未测量。
+
+
+### 有界读取与跨表迭代
+
+- ET 按概况、矩形预览、直接区域统计、完整证据分流；有界参考仅描述电子表格，不再示例 WPS 文字。
+- DOCX 入口明确 compact 表格默认仅前两行、`--tables rows` 与 `next_block` 续读。保留原安全、归档与创建约束；入口7458字节，静态回归上限从7000调整为8000并增加完整性断言，字节不是token。
+- PPTX inspect 保留原完整默认，新增 summary、slides、notes、UTF-8字节预算和整页续读。未选页、关系和媒体仍全包检查；超大单页明确拒绝，不静默截断，源partial继续退出3。
+- table-workflow 新增 names 单文件有界表名发现及SHA绑定续读；inspect继续保留原最多8表预览。XLSX公开接口v1增添address_many，每批最多10000地址；新workflow明确要求该能力。金额舍入复用既有evaluate_many，保留Decimal和错误边界。
+
+计划加载评测扩展至39个场景，包括PPTX、跨表、ET直接统计、OFD创建和partial。新能力的baseline缺口单独注明，静态读取计划、工具输出和RPC测试不替代真实模型路由或token计量。本轮验证范围和限制见 [迭代验收记录](tests/skill_reading_iteration_validation_20261107.json)。该记录保留当时验收快照；后续源码分批发布不更新发布ZIP。
+
+
+### 大表写入与跨进程传输优化
+
+XLSX 的 create/patch/calculate 使用单次操作内的行与单元格索引，操作结束即丢弃；非规范DOM结构沿用原查找路径，保留插入、错误和非目标保护规则。公开接口v1增添 typed_values 与 open_metadata，ET增添metadata；旧操作不变。table-workflow的目标键批量转换、names元数据路径显式协商新能力，完整解析/安全校验、SHA、partial及公式缓存门禁保持。
+
+同输入基准与本轮真实样本/平台/独立部署范围见 [大表优化验收](tests/large_workbook_optimization_validation_20261107.json)。耗时与字节是指定样本的维护测量，不是通用加速或token保证；未修改Deep Agents或替换发布ZIP。两份验收记录中的 publication 字段均为各自 checked_utc 时的历史状态，不代表后续 Git 发布状态。

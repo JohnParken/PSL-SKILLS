@@ -34,9 +34,9 @@ class LoadingBenchmarkTests(unittest.TestCase):
         for paths in BENCH.PROFILES['wps-complex-create']:
             self.assertIn('wps/references/generation.md', paths)
 
-    def test_changed_read_sets_are_limited_to_documented_xlsx_shortcut(self):
+    def test_changed_read_sets_follow_documented_routes(self):
         allowed = {'xlsx-static-create', 'repeated-create-cold',
-                   'repeated-create-retained', 'repeated-create-compacted'}
+                   'repeated-create-retained', 'repeated-create-compacted', 'pptx-notes-pagination'}
         for name, (before, after) in BENCH.PROFILES.items():
             if name not in allowed:
                 self.assertEqual(before, after, name)
@@ -47,6 +47,28 @@ class LoadingBenchmarkTests(unittest.TestCase):
                 self.assertTrue(BENCH.read_resource(name, BENCH.BASELINE))
             for name in after:
                 self.assertTrue(BENCH.read_resource(name))
+
+    def test_iteration_routes_cover_formats_and_partial_boundaries(self):
+        required = {'docx-complete-table-read', 'pptx-summary', 'pptx-selected-slides', 'pptx-notes-pagination',
+                    'pptx-partial-inspect', 'et-overview', 'et-header-preview', 'et-direct-statistics',
+                    'et-full-evidence', 'et-partial-pagination', 'table-inspect-many-sheets',
+                    'table-partial-et-source', 'ofd-basic-create', 'ofd-partial-page-read', 'mixed-pptx-et-read'}
+        self.assertTrue(required <= BENCH.PROFILES.keys())
+        self.assertEqual(BENCH.PROFILES['et-direct-statistics'][1],
+                         ['et/SKILL.md', 'et/references/table-analysis.md'])
+        for paths in BENCH.PROFILES['table-partial-et-source']:
+            self.assertIn('et/SKILL.md', paths)
+            self.assertNotIn('wps/SKILL.md', paths)
+        for paths in BENCH.PROFILES['ofd-basic-create']:
+            self.assertIn('ofd/references/generation.md', paths)
+
+    def test_new_capabilities_are_not_claimed_at_baseline(self):
+        report = BENCH.build_report()
+        for name in ('pptx-summary', 'pptx-selected-slides', 'pptx-notes-pagination', 'table-inspect-many-sheets'):
+            profile = report['profiles'][name]
+            self.assertTrue(profile['baseline_capability_note'])
+            self.assertEqual(profile['behavior_validation'], 'not_measured_by_loading_benchmark')
+            self.assertIsNone(profile['delta_after_minus_before']['tokens'])
 
     def test_no_tokenizer_never_estimates_tokens(self):
         result = BENCH.measure(['xlsx/SKILL.md'])
