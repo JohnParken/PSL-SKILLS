@@ -1749,7 +1749,8 @@ def _verify_content(spec: dict, roots: dict) -> None:
 def create_document(spec: dict, output: str | Path, base_dir: str | Path | None = None, *,
                     verify: bool = False, require_no_placeholders: bool = False) -> Path:
     """Create a DOCX at output, resolving relative image paths under base_dir."""
-    output_path = Path(output)
+    from archive_deliverables import validate_delivery_output
+    output_path = validate_delivery_output(output)
     if not isinstance(verify, bool) or not isinstance(require_no_placeholders, bool):
         raise ValueError("verify and require_no_placeholders must be booleans")
     if output_path.suffix.lower() != ".docx":

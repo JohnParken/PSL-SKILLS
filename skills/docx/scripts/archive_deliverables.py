@@ -43,9 +43,18 @@ def validate_output_path(path: Path, protected_inputs=()) -> Path:
     return path
 
 
+def validate_delivery_output(path: str | Path, protected_inputs=()) -> Path:
+    """Accept a filename only, before Path can normalize user-supplied syntax."""
+    raw = os.fspath(path)
+    if (not isinstance(raw, str) or not raw or raw in {'.', '..'}
+            or '/' in raw or '\\' in raw):
+        raise ValueError('output path must be a bare filename in the task directory')
+    return validate_output_path(Path(raw), protected_inputs)
+
+
 def choose_delivery_output(path: Path, protected_inputs=()) -> Path:
     """Choose an unused versioned name using metadata only; do not reserve it."""
-    path = validate_output_path(Path(path), protected_inputs)
+    path = validate_delivery_output(path, protected_inputs)
     location = resolve_output_location(read_router_config_from_environment())
     stem, suffix = path.stem, path.suffix
     match = re.fullmatch(r'(.+)_第([1-9][0-9]*)版', stem)
@@ -146,7 +155,7 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path],
         location = resolve_output_location(read_router_config_from_environment())
         summary.update(archive_status='skipped' if location.used_fallback else 'copied',
                        used_fallback=location.used_fallback, fallback_reason=location.fallback_reason)
-        sources = [validate_output_path(Path(path)) for path in outputs]
+        sources = [validate_delivery_output(path) for path in outputs]
         if not sources:
             raise ValueError('at least one completed deliverable is required')
         if len({path.name.casefold() for path in sources}) != len(sources):
@@ -208,9 +217,10 @@ def archive_outputs(outputs: list[Path], protected_inputs: list[Path],
 
 def finalize_delivery(output, protected_inputs, *, status, result=None) -> dict:
     """Archive a published file without turning an archive error into primary failure."""
+    raw_output = output
     output = Path(output)
     try:
-        archive_result = archive_outputs([output], protected_inputs)
+        archive_result = archive_outputs([raw_output], protected_inputs)
     except Exception as exc:
         archive_result = {'archive_status': 'failed', 'used_fallback': True,
                           'fallback_reason': 'archive_error', 'files': [],
@@ -225,7 +235,7 @@ def finalize_delivery(output, protected_inputs, *, status, result=None) -> dict:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('outputs', type=Path, nargs='*', help='explicit completed delivery files only')
+    parser.add_argument('outputs', nargs='*', help='explicit completed delivery files only')
     parser.add_argument('--protect-input', type=Path, action='append', default=[])
     parser.add_argument('--replace-existing', action='store_true',
                         help='Replace archives only for this explicitly authorized output list')

@@ -155,7 +155,8 @@ class ArchiveOutputsTests(unittest.TestCase):
         self.assertEqual(Path('output/record/first.txt').read_bytes(), b'first')
         self.assertEqual(Path('second.txt').read_bytes(), b'second')
         again = delivery.archive_outputs([Path('output/record/first.txt')], [])
-        self.assertEqual(again['files'][0]['archive_status'], 'already_archived')
+        self.assertEqual(again['archive_status'], 'failed')
+        self.assertEqual(again['files'], [])
 
     def test_resolver_failure_is_a_warning_and_standalone_cli_succeeds(self):
         Path('result.txt').write_bytes(b'result')
@@ -184,8 +185,9 @@ class ArchiveOutputsTests(unittest.TestCase):
         self.assertEqual(result['files'][0]['archive_output'], 'output/record/交付.txt')
         self.assertEqual(Path(result['files'][0]['archive_output']).read_text(encoding='utf-8'), '正文')
         again = delivery.archive_outputs([Path('output/record/交付.txt')], [])
-        self.assertEqual(again['files'][0]['archive_status'], 'already_archived')
-        self.assertEqual(again['archive_message'], '归档完成')
+        self.assertEqual(again['archive_status'], 'failed')
+        self.assertEqual(again['files'], [])
+        self.assertEqual(again['archive_message'], '归档未完成')
         self.assertNotIn('record', again['archive_message'])
         self.assertNotIn('/', again['archive_message'])
 

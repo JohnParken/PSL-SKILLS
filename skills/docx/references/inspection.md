@@ -1,6 +1,6 @@
 # 结构读取与进阶检查
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入、输出和临时文件均在该目录及其子目录内，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -74,10 +74,10 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --compact-json 
 
 ## 结构化 JSON
 
-先用 `"<skill-root>/scripts/read_docx.py" --check` 完成只读运行条件自检；仅写 stdout 不需输出目录写入探针。保存 `-o` 结果前另核对实际输出目录的写入能力。从宿主确认的任务工作目录执行；将示例 `<skill-root>` 替换为主入口定义的真实目录：
+先用 `"<skill-root>/scripts/read_docx.py" --check` 完成只读运行条件自检；仅写 stdout 不需输出目录写入探针。保存 `-o` 结果时只传裸文件名，先核对任务根目录的写入能力。从宿主确认的任务工作目录执行；将示例 `<skill-root>` 替换为主入口定义的真实目录：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --format json --revisions all --include-related -o ./structure.json")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --format json --revisions all --include-related -o structure.json")
 ```
 
 使用 Python API `read_docx_structure(path, revisions="accepted", include_related=False)` 获取字典。默认 CLI 和 `read_docx()` 仍返回纯文本。

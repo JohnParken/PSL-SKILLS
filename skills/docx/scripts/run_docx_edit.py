@@ -46,7 +46,7 @@ def _edit_task(kind, source, output, specification, *, replacement=None):
         return failure('environment_failed', 'Required edit environment is unavailable', action='fix_environment', environment=environment)
     if kind not in OPERATIONS or (kind == 'comments' and isinstance(specification, dict) and specification.get('action') == 'list'):
         return failure('edit_request_rejected', 'Use existing read-only list entry for comments listing', action='inspect_request')
-    source, output = Path(source), Path(output)
+    source = Path(source)
     protected = [source] + ([Path(replacement)] if replacement is not None else [])
     validate_output_path(source)
     for path in protected:

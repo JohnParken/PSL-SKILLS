@@ -8,6 +8,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 
 import json
@@ -35,7 +36,7 @@ class StabilityTests(unittest.TestCase):
     def create(self, spec=None):
         if spec is None:
             spec = {'blocks': [{'type': 'paragraph', 'text': '基础稳定性测试'}]}
-        create_docx.create_document(spec, self.path, verify=True)
+        create_fixture(create_docx.create_document,spec, self.path, verify=True)
         return self.path
 
     def edit_part(self, name, editor):

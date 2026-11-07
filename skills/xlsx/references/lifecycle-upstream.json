@@ -1,5 +1,5 @@
 {
-  "source": "artifact-lifecycle 20261107.1943.5370",
+  "source": "artifact-lifecycle 20261108.0102.2369",
   "transform": "Prepend future annotations; replace listed sibling imports with package-relative imports. No runtime cross-skill dependency.",
   "files": [
     {
@@ -29,8 +29,8 @@
     },
     {
       "file": "archive_deliverables.py",
-      "source_sha256": "92e282779d79e615cbb84759140fd82a7f11f004538a751d96551da64163cbb3",
-      "installed_sha256": "5c271d57de2c1059daefcee87939cb29ef1e2bcec120fd60bf804f04640c945e"
+      "source_sha256": "90b6ee9658fa01d11c9d442d2b07450dbc95ba0ba624c358ed2229ba9ec2f068",
+      "installed_sha256": "fb137cf02d5e000492d09e1c7b626f9f99e73b0a87f5af2a86d814808704e29f"
     }
   ]
 }

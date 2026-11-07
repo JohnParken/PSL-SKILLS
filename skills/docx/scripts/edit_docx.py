@@ -20,7 +20,7 @@ from office.package import pack_document
 from office.helpers import XML_SPACE, reject_signed_package
 from office.xmlio import parse_dom, read_xml
 from office.validators.structure import StructureValidator, W
-from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
+from archive_deliverables import finalize_delivery, validate_delivery_output, validate_input_path
 
 XML_NS = "http://www.w3.org/XML/1998/namespace"
 XMLNS_NS = "http://www.w3.org/2000/xmlns/"
@@ -278,7 +278,7 @@ def _serialize_checked(dom):
 
 def replace_text(source, destination, specification, *, parts=None, require_no_placeholders=False):
     """Apply all replacements simultaneously; require explicit occurrence counts."""
-    source, destination = Path(source), Path(destination)
+    source, destination = Path(source), validate_delivery_output(destination, [source])
     if source.suffix.lower() not in (".docx", ".dotx") or source.suffix.lower() != destination.suffix.lower():
         raise ValueError("Input and output must have the same DOCX/DOTX extension")
     if source.resolve() == destination.resolve() or (
@@ -391,7 +391,7 @@ def replace_text_delivery(source, destination, specification, *, parts=None,
                           require_no_placeholders=False, protected_inputs=()):
     """Publish a final edited document and automatically attempt shared archival."""
     protected = [Path(source), *map(Path, protected_inputs)]
-    destination = validate_output_path(Path(destination), protected_inputs=protected)
+    destination = validate_delivery_output(destination, protected_inputs=protected)
     result = replace_text(source, destination, specification, parts=parts,
                           require_no_placeholders=require_no_placeholders)
     return finalize_delivery(destination, protected, status="edited", result=result)
@@ -401,7 +401,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
     parser.add_argument("replacements", type=Path)
-    parser.add_argument("output", type=Path)
+    parser.add_argument("output")
     parser.add_argument("--parts", nargs="+", default=["word/document.xml"])
     parser.add_argument("--require-no-placeholders", action="store_true")
     args = parser.parse_args(argv)
@@ -409,7 +409,7 @@ def main(argv=None):
     try:
         for input_path in protected_inputs:
             validate_input_path(input_path)
-        args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
+        args.output = validate_delivery_output(args.output, protected_inputs=protected_inputs)
         with args.replacements.open(encoding="utf-8") as stream:
             specification = json.load(stream)
         payload = replace_text_delivery(

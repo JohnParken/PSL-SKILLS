@@ -25,7 +25,7 @@ from office.memory_package import package_workspace
 from office.package import pack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
+from archive_deliverables import finalize_delivery, validate_delivery_output, validate_input_path
 
 W14 = "http://schemas.microsoft.com/office/word/2010/wordml"
 W15 = "http://schemas.microsoft.com/office/word/2012/wordml"
@@ -620,7 +620,7 @@ def manage_comments(source, specification, destination=None):
     else:
         if destination is None:
             raise ValueError("Mutations require a separate output document")
-        destination = Path(destination)
+        destination = validate_delivery_output(destination, [source])
         if destination.suffix.lower() != source.suffix.lower():
             raise ValueError("Input and output must have the same DOCX/DOTX extension")
         if source.resolve() == destination.resolve() or (destination.exists() and source.samefile(destination)):
@@ -702,7 +702,7 @@ def manage_comments_delivery(source, specification, destination=None, *, protect
     """Keep list read-only; automatically archive a successful comment mutation."""
     protected = [Path(source), *map(Path, protected_inputs)]
     if destination is not None:
-        destination = validate_output_path(Path(destination), protected_inputs=protected)
+        destination = validate_delivery_output(destination, protected_inputs=protected)
     result = manage_comments(source, specification, destination)
     if result.get("action") == "list":
         return result
@@ -713,14 +713,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
     parser.add_argument("action", type=Path, help="JSON containing exactly one action")
-    parser.add_argument("output", type=Path, nargs="?")
+    parser.add_argument("output", nargs="?")
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.action]
     try:
         for input_path in protected_inputs:
             validate_input_path(input_path)
         if args.output is not None:
-            args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
+            args.output = validate_delivery_output(args.output, protected_inputs=protected_inputs)
         with args.action.open(encoding="utf-8") as stream:
             specification = json.load(stream)
         result = manage_comments_delivery(args.input, specification, args.output,

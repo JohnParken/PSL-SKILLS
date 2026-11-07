@@ -202,6 +202,8 @@ def safe_extract(zf: zipfile.ZipFile, dest: Path) -> None:
 
 
 def rezip(src_dir: Path, out_path: Path) -> None:
+    from archive_deliverables import validate_delivery_output
+    out_path = validate_delivery_output(out_path)
     if out_path.is_symlink():
         raise ValueError("Symbolic link pack destinations are unsupported")
     if src_dir.is_symlink() or not src_dir.is_dir():

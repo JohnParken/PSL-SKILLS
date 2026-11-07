@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 from contextlib import redirect_stderr, redirect_stdout
 import hashlib
@@ -57,7 +58,7 @@ class EditDeliveryTests(unittest.TestCase):
 
     def document(self, name, blocks):
         path = self.work / name
-        create_docx.create_document(
+        create_fixture(create_docx.create_document,
             {"blocks": blocks}, path, base_dir=self.work, verify=True,
         )
         return path
@@ -308,7 +309,7 @@ class EditDeliveryTests(unittest.TestCase):
         record = "source-at-archive"
         archive_source = self.work / "output" / record / "edited.docx"
         archive_source.parent.mkdir(parents=True)
-        create_docx.create_document(
+        create_fixture(create_docx.create_document,
             {"blocks": [{"type": "paragraph", "text": "合同 ABC"}]},
             archive_source, base_dir=self.work, verify=True,
         )
@@ -442,7 +443,7 @@ class EditDeliveryTests(unittest.TestCase):
         process = self.run_cli("edit_docx.py", "nested-source.docx", "replace.json",
                                "link/escaped.docx", cwd=nested)
         self.assertEqual(process.returncode, 1)
-        self.assertIn("symbolic links", process.stderr)
+        self.assertIn("bare filename", process.stderr)
         self.assertFalse((self.work / "escaped.docx").exists())
         self.assertEqual(source.read_bytes(), source_bytes)
 
@@ -459,7 +460,7 @@ class EditDeliveryTests(unittest.TestCase):
             with patch.dict(os.environ, {"ROUTER_CONFIG_VARIABLES": self.config("must-not-be-read")}):
                 with patch.object(manage_comments, "finalize_delivery",
                                   side_effect=AssertionError("archive helper called")), \
-                        patch.object(manage_comments, "validate_output_path",
+                        patch.object(manage_comments, "validate_delivery_output",
                                      side_effect=AssertionError("output helper called")):
                     with redirect_stdout(stdout), redirect_stderr(stderr):
                         code = manage_comments.main(["source.docx", "list.json"])

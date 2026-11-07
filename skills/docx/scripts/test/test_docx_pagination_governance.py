@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 import json
 import subprocess
@@ -42,7 +43,7 @@ class PaginationGovernanceTests(unittest.TestCase):
         self.audit_script = (Path(__file__).parents[1] / 'validate_layout.py')
 
     def create(self, blocks, **options):
-        create_docx.create_document({'blocks': blocks, **options}, self.path, verify=True)
+        create_fixture(create_docx.create_document,{'blocks': blocks, **options}, self.path, verify=True)
         report = validate_layout(self.path)
         self.assertTrue(report['structure_valid'], report)
         return report

@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import io
@@ -43,7 +44,7 @@ class LayoutDeliveryTests(unittest.TestCase):
         self.work = Path(temporary.name)
         self.source = self.work / 'source.docx'
         self.spec = {'blocks': [{'type': 'paragraph', 'text': '原件正文'}]}
-        create_docx.create_document(self.spec, self.source, verify=True)
+        create_fixture(create_docx.create_document,self.spec, self.source, verify=True)
         self.original = self.source.read_bytes()
         self.environment = dict(os.environ, PATH='')
         self.environment.pop('ROUTER_CONFIG_VARIABLES', None)
@@ -66,11 +67,10 @@ class LayoutDeliveryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         expected = json.loads(result.stdout)
         self.assertEqual(set(self.work.iterdir()), {self.source})
-        (self.work / 'reports').mkdir()
-        result = self.cli('validate_layout.py', 'source.docx', '-o', './reports/layout.json')
+        result = self.cli('validate_layout.py', 'source.docx', '-o', 'layout.json')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, '')
-        self.assertEqual(json.loads((self.work / 'reports/layout.json').read_text(encoding='utf-8')), expected)
+        self.assertEqual(json.loads((self.work / 'layout.json').read_text(encoding='utf-8')), expected)
         self.assertEqual(self.source.read_bytes(), self.original)
 
     def test_audit_rejects_original_aliases_and_existing_files(self):
@@ -132,7 +132,7 @@ class LayoutDeliveryTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), self.original)
 
     def test_saved_audit_preserves_strict_and_invalid_exit_codes(self):
-        create_docx.create_document({'blocks': [*self.spec['blocks'], {'type': 'page_break'}]}, self.source, verify=True)
+        create_fixture(create_docx.create_document,{'blocks': [*self.spec['blocks'], {'type': 'page_break'}]}, self.source, verify=True)
         result = self.cli('validate_layout.py', 'source.docx', '--strict-pagination', '-o', 'warning.json')
         self.assertEqual(result.returncode, 2, result.stderr)
         report = json.loads((self.work / 'warning.json').read_text(encoding='utf-8'))

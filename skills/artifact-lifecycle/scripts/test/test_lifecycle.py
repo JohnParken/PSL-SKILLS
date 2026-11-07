@@ -45,6 +45,22 @@ class LifecycleTests(unittest.TestCase):
         Path('spec.json').write_text('{}', encoding='utf-8')
         Path('report.txt').write_text('验收结果', encoding='utf-8')
 
+    def test_archive_requires_bare_final_names_and_keeps_nested_inputs(self):
+        Path('inputs').mkdir()
+        Path('inputs/source.txt').write_text('source')
+        Path('result.txt').write_text('result')
+        for name in ('./result.txt', 'inputs/source.txt', '../result.txt',
+                     '/result.txt', 'C:\\result.txt'):
+            with self.subTest(name=name):
+                code, result = self.call('archive', name)
+                self.assertNotEqual(code, 0)
+                self.assertEqual(result['archive_status'], 'failed')
+        code, result = self.call('archive', 'result.txt', '--protect-input', 'inputs/source.txt')
+        self.assertEqual(code, 0)
+        self.assertEqual(result['archive_status'], 'copied')
+        self.assertEqual(Path('output/case/result.txt').read_text(), 'result')
+        self.assertEqual(Path('inputs/source.txt').read_text(), 'source')
+
     def test_check_only_removes_own_probe(self):
         Path('keep').write_text('x')
         code, result = self.call('check')

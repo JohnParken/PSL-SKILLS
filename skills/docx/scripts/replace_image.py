@@ -21,7 +21,7 @@ from office.helpers import MAX_PART_BYTES
 from office.memory_package import package_workspace
 from office.package import pack_document
 from office.validators.structure import R, W, StructureValidator
-from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
+from archive_deliverables import finalize_delivery, validate_delivery_output, validate_input_path
 
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 PIC = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -113,7 +113,7 @@ def _references(validator, part):
 
 def replace_image(source, replacement, destination, specification):
     """Replace one same-format media member; all other member bytes are retained."""
-    source, replacement, destination = Path(source), Path(replacement), Path(destination)
+    source, replacement, destination = Path(source), Path(replacement), validate_delivery_output(destination, [source, replacement])
     if source.suffix.lower() not in {".docx", ".dotx"} or source.suffix.lower() != destination.suffix.lower():
         raise ValueError("Input and output must have the same DOCX/DOTX extension")
     if source.resolve() == destination.resolve() or (destination.exists() and source.samefile(destination)):
@@ -156,7 +156,7 @@ def replace_image(source, replacement, destination, specification):
 def replace_image_delivery(source, replacement, destination, specification, *, protected_inputs=()):
     """Publish a final edited document and automatically attempt shared archival."""
     protected = [Path(source), Path(replacement), *map(Path, protected_inputs)]
-    destination = validate_output_path(Path(destination), protected_inputs=protected)
+    destination = validate_delivery_output(destination, protected_inputs=protected)
     result = replace_image(source, replacement, destination, specification)
     return finalize_delivery(destination, protected, status="edited", result=result)
 
@@ -166,13 +166,13 @@ def main(argv=None):
     parser.add_argument("input", type=Path)
     parser.add_argument("replacement", type=Path)
     parser.add_argument("selection", type=Path)
-    parser.add_argument("output", type=Path)
+    parser.add_argument("output")
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.replacement, args.selection]
     try:
         for input_path in protected_inputs:
             validate_input_path(input_path)
-        args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
+        args.output = validate_delivery_output(args.output, protected_inputs=protected_inputs)
         payload = replace_image_delivery(args.input, args.replacement, args.output,
                                json.loads(args.selection.read_text(encoding="utf-8")),
                                protected_inputs=protected_inputs)

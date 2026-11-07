@@ -6,12 +6,12 @@
 
 `ROUTER_CONFIG_VARIABLES` 支持外层 `{ "commonParam": [...] }` 或 `[{"name":"commonParam","value":...}]`；commonParam可以是列表或列表JSON字符串。通用取值函数对字符串参数值先执行 `.strip()` 去掉两端空白，保留中间内容及非字符串类型，参数名及原始环境变量不改写。唯一questionId裁剪后必须为非负整数或1–128位ASCII字母/数字/下划线/短横线字符串，拒绝布尔值、路径和设备名。重复JSON键、NaN、重复业务参数及错误结构拒绝；配置缺失/无效时跳过归档，不改主文件路径。
 
-有效归档位置是任务目录内output/{questionId}/，按主文件basename平铺，复制而非移动。批内同名（忽略大小写）拒绝；输入路径别名及硬链接保护，禁止路径组件符号链接。临时副本在任务根目录./独占创建，完整复制、flush/fsync及设置权限后，以原子独占硬链接发布并删除临时链接；默认拒绝同名目标，files项返回error_code=archive_conflict，汇总archive_status=failed。硬链接不可用或跨文件系统时归档失败，不回退覆盖或改变暂存位置。仅显式授权更新时原子replace并保留旧归档权限。多文件不是整批事务，主文件不回滚；不承诺隔离同权限恶意并发写者。
+archive 与最终交付清单仅收任务根目录的裸文件名，不接收 `./文件名`、子目录或绝对路径；输入保护及原清单恢复路径保持原规则。有效归档位置是任务目录内output/{questionId}/，按主文件basename平铺，复制而非移动。批内同名（忽略大小写）拒绝；输入路径别名及硬链接保护，禁止路径组件符号链接。临时副本在任务根目录./独占创建，完整复制、flush/fsync及设置权限后，以原子独占硬链接发布并删除临时链接；默认拒绝同名目标，files项返回error_code=archive_conflict，汇总archive_status=failed。硬链接不可用或跨文件系统时归档失败，不回退覆盖或改变暂存位置。仅显式授权更新时原子replace并保留旧归档权限。多文件不是整批事务，主文件不回滚；不承诺隔离同权限恶意并发写者。
 
 环境读取保留 `DOCX_DEBUG_ROUTER_CONFIG` 开关，默认关闭。显式设为1时，stderr只输出configured和values_redacted两个布尔字段，不输出配置原文、参数值、ID或目录；不要为排错回显环境变量。程序接口 `read_environment_parameter` 保持无日志返回原值。
 
 ```console
-python -I -S -B "<skill-root>/scripts/lifecycle.py" archive ./报告.txt --protect-input ./用户原件.json
+python -I -S -B "<skill-root>/scripts/lifecycle.py" archive 报告.txt --protect-input ./用户原件.json
 ```
 
 仅在用户明确授权覆盖所列归档后，给上述archive命令增加`--replace-existing`；API为`archive_outputs(outputs, protected_inputs, replace_existing=True)`。必须继续列全保护输入，不因配置或同名推断授权。

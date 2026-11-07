@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 from copy import deepcopy
 import json
@@ -34,7 +35,7 @@ class TypographyTests(unittest.TestCase):
 
     def _make(self, spec):
         file = self.root / 'output.docx'
-        create_docx.create_document(spec, file, verify=True)
+        create_fixture(create_docx.create_document,spec, file, verify=True)
         with ZipFile(file) as archive:
             xml = {k: ET.fromstring(archive.read(k)) for k in ('word/document.xml', 'word/styles.xml')}
         return file, xml
@@ -91,7 +92,7 @@ class TypographyTests(unittest.TestCase):
         for page in invalid_pages:
             with self.subTest(page=page):
                 with self.assertRaises(ValueError):
-                    create_docx.create_document(
+                    create_fixture(create_docx.create_document,
                         {'profile': 'business-report', 'page': page,
                          'blocks': [{'type': 'paragraph', 'text': '正文'}]},
                         output, verify=True)
@@ -168,7 +169,7 @@ class TypographyTests(unittest.TestCase):
                 spec = {'blocks': [{'type': 'paragraph', 'text': 'x'}], **example}
                 (self.root / 'should-not-exist.docx').unlink(missing_ok=True)
                 with self.assertRaises(ValueError):
-                    create_docx.create_document(spec, self.root / 'should-not-exist.docx', verify=True)
+                    create_fixture(create_docx.create_document,spec, self.root / 'should-not-exist.docx', verify=True)
                 self.assertFalse((self.root / 'should-not-exist.docx').exists())
 
     def test_auditor_flags_duplicate_and_wrong_property_order(self):

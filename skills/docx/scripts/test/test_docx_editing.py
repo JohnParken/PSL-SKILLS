@@ -8,6 +8,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 import hashlib
 import os
@@ -61,6 +62,7 @@ class EditingTests(unittest.TestCase):
         self.root = Path(self.temporary.name).resolve()
         self.previous = Path.cwd()
         os.chdir(self.root)
+        self.root = Path(".")
         self.sources = {}
 
     def tearDown(self):
@@ -74,7 +76,7 @@ class EditingTests(unittest.TestCase):
 
     def source(self, blocks=None, name="source.docx"):
         path = self.root / name
-        self.create_document({"blocks": blocks or [
+        create_fixture(self.create_document,{"blocks": blocks or [
             {"type": "paragraph", "text": "合同 ABC"}]}, path, base_dir=self.root, verify=True)
         self.remember(path)
         return path
@@ -301,7 +303,7 @@ class EditingTests(unittest.TestCase):
             self.replace_text(source, self.root / "edited.docx", {"replacements": [
                 {"old": "ABC", "new": "XYZ", "count": 1}]})
         self.assertTrue(created)
-        self.assertTrue(all(path.parent == self.root for path in created), created)
+        self.assertTrue(all(path.parent == self.root.resolve() for path in created), created)
         self.assertTrue(all(not path.exists() for path in created))
         self.assertEqual(self.read_docx(self.root / "edited.docx"), "合同 XYZ")
 

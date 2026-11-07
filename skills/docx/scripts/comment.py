@@ -503,6 +503,7 @@ def main() -> None:
     p.add_argument("--parent", type=int, help="Parent comment ID (makes this a reply)")
     p.add_argument("-o", "--output",
                    help="Required output .docx path for packaged input")
+    from archive_deliverables import validate_delivery_output
     args = p.parse_args()
 
     src = Path(args.input)
@@ -520,7 +521,7 @@ def main() -> None:
         elif src.is_file() and src.suffix.lower() in (".docx", ".dotx"):
             if args.output is None:
                 raise ValueError("Packaged input requires an explicit --output path")
-            out = Path(args.output)
+            out = validate_delivery_output(args.output, [src])
             same_path = out.resolve(strict=False) == src.resolve(strict=True)
             same_file = out.exists() and os.path.samefile(src, out)
             if same_path or same_file:

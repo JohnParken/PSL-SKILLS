@@ -95,12 +95,8 @@ class ArchiveCollisionTests(unittest.TestCase):
         self.assertFalse(list(Path('.').glob('.docx-*.tmp')))
 
     def test_two_publishers_have_one_complete_winner(self):
-        sources = []
-        for name, data in (('a', b'A' * 4096), ('b', b'B' * 4096)):
-            Path(name).mkdir()
-            source = Path(name) / 'report.txt'
-            source.write_bytes(data)
-            sources.append(source)
+        Path('report.txt').write_bytes(b'A' * 4096)
+        sources = [Path('report.txt'), Path('report.txt')]
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(lambda source: delivery.archive_outputs([source], []), sources))
         self.assertEqual(sorted(r['archive_status'] for r in results), ['copied', 'failed'])

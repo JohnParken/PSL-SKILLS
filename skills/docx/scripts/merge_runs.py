@@ -244,8 +244,9 @@ def _merge_or_die(path, *, extension=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, help="Unpacked directory or DOCX/DOTX file")
-    parser.add_argument("-o", "--output", type=Path,
+    parser.add_argument("-o", "--output",
                         help="Required output document for packaged input")
+    from archive_deliverables import validate_delivery_output
     args = parser.parse_args(argv)
     source = args.input
     try:
@@ -258,7 +259,7 @@ def main(argv=None):
         elif source.is_file() and source.suffix.lower() in {".docx", ".dotx"}:
             if args.output is None:
                 raise ValueError("Packaged input requires an explicit --output path")
-            output = args.output
+            output = validate_delivery_output(args.output, [source])
             same_path = output.resolve(strict=False) == source.resolve(strict=True)
             same_file = output.exists() and os.path.samefile(source, output)
             if same_path or same_file:

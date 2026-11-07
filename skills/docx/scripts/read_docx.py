@@ -760,7 +760,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, nargs="?", help="input .docx or .dotx file")
     parser.add_argument("--check", action="store_true", help="check read-only runtime support without output probes")
-    parser.add_argument("-o", "--output", type=Path)
+    parser.add_argument("-o", "--output")
     parser.add_argument("--revisions", choices=tuple(_REVISION_TAGS), default=None,
                         help="OOXML defaults to accepted")
     parser.add_argument("--include-related", action="store_true")
@@ -819,10 +819,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.input.suffix.lower() in WPS_SUFFIXES:
             raise UnsupportedInputError(WPS_UNSUPPORTED_MESSAGE)
-        from archive_deliverables import validate_input_path, validate_output_path
+        from archive_deliverables import validate_input_path, validate_delivery_output
         validate_input_path(args.input)
         if args.output is not None:
-            validate_output_path(args.output, protected_inputs=[args.input])
+            args.output = validate_delivery_output(args.output, protected_inputs=[args.input])
         if args.delivery:
             if args.output.exists():
                 raise ValueError('Delivery output already exists; choose a new filename')

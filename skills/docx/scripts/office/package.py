@@ -90,6 +90,8 @@ def _verify_written_package(path):
 
 def pack_document(source: str | Path, destination: str | Path) -> Path:
     """Repack XML and media without launching an archiver or following links."""
+    from archive_deliverables import validate_delivery_output
+    destination = validate_delivery_output(destination)
     if getattr(source, "is_memory_path", False):
         from office.memory_package import package_bytes
         from office.helpers import atomic_write_bytes
@@ -123,10 +125,13 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("operation", choices=("unpack", "pack"))
     parser.add_argument("source", type=Path)
-    parser.add_argument("destination", type=Path)
+    parser.add_argument("destination")
     args = parser.parse_args(argv)
     try:
         operation = unpack_document if args.operation == "unpack" else pack_document
+        if args.operation == "pack":
+            from archive_deliverables import validate_delivery_output
+            args.destination = validate_delivery_output(args.destination)
         output = operation(args.source, args.destination)
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
         print(f"Error: {exc}", file=sys.stderr)

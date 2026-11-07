@@ -22,7 +22,7 @@ from office.memory_package import package_workspace
 from office.package import pack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import finalize_delivery, validate_output_path, validate_input_path
+from archive_deliverables import finalize_delivery, validate_delivery_output, validate_input_path
 
 TABLE_PROPERTIES = {
     "tblStyle", "tblpPr", "tblOverlap", "bidiVisual", "tblStyleRowBandSize", "tblStyleColBandSize",
@@ -158,7 +158,7 @@ def _plain_table(table, blocked):
 
 def edit_tables(source, destination, specification, *, require_no_placeholders=False):
     """Apply exactly one guarded insert_row/delete_row operation to a new file."""
-    source, destination = Path(source), Path(destination)
+    source, destination = Path(source), validate_delivery_output(destination, [source])
     if source.suffix.lower() not in {".docx", ".dotx"} or source.suffix.lower() != destination.suffix.lower():
         raise ValueError("Input and output must have the same DOCX/DOTX extension")
     if source.resolve() == destination.resolve() or (destination.exists() and source.samefile(destination)):
@@ -231,7 +231,7 @@ def edit_tables_delivery(source, destination, specification, *,
                          require_no_placeholders=False, protected_inputs=()):
     """Publish a final edited document and automatically attempt shared archival."""
     protected = [Path(source), *map(Path, protected_inputs)]
-    destination = validate_output_path(Path(destination), protected_inputs=protected)
+    destination = validate_delivery_output(destination, protected_inputs=protected)
     result = edit_tables(source, destination, specification,
                          require_no_placeholders=require_no_placeholders)
     return finalize_delivery(destination, protected, status="edited", result=result)
@@ -241,14 +241,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
     parser.add_argument("operation", type=Path)
-    parser.add_argument("output", type=Path)
+    parser.add_argument("output")
     parser.add_argument("--require-no-placeholders", action="store_true")
     args = parser.parse_args(argv)
     protected_inputs = [args.input, args.operation]
     try:
         for input_path in protected_inputs:
             validate_input_path(input_path)
-        args.output = validate_output_path(args.output, protected_inputs=protected_inputs)
+        args.output = validate_delivery_output(args.output, protected_inputs=protected_inputs)
         payload = edit_tables_delivery(args.input, args.output, json.loads(args.operation.read_text(encoding="utf-8")),
                              require_no_placeholders=args.require_no_placeholders,
                                 protected_inputs=protected_inputs)

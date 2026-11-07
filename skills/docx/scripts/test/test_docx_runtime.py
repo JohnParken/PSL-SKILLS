@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 from contextlib import redirect_stderr, redirect_stdout
 import io
@@ -82,7 +83,7 @@ class RuntimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='docx-read-runtime-', dir='.') as temp:
             directory = Path(temp).resolve()
             source = directory / 'input.docx'
-            create_docx.create_document({'blocks': [{'type': 'paragraph', 'text': '只读内容 & 中文'}]}, source, verify=True)
+            create_fixture(create_docx.create_document,{'blocks': [{'type': 'paragraph', 'text': '只读内容 & 中文'}]}, source, verify=True)
             before = source.read_bytes()
             directory.chmod(0o555)
             try:

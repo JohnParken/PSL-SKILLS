@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 import tempfile
 import unittest
@@ -24,7 +25,7 @@ class P1LayoutTests(unittest.TestCase):
         self.output = Path(self.temp.name) / 'p1.docx'
 
     def parts(self, spec):
-        create_docx.create_document(spec, self.output, verify=True)
+        create_fixture(create_docx.create_document,spec, self.output, verify=True)
         with zipfile.ZipFile(self.output) as archive:
             self.assertIsNone(archive.testzip())
             return {n: ET.fromstring(archive.read(n)) for n in archive.namelist() if n.endswith('.xml') or n.endswith('.rels')}
@@ -112,14 +113,14 @@ class P1LayoutTests(unittest.TestCase):
         ]
         for rows in bad_rows:
             with self.subTest(rows=rows), self.assertRaises(ValueError):
-                create_docx.create_document({'blocks': [{'type': 'table', 'rows': rows}]}, self.output, verify=True)
+                create_fixture(create_docx.create_document,{'blocks': [{'type': 'table', 'rows': rows}]}, self.output, verify=True)
             self.assertFalse(self.output.exists())
 
     def test_repeating_header_cannot_cross_vertical_merge(self):
         spec = {'blocks': [{'type': 'table', 'header_rows': 1,
                             'rows': [[{'text':'A','row_span':2},'B'],[None,'C']]}]}
         with self.assertRaisesRegex(ValueError, 'header'):
-            create_docx.create_document(spec, self.output, verify=True)
+            create_fixture(create_docx.create_document,spec, self.output, verify=True)
 
     def test_bookmarks_and_toc_and_settings_with_header_footer(self):
         spec = {'page_numbers': True, 'header':'header', 'footer':'footer',
@@ -148,7 +149,7 @@ class P1LayoutTests(unittest.TestCase):
             {'heading_numbering':'roman','blocks':[]},
         ]:
             with self.subTest(spec=spec), self.assertRaises(ValueError):
-                create_docx.create_document(spec,self.output,verify=True)
+                create_fixture(create_docx.create_document,spec,self.output,verify=True)
             self.assertFalse(self.output.exists())
 
     def test_static_audit_rejects_bad_merge_continuation(self):

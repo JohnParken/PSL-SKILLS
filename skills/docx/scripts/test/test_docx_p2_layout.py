@@ -7,6 +7,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 import tempfile
 import unittest
@@ -29,7 +30,7 @@ class P2LayoutTests(unittest.TestCase):
         self.output = Path(self.temp.name) / 'p2.docx'
 
     def parts(self, spec):
-        create_docx.create_document(spec, self.output, verify=True)
+        create_fixture(create_docx.create_document,spec, self.output, verify=True)
         with zipfile.ZipFile(self.output) as archive:
             self.assertIsNone(archive.testzip())
             return {name: ET.fromstring(archive.read(name)) for name in archive.namelist()
@@ -199,11 +200,11 @@ class P2LayoutTests(unittest.TestCase):
     def test_bad_cross_reference_is_rejected(self):
         bad = {'blocks':[{'type':'reference','bookmark':'missing','kind':'text'}]}
         with self.assertRaisesRegex(ValueError, 'undefined'):
-            create_docx.create_document(bad, self.output, verify=True)
+            create_fixture(create_docx.create_document,bad, self.output, verify=True)
         self.assertFalse(self.output.exists())
         bad['blocks'][0]['bookmark'] = '_invalid'
         with self.assertRaisesRegex(ValueError, 'bookmark'):
-            create_docx.create_document(bad, self.output, verify=True)
+            create_fixture(create_docx.create_document,bad, self.output, verify=True)
 
     def test_audit_detects_missing_cross_reference(self):
         roots = self.parts({'blocks':[{'type':'heading','level':1,'text':'标题','bookmark':'book'},
@@ -249,7 +250,7 @@ class P2LayoutTests(unittest.TestCase):
         ]
         for entry in invalid:
             with self.subTest(entry=entry), self.assertRaises(ValueError):
-                create_docx.create_document({'blocks':[{'type':'paragraph','text':'A'},entry,
+                create_fixture(create_docx.create_document,{'blocks':[{'type':'paragraph','text':'A'},entry,
                                                          {'type':'paragraph','text':'B'}]},self.output,verify=True)
             self.assertFalse(self.output.exists())
         for blocks in [[{'type':'section_break'},{'type':'paragraph','text':'A'}],
@@ -257,7 +258,7 @@ class P2LayoutTests(unittest.TestCase):
                        [{'type':'paragraph','text':'A'},{'type':'section_break'},
                         {'type':'section_break'},{'type':'paragraph','text':'B'}]]:
             with self.subTest(blocks=blocks), self.assertRaises(ValueError):
-                create_docx.create_document({'blocks':blocks},self.output,verify=True)
+                create_fixture(create_docx.create_document,{'blocks':blocks},self.output,verify=True)
             self.assertFalse(self.output.exists())
 
     def test_profile_and_headings_survive_sections(self):

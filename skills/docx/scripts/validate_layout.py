@@ -11,7 +11,7 @@ if __package__ in (None, ''):
 from office.archiveio import open_archive
 from office.validators.structure import StructureValidator
 from office.formatting.audit import audit_roots
-from archive_deliverables import validate_input_path, validate_output_path
+from archive_deliverables import validate_input_path, validate_delivery_output
 
 
 def validate_layout(path: str | Path, *, profile: str | None = None) -> dict:
@@ -39,14 +39,14 @@ def validate_layout(path: str | Path, *, profile: str | None = None) -> dict:
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Read-only OOXML static layout audit (not visual rendering)')
     parser.add_argument('filename', type=Path)
-    parser.add_argument('-o', '--output', type=Path, help='save JSON to a new task-relative file; never overwrite')
+    parser.add_argument('-o', '--output', help='save JSON to a new task-relative file; never overwrite')
     parser.add_argument('--strict-pagination', action='store_true',
                         help='exit 2 if advisory pagination risks are found (without changing the document)')
     args = parser.parse_args(argv)
     try:
         validate_input_path(args.filename)
         if args.output is not None:
-            validate_output_path(args.output, protected_inputs=[args.filename])
+            args.output = validate_delivery_output(args.output, protected_inputs=[args.filename])
             if args.output.exists():
                 raise ValueError('Report output already exists; choose a new filename')
         report = validate_layout(args.filename)

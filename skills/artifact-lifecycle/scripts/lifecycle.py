@@ -34,7 +34,7 @@ def main(argv=None):
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('check')
     archive = commands.add_parser('archive')
-    archive.add_argument('outputs', nargs='+', type=Path)
+    archive.add_argument('outputs', nargs='+')
     archive.add_argument('--protect-input', action='append', default=[], type=Path)
     archive.add_argument('--replace-existing', action='store_true',
                          help='Replace archives only for this explicitly authorized output list')

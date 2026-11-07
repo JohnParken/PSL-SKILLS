@@ -9,6 +9,7 @@ from pathlib import Path
 
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
+from fixture_delivery import create_fixture
 
 import tempfile
 import unittest
@@ -30,7 +31,7 @@ class OfficialNaturalPaginationTests(unittest.TestCase):
         self.file = Path(temp.name) / 'official-natural.docx'
 
     def generate(self, blocks, **kwargs):
-        create_docx.create_document({'theme': 'official', 'blocks': blocks, **kwargs}, self.file, verify=True)
+        create_fixture(create_docx.create_document,{'theme': 'official', 'blocks': blocks, **kwargs}, self.file, verify=True)
         with zipfile.ZipFile(self.file) as z:
             document = ET.fromstring(z.read('word/document.xml'))
             styles = ET.fromstring(z.read('word/styles.xml'))
@@ -82,7 +83,7 @@ class OfficialNaturalPaginationTests(unittest.TestCase):
         self.generate(blocks)
         with zipfile.ZipFile(self.file) as z:
             explicit = {name:z.read(name) for name in z.namelist()}
-        create_docx.create_document({'blocks':blocks}, self.file, verify=True)
+        create_fixture(create_docx.create_document,{'blocks':blocks}, self.file, verify=True)
         with zipfile.ZipFile(self.file) as z:
             implicit = {name:z.read(name) for name in z.namelist()}
         self.assertEqual(explicit, implicit)
