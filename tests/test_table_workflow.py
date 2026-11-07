@@ -318,6 +318,14 @@ class WorkflowTests(unittest.TestCase):
                    'inspect', '--xlsx-root', str(XLSX_ROOT), '--et-root', str(ET_ROOT)]
         child = subprocess.run(command, input=encode({'files': [{'path': 'prior.et'}]}), capture_output=True, text=True)
         self.assertEqual(child.returncode, 3, child.stdout + child.stderr)
+        command[command.index('inspect')] = 'names'
+        names_child = subprocess.run(command, input=encode({'path': 'prior.et'}), capture_output=True, text=True)
+        self.assertEqual(names_child.returncode, 3, names_child.stdout + names_child.stderr)
+        names_result = json.loads(names_child.stdout)
+        self.assertEqual(names_result['source_status'], 'partial')
+        self.assertTrue(names_result['names'])
+        self.assertLessEqual(len(names_child.stdout.strip()), 24000)
+
         self.assertEqual(json.loads(child.stdout)['files'][0]['source_coverage']['cell_value_coverage'],
                          'unverified_due_to_best_effort_salvage')
         self.plan['sources']['prior'].update(path='prior.et', sha256=self.digest('prior.et'), accept_partial=True)

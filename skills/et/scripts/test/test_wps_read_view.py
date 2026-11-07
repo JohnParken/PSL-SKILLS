@@ -110,6 +110,39 @@ class WpsViewTests(unittest.TestCase):
             self.assertEqual(child.returncode, 1)
             self.assertEqual(json.loads(child.stdout)['status'], 'output_view_error')
 
+    def test_et_entry_summary_paging_and_word_rejection(self):
+        import struct
+        from test_wps_biff8 import rec, cell
+        script = str(Path(__file__).resolve().parents[1] / 'read_et.py')
+        body = b''.join(rec(0x203, cell(i, 0) + struct.pack('<d', i)) for i in range(3))
+        raw = synthetic_cfb({'Workbook': workbook([body], extra_global=rec(0x42, struct.pack('<H', 936)))})
+        with tempfile.TemporaryDirectory() as tmp:
+            for suffix in ('et', 'ett'):
+                name = 'source.' + suffix
+                (Path(tmp) / name).write_bytes(raw)
+                command = [sys.executable, '-I', '-S', '-B', script, './' + name]
+                result = subprocess.run(command + ['--summary'], cwd=tmp, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 3, result.stderr)
+                self.assertEqual(json.loads(result.stdout)['total_items'], 3)
+                cursor = None
+                refs = []
+                while True:
+                    args = ['--page-size', '1'] + (['--cursor', cursor] if cursor else [])
+                    result = subprocess.run(command + args, cwd=tmp, capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 3, result.stderr)
+                    data = json.loads(result.stdout)
+                    self.assertTrue(data['partial'])
+                    self.assertTrue(data['issues'])
+                    refs.extend(item['cell'] for item in data['items'])
+                    cursor = data['next_cursor']
+                    if cursor is None:
+                        break
+                self.assertEqual(refs, ['A1', 'A2', 'A3'])
+            (Path(tmp) / 'word.wps').write_bytes(synthetic_cfb({'WordDocument': b'not a workbook'}))
+            result = subprocess.run([sys.executable, '-I', '-S', '-B', script, './word.wps', '--summary'], cwd=tmp, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1)
+            self.assertNotEqual(json.loads(result.stdout).get('status'), 'ok')
+
     def test_check_options_refused_and_schema_is_not_full_adapter_input(self):
         script = str((Path(__file__).resolve().parents[1] / 'read_wps.py'))
         child = subprocess.run([sys.executable, '-I', '-S', '-B', script, '--check', '--summary'], capture_output=True, text=True)

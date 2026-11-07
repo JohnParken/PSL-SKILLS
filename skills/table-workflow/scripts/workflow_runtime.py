@@ -210,6 +210,19 @@ class LegacyDependencies:
         from xlsx_lookup import lookup_regions
         return lookup_regions(left, right, config)
 
+    def addresses(self, refs):
+        return [self.xlsx.address(ref) for ref in refs]
+
+    def typed_values(self, cells):
+        return [self.analysis.typed_value(cell) for cell in cells]
+
+    def metadata(self, path, raw):
+        book = self.load(path, raw)
+        return {'schema_version': 'workbook_metadata_v1', 'sheet_names': list(book.cells),
+                'native': self.is_native(book), 'source_status': getattr(book, 'wps_source_status', 'ok'),
+                'source_issues': getattr(book, 'wps_issues', []), 'source_coverage': getattr(book, 'wps_source_coverage', {}),
+                'input_schema': getattr(book, 'wps_input_schema', None)}
+
     def evaluate_bound(self, expression, sheet, bindings):
         def resolve(actual_sheet, ref):
             require(actual_sheet == sheet and ref in bindings, 'Formula reference outside declared bindings')
@@ -271,8 +284,8 @@ class Dependencies(LegacyDependencies):
             require(advertised.get('protocol') == PROTOCOL and advertised.get('interface_version') == 1
                     and advertised.get('skill') == name, 'Incompatible dependency capability interface')
             needed = ({'open', 'create', 'extract', 'region', 'target_headers', 'resolve_column', 'address', 'column_name',
-                       'typed_value', 'validate_query', 'matches', 'index_rows', 'summarize', 'lookup', 'evaluate',
-                       'patch', 'calculate', 'verify', 'publish', 'delivery', 'evaluate_many', 'select_rows'} if name == 'xlsx' else {'read'})
+                       'address_many', 'typed_value', 'typed_values', 'open_metadata', 'release', 'validate_query', 'matches', 'index_rows', 'summarize', 'lookup', 'evaluate',
+                       'patch', 'calculate', 'verify', 'publish', 'delivery', 'evaluate_many', 'select_rows'} if name == 'xlsx' else {'read', 'metadata'})
             require(needed <= set(advertised.get('operations', [])), 'Dependency lacks required capabilities')
             self.roots[name] = root
             self.checks[name] = {'exit_code': child.returncode, 'stdout': child.stdout, 'stderr': child.stderr,
@@ -302,11 +315,11 @@ class Dependencies(LegacyDependencies):
         return subprocess.CompletedProcess(child.args, child.returncode,
                                            decoded(child.stdout), decoded(child.stderr))
 
-    def read_et(self, raw, source):
+    def et_request(self, operation, raw, source):
         from table_workflow_cli_protocol import PROTOCOL, dumps, loads
         require('et' in self.roots, 'ET dependency required; supply its confirmed root')
-        request = dumps({'protocol': PROTOCOL, 'id': 1, 'operation': 'read', 'parameters': {'raw': raw, 'source': source}})
-        child = self.run_process('et', [str(self.roots['et'] / 'scripts' / 'et_cli.py'), 'read'], request, allowed=(0, 1, 3))
+        request = dumps({'protocol': PROTOCOL, 'id': 1, 'operation': operation, 'parameters': {'raw': raw, 'source': source}})
+        child = self.run_process('et', [str(self.roots['et'] / 'scripts' / 'et_cli.py'), operation], request, allowed=(0, 1, 3))
         response = loads(child.stdout.encode('utf-8'))
         require(response.get('protocol') == PROTOCOL and response.get('id') == 1, 'ET response contract failed')
         if response.get('ok') is not True:
@@ -314,7 +327,47 @@ class Dependencies(LegacyDependencies):
             raise CapabilityError(response['error'])
         result = response['result']
         require(result['exit_code'] == child.returncode, 'ET exit code mismatch')
-        return json.loads(result['extraction'])
+        return result
+
+    def read_et(self, raw, source):
+        return json.loads(self.et_request('read', raw, source)['extraction'])
+
+    def metadata(self, path, raw):
+        native = Path(path).suffix.lower() in ('.xlsx', '.xlsm')
+        if not native:
+            require(Path(path).suffix.lower() in ('.et', '.ett'), 'Unsupported source format')
+            result = self.et_request('metadata', raw, path)
+            metadata = result['metadata']
+            require(result['exit_code'] == (0 if metadata.get('source_status') == 'ok' else 3), 'ET metadata status mismatch')
+        else:
+            metadata = self.client.call('open_metadata', raw=raw, source=path)
+            handle = metadata.get('handle')
+            require(type(handle) is int and handle >= 0, 'Invalid metadata handle')
+            # Discovery does not retain parsed workbooks or accidentally hydrate cells.
+            require(self.client.call('release', handle=handle) is True, 'Metadata handle release failed')
+        require(metadata.get('schema_version') == 'workbook_metadata_v1' and metadata.get('native') is native,
+                'Invalid workbook metadata version or source kind')
+        names = metadata.get('sheet_names')
+        require(isinstance(names, list) and all(isinstance(name, str) and bool(name) for name in names)
+                and len(set(names)) == len(names), 'Invalid worksheet names metadata')
+        require(metadata.get('source_status') in (('ok',) if native else ('ok', 'partial'))
+                and isinstance(metadata.get('source_issues'), list) and isinstance(metadata.get('source_coverage'), dict)
+                and (metadata.get('input_schema') is None if native else
+                     metadata.get('input_schema') in ('biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1')),
+                'Incomplete source metadata diagnostics')
+        return metadata
+
+    def typed_values(self, cells):
+        result = []
+        for offset in range(0, len(cells), 10000):
+            batch = cells[offset:offset + 10000]
+            values = self.client.call('typed_values', cells=batch)
+            require(isinstance(values, list) and len(values) == len(batch), 'Incomplete typed value results')
+            require(all(isinstance(value, tuple) and len(value) == 2
+                        and value[0] in ('blank', 'date_text', 'boolean', 'number', 'text') for value in values),
+                    'Invalid typed value results')
+            result.extend(values)
+        return result
 
     def load(self, path, raw):
         if Path(path).suffix.lower() in ('.et', '.ett'):
@@ -357,6 +410,15 @@ class Dependencies(LegacyDependencies):
     def close(self):
         self.client.close()
 
+
+    def addresses(self, refs):
+        result = []
+        for offset in range(0, len(refs), 10000):
+            batch = refs[offset:offset + 10000]
+            values = self.client.call('address_many', refs=batch)
+            require(isinstance(values, list) and len(values) == len(batch), 'Incomplete address results')
+            result.extend(values)
+        return result
 
     def evaluate_bound(self, expression, sheet, bindings):
         return self.client.call('evaluate', formula=expression, sheet=sheet, bindings=bindings)

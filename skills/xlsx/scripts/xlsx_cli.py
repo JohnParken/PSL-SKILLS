@@ -18,15 +18,16 @@ import formula_engine as formula
 from xlsx_wps_result import load_result_bytes
 from xlsx_delivery import finish_delivery, validate_input_path, validate_output_path
 
-OPERATIONS = ('open', 'create', 'extract', 'release', 'region', 'target_headers', 'resolve_column',
-              'address', 'column_name', 'typed_value', 'validate_query', 'matches', 'index_rows',
+OPERATIONS = ('open', 'open_metadata', 'create', 'extract', 'release', 'region', 'target_headers', 'resolve_column',
+              'address', 'address_many', 'column_name', 'typed_value', 'typed_values', 'validate_query', 'matches', 'index_rows',
               'summarize', 'lookup', 'evaluate', 'evaluate_many', 'select_rows', 'patch', 'calculate', 'verify', 'publish', 'delivery')
 
 
 def capabilities():
     return {'protocol': PROTOCOL, 'interface_version': 1, 'skill': 'xlsx', 'operations': list(OPERATIONS),
             'transport': 'bounded_json_lines', 'max_frame_bytes': MAX_FRAME,
-            'handles': 'process_local; opaque; release or close stdin', 'max_handles': 64}
+            'handles': 'process_local; opaque; release or close stdin', 'max_handles': 64,
+            'max_typed_values': 10000, 'metadata_schema': 'workbook_metadata_v1'}
 
 
 def require(condition, message):
@@ -85,21 +86,32 @@ class Session:
                 'source_issues': deepcopy(getattr(book, 'wps_issues', [])), 'source_coverage': deepcopy(getattr(book, 'wps_source_coverage', {})),
                 'input_schema': getattr(book, 'wps_input_schema', None), 'native': isinstance(book, core.Workbook)}
 
-    def add(self, book):
+    def metadata(self, book):
+        # No cell snapshot or merge XML traversal: parsing already validated the package.
+        return {'schema_version': 'workbook_metadata_v1', 'sheet_names': list(book.cells),
+                'source_status': getattr(book, 'wps_source_status', 'ok'),
+                'source_issues': deepcopy(getattr(book, 'wps_issues', [])),
+                'source_coverage': deepcopy(getattr(book, 'wps_source_coverage', {})),
+                'input_schema': getattr(book, 'wps_input_schema', None), 'native': isinstance(book, core.Workbook)}
+
+    def add(self, book, metadata=False):
         require(len(self.books) < 64, 'Release handles before opening more than 64 workbooks')
         handle = self.next_handle
         self.next_handle += 1
         self.books[handle] = book
-        return {'handle': handle, **self.view(book)}
+        return {'handle': handle, **(self.metadata(book) if metadata else self.view(book))}
 
     def execute(self, operation, p):
         require(operation in OPERATIONS, 'Unknown capability operation')
-        if operation == 'open':
+        if operation in ('open', 'open_metadata'):
+            if operation == 'open_metadata':
+                require(isinstance(p, dict) and set(p) == {'raw', 'source'} and isinstance(p['source'], str),
+                        'open_metadata requires raw bytes and a source string')
             raw = p['raw']
             require(isinstance(raw, bytes) and len(raw) <= 64 * 1024 * 1024, 'Input exceeds 64 MiB')
             require(self.snapshot_bytes + len(raw) <= 256 * 1024 * 1024, 'Session input budget exceeded; start a new session')
             self.snapshot_bytes += len(raw)
-            return self.add(core.Workbook.from_bytes(raw, p['source']))
+            return self.add(core.Workbook.from_bytes(raw, p['source']), metadata=operation == 'open_metadata')
         if operation == 'extract':
             return self.add(load_result_bytes(p['raw'], core.address))
         if operation in ('create', 'patch'):
@@ -122,10 +134,19 @@ class Session:
             return headers.reconstruct(book, p['sheet'], p['bounds'], p['header_rows'], read_cell)
         if operation == 'resolve_column':
             return headers.resolve_column(p['selector'], p['columns'], p['schema'])
+        if operation == 'address_many':
+            require(isinstance(p['refs'], list) and len(p['refs']) <= 10000, 'At most 10000 addresses per batch')
+            return [core.address(ref) for ref in p['refs']]
         if operation == 'address':
             return core.address(p['ref'])
         if operation == 'column_name':
             return analysis.column_name(p['number'])
+        if operation == 'typed_values':
+            require(isinstance(p, dict) and set(p) == {'cells'}, 'typed_values requires cells only')
+            cells = p['cells']
+            require(isinstance(cells, list) and len(cells) <= 10000, 'At most 10000 cells per batch')
+            require(all(isinstance(cell, dict) for cell in cells), 'Each batch cell must be a dictionary')
+            return [analysis.typed_value(cell) for cell in cells]
         if operation == 'typed_value':
             return analysis.typed_value(p['cell'])
         if operation == 'validate_query':

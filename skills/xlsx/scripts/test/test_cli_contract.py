@@ -25,6 +25,31 @@ class ContractTests(unittest.TestCase):
         for operation in capabilities()['operations']:
             self.assertIn(operation, doc)
 
+    def test_address_many_reuses_scalar_validation_and_order(self):
+        session = Session()
+        refs = ['B2', 'a1', 'XFD1048576', 'B2']
+        self.assertEqual(session.execute('address_many', {'refs': refs}),
+                         [session.execute('address', {'ref': ref}) for ref in refs])
+        self.assertEqual(session.execute('address_many', {'refs': []}), [])
+        self.assertEqual(len(session.execute('address_many', {'refs': ['A1'] * 10000})), 10000)
+        for refs in (['A1'] * 10001, 'A1', None, ['A1', 'A0'], ['A1', 12], ['XFE1']):
+            with self.subTest(refs=str(refs)[:40]), self.assertRaises(ValueError):
+                session.execute('address_many', {'refs': refs})
+
+    def test_address_many_wire_failure_and_recovery(self):
+        requests = [('address_many', {'refs': ['A1', 'B2']}),
+                    ('address_many', {'refs': ['A0']}), ('address', {'ref': 'C3'})]
+        raw = b''.join(dumps({'protocol': PROTOCOL, 'id': number, 'operation': operation,
+                              'parameters': parameters}) + b'\n'
+                       for number, (operation, parameters) in enumerate(requests))
+        child = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS/'xlsx_cli.py'), 'serve'],
+                               input=raw, capture_output=True)
+        self.assertEqual(child.returncode, 0, child.stderr)
+        replies = [loads(line) for line in child.stdout.splitlines()]
+        self.assertEqual(replies[0]['result'], [(1, 1), (2, 2)])
+        self.assertFalse(replies[1]['ok'])
+        self.assertEqual(replies[2]['result'], (3, 3))
+
     def test_document_wire_example_is_executable(self):
         import re
         doc = (SCRIPTS/'docs'/'cli-contract.md').read_text(encoding='utf-8')

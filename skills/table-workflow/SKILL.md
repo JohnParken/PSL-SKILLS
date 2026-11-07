@@ -1,6 +1,6 @@
 ---
 name: table-workflow
-version: "20261105.1717.1148"
+version: "20261107.1659.5866"
 description: 用于根据目标表头，从多份 XLSX、ET/ETT 原始表确认来源和口径，支持受控维表补列、按键汇总与业务勾稽，再填入既有 XLSX 模板副本并提供溯源。适合跨表统计、期间比较与模板填报；简单建表或单表读取使用原技能，不做多对多关联或 ET 写回。
 ---
 
@@ -29,7 +29,7 @@ python -I -S -B "<skill-root>/scripts/table_workflow.py" check --xlsx-root "XLSX
 
 ## 最短任务路径
 
-1. **识别**：读取本轮附件并根据用户要求判断来源/目标；只向 `inspect` 提交文件列表，stdout 是有界结构摘要。默认每表前 4 行、8 列，每文件最多 8 表；用同一入口的 `sheet`/`range` 定位更下方表头，不逐页搬运全量数据。用打印的 SHA-256 绑定计划。
+1. **识别**：读取本轮附件并根据用户要求判断来源/目标；只向 `inspect` 提交文件列表，stdout 是有界结构摘要。默认每表前 4 行、8 列，每文件最多 8 表；超过 8 表时先用 `names` 命令发现名称（单文件 stdin：`{"path":"./来源.xlsx","limit":32}`）；名称发现仍完整校验输入，但不先跨进程传输整表单元格；按返回 `next_offset` 以 `offset` 和同一 `sha256` 续读，直到 null。再用同一入口的 `sheet`/`range` 定位更下方表头，不逐页搬运全量数据。用打印的 SHA-256 绑定计划。
 
 ```console
 python -I -S -B "<skill-root>/scripts/table_workflow.py" inspect --xlsx-root "XLSX_ROOT_CONFIRMED"

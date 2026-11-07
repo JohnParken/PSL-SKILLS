@@ -33,7 +33,9 @@ capabilities输出普通JSON（接口版本、skill、operations、限制），�
 | region | handle,sheet,range,options? | 类型化区域tuple(columns,headers,rows,metadata)；options沿原区域能力，formula策略默认reject |
 | target_headers | handle,sheet,bounds,header_rows | 返回重建表头schema；拒绝表头/键读取中的公式或错误 |
 | resolve_column | selector,columns,schema | 明确列ID，歧义拒绝 |
+| address_many | refs:list | 最多10000个地址（可为空），按输入顺序返回坐标tuple列表；复用address校验，任一无效地址使整批失败，无部分结果、无副作用 |
 | address / column_name | ref / number | 地址坐标tuple / 列名 |
+| typed_values | cells:list | 最多10000个cell字典（可为空），按输入顺序逐项复用typed_value，保留重复项、Decimal和类型；整批参数先校验，错误不返回部分结果 |
 | typed_value | cell | (kind,value)，保留文本/数值/空白/布尔/日期文字 |
 | validate_query | query,columns,schema | 受检筛选/汇总配置tuple，保持原规则 |
 | select_rows | rows,excluded:list,filters | 一次批量筛选，保留物理行号，不逐行启动或调用进程 |
@@ -48,6 +50,12 @@ capabilities输出普通JSON（接口版本、skill、operations、限制），�
 | verify | original,candidate,writes:{(sheet,ref):expected} | 核验目标值、非目标单元格/样式/公式及未改ZIP成员；通过返回true |
 | publish | handle,output | 独占新相对文件；保存后回读ZIP成员一致，返回output_written/verification/sha256 |
 | delivery | output,protected_inputs:list | 对已验收最终文件复用原归档，返回delivery，不重算或删除调用方文件 |
+
+## 仅元数据与批量类型值
+
+open_metadata 与 open 接受相同 raw/source，执行相同完整解析、安全检查、64MiB输入与会话预算，但不构造或传输 cells/merges 快照。返回 schema_version=workbook_metadata_v1、handle、sheet_names、native、source_status、source_issues、source_coverage、input_schema。名称保持原顺序，元数据不是计算输入。句柄仍可供 region 等能力使用，使用完必须 release；不能把小响应当作少读ZIP或跳过未选表校验。旧open/create/extract及typed_value响应不变。
+
+typed_values 不重算公式、不决定缓存是否可用，也不替消费方授权公式/错误键；消费方仍先执行原边界检查。接口v1新增能力须在 capabilities 中逐项确认，不能静默逐格回退或读取私有对象。
 
 ## 公开工作簿快照
 

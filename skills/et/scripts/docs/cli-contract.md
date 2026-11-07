@@ -13,7 +13,7 @@ python -I -S -B "<skill-root>/scripts/et_cli.py" run ./明细.et
 python -I -S -B "<skill-root>/scripts/et_cli.py" read
 ```
 
-capabilities为普通JSON：skill=et、interface_version=1、operations=[read]；不代表OOXML环境或文件验收。run原样调用旧主入口并保留参数、JSON、分页、stderr和退出码。read仅供程序编排，从stdin读取一个完整协议请求，不是Shell路径参数或分页接口。
+capabilities为普通JSON：skill=et、interface_version=1、operations=[read,metadata]；不代表OOXML环境或文件验收。run原样调用旧主入口并保留参数、JSON、分页、stderr和退出码。read仅供程序编排，从stdin读取一个完整协议请求，不是Shell路径参数或分页接口。
 
 ## read 输入输出
 
@@ -22,6 +22,12 @@ capabilities为普通JSON：skill=et、interface_version=1、operations=[read]�
 成功执行返回result={extraction:bytes,exit_code:int}，extraction是原生产者encode_result的完整UTF-8 JSON，维持原16MiB预算与schema。读取ok退出0，partial退出3，失败退出1；参数usage退出2。部分结果保留可靠单元格、原值与格式解释/缓存/coverage/issues的区别。partial不能按ok处理，消费方不能擅自制造覆盖断言或使用缺失缓存。
 
 解析抛出的错误返回ok=false及error，保留原status/location和错误信息；退出1。不要只因报文传输成功就消费数据。跨表只接受完整原始提取schema；概况、分页及et_table_analysis_v1不能替代完整原结果。输入路径与快照所有权由调用方核验。
+
+## metadata 输入输出
+
+metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compatibility。仍完整执行 read_bytes 和 encode_result 的解析、安全、结构及16MiB结果预算校验，随后只投影受支持的 biff8_readonly_v1 或 ooxml_spreadsheet_readonly_v1；未知提取schema或未解析标记拒绝，不猜表名。
+
+返回 result={metadata:{schema_version:workbook_metadata_v1,sheet_names,native:false,source_status,source_issues,source_coverage,input_schema},exit_code}。保留原表序、issues及可用的cell_value_coverage/omissions_affect_cell_values/reading_assessment，不传输单元格；ok/partial仍分别退出0/3，投影或校验失败退出1。名称元数据不能供统计或代替完整提取。旧read/run结果不变，消费方必须先确认metadata能力。该路径减少进程间数据，不承诺跳过底层解析或降低内存上限。
 
 ## 版本与兼容策略
 

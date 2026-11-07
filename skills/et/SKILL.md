@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261106.1235.5861"
+version: "20261107.1659.5866"
 description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，预览表头区域，并按指定范围筛选、排序、去重、统计及分组汇总，提供质量诊断；支持 BIFF8 与 OOXML 子集并保留 partial。公式不重算，不修改原表；原生 XLSX 使用对应技能。
 ---
 
@@ -38,7 +38,14 @@ python -I -S -B "<skill-root>/scripts/et_cli.py" run --check
 
 ## 电子表格：读取 ET/ETT 保存值
 
-完成共同自检后，在任务工作目录运行；将文件名换成实际输入，保留默认 JSON 和 `data` 策略：
+完成共同自检后按任务选择入口，不先输出完整 JSON：
+
+- 表名与规模概况：`<skill-root>/scripts/read_et.py` 加 `--summary`。
+- 候选表头与空位：下方 `analyze_et.py --preview` 指定矩形。
+- 本 Skill 区域统计：直接使用下方 `analyze_et.py`，不遍历分页或绕经完整 JSON。
+- 完整证据或外部原 schema 消费：使用以下默认完整读取。
+
+在任务工作目录运行，将文件名换成实际输入，保留默认 JSON 和 `data` 策略：
 
 ```console
 python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et

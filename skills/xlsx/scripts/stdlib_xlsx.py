@@ -5,6 +5,7 @@
 Python 3.9+. See references/python-calculation.md for the JSON contract.
 """
 import argparse
+from bisect import bisect_left
 import copy
 import csv
 import io
@@ -121,6 +122,31 @@ def relation_target(base, target):
     if path.startswith("../") or "\\" in path:
         raise ValueError("Invalid package relationship target")
     return path
+
+
+class _WriteIndex:
+    """Operation-local lookup for ordered DOM siblings; unusual layouts use the old scan.
+
+    Never retain this across patch/calculate calls: callers can directly edit the
+    exposed DOM between operations. Indexing only locates nodes, not their values.
+    """
+
+    def __init__(self, parent, local, key):
+        self.parent = parent
+        self.nodes = [n for n in parent.childNodes if n.nodeType == n.ELEMENT_NODE and n.localName == local]
+        self.keys = [key(n) for n in self.nodes]
+        if any(a >= b for a, b in zip(self.keys, self.keys[1:])):
+            raise ValueError("Unordered or duplicate DOM siblings")
+        self.by_key = dict(zip(self.keys, self.nodes))
+        self.children = {}
+
+    def insert(self, key, node):
+        position = bisect_left(self.keys, key)
+        later = self.nodes[position] if position < len(self.nodes) else None
+        self.parent.insertBefore(node, later)
+        self.keys.insert(position, key)
+        self.nodes.insert(position, node)
+        self.by_key[key] = node
 
 
 class Workbook:
@@ -331,6 +357,47 @@ class Workbook:
         self.changed.add(self.sheets[sheet])
         return doc, cell
 
+    def _write_cell_node(self, sheet, ref, indexes):
+        """Use fresh batch indexes without changing the public DOM mutation path."""
+        part = self.sheets[sheet]
+        doc = self.document(part)
+        row_num, col_num = address(ref)
+        if part not in indexes:
+            data = doc.getElementsByTagNameNS(MAIN, "sheetData")[0]
+            try:
+                indexes[part] = _WriteIndex(data, "row", lambda n: int(n.getAttribute("r")))
+            except ValueError:
+                indexes[part] = None
+        rows = indexes[part]
+        if rows is None:
+            return self.cell_node(sheet, ref)
+        row = rows.by_key.get(row_num)
+        if row is None:
+            row = self.element(doc, "row")
+            row.setAttribute("r", str(row_num))
+            rows.insert(row_num, row)
+        if row_num not in rows.children:
+            try:
+                cells = _WriteIndex(row, "c", lambda n: address(n.getAttribute("r"))[1])
+                # The legacy search compares the full address, not just its column.
+                if any(address(n.getAttribute("r"))[0] != row_num for n in cells.nodes):
+                    raise ValueError("Cell address does not match its row")
+                rows.children[row_num] = cells
+            except ValueError:
+                rows.children[row_num] = None
+        cells = rows.children[row_num]
+        if cells is None or ref != ref.upper():
+            # Fallback can insert siblings; discard this sheet's index afterwards.
+            indexes[part] = None
+            return self.cell_node(sheet, ref)
+        cell = cells.by_key.get(col_num)
+        if cell is None:
+            cell = self.element(doc, "c")
+            cell.setAttribute("r", ref)
+            cells.insert(col_num, cell)
+        self.changed.add(part)
+        return doc, cell
+
     def put_value(self, doc, cell, value, cache=False):
         for child in list(cell.childNodes):
             if child.nodeType == child.ELEMENT_NODE and child.localName in ("v", "is"):
@@ -365,6 +432,7 @@ class Workbook:
         cell.insertBefore(node, next((n for n in cell.childNodes if n.nodeType == n.ELEMENT_NODE and n.localName == "extLst"), None))
 
     def patch(self, spec):
+        indexes = {}
         for item in validate_spec(spec):
             sheet = item["name"]
             if sheet not in self.sheets:
@@ -382,7 +450,7 @@ class Workbook:
                     r2, c2 = address(last)
                     if r1 <= row <= r2 and c1 <= col <= c2 and ref != first:
                         raise ValueError("Write only the merged cell anchor: " + first)
-                doc, node = self.cell_node(sheet, ref)
+                doc, node = self._write_cell_node(sheet, ref, indexes)
                 if "style" in entry:
                     style = entry["style"]
                     styles = xml(self.parts["xl/styles.xml"]).find(NS + "cellXfs")
@@ -482,8 +550,9 @@ class Workbook:
         if fatal or values_only and errors:
             report["status"] = "failed"
             return report
+        indexes = {}
         for sheet, ref in formula_keys:
-            doc, node = self.cell_node(sheet, ref)
+            doc, node = self._write_cell_node(sheet, ref, indexes)
             # Unknown formulas never retain potentially stale cached results.
             result = results.get((sheet, ref))
             # Excel's direct blank reference yields zero; evaluator returns None for blank.

@@ -37,6 +37,31 @@ class CliCapabilityTests(fixtures.WorkflowTests):
     def tearDown(self):
         self.api.close()
 
+    def test_names_cli_and_ninth_sheet(self):
+        names = ['Sheet' + str(i) for i in range(40)]
+        self.api.xlsx.Workbook.create({'sheets': [{'name': name, 'cells': {'A1': {'value': name}}} for name in names]}).save('many.xlsx')
+        def run(command, request):
+            child = subprocess.run([sys.executable, '-I', '-S', '-B', str(WORKFLOW_SCRIPTS/'table_workflow.py'),
+                                    command, '--xlsx-root', str(fixtures.XLSX_ROOT)],
+                                   input=json.dumps(request), text=True, capture_output=True)
+            self.assertEqual(child.returncode, 0, child.stderr + child.stdout)
+            self.assertLessEqual(len(child.stdout.strip()), 24000)
+            return json.loads(child.stdout)
+        first = run('names', {'path': 'many.xlsx'})
+        second = run('names', {'path': 'many.xlsx', 'offset': first['next_offset'], 'sha256': first['sha256']})
+        self.assertEqual(first['names'] + second['names'], names)
+        result = run('inspect', {'files': [{'path': 'many.xlsx', 'sheet': names[8]}]})
+        self.assertEqual(result['files'][0]['sheets'][0]['name'], names[8])
+
+    def test_inspect_batches_ten_thousand_addresses(self):
+        self.api.xlsx.Workbook.create({'sheets': [{'name': 'Data', 'cells': {
+            'A' + str(i): {'value': i} for i in range(1, 10001)}}]}).save('large.xlsx')
+        before = self.api.client.metrics['requests']
+        result = Workflow(self.api).inspect({'files': [{'path': 'large.xlsx'}]})
+        count = self.api.client.metrics['requests'] - before
+        self.assertLess(count, 100)
+        self.assertEqual(result['files'][0]['sheets'][0]['last_row'], 10000)
+
     def test_actual_cli_archive_success_conflict_and_invalid_configuration(self):
         config = json.dumps({'commonParam': [{'name': 'questionId', 'value': 'workflow-cli-test'}]})
         with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': config}):
@@ -127,6 +152,18 @@ class WireTests(unittest.TestCase):
         bad = subprocess.CompletedProcess([], 0, json.dumps({'protocol': PROTOCOL, 'interface_version': 999, 'skill': 'xlsx'}), '')
         with patch('workflow_runtime.Dependencies.run_process', side_effect=[result, bad]), self.assertRaisesRegex(ValueError, 'Incompatible'):
             Dependencies(str(fixtures.XLSX_ROOT))
+
+    def test_missing_address_batch_capability_is_rejected(self):
+        child = subprocess.run([sys.executable, '-I', '-S', '-B', str(fixtures.XLSX_ROOT/'scripts/xlsx_cli.py'),
+                                'capabilities'], capture_output=True, text=True, check=True)
+        capabilities = json.loads(child.stdout)
+        capabilities['operations'].remove('address_many')
+        ready = subprocess.CompletedProcess([], 0, json.dumps({'status': 'ready', 'check_kind': 'environment',
+                                                             'artifact_validation': 'not_run'}), '')
+        missing = subprocess.CompletedProcess([], 0, json.dumps(capabilities), '')
+        with patch('workflow_runtime.Dependencies.run_process', side_effect=[ready, missing]):
+            with self.assertRaisesRegex(ValueError, 'lacks required capabilities'):
+                Dependencies(str(fixtures.XLSX_ROOT))
 
     def test_old_dependency_keeps_legacy_cli_but_requires_explicit_upgrade_for_workflow(self):
         with tempfile.TemporaryDirectory() as directory:

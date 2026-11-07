@@ -4,7 +4,7 @@
 
 ## 标准入口
 
-`<skill-root>/scripts/table_workflow.py` 继续提供check/inspect/plan/apply，原stdin计划schema、输出schema及0/3/1/2退出码不变。依赖根仍须从实际SKILL读取确认，显式传入--xlsx-root，ET来源另传--et-root，不猜相邻安装路径。没有内置其他技能，独立安装指本技能代码自包含、依赖通过公开CLI可用，不代表无需安装XLSX/ET。
+`<skill-root>/scripts/table_workflow.py` 继续提供check/inspect/names/plan/apply，原stdin计划schema、输出schema及0/3/1/2退出码不变。依赖根仍须从实际SKILL读取确认，显式传入--xlsx-root，ET来源另传--et-root，不猜相邻安装路径。没有内置其他技能，独立安装指本技能代码自包含、依赖通过公开CLI可用，不代表无需安装XLSX/ET。
 
 ## 默认跨进程链路
 
@@ -59,3 +59,21 @@ The actual subprocess chain covers native XLSX, synthetic BIFF/OOXML ET, partial
 Archive configuration behavior is unchanged: absent or invalid router configuration yields skipped with fallback_reason, not copied; an actual copy conflict/failure is delivery_incomplete. The primary workbook remains available in both cases.
 
 Final verification on Python 3.12.11/macOS: workflow 158, XLSX 373, ET 453, repository integration 48 tests passed. The workflow number includes deliberate legacy/new-path replays, not unique format scenarios. Exact legacy run stdout/stderr/exit compatibility and recursive test discovery were checked separately. Isolated temporary ZIPs had 159 XLSX, 146 ET and 17 workflow members: CRC and every member byte matched source; read-only extracted installations with empty external PATH completed native creation, cross-table fill, value/leading-zero checks and actual archival. Installed source hashes stayed unchanged; packaged strict passed. No release ZIP was replaced. Standalone native tools still work without workflow; workflow requires explicitly installed compatible XLSX/ET CLIs. Raw-tree strict returned 1 due to 70 pre-existing ET cache warnings and no errors; cache-free snapshots passed. Pylint was unavailable; AST and focused source layout checks are not full Pylint.
+
+## 有界表名发现与批量舍入
+
+新增 names 命令使用单文件请求 path，可选 limit（1..100，默认32）、offset（非负整数，默认0）和 sha256。非零 offset 必须提供前页 sha256；来源变化或偏移越界即拒绝。响应 table_workflow_names_v1 返回完整名称、total_names、next_offset、names_omitted 和来源状态；名称页不包含单元格，不代表完整读取。按实际返回数续读，next_offset=null 表示已列出全部可读表名，source partial 仍为 partial/退出3。名称页按23000字符预算提前停止，单个名称或文件身份超预算明确失败，不截断名称或返回无法推进的游标。旧 inspect schema 和预览默认值不变。
+
+最终金额舍入按输出映射复用已有公开 evaluate_many（接口v1必需能力）；空值不送入公式引擎，Decimal和错误语义不变，不改提供方默认行为。
+
+inspect 的存储格边界复用 XLSX 公开 address_many，按最多10000地址分批；启动时必须协商该 operation，旧提供方缺失时明确停止，无私有导入或静默逐格回退。显式 LegacyDependencies 迁移适配器仍使用原地址核心。
+
+本轮macOS/Python3.12.12合成测量：10000个存储格inspect（不含夹具创建与依赖初始化）0.160220秒，10次RPC，186482请求字节、1347852响应字节；地址解析为一个批次而非10000次请求。4000来源行/两个目标组计划基准三次CLI中位0.547590秒、46次请求，legacy中位0.145015秒；该小目标样本不代表大写入规模的普遍加速。字符/字节均不是token，未测宿主模型usage。当前未验证Linux/Windows或新的真实ET生产样本。
+
+## 大表目标键与名称传输
+
+names 对已核验SHA的不可变输入快照调用 XLSX open_metadata 或 ET metadata，保留 workbook_metadata_v1 来源状态与诊断；不先向workflow搬运完整cells。仅XLSX名称发现用完即release，单个Workflow对象按原快照复用元数据；后续load仍可显式取得完整数据。分页schema、SHA续读、预算和partial退出码保持不变。底层依旧完整解析和安全校验，未选表损坏也拒绝；名称响应小不代表完整格式支持或仅扫描workbook.xml。
+
+目标行键先按原物理行顺序检查公式/错误，再通过公开 typed_values 每批最多10000格转换，按原顺序重建复合键。重复、空键、Decimal、前导零、排除行和唯一性规则不变；批次长度/类型标签不符即拒绝。原typed_value保持可用，默认workflow不逐格降级。XLSX必须声明open_metadata/release/typed_values，ET来源必须声明metadata；缺能力在输入处理前停止。完整计算、来源partial/缓存门禁、候选保护及最终发布复核未缩减。
+
+本轮同输入before/after基准位于仓库 tests/benchmark_large_workbooks.py；指定两个已确认源码快照根目录，默认各运行3次，输入仅生成一次。维护验收证据记录实际平台、脚本哈希、耗时范围、RPC及传输字节，不换算模型token或宣称普遍性能保证。

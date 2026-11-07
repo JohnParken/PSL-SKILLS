@@ -74,10 +74,11 @@ class Workflow:
         self.api = dependencies
         self.snapshots = {}
         self.books = {}
+        self.metadata_views = {}
         self.warnings = []
         self.publication = {'output_written': False, 'audit_written': False, 'verification': 'not_run'}
 
-    def load(self, spec):
+    def source_snapshot(self, spec):
         path = spec['path']
         if path not in self.snapshots:
             require(len(self.snapshots) < 17, 'At most 16 source files plus one template')
@@ -85,15 +86,58 @@ class Workflow:
             require(sum(len(item[0]) for item in self.snapshots.values()) + len(raw) <= 128 * 1024 * 1024,
                     'Combined source snapshots exceed 128 MiB')
             self.snapshots[path] = (raw, digest)
-            try:
-                self.books[path] = self.api.load(path, raw)
-            except Exception as exc:
-                raise WorkflowError('Source parsing failed: ' + path + ': ' + str(exc), {
-                    'source_path': path, 'source_error_type': getattr(exc, 'remote_code', None) or type(exc).__name__, 'source_status': getattr(exc, 'status', None),
-                    'source_location': getattr(exc, 'location', None)}) from exc
         if 'sha256' in spec:
             require(spec['sha256'] == self.snapshots[path][1], 'Source changed; inspect and rebuild mapping: ' + path)
+        return self.snapshots[path]
+
+    def load(self, spec):
+        path = spec['path']
+        raw, _digest = self.source_snapshot(spec)
+        if path not in self.books:
+            self.books[path] = self.parse_source(path, raw, self.api.load)
         return self.books[path]
+
+    @staticmethod
+    def parse_source(path, raw, loader):
+        try:
+            return loader(path, raw)
+        except Exception as exc:
+            raise WorkflowError('Source parsing failed: ' + path + ': ' + str(exc), {
+                'source_path': path, 'source_error_type': getattr(exc, 'remote_code', None) or type(exc).__name__,
+                'source_status': getattr(exc, 'status', None), 'source_location': getattr(exc, 'location', None)}) from exc
+
+    def names(self, request):
+        """Discover names without cell previews; bind continuation to source bytes."""
+        fields(request, ['path'], ['sha256', 'offset', 'limit'])
+        offset = request.get('offset', 0)
+        limit = request.get('limit', 32)
+        require(type(offset) is int and offset >= 0, 'offset must be a nonnegative integer')
+        require(type(limit) is int and 1 <= limit <= 100, 'limit must be an integer in 1..100')
+        require(offset == 0 or 'sha256' in request, 'Continuation requires source sha256')
+        raw, _digest = self.source_snapshot(request)
+        if request['path'] not in self.metadata_views:
+            self.metadata_views[request['path']] = self.parse_source(request['path'], raw, self.api.metadata)
+        metadata = self.metadata_views[request['path']]
+        names = metadata['sheet_names']
+        require(offset <= len(names), 'offset exceeds worksheet count')
+        status = 'native_loaded' if metadata['native'] else metadata['source_status']
+        result = {'schema_version': 'table_workflow_names_v1', 'operation': 'names',
+                  'status': 'inspected' if status in ('ok', 'native_loaded') else 'partial',
+                  'path': request['path'], 'sha256': self.snapshots[request['path']][1],
+                  'source_status': status, 'source_partial_count': int(status not in ('ok', 'native_loaded')),
+                  'complete_data_for_computation': False, 'offset': offset, 'total_names': len(names),
+                  'names': [], 'next_offset': None, 'names_omitted': len(names) - offset,
+                  'next': 'Continue names with the same path and sha256; inspect this file for source diagnostics and sheet previews'}
+        for name in names[offset:offset + limit]:
+            result['names'].append(name)
+            if len(encode(result)) > 23000:
+                result['names'].pop()
+                break
+        consumed = offset + len(result['names'])
+        require(consumed > offset or offset == len(names), 'Worksheet name or source identity exceeds output budget')
+        result['next_offset'] = consumed if consumed < len(names) else None
+        result['names_omitted'] = len(names) - consumed
+        return result
 
     def inspect(self, request):
         fields(request, ['files'])
@@ -109,7 +153,7 @@ class Workflow:
             sheets = []
             for name in names[:8]:
                 cells = book.cells[name]
-                positions = [self.api.xlsx.address(ref) for ref in cells]
+                positions = self.api.addresses(list(cells))
                 last_row = max((p[0] for p in positions), default=1)
                 last_col = max((p[1] for p in positions), default=1)
                 bounds = selection(spec['range'], self.api.xlsx) if 'range' in spec else (1, 1, last_row, last_col)
@@ -235,9 +279,18 @@ class Workflow:
         cols = [item['column'] for item in schema['columns']]
         keys = columns_for(spec['keys'], cols, schema, self.api)
         excluded = exclusions(spec.get('exclude_rows', []), schema['data_first_row'], bounds[2])
-        rows = [(row, [read_cell(col + str(row)) for col in keys])
-                for row in range(schema['data_first_row'], bounds[2] + 1) if row not in excluded]
-        require(0 < len(rows) <= MAX_WRITES, 'Target has no data rows or exceeds row budget')
+        row_numbers = [row for row in range(schema['data_first_row'], bounds[2] + 1) if row not in excluded]
+        require(0 < len(row_numbers) <= MAX_WRITES, 'Target has no data rows or exceeds row budget')
+        key_cells = []
+        for row in row_numbers:
+            for col in keys:
+                ref = col + str(row)
+                cell = cells.get(ref, {})
+                require(cell.get('formula') is None and cell.get('type') != 'e', 'Formula/error in target header or key: ' + ref)
+                key_cells.append(cell)
+        values = self.api.typed_values(key_cells)
+        require(len(values) == len(key_cells), 'Incomplete target key values')
+        rows = [(row, values[index * len(keys):(index + 1) * len(keys)]) for index, row in enumerate(row_numbers)]
         side = {'rows': rows, 'indices': list(range(len(keys)))}
         _, key_by_row, diagnostics = self.api.match.index_rows(side, 'never')
         if diagnostics['null_key_rows'] or diagnostics['duplicate_key_groups']:
@@ -369,6 +422,12 @@ class Workflow:
             require(mapping['metric'] in metrics, 'Unknown target metric')
             metric = metrics[mapping['metric']]
             require((mapping['unit'], mapping['period']) == (metric['unit'], metric['period']), 'Target unit/period differs from metric declaration')
+            rounding_keys = [key for key in target_keys.values() if metric['values'][key] is not None]
+            rounded_values = self.api.evaluate_many(
+                'ROUND(A1,' + str(mapping['decimals']) + ')', 'Metrics',
+                [{'A1': metric['values'][key]} for key in rounding_keys]) if rounding_keys else []
+            require(len(rounded_values) == len(rounding_keys), 'Incomplete rounding results')
+            rounded_by_key = dict(zip(rounding_keys, rounded_values))
             for row, key in target_keys.items():
                 ref = mapping['column'] + str(row)
                 previous = template.cells[plan['target']['sheet']].get(ref, {})
@@ -376,7 +435,7 @@ class Workflow:
                 require(plan['target'].get('overwrite', 'blank_only') == 'replace_values' or previous.get('value') in (None, ''),
                         'Target is nonblank; requires authorized replace_values: ' + ref)
                 value = metric['values'][key]
-                rounded = None if value is None else self.api.evaluate_bound('ROUND(A1,' + str(mapping['decimals']) + ')', 'Metrics', {'A1': value})
+                rounded = None if value is None else rounded_by_key[key]
                 if rounded is not None:
                     digits = ''.join(str(digit) for digit in rounded.as_tuple().digits).rstrip('0')
                     require(len(digits) <= 15 and (rounded == 0 or -307 <= rounded.adjusted() <= 307),
@@ -532,7 +591,7 @@ def bounded_result(result, limit=24000):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('check', 'inspect', 'plan', 'apply'))
+    parser.add_argument('command', choices=('check', 'inspect', 'names', 'plan', 'apply'))
     parser.add_argument('--xlsx-root', required=True)
     parser.add_argument('--et-root')
     parser.add_argument('--write', action='store_true', help='Include an exclusive write probe in check')
@@ -551,8 +610,8 @@ def main():
         else:
             workflow = Workflow(dependencies)
             request = read_request(sys.stdin.buffer)
-            if args.command == 'inspect':
-                result = workflow.inspect(request)
+            if args.command in ('inspect', 'names'):
+                result = getattr(workflow, args.command)(request)
             elif args.command == 'plan':
                 _, report = workflow.prepare(request)
                 result = workflow.receipt(report)
