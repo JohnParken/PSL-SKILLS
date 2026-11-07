@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-07。本文对应仓库基线 [`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)，Skill 版本为 `20261108.0102.2369`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261108.0102.2369`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 

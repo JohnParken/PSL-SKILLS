@@ -1,6 +1,6 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期：2026-11-07；源码基线：[6e317cf](https://github.com/JohnParken/PSL-SKILLS/tree/6e317cf3d28972e214ffa119bf04d60302db7126) 加本轮未提交输出契约变更；Skill 版本：`20261108.0102.2369`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收；本轮定点回归见 [核验记录](../skill-docs-validation-20261107.json)。
+> 文档核对日期：2026-11-07；源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261108.0102.2369`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收；本轮定点回归见 [核验记录](../skill-docs-validation-20261107.json)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 

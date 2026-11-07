@@ -2,12 +2,12 @@
 
 本文档集逐一说明仓库中的 10 个 Skill：功能范围、实际模块、执行流程、输入输出、依赖、失败与部分结果边界。架构图描述当前实现与任务交接，不表示存在统一的自动路由服务。
 
-本轮输出契约：业务交付只接收裸文件名，固定写任务根目录 `./`，不接受 `./文件名` 或任何输出目录。输入、内部归档和受控临时工作区不变；详见各技能当前入口与 [输出契约和迁移](output-filenames.md)。源码为 6e317cf 加本轮未提交修改，旧日期验收记录不代表本轮测试。
+本轮输出契约：业务交付只接收裸文件名，固定写任务根目录 `./`，不接受 `./文件名` 或任何输出目录。输入、内部归档和受控临时工作区不变；详见各技能当前入口与 [输出契约和迁移](output-filenames.md)。业务源码已发布至 `9fcf9fc`，旧日期验收记录不代表本轮测试。
 
 ## 阅读基线
 
 - 仓库：[JohnParken/PSL-SKILLS](https://github.com/JohnParken/PSL-SKILLS)。
-- 当前源码基线：[6e317cf](https://github.com/JohnParken/PSL-SKILLS/commit/6e317cf3d28972e214ffa119bf04d60302db7126) 加本轮未提交修改，核对日期 2026-11-07 UTC；实际验证见 [本轮记录](output-filenames-validation.json)。
+- 当前源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/commit/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，核对日期 2026-11-07 UTC；实际验证见 [本轮记录](output-filenames-validation.json)。
 - 覆盖依据：当前工作树中所有 `skills/*/SKILL.md`，不将历史分发 ZIP、测试夹具或参考文件当作额外 Skill。
 - 本目录是仓库维护文档，链接相对于当前 Markdown 文件。不是新的 Skill 入口，也不改变各 Skill 的主入口、版本、运行时依赖或授权要求。
 - 图表使用 Mermaid。支持 Mermaid 的 Markdown 阅读器可直接显示；不支持时，代码块仍保留完整结构与连线说明。

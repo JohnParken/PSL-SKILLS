@@ -1,5 +1,6 @@
 """Repository maintenance tests; not distributed with an individual Skill."""
 import importlib.util
+import shlex
 from pathlib import Path
 import tempfile
 import unittest
@@ -89,6 +90,32 @@ class DocumentationChecks(unittest.TestCase):
 
     def test_duplicate_heading(self):
         self.assertEqual({'hello', 'hello-1'}, checker.anchors('# Hello\n# Hello'))
+
+
+class RepositoryDeliveryExamples(unittest.TestCase):
+    def test_current_delivery_examples_use_bare_filenames(self):
+        root = Path(__file__).resolve().parents[1]
+        examples = [
+            ('README.md', 'stdlib_xlsx.py', 'create', 2),
+            ('README.md', 'stdlib_xlsx.py', 'edit', 3),
+            ('docs/skills/wps.md', 'run_wps_task.py', 'create', 1),
+        ]
+        for relative, script, operation, offset in examples:
+            with self.subTest(page=relative, operation=operation):
+                commands = [
+                    shlex.split(line)
+                    for line in (root / relative).read_text(encoding='utf-8').splitlines()
+                    if line.startswith(('python ', 'python3 '))
+                    and f'/scripts/{script}" {operation} ' in line
+                ]
+                self.assertEqual(len(commands), 1)
+                command = commands[0]
+                output = command[command.index(operation) + offset]
+                self.assertTrue(output)
+                self.assertNotIn('/', output)
+                self.assertNotIn('\\', output)
+                self.assertNotIn(':', output)
+                self.assertNotIn(output, ('.', '..'))
 
 
 if __name__ == '__main__':

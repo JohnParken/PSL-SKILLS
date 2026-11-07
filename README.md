@@ -6,7 +6,7 @@
 
 - [裸文件名输出契约与迁移](docs/output-filenames.md)：全 Skill 输出范围、接口版本与兼容边界。
 - [架构与功能文档](docs/README.md)：10 个独立 Skill 的模块、架构图、流程图和输入输出边界。
-- 当前导读基于源码 `6e317cf3d28972e214ffa119bf04d60302db7126` 加本轮未提交的裸文件名输出变更（2026-11-07 UTC）。Skill 版本以各自 `SKILL.md` 为准；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
+- 当前导读基于源码 `9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`（裸文件名输出契约，已于 2026-11-07 UTC 发布）。Skill 版本以各自 `SKILL.md` 为准；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
 - [本轮文档核验](docs/skill-docs-validation-20261107.json) 与 [文档防漂移检查](tools/check_project_docs.py) 分别记录实际检查结果和可重复检查入口。
 - 本项目维护 Skill 层，不修改 Deep Agents 宿主或加载机制。基础包自包含；组合型 workflow 通过声明的公开契约协作，不能推断存在自动路由服务或 token 节省保证。
 
@@ -128,8 +128,8 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./report.json ./report.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json ./edited.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./report.json report.xlsx
+python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch.json edited.xlsx
 ```
 
 输出必须是尚不存在的裸文件名，固定写入任务根目录。创建示例见 [calculation_example.json](skills/xlsx/assets/calculation_example.json)，其两处计算结果均应为 `226.86`。公式引擎只实现文档列出的子集，退出码 2 表示计算不完整，不能作为完整验收通过。
@@ -533,3 +533,9 @@ DOCX 新增可选 UTF-8 字节预算及源/参数绑定续读；ET/WPS 输出支
 本次最终组合在 macOS/Python 3.12.12 上执行 28 个测试进程，共 2282 项、0 失败、0 跳过；14 项嵌套预算执行另记，不重复计入总数。九份干净副本 strict 通过，八个只读生产安装的十一项自检通过，跨技能副本与独立归档行为在回归中覆盖。原工作区 WPS/ET strict 仍因原有缓存分别产生 56/70 项警告，未删除或提交这些缓存。详细证据见 [分批发布验证](tests/batched_publish_validation_20261107.json)。
 
 保留历史 OFD 验收目录和两份归属不明旧报告为未跟踪，不提交真实样本、不替换 ZIP。Linux/Windows、真实宿主模型选路与 usage、Office 视觉、云端上传和可见时效未验证；Pylint 未安装，AST/定点格式检查不替代完整 lint。仓库现有 CI 仅由 pull request 或 workflow_dispatch 触发，直接推 main 不等于已通过远端 CI；提交与推送结果以 Git 历史和精确远端 SHA 为准。
+
+## 裸文件名输出分批发布（2026-11-07）
+
+输出约束已按 DOCX/公共归档、WPS/PPTX/OFD、XLSX/workflow、公共文档及证据四批提交：`ebf67ad`、`ff27f9b`、`fdc8765`、`9fcf9fc`。四批普通快进推送后核实当时远端 main 为 `9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`，未强推。随后补正仓库导读的三个旧输出示例及发布基线，增加文档示例回归；补正后的 14 项文档测试及 429 个本地链接检查通过，加载快照仍为 fresh；业务源码和 Skill 版本不变。
+
+提交前重新执行 29 个测试进程，共 2317 项全部通过；十份干净独立副本 strict 通过，当前加载快照 fresh，文档版本与 427 个本地链接检查通过。已保存的 [输出验证记录](docs/output-filenames-validation.json) 中“未提交/未推送”描述的是采样时状态，保留为历史证据；发布结果以 Git 历史为准。原三项未知文件和既有缓存未提交或清理，历史 ZIP 未替换。远端精确提交的 status 与 PR workflow 查询均为空，仓库现有工作流仅由 PR 或手动触发，不能称为远端 CI 已通过。
