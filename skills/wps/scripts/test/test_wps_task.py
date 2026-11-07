@@ -7,6 +7,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 
 import json
 import tempfile
@@ -56,7 +58,7 @@ class TestWpsTaskRunner(unittest.TestCase):
                     {"type": "table", "rows": [["部门", "结果"], ["综合处", "优秀"]]},
                 ],
             }
-            res = create_document(spec, out_file, compact_receipt=True)
+            res = task_api(create_document, spec, out_file, compact_receipt=True)
             self.assertEqual(res["status"], "success")
             self.assertEqual(res["readback_status"], "partial")
             self.assertTrue(res['partial'])
@@ -82,7 +84,7 @@ class TestWpsTaskRunner(unittest.TestCase):
                         {"type": "paragraph", "text": f"{theme} 正文说明。"},
                     ],
                 }
-                res = create_document(spec, out_file)
+                res = task_api(create_document, spec, out_file)
                 self.assertEqual(res["status"], "success")
                 self.assertTrue(out_file.exists())
 

@@ -5,6 +5,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 import tempfile
 import unittest
 from wps_rtf_builder import build_document_from_spec, escape_rtf_text
@@ -43,10 +45,10 @@ class LayoutTests(unittest.TestCase):
     def test_edit_retains_interleaved_structure(self):
         with tempfile.TemporaryDirectory() as temporary:
             source, output = Path(temporary) / 'in.wps', Path(temporary) / 'out.wps'
-            create_document({'page_numbering': False, 'blocks': [{'type': 'paragraph', 'text': '前'},
+            task_api(create_document, {'page_numbering': False, 'blocks': [{'type': 'paragraph', 'text': '前'},
                             {'type': 'table', 'rows': [['单元格']]}, {'type': 'paragraph', 'text': '后'}]}, source)
             before = source.read_bytes()
-            execute_edit_task(source, output, [{'operation': 'replace_text', 'find': '后', 'replace': '末'}])
+            task_api(execute_edit_task, source, output, [{'operation': 'replace_text', 'find': '后', 'replace': '末'}])
             parsed = read_bytes(output.read_bytes())
             self.assertEqual([item['type'] for item in parsed['blocks']], ['paragraph', 'table', 'paragraph'])
             self.assertEqual(parsed['paragraphs'][-1]['text'], '末')

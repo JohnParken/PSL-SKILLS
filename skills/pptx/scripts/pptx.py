@@ -31,7 +31,7 @@ def parser() -> argparse.ArgumentParser:
     check_parser.add_argument("--write-probe", action="store_true", help="Create, read and remove a unique task-directory probe")
     create_parser = commands.add_parser("create", help="Create a new editable PPTX from a JSON deck")
     create_parser.add_argument("config", help="Task-relative JSON filename, or - for stdin")
-    create_parser.add_argument("output", help="New task-relative .pptx filename; never overwritten")
+    create_parser.add_argument("output", help="New bare .pptx filename in the task root; never overwritten")
     for command in ("inspect", "validate"):
         command_parser = commands.add_parser(command, help=f"{command.title()} a supported PPTX package")
         command_parser.add_argument("input", help="Task-relative .pptx filename")

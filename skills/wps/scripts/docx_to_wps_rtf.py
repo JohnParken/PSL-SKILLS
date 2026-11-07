@@ -430,7 +430,13 @@ def parse_docx_to_rtf_doc(docx_path: str) -> RtfDocument:
 
 
 def convert_docx_to_rtf_wps(docx_path: str, output_path: str) -> Dict[str, Any]:
-    """Convert .docx file to .wps file using pure Python RTF stream."""
+    """Convert DOCX to a bare delivery filename in the task cwd."""
+    from wps_task_paths import delivery_filename
+    return _convert_docx_to_rtf_candidate(docx_path, delivery_filename(output_path))
+
+
+def _convert_docx_to_rtf_candidate(docx_path, output_path):
+    """Internal converter for an already-owned staging target or checked delivery."""
     from read_wps import read_bytes
     from wps_access import read_input
     from wps_output_contract import require_output_path, readback_summary

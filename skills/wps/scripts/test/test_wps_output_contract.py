@@ -7,6 +7,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 from test_task_cli_support import run_task_cli, run_main
 import contextlib
 import io
@@ -46,7 +48,7 @@ class OutputContractTests(unittest.TestCase):
         self.ooxml = package('<w:p><w:r><w:t>正文中文😀</w:t></w:r></w:p>')
         self.source.write_bytes(self.ooxml)
         self.rtf_source = self.root / 'source.rtf'
-        create_document(SPEC, self.rtf_source)
+        task_api(create_document, SPEC, self.rtf_source)
         self.rtf = self.rtf_source.read_bytes()
 
     def cli(self, script, *args, stdin=None):
@@ -131,7 +133,7 @@ class OutputContractTests(unittest.TestCase):
         self.source.write_bytes(self.ooxml[:100])
         target = self.root / 'existing.rtf'
         target.write_bytes(b'original')
-        result = export_wps.convert_docx_to_wps(self.source, target, backend='rtf')
+        result = task_api(export_wps.convert_docx_to_wps, self.source, target, backend='rtf')
         self.assertEqual(result['status'], 'error')
         self.assertEqual(target.read_bytes(), b'original')
         self.assertEqual(self.source.read_bytes(), self.ooxml[:100])
@@ -169,10 +171,10 @@ class OutputContractTests(unittest.TestCase):
         target.write_bytes(original)
         doc = RtfDocument()
         doc.add_body_paragraph('changed')
-        calls = (lambda: create_document(SPEC, target),
-                 lambda: execute_edit_task(self.rtf_source, target, [{'operation': 'replace_text', 'find': '正文', 'replace': '修订'}]),
-                 lambda: doc.save(target),
-                 lambda: docx_to_wps_rtf.convert_docx_to_rtf_wps(self.source, target))
+        calls = (lambda: task_api(create_document, SPEC, target),
+                 lambda: task_api(execute_edit_task, self.rtf_source, target, [{'operation': 'replace_text', 'find': '正文', 'replace': '修订'}]),
+                 lambda: task_api(doc.save, target),
+                 lambda: task_api(docx_to_wps_rtf.convert_docx_to_rtf_wps, self.source, target))
         for call in calls:
             with self.subTest(call=call):
                 with self.assertRaisesRegex(ValueError, 'rtf output requires'):
@@ -191,8 +193,8 @@ class OutputContractTests(unittest.TestCase):
 
     def test_valid_create_edit_receipts_identify_rtf(self):
         target = self.root / 'new.wps'
-        created = create_document(SPEC, target, compact_receipt=True)
-        edited = execute_edit_task(target, self.root / 'edited.rtf', [{'operation': 'replace_text', 'find': '正文', 'replace': '修订'}])
+        created = task_api(create_document, SPEC, target, compact_receipt=True)
+        edited = task_api(execute_edit_task, target, self.root / 'edited.rtf', [{'operation': 'replace_text', 'find': '正文', 'replace': '修订'}])
         for result in (created, edited):
             self.assertEqual(result['output_format'], 'rtf')
             self.assertFalse(result['binary_doc'])
@@ -200,18 +202,18 @@ class OutputContractTests(unittest.TestCase):
     def test_rtf_export_and_legacy_converter_refuse_doc(self):
         target = self.root / 'existing.doc'
         target.write_bytes(b'original')
-        result = export_wps.convert_docx_to_wps(self.source, target, backend='rtf')
+        result = task_api(export_wps.convert_docx_to_wps, self.source, target, backend='rtf')
         self.assertEqual(result['status'], 'error')
         self.assertEqual(target.read_bytes(), b'original')
         with self.assertRaises(ValueError):
-            docx_to_wps_rtf.convert_docx_to_rtf_wps(self.source, self.root / 'unused' / 'wrong.doc')
+            task_api(docx_to_wps_rtf.convert_docx_to_rtf_wps, self.source, self.root / 'unused' / 'wrong.doc')
         self.assertFalse((self.root / 'unused').exists())
 
     def test_auto_doc_never_falls_back(self):
         target = self.root / 'existing.doc'
         target.write_bytes(b'original')
         with patch('export_wps.find_soffice', return_value=None), patch('export_wps.convert_docx_to_wps_rtf') as rtf:
-            result = export_wps.convert_docx_to_wps(self.source, target)
+            result = task_api(export_wps.convert_docx_to_wps, self.source, target)
         self.assertEqual(result['status'], 'missing-dependency')
         self.assertFalse(result['fallback_allowed'])
         rtf.assert_not_called()
@@ -220,7 +222,7 @@ class OutputContractTests(unittest.TestCase):
     def test_auto_wps_reports_actual_rtf_fallback(self):
         target = self.root / 'fallback.wps'
         with patch('export_wps.find_soffice', return_value=None):
-            result = export_wps.convert_docx_to_wps(self.source, target)
+            result = task_api(export_wps.convert_docx_to_wps, self.source, target)
         self.assertEqual((result['status'], result['backend'], result['output_format']), ('partial', 'rtf', 'rtf'))
         self.assertFalse(result['binary_doc'])
         self.assertTrue(result['fallback_used'])
@@ -229,7 +231,7 @@ class OutputContractTests(unittest.TestCase):
 
     def test_auto_rtf_routes_directly(self):
         with patch('export_wps.convert_docx_to_wps_libreoffice') as office:
-            result = export_wps.convert_docx_to_wps(self.source, self.root / 'direct.rtf')
+            result = task_api(export_wps.convert_docx_to_wps, self.source, self.root / 'direct.rtf')
         self.assertEqual(result['status'], 'success')
         self.assertEqual(result['output_format'], 'rtf')
         office.assert_not_called()
@@ -277,7 +279,7 @@ class OutputContractTests(unittest.TestCase):
 
     def test_auto_fallback_keeps_default_wps_name_and_partial(self):
         with patch('export_wps.find_soffice', return_value=None):
-            receipt = export_wps.convert_docx_to_wps(self.source)
+            receipt = task_api(export_wps.convert_docx_to_wps, self.source)
         self.assertEqual(Path(receipt['output_file']), self.source.with_suffix('.wps').resolve())
         self.assertEqual(receipt['status'], 'partial')
         self.assertEqual(receipt['output_format'], 'rtf')
@@ -289,7 +291,7 @@ class OutputContractTests(unittest.TestCase):
         target = self.source.with_suffix('.wps')
         target.write_bytes(b'previous result')
         self.source.write_bytes(self.ooxml[:100])
-        receipt = export_wps.convert_docx_to_wps_rtf(self.source)
+        receipt = task_api(export_wps.convert_docx_to_wps_rtf, self.source)
         self.assertEqual(receipt['status'], 'error')
         self.assertEqual(target.read_bytes(), b'previous result')
         self.assertEqual(self.source.read_bytes(), self.ooxml[:100])
@@ -302,7 +304,7 @@ class OutputContractTests(unittest.TestCase):
                     target = self.root / ('binary' + suffix)
                     data = binary_document(partial)
                     with patch('export_wps.find_soffice', return_value='soffice'), patch('export_wps.subprocess.run', side_effect=self.fake_office(data)):
-                        result = export_wps.convert_docx_to_wps(self.source, target, backend='libreoffice')
+                        result = task_api(export_wps.convert_docx_to_wps, self.source, target, backend='libreoffice')
                     self.assertEqual(result['status'], 'partial' if partial else 'success')
                     self.assertEqual(result['output_format'], 'ms_doc_subset')
                     self.assertTrue(result['binary_doc'])
@@ -318,7 +320,7 @@ class OutputContractTests(unittest.TestCase):
             with self.subTest(data_type=None if data is None else data[:8]):
                 target.write_bytes(b'original')
                 with patch('export_wps.find_soffice', return_value='soffice'), patch('export_wps.subprocess.run', side_effect=self.fake_office(data)):
-                    result = export_wps.convert_docx_to_wps(self.source, target)
+                    result = task_api(export_wps.convert_docx_to_wps, self.source, target)
                 self.assertIn(result['status'], ('output-missing', 'structure-invalid'))
                 self.assertFalse(result['fallback_allowed'])
                 self.assertEqual(target.read_bytes(), b'original')
@@ -328,7 +330,7 @@ class OutputContractTests(unittest.TestCase):
         target = self.root / 'existing.doc'
         target.write_bytes(b'original')
         with patch('export_wps.find_soffice', return_value='soffice'), patch('export_wps.subprocess.run', side_effect=self.fake_office(None, 9)):
-            result = export_wps.convert_docx_to_wps(self.source, target)
+            result = task_api(export_wps.convert_docx_to_wps, self.source, target)
         self.assertEqual(result['status'], 'conversion-failed')
         self.assertEqual(result['returncode'], 9)
         self.assertEqual(result['stderr'], 'converter stderr')
@@ -346,14 +348,14 @@ class OutputContractTests(unittest.TestCase):
             return result
 
         with patch('export_wps.find_soffice', return_value='soffice'), patch('export_wps.subprocess.run', side_effect=changing_source):
-            result = export_wps.convert_docx_to_wps(self.source, target)
+            result = task_api(export_wps.convert_docx_to_wps, self.source, target)
         self.assertEqual(result['status'], 'error')
         self.assertIn('Source changed', result['error'])
         self.assertEqual(target.read_bytes(), b'original')
 
     def test_converter_bad_signature_auto_wps_discloses_fallback(self):
         with patch('export_wps.find_soffice', return_value='soffice'), patch('export_wps.subprocess.run', side_effect=self.fake_office(self.rtf)):
-            result = export_wps.convert_docx_to_wps(self.source, self.root / 'fallback.wps')
+            result = task_api(export_wps.convert_docx_to_wps, self.source, self.root / 'fallback.wps')
         self.assertEqual(result['status'], 'partial')
         self.assertFalse(result['binary_doc'])
         self.assertEqual(result['fallback']['reason']['status'], 'structure-invalid')
@@ -361,18 +363,18 @@ class OutputContractTests(unittest.TestCase):
     def test_export_input_is_content_based_and_source_alias_protected(self):
         misnamed = self.root / 'ooxml.doc'
         misnamed.write_bytes(self.ooxml)
-        result = export_wps.convert_docx_to_wps(misnamed, self.root / 'good.rtf', backend='rtf')
+        result = task_api(export_wps.convert_docx_to_wps, misnamed, self.root / 'good.rtf', backend='rtf')
         self.assertEqual(result['status'], 'success')
-        wrong = export_wps.convert_docx_to_wps(self.rtf_source, self.root / 'bad.rtf', backend='rtf')
+        wrong = task_api(export_wps.convert_docx_to_wps, self.rtf_source, self.root / 'bad.rtf', backend='rtf')
         self.assertEqual(wrong['status'], 'error')
         self.assertFalse((self.root / 'bad.rtf').exists())
         alias = self.root / 'alias.rtf'
         os.link(self.source, alias)
-        result = export_wps.convert_docx_to_wps(self.source, alias, backend='rtf')
+        result = task_api(export_wps.convert_docx_to_wps, self.source, alias, backend='rtf')
         self.assertEqual(result['status'], 'error')
         self.assertEqual(self.source.read_bytes(), self.ooxml)
-        with self.assertRaisesRegex(ValueError, 'overwrite the source'):
-            docx_to_wps_rtf.convert_docx_to_rtf_wps(self.source, alias)
+        with self.assertRaisesRegex(ValueError, 'overwrite the source|hard link'):
+            task_api(docx_to_wps_rtf.convert_docx_to_rtf_wps, self.source, alias)
 
     def test_source_partial_survives_successful_output(self):
         # Unsupported OOXML drawing is disclosed even when output text reads ok.
@@ -380,7 +382,7 @@ class OutputContractTests(unittest.TestCase):
         source.write_bytes(package('<w:p><w:r><w:t>Main</w:t></w:r><w:drawing/></w:p>'))
         source_payload = read_bytes(source.read_bytes())
         self.assertEqual(source_payload['status'], 'partial')
-        result = export_wps.convert_docx_to_wps(source, self.root / 'partial.rtf', backend='rtf')
+        result = task_api(export_wps.convert_docx_to_wps, source, self.root / 'partial.rtf', backend='rtf')
         self.assertEqual(result['status'], 'partial')
         self.assertEqual(result['source_readback']['status'], 'readback-partial')
         self.assertEqual(result['readback']['status'], 'readback-ok')
@@ -390,7 +392,7 @@ class OutputContractTests(unittest.TestCase):
         if not source.is_file():
             self.skipTest('Repository complex-table fixture unavailable in standalone package')
         target = self.root / 'legacy.rtf'
-        result = docx_to_wps_rtf.convert_docx_to_rtf_wps(source, target)
+        result = task_api(docx_to_wps_rtf.convert_docx_to_rtf_wps, source, target)
         self.assertEqual(result['status'], 'partial')
         self.assertEqual(result['readback']['status'], 'readback-partial')
         self.assertEqual(result['output_format'], 'rtf')

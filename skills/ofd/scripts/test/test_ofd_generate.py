@@ -12,6 +12,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import struct
 import subprocess
 import tempfile
@@ -340,11 +341,22 @@ class GenerationTests(unittest.TestCase):
         (self.root / 'sentinel.txt').write_bytes(b'private sentinel')
         (self.root / 'link.ofd').symlink_to(self.root / 'sentinel.txt')
         with self.working():
-            for name in ('new.ofd', 'link.ofd', '../outside.ofd', '/tmp/outside.ofd'):
+            for name in ('new.ofd', 'link.ofd', './bad.ofd', 'sub/bad.ofd', '../outside.ofd', '/tmp/outside.ofd', 'C:bad.ofd', 'C:/bad.ofd', 'sub\\bad.ofd'):
                 with self.subTest(name=name), self.assertRaises((OSError, WRITER.GenerationError)):
                     WRITER.publish_new(data, name, CHECKER.audit)
         self.assertEqual((self.root / 'new.ofd').read_bytes(), b'preserved')
         self.assertEqual((self.root / 'sentinel.txt').read_bytes(), b'private sentinel')
+
+    def test_bare_output_names_preserve_hard_links_and_raw_spelling(self):
+        data, _ = self.build()
+        (self.root / 'sentinel.txt').write_bytes(b'preserve input')
+        os.link(self.root / 'sentinel.txt', self.root / 'new.ofd')
+        with self.working():
+            for name in ('./bad.ofd', 'sub/../bad.ofd', 'C:bad.ofd', 'C:\\bad.ofd', 'new.ofd', None, Path('new.ofd')):
+                with self.subTest(name=name), self.assertRaises((OSError, WRITER.GenerationError)):
+                    WRITER.publish_new(data, name, CHECKER.audit)
+        self.assertEqual((self.root / 'sentinel.txt').read_bytes(), b'preserve input')
+        self.assertEqual(sorted(path.name for path in self.root.iterdir()), ['new.ofd', 'sentinel.txt'])
 
     def test_validation_failure_removes_only_private_candidate(self):
         data, _ = self.build()
@@ -433,6 +445,42 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual(json.loads(again.stdout)['publication_outcome'], 'not_published_existing_name')
         for name, data in self.assets.items():
             self.assertEqual((self.root / name).read_bytes(), data)
+
+    def test_independent_installation_bare_filename_contract(self):
+        with tempfile.TemporaryDirectory(prefix='ofd-independent-') as temporary:
+            root = Path(temporary)
+            installation = root / 'installation'
+            shutil.copytree(Path(WRITER.__file__).parent, installation / 'scripts', ignore=shutil.ignore_patterns('test', '__pycache__'))
+            task = root / 'task'
+            task.mkdir()
+            (task / 'inputs').mkdir()
+            for name, data in self.assets.items():
+                (task / name).write_bytes(data)
+            (task / 'inputs/spec.json').write_text(json.dumps(spec_fixture()), encoding='utf-8')
+            before = {str(path.relative_to(installation)): path.read_bytes() for path in installation.rglob('*') if path.is_file()}
+            for path in installation.rglob('*'):
+                path.chmod(0o555 if path.is_dir() else 0o444)
+            installation.chmod(0o555)
+            command = [sys.executable, '-I', '-S', '-B', str(installation / 'scripts/generate_ofd.py'), './inputs/spec.json']
+            try:
+                for name in ('./bad.ofd', 'inputs/bad.ofd', '../bad.ofd', str(task / 'bad.ofd'), 'C:bad.ofd', 'inputs\\bad.ofd'):
+                    with self.subTest(name=name):
+                        rejected = subprocess.run(command + [name], cwd=task, capture_output=True, text=True, encoding='utf-8')
+                        self.assertEqual(rejected.returncode, 1, rejected.stdout + rejected.stderr)
+                        self.assertEqual(json.loads(rejected.stdout)['publication_outcome'], 'not_attempted')
+                success = subprocess.run(command + ['中文报告.ofd'], cwd=task, capture_output=True, text=True, encoding='utf-8',
+                                         env={**os.environ, 'PATH': ''})
+                self.assertEqual(success.returncode, 0, success.stdout + success.stderr)
+                self.assertEqual(json.loads(success.stdout)['output'], '中文报告.ofd')
+                self.assertTrue((task / '中文报告.ofd').is_file())
+                self.assertFalse((task / 'bad.ofd').exists())
+                self.assertFalse(list(task.glob('._ofd_candidate_*')))
+                self.assertEqual({str(path.relative_to(installation)): path.read_bytes()
+                                  for path in installation.rglob('*') if path.is_file()}, before)
+            finally:
+                installation.chmod(0o755)
+                for path in installation.rglob('*'):
+                    path.chmod(0o755 if path.is_dir() else 0o644)
 
     def test_duplicate_json_and_nonfinite_json(self):
         for text in ('{"schema_version":1,"schema_version":2}', '{"schema_version":NaN}'):

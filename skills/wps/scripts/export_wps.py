@@ -142,7 +142,8 @@ def _prepare_conversion(docx_path, output_path, expected_format):
     from wps_access import read_input
     from wps_output_contract import require_output_path
     source = Path(docx_path).resolve()
-    target = Path(output_path).resolve() if output_path else source.with_suffix('.wps')
+    from wps_task_paths import delivery_filename
+    target = delivery_filename(output_path if output_path is not None else source.with_suffix('.wps').name).absolute()
     require_output_path(target, expected_format)
     if source == target or (target.exists() and source.samefile(target)):
         raise ValueError('Output must not overwrite the source document')
@@ -207,6 +208,11 @@ def _conversion_failure(exc, target):
 
 def convert_docx_to_wps_libreoffice(docx_path, output_path=None, custom_soffice=None, timeout=120):
     """Request actual MS-DOC bytes; validate privately before publishing .doc/.wps."""
+    from wps_task_paths import delivery_filename
+    try:
+        delivery_filename(output_path if output_path is not None else Path(docx_path).with_suffix('.wps').name)
+    except (ValueError, OSError) as exc:
+        return _conversion_failure(exc, None)
     soffice_path = find_soffice(custom_soffice)
     if not soffice_path:
         return {'status': 'missing-dependency', 'error': 'LibreOffice executable (soffice) not found'}
@@ -216,7 +222,7 @@ def convert_docx_to_wps_libreoffice(docx_path, output_path=None, custom_soffice=
         if ACTIVE.get() is None:
             target.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix='.tmp_wps_export_', dir='.' if ACTIVE.get() is not None else target.parent) as directory:
-            private = Path(directory)
+            private = Path(directory).absolute()
             candidate = private / (source.stem + '.doc')
             private_source = private / (source.stem + '.docx')
             private_source.write_bytes(source_bytes)
@@ -246,14 +252,15 @@ def convert_docx_to_wps_rtf(docx_path, output_path=None):
         if ACTIVE.get() is not None:
             # The converter already validates text, raw controls and source
             # identity, then publishes through a confined private candidate.
-            result = convert_docx_to_rtf_wps(str(source), str(target))
+            result = convert_docx_to_rtf_wps(str(source), target.name)
             result['backend'] = 'rtf'
             return result
         if ACTIVE.get() is None:
             target.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix='.tmp_wps_export_', dir='.' if ACTIVE.get() is not None else target.parent) as directory:
             candidate = Path(directory) / 'candidate.rtf'
-            conversion = convert_docx_to_rtf_wps(str(source), str(candidate))
+            from docx_to_wps_rtf import _convert_docx_to_rtf_candidate
+            conversion = _convert_docx_to_rtf_candidate(str(source), str(candidate))
             result = _publish_conversion(candidate, target, source, source_bytes, source_payload, 'rtf', 'rtf')
             if result.get('status') in ('success', 'partial'):
                 for key in ('content_validation', 'conversion_issues', 'format_validation', 'source_format_mapping'):
@@ -273,7 +280,11 @@ def convert_docx_to_wps(docx_path, output_path=None, backend="auto", custom_soff
     source = Path(docx_path)
     if not source.is_file():
         return {'status': 'error', 'error': f'Input file not found: {docx_path}'}
-    target = Path(output_path) if output_path else source.with_suffix('.wps')
+    from wps_task_paths import delivery_filename
+    try:
+        target = delivery_filename(output_path if output_path is not None else source.with_suffix('.wps').name)
+    except (ValueError, OSError) as exc:
+        return _conversion_failure(exc, None)
     suffix = target.suffix.lower()
     if suffix not in ('.wps', '.rtf', '.doc'):
         return {'status': 'error', 'error': 'Export output must use .wps, .rtf or binary-only .doc'}
@@ -344,7 +355,7 @@ def main():
 
     convert_parser = subparsers.add_parser("convert", help="Convert OOXML Word to RTF or conditional binary MS-DOC.")
     convert_parser.add_argument("input", help="Path to input .docx file.")
-    convert_parser.add_argument("--output", "-o", help="Default: input basename with .wps; explicit .rtf or binary-only .doc also accepted.")
+    convert_parser.add_argument("--output", "-o", help="Bare filename in task cwd. Default: input basename with .wps; .rtf or binary-only .doc also accepted.")
     convert_parser.add_argument(
         "--backend",
         "-b",
@@ -373,7 +384,7 @@ def main():
     if args.command == "convert":
         from wps_delivery import finish_delivery
         validate_argument(args.input)
-        validate_argument(args.output or str(Path(args.input).with_suffix(".wps")), output=True)
+        validate_argument(args.output or Path(args.input).with_suffix(".wps").name, output=True)
         res = convert_docx_to_wps(
             args.input,
             args.output,
@@ -388,7 +399,7 @@ def main():
                 res.update(status="partial", partial=True)
             elif read_status != "readback-ok":
                 res.update(status="readback-failed", error="Output exists, but requested readback did not succeed")
-        finish_delivery(res, res.get('output_file') or args.output or str(Path(args.input).with_suffix('.wps')), [args.input])
+        finish_delivery(res, res.get('output_file') or args.output or Path(args.input).with_suffix('.wps').name, [args.input])
         print(json.dumps(res, ensure_ascii=False, indent=2), flush=True)
         sys.exit(0 if res.get("status") == "success" else 3 if res.get("status") == "partial" else 1)
 

@@ -76,13 +76,15 @@ class TaskPathTests(unittest.TestCase):
         self.assertEqual((self.task / 'existing.wps').read_bytes(), b'original')
         self.assertFalse((self.other / 'output.wps').exists())
 
-    def test_relative_nested_create_read_and_edit(self):
+    def test_nested_inputs_and_root_create_and_edit(self):
         spec = json.dumps({'theme': 'general', 'page_numbering': False, 'blocks': [{'type': 'paragraph', 'text': 'Source'}]})
-        self.assertEqual(self.cli('run_wps_task.py', 'create', 'nested/new.wps', stdin=spec).returncode, 0)
+        self.assertEqual(self.cli('run_wps_task.py', 'create', 'new.wps', stdin=spec).returncode, 0)
+        (self.task / 'nested').mkdir()
+        (self.task / 'new.wps').rename(self.task / 'nested/new.wps')
         self.assertEqual(self.cli('read_wps.py', 'nested/new.wps').returncode, 0)
-        edited = self.cli('run_wps_edit.py', 'text', 'nested/new.wps', 'nested/edited.wps', '--find', 'Source', '--replace', 'Changed')
+        edited = self.cli('run_wps_edit.py', 'text', 'nested/new.wps', 'edited.wps', '--find', 'Source', '--replace', 'Changed')
         self.assertEqual(edited.returncode, 0, edited.stderr)
-        self.assertEqual(read_bytes((self.task / 'nested/edited.wps').read_bytes())['text'], 'Changed')
+        self.assertEqual(read_bytes((self.task / 'edited.wps').read_bytes())['text'], 'Changed')
 
     def test_conversion_and_inspect_confined(self):
         (self.task / 'in.docx').write_bytes(package('<w:p><w:r><w:t>Text</w:t></w:r></w:p>'))
@@ -107,7 +109,9 @@ class TaskPathTests(unittest.TestCase):
                 (self.task / 'nested').rename(self.task / 'saved')
                 (self.task / 'nested').symlink_to(self.other, target_is_directory=True)
             with patch('wps_task_paths.write_candidate', side_effect=swapped), self.assertRaises(OSError):
-                create_document({'blocks': [{'type': 'paragraph', 'text': 'X'}]}, Path('nested/new.wps'))
+                with wps_task_paths.output_candidate(Path('nested/new.wps')) as (candidate, publish):
+                    wps_task_paths.write_candidate(candidate, b'X')
+                    publish()
         self.assertFalse((self.other / 'new.wps').exists())
         self.assertEqual(list((self.task / 'saved').iterdir()), [])
 
@@ -122,10 +126,11 @@ class TaskPathTests(unittest.TestCase):
         self.assertEqual((self.task / 'new.wps').read_bytes(), b'other task')
         self.assertFalse(list(self.task.glob('.tmp_wps_*')))
 
-    def test_library_absolute_path_remains_supported(self):
+    def test_library_absolute_output_is_rejected(self):
         output = self.other / 'library.wps'
-        self.assertEqual(create_document({'blocks': [{'type': 'paragraph', 'text': 'API'}]}, output)['status'], 'success')
-        self.assertEqual(read_bytes(output.read_bytes())['text'], 'API')
+        with self.assertRaisesRegex(ValueError, 'bare filename'):
+            create_document({'blocks': [{'type': 'paragraph', 'text': 'API'}]}, output)
+        self.assertFalse(output.exists())
 
     def test_two_cli_publishers_do_not_overwrite_each_other(self):
         spec = json.dumps({'blocks': [{'type': 'paragraph', 'text': 'Winner'}]})

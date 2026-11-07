@@ -20,7 +20,7 @@
 通过管道传入 JSON 规范：
 
 ```console
-python -I -S -B "<skill-root>/scripts/run_wps_task.py" create "./通知.wps" --compact-receipt <<'JSON'
+python -I -S -B "<skill-root>/scripts/run_wps_task.py" create "通知.wps" --compact-receipt <<'JSON'
 {
   "theme": "official",
   "header": "内部公文",

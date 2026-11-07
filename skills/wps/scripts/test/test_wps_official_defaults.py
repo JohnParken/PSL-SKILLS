@@ -5,6 +5,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 import json
 import re
 import subprocess
@@ -119,7 +121,7 @@ class OfficialDefaultsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='wps-official-test-') as directory:
             target = Path(directory) / 'font.wps'
             spec = {'blocks': [{'type': 'paragraph', 'runs': [{'text': '保留文字', 'font': 'unknown-family'}]}]}
-            receipt = create_document(spec, target, compact_receipt=True)
+            receipt = task_api(create_document, spec, target, compact_receipt=True)
             self.assertTrue(receipt['partial'])
             self.assertEqual(receipt['spec_warnings'][0]['code'], 'unsupported_font_substituted')
             self.assertEqual(read_bytes(target.read_bytes())['paragraphs'][0]['text'], '保留文字')

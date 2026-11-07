@@ -541,11 +541,15 @@ class RtfDocument:
     def save(self, file_path: str):
         """Save validated ASCII RTF as .rtf/.wps and return readback diagnostics."""
         from wps_output_contract import require_output_path, require_output_bytes
+        from wps_task_paths import delivery_filename
+        file_path = delivery_filename(file_path)
         require_output_path(file_path, 'rtf')
         content = self.render()
         inspection = require_output_bytes(content.encode('ascii'), file_path, 'rtf')
-        with open(file_path, "w", encoding="ascii") as fp:
-            fp.write(content)
+        from wps_task_paths import output_candidate, write_candidate
+        with output_candidate(file_path, exclusive=True) as (candidate, publish):
+            write_candidate(candidate, content.encode("ascii"))
+            publish()
         return inspection
 
 

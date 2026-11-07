@@ -5,6 +5,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 from test_task_cli_support import run_task_cli
 from io import BytesIO
 import tempfile
@@ -75,7 +77,7 @@ class NextIterationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source, target = Path(directory) / 'in.docx', Path(directory) / 'out.wps'
             source.write_bytes(package(body))
-            result = convert_docx_to_wps_rtf(source, target)
+            result = task_api(convert_docx_to_wps_rtf, source, target)
             self.assertEqual(result['status'], 'partial', result)
             self.assertEqual(read_bytes(target.read_bytes())['text'], 'A\nBCachedNEW')
             self.assertEqual(result['source_readback']['reader_status'], 'partial')
@@ -113,7 +115,7 @@ class NextIterationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source, target = Path(directory) / 'in.docx', Path(directory) / 'out.wps'
             source.write_bytes(package(body))
-            result = convert_docx_to_rtf_wps(str(source), str(target))
+            result = task_api(convert_docx_to_rtf_wps, str(source), str(target))
             self.assertEqual(read_bytes(target.read_bytes())['text'], 'ABCD\nZ')
             self.assertEqual(result['source_content_comparison'], 'normalized-readable-main-text-matched')
 
@@ -134,7 +136,7 @@ class NextIterationTests(unittest.TestCase):
             self.assertEqual((paragraph.line_spacing_exact_pt, paragraph.first_line_indent_pt), (28, 20))
             self.assertEqual((paragraph.runs[0].size_pt, paragraph.runs[0].bold), (20, False))
             self.assertEqual(project_headings(read_bytes(source.read_bytes()))['headings'][0]['level'], 1)
-            result = convert_docx_to_rtf_wps(str(source), str(target))
+            result = task_api(convert_docx_to_rtf_wps, str(source), str(target))
             self.assertEqual(read_bytes(target.read_bytes())['page_properties']['paperw'], 15840)
             self.assertEqual(result['format_validation']['status'], 'verified_raw_controls')
 
@@ -146,7 +148,7 @@ class NextIterationTests(unittest.TestCase):
                 target = Path(directory) / 'old.wps'
                 target.write_bytes(b'old')
                 with patch('wps_rtf_builder.RtfDocument.render', return_value=wrong), self.assertRaises(RuntimeError):
-                    create_document(spec, target)
+                    task_api(create_document, spec, target)
                 self.assertEqual(target.read_bytes(), b'old')
                 self.assertEqual(list(Path(directory).iterdir()), [target])
 
@@ -157,7 +159,7 @@ class NextIterationTests(unittest.TestCase):
             target.write_bytes(b'old')
             wrong = build_document_from_spec({'blocks': [{'type': 'paragraph', 'text': 'Missing'}]}).render()
             with patch('wps_rtf_builder.RtfDocument.render', return_value=wrong):
-                result = convert_docx_to_wps_rtf(source, target)
+                result = task_api(convert_docx_to_wps_rtf, source, target)
             self.assertEqual(result['status'], 'error')
             self.assertEqual(target.read_bytes(), b'old')
             self.assertEqual(sorted(item.name for item in Path(directory).iterdir()), ['in.docx', 'out.wps'])
@@ -173,7 +175,7 @@ class StyleAndEnvironmentTests(unittest.TestCase):
             target = Path(directory) / 'old.wps'
             target.write_bytes(b'old')
             with patch('wps_rtf_builder.RtfDocument.render', return_value=wrong), self.assertRaises(RuntimeError):
-                create_document(spec, target)
+                task_api(create_document, spec, target)
             self.assertEqual(target.read_bytes(), b'old')
 
     def test_embedded_newline_is_not_a_new_paragraph(self):

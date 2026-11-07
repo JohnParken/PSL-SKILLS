@@ -167,6 +167,9 @@ def execute_edit_task(
     allow_lossy_reflow: bool = False,
 ) -> Dict[str, Any]:
     """Run full edit pipeline: read -> modify -> rebuild -> write atomic -> readback verify."""
+    from wps_task_paths import delivery_filename
+    output_path = delivery_filename(output_path)
+    input_path = Path(input_path)
     from wps_output_contract import require_output_path
     require_output_path(output_path, 'rtf')
     if not input_path.is_file():
@@ -281,7 +284,7 @@ def main(argv=None) -> int:
     # text subcommand
     text_parser = subparsers.add_parser("text", help="replace text occurrences in wps document")
     text_parser.add_argument("input", help="source .wps file")
-    text_parser.add_argument("output", help="destination .wps file")
+    text_parser.add_argument("output", help="bare .wps filename in task cwd")
     text_parser.add_argument("--find", required=True, help="text string to find")
     text_parser.add_argument("--replace", required=True, help="replacement text string")
     text_parser.add_argument("--theme", choices=("official", "business", "general"), default="official")
@@ -289,7 +292,7 @@ def main(argv=None) -> int:
     # structure subcommand
     struct_parser = subparsers.add_parser("structure", help="modify or append paragraphs/blocks")
     struct_parser.add_argument("input", help="source .wps file")
-    struct_parser.add_argument("output", help="destination .wps file")
+    struct_parser.add_argument("output", help="bare .wps filename in task cwd")
     struct_parser.add_argument("--replace-paragraph", type=int, help="1-based paragraph index to replace")
     struct_parser.add_argument("--delete-paragraph", type=int, help="1-based paragraph index to delete")
     struct_parser.add_argument("--text", help="text for replacement or appending")
@@ -299,7 +302,7 @@ def main(argv=None) -> int:
     # table subcommand
     tbl_parser = subparsers.add_parser("table", help="update table cell value")
     tbl_parser.add_argument("input", help="source .wps file")
-    tbl_parser.add_argument("output", help="destination .wps file")
+    tbl_parser.add_argument("output", help="bare .wps filename in task cwd")
     tbl_parser.add_argument("--table-index", type=int, default=0, help="0-based table index")
     tbl_parser.add_argument("--row", type=int, required=True, help="0-based row index")
     tbl_parser.add_argument("--col", type=int, required=True, help="0-based column index")
@@ -309,7 +312,7 @@ def main(argv=None) -> int:
     # batch subcommand
     batch_parser = subparsers.add_parser("batch", help="run arbitrary operations from JSON specification")
     batch_parser.add_argument("input", help="source .wps file")
-    batch_parser.add_argument("output", help="destination .wps file")
+    batch_parser.add_argument("output", help="bare .wps filename in task cwd")
     batch_parser.add_argument("--spec", help="inline JSON specification or file path")
     batch_parser.add_argument("--theme", choices=("official", "business", "general"), default="official")
 

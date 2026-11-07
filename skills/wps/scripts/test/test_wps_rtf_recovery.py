@@ -5,6 +5,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 from test_task_cli_support import run_task_cli
 import unittest
 import tempfile
@@ -80,7 +82,7 @@ class RecoveryTests(unittest.TestCase):
             output.write_bytes(b'old')
             with patch('run_wps_task.read_bytes', return_value=damaged):
                 with self.assertRaises(RuntimeError):
-                    create_document({'blocks': [{'type': 'paragraph', 'text': 'new'}]}, output)
+                    task_api(create_document, {'blocks': [{'type': 'paragraph', 'text': 'new'}]}, output)
             self.assertEqual(output.read_bytes(), b'old')
             self.assertEqual(list(Path(directory).iterdir()), [output])
             from run_wps_edit import execute_edit_task
@@ -89,7 +91,7 @@ class RecoveryTests(unittest.TestCase):
             original = source.read_bytes()
             with patch('run_wps_edit.read_bytes', side_effect=[read_bytes(original), damaged]):
                 with self.assertRaises(RuntimeError):
-                    execute_edit_task(source, output, [])
+                    task_api(execute_edit_task, source, output, [])
             self.assertEqual(source.read_bytes(), original)
             self.assertEqual(output.read_bytes(), b'old')
 

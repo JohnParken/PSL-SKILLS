@@ -13,7 +13,7 @@
 在全篇段落、标题与表格中执行精准文字替换：
 
 ```console
-python -I -S -B "<skill-root>/scripts/run_wps_edit.py" text "./原文档.wps" "./修订后.wps" \
+python -I -S -B "<skill-root>/scripts/run_wps_edit.py" text "./原文档.wps" "修订后.wps" \
   --find "旧项目组" --replace "新综合运营中心"
 ```
 
@@ -21,17 +21,17 @@ python -I -S -B "<skill-root>/scripts/run_wps_edit.py" text "./原文档.wps" ".
 
 - **替换指定段落**：按 1-based 序号替换段落内容：
   ```console
-  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "./修订后.wps" \
+  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "修订后.wps" \
     --replace-paragraph 2 --text "第二段修改后的全新正文内容。"
   ```
 - **删除指定段落**：按 1-based 序号移除过时段落：
   ```console
-  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "./修订后.wps" \
+  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "修订后.wps" \
     --delete-paragraph 3
   ```
 - **末尾追加段落**：
   ```console
-  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "./修订后.wps" \
+  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "修订后.wps" \
     --text "补充说明：本通知自发布之日起施行。"
   ```
 
@@ -40,7 +40,7 @@ python -I -S -B "<skill-root>/scripts/run_wps_edit.py" text "./原文档.wps" ".
 按表格索引、行号与列号（均为 0-based）更新特定单元格数据：
 
 ```console
-python -I -S -B "<skill-root>/scripts/run_wps_edit.py" table "./原文档.wps" "./修订后.wps" \
+python -I -S -B "<skill-root>/scripts/run_wps_edit.py" table "./原文档.wps" "修订后.wps" \
   --table-index 0 --row 1 --col 2 --text "已完成"
 ```
 
@@ -49,7 +49,7 @@ python -I -S -B "<skill-root>/scripts/run_wps_edit.py" table "./原文档.wps" "
 通过 JSON 规范一次性执行多个复合修改操作：
 
 ```console
-python -I -S -B "<skill-root>/scripts/run_wps_edit.py" batch "./原文档.wps" "./修订后.wps" <<'JSON'
+python -I -S -B "<skill-root>/scripts/run_wps_edit.py" batch "./原文档.wps" "修订后.wps" <<'JSON'
 {
   "operations": [
     {"operation": "replace_text", "find": "旧计划", "replace": "新战略"},

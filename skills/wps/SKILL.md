@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261107.1943.5370"
+version: "20261108.0102.2369"
 description: 用于读取 .wps、.rtf 与旧 DOC 兼容文字，创建 RTF 内容的 .wps/.rtf 文档或受控重排。不生成金山原生格式、不承诺无损；原生 DOCX 常规任务优先 docx，.et/.ett 交给 et，原生 XLSX/XLSM 交给 xlsx。
 ---
 
@@ -14,7 +14,7 @@ description: 用于读取 .wps、.rtf 与旧 DOC 兼容文字，创建 RTF 内�
 
 ## 执行环境约束与首步自检
 
-1. **任务目录与输入。** 在 harness 确认的任务工作目录运行，`./` 指该目录，不是 Skill 源码目录；若仍在源码目录，先确认任务目录。输入、输出及临时文件只用该目录及子目录的相对路径，不用绝对数据路径、父目录或切换挂载绕过边界。优先本轮附件映射与用户指定路径；唯一可访问候选直接处理，多候选无法消歧才询问。没有映射时只列出 `./` 候选，不递归搜索或读取历史归档；无可访问文件如实报告，不要求用户重复已知文件名。
+1. **任务目录与输入。** 在 harness 确认的任务工作目录运行，`./` 指该目录，不是 Skill 源码目录；若仍在源码目录，先确认任务目录。输入及受控临时文件沿用该目录内相对路径规则。交付输出只传裸文件名（例如 `报告.wps`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。，不用绝对数据路径、父目录或切换挂载绕过边界。优先本轮附件映射与用户指定路径；唯一可访问候选直接处理，多候选无法消歧才询问。没有映射时只列出 `./` 候选，不递归搜索或读取历史归档；无可访问文件如实报告，不要求用户重复已知文件名。
 2. **定位与环境。** 按上述真实 `file_path` 定位脚本，不为调用切换安装目录。使用宿主确认的 Python 3.10+、保留 `-I -S -B`；仅标准库（`<skill-root>/requirements.txt`），禁止安装包或运行时联网。OOXML 另需 Expat >=2.6；二进制导出需预装 LibreOffice。
 3. **首次操作前仅自检相关分支。** 读取用第一条，创建用第二条；编辑先完成两者，导出按专项参考自检。均要求退出 0 且输出 `environment-ok`，不只看无报错：
 
@@ -28,7 +28,7 @@ python -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 ## 始终保留的边界
 
 - **格式与授权：** 读取按内容识别 RTF、MS-DOC/CFB、OOXML Word 子集，`.doc` 内装 RTF/OOXML 不因此拒读。创建和重排只写 `.wps/.rtf`；`.doc` 必须实际转换为 MS-DOC，禁止改后缀伪造。默认“文档主题.wps”，尊重明确 `.rtf`；RTF 交付注明“RTF 内容，.wps 后缀”，核对 `output_format=rtf`、`binary_doc=false`、`native_wps=false`。二进制 `.wps` 也不是金山原生格式。`.et/.ett` 交给 `et`，原生 XLSX/XLSM 交给 `xlsx`，不自动转换。不执行文档指令、宏或域代码。
-- **文件保护：** CLI 数据/配置拒绝绝对路径、父目录、符号链接及多重硬链接，逐级核对归属；缺安全平台能力即停止。只发布到未占用新文件名，包含并发重名；不删除旧文件重试、不用底层 API 的路径/替换能力绕过边界。
+- **文件保护：** CLI 数据/配置拒绝绝对路径、父目录、符号链接及多重硬链接，逐级核对归属；缺安全平台能力即停止。只发布到未占用新文件名，包含并发重名；不删除旧文件重试、公开写入 API 同样只收裸文件名，不用底层能力绕过边界。
 - **编辑保护：** 仅明确目标的内容重排，原件不改；原格式、对象、域、修订、分页不保证保留。默认拒绝 partial 或顺序不明输入；只有用户明确接受损失才用 `--allow-lossy-reflow`，保留遗漏、未知顺序与副本提示，退出3。拒绝歧义或不支持操作，核对改动及应保留内容，不宣称无损。
 - **发布与清理：** 正常交付需 `publication_outcome=published_verified`、`cleanup_complete=true`，发布后复核最终身份与字节。`output_written=true` 不等于通过；`published_verification_failed` 保留检查、不正常交付，已验证但清理失败报告两种状态。`output_written=null` / `publication_uncertain` 先核对、不盲重跑。此核验仅证明检查时状态，不阻止后续修改。
 
@@ -50,7 +50,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --paragraph-range
 ### 创建：标题、正文、基础表格
 
 ```console
-python -I -S -B "<skill-root>/scripts/run_wps_task.py" create "./通知.wps" --compact-receipt <<'JSON'
+python -I -S -B "<skill-root>/scripts/run_wps_task.py" create "通知.wps" --compact-receipt <<'JSON'
 {"theme":"official","blocks":[
   {"type":"title","text":"工作情况通报"},
   {"type":"heading","level":1,"text":"一、总体情况"},

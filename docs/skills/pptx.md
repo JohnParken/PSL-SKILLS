@@ -1,6 +1,8 @@
 # PPTX：受限 SVG 到可编辑演示文稿
 
-文档核对日期：2026-11-07。本文对应仓库基线 [`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)，Skill 版本为 `20261107.1943.5370`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
+文档核对日期：2026-11-07。本文对应仓库基线 [`6e4cca7a78a57acebe38448962c99cbc4814b409`](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409)，Skill 版本为 `20261108.0102.2369`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
+
+所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
 ## 功能与适用范围
 
@@ -101,7 +103,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 
 未知字段、重复键、非法 Unicode、非有限数字和超过 64 层的 JSON 拒绝。每页 SVG 标准命名空间和 `viewBox` 必须与统一画布一致。配置、SVG 及其图片路径都相对任务工作目录，而不是配置或 SVG 所在目录；拒绝绝对路径、父目录、盘符、反斜杠与符号链接。
 
-输出必须是尚不存在的 `.pptx`，父目录已存在。脚本不覆盖、不自动改名、不创建父目录；正常创建在内存完成转换和结构验证后，以独占方式写最终文件并读回字节比较。不得把这一过程描述成原文件原位修改或任意时点的原子整文件可见性保证。
+输出必须是尚不存在的 `.pptx` 裸文件名，固定写任务根目录。脚本不覆盖、不自动改名、不创建父目录；正常创建在内存完成转换和结构验证后，以独占方式写最终文件并读回字节比较。不得把这一过程描述成原文件原位修改或任意时点的原子整文件可见性保证。
 
 ### SVG 与原生对象子集
 
@@ -148,7 +150,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 
 - [requirements.txt](../../skills/pptx/requirements.txt)：Python 3.10+、仅标准库，需 zlib、Expat 2.6+ 和 POSIX 描述符相对文件操作。当前目标为 Linux，Windows 不支持；不安装包、不调用外部程序或网络服务。
 - `check` 必须实际退出 0，完整 JSON 含 `ok=true`、`status=environment-ok`、`in_memory_export=passed`。`check_kind=environment`、`artifact_validation=not_run` 表明这里只验内存样例，不是用户产物。
-- 写入任务可用 `check --write-probe` 独占创建、读回并清理探针，要求 `write_probe=passed`；任务根探针不代替输出子目录权限检查，纯读取无需探针。
+- 写入任务可用 `check --write-probe` 独占创建、读回并清理探针，要求 `write_probe=passed`；不接受输出子目录，纯读取无需探针。
 - 宿主须返回同次调用的完整 stdout、stderr 和真实退出码；未启动、超时、强杀、截断与脚本业务失败分别报告，不解析截断 JSON 或伪造成功。
 - 业务验收后，按宿主发现的真实 `artifact-lifecycle` 入口交接最终清单、来源和验证结果。公共能力不可用报告归档 skipped；失败保留主文件，不重新生成或删除已验收 PPTX。归档与业务成功分别判断。
 - [来源记录](../../skills/pptx/references/provenance.md) 固定 PPT Master v6.8.0 来源提交 `5e8856be0da8e6bc85c4aa28acc614478f7b7137`，记录保留的标准库适配、静态数据与 MIT/Apache 等许可。没有移植上游完整工作流、浏览器审查、渲染、任意模板导入或媒体流程。

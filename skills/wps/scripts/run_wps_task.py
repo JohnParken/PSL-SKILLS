@@ -75,7 +75,8 @@ def create_document(
     theme_override: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Build, write atomically, and readback-verify a WPS document."""
-    output_path = Path(output_path)
+    from wps_task_paths import delivery_filename
+    output_path = delivery_filename(output_path)
     require_output_path(output_path, 'rtf')
     if theme_override:
         spec["theme"] = theme_override
@@ -170,7 +171,7 @@ def main(argv=None) -> int:
 
     # create command
     create_parser = subparsers.add_parser("create", help="create a wps document from specification")
-    create_parser.add_argument("output", help="destination path; use .wps by default, .rtf when explicitly requested (both contain RTF)")
+    create_parser.add_argument("output", help="bare filename in task cwd; use .wps by default, .rtf when explicitly requested (both contain RTF)")
     create_parser.add_argument("--spec", help="inline JSON specification or file path")
     create_parser.add_argument("--compact-receipt", action="store_true", help="output concise JSON receipt")
     create_parser.add_argument("--theme", choices=("official", "business", "general"), help="override theme")

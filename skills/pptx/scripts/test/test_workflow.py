@@ -252,6 +252,32 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result["error"]["code"], "task_boundary")
         self.assertFalse((self.root / "out.pptx").exists())
 
+    def test_output_requires_raw_bare_filename_for_cli_and_api(self) -> None:
+        from pptx_core.runtime import TaskError, create
+        (self.root / "nested").mkdir()
+        (self.root / "nested" / "input.json").write_text(json.dumps(config()), encoding="utf-8")
+        invalid = ("./out.pptx", "nested/out.pptx", "nested//out.pptx", "nested/../out.pptx",
+                   "../out.pptx", str(self.root / "out.pptx"), "C:out.pptx", "C:/out.pptx", "nested\\out.pptx")
+        for name in invalid:
+            with self.subTest(name=name):
+                failure = self.assert_failure("create", "-", name, payload=config())
+                self.assertEqual(failure["error"]["code"], "task_boundary")
+                with patch("pptx_core.runtime.load_deck") as loader, self.assertRaises(TaskError):
+                    create("-", name)
+                loader.assert_not_called()
+        process, result = self.invoke("create", "./nested/input.json", "中文报告.pptx")
+        self.assertEqual(process.returncode, 0, result)
+        self.assertEqual(result["output"], "中文报告.pptx")
+        self.assertTrue((self.root / "中文报告.pptx").is_file())
+        for alias in ("hard.pptx", "soft.pptx"):
+            path = self.root / alias
+            if alias.startswith("hard"):
+                os.link(self.root / "nested/input.json", path)
+            else:
+                path.symlink_to(self.root / "nested/input.json")
+            self.assert_failure("create", "-", alias, payload=config())
+        self.assertEqual(json.loads((self.root / "nested/input.json").read_text()), config())
+
     def test_unsupported_input_fails_without_partial_artifact(self) -> None:
         cases = [
             f'<?xml-stylesheet type="text/css" href="https://example.com/style.css"?><svg xmlns="{SVG_NS}" viewBox="0 0 1280 720"/>',
@@ -322,6 +348,11 @@ class WorkflowTests(unittest.TestCase):
                 guard_installation=True,
             )
             self.assertEqual(process.returncode, 0, result)
+            for name in ("./bad.pptx", "installed/bad.pptx", "C:bad.pptx"):
+                rejected, failure = self.invoke("create", "-", name, payload=config(),
+                                                script=installation / "scripts" / "pptx.py", guard_installation=True)
+                self.assertEqual(rejected.returncode, 2, failure)
+                self.assertEqual(failure["error"]["code"], "task_boundary")
             self.assertEqual(snapshot(installation), before)
             self.assertFalse(list(installation.rglob("__pycache__")))
         finally:

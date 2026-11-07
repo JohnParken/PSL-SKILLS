@@ -63,7 +63,11 @@ def _command(spec):
         output_index, input_index = arguments.index('--output') + 1, 1
     else:
         raise ValueError('Only create, edit and explicit-output conversion jobs are supported')
-    if output_index >= len(arguments) or Path(arguments[output_index]) != Path(spec['output']):
+    from wps_task_paths import delivery_filename
+    delivery_filename(spec['output'])
+    if output_index < len(arguments):
+        delivery_filename(arguments[output_index])
+    if output_index >= len(arguments) or arguments[output_index] != spec['output']:
         raise ValueError('Declared output must match the actual CLI output')
     inputs = spec.get('inputs', [])
     if not isinstance(inputs, list) or not all(isinstance(item, str) for item in inputs):

@@ -14,7 +14,7 @@ python -I -S -B "<skill-root>/scripts/generate_ofd.py" ./layout.json new-documen
 python -I -S -B "<skill-root>/scripts/check_generated_ofd.py" ./new-document.ofd
 ```
 
-先核对自检退出0、JSON status=environment-ok、artifact_validation=not_run；write_probe=not_run明确没有证明目录可写。生成过程实际独占创建并登记一个任务根目录私有候选，写入、fsync、读回比较与结构验证成功后，才使用硬链接原子建立全新的输出名；失败不覆盖已有名字，也不退回replace/rename覆盖方案。候选写入是本次实际写入能力检查。输出仅接受任务根目录内一个新的 `.ofd` 文件名；不会创建子目录。调用前确认不是技能源码目录。
+先核对自检退出0、JSON status=environment-ok、artifact_validation=not_run；write_probe=not_run明确没有证明目录可写。生成过程实际独占创建并登记一个任务根目录私有候选，写入、fsync、读回比较与结构验证成功后，才使用硬链接原子建立全新的输出名；失败不覆盖已有名字，也不退回replace/rename覆盖方案。候选写入是本次实际写入能力检查。输出只接收新的 `.ofd` 裸文件名；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝，不截取 basename 改写参数；不会创建输出子目录。调用前确认不是技能源码目录。
 
 ## 输入模型
 

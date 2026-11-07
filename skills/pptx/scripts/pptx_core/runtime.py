@@ -562,6 +562,10 @@ def publish_exclusive(path: Path, data: bytes) -> tuple[int, int]:
 
 
 def create(config: str, output: str) -> dict:
+    # Check the original string before Path can normalize away './'.
+    if (not isinstance(output, str) or not output or output in (".", "..")
+            or any(character in output for character in ("/", "\\", ":", "\x00"))):
+        raise TaskError("Output must be a bare filename in the confirmed task directory", "task_boundary")
     destination = task_path(output, must_exist=False)
     if destination.suffix.lower() != ".pptx":
         raise TaskError("The output filename must end in .pptx")

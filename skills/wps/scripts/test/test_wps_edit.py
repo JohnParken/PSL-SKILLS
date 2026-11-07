@@ -7,6 +7,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 
 import tempfile
 import unittest
@@ -33,7 +35,7 @@ class TestWpsEditOperations(unittest.TestCase):
                 {"type": "table", "rows": [["人员", "岗位"], ["张三", "旧岗位"]]},
             ],
         }
-        create_document(spec, self.base_file)
+        task_api(create_document, spec, self.base_file)
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -45,7 +47,7 @@ class TestWpsEditOperations(unittest.TestCase):
             "find": "旧机构名称",
             "replace": "新办公室",
         }]
-        res = execute_edit_task(self.base_file, out_file, ops)
+        res = task_api(execute_edit_task, self.base_file, out_file, ops)
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["edit_stats"]["text_replacements"], 1)
 
@@ -59,7 +61,7 @@ class TestWpsEditOperations(unittest.TestCase):
             {"operation": "replace_paragraph", "index": 3, "text": "全新替换的正文段落。"},
             {"operation": "append_blocks", "blocks": [{"type": "paragraph", "text": "结尾追加段落。"}]},
         ]
-        res = execute_edit_task(self.base_file, out_file, ops)
+        res = task_api(execute_edit_task, self.base_file, out_file, ops)
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["edit_stats"]["paragraphs_modified"], 1)
 
@@ -76,7 +78,7 @@ class TestWpsEditOperations(unittest.TestCase):
             "col": 1,
             "text": "新主任",
         }]
-        res = execute_edit_task(self.base_file, out_file, ops)
+        res = task_api(execute_edit_task, self.base_file, out_file, ops)
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["edit_stats"]["cells_updated"], 1)
 

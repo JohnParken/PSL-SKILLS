@@ -1,4 +1,4 @@
-"""CLI task-root access; library calls remain unrestricted unless explicitly scoped."""
+"""Task-root access and public delivery filename validation."""
 from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 from functools import wraps
@@ -139,7 +139,25 @@ def cli_boundary(function):
     return guarded
 
 
+def delivery_filename(value):
+    """Validate caller spelling before Path can discard a leading './'."""
+    raw = os.fspath(value)
+    if (not isinstance(raw, str) or not raw or raw in ('.', '..')
+            or any(character in raw for character in ('/', '\\', ':', '\0'))):
+        raise ValueError('Output must be a bare filename in the task working directory')
+    path = Path(raw)
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return path
+    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise ValueError('Output must not be a symbolic link, hard link or non-regular file')
+    return path
+
+
 def validate_argument(path, *, output=False):
+    if output:
+        delivery_filename(path)
     access = ACTIVE.get()
     if access is not None:
         access.validate(path, output=output)

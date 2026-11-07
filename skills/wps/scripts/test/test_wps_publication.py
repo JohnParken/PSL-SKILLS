@@ -5,6 +5,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 import contextlib
 import io
 import json
@@ -41,7 +43,7 @@ class PublicationTests(unittest.TestCase):
                     stream.write(raw.replace(b'Reliable', b'Changed!'))
                 return real_link(source, destination, **kwargs)
             with self.linking(altered), self.assertRaises(ValueError) as raised:
-                create_document({'blocks': [{'type': 'paragraph', 'text': 'Reliable'}]}, Path('new.wps'))
+                task_api(create_document, {'blocks': [{'type': 'paragraph', 'text': 'Reliable'}]}, Path('new.wps'))
             report = raised.exception.publication
             self.assertTrue(report['output_written'])
             self.assertEqual(report['publication_outcome'], 'published_verification_failed')
@@ -58,7 +60,7 @@ class PublicationTests(unittest.TestCase):
                 os.unlink(destination, dir_fd=kwargs['dst_dir_fd'])
                 real_link('other.wps', destination, dst_dir_fd=kwargs['dst_dir_fd'])
             with self.linking(replaced), self.assertRaises(ValueError) as raised:
-                create_document({'blocks': [{'type': 'paragraph', 'text': 'Reliable'}]}, Path('new.wps'))
+                task_api(create_document, {'blocks': [{'type': 'paragraph', 'text': 'Reliable'}]}, Path('new.wps'))
             self.assertEqual(raised.exception.publication['publication_verification'], 'failed')
             self.assertEqual(Path('new.wps').read_bytes(), b'unknown file')
             self.assertEqual(Path('other.wps').read_bytes(), b'unknown file')
@@ -85,7 +87,7 @@ class PublicationTests(unittest.TestCase):
 
     def test_success_adds_independent_publication_and_cleanup_states(self):
         with tempfile.TemporaryDirectory() as directory:
-            result = create_document({'blocks': [{'type': 'paragraph', 'text': 'OK'}]}, Path(directory) / 'new.wps')
+            result = task_api(create_document, {'blocks': [{'type': 'paragraph', 'text': 'OK'}]}, Path(directory) / 'new.wps')
             self.assertTrue(result['output_written'])
             self.assertTrue(result['cleanup_complete'])
             self.assertEqual(result['publication_verification'], 'identity_and_bytes_verified')
@@ -97,7 +99,7 @@ class PublicationTests(unittest.TestCase):
                 original_link(source, destination, **kwargs)
                 raise OSError('injected lost acknowledgement')
             with self.linking(interrupted), self.assertRaises(OSError) as raised:
-                create_document({'blocks': [{'type': 'paragraph', 'text': 'Inspect'}]}, Path('new.wps'))
+                task_api(create_document, {'blocks': [{'type': 'paragraph', 'text': 'Inspect'}]}, Path('new.wps'))
             self.assertIsNone(raised.exception.publication['output_written'])
             self.assertEqual(raised.exception.publication['publication_outcome'], 'publication_uncertain')
             self.assertTrue(Path('new.wps').is_file())
@@ -112,8 +114,8 @@ class PublicationTests(unittest.TestCase):
                 error.publication = {'output_written': True, 'publication_target': candidate,
                                      'publication_outcome': 'published_verified', 'cleanup_complete': False}
                 raise error
-            with patch('export_wps.convert_docx_to_rtf_wps', side_effect=failed_stage):
-                report = export_wps.convert_docx_to_wps_rtf(source, target)
+            with patch('docx_to_wps_rtf._convert_docx_to_rtf_candidate', side_effect=failed_stage):
+                report = task_api(export_wps.convert_docx_to_wps_rtf, source, target)
             self.assertFalse(report['output_written'])
             self.assertEqual(report['publication_outcome'], 'not_attempted')
             self.assertIn('intermediate_publication', report)
@@ -125,7 +127,7 @@ class PublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source, target = Path(directory) / 'in.docx', Path(directory) / 'out.wps'
             source.write_bytes(package(body))
-            result = convert_docx_to_rtf_wps(str(source), str(target))
+            result = task_api(convert_docx_to_rtf_wps, str(source), str(target))
             self.assertEqual(result['status'], 'partial')
             properties = {issue.get('property') for issue in result['conversion_issues']}
             self.assertTrue({'spacing', 'keepNext', 'pageBreakBefore'} <= properties)

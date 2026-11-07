@@ -432,6 +432,10 @@ def publish_new(data, output, validator):
     outcome = dict(output_written=False, publication_target=str(output), publication_outcome='not_attempted',
                    publication_verification='not_run', cleanup_complete=True, cleanup_issues=[])
     try:
+        # Validate the spelling before Path normalizes './' or platform paths.
+        require(isinstance(output, str) and bool(output) and output not in ('.', '..')
+                and not any(character in output for character in ('/', '\\', ':', '\x00')),
+                'output must be a bare .ofd filename directly in the confirmed task directory')
         path = Path(output)
         require(isinstance(output, str) and not path.is_absolute() and len(path.parts) == 1
                 and path.name not in ('.', '..') and path.suffix.lower() == '.ofd',
@@ -571,7 +575,7 @@ def validate_model(data, spec, report, checker):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('spec', nargs='?')
-    parser.add_argument('output', nargs='?')
+    parser.add_argument('output', nargs='?', help='new bare .ofd filename in the task root')
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args(argv)
     if (args.check and (args.spec or args.output)) or (not args.check and not (args.spec and args.output)):

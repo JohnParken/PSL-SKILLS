@@ -5,6 +5,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 import tempfile
 import unittest
 from read_wps import read_bytes
@@ -55,7 +57,7 @@ class GeometryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             source, output = Path(temporary) / 'input.rtf', Path(temporary) / 'output.rtf'
             source.write_bytes(LITERAL)
-            execute_edit_task(source, output, [{'operation': 'replace_text', 'find': 'anchor', 'replace': 'changed'}])
+            task_api(execute_edit_task, source, output, [{'operation': 'replace_text', 'find': 'anchor', 'replace': 'changed'}])
             result = read_bytes(output.read_bytes())
             self.assertEqual(result['tables'][0]['merges'], [[0, 0, 1, 1]])
             self.assertEqual(result['tables'][0]['rows'][0][0]['text'], 'changed')

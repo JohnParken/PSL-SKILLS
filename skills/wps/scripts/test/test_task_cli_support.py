@@ -39,3 +39,29 @@ def run_main(function, arguments=None):
             return function() if arguments is None else function(task)
     finally:
         os.chdir(previous)
+
+
+def task_api(function, *args, **kwargs):
+    """Run an existing artifact fixture API call with explicit cwd/basename inputs."""
+    name = function.__name__
+    index = 0 if name == 'save' else 1
+    values = list(args)
+    output = values[index] if len(values) > index else kwargs.get('output_path')
+    source = None if name in ('save', 'create_document') else Path(values[0]).absolute()
+    target = Path(output) if output is not None else source.with_suffix('.wps')
+    previous = Path.cwd()
+    root = target.absolute().parent
+    # Invalid-directory fixtures remain invalid instead of creating a parent.
+    if not root.is_dir():
+        return function(*args, **kwargs)
+    if source is not None:
+        values[0] = source
+    if len(values) > index:
+        values[index] = target.name
+    elif output is not None:
+        kwargs['output_path'] = target.name
+    try:
+        os.chdir(root)
+        return function(*values, **kwargs)
+    finally:
+        os.chdir(previous)

@@ -7,6 +7,8 @@ from pathlib import Path
 # Test-only bootstrap: support discovery and direct execution with -I.
 sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[1])]
 
+from test_task_cli_support import task_api
+
 
 import json
 import os
@@ -132,7 +134,8 @@ class TestWpsExport(unittest.TestCase):
         doc.add_title("测试标题")
         doc.add_body_paragraph("这是正文测试段落。")
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wps") as tf:
-            doc.save(tf.name)
+            os.unlink(tf.name)
+            task_api(doc.save, tf.name)
             tmp_name = tf.name
         try:
             res = export_wps.inspect_wps_structure(tmp_name)
@@ -166,7 +169,7 @@ class TestWpsExport(unittest.TestCase):
 
             mock_run.side_effect = side_effect
 
-            res = export_wps.convert_docx_to_wps(str(in_docx), backend="libreoffice")
+            res = task_api(export_wps.convert_docx_to_wps, str(in_docx), backend="libreoffice")
             self.assertEqual(res["status"], "success")
             self.assertEqual(res["backend"], "libreoffice")
             self.assertTrue(res["structure_check"]["valid"])
@@ -176,7 +179,7 @@ class TestWpsExport(unittest.TestCase):
     def test_convert_docx_missing_soffice(self, mock_find):
         mock_find.return_value = None
         with tempfile.NamedTemporaryFile(suffix=".docx") as tf:
-            res = export_wps.convert_docx_to_wps(tf.name, backend="libreoffice")
+            res = task_api(export_wps.convert_docx_to_wps, tf.name, backend="libreoffice")
             self.assertEqual(res["status"], "missing-dependency")
 
     def test_convert_docx_rtf_backend_real_sample(self):
@@ -186,7 +189,7 @@ class TestWpsExport(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as td:
             out_wps = (Path(td) / "result.wps").resolve()
-            res = export_wps.convert_docx_to_wps(str(sample_path), output_path=str(out_wps), backend="rtf")
+            res = task_api(export_wps.convert_docx_to_wps, str(sample_path), output_path=str(out_wps), backend="rtf")
             self.assertEqual(res["status"], "partial")
             unmapped = {issue.get('property') for issue in res['conversion_issues'] if issue['code'] == 'source_format_not_mapped'}
             self.assertTrue({'keepNext', 'numPr', 'szCs'} <= unmapped)
@@ -213,7 +216,7 @@ class TestWpsExport(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as td:
             out_wps = (Path(td) / "table_result.wps").resolve()
-            res = export_wps.convert_docx_to_wps(str(sample_path), output_path=str(out_wps), backend="auto")
+            res = task_api(export_wps.convert_docx_to_wps, str(sample_path), output_path=str(out_wps), backend="auto")
             self.assertEqual(res["status"], "partial")
             self.assertTrue(res["fallback_used"])
             self.assertFalse(res["binary_doc"])

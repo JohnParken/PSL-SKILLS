@@ -36,11 +36,11 @@ python -I -S -B "<skill-root>/scripts/run_wps_job.py" --check
 
 ```console
 python -I -S -B "<skill-root>/scripts/run_wps_job.py" <<'JSON'
-{"script":"run_wps_task.py","arguments":["create","./工作汇报.wps","--spec","@spec"],"output":"./工作汇报.wps","configs":{"spec":{"blocks":[{"type":"paragraph","text":"已确认的正文。"}]}}}
+{"script":"run_wps_task.py","arguments":["create","工作汇报.wps","--spec","@spec"],"output":"工作汇报.wps","configs":{"spec":{"blocks":[{"type":"paragraph","text":"已确认的正文。"}]}}}
 JSON
 ```
 
-编辑可使用script=run_wps_edit.py及batch参数，将--spec对应值设为@ops，configs.ops给出操作列表；源文件自动保护。导出script=export_wps.py只接受convert并要求单独且唯一的--output参数，纯标准库任务使用--backend rtf；导出不需要配置时直接用CLI即可，不为归档套job。inputs可补充需保护的任务文件。output必须与子命令实际输出一致，所有数据路径相对任务目录；configs只允许最多8个命名JSON，@引用须与configs完全一致。
+编辑可使用script=run_wps_edit.py及batch参数，将--spec对应值设为@ops，configs.ops给出操作列表；源文件自动保护。导出script=export_wps.py只接受convert并要求单独且唯一的--output参数，纯标准库任务使用--backend rtf；导出不需要配置时直接用CLI即可，不为归档套job。inputs可补充需保护的任务文件。output与子命令实际输出必须为完全一致的裸文件名，不带 `./` 或任何目录；输入路径仍相对任务目录；configs只允许最多8个命名JSON，@引用须与configs完全一致。
 
 创建前plan登记尚不存在的根目录文件，独占写入；已有文件不认领，不按扩展名扫描。创建后记录实际文件身份与内容指纹，启动worker前封存原始指纹；文件在计划后由他者创建、归属不明或指纹变化时保留并报cleanup_incomplete，不能仅凭“计划时不存在”就认领。主文件和用户输入不清理。成功或已停止的业务失败均关闭本轮配置，不因可能重试而保留。job_cleanup只针对登记项，原cleanup_complete仍表示内部候选，delivery表示归档；不要将三个范围混为目录零残留。无configs不建清单。
 
