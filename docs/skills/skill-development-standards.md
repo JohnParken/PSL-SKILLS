@@ -1,8 +1,10 @@
 # skill-development-standards：开发规范与只读结构检查
 
-> 文档核对日期：2026-11-07；源码基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261108.0102.2369`。本文说明规范、工具及其边界，不修改或替代原规范。
+> 文档核对日期：2026-11-07；源码基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1818.2343`。本文说明规范、工具及其边界，不修改或替代原规范。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
+
+当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
 
 ## 功能与适用范围
 
@@ -22,7 +24,7 @@ flowchart TD
     B --> D
     D --> E["目录与文件遍历：不跟随内部符号链接"]
     E --> F["简单 YAML 元信息与版本检查"]
-    E --> G["Python AST 语法与测试布局检查"]
+    E --> G["Python 物理行数、AST 语法与测试布局检查"]
     E --> H["入口和 references 的 Markdown 路径检查"]
     F --> I["Issue：等级、规则、路径、说明"]
     G --> I
@@ -47,7 +49,7 @@ flowchart TD
 | `check_skill.py: is_test_script` | 按常见 test/spec 名称及脚本后缀识别测试脚本，不把普通 check/validate 命令当作测试 |
 | `check_skill.py: _root_resources` | 检查每个被选中 Markdown 的定位说明、旧根别名、字面量根路径、存在性、越界和章节锚点 |
 | `check_skill.py: _markdown_links` | 检查 Markdown 链接，拒绝 Skill 内部本地 Markdown 链接写法，对外部/绝对资源链接给出建议 |
-| `check_skill.py: check_skill` | 汇总单个 Skill 的结构、元信息、Python 语法、测试布局与资源问题，返回 `list[Issue]` |
+| `check_skill.py: check_skill` | 汇总单个 Skill 的结构、元信息、Python 物理行数/语法、测试布局与资源问题，返回 `list[Issue]` |
 | `check_skill.py: main` | 接收一个或多个目录及 `--strict`，输出诊断并汇总退出状态 |
 | [test_check_skill.py](../../skills/skill-development-standards/scripts/test/test_check_skill.py) | 检查器自身的合成回归测试，覆盖只读性、路径、元信息、符号链接、测试布局等 |
 
@@ -129,7 +131,7 @@ python -I -S -B -m unittest discover -s skills/skill-development-standards/scrip
 4. **Markdown 遍历范围有限。** 当前 `check_skill` 交给链接检查的是入口 `SKILL.md` 与 `references/` 下的 Markdown；并非遍历任意 assets 或 scripts 下的 Markdown。规范中更广的资源一致性要求仍需人工覆盖。
 5. **不执行命令示例、不推断动态路径。** 字面量路径与锚点通过，不证明模型真的正确替换占位符或命令可用。
 6. **不验证业务能力或平台。** AST 能解析不代表目标业务脚本可运行、结果正确、跨平台兼容、只读安装可用或真实文件格式受支持。
-7. **不做完整 lint。** 仓库的 Python 行长、命名、单行语句等约束要用对应检查工具和人工审阅；结构检查不能替代 Pylint 或语义检查。
+7. **文件行数已覆盖，但不做完整 lint。** 所有 `.py` 的 1000 物理行上限由检查器强制，`python-file-lines` 为 error，默认及严格模式均失败；注释、空行计数，1000 行允许，源文件编码和 LF/CRLF/CR 按 Python 读取。 仓库的 Python 行长、命名、单行语句等约束要用对应检查工具和人工审阅；结构检查不能替代 Pylint 或语义检查。
 8. **测试边界仅按名称静态识别。** 非标准测试名称、生产代码是否偷偷调用测试、夹具依赖与跨 Skill 私有耦合仍需人工检查。
 9. **不验证格式映射和压缩包成员。** 源码别名合法，不证明生成的 OOXML 包正确恢复 `[Content_Types].xml` 等标准成员名。
 10. **不证明宿主回传完整。** 本地 stdout/stderr 或 subprocess 捕获不能替代执行器返回载荷和模型实际收到结果的核对。
@@ -151,7 +153,7 @@ python -I -S -B -m unittest discover -s skills/skill-development-standards/scrip
 
 规范末尾保留的 macOS/Python 3.12.14 历史验证记录只属于对应日期和维护范围，不应据此宣称云端 Linux、Windows、真实宿主路由或业务产物验收通过。
 
-本轮仅编写仓库级说明并审阅固定基线源码，没有修改 Skill、版本或检查逻辑，没有运行全量测试、业务生成、打包发布或跨平台验证。本文在 `docs/skills/`，不是 Skill 分发目录，因此使用仓库相对链接；不应把 Skill 内部的根路径写法规则机械套用于此文档。
+历史文档初建时只审阅固定基线；本轮新增文件行数硬规则和边界回归，实际结果与未验证范围见上述维护记录。本文在 `docs/skills/`，不是 Skill 分发目录，因此使用仓库相对链接；不应把 Skill 内部的根路径写法规则机械套用于此文档。
 
 ## 可追溯源码
 

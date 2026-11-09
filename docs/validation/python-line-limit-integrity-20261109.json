@@ -1,0 +1,177 @@
+{
+  "ofd_function_class_ast_equal": true,
+  "ofd_compared_definitions": 21,
+  "new_or_preexisting_untracked_python_files_scanned": 84,
+  "new_file_line_style_issues": [],
+  "pptx_source_manifest_entries_verified": 141,
+  "pptx_fresh_process_imports": {
+    "modules": 67,
+    "failures": 0
+  },
+  "limits": [
+    "Lightweight AST/line scan is not Pylint; Pylint unavailable.",
+    "Existing ET reader has6 lines over200 chars and57 multi-statement lines, not introduced by extraction."
+  ],
+  "precommit_eof_normalization": {
+    "files": [
+      {
+        "path": "skills/docx/scripts/docx_create_validation.py",
+        "before": 492,
+        "after": 490
+      },
+      {
+        "path": "skills/docx/scripts/docx_create_common.py",
+        "before": 504,
+        "after": 502
+      },
+      {
+        "path": "skills/docx/scripts/docx_create_xml.py",
+        "before": 715,
+        "after": 713
+      },
+      {
+        "path": "skills/et/scripts/wps_biff8_values.py",
+        "before": 208,
+        "after": 206
+      },
+      {
+        "path": "skills/et/scripts/wps_biff8_errors.py",
+        "before": 19,
+        "after": 17
+      },
+      {
+        "path": "skills/ofd/scripts/ofd_package.py",
+        "before": 314,
+        "after": 312
+      },
+      {
+        "path": "skills/ofd/scripts/ofd_common.py",
+        "before": 187,
+        "after": 185
+      },
+      {
+        "path": "skills/ofd/scripts/ofd_structure.py",
+        "before": 156,
+        "after": 154
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_lengths.py",
+        "before": 414,
+        "after": 413
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_conversion.py",
+        "before": 739,
+        "after": 738
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_metrics.py",
+        "before": 683,
+        "after": 681
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_image_sources.py",
+        "before": 302,
+        "after": 300
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_markers.py",
+        "before": 432,
+        "after": 430
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_basic_shapes.py",
+        "before": 751,
+        "after": 750
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_clip_geometry.py",
+        "before": 661,
+        "after": 660
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_filters.py",
+        "before": 566,
+        "after": 564
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_gradients.py",
+        "before": 480,
+        "after": 478
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_constants.py",
+        "before": 322,
+        "after": 321
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_transforms.py",
+        "before": 444,
+        "after": 442
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_path_shapes.py",
+        "before": 416,
+        "after": 414
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_runs.py",
+        "before": 625,
+        "after": 623
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_preset_geometry.py",
+        "before": 491,
+        "after": 489
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_paint_values.py",
+        "before": 553,
+        "after": 551
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_text_metadata.py",
+        "before": 716,
+        "after": 714
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_pictures.py",
+        "before": 650,
+        "after": 649
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_stroke_transforms.py",
+        "before": 441,
+        "after": 440
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_dispatch.py",
+        "before": 614,
+        "after": 612
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_groups.py",
+        "before": 625,
+        "after": 624
+      },
+      {
+        "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_validation.py",
+        "before": 524,
+        "after": 523
+      },
+      {
+        "path": "skills/xlsx/scripts/formula_wildcards.py",
+        "before": 60,
+        "after": 58
+      }
+    ],
+    "ast_unchanged": true,
+    "reason": "Staged diff checks include previously untracked files; terminal blank lines only."
+  },
+  "log_display_normalization": {
+    "path": "docs/validation/python-line-limit-tests-20261109/tests.stderr.txt",
+    "original_line": "AssertionError: 1 != 0 : ",
+    "normalized_line": "AssertionError: 1 != 0 :",
+    "reason": "Remove one terminal display space for git whitespace check; original text retained here."
+  }
+}

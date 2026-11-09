@@ -1,0 +1,2352 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "expat": "expat_2.6.3",
+  "limit": 1000,
+  "counting": "Python encoding detection; universal newline iteration including comments, blank lines, final unterminated line",
+  "skills": [
+    {
+      "skill": "artifact-lifecycle",
+      "python_files": 9,
+      "max_lines": 413,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": [
+        {
+          "path": "skills/artifact-lifecycle/scripts/archive_deliverables.py",
+          "lines": 235
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/output_location.py",
+          "lines": 59
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/controlled_cleanup.py",
+          "lines": 413
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/cleanup_task.py",
+          "lines": 65
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/lifecycle.py",
+          "lines": 60
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/artifact_files.py",
+          "lines": 130
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/router_config.py",
+          "lines": 116
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/test/test_lifecycle.py",
+          "lines": 199
+        },
+        {
+          "path": "skills/artifact-lifecycle/scripts/test/__init__.py",
+          "lines": 1
+        }
+      ]
+    },
+    {
+      "skill": "bank-writing",
+      "python_files": 0,
+      "max_lines": 0,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": []
+    },
+    {
+      "skill": "docx",
+      "python_files": 89,
+      "max_lines": 893,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": [
+        {
+          "path": "skills/docx/scripts/docx_create_validation.py",
+          "lines": 490
+        },
+        {
+          "path": "skills/docx/scripts/create_docx.py",
+          "lines": 402
+        },
+        {
+          "path": "skills/docx/scripts/docx_outcome.py",
+          "lines": 13
+        },
+        {
+          "path": "skills/docx/scripts/comment.py",
+          "lines": 554
+        },
+        {
+          "path": "skills/docx/scripts/archive_deliverables.py",
+          "lines": 259
+        },
+        {
+          "path": "skills/docx/scripts/edit_structure.py",
+          "lines": 355
+        },
+        {
+          "path": "skills/docx/scripts/format_guard.py",
+          "lines": 430
+        },
+        {
+          "path": "skills/docx/scripts/read_docx.py",
+          "lines": 893
+        },
+        {
+          "path": "skills/docx/scripts/output_location.py",
+          "lines": 59
+        },
+        {
+          "path": "skills/docx/scripts/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/docx/scripts/controlled_cleanup.py",
+          "lines": 413
+        },
+        {
+          "path": "skills/docx/scripts/cleanup_task.py",
+          "lines": 65
+        },
+        {
+          "path": "skills/docx/scripts/manage_comments.py",
+          "lines": 742
+        },
+        {
+          "path": "skills/docx/scripts/run_docx_task.py",
+          "lines": 741
+        },
+        {
+          "path": "skills/docx/scripts/validate_layout.py",
+          "lines": 75
+        },
+        {
+          "path": "skills/docx/scripts/docx_create_common.py",
+          "lines": 502
+        },
+        {
+          "path": "skills/docx/scripts/replace_image.py",
+          "lines": 189
+        },
+        {
+          "path": "skills/docx/scripts/merge_runs.py",
+          "lines": 285
+        },
+        {
+          "path": "skills/docx/scripts/edit_tables.py",
+          "lines": 265
+        },
+        {
+          "path": "skills/docx/scripts/audit_package.py",
+          "lines": 81
+        },
+        {
+          "path": "skills/docx/scripts/docx_create_xml.py",
+          "lines": 713
+        },
+        {
+          "path": "skills/docx/scripts/docx_task_state.py",
+          "lines": 161
+        },
+        {
+          "path": "skills/docx/scripts/edit_docx.py",
+          "lines": 430
+        },
+        {
+          "path": "skills/docx/scripts/run_docx_edit.py",
+          "lines": 147
+        },
+        {
+          "path": "skills/docx/scripts/artifact_files.py",
+          "lines": 130
+        },
+        {
+          "path": "skills/docx/scripts/router_config.py",
+          "lines": 116
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_delivery.py",
+          "lines": 745
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_layout_delivery.py",
+          "lines": 229
+        },
+        {
+          "path": "skills/docx/scripts/test/test_delivery_api.py",
+          "lines": 552
+        },
+        {
+          "path": "skills/docx/scripts/test/reference_loading_audit.py",
+          "lines": 278
+        },
+        {
+          "path": "skills/docx/scripts/test/fixture_delivery.py",
+          "lines": 15
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_compact_receipt.py",
+          "lines": 105
+        },
+        {
+          "path": "skills/docx/scripts/test/test_root_delivery_names.py",
+          "lines": 102
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_routing.py",
+          "lines": 92
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_stability.py",
+          "lines": 189
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_task_reliability.py",
+          "lines": 457
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_token_routing.py",
+          "lines": 80
+        },
+        {
+          "path": "skills/docx/scripts/test/test_cleanup_task.py",
+          "lines": 335
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_controlled_flow.py",
+          "lines": 266
+        },
+        {
+          "path": "skills/docx/scripts/test/test_archive_collision.py",
+          "lines": 175
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_p1_layout.py",
+          "lines": 186
+        },
+        {
+          "path": "skills/docx/scripts/test/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_pagination_governance.py",
+          "lines": 202
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_io.py",
+          "lines": 281
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_output_channels.py",
+          "lines": 39
+        },
+        {
+          "path": "skills/docx/scripts/test/test_archive_deliverables.py",
+          "lines": 234
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_generation.py",
+          "lines": 155
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_bound_pages.py",
+          "lines": 282
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_official_pagination_defaults.py",
+          "lines": 139
+        },
+        {
+          "path": "skills/docx/scripts/test/test_terminal_cleanup.py",
+          "lines": 103
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_read_fastpath.py",
+          "lines": 210
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_module_boundaries.py",
+          "lines": 37
+        },
+        {
+          "path": "skills/docx/scripts/test/test_cli_task_paths.py",
+          "lines": 70
+        },
+        {
+          "path": "skills/docx/scripts/test/test_runtime_modules.py",
+          "lines": 89
+        },
+        {
+          "path": "skills/docx/scripts/test/test_run_docx_task.py",
+          "lines": 487
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_p2_layout.py",
+          "lines": 277
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_simple_fastpath.py",
+          "lines": 71
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_editing.py",
+          "lines": 312
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_format_preservation.py",
+          "lines": 749
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_typography.py",
+          "lines": 199
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_legacy_entry.py",
+          "lines": 55
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_receipt_cleanup.py",
+          "lines": 285
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_reference_loading.py",
+          "lines": 140
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_runtime.py",
+          "lines": 106
+        },
+        {
+          "path": "skills/docx/scripts/test/test_flat_temporary.py",
+          "lines": 140
+        },
+        {
+          "path": "skills/docx/scripts/test/test_format_guard.py",
+          "lines": 686
+        },
+        {
+          "path": "skills/docx/scripts/test/test_docx_task_lazy_routing.py",
+          "lines": 79
+        },
+        {
+          "path": "skills/docx/scripts/test/test_output_location.py",
+          "lines": 356
+        },
+        {
+          "path": "skills/docx/scripts/test/test_edit_delivery.py",
+          "lines": 497
+        },
+        {
+          "path": "skills/docx/scripts/office/package.py",
+          "lines": 144
+        },
+        {
+          "path": "skills/docx/scripts/office/binary_doc.py",
+          "lines": 6
+        },
+        {
+          "path": "skills/docx/scripts/office/runtime.py",
+          "lines": 36
+        },
+        {
+          "path": "skills/docx/scripts/office/validate.py",
+          "lines": 80
+        },
+        {
+          "path": "skills/docx/scripts/office/xmlio.py",
+          "lines": 188
+        },
+        {
+          "path": "skills/docx/scripts/office/archiveio.py",
+          "lines": 144
+        },
+        {
+          "path": "skills/docx/scripts/office/memory_package.py",
+          "lines": 153
+        },
+        {
+          "path": "skills/docx/scripts/office/formatting/sections.py",
+          "lines": 117
+        },
+        {
+          "path": "skills/docx/scripts/office/formatting/audit.py",
+          "lines": 202
+        },
+        {
+          "path": "skills/docx/scripts/office/formatting/paragraphs.py",
+          "lines": 81
+        },
+        {
+          "path": "skills/docx/scripts/office/formatting/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/docx/scripts/office/formatting/tables.py",
+          "lines": 47
+        },
+        {
+          "path": "skills/docx/scripts/office/formatting/pagination.py",
+          "lines": 175
+        },
+        {
+          "path": "skills/docx/scripts/office/formatting/profiles.py",
+          "lines": 69
+        },
+        {
+          "path": "skills/docx/scripts/office/validators/advanced.py",
+          "lines": 216
+        },
+        {
+          "path": "skills/docx/scripts/office/validators/generation.py",
+          "lines": 492
+        },
+        {
+          "path": "skills/docx/scripts/office/validators/__init__.py",
+          "lines": 6
+        },
+        {
+          "path": "skills/docx/scripts/office/validators/redlining.py",
+          "lines": 246
+        },
+        {
+          "path": "skills/docx/scripts/office/validators/structure.py",
+          "lines": 402
+        },
+        {
+          "path": "skills/docx/scripts/office/helpers/__init__.py",
+          "lines": 251
+        }
+      ]
+    },
+    {
+      "skill": "et",
+      "python_files": 94,
+      "max_lines": 958,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 1,
+      "errors": [],
+      "warning_counts": {
+        "suspicious-entry": 70
+      },
+      "files": [
+        {
+          "path": "skills/et/scripts/wps_biff8_conditional.py",
+          "lines": 113
+        },
+        {
+          "path": "skills/et/scripts/et_cli.py",
+          "lines": 81
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_charts.py",
+          "lines": 96
+        },
+        {
+          "path": "skills/et/scripts/et_table_preview.py",
+          "lines": 36
+        },
+        {
+          "path": "skills/et/scripts/wps_sheet_comments.py",
+          "lines": 90
+        },
+        {
+          "path": "skills/et/scripts/read_wps.py",
+          "lines": 19
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_values.py",
+          "lines": 206
+        },
+        {
+          "path": "skills/et/scripts/wps_diagnostics.py",
+          "lines": 331
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_names.py",
+          "lines": 253
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_headers.py",
+          "lines": 113
+        },
+        {
+          "path": "skills/et/scripts/wps_ooxml_sheet.py",
+          "lines": 328
+        },
+        {
+          "path": "skills/et/scripts/wps_cfb.py",
+          "lines": 231
+        },
+        {
+          "path": "skills/et/scripts/wps_iso_date.py",
+          "lines": 37
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_audit_sources.py",
+          "lines": 136
+        },
+        {
+          "path": "skills/et/scripts/wps_access.py",
+          "lines": 138
+        },
+        {
+          "path": "skills/et/scripts/wps_ooxml.py",
+          "lines": 802
+        },
+        {
+          "path": "skills/et/scripts/analyze_et.py",
+          "lines": 97
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8.py",
+          "lines": 958
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_noncell.py",
+          "lines": 66
+        },
+        {
+          "path": "skills/et/scripts/wps_result.py",
+          "lines": 18
+        },
+        {
+          "path": "skills/et/scripts/wps_style_formats.py",
+          "lines": 89
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_drawing_notes.py",
+          "lines": 184
+        },
+        {
+          "path": "skills/et/scripts/et_table_data.py",
+          "lines": 211
+        },
+        {
+          "path": "skills/et/scripts/wps_read_view.py",
+          "lines": 201
+        },
+        {
+          "path": "skills/et/scripts/wps_numeric.py",
+          "lines": 163
+        },
+        {
+          "path": "skills/et/scripts/wps_format_rules.py",
+          "lines": 63
+        },
+        {
+          "path": "skills/et/scripts/et_cli_protocol.py",
+          "lines": 81
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_tablestyles.py",
+          "lines": 75
+        },
+        {
+          "path": "skills/et/scripts/et_output_page.py",
+          "lines": 132
+        },
+        {
+          "path": "skills/et/scripts/wps_visibility.py",
+          "lines": 61
+        },
+        {
+          "path": "skills/et/scripts/et_table_analysis.py",
+          "lines": 269
+        },
+        {
+          "path": "skills/et/scripts/read_et.py",
+          "lines": 183
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_merges.py",
+          "lines": 37
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_errors.py",
+          "lines": 17
+        },
+        {
+          "path": "skills/et/scripts/et_table_quality.py",
+          "lines": 83
+        },
+        {
+          "path": "skills/et/scripts/wps_biff8_audit.py",
+          "lines": 206
+        },
+        {
+          "path": "skills/et/scripts/wps_dxf.py",
+          "lines": 185
+        },
+        {
+          "path": "skills/et/scripts/wps_vml_notes.py",
+          "lines": 77
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_noncell.py",
+          "lines": 179
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_pure_tables.py",
+          "lines": 168
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_file_access.py",
+          "lines": 218
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_dxf_readability.py",
+          "lines": 106
+        },
+        {
+          "path": "skills/et/scripts/test/test_et_module_boundaries.py",
+          "lines": 36
+        },
+        {
+          "path": "skills/et/scripts/test/test_et_table_row_selection.py",
+          "lines": 228
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff_codepage_decl.py",
+          "lines": 135
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_spreadsheet_stability.py",
+          "lines": 50
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_embedded_charts.py",
+          "lines": 110
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_visibility.py",
+          "lines": 49
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8.py",
+          "lines": 195
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_salvage.py",
+          "lines": 198
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_data_policy.py",
+          "lines": 160
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_print_titles_memfunc.py",
+          "lines": 135
+        },
+        {
+          "path": "skills/et/scripts/test/test_et_table_quality_preview.py",
+          "lines": 274
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_builtin_names.py",
+          "lines": 256
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_audit.py",
+          "lines": 202
+        },
+        {
+          "path": "skills/et/scripts/test/test_et_table_analysis.py",
+          "lines": 407
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_row_column_formats.py",
+          "lines": 50
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_template_metadata.py",
+          "lines": 83
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff_reading.py",
+          "lines": 288
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_legacy_compat.py",
+          "lines": 116
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_et_errors.py",
+          "lines": 104
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_format_rules.py",
+          "lines": 65
+        },
+        {
+          "path": "skills/et/scripts/test/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/et/scripts/test/verify_et_samples.py",
+          "lines": 131
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_cfb.py",
+          "lines": 222
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_internal_links.py",
+          "lines": 29
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_accounting.py",
+          "lines": 53
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_template_compatibility.py",
+          "lines": 205
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_iso_date.py",
+          "lines": 52
+        },
+        {
+          "path": "skills/et/scripts/test/test_metadata_api.py",
+          "lines": 112
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_et_capacity.py",
+          "lines": 131
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_dxf_semantics.py",
+          "lines": 117
+        },
+        {
+          "path": "skills/et/scripts/test/test_et_output_budget.py",
+          "lines": 255
+        },
+        {
+          "path": "skills/et/scripts/test/test_et_cli.py",
+          "lines": 56
+        },
+        {
+          "path": "skills/et/scripts/test/verify_et_analysis.py",
+          "lines": 176
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_read_view.py",
+          "lines": 175
+        },
+        {
+          "path": "skills/et/scripts/test/test_et_cli_contract.py",
+          "lines": 52
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_continue.py",
+          "lines": 70
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_dxf_integration.py",
+          "lines": 106
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_vml_notes.py",
+          "lines": 61
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_dxf.py",
+          "lines": 178
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff_tablestyles.py",
+          "lines": 140
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_salvage_hardening.py",
+          "lines": 170
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_formula_groups.py",
+          "lines": 107
+        },
+        {
+          "path": "skills/et/scripts/test/test_unknown_drawing_objects.py",
+          "lines": 61
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_numeric.py",
+          "lines": 57
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_style_inheritance.py",
+          "lines": 74
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_drawing_notes.py",
+          "lines": 232
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_names.py",
+          "lines": 181
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_sheet_comments.py",
+          "lines": 87
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_rich_strings.py",
+          "lines": 141
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_ooxml_sheet.py",
+          "lines": 113
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_phonetic.py",
+          "lines": 221
+        },
+        {
+          "path": "skills/et/scripts/test/test_wps_biff8_conditional.py",
+          "lines": 167
+        }
+      ]
+    },
+    {
+      "skill": "ofd",
+      "python_files": 16,
+      "max_lines": 651,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": [
+        {
+          "path": "skills/ofd/scripts/ofd_generation_assets.py",
+          "lines": 287
+        },
+        {
+          "path": "skills/ofd/scripts/generate_ofd.py",
+          "lines": 616
+        },
+        {
+          "path": "skills/ofd/scripts/read_ofd.py",
+          "lines": 496
+        },
+        {
+          "path": "skills/ofd/scripts/ofd_package.py",
+          "lines": 312
+        },
+        {
+          "path": "skills/ofd/scripts/ofd_common.py",
+          "lines": 185
+        },
+        {
+          "path": "skills/ofd/scripts/ofd_structure.py",
+          "lines": 154
+        },
+        {
+          "path": "skills/ofd/scripts/check_generated_ofd.py",
+          "lines": 226
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd_bundled_fonts.py",
+          "lines": 188
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd_generate.py",
+          "lines": 514
+        },
+        {
+          "path": "skills/ofd/scripts/test/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd_views.py",
+          "lines": 105
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd_postfix_review.py",
+          "lines": 131
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd_compat.py",
+          "lines": 203
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd.py",
+          "lines": 651
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd_resource_recovery.py",
+          "lines": 150
+        },
+        {
+          "path": "skills/ofd/scripts/test/test_ofd_structure.py",
+          "lines": 378
+        }
+      ]
+    },
+    {
+      "skill": "pptx",
+      "python_files": 152,
+      "max_lines": 896,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": [
+        {
+          "path": "skills/pptx/scripts/pptx.py",
+          "lines": 101
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_effects.py",
+          "lines": 229
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/semantic_table.py",
+          "lines": 532
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_authoring_view.py",
+          "lines": 35
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/native_payloads.py",
+          "lines": 21
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/hyperlink_contract.py",
+          "lines": 403
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_gradients.py",
+          "lines": 119
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/language_tags.py",
+          "lines": 308
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_compatibility.py",
+          "lines": 61
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/resource_paths.py",
+          "lines": 288
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_v680_inspection.py",
+          "lines": 157
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_v680_render.py",
+          "lines": 201
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_drawing_modules.py",
+          "lines": 344
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_validation.py",
+          "lines": 369
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_package.py",
+          "lines": 221
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_images.py",
+          "lines": 222
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_native_module_boundaries.py",
+          "lines": 382
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_bounded_inspection.py",
+          "lines": 177
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_v680_native.py",
+          "lines": 257
+        },
+        {
+          "path": "skills/pptx/scripts/test/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_workflow.py",
+          "lines": 395
+        },
+        {
+          "path": "skills/pptx/scripts/test/test_svg_limits.py",
+          "lines": 117
+        },
+        {
+          "path": "skills/pptx/scripts/pptx_core/package.py",
+          "lines": 623
+        },
+        {
+          "path": "skills/pptx/scripts/pptx_core/svg_limits.py",
+          "lines": 158
+        },
+        {
+          "path": "skills/pptx/scripts/pptx_core/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/pptx/scripts/pptx_core/runtime.py",
+          "lines": 632
+        },
+        {
+          "path": "skills/pptx/scripts/pptx_core/inspection.py",
+          "lines": 99
+        },
+        {
+          "path": "skills/pptx/scripts/pptx_core/images.py",
+          "lines": 389
+        },
+        {
+          "path": "skills/pptx/scripts/pptx_core/validation.py",
+          "lines": 711
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_to_svg/preset_authoring.py",
+          "lines": 896
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_to_svg/__init__.py",
+          "lines": 3
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_to_svg/emu_units.py",
+          "lines": 260
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_to_svg/preset_svg_markup.py",
+          "lines": 200
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_to_svg/preset_registry_to_svg.py",
+          "lines": 218
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/xml_safety.py",
+          "lines": 23
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/models.py",
+          "lines": 203
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/formula.py",
+          "lines": 338
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/semantic_hash.py",
+          "lines": 458
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/registry.py",
+          "lines": 272
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/semantics.py",
+          "lines": 551
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/__init__.py",
+          "lines": 132
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/loader.py",
+          "lines": 366
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_shapes/errors.py",
+          "lines": 41
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_ooxml/package.py",
+          "lines": 62
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/pptx_ooxml/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/canvas_contract.py",
+          "lines": 228
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/geometry_properties.py",
+          "lines": 142
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/use_expander.py",
+          "lines": 484
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/animation_config.py",
+          "lines": 84
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/semantic_markers.py",
+          "lines": 242
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/__init__.py",
+          "lines": 2
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/tspan_flattener.py",
+          "lines": 86
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_finalize/__init__.py",
+          "lines": 14
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_finalize/flatten_tspan.py",
+          "lines": 843
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_shared.py",
+          "lines": 83
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py",
+          "lines": 121
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_document.py",
+          "lines": 134
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_delimiters.py",
+          "lines": 349
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_attributes.py",
+          "lines": 191
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_labels.py",
+          "lines": 243
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_geometry.py",
+          "lines": 289
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_chrome.py",
+          "lines": 270
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/workbook.py",
+          "lines": 181
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_text.py",
+          "lines": 503
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_document.py",
+          "lines": 28
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_warnings.py",
+          "lines": 475
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_geometry.py",
+          "lines": 215
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py",
+          "lines": 505
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_category.py",
+          "lines": 481
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_layout.py",
+          "lines": 361
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula.py",
+          "lines": 295
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_profile.py",
+          "lines": 741
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_axes.py",
+          "lines": 240
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_values.py",
+          "lines": 262
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_validate.py",
+          "lines": 451
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_fallback.py",
+          "lines": 325
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_chemistry.py",
+          "lines": 391
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_payload.py",
+          "lines": 582
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chartex.py",
+          "lines": 369
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_shared.py",
+          "lines": 65
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_render.py",
+          "lines": 300
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_parity.py",
+          "lines": 327
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_compiler.py",
+          "lines": 98
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py",
+          "lines": 117
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/__init__.py",
+          "lines": 787
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_projection.py",
+          "lines": 243
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py",
+          "lines": 120
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_dispatch.py",
+          "lines": 87
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_axes.py",
+          "lines": 317
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_environments.py",
+          "lines": 344
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_shared.py",
+          "lines": 75
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_emit.py",
+          "lines": 505
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_shared.py",
+          "lines": 125
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py",
+          "lines": 83
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_ast.py",
+          "lines": 594
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common_shared.py",
+          "lines": 120
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_series.py",
+          "lines": 213
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_source.py",
+          "lines": 446
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_arguments.py",
+          "lines": 352
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_run_properties.py",
+          "lines": 236
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_labels.py",
+          "lines": 376
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py",
+          "lines": 117
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_plots.py",
+          "lines": 397
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/fallback_hash.py",
+          "lines": 179
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_special.py",
+          "lines": 185
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_companions.py",
+          "lines": 313
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_payload.py",
+          "lines": 203
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/inline_formula.py",
+          "lines": 313
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py",
+          "lines": 96
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_combo.py",
+          "lines": 302
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_warnings.py",
+          "lines": 462
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_shared.py",
+          "lines": 127
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_status.py",
+          "lines": 209
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_special.py",
+          "lines": 301
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_lengths.py",
+          "lines": 413
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_conversion.py",
+          "lines": 738
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_metrics.py",
+          "lines": 681
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_image_sources.py",
+          "lines": 300
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/text_baseline.py",
+          "lines": 128
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_text_widths.py",
+          "lines": 342
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_nested_crops.py",
+          "lines": 619
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/paths.py",
+          "lines": 850
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_markers.py",
+          "lines": 430
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_fonts.py",
+          "lines": 435
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py",
+          "lines": 241
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_shape_xml.py",
+          "lines": 443
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_basic_shapes.py",
+          "lines": 750
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_clip_geometry.py",
+          "lines": 660
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_filters.py",
+          "lines": 564
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py",
+          "lines": 206
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/__init__.py",
+          "lines": 2
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_gradients.py",
+          "lines": 478
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/theme_colors.py",
+          "lines": 284
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/theme_fonts.py",
+          "lines": 457
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_constants.py",
+          "lines": 321
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_transforms.py",
+          "lines": 442
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_slide.py",
+          "lines": 757
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_path_shapes.py",
+          "lines": 414
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/context.py",
+          "lines": 303
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_runs.py",
+          "lines": 623
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py",
+          "lines": 253
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_preset_geometry.py",
+          "lines": 489
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/text_properties.py",
+          "lines": 797
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/styles.py",
+          "lines": 783
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_paint_values.py",
+          "lines": 551
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/hyperlinks.py",
+          "lines": 163
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_text_metadata.py",
+          "lines": 714
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_pictures.py",
+          "lines": 649
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_stroke_transforms.py",
+          "lines": 440
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_dispatch.py",
+          "lines": 612
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_groups.py",
+          "lines": 624
+        },
+        {
+          "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_validation.py",
+          "lines": 523
+        }
+      ]
+    },
+    {
+      "skill": "skill-development-standards",
+      "python_files": 2,
+      "max_lines": 553,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": [
+        {
+          "path": "skills/skill-development-standards/scripts/check_skill.py",
+          "lines": 449
+        },
+        {
+          "path": "skills/skill-development-standards/scripts/test/test_check_skill.py",
+          "lines": 553
+        }
+      ]
+    },
+    {
+      "skill": "table-workflow",
+      "python_files": 5,
+      "max_lines": 641,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": [
+        {
+          "path": "skills/table-workflow/scripts/table_workflow_cli_protocol.py",
+          "lines": 81
+        },
+        {
+          "path": "skills/table-workflow/scripts/workflow_cli_client.py",
+          "lines": 196
+        },
+        {
+          "path": "skills/table-workflow/scripts/workflow_quality.py",
+          "lines": 150
+        },
+        {
+          "path": "skills/table-workflow/scripts/table_workflow.py",
+          "lines": 641
+        },
+        {
+          "path": "skills/table-workflow/scripts/workflow_runtime.py",
+          "lines": 437
+        }
+      ]
+    },
+    {
+      "skill": "wps",
+      "python_files": 91,
+      "max_lines": 925,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 1,
+      "errors": [],
+      "warning_counts": {
+        "suspicious-entry": 56
+      },
+      "files": [
+        {
+          "path": "skills/wps/scripts/wps_selective.py",
+          "lines": 162
+        },
+        {
+          "path": "skills/wps/scripts/wps_rtf_builder.py",
+          "lines": 925
+        },
+        {
+          "path": "skills/wps/scripts/run_wps_job.py",
+          "lines": 223
+        },
+        {
+          "path": "skills/wps/scripts/wps_binary_headers.py",
+          "lines": 96
+        },
+        {
+          "path": "skills/wps/scripts/wps_msdoc_charprops.py",
+          "lines": 143
+        },
+        {
+          "path": "skills/wps/scripts/read_wps.py",
+          "lines": 812
+        },
+        {
+          "path": "skills/wps/scripts/wps_binary_tables.py",
+          "lines": 392
+        },
+        {
+          "path": "skills/wps/scripts/wps_diagnostics.py",
+          "lines": 331
+        },
+        {
+          "path": "skills/wps/scripts/docx_to_wps_rtf.py",
+          "lines": 510
+        },
+        {
+          "path": "skills/wps/scripts/wps_ooxml_tables.py",
+          "lines": 200
+        },
+        {
+          "path": "skills/wps/scripts/wps_cfb.py",
+          "lines": 347
+        },
+        {
+          "path": "skills/wps/scripts/wps_output_contract.py",
+          "lines": 94
+        },
+        {
+          "path": "skills/wps/scripts/wps_access.py",
+          "lines": 143
+        },
+        {
+          "path": "skills/wps/scripts/wps_task_paths.py",
+          "lines": 307
+        },
+        {
+          "path": "skills/wps/scripts/wps_paragraph_sources.py",
+          "lines": 33
+        },
+        {
+          "path": "skills/wps/scripts/wps_ooxml.py",
+          "lines": 855
+        },
+        {
+          "path": "skills/wps/scripts/wps_rtf_geometry.py",
+          "lines": 60
+        },
+        {
+          "path": "skills/wps/scripts/wps_result.py",
+          "lines": 19
+        },
+        {
+          "path": "skills/wps/scripts/run_wps_edit.py",
+          "lines": 418
+        },
+        {
+          "path": "skills/wps/scripts/wps_content_validation.py",
+          "lines": 120
+        },
+        {
+          "path": "skills/wps/scripts/wps_read_view.py",
+          "lines": 201
+        },
+        {
+          "path": "skills/wps/scripts/wps_binary_shapes.py",
+          "lines": 48
+        },
+        {
+          "path": "skills/wps/scripts/wps_binary_refs.py",
+          "lines": 47
+        },
+        {
+          "path": "skills/wps/scripts/export_wps.py",
+          "lines": 408
+        },
+        {
+          "path": "skills/wps/scripts/wps_paragraph_evidence.py",
+          "lines": 86
+        },
+        {
+          "path": "skills/wps/scripts/wps_word_styles.py",
+          "lines": 186
+        },
+        {
+          "path": "skills/wps/scripts/wps_rtf_read.py",
+          "lines": 430
+        },
+        {
+          "path": "skills/wps/scripts/wps_binary_comments.py",
+          "lines": 74
+        },
+        {
+          "path": "skills/wps/scripts/wps_word_visibility.py",
+          "lines": 134
+        },
+        {
+          "path": "skills/wps/scripts/wps_delivery.py",
+          "lines": 43
+        },
+        {
+          "path": "skills/wps/scripts/run_wps_task.py",
+          "lines": 257
+        },
+        {
+          "path": "skills/wps/scripts/_wps_artifact_runtime/archive_deliverables.py",
+          "lines": 236
+        },
+        {
+          "path": "skills/wps/scripts/_wps_artifact_runtime/output_location.py",
+          "lines": 60
+        },
+        {
+          "path": "skills/wps/scripts/_wps_artifact_runtime/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/wps/scripts/_wps_artifact_runtime/controlled_cleanup.py",
+          "lines": 414
+        },
+        {
+          "path": "skills/wps/scripts/_wps_artifact_runtime/cleanup_task.py",
+          "lines": 66
+        },
+        {
+          "path": "skills/wps/scripts/_wps_artifact_runtime/artifact_files.py",
+          "lines": 131
+        },
+        {
+          "path": "skills/wps/scripts/_wps_artifact_runtime/router_config.py",
+          "lines": 117
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_publication.py",
+          "lines": 157
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_next_iteration.py",
+          "lines": 219
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_charprops.py",
+          "lines": 120
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_stories.py",
+          "lines": 118
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_ooxml_related.py",
+          "lines": 156
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_doc_versions.py",
+          "lines": 123
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_lazy_render.py",
+          "lines": 56
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_binary_refs.py",
+          "lines": 102
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_binary_shapes.py",
+          "lines": 107
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_delivery.py",
+          "lines": 299
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_rtf_recovery.py",
+          "lines": 122
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_output_contract.py",
+          "lines": 438
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_official_defaults.py",
+          "lines": 159
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_content_validation.py",
+          "lines": 83
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_selective.py",
+          "lines": 111
+        },
+        {
+          "path": "skills/wps/scripts/test/verify_wps_sample.py",
+          "lines": 345
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_rtf_layout.py",
+          "lines": 59
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_rtf_structure.py",
+          "lines": 76
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_publish_failure.py",
+          "lines": 59
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_rtf_reading.py",
+          "lines": 138
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_huge_papx.py",
+          "lines": 134
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_tables.py",
+          "lines": 209
+        },
+        {
+          "path": "skills/wps/scripts/test/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_cfb.py",
+          "lines": 339
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_paragraph_evidence.py",
+          "lines": 116
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_cfb_padding.py",
+          "lines": 84
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_table_layout.py",
+          "lines": 83
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_task.py",
+          "lines": 109
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_sample_acceptance.py",
+          "lines": 255
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_hidden.py",
+          "lines": 183
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_text_recovery.py",
+          "lines": 122
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_failure_diagnostics.py",
+          "lines": 50
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_paragraph_sources.py",
+          "lines": 152
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_export.py",
+          "lines": 244
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_entry_workflows.py",
+          "lines": 118
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_binary_comments.py",
+          "lines": 86
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_binary_tables.py",
+          "lines": 224
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_rtf_geometry.py",
+          "lines": 68
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_task_paths.py",
+          "lines": 178
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_strict_word.py",
+          "lines": 76
+        },
+        {
+          "path": "skills/wps/scripts/test/test_task_cli_support.py",
+          "lines": 67
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_binary_ownership.py",
+          "lines": 53
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_rtf_merges.py",
+          "lines": 62
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_ooxml.py",
+          "lines": 145
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_routing.py",
+          "lines": 96
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_word_profile.py",
+          "lines": 97
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_doc_extensions.py",
+          "lines": 128
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_diagnostics.py",
+          "lines": 202
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_partial_reflow.py",
+          "lines": 77
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps.py",
+          "lines": 534
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_edit.py",
+          "lines": 100
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_binary_headers.py",
+          "lines": 168
+        },
+        {
+          "path": "skills/wps/scripts/test/test_wps_delivery_filenames.py",
+          "lines": 124
+        }
+      ]
+    },
+    {
+      "skill": "xlsx",
+      "python_files": 95,
+      "max_lines": 965,
+      "over_limit": [],
+      "default_exit": 0,
+      "strict_exit": 0,
+      "errors": [],
+      "warning_counts": {},
+      "files": [
+        {
+          "path": "skills/xlsx/scripts/xlsx_rows.py",
+          "lines": 133
+        },
+        {
+          "path": "skills/xlsx/scripts/formula_engine.py",
+          "lines": 965
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_reader.py",
+          "lines": 368
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_hierarchy.py",
+          "lines": 96
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_unpack.py",
+          "lines": 148
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_cli.py",
+          "lines": 260
+        },
+        {
+          "path": "skills/xlsx/scripts/libreoffice_recalc.py",
+          "lines": 267
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_deposits.py",
+          "lines": 216
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_appearance.py",
+          "lines": 286
+        },
+        {
+          "path": "skills/xlsx/scripts/shared_strings_builder.py",
+          "lines": 169
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_header_candidates.py",
+          "lines": 142
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_wps_result.py",
+          "lines": 201
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_headers.py",
+          "lines": 166
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_analysis.py",
+          "lines": 376
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_delivery.py",
+          "lines": 28
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_management.py",
+          "lines": 390
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_deposit_structure.py",
+          "lines": 136
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_advanced.py",
+          "lines": 257
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_reconcile.py",
+          "lines": 154
+        },
+        {
+          "path": "skills/xlsx/scripts/formula_check.py",
+          "lines": 439
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_daily.py",
+          "lines": 229
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_identify.py",
+          "lines": 102
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_match.py",
+          "lines": 139
+        },
+        {
+          "path": "skills/xlsx/scripts/formula_wildcards.py",
+          "lines": 58
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_maturity.py",
+          "lines": 158
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_read_view.py",
+          "lines": 140
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_customers.py",
+          "lines": 235
+        },
+        {
+          "path": "skills/xlsx/scripts/stdlib_xlsx.py",
+          "lines": 853
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_add_column.py",
+          "lines": 401
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_lifecycle.py",
+          "lines": 27
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_shift_rows.py",
+          "lines": 328
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_tabular.py",
+          "lines": 197
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_lookup.py",
+          "lines": 115
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_cli_protocol.py",
+          "lines": 81
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_xml.py",
+          "lines": 24
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_pack.py",
+          "lines": 101
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_insert_row.py",
+          "lines": 160
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_management_policy.py",
+          "lines": 260
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_dashboard.py",
+          "lines": 207
+        },
+        {
+          "path": "skills/xlsx/scripts/run_xlsx_task.py",
+          "lines": 237
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_result_export.py",
+          "lines": 362
+        },
+        {
+          "path": "skills/xlsx/scripts/style_audit.py",
+          "lines": 581
+        },
+        {
+          "path": "skills/xlsx/scripts/xlsx_rank_share.py",
+          "lines": 138
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_tabular.py",
+          "lines": 145
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_deposits.py",
+          "lines": 167
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_result_export.py",
+          "lines": 135
+        },
+        {
+          "path": "skills/xlsx/scripts/test/benchmark_write_index.py",
+          "lines": 93
+        },
+        {
+          "path": "skills/xlsx/scripts/test/task_directory.py",
+          "lines": 24
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_dashboard.py",
+          "lines": 144
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_management_integration.py",
+          "lines": 93
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_daily.py",
+          "lines": 170
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_delivery.py",
+          "lines": 367
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_advanced.py",
+          "lines": 208
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_boundary.py",
+          "lines": 121
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_reconcile.py",
+          "lines": 135
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_rank_share.py",
+          "lines": 130
+        },
+        {
+          "path": "skills/xlsx/scripts/test/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_customers.py",
+          "lines": 152
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_management_policy.py",
+          "lines": 175
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_formula_workflows.py",
+          "lines": 165
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_analysis.py",
+          "lines": 181
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_match.py",
+          "lines": 116
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_read_view.py",
+          "lines": 151
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_cli_boundaries.py",
+          "lines": 117
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_stdlib_xlsx.py",
+          "lines": 311
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_identify.py",
+          "lines": 70
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_appearance.py",
+          "lines": 202
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_et_entrypoint.py",
+          "lines": 66
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_archive_sync.py",
+          "lines": 118
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_headers.py",
+          "lines": 203
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_maturity.py",
+          "lines": 115
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_bulk_metadata_api.py",
+          "lines": 112
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_rows.py",
+          "lines": 107
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_paths.py",
+          "lines": 232
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_calculation_reliability.py",
+          "lines": 180
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_output_filenames.py",
+          "lines": 98
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_write_index.py",
+          "lines": 159
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_deposit_structure.py",
+          "lines": 98
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_hierarchy.py",
+          "lines": 144
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_formula_functions.py",
+          "lines": 312
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_formula_engine.py",
+          "lines": 236
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_management.py",
+          "lines": 297
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_module_boundaries.py",
+          "lines": 28
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_wps_result.py",
+          "lines": 237
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_quick_start.py",
+          "lines": 176
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_cli_contract.py",
+          "lines": 125
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_header_candidates.py",
+          "lines": 75
+        },
+        {
+          "path": "skills/xlsx/scripts/test/test_xlsx_safety_regressions.py",
+          "lines": 199
+        },
+        {
+          "path": "skills/xlsx/scripts/_artifact_runtime/archive_deliverables.py",
+          "lines": 236
+        },
+        {
+          "path": "skills/xlsx/scripts/_artifact_runtime/output_location.py",
+          "lines": 60
+        },
+        {
+          "path": "skills/xlsx/scripts/_artifact_runtime/__init__.py",
+          "lines": 1
+        },
+        {
+          "path": "skills/xlsx/scripts/_artifact_runtime/controlled_cleanup.py",
+          "lines": 414
+        },
+        {
+          "path": "skills/xlsx/scripts/_artifact_runtime/cleanup_task.py",
+          "lines": 66
+        },
+        {
+          "path": "skills/xlsx/scripts/_artifact_runtime/artifact_files.py",
+          "lines": 131
+        },
+        {
+          "path": "skills/xlsx/scripts/_artifact_runtime/router_config.py",
+          "lines": 117
+        }
+      ]
+    }
+  ],
+  "python_files": 553,
+  "over_limit": 0,
+  "max_lines": 965,
+  "limitations": [
+    "Existing ET/WPS cache warnings left untouched; strict mode fails on these warnings.",
+    "No complete Pylint: package unavailable.",
+    "Not Linux/Windows or client visual validation."
+  ]
+}

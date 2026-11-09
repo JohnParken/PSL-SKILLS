@@ -1,0 +1,22 @@
+test_archive_failure_preserves_primary_and_allows_truthful_cleanup (test_lifecycle.LifecycleTests.test_archive_failure_preserves_primary_and_allows_truthful_cleanup) ... ok
+test_archive_requires_bare_final_names_and_keeps_nested_inputs (test_lifecycle.LifecycleTests.test_archive_requires_bare_final_names_and_keeps_nested_inputs) ... ok
+test_archive_trims_string_parameter_edges_before_selecting_destination (test_lifecycle.LifecycleTests.test_archive_trims_string_parameter_edges_before_selecting_destination) ... ok
+test_changed_final_prevents_cleanup (test_lifecycle.LifecycleTests.test_changed_final_prevents_cleanup) ... ok
+test_changed_fingerprint_retained (test_lifecycle.LifecycleTests.test_changed_fingerprint_retained) ... ok
+test_check_only_removes_own_probe (test_lifecycle.LifecycleTests.test_check_only_removes_own_probe) ... ok
+test_complete_cli_flow_keeps_input_and_final (test_lifecycle.LifecycleTests.test_complete_cli_flow_keeps_input_and_final) ... ok
+test_conflict_requires_explicit_replacement_and_preserves_inputs (test_lifecycle.LifecycleTests.test_conflict_requires_explicit_replacement_and_preserves_inputs) ... ok
+test_corrupt_manifest_never_deletes (test_lifecycle.LifecycleTests.test_corrupt_manifest_never_deletes) ... ok
+test_duplicate_parameters_and_json_constants_rejected (test_lifecycle.LifecycleTests.test_duplicate_parameters_and_json_constants_rejected) ... ok
+test_invalid_or_missing_config_skips_archive (test_lifecycle.LifecycleTests.test_invalid_or_missing_config_skips_archive) ... ok
+test_missing_platform_capability_fails_without_deletion (test_lifecycle.LifecycleTests.test_missing_platform_capability_fails_without_deletion) ... ok
+test_parent_path_and_unverified_seal_do_not_delete (test_lifecycle.LifecycleTests.test_parent_path_and_unverified_seal_do_not_delete) ... ok
+test_preexisting_file_cannot_be_adopted (test_lifecycle.LifecycleTests.test_preexisting_file_cannot_be_adopted) ... ok
+test_process_cli_stdout_is_single_json (test_lifecycle.LifecycleTests.test_process_cli_stdout_is_single_json) ... ok
+test_retry_preserves_then_success_cleans (test_lifecycle.LifecycleTests.test_retry_preserves_then_success_cleans) ... ok
+test_symlink_and_hardlink_inputs_protected (test_lifecycle.LifecycleTests.test_symlink_and_hardlink_inputs_protected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.064s
+
+OK

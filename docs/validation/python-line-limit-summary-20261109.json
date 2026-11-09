@@ -1,0 +1,230 @@
+{
+  "verified_utc": "2026-11-09T11:28:51.867545+00:00",
+  "source_head": "926505d9b1ca6ef03fe36ffab7634c8f7045820a",
+  "working_tree": "Original validation was recorded before commits; pre-existing DOCX work was preserved and later committed separately.",
+  "skill_versions": {
+    "docx": "20261109.1818.2343",
+    "et": "20261109.1818.2343",
+    "xlsx": "20261109.1818.2343",
+    "ofd": "20261109.1818.2343",
+    "pptx": "20261109.1818.2343",
+    "skill-development-standards": "20261109.1818.2343"
+  },
+  "before": {
+    "skills": 10,
+    "python_files": 472,
+    "over_1000": 14
+  },
+  "after": {
+    "skills": 10,
+    "python_files": 553,
+    "over_1000": 0,
+    "max_lines": 965
+  },
+  "refactored_files": [
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py",
+      "before": 5190,
+      "after": 241
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py",
+      "before": 3887,
+      "after": 253
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py",
+      "before": 2608,
+      "after": 206
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py",
+      "before": 2183,
+      "after": 505
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py",
+      "before": 2059,
+      "after": 117
+    },
+    {
+      "path": "skills/docx/scripts/create_docx.py",
+      "before": 2039,
+      "after": 402
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py",
+      "before": 1742,
+      "after": 117
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py",
+      "before": 1712,
+      "after": 83
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py",
+      "before": 1697,
+      "after": 121
+    },
+    {
+      "path": "skills/et/scripts/wps_biff8.py",
+      "before": 1159,
+      "after": 958
+    },
+    {
+      "path": "skills/ofd/scripts/read_ofd.py",
+      "before": 1113,
+      "after": 496
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py",
+      "before": 1112,
+      "after": 120
+    },
+    {
+      "path": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py",
+      "before": 1051,
+      "after": 96
+    },
+    {
+      "path": "skills/xlsx/scripts/formula_engine.py",
+      "before": 1020,
+      "after": 965
+    }
+  ],
+  "regressions": {
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "python": "3.12.12",
+    "expat": "expat_2.6.3",
+    "suites": [
+      {
+        "suite": "skills/artifact-lifecycle/scripts/test",
+        "exit_code": 0,
+        "tests": 17,
+        "skipped": 0,
+        "seconds": 0.106
+      },
+      {
+        "suite": "skills/docx/scripts/test",
+        "exit_code": 0,
+        "tests": 444,
+        "skipped": 0,
+        "seconds": 21.585
+      },
+      {
+        "suite": "skills/et/scripts/test",
+        "exit_code": 0,
+        "tests": 482,
+        "skipped": 0,
+        "seconds": 5.333
+      },
+      {
+        "suite": "skills/ofd/scripts/test",
+        "exit_code": 0,
+        "tests": 154,
+        "skipped": 0,
+        "seconds": 2.124
+      },
+      {
+        "suite": "skills/pptx/scripts/test",
+        "exit_code": 0,
+        "tests": 106,
+        "skipped": 0,
+        "seconds": 11.862
+      },
+      {
+        "suite": "skills/skill-development-standards/scripts/test",
+        "exit_code": 0,
+        "tests": 39,
+        "skipped": 0,
+        "seconds": 0.38
+      },
+      {
+        "suite": "skills/wps/scripts/test",
+        "exit_code": 0,
+        "tests": 447,
+        "skipped": 0,
+        "seconds": 6.802
+      },
+      {
+        "suite": "skills/xlsx/scripts/test",
+        "exit_code": 0,
+        "tests": 403,
+        "skipped": 0,
+        "seconds": 16.27
+      },
+      {
+        "suite": "tests",
+        "exit_code": 0,
+        "tests": 322,
+        "skipped": 0,
+        "seconds": 73.086
+      },
+      {
+        "suite": "tests/pptx",
+        "exit_code": 0,
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.305
+      }
+    ],
+    "tests": 2417,
+    "skipped": 0,
+    "ok": true,
+    "limitations": "Regression results only; not all-platform, client visual or production host acceptance."
+  },
+  "package_checks_included": {
+    "all_ten_independent_packages": 11,
+    "docx_runtime": 26,
+    "generic_packager_security": 11
+  },
+  "structure": {
+    "default_passed": 10,
+    "strict_source_passed": 8,
+    "strict_source_warning_only": {
+      "et": 70,
+      "wps": 56
+    },
+    "independent_runtime_strict_passed": 10
+  },
+  "first_pass_repairs": [
+    "XLSX summary test incorrectly searched cell text inside SHA-256: now checks parsed worksheet scope without changing production logic.",
+    "Current loading and skill-selection audit snapshots refreshed after manual expectation review; exact prior copies preserved."
+  ],
+  "evidence": {
+    "source_scan": "python-line-limit-source-20261109.json",
+    "integrity": "python-line-limit-integrity-20261109.json",
+    "final_tests": "python-line-limit-tests-final-20261109/summary.json",
+    "first_tests": "python-line-limit-tests-20261109/summary.json"
+  },
+  "limitations": [
+    "macOS27.2 arm64, Python3.12.12 and Expat2.6.3 only; Linux/Windows not rerun.",
+    "Client visual rendering and full real-format certification not performed.",
+    "Pylint unavailable; lightweight AST/line scan is not a full lint pass.",
+    "Pre-existing ET reader style issues and ET/WPS caches remain; no unsupported deletion or threshold exemption.",
+    "Runtime ZIPs built temporarily for tests; existing dist and historical release ZIPs not rewritten."
+  ],
+  "prepush_verification": {
+    "source_head": "dc523be9c1eefa761d1ca5e42661344a70fd2a1d",
+    "tests": 2417,
+    "failures": 0,
+    "skipped": 0,
+    "report": "python-line-limit-prepush-tests-20261109/summary.json",
+    "terminal_newline_normalization_files": 30,
+    "ast_unchanged": true
+  },
+  "pylint_policy_update": {
+    "default_tool": "Pylint",
+    "required_categories": [
+      "E",
+      "F"
+    ],
+    "path_entry": "not_found",
+    "python_3_12": "not_installed",
+    "python_3_13": "not_installed",
+    "execution": "not_run",
+    "installation": "not_performed",
+    "scope": "User requested AGENTS policy update; no claim of zero Pylint errors."
+  }
+}

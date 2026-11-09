@@ -1,0 +1,1 @@
+Collected 3 tests from /Users/yangxuezhen/git/PSL-SKILLS/tests/pptx (test_*.py)

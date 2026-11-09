@@ -1,0 +1,1 @@
+Collected 17 tests from /Users/yangxuezhen/git/PSL-SKILLS/skills/artifact-lifecycle/scripts/test (test_*.py)

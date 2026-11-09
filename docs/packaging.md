@@ -58,7 +58,13 @@ python -I -S -B tools/check_project_docs.py
 
 覆盖生成/读取/编辑、ET保存值和partial语义、OFD字体原始哈希、PPTX原生生成、生命周期归档清理、组合依赖缺失，以及所有包严格路径闭包。真实原生ET、Word/WPS/PPT视觉、真实模型自动选技能、云空间同步和所有平台仍须分别验收。源码ET/WPS已有缓存不在此次授权清理范围内；源码严格检查可受缓存警告影响，所有运行包必须无缓存并通过严格检查。
 
+## Python 模块拆分后的清单
+
+[文件行数维护](python-file-limit.md) 为 OFD、DOCX、ET、XLSX、PPTX 的职责模块同步显式白名单，检查器随规范包分发。原 CLI/API 入口保留，必须完整安装运行清单，不再将单个入口脚本误当完整部署单元。既有 ZIP 与历史验收不改写；本轮独立安装测试临时构建新包并核对只读、空 PATH 及无源码依赖。
+
 ## 当前结果
+
+本节保留分发整理时的历史基线、包大小和验收结果，不作为后续版本的重复验收。DOCX 字体编辑路由、格式差异保护及保留维护的当前范围见 [DOCX 说明](skills/docx.md#已有文档字体修改与格式保留)。
 
 本轮验收基于 `e86522e` 加本轮工作树变更，证据生成时尚未提交；后续分批提交与推送状态以 Git 历史和远端 SHA 为准。详细大小与SHA256见 [10包发布记录](validation/runtime-release-20261109.json)，完整回归见 [2368项汇总](validation/restructure-tests-final-20261109/summary.json)，[源码完整性](validation/restructure-integrity.json) 记录255份正式Python未改与原包/样本保护。
 

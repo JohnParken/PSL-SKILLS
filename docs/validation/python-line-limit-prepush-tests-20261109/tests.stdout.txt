@@ -1,0 +1,16 @@
+Collected 322 tests from /Users/yangxuezhen/git/PSL-SKILLS/tests (test_*.py)
+Isolated copy: et
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 1.345s
+
+OK
+
+Isolated copy: wps
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 1.344s
+
+OK
+
+{"platform": "macOS-27.2-arm64-arm-64bit", "python": "3.12.12", "expat": "expat_2.6.3", "fixtures": "synthetic only", "not_verified": ["other operating systems", "Office/WPS rendering", "real native ET", "OS-level network/read sandbox", "host/model result delivery"]}

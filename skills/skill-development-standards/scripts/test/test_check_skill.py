@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import subprocess
 from pathlib import Path
 import sys
 import tempfile
@@ -30,6 +31,104 @@ def make_skill(root: Path, body: str = "Instructions.\n", front: str | None = No
 
 
 class CheckSkillTests(unittest.TestCase):
+    def python_skill(self, root, data, name="scripts/source.py"):
+        skill = make_skill(root)
+        (skill / "requirements.txt").write_text("# Standard library only.\n", encoding="utf-8")
+        target = skill / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        return skill, target
+
+    def test_python_physical_line_boundaries_and_endings(self):
+        for count in (999, 1000, 1001):
+            for newline in (b"\n", b"\r\n", b"\r"):
+                for terminated in (False, True):
+                    with self.subTest(count=count, newline=newline, terminated=terminated):
+                        with tempfile.TemporaryDirectory() as tmp:
+                            data = newline.join([b"pass"] * count) + (newline if terminated else b"")
+                            skill, target = self.python_skill(Path(tmp), data)
+                            before = (target.read_bytes(), target.stat().st_mtime_ns)
+                            issues = check_skill.check_skill(skill)
+                            if count <= 1000:
+                                self.assertEqual([], issues)
+                            else:
+                                self.assertEqual(1, len(issues))
+                                issue = issues[0]
+                                self.assertEqual(("error", "python-file-lines", "scripts/source.py"),
+                                                 (issue.level, issue.rule, issue.path))
+                                self.assertIn("1001", issue.message)
+                                self.assertIn("1000", issue.message)
+                            for options in ([], ["--strict"]):
+                                with contextlib.redirect_stdout(io.StringIO()):
+                                    self.assertEqual(int(count > 1000), check_skill.main([str(skill), *options]))
+                            self.assertEqual(before, (target.read_bytes(), target.stat().st_mtime_ns))
+
+    def test_python_line_limit_counts_comments_blank_lines_and_docstrings(self):
+        for prefix in (b"\n", b"# comment\n", b'"""\n'):
+            with self.subTest(prefix=prefix), tempfile.TemporaryDirectory() as tmp:
+                data = prefix * 1000 + b"pass\n" if prefix != b'"""\n' else b'"""\n' + b"text\n" * 999 + b'"""'
+                skill, _ = self.python_skill(Path(tmp), data)
+                issues = check_skill.check_skill(skill)
+                self.assertEqual([("python-file-lines", "error")], [(i.rule, i.level) for i in issues])
+
+    def test_python_unicode_separators_are_not_physical_newlines(self):
+        for separator in ("\u0085", "\u2028", "\u2029", "\v", "\f", "\x1c", "\x1d", "\x1e"):
+            with self.subTest(separator=repr(separator)), tempfile.TemporaryDirectory() as tmp:
+                data = (f"value = 'a{separator}b'\n" * 1000).encode("utf-8")
+                skill, _ = self.python_skill(Path(tmp), data)
+                self.assertEqual([], check_skill.check_skill(skill))
+
+    def test_python_line_limit_honors_source_encodings(self):
+        cases = ((b"# coding: latin-1\n", b"# caf\xe9\n"),
+                 (b"\xef\xbb\xbf", "# 中文\n".encode("utf-8")))
+        for header, line in cases:
+            for count in (1000, 1001):
+                with self.subTest(header=header, count=count), tempfile.TemporaryDirectory() as tmp:
+                    skill, _ = self.python_skill(Path(tmp), header + line * (count - header.count(b"\n")))
+                    issues = check_skill.check_skill(skill)
+                    self.assertEqual(["python-file-lines"] if count > 1000 else [], [i.rule for i in issues])
+
+    def test_python_line_limit_recurses_all_sources_without_exemptions(self):
+        names = ("scripts/nested/source.py", "scripts/test/test_large.py", "scripts/test/helpers/helper.py",
+                 "references/nested/source.py", "assets/vendor/third_party.py", "assets/generated/source.py")
+        for name in names:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                skill, _ = self.python_skill(Path(tmp), b"# generated third-party source\n" * 1001, name)
+                self.assertEqual([("error", "python-file-lines", name)],
+                                 [(i.level, i.rule, i.path) for i in check_skill.check_skill(skill)])
+
+    def test_python_line_limit_reports_even_when_syntax_is_invalid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill, _ = self.python_skill(Path(tmp), b"\n" * 1000 + b"if")
+            self.assertEqual({"python-file-lines", "python-syntax"}, {i.rule for i in check_skill.check_skill(skill)})
+
+    def test_python_line_limit_does_not_read_nested_symlinks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill, _ = self.python_skill(root, b"pass\n")
+            outside = root / "outside"
+            outside.mkdir()
+            source = outside / "large.py"
+            source.write_bytes(b"pass\n" * 1001)
+            (skill / "scripts" / "linked.py").symlink_to(source)
+            (skill / "scripts" / "linked_dir").symlink_to(outside, target_is_directory=True)
+            self.assertEqual(["symlink", "symlink"], sorted(i.rule for i in check_skill.check_skill(skill)))
+
+    def test_python_line_limit_cli_exit_status_and_diagnostic(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill, target = self.python_skill(Path(tmp), b"pass\n" * 1001)
+            for count in (1000, 1001):
+                target.write_bytes(b"pass\n" * count)
+                for options in ([], ["--strict"]):
+                    result = subprocess.run([sys.executable, "-I", "-S", "-B", check_skill.__file__, str(skill), *options],
+                                            capture_output=True, text=True, check=False)
+                    self.assertEqual(int(count > 1000), result.returncode, result.stdout + result.stderr)
+                    self.assertEqual("", result.stderr)
+                    if count > 1000:
+                        self.assertIn("ERROR", result.stdout)
+                        self.assertIn("scripts/source.py: [python-file-lines]", result.stdout)
+                        self.assertIn("1001 physical lines; maximum is 1000", result.stdout)
+
     def test_misplaced_test_scripts_fail_both_modes_without_execution(self):
         names = ("scripts/test_sample.py", "scripts/sample_test.py", "references/sample.test.js", "scripts/spec_sample.sh")
         for name in names:

@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sys
+import tokenize
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +27,7 @@ ALLOWED_ROOT = {"SKILL.md", "requirements.txt", "scripts", "references", "assets
 SUSPICIOUS = {"readme", "readme.md", "cache", "__pycache__", "log", "logs", "tmp", "temp"}
 DIRECTORY_NAME = re.compile(r"[A-Za-z_](?:[A-Za-z_-]*[A-Za-z_])?")
 FILE_NAME_START = re.compile(r"[A-Za-z_]")
+MAX_PYTHON_FILE_LINES = 1000
 TEMP_SUFFIXES = {".pyc", ".pyo", ".log", ".tmp", ".bak"}
 TEST_SCRIPT_SUFFIXES = {".py", ".sh", ".bash", ".ps1", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
 
@@ -396,8 +398,18 @@ def check_skill(skill: Path) -> list[Issue]:
         issues.append(Issue("error", "requirements", "requirements.txt", "Python scripts require requirements.txt."))
     for pyfile in pyfiles:
         try:
-            ast.parse(pyfile.read_text(encoding="utf-8"), filename=str(pyfile))
-        except (SyntaxError, UnicodeError, OSError) as exc:
+            # Honor Python encoding cookies/BOM and universal source newlines.
+            # Iteration counts blank/comment lines and a final unterminated line,
+            # but not Unicode separators inside strings/comments as extra lines.
+            with tokenize.open(pyfile) as source:
+                lines = list(source)
+            if len(lines) > MAX_PYTHON_FILE_LINES:
+                issues.append(Issue(
+                    "error", "python-file-lines", pyfile.relative_to(skill).as_posix(),
+                    f"Python file has {len(lines)} physical lines; maximum is {MAX_PYTHON_FILE_LINES}.",
+                ))
+            ast.parse("".join(lines), filename=str(pyfile))
+        except (SyntaxError, UnicodeError, OSError, LookupError) as exc:
             issues.append(Issue("error", "python-syntax", pyfile.relative_to(skill).as_posix(), f"Cannot parse Python file: {exc}"))
     refs = skill / "references"
     reference_files = [p for p in files if p.is_relative_to(refs) and p.suffix.lower() == ".md"]

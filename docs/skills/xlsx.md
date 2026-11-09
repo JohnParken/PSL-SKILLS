@@ -1,8 +1,10 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 核对日期：2026-11-07；源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.0953.3643`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1818.2343`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
+
+当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
 
 ## 功能与适用范围
 
@@ -62,6 +64,8 @@ flowchart TD
 | [xlsx_appearance.py](../../skills/xlsx/scripts/xlsx_appearance.py) | 仅新表可选的可读外观及格式，不作为既有文件任意重排能力 |
 | [run_xlsx_task.py](../../skills/xlsx/scripts/run_xlsx_task.py) | 白名单写文件 CLI；stdin 规格、具名配置、冲突版本名、子进程结果与本轮中间文件收尾 |
 | [xlsx_delivery.py](../../skills/xlsx/scripts/xlsx_delivery.py)、[xlsx_lifecycle.py](../../skills/xlsx/scripts/xlsx_lifecycle.py) | 路径检查、追加 `delivery`；显式归档/登记/封存/清理入口 |
+
+公式引擎将纯通配匹配职责拆到同包 `formula_wildcards.py`，`formula_engine.py` 保留兼容导出；不改变公式语法、运算预算、类型或错误语义，也不扩大函数支持范围。
 
 ## 任务流程
 

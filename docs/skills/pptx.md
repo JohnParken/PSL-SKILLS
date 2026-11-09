@@ -1,8 +1,10 @@
 # PPTX：受限 SVG 到可编辑演示文稿
 
-文档核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261108.0102.2369`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
+文档核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261109.1818.2343`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
+
+当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
 
 ## 功能与适用范围
 
@@ -50,6 +52,10 @@ flowchart TD
 | [pptx_core/package.py](../../skills/pptx/scripts/pptx_core/package.py) | 幻灯片、母版、主题、备注、内容类型与关系的内存组包 |
 | [pptx_core/inspection.py](../../skills/pptx/scripts/pptx_core/inspection.py) | 全包验证后的返回投影、整页 UTF-8 预算、源/选项绑定续读与 coverage |
 | [pptx_core/validation.py](../../skills/pptx/scripts/pptx_core/validation.py) | ZIP/XML、媒体、关系、内嵌工作簿和受支持 PPTX 结构校验；MCE 分支选择及内容摘要 |
+
+### 引擎文件行数与职责拆分
+
+原 `drawingml/elements.py`、`utils.py`、`converter.py` 保留兼容导出，分别委托图片/形状/文本、几何/样式/字体度量、页面遍历/图表/表格职责模块。`native_objects` 的图表、表格、公式与 marker 模块同样保留旧入口，以显式模块导入共享实现；公式解析按参数、分隔符、环境和化学表达式分解。所有新增模块随同一运行包安装，不读取源码仓库。来源及许可证保留，派生路径在上游清单和 provenance 中追踪，不以第三方身份豁免 1000 行硬规范。
 
 ## 任务流程
 

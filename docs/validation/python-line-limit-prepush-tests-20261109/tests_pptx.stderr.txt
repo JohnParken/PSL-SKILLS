@@ -1,0 +1,8 @@
+test_missing_pptx_success_markers_are_not_accepted (test_adapter.PptxCheckAdapterTests.test_missing_pptx_success_markers_are_not_accepted) ... ok
+test_real_environment_check_preserves_child_contract (test_adapter.PptxCheckAdapterTests.test_real_environment_check_preserves_child_contract) ... ok
+test_real_failed_check_keeps_both_channels_and_child_exit (test_adapter.PptxCheckAdapterTests.test_real_failed_check_keeps_both_channels_and_child_exit) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.274s
+
+OK

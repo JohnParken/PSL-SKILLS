@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
-  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。",
+  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。",
   "entry_sha256": {
     "artifact-lifecycle": "f6de41a1f229fd7eae90bc2c2803d765b74dc83eb05fbeb4ee54281c88ee1d20",
     "bank-writing": "83317df3c37dfa1eabadc28b38ed28d2b97e2ff958a7e89c44c606d8df7d8435",
-    "docx": "24c6118b0b22463826fc885985119d63ee70f7822246b70b32c6584dd8343b53",
-    "et": "4f9d7802dbf247cc5e4b58628744505d110bff4f70e3661beec03fe16b489db1",
-    "ofd": "3acbc734da8cddec85cef4b85af5846e99e447f06729e883b5e5dc4caa61c377",
-    "pptx": "5ed6b5df12efd1ab1f9e473432241067ac619fbe6d58a08d8c895112feab11f0",
-    "skill-development-standards": "9554aeb9e6dbbbc37d73ef136c3d2e115348a98558e0ddce53d72d0a0ed6d463",
+    "docx": "96d787dd47b7950963714ecd3f5afbfcc5f58ac35ac7ac419078a02e818cbe7b",
+    "et": "6671c87dc1882c9b8283ab3a9b06b220bcb4ad0eddaf2c486f01f138072b1c27",
+    "ofd": "5346cde45f90bb9769e619e76590de41842500dc746d506ac65b9fa5a29a6800",
+    "pptx": "282180d431f2512a22aebbf3cf03623db896c59f3b85ad2a5e9ae2351a2e68eb",
+    "skill-development-standards": "c1bf7754e735252af08c1fdd38be7b8d4cb0760d2c885bc9590c75cdb21e9317",
     "table-workflow": "ded5c18ae1bb4134af69cbda42cca00ca9d7c2cc9a67919f692a07367d62b548",
     "wps": "777679b528be728a86f18a4ac48b5306208dd46046529e1cad64cfce12cf83a6",
-    "xlsx": "bb30ccc6674bb08adf7fa9c63e4354819ff8075bb4fee6e81590e3c144003e03"
+    "xlsx": "1e9fd0d879d48c5fba55496c133dea4aaa627d0dde3f579ea0bbef46dfba7840"
   },
   "cases": [
     {

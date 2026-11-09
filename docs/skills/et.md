@@ -1,8 +1,10 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261109.0953.3643`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261109.1818.2343`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
+
+当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
 
 ## 功能与适用范围
 
@@ -23,6 +25,9 @@ flowchart TD
     B --> C["read_et.py：按内容路由"]
     C --> D["wps_cfb.py：CFB 容器校验"]
     D --> E["wps_biff8.py：BIFF8 子集"]
+    E --> EV["wps_biff8_values.py：数值、字符串和 SST"]
+    E --> EE["wps_biff8_errors.py：共享异常与断言"]
+    EV --> EE
     C --> F["wps_ooxml_sheet.py：OOXML 表格子集"]
     F --> G["wps_ooxml.py：ZIP 与 XML 安全原语"]
     E --> H["wps_diagnostics.py：范围与缺口诊断"]
@@ -55,6 +60,8 @@ flowchart TD
 | [et_table_data.py](../../skills/et/scripts/et_table_data.py) | schema、选区、表头、类型、缓存策略与合并区域处理 |
 | [et_table_analysis.py](../../skills/et/scripts/et_table_analysis.py) | `analyze(result, query)`、类型化过滤、稳定排序、统计和分组 |
 | [et_table_preview.py](../../skills/et/scripts/et_table_preview.py)、[et_table_quality.py](../../skills/et/scripts/et_table_quality.py) | 物理网格预览及有界位置样本、统计分母、缓存缺口 |
+
+内部拆分将基础数值、字符串和 SST 解码放入 `wps_biff8_values.py`，稳定异常类别放入 `wps_biff8_errors.py`；原 `wps_biff8.py` 继续导出旧入口，BIFF8 元数据及资源限制不变。三个模块随同一运行清单分发。
 
 ## 任务流程
 

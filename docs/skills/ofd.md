@@ -1,8 +1,10 @@
 # OFD：结构读取与受限固定版式生成
 
-文档核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261109.0953.3643`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
+文档核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261109.1818.2343`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
+
+当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
 
 ## 功能与适用范围
 
@@ -18,9 +20,12 @@ OFD Skill 同时提供只读提取和显式模型生成，但两者支持范围�
 
 ```mermaid
 flowchart TD
-    A["OFD 文件"] --> B["read_ofd.py：安全文件与 ZIP/XML 读取"]
+    A["OFD 文件"] --> B["read_ofd.py：只读 CLI/API 与业务编排"]
+    B --> BC["ofd_common.py：安全输入、环境与共享预算"]
+    B --> BP["ofd_package.py：ZIP/XML 容器与资源角色"]
+    BP --> BC
     B --> C["类型化引用：文档、页面、模板、资源"]
-    C --> D["structure 与 text_sources：结构及存储文字"]
+    C --> D["ofd_structure.py：structure 与 text_sources"]
     C --> E["text_runs 与 objects：页面出现及存储节点交叉索引"]
     D --> F["ofd-read-3：状态、覆盖与诊断"]
     E --> F
@@ -35,7 +40,7 @@ flowchart TD
     I -.->|"仅复用安全读取与环境原语"| B
 ```
 
-`read_ofd.py` 的 `Package` 管理 ZIP 成员、引用解析、XML 缓存、资源角色和累计预算；`read_ofd()` 构建业务结果。`catalogue_structure()` 将 XML 存储与页面出现拆开，避免把同一复合对象的多次出现误当重复数据而删除。
+`read_ofd.py` 保留原 CLI/API 和兼容导出，`read_ofd()` 构建业务结果。共享限制、异常和安全文件读取位于 `ofd_common.py`；`ofd_package.py` 的 `Package` 管理 ZIP 成员、引用解析、XML 缓存、资源角色和累计预算；`ofd_structure.py` 的 `catalogue_structure()` 将 XML 存储与页面出现拆开，避免把同一复合对象的多次出现误当重复数据而删除。四个文件随同一包发布，必须一起安装；仍使用标准库和隔离启动，不将任务目录加入模块搜索路径。
 
 读取器、生成器、独立检查器及所需静态资源随本包部署，不隐式依赖相邻 Skill 或仓库测试；公共归档另由宿主显式定位。生成器复用本包读取器的安全输入和环境检查，不复用其结果作为唯一验收依据。独立检查器不导入读取器或生成器，生成过程还将结果与显式输入模型比对；这种独立结构检查仍不是 OFD 客户端视觉验收。
 
@@ -43,7 +48,10 @@ flowchart TD
 
 | 源码 | 职责 |
 |---|---|
-| [read_ofd.py](../../skills/ofd/scripts/read_ofd.py) | 只读 CLI/API、容器预算、版本策略、引用图、结构目录、文字解释及输出投影 |
+| [read_ofd.py](../../skills/ofd/scripts/read_ofd.py) | 稳定只读 CLI/API、版本策略、页面与文字编排、输出投影和兼容导出 |
+| [ofd_common.py](../../skills/ofd/scripts/ofd_common.py) | 共享限制与异常、环境自检、受限文件读取、包路径及 XML/文字原语 |
+| [ofd_package.py](../../skills/ofd/scripts/ofd_package.py) | ZIP/XML 安全解析、预算、引用与不透明载荷角色 |
+| [ofd_structure.py](../../skills/ofd/scripts/ofd_structure.py) | XML 存储目录、文字来源与页面出现交叉索引 |
 | [generate_ofd.py](../../skills/ofd/scripts/generate_ofd.py) | JSON 输入约束、`Builder`、几何定位、资源组包、模型核对及安全发布 |
 | [ofd_generation_assets.py](../../skills/ofd/scripts/ofd_generation_assets.py) | 静态 TrueType 的 cmap/度量/嵌入限制和受限 PNG/JPEG 检查 |
 | [check_generated_ofd.py](../../skills/ofd/scripts/check_generated_ofd.py) | 独立 ZIP/XML 子集审计、ID、引用、边界、文字/字形计数和许可保留 |
