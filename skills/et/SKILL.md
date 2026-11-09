@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261109.2340.5905"
+version: "20261110.0051.1813"
 description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，预览表头区域，并按指定范围筛选、排序、去重、统计及分组汇总，提供质量诊断；支持 BIFF8 与 OOXML 子集并保留 partial。公式不重算，不修改原表；原生 XLSX 使用对应技能。
 ---
 
@@ -39,6 +39,12 @@ python -I -S -B "<skill-root>/scripts/et_cli.py" run --check
 多份来源计算后填入另附 XLSX 模板时，交由独立 table-workflow 技能编排，ET 仍只读。纯文本或仅 stdout 不归档；文件交接继承提供方已验证的归档状态与用户提示，成功即提示去云空间查看，非成功如实报告，不虚构文件链接或暴露内部归档信息。交接原始完整读取 schema 与 partial/缓存诊断，不能将 et_table_analysis_v1 或预览直接当原工作簿；单表读取与统计继续本入口，不加载跨表流程。
 
 维护CLI或接入跨技能编排时，按需读取 `<skill-root>/scripts/docs/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。回归脚本集中在 `skills/et/scripts/test/`。
+
+## 执行结果判读
+
+每次调用先核对是否执行、真实退出状态和宿主截断说明，再检查完整业务 JSON。工具 `success` 不等于读取成功；Deep Agents 可以合并 stdout/stderr 并附状态文字，不假定两个独立字段或固定分隔符。保留实际可见诊断，不把宿主前后缀当 JSON，不靠截取首尾花括号猜正文。退出码缺失/未知不补成0；未启动、超时或结果不明时停止依赖并核实。
+
+退出3仍读取可靠 JSON 并保留 partial，退出1检查失败诊断，参数错误退出2可能只有 stderr 用法文本，不假造空表。宿主结果引用（如 `/large_tool_results/`）仅用实际可用的 `read_file` 按真实 schema 逐段读取，不交给 Shell 或猜替代路径。区分宿主截断与业务视图尚未取完；如何续读及确认覆盖见 `<skill-root>/references/bounded-reading.md`。完整结果不可取得时明确缺口，不以首屏或概况完成全量分析。
 
 ## 电子表格：读取 ET/ETT 保存值
 

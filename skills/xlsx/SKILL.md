@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261109.2340.5905"
+version: "20261110.0051.1813"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -76,7 +76,11 @@ python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./清单.xlsx
 
 首次普通读取：`python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./input.xlsx`。大表只选结构时可直接用 `python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx --summary`；概况没有单元格值，不能替代数据验收。有界读取的覆盖、truncated、next_cursor 及诊断必须保留；需要局部值或续读时才加载有界参考。全量统计直接用 profile/summarize 的明确区域，不先逐页搬整表；必要全量数据仍读取完整结果，不为省输出丢弃内容。
 
-工具调用前核对真实 schema、完整非空命令与 JSON。复杂规格用 Python dict/list 和 JSON 序列化（走 stdin），不手拼长 JSON。保留 stdout、stderr、退出状态及完整业务诊断；非零退出也先检查结果，参数错误不冒充 partial。宿主返回 `/large_tool_results/` 结果引用时须用 `read_file` 读取，不当作 execute 可见路径；工具缺失或读取失败就停止依赖，不用 Shell 绕过，不虚构参数。
+工具调用前核对真实 schema、完整非空命令与 JSON。复杂规格用 Python dict/list 和 JSON 序列化（走 stdin），不手拼长 JSON。每次执行后按三层判读：
+
+1. **调用与进程。** 核对本次调用是否实际执行、真实退出状态及宿主截断说明。工具 `success` 不等于业务成功；Deep Agents 可以合并 stdout/stderr 并附状态文字，不假定两个独立字段或固定分隔符。保留实际可见诊断；退出码缺失/未知不补成0，未启动、超时或状态不明时先核实，不盲目重跑写操作。
+2. **业务结果。** 从已确认完整的结果中识别本入口的 JSON，不把宿主前后缀当 JSON，也不靠截取首尾花括号猜正文。非零退出仍读取业务结果；普通原生完整读取只有 `date_system/sheets` 等字段，不要求不存在的 `status` 或 `schema_version`。有界读取核对 `xlsx_read_view_v1`；写入按下方业务、归档和清理契约验收。参数错误、缺失/无效 JSON 与部分公式计算分别处理。
+3. **覆盖与续读。** 宿主结果引用（如 `/large_tool_results/`）使用实际可用的 `read_file` 按真实 schema 读取，不当作 execute 可见路径；逐段核对覆盖和截断。业务 `truncated` 只表示投影还有后续，不代表宿主截断。大结果按 `<skill-root>/references/bounded-reading.md` 续读；引用不可读或内容已被截断则停止依赖，不用 Shell 绕过或虚构参数。
 
 ## 核心结果与安全边界
 

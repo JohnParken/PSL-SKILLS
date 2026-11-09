@@ -51,7 +51,7 @@ raise SystemExit(result.returncode)
 execute(command="python -I -S -B - \"<skill-root>\" \"报告.xlsx\" <<'PY_SPEC'\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\n\nroot = Path(sys.argv[1])\noutput = sys.argv[2]\nspec = {\n    \"sheets\": [{\"name\": \"Data\", \"cells\": {\n        \"A1\": {\"value\": '说明：客户说\"已确认\"；字面文本 C:\\\\资料 与 $(echo 未执行)。'},\n        \"B1\": {\"value\": 42},\n    }}]\n}\nrequest = {\"script\": \"stdlib_xlsx.py\", \"arguments\": [\"create\", \"@spec\", output],\n           \"output\": output, \"configs\": {\"spec\": spec}}\ncommand = [sys.executable, \"-I\", \"-S\", \"-B\", str(root / \"scripts/run_xlsx_task.py\")]\n\ntry:\n    payload = json.dumps(request, ensure_ascii=False, allow_nan=False).encode(\"utf-8\")\nexcept (TypeError, ValueError, OverflowError):\n    print(\"spec_serialization_failed: correct the Python data structure\", file=sys.stderr)\n    raise SystemExit(2)\ntry:\n    result = subprocess.run(command, input=payload, check=False)\nexcept OSError:\n    print(\"runner_not_started: check the confirmed interpreter and Skill path\", file=sys.stderr)\n    raise SystemExit(1)\nraise SystemExit(result.returncode)\nPY_SPEC\n")
 ```
 
-Python通过sys.executable启动现有runner，subprocess参数使用列表，未启用shell=True、不设置cwd，也不另设更短的外层超时。JSON只通过input字节传stdin，不写临时JSON、不打印正文调试信息。子进程stdout/stderr直接透传，真实退出码原样返回，包括1、2、3；不要用check=True异常掩盖返回摘要。宿主仍须完整回传两个通道，截断或未知执行状态不能当成功。
+Python通过sys.executable启动现有runner，subprocess参数使用列表，未启用shell=True、不设置cwd，也不另设更短的外层超时。JSON只通过input字节传stdin，不写临时JSON、不打印正文调试信息。子进程stdout/stderr直接透传，真实退出码原样返回，包括1、2、3；不要用check=True异常掩盖返回摘要。宿主可能分流或合流回传；按实际可见结果保留正文和诊断，核对真实退出状态及截断，无法确认完整时不得当成功。
 
 ## 成功与失败清理
 

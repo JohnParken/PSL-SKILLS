@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261109.2340.5905"
+version: "20261110.0051.1813"
 description: 用于读取 .wps、.rtf 与旧 DOC 兼容文字，创建 RTF 内容的 .wps/.rtf 文档或受控重排。不生成金山原生格式、不承诺无损；原生 DOCX 常规任务优先 docx，.et/.ett 交给 et，原生 XLSX/XLSM 交给 xlsx。
 ---
 
@@ -47,7 +47,7 @@ python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --summary
 python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --paragraph-range 1:20
 ```
 
-概况不含正文，不用它回答全文问题。段落范围为1-based闭区间，只投影主段落；核对 `selection_status`、`source_status`、`projection_scope`，不把源 `reading_assessment` 当投影覆盖全文。保留 stdout、stderr、退出码及 partial/遗漏诊断；宿主截断结果不是完整 JSON，不据此继续。纯文本 `--format text` 只在确实不需结构/诊断时用，不替代结果契约。
+概况不含正文，不用它回答全文问题。段落范围为1-based闭区间，只投影主段落；核对 `selection_status`、`source_status`、`projection_scope`，不把源 `reading_assessment` 当投影覆盖全文。保留本次可见输出、真实退出状态及 partial/遗漏诊断，按末节判读；宿主截断结果不是完整 JSON。纯文本 `--format text` 只在确实不需结构/诊断时用，partial 诊断仍在 stderr；合并流时不能把诊断混作正文，不替代结果契约。
 
 ### 创建：标题、正文、基础表格
 
@@ -81,6 +81,10 @@ JSON
 | 落盘配置、归档异常或收尾恢复 | `<skill-root>/references/delivery.md` |
 
 ## 结果判断与交付
+
+先核对调用是否执行、真实退出状态与宿主截断说明，再检查本入口的业务结果。工具 `success` 不等于文档成功；Deep Agents 可以合并 stdout/stderr 并附状态文字，不假定两个独立字段或固定分隔符。不把宿主前后缀当 JSON，也不靠截取首尾花括号猜正文；退出码缺失/未知不补成0。未启动、超时、发布或结果不明时先核实，不盲目重跑创建、重排或导出。
+
+宿主结果引用（如 `/large_tool_results/`）仅用实际可用的 `read_file` 按真实 schema 读取，不能当 Shell 路径。需要分段时核对覆盖；宿主截断不等于业务视图 `truncated`。引用不可读或内容不完整时停止依赖，按 `<skill-root>/references/bounded-reading.md` 选择安全续读，不能以首屏、概况或主正文投影代替全文结构。
 
 - 读取 `status=ok` / 退出0只表示声明范围内成功；`partial` / 退出3保留可靠正文并报告已知缺口；失败1、参数错误2。选择性歧义/未找到不能当已读到目标，partial源还可能保持退出3，须同时检查选择状态。
 - 创建/编辑退出0仍须检查 `partial`、`issues`、`spec_warnings` / `spec_warning_count`，不能只凭 `status=success`。未知配置或显式未知字体替换要说明；显式有损重排退出3。`--compact-receipt` 仅创建支持，省去预览、不省略现有警告及发布/归档状态；编辑不要传此参数。
