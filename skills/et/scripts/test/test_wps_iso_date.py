@@ -42,6 +42,22 @@ class IsoDatePackageTests(unittest.TestCase):
         self.assertEqual(cells['A1']['value'],'2024-02-29')
         self.assertEqual(cells['B1']['cache_status'],'missing')
         self.assertNotIn('iso_date',cells['B1'])
+    def test_missing_and_plain_cells_do_not_reuse_previous_date_metadata(self):
+        value = result(package(
+            '<c r="A1" t="d"><f>TODAY()</f></c>'
+            '<c r="B1" t="d"><v>2024-02-29</v></c>'
+            '<c r="C1" t="n"><v>42</v></c>'
+            '<c r="D1" t="d"><f>TODAY()</f></c>'
+        ))
+        self.assertEqual(value['status'], 'partial')
+        cells = value['sheets'][0]['cells']
+        self.assertEqual(cells['B1']['iso_date']['lexical'], '2024-02-29')
+        for address in ('A1', 'C1', 'D1'):
+            self.assertNotIn('iso_date', cells[address])
+            self.assertNotIn('source_cell_type', cells[address])
+        for address in ('A1', 'D1'):
+            self.assertEqual(cells[address]['cache_status'], 'missing')
+
     def test_invalid_dates_never_become_empty_success(self):
         for raw in ('','1900-02-29','2024-01-01T24:00Z'):
             value=result(package('<c r="A1" t="d"><v>'+raw+'</v></c>'))

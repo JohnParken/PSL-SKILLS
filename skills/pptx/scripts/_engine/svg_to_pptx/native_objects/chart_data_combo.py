@@ -231,21 +231,21 @@ def _combo_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
                 plot.get("line_style"),
                 plot["type"],
             )
-            previous = plots[-1] if plots else None
-            previous_signature = (
-                previous.get("axis"),
-                previous.get("grouping"),
-                previous.get("line_style"),
-                previous.get("type"),
-            ) if previous else None
-            if (
-                previous is not None
-                and signature == previous_signature
-                and plot.get("data_labels") == previous.get("data_labels")
-            ):
-                previous["series"].extend(plot["series"])
-            else:
-                plots.append(plot)
+            if plots:
+                previous = plots[-1]
+                previous_signature = (
+                    previous.get("axis"),
+                    previous.get("grouping"),
+                    previous.get("line_style"),
+                    previous.get("type"),
+                )
+                if (
+                    signature == previous_signature
+                    and plot.get("data_labels") == previous.get("data_labels")
+                ):
+                    previous["series"].extend(plot["series"])
+                    continue
+            plots.append(plot)
 
     if not plots:
         raise RuntimeError("Native PPTX combo chart requires at least one plot")

@@ -206,7 +206,7 @@ def _record_header_evidence(container, stream_name, location):
 def main():
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from wps_biff8_name_oracle import count_known_cell_records
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills' / 'wps' / 'scripts'))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills' / 'et' / 'scripts'))
     from wps_access import load_compound
     results = []
     for sample in SAMPLES:

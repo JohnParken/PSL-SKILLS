@@ -185,7 +185,7 @@ def parse_attempt(compound):
 
 
 def main():
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills/wps/scripts'))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'skills/et/scripts'))
     from wps_access import load_compound
 
     observations = []

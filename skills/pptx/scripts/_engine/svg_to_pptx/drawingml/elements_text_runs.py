@@ -435,9 +435,9 @@ def _build_run_properties_xml(
     sz = font_px_to_hpt(fs_px)
     b_attr = ' b="1"' if parse_project_font_weight(fw).value else ''
     i_attr = ' i="1"' if fstyle == 'italic' else ''
-    underline, strike = parse_project_text_decoration(
-        text_dec or 'none'
-    ).value
+    underline, strike = tuple(
+        parse_project_text_decoration(text_dec or 'none').value
+    )
     u_attr = ' u="sng"' if underline else ''
     strike_attr = ' strike="sngStrike"' if strike else ''
     spc_attr = _letter_spacing_to_drawingml_spc(letter_spacing_px)

@@ -857,13 +857,13 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_runs.py",
-      "distributed_sha256": "718b89a9911559bc17269e93487b34d0432f844f8e0a79a560671ae2e3f8c463",
+      "distributed_sha256": "4e0b48adc1a7b93d4da6f8103fb543dbdf85e2ec821ec045f237e2831d2f78f0",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
       "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
       "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
       "upstream_changed_since_v650": true,
       "comparison": "adapted",
-      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved. Pylint maintenance: Make the guaranteed decoration tuple explicit before unpacking the heterogeneous parsed-property value; supported text output is unchanged.",
       "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
     },
     {
@@ -1055,13 +1055,13 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_combo.py",
-      "distributed_sha256": "7d964b97bba92a593f20ce251bb1a2f5168abd6f692c0b86656f9e114d752349",
+      "distributed_sha256": "c67bab253cef212ed1427a23d75343ee526a40606bf2bea35ea6e1ab1e5997d5",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
       "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
       "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
       "upstream_changed_since_v650": true,
       "comparison": "adapted",
-      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained. Pylint maintenance: Make the non-empty predecessor branch explicit when merging adjacent matching typed-series plots; grouping order and output are unchanged.",
       "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
     },
     {

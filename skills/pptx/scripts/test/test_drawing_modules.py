@@ -3,6 +3,7 @@ import importlib
 import sys
 import unittest
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -331,6 +332,31 @@ class DrawingModuleTests(unittest.TestCase):
                     value = getattr(facade, name)
                     owner = importlib.import_module(value.__module__)
                     self.assertIs(value, getattr(owner, name))
+
+    def test_text_decoration_flags_preserve_supported_values(self):
+        runs = importlib.import_module('svg_to_pptx.drawingml.elements_text_runs')
+        namespace = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+        fonts = {'latin': 'Arial', 'ea': 'Arial', 'cs': 'Arial'}
+        expected = (
+            ('none', None, None),
+            ('underline', 'sng', None),
+            ('line-through', None, 'sngStrike'),
+            ('underline line-through', 'sng', 'sngStrike'),
+            ('line-through underline', 'sng', 'sngStrike'),
+        )
+        for decoration, underline, strike in expected:
+            with self.subTest(decoration=decoration):
+                properties = runs._build_run_properties_xml(
+                    {'text': 'Test', 'text_decoration': decoration}, fonts,
+                )
+                root = ET.fromstring(f'<root xmlns:a="{namespace}">{properties}</root>')
+                attributes = root[0].attrib
+                self.assertEqual(attributes.get('u'), underline)
+                self.assertEqual(attributes.get('strike'), strike)
+        with self.assertRaises(ValueError):
+            runs._build_run_properties_xml(
+                {'text': 'Test', 'text_decoration': 'double-underline'}, fonts,
+            )
 
     def test_modules_import_and_fit_limit(self):
         root = ROOT / '_engine' / 'svg_to_pptx' / 'drawingml'

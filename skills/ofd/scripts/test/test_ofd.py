@@ -400,6 +400,13 @@ class ReaderTests(unittest.TestCase):
         self.assertIn('object_outside_content',[d['code'] for d in result['diagnostics']])
         self.assertIn('blank_page_no_content',[d['code'] for d in result['diagnostics']])
 
+    def test_deflated_xml_preserves_text_and_structure(self):
+        write_package(self.path, fixture(), zipfile.ZIP_DEFLATED)
+        result = READER.read_ofd(self.path)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['documents'][0]['pages'][0]['text_runs'][0]['text'], '甲乙')
+        self.assertEqual(len(result['structure']['xml_parts']), 3)
+
     def test_dishonest_deflate_size(self):
         prefix=xml('OFD','<ofd:DocBody><ofd:DocRoot>Doc/Document.xml</ofd:DocRoot></ofd:DocBody>')
         files=fixture()

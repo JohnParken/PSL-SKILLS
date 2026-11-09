@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
-  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。",
+  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。",
   "entry_sha256": {
     "artifact-lifecycle": "f6de41a1f229fd7eae90bc2c2803d765b74dc83eb05fbeb4ee54281c88ee1d20",
     "bank-writing": "83317df3c37dfa1eabadc28b38ed28d2b97e2ff958a7e89c44c606d8df7d8435",
     "docx": "96d787dd47b7950963714ecd3f5afbfcc5f58ac35ac7ac419078a02e818cbe7b",
-    "et": "6671c87dc1882c9b8283ab3a9b06b220bcb4ad0eddaf2c486f01f138072b1c27",
-    "ofd": "5346cde45f90bb9769e619e76590de41842500dc746d506ac65b9fa5a29a6800",
-    "pptx": "282180d431f2512a22aebbf3cf03623db896c59f3b85ad2a5e9ae2351a2e68eb",
+    "et": "2b286c1df6f98c09e572ce56dbb3f3bc6833cd6c14384f67eb6e549801d06f59",
+    "ofd": "1086a30260cafe394eee02fedaf8365f08cff34ba5a7a1c7adedf8c7c07122a3",
+    "pptx": "4415cc3d71bbf1783c74db34d3f7049add98c7fbecea84aef91ca75ba4399bc8",
     "skill-development-standards": "c1bf7754e735252af08c1fdd38be7b8d4cb0760d2c885bc9590c75cdb21e9317",
     "table-workflow": "ded5c18ae1bb4134af69cbda42cca00ca9d7c2cc9a67919f692a07367d62b548",
-    "wps": "777679b528be728a86f18a4ac48b5306208dd46046529e1cad64cfce12cf83a6",
+    "wps": "cbde1e82f19acf74a46afd3235d94f9ea70c2e4ad970103b4f22c388c20b7121",
     "xlsx": "1e9fd0d879d48c5fba55496c133dea4aaa627d0dde3f579ea0bbef46dfba7840"
   },
   "cases": [

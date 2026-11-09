@@ -363,6 +363,37 @@ class NativeModuleBoundaryTests(unittest.TestCase):
         with self.assertRaises(parser.FormulaCompileError):
             omml.validate_omml_fragment('<!DOCTYPE x [<!ENTITY a "x">]><x>&a;</x>')
 
+    def test_combo_typed_series_group_only_adjacent_matching_plots(self) -> None:
+        charts = importlib.import_module(PREFIX + "chart_data")
+        result = charts._combo_chart_data({
+            "categories": ["A", "B"],
+            "series": [
+                {"type": "column", "name": "First", "values": [1, 2]},
+                {"type": "column", "name": "Second", "values": [3, 4]},
+                {"type": "line", "name": "Third", "values": [5, 6]},
+                {"type": "column", "name": "Fourth", "values": [7, 8]},
+            ],
+        })
+        self.assertEqual([plot["type"] for plot in result["plots"]], ["column", "line", "column"])
+        self.assertEqual([len(plot["series"]) for plot in result["plots"]], [2, 1, 1])
+        self.assertEqual([plot["start_index"] for plot in result["plots"]], [0, 2, 3])
+        self.assertEqual([series["name"] for series in result["series"]], ["First", "Second", "Third", "Fourth"])
+
+    def test_formula_parser_depth_is_reset_for_each_instance(self) -> None:
+        parser = importlib.import_module(PREFIX + "formula_parser")
+        arguments = importlib.import_module(PREFIX + "formula_parser_arguments")
+        with self.assertRaises(AttributeError):
+            arguments._ArgumentParserMixin()._parse_nested_sequence()
+        first = parser._LatexParser(r"\frac{x}{y}", display=False)
+        second = parser._LatexParser("z", display=False)
+        first.parse()
+        self.assertEqual(first.depth, 0)
+        self.assertEqual(second.depth, 0)
+        first.depth = 3
+        self.assertEqual(second.depth, 0)
+        second.parse()
+        self.assertEqual(second.depth, 0)
+
     def test_marker_context_is_shared_and_restored(self) -> None:
         facade = importlib.import_module(PREFIX + "marker_common")
         fallback = importlib.import_module(PREFIX + "marker_fallback")

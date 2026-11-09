@@ -101,8 +101,8 @@ class Package:
             if info.compress_type == zipfile.ZIP_DEFLATED:
                 offset = info.header_offset
                 name_size, extra_size = struct.unpack_from('<HH', self.data, offset + 26)
-                start = offset + 30 + name_size + extra_size
-                compressed = self.data[start:start + info.compress_size]
+                compressed_start = offset + 30 + name_size + extra_size
+                compressed = self.data[compressed_start:compressed_start + info.compress_size]
                 decoder = zlib.decompressobj(-15)
                 inflated = decoder.decompress(compressed, size + 1)
                 if (len(inflated) != size or not decoder.eof or decoder.unused_data
@@ -208,10 +208,10 @@ class Package:
             try:
                 configure(parser).Parse(data, True)
             except expat.ExpatError as exc:
-                lexical_codes = {expat.errors.codes[getattr(expat.errors, code)] for code in (
+                lexical_errors = {getattr(expat.errors, code) for code in (
                     'XML_ERROR_INVALID_TOKEN', 'XML_ERROR_UNBOUND_PREFIX', 'XML_ERROR_RESERVED_PREFIX_XML',
                     'XML_ERROR_RESERVED_PREFIX_XMLNS', 'XML_ERROR_RESERVED_NAMESPACE_URI')}
-                if require_ofd or expected or exc.code not in lexical_codes:
+                if require_ofd or expected or expat.ErrorString(exc.code) not in lexical_errors:
                     raise ReadError('invalid XML part: ' + name + ': ' + str(exc)) from exc
                 # Only extra, untyped XML may be retained as XML 1.0 lexical
                 # names when namespace processing is impossible. No name is

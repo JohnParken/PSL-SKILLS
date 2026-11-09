@@ -6,7 +6,7 @@ import ast
 import json
 from pathlib import Path
 
-PARSER = Path(__file__).resolve().parents[1] / "skills" / "wps" / "scripts" / "wps_biff8.py"
+PARSER = Path(__file__).resolve().parents[1] / "skills" / "et" / "scripts" / "wps_biff8.py"
 RISK_TERMS = {
     "structure": ("BOF", "EOF", "BoundSheet", "Date1904", "WsBool", "offset", "length"),
     "security": ("FILEPASS", "encrypted", "macro", "password"),

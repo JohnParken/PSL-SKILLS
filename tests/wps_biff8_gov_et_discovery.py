@@ -61,7 +61,7 @@ def _container_kind(data):
 
 def _codepage_inventory(data):
     # Python -I omits the repository from import search paths.
-    scripts = Path(__file__).resolve().parents[1] / 'skills' / 'wps' / 'scripts'
+    scripts = Path(__file__).resolve().parents[1] / 'skills' / 'et' / 'scripts'
     sys.path.insert(0, str(scripts))
     from wps_access import load_compound
     from wps_biff8 import records, bof
@@ -148,9 +148,9 @@ def _probe(item):
             result['inventory'] = {'status': 'failed',
                                    'reason_type': type(exc).__name__,
                                    'message': str(exc)[:150]}
-    scripts = Path(__file__).resolve().parents[1] / 'skills' / 'wps' / 'scripts'
+    scripts = Path(__file__).resolve().parents[1] / 'skills' / 'et' / 'scripts'
     sys.path.insert(0, str(scripts))
-    from read_wps import read_bytes
+    from read_et import read_bytes
     try:
         extracted = read_bytes(data)
         result.update(reader_status=extracted.get('status'),

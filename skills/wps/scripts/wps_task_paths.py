@@ -170,6 +170,7 @@ def write_capabilities():
 
 
 def _verify_published(path, identity, expected, *, parent=None, candidate=False):
+    """Verify the immutable snapshot and return its confirmed SHA-256 digest."""
     options = {} if parent is None else {'dir_fd': parent}
     descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0), **options)
     with os.fdopen(descriptor, 'rb') as stream:
@@ -184,6 +185,7 @@ def _verify_published(path, identity, expected, *, parent=None, candidate=False)
         if ((before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (after.st_size, after.st_mtime_ns, after.st_ctime_ns)
                 or (named.st_dev, named.st_ino) != identity):
             raise ValueError('Published file changed during verification; inspect before retry')
+    return digest
 
 
 @contextmanager
@@ -193,27 +195,27 @@ def output_candidate(target, *, prefix='.tmp_wps_', exclusive=False):
     state = {'output_written': False, 'publication_target': str(target), 'publication_outcome': 'not_attempted',
              'publication_verification': 'not_run', 'cleanup_complete': False, 'cleanup_issues': []}
     if access is None:
-        parent_path = Path(target).parent
-        parent_path.mkdir(parents=True, exist_ok=True)
-        descriptor, temporary = tempfile.mkstemp(prefix=prefix, suffix='.rtf', dir=parent_path)
-        owned = os.fstat(descriptor)
-        os.close(descriptor)
-        candidate = Path(temporary)
-        parent = None
-        target_name = target
-        parent_context = nullcontext()
+        parent_context = nullcontext((None, target))
     else:
         write_capabilities()
         parent_context = access.parent(target, create=True)
-    with parent_context as scoped_parent:
-        if access is not None:
-            parent, target_name = scoped_parent
-            parent_identity = os.fstat(parent)
+    with parent_context as (parent, target_name):
+        parent_identity = None
+        if parent is None:
+            parent_path = Path(target).parent
+            parent_path.mkdir(parents=True, exist_ok=True)
+            descriptor, temporary = tempfile.mkstemp(prefix=prefix, suffix='.rtf', dir=parent_path)
+            candidate = Path(temporary)
+        else:
+            parent_info = os.fstat(parent)
+            parent_identity = (parent_info.st_dev, parent_info.st_ino)
             temporary = prefix + uuid.uuid4().hex + '.rtf'
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
-            owned = os.fstat(descriptor)
-            os.close(descriptor)
             candidate = Path(target).parent / temporary
+        try:
+            owned = os.fstat(descriptor)
+        finally:
+            os.close(descriptor)
         identity = (owned.st_dev, owned.st_ino)
         key = str(candidate.absolute())
         registration = {'identity': identity, 'expected': None}
@@ -231,7 +233,7 @@ def output_candidate(target, *, prefix='.tmp_wps_', exclusive=False):
             with current_context as (current, current_name):
                 if current is not None:
                     now = os.fstat(current)
-                    if (now.st_dev, now.st_ino) != (parent_identity.st_dev, parent_identity.st_ino):
+                    if (now.st_dev, now.st_ino) != parent_identity:
                         raise ValueError('Output parent changed; publication stopped')
                 state.update(output_written=None, publication_outcome='publication_uncertain')
                 try:
@@ -244,12 +246,12 @@ def output_candidate(target, *, prefix='.tmp_wps_', exclusive=False):
                     raise
                 state.update(output_written=True, publication_outcome='published_unverified')
                 try:
-                    _verify_published(current_name, identity, expected, parent=current)
+                    published_digest = _verify_published(current_name, identity, expected, parent=current)
                 except (OSError, ValueError):
                     state.update(publication_outcome='published_verification_failed', publication_verification='failed')
                     raise
                 state.update(publication_outcome='published_verified', publication_verification='identity_and_bytes_verified')
-                state['published_sha256'] = expected[1]
+                state['published_sha256'] = published_digest
             return state
 
         publish.receipt = state

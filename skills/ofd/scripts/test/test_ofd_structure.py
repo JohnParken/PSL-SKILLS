@@ -255,6 +255,23 @@ class StructureTests(unittest.TestCase):
         self.assertEqual(result['structure']['namespace_resolution'], 'partial')
         self.assertIn('xml_namespace_unresolved', [diagnostic['code'] for diagnostic in result['diagnostics']])
 
+    def test_untyped_namespace_error_variants_keep_lexical_text(self):
+        cases = (
+            b'<p:Extra>text</p:Extra>',
+            b'<Extra xmlns:xml="urn:wrong">text</Extra>',
+            b'<Extra xmlns:xmlns="urn:wrong">text</Extra>',
+            b'<Extra xmlns:p="http://www.w3.org/XML/1998/namespace">text</Extra>',
+        )
+        for extra in cases:
+            with self.subTest(xml=extra):
+                result = self.read(BASE.fixture(extra={'Extra.xml': extra}))
+                part = self.part(result, 'Extra.xml')
+                self.assertEqual(part['namespace_mode'], 'raw_names')
+                self.assertEqual(part['nodes'][0]['text'], 'text')
+                self.assertEqual(result['status'], 'partial')
+        with self.assertRaisesRegex(READER.ReadError, 'invalid XML part: Extra.xml'):
+            self.read(BASE.fixture(extra={'Extra.xml': b'<Extra><Child></Extra>'}))
+
     def test_active_ofd_parts_never_use_raw_namespace_mode(self):
         files = BASE.fixture()
         files['Doc/Pages/P.xml'] = b'<:Page><:Content/></:Page>'

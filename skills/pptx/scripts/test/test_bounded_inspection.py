@@ -19,6 +19,9 @@ from test_validation import zipped
 
 
 class BoundedInspectionTests(unittest.TestCase):
+    # The shared workflow fixture initializes this task directory in setUp.
+    root: Path
+
     setUp = test_workflow.WorkflowTests.setUp
     tearDown = test_workflow.WorkflowTests.tearDown
     invoke = test_workflow.WorkflowTests.invoke

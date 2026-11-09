@@ -115,6 +115,42 @@ class TaskPathTests(unittest.TestCase):
         self.assertFalse((self.other / 'new.wps').exists())
         self.assertEqual(list((self.task / 'saved').iterdir()), [])
 
+    def test_unwritten_candidate_cannot_publish_in_scoped_or_plain_mode(self):
+        for scoped_mode in (False, True):
+            with self.subTest(scoped=scoped_mode), scoped(self.task):
+                token = None if scoped_mode else ACTIVE.set(None)
+                try:
+                    with wps_task_paths.output_candidate(Path('unwritten.wps')) as (candidate, publish):
+                        self.assertTrue(candidate.exists())
+                        with self.assertRaisesRegex(ValueError, 'payload has not been registered'):
+                            publish()
+                    self.assertTrue(publish.receipt['cleanup_complete'])
+                    self.assertEqual(publish.receipt['publication_outcome'], 'not_attempted')
+                    self.assertFalse(Path('unwritten.wps').exists())
+                    self.assertFalse(candidate.exists())
+                finally:
+                    if token is not None:
+                        ACTIVE.reset(token)
+
+    def test_plain_and_scoped_publication_report_verified_digest(self):
+        for scoped_mode in (False, True):
+            with self.subTest(scoped=scoped_mode), scoped(self.task):
+                token = None if scoped_mode else ACTIVE.set(None)
+                try:
+                    target = Path(f'verified-{scoped_mode}.wps')
+                    with wps_task_paths.output_candidate(target, exclusive=True) as (candidate, publish):
+                        wps_task_paths.write_candidate(candidate, b'X')
+                        receipt = publish()
+                    self.assertEqual(target.read_bytes(), b'X')
+                    self.assertEqual(receipt['publication_outcome'], 'published_verified')
+                    self.assertEqual(receipt['published_sha256'],
+                                     '4b68ab3847feda7d6c62c1fbcbeebfa35eab7351ed5e78f4ddadea5df64b8015')
+                    self.assertTrue(receipt['cleanup_complete'])
+                    self.assertFalse(candidate.exists())
+                finally:
+                    if token is not None:
+                        ACTIVE.reset(token)
+
     def test_target_appearing_during_validation_is_never_replaced(self):
         original = wps_task_paths.write_candidate
         with scoped(self.task):

@@ -194,6 +194,7 @@ def read_bytes(data):
                         cell_type=cell.get('t','n');need(cell_type in ('n','s','inlineStr','str','e','b','d'), 'Unsupported cell type '+cell_type);raw=(values[0].text or '') if values else None;formula=forms[0] if forms else None
                         need(not(formula is not None and inline),'Inline string formula unsupported')
                         status='not_applicable';kind='blank';value=None
+                        iso_date = None
                         if raw is None and not inline:
                             need(cell_type=='n' or formula is not None, 'Missing typed cell value')
                             if formula is not None:status='missing';issue('missing_formula_cache',sheet=name,cell=ref)
@@ -216,7 +217,7 @@ def read_bytes(data):
                         style=integer(cell.get('s','0'),4095);need((styles and style<len(styles)) or (not styles and style==0),'Style index outside collection')
                         fmt=styles[style]['number_format_id_raw'] if styles else 0
                         item={'type':kind,'value':value,'cell_style_explicit':cell.get('s') is not None,'xf_index':style,'number_format_id_raw':fmt,'custom_format_raw':formats.get(fmt),'cache_status':status,'source':{'part':part,'cell':ref}}
-                        if cell_type=='d' and raw is not None:
+                        if iso_date is not None:
                             item['source_cell_type']='d';item['iso_date']=iso_date
                         if formula is not None:
                             need(len(formula.text or '')<=32767, 'Formula text limit exceeded')
@@ -288,7 +289,7 @@ def read_bytes(data):
                         candidates.append(('column',styled_columns[col_index]['style_index_raw'],True))
                     if not candidates:
                         continue
-                    resolved=None
+                    matched_style=None
                     valid=[]
                     for origin,raw_index,active in candidates:
                         if active and re.fullmatch(r'[0-9]{1,4}',raw_index or '') and int(raw_index)<len(styles):
@@ -298,22 +299,22 @@ def read_bytes(data):
                                 valid.append((origin,inherited_index,inherited_resolution))
                     if len(valid)==len(candidates):
                         if len(valid)==1:
-                            resolved=valid[0]
+                            matched_style=valid[0]
                         elif len(valid)==2 and valid[0][2]['number_format_id']==valid[1][2]['number_format_id']:
                             # Equal resolved number formats prove numeric equivalence;
                             # no row/column precedence or other style effects inferred.
                             origin, inherited_index, inherited_resolution=valid[0]
                             inherited_resolution=dict(inherited_resolution)
                             inherited_resolution['source']={'equivalent_sources':[item[2]['source'] for item in valid]}
-                            resolved=('row_and_column_equivalent',inherited_index,inherited_resolution)
-                    if resolved is None:
+                            matched_style=('row_and_column_equivalent',inherited_index,inherited_resolution)
+                    if matched_style is None:
                         item['numeric_interpretation']={'status':'unknown','reason':'row_or_column_style_inheritance_unresolved','source_value_unchanged':True}
                         issue('number_style_inheritance_not_resolved',sheet=name,cell=ref)
                     else:
-                        origin,inherited_index,inherited_resolution=resolved
-                        inherited_format=inherited_resolution['number_format_id']
+                        origin,inherited_index,selected_resolution=matched_style
+                        inherited_format=selected_resolution['number_format_id']
                         interpreted=interpret_number(item['value'],inherited_format,formats.get(inherited_format),date_system)
-                        interpreted['number_format_source']=inherited_resolution['source']
+                        interpreted['number_format_source']=selected_resolution['source']
                         interpreted['basis']='stored_number_and_unambiguous_'+origin+'_cell_xf'
                         interpreted['style_source']={'kind':origin,'xf_index':inherited_index,'part':part}
                         item['numeric_interpretation']=interpreted

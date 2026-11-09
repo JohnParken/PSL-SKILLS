@@ -531,7 +531,9 @@ class Reader:
         drawing_pending=False; chart_pending=None; object_ids=set()
         page_break_last_key={0x001B:None,0x001A:None}
         page_break_end_by_axis={0x001B:{},0x001A:{}}
-        formula_groups={}; formula_refs=[]; last_formula=None
+        formula_groups = {}
+        formula_refs = []
+        last_formula = {}
         visibility = SavedVisibility()
         def put(row,col,xf,kind,value,record,**extra):
             require(0<=row<65536 and 0<=col<256 and 0<=xf<len(self.styles),'Cell coordinate or XF index outside BIFF8 bounds')
@@ -732,13 +734,16 @@ class Reader:
                     address=put(row,col,xf,cell_type,value,record,formula=formula,error_code=error_code)
                     cells[address]['cache_status']=cache_status
                     if cache_status=='pending_string': pending=address
-                    last_formula=(row,col,address,anchor,bool(flags&8),index-1)
+                    last_formula = {'row': row, 'column': col, 'address': address,
+                                    'anchor': anchor, 'shared': bool(flags&8), 'record_index': index-1}
                     if anchor is not None: formula_refs.append((row,col,anchor,bool(flags&8),address))
             elif kind in (0x04BC, 0x0221):
                 # MS-XLS FORMULA permits a group definition before its String cache.
-                require(last_formula is not None and last_formula[5] == index-2,
+                require(last_formula.get('record_index') == index-2,
                         'Shared/array definition must immediately follow Formula at '+str(offset))
-                row,col,address,anchor,shared,_=last_formula
+                row, col = last_formula['row'], last_formula['column']
+                address, anchor = last_formula['address'], last_formula['anchor']
+                shared = last_formula['shared']
                 group_kind='shared' if kind == 0x04BC else 'array'
                 require(anchor == (row,col) and shared == (group_kind == 'shared'),
                         'Shared/array definition anchor or flag mismatch at '+str(offset))
