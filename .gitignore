@@ -9,3 +9,6 @@ __pycache__/
 # OFD installation-local user fonts are private, not distribution assets.
 /skills/ofd/assets/user_fonts/*
 !/skills/ofd/assets/user_fonts/NOTICE.txt
+
+# Reproducible local release artifacts; manifests and evidence remain versioned.
+/dist/

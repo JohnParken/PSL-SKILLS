@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "files": [
+    "SKILL.md",
+    "assets/examples/zhuque_layout.json",
+    "assets/fonts/zhuque_fangsong/LICENSE.txt",
+    "assets/fonts/zhuque_fangsong/LICENSE_Alegreya.txt",
+    "assets/fonts/zhuque_fangsong/NOTICE.txt",
+    "assets/fonts/zhuque_fangsong/ZhuqueFangsong-Regular.ttf",
+    "assets/fonts/zhuque_fangsong/source.json",
+    "assets/user_fonts/NOTICE.txt",
+    "references/boundaries.md",
+    "references/bundled-fonts.md",
+    "references/compatibility.md",
+    "references/contract.md",
+    "references/generation.md",
+    "references/output-views.md",
+    "references/structure.md",
+    "references/validation.md",
+    "requirements.txt",
+    "scripts/check_generated_ofd.py",
+    "scripts/generate_ofd.py",
+    "scripts/ofd_generation_assets.py",
+    "scripts/read_ofd.py"
+  ],
+  "exclude_prefixes": [
+    "scripts/test/",
+    "assets/user_fonts/"
+  ],
+  "exclude_files": {}
+}

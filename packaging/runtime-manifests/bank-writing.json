@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "files": [
+    "SKILL.md",
+    "references/activity-planning.md",
+    "references/audit-and-compliance.md",
+    "references/banking-regulations-sop.md",
+    "references/business-analysis.md",
+    "references/comprehensive-writing.md",
+    "references/credit-investigation.md",
+    "references/digital-product-requirements.md",
+    "references/docx-handoff.md",
+    "references/editing-and-integration.md",
+    "references/email-communication.md",
+    "references/email-scenarios.md",
+    "references/industry-research.md",
+    "references/official-documents.md",
+    "references/pr-and-crisis-management.md",
+    "references/source-access.md",
+    "references/speech-and-report.md",
+    "references/style-imitation.md",
+    "references/summary-and-imitation.md",
+    "references/summary-reading.md",
+    "references/writing-review.md"
+  ],
+  "exclude_prefixes": [
+    "scripts/test/"
+  ],
+  "exclude_files": {}
+}

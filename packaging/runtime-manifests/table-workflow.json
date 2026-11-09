@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "files": [
+    "SKILL.md",
+    "references/plan-contract.md",
+    "references/quality-and-lookups.md",
+    "requirements.txt",
+    "scripts/docs/cli-contract.md",
+    "scripts/table_workflow.py",
+    "scripts/table_workflow_cli_protocol.py",
+    "scripts/workflow_cli_client.py",
+    "scripts/workflow_quality.py",
+    "scripts/workflow_runtime.py"
+  ],
+  "exclude_prefixes": [
+    "scripts/test/"
+  ],
+  "exclude_files": {}
+}

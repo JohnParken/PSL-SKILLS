@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "files": [
+    "SKILL.md",
+    "requirements.txt",
+    "scripts/check_skill.py",
+    "scripts/test/test_check_skill.py"
+  ],
+  "exclude_prefixes": [],
+  "exclude_files": {}
+}

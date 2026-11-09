@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "files": [
+    "SKILL.md",
+    "references/contract.md",
+    "references/reuse.md",
+    "references/upstream.json",
+    "requirements.txt",
+    "scripts/archive_deliverables.py",
+    "scripts/artifact_files.py",
+    "scripts/cleanup_task.py",
+    "scripts/controlled_cleanup.py",
+    "scripts/lifecycle.py",
+    "scripts/output_location.py",
+    "scripts/router_config.py"
+  ],
+  "exclude_prefixes": [
+    "scripts/test/"
+  ],
+  "exclude_files": {}
+}
