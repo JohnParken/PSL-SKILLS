@@ -35,6 +35,10 @@ SVG 到 DrawingML 的转换逻辑及部分形状数据源自 JohnParken/ppt-mast
 未迁移浏览器设计审查、PDF/网页等来源转换、图片生成 API、已有 PPTX/模板导入与回填、完整动画、音频或视频流程。导入专用的 opaque OOXML、外部原生载体与原始形状属性继续拒绝。
 维护文件清单与来源 blob 记录保存在目标仓库根目录的 `tests/pptx/upstream_manifest.json`，不属于独立 Skill 的运行资源。
 
+DrawingML 本地维护按图形、文字、裁剪、图片、校验和页面编排职责拆分原 `elements.py`、`utils.py`、`converter.py`，保留原模块的公开及既有私有导入入口。新增模块沿用各自原文件的上游基线与 MIT 许可，具体派生关系和当前哈希记录在上述仓库维护清单中；未引入额外运行依赖。
+
+原生对象的表格、图表数据/样式/XML、公式解析/OMML 和标记公共逻辑同样按职责拆分；七个原模块保留兼容入口，41 个派生模块在来源清单中逐项记录，继续保留原上游许可。
+
 ## 许可证
 
 - 上游转换代码保留 MIT 许可，完整文本见 ppt-master 许可证（`<skill-root>/assets/licenses/ppt_master.txt`）。分发时保留许可与相关版权声明。

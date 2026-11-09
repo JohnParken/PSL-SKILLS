@@ -7,10 +7,10 @@
   "previous_upstream_commit": "c951bf4a3a4af7cbc2382447f3d2e7719b292bd2",
   "comparison_method": "Complete untruncated Git trees and source blob checksums; Python AST comparison preserves docstrings but omits locations.",
   "counts": {
-    "adapted": 14,
+    "adapted": 89,
     "byte_identical": 9,
     "local_namespace_shim": 1,
-    "python_ast_equal": 50
+    "python_ast_equal": 42
   },
   "scope": "Adopted SVG-to-DrawingML conversion subset and distributed source/data licenses; excludes the complete upstream workflow.",
   "excluded_new_modules": {
@@ -390,23 +390,23 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py",
-      "distributed_sha256": "b5c4649a2f59e0046e55210f35ab6bf782f8337c52041f4d8e55c859aa6147e8",
+      "distributed_sha256": "1a67766d49c9f0a6b3e348db66eca734523d91e04099a56ae3e32ac6a293f499",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
       "upstream_git_blob": "cdcc878836ba52ba3594209dd1258b6b12782f4d",
       "upstream_sha256": "1a9f7ad49e39085234c329f647af84b5c9185e921917e408abae441b47b2adf8",
       "upstream_changed_since_v650": true,
       "comparison": "adapted",
-      "adaptation": "Add svg_text in-memory input and default image_optimize=False."
+      "adaptation": "Add svg_text in-memory input and default image_optimize=False. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py",
-      "distributed_sha256": "b968e3fc64cdab41aa8ef0f4345a4dfc9c2697edef5a04a7ea74add9971470b8",
+      "distributed_sha256": "9833c709a0e64b28dbb2828e8a06b74f83838e2faf2d183bb45a4be682835213",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
       "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
       "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
       "upstream_changed_since_v650": true,
       "comparison": "adapted",
-      "adaptation": "Replace Pillow image decoding/optimization paths with bounded stdlib PNG/JPEG inspection and byte embedding."
+      "adaptation": "Replace Pillow image decoding/optimization paths with bounded stdlib PNG/JPEG inspection and byte embedding. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/font_advances.json",
@@ -498,13 +498,13 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py",
-      "distributed_sha256": "3b01448beb5f41236f6771096a4662b7f72737ac9137f1c46ce71dd4e7860734",
+      "distributed_sha256": "5f238581374dd49a3c2a051219cf3696819f1d76335eea38b9fa5a17007586d2",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
       "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
       "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
       "upstream_changed_since_v650": true,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/geometry_properties.py",
@@ -528,33 +528,33 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py",
-      "distributed_sha256": "c7d028708955125acbd2d0e46cd7ed86276a29fc317d564a357a23295379c828",
+      "distributed_sha256": "c43fb5e5d2fadb9b92c8388344969887296230e28abab0d7c123f378a17988a1",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
       "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
       "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
       "upstream_changed_since_v650": true,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with compatibility facade."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py",
-      "distributed_sha256": "edcbd393023910ed07622dc031a8ba615db60adc79410b45db111342def61989",
+      "distributed_sha256": "ecdd609812f2e7483d7a5d4af246b6a4e066db1626e2e37e40c08c74cf9b0888",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
       "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
       "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
       "upstream_changed_since_v650": true,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with compatibility facade."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py",
-      "distributed_sha256": "d613b3e4dbaa35e6acefb4997f0b1468f7048f6fae2c486b0e85d7be2fd7070a",
+      "distributed_sha256": "1de7eff591205c3f651c60f34a1186e9e51ac740a023f157133320f25114ffa4",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
       "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
       "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
       "upstream_changed_since_v650": true,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with compatibility facade."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chartex.py",
@@ -608,23 +608,23 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py",
-      "distributed_sha256": "ede2180870ce153054f2c796e930abdd41cddb97de2405b3d1212f974663fa00",
+      "distributed_sha256": "7edea8d0b486f227235798f39ba9e9a342280a5021edba851c032036fbb07b9b",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_omml.py",
       "upstream_git_blob": "2a6fe44086f85a80c3c8184d0d727a5f7dad39d6",
       "upstream_sha256": "07e0db594546646b88772ab772820e959b0efdcc03b51bbaa9df0ce1b990ce6d",
       "upstream_changed_since_v650": false,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with compatibility facade."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py",
-      "distributed_sha256": "600c454dffab5256575204811007a3e18748f9b50ef0e6d200f8c1096149a308",
+      "distributed_sha256": "70194937431e335c8443acc82a097d797b34c33e066b9ac4266cfc5262539c8e",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
       "upstream_git_blob": "30c13539294be6d3affe549ae75fe8e8860fa846",
       "upstream_sha256": "4636546110b62a105f11b0554058ed8ccf6154db0bc631147777f9b3b9384088",
       "upstream_changed_since_v650": false,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with compatibility facade."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_profile.py",
@@ -668,13 +668,13 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py",
-      "distributed_sha256": "2fb711ccb7c3cb017051ca443dad5fb23f25b93de8cb545ff279f11317973644",
+      "distributed_sha256": "680c9720d50d84be1203aae8618efdfebd641afc8cbcbdcd600e5b48e338f7cd",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
       "upstream_git_blob": "361e37763f02ab237c9b2063549f43901b48fdff",
       "upstream_sha256": "fe42741b3fe2b198eca0bdee9115ad655553cb346b0d5f1379e9aae0c2de43fb",
       "upstream_changed_since_v650": false,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with compatibility facade."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_status.py",
@@ -688,13 +688,13 @@
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py",
-      "distributed_sha256": "46b085eb7c01fc10c80de66f64fe7a922f67f1e27dc2489f46b93f497a01809d",
+      "distributed_sha256": "2a13f5d87fe6ad34c3c9d5bee76608962f9f89c403fcc3af9ecb78aab3904e07",
       "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
       "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
       "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
       "upstream_changed_since_v650": true,
-      "comparison": "python_ast_equal",
-      "adaptation": "Provenance header; formatting-only changes where needed."
+      "comparison": "adapted",
+      "adaptation": "Provenance header; formatting-only changes where needed. Split into responsibility modules with compatibility facade."
     },
     {
       "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/workbook.py",
@@ -744,6 +744,743 @@
       "upstream_sha256": "80cefc234c1ec12a8cece4344f16300c634fa03df7891686fcf979e3828f0921",
       "upstream_changed_since_v650": false,
       "comparison": "byte_identical"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_basic_shapes.py",
+      "distributed_sha256": "671737dbdeef2eefaf358a6f78d315297f6ed69c9047f112ea8cf7ebed4442f8",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_clip_geometry.py",
+      "distributed_sha256": "dbfac2be8d5b6c0230c73d4fe272eb1b2d7eeb48a2966843417e52c0bf8b4e7f",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_image_sources.py",
+      "distributed_sha256": "7296a5409bcde00f6994577f645562c8af1805d03c252343f5287d4e8959306f",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_nested_crops.py",
+      "distributed_sha256": "05132584b9bd67ae9823923f312a4d315cfed333b35bbc6fac1e928297916e11",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_path_shapes.py",
+      "distributed_sha256": "85aad63de34b02cb5fc3b2fb25bece11d87fe2d7e0a6e7a5d5e9b87516c2d446",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_pictures.py",
+      "distributed_sha256": "719fead0c8ce8c2c92cb2969f7ea7fda38d90e990afc222b05b3e063533adfe0",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_preset_geometry.py",
+      "distributed_sha256": "83717ea5c0d12d4f6ef6cc575a10de9fee26f5cbe544cc55dec16f535cb4ab63",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_shape_xml.py",
+      "distributed_sha256": "328fe606cad63fecba459fa483d685cfdf312556452d7431365fbb867742f3bb",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_conversion.py",
+      "distributed_sha256": "557b1fb1fbf37090e11262107737dec1ed3b6e7f6d02ffe9fb9f5013f41b2aab",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_metrics.py",
+      "distributed_sha256": "43b101bb0491976b04177d0fc4b76443a39dbc2188dfe59949d26245f8551dbf",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements_text_runs.py",
+      "distributed_sha256": "718b89a9911559bc17269e93487b34d0432f844f8e0a79a560671ae2e3f8c463",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "upstream_git_blob": "c6876607cf2593f667c5fc56f1f3c3bfe969570c",
+      "upstream_sha256": "c9535191926f5cd6a37dfdfc53c2861557cc0583345047f365540e767419ad45",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/elements.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_constants.py",
+      "distributed_sha256": "e72bf231300514b88728d13aaee1ce3ed42470c256385f7d892ed119ea843a71",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_filters.py",
+      "distributed_sha256": "c4073770022da5dd33f2acb11fbd6fd14e531562a3f9844d3cfe837ffd78ac65",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_fonts.py",
+      "distributed_sha256": "a1a82337cde77c13da8a799a5a8094440a73e093aae65a0375d2c8ad69dc1039",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_gradients.py",
+      "distributed_sha256": "79b69614d420515f55d261e18efd30b329551bea32eb9283ca7db4092b70d834",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_lengths.py",
+      "distributed_sha256": "73775222b68713adb06b7b5fcd823558ba4ecd76408e072c1798f280308a5005",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_markers.py",
+      "distributed_sha256": "332bfe90a3ffaa0cb0a3a2107022c75c25b4095d288cec331f86227cee462db0",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_paint_values.py",
+      "distributed_sha256": "4eeda950326d4f5328f7a970e851285abf46b130594a483d6f074947a7cfce67",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_stroke_transforms.py",
+      "distributed_sha256": "68875c6c3d1683df2bd704886d1349bb89c4ca024959f6a7be0af0f66b1c1d7d",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_text_widths.py",
+      "distributed_sha256": "62b89355f5b2aad810dbb7237873bb6d985fbf3db397300ccac1ca6bc4582408",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils_transforms.py",
+      "distributed_sha256": "b9648bdbe24022a4fd32a40666d97e441e45957c3f1921559d39553755bb6f55",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "upstream_git_blob": "71239bc28862ac305a0b21c908abf42085ef32e4",
+      "upstream_sha256": "32628b1383411e3a8ac102833aab784c6d69965989edd30f7ef18607f11e6ebd",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/utils.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_dispatch.py",
+      "distributed_sha256": "ec9673aa187e069ac0089db6194090d16d54c2c04a8430402293af94532246f0",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
+      "upstream_git_blob": "cdcc878836ba52ba3594209dd1258b6b12782f4d",
+      "upstream_sha256": "1a9f7ad49e39085234c329f647af84b5c9185e921917e408abae441b47b2adf8",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_groups.py",
+      "distributed_sha256": "7aa6684df6d3b430a97a4db14b9590929bed250e8a61d8bf467d9a366c477c49",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
+      "upstream_git_blob": "cdcc878836ba52ba3594209dd1258b6b12782f4d",
+      "upstream_sha256": "1a9f7ad49e39085234c329f647af84b5c9185e921917e408abae441b47b2adf8",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_slide.py",
+      "distributed_sha256": "21f6009f40397735f45fb14dac7d8346ed209c53b0e45561ecd00971cac21420",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
+      "upstream_git_blob": "cdcc878836ba52ba3594209dd1258b6b12782f4d",
+      "upstream_sha256": "1a9f7ad49e39085234c329f647af84b5c9185e921917e408abae441b47b2adf8",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_text_metadata.py",
+      "distributed_sha256": "20c154be8620928eaff89b29aa051cfb2d99d5aaf116684df2934f8e0a48a2c4",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
+      "upstream_git_blob": "cdcc878836ba52ba3594209dd1258b6b12782f4d",
+      "upstream_sha256": "1a9f7ad49e39085234c329f647af84b5c9185e921917e408abae441b47b2adf8",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_validation.py",
+      "distributed_sha256": "ee8b970784c16d0f8447d26b5902a8bbff714b9444b34619dc5c657cafef003d",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
+      "upstream_git_blob": "cdcc878836ba52ba3594209dd1258b6b12782f4d",
+      "upstream_sha256": "1a9f7ad49e39085234c329f647af84b5c9185e921917e408abae441b47b2adf8",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py. Split into responsibility modules with explicit compatibility exports and deferred imports; algorithm bodies preserved.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_axes.py",
+      "distributed_sha256": "1eb1b72c583000b6374bf4f2eaa4fda74d386c03e23a25e3b7cff17817f1ead3",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_category.py",
+      "distributed_sha256": "05ade42631b7455ce7f4ef238cf985e8fd1a07355e7b47c756b9008d260a537d",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_combo.py",
+      "distributed_sha256": "7d964b97bba92a593f20ce251bb1a2f5168abd6f692c0b86656f9e114d752349",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_dispatch.py",
+      "distributed_sha256": "6c6a4589f7c21a644560421ab4c1f4f9518fcd00041ee6475d71483e50e79715",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_labels.py",
+      "distributed_sha256": "00ade8c5c5835c63445c7326d5072ccc1ccbb276f994a541b47153f095419187",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_shared.py",
+      "distributed_sha256": "4f6a6dc48be17457019100ce71a1865a5ee7cf2ba7c9e4f8f33ccba51d83efc8",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data_special.py",
+      "distributed_sha256": "92d26d9bb8f9f9123962f638857b773d8052bd5362b5f8fe48787f899d111a94",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "upstream_git_blob": "e055d3757adabcb558cfbb915fe2c5d644dd2899",
+      "upstream_sha256": "90d87e28b2323979189b64a7cb46adc53444454b3659d88692e1444a498b4883",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_data.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_companions.py",
+      "distributed_sha256": "ab044ea27c85ccf2153230015cacc05b487245df2d9a3825ebd77b82b6a547ed",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
+      "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_geometry.py",
+      "distributed_sha256": "2b287f2605e7813a9c370ef77932192ecc01b240e04a1053c382f6579076074e",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
+      "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_projection.py",
+      "distributed_sha256": "40c75868c7f60a6ad39bb7149b5a2efc4f5406f71678d9a8a951af8bea0761f2",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
+      "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_shared.py",
+      "distributed_sha256": "70ecee365d3d060a09407eae14b1af16f59e5edf200599ae3d457149484327d6",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
+      "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_text.py",
+      "distributed_sha256": "712dc826e1793e900dcf7ec5353152a7e3ad9022c1c9377ebcf8a3e1d16440da",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
+      "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style_warnings.py",
+      "distributed_sha256": "eb111aca380d96b1983134daa281ed323d0d2ae4a2d5aef1f324d065f9218961",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "upstream_git_blob": "866986857a8e25ea8fc77c4e3ab34c82ac3569d8",
+      "upstream_sha256": "40d2269500e9375848bb5e514b9fa22638743b07f3c25edd4ccd71fbbc16ba20",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_style.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_axes.py",
+      "distributed_sha256": "172a950ffcec86bffa3fee3558886b6af38004bc55e6bd53a2aa9f4aa4a0e4da",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_chrome.py",
+      "distributed_sha256": "bb78477dc8fc79ee6eb5340be16b6d95eb1a7fdb4b7729c13e8935c5e5ae874f",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_document.py",
+      "distributed_sha256": "53b3b5654961d5dff50ea4a537c26e21049443d80ef708709eec20b4a164c513",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_labels.py",
+      "distributed_sha256": "43ae339c2e624f585ee67720394a660565a27a83013d745f1e52c80438964981",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_plots.py",
+      "distributed_sha256": "5c626c2874e5993d9796a4ff04eff2bec1fd281b30656c0eeddf76e42bb7e91a",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_series.py",
+      "distributed_sha256": "8122b8043e529a319906528c1dd928b1d960a30892430ed53e272ab1da0b6ba3",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_shared.py",
+      "distributed_sha256": "758df8057e8825e4f54b3fc4a8c8ccd963b27d41b4be7f31eaf3acae4fca9719",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml_special.py",
+      "distributed_sha256": "0663040d0cfdf38eb117c724deedb952606f3d0416c793dc0dbe5c68ac48a545",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "upstream_git_blob": "c8d4462df131889b967b76db24dfab5e5faf3e36",
+      "upstream_sha256": "8172068d9e1b0a250058b376d063de59fc679f85dae40d5c10925147742f7bef",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/chart_xml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_document.py",
+      "distributed_sha256": "451c760920aaeaa894783213c94b04670dce0393cca45ed49405c755a9b694a8",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_omml.py",
+      "upstream_git_blob": "2a6fe44086f85a80c3c8184d0d727a5f7dad39d6",
+      "upstream_sha256": "07e0db594546646b88772ab772820e959b0efdcc03b51bbaa9df0ce1b990ce6d",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_emit.py",
+      "distributed_sha256": "88ac567b87974aa253f7366daf5c7808224b031ad494692ac180c46c979c5aaa",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_omml.py",
+      "upstream_git_blob": "2a6fe44086f85a80c3c8184d0d727a5f7dad39d6",
+      "upstream_sha256": "07e0db594546646b88772ab772820e959b0efdcc03b51bbaa9df0ce1b990ce6d",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_shared.py",
+      "distributed_sha256": "a03565a40e2328c7acced5f6e619097ff89c17496ea0f0f2177900d29f1ba66a",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_omml.py",
+      "upstream_git_blob": "2a6fe44086f85a80c3c8184d0d727a5f7dad39d6",
+      "upstream_sha256": "07e0db594546646b88772ab772820e959b0efdcc03b51bbaa9df0ce1b990ce6d",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml_validate.py",
+      "distributed_sha256": "fb49ae8e8a22e4040eee8538a0a91010b0a87806d2f570975a4ca5ae00c75a68",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_omml.py",
+      "upstream_git_blob": "2a6fe44086f85a80c3c8184d0d727a5f7dad39d6",
+      "upstream_sha256": "07e0db594546646b88772ab772820e959b0efdcc03b51bbaa9df0ce1b990ce6d",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_omml.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_arguments.py",
+      "distributed_sha256": "8e28cfec18472d890746dc7e23ee20ebd674eb20df0f765ad3b1203cf0554220",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "upstream_git_blob": "30c13539294be6d3affe549ae75fe8e8860fa846",
+      "upstream_sha256": "4636546110b62a105f11b0554058ed8ccf6154db0bc631147777f9b3b9384088",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_chemistry.py",
+      "distributed_sha256": "aad4b2f11e79e2c2fa6baa26c002930c4bc455c54852ffa823bf9453a2db2684",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "upstream_git_blob": "30c13539294be6d3affe549ae75fe8e8860fa846",
+      "upstream_sha256": "4636546110b62a105f11b0554058ed8ccf6154db0bc631147777f9b3b9384088",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_delimiters.py",
+      "distributed_sha256": "4c8cd4914619fe9dc23a146c3de1fcf027ee17fda69efcbdc4ad4350ff00d978",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "upstream_git_blob": "30c13539294be6d3affe549ae75fe8e8860fa846",
+      "upstream_sha256": "4636546110b62a105f11b0554058ed8ccf6154db0bc631147777f9b3b9384088",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_environments.py",
+      "distributed_sha256": "a8b067e47468b8da9f5d80334454377dc06fe36dbfd318b9d9701355960cebc2",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "upstream_git_blob": "30c13539294be6d3affe549ae75fe8e8860fa846",
+      "upstream_sha256": "4636546110b62a105f11b0554058ed8ccf6154db0bc631147777f9b3b9384088",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser_source.py",
+      "distributed_sha256": "6f57e475e48351faf1020a5e64d5d26286003911914df375143c10b8b899c054",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "upstream_git_blob": "30c13539294be6d3affe549ae75fe8e8860fa846",
+      "upstream_sha256": "4636546110b62a105f11b0554058ed8ccf6154db0bc631147777f9b3b9384088",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/formula_parser.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common_shared.py",
+      "distributed_sha256": "318dd75a15a0dec58c5fd5e6f6fc7baccfca429c460a2769e9a5496945571267",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
+      "upstream_git_blob": "361e37763f02ab237c9b2063549f43901b48fdff",
+      "upstream_sha256": "fe42741b3fe2b198eca0bdee9115ad655553cb346b0d5f1379e9aae0c2de43fb",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_fallback.py",
+      "distributed_sha256": "19f639c264dc5c1e5c4a10cea0e4d3f27da9b8991a4f30bcb1f6bdb681ee834a",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
+      "upstream_git_blob": "361e37763f02ab237c9b2063549f43901b48fdff",
+      "upstream_sha256": "fe42741b3fe2b198eca0bdee9115ad655553cb346b0d5f1379e9aae0c2de43fb",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_geometry.py",
+      "distributed_sha256": "01e9e1434b334275ebcc840ba51bfd8db91b63024e56086a1c79a89c20e296e5",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
+      "upstream_git_blob": "361e37763f02ab237c9b2063549f43901b48fdff",
+      "upstream_sha256": "fe42741b3fe2b198eca0bdee9115ad655553cb346b0d5f1379e9aae0c2de43fb",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_payload.py",
+      "distributed_sha256": "00827ed29a2347efb846a80bc22998e743b71dc233c178207e6473e18d3ecb0d",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
+      "upstream_git_blob": "361e37763f02ab237c9b2063549f43901b48fdff",
+      "upstream_sha256": "fe42741b3fe2b198eca0bdee9115ad655553cb346b0d5f1379e9aae0c2de43fb",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_values.py",
+      "distributed_sha256": "bb8c2b639fe733d7c743784cb7a03eb9898af8a3e26465f8fa96882d121d52fb",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
+      "upstream_git_blob": "361e37763f02ab237c9b2063549f43901b48fdff",
+      "upstream_sha256": "fe42741b3fe2b198eca0bdee9115ad655553cb346b0d5f1379e9aae0c2de43fb",
+      "upstream_changed_since_v650": false,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/marker_common.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_layout.py",
+      "distributed_sha256": "b3131b9e7d2049609dc03dc5aa65544a2defbddaf9438f7ef864e544c980a825",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
+      "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_parity.py",
+      "distributed_sha256": "b4788f68fd4c2627604c99eb324f7917e9d88ec8a7fc660f6b9996307f5c9acc",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
+      "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_payload.py",
+      "distributed_sha256": "2b1b74fce684cd863665bd121a2724ac1a9caccfb1aaa7f18f576f8af94e40b3",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
+      "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_render.py",
+      "distributed_sha256": "b3e27726190feda0c675b1a0a3ae0291013c74c79b28184ed70c2e8817a5df11",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
+      "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_shared.py",
+      "distributed_sha256": "e9710fa54d9f7140a8d2709f67392088373d1d3bd5ebd9028f371c9cf88fd4f9",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
+      "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py"
+    },
+    {
+      "target": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table_warnings.py",
+      "distributed_sha256": "d993b5db3db37f0050d50763a02fc0d147408a8a183111153533fa40a9a2c07d",
+      "upstream_path": "skills/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "upstream_git_blob": "dde9dfc5f67e00d9ef24b8d02b072b074bbc33e6",
+      "upstream_sha256": "a6d47b7c5cfe9006138920fd46bb5187195e1262698d0076b19ebf6e91f5bcf9",
+      "upstream_changed_since_v650": true,
+      "comparison": "adapted",
+      "adaptation": "Responsibility module extracted from skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py; original API facade and upstream MIT provenance retained.",
+      "derived_from": "skills/pptx/scripts/_engine/svg_to_pptx/native_objects/table.py"
     }
   ]
 }
