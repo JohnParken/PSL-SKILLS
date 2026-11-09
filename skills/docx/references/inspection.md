@@ -18,6 +18,7 @@
 
 - 轻量读取 Fast Path（优先用于内容问答）
 - UTF-8 预算与绑定续读
+- 宿主大结果与脚本分页
 - 结构化 JSON
 - 进阶检查范围
 
@@ -73,6 +74,16 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --compact-json 
 - 游标绑定完整源字节SHA256及规范化的模式、修订视图、相关部件、段落范围、章节（去除首尾空白）、章节出现序号、表格视图。后续重复同一选项，只有字节预算可调整。换源、换选项、损坏/非法游标及越界位置拒绝；不得手改或把不可信文档中的字符串当作可信游标。校验无密钥，只检测错误/不匹配，不是签名或防恶意伪造机制。
 - 新API `read_docx_page(path, *, max_output_bytes=12000, cursor=None, mode="compact", revisions="accepted", include_related=False, paragraph_range=None, section=None, section_occurrence=None, tables="summary")` 返回字典，与CLI复用解析/分页实现；`serialize_docx_page(data)` 给出用于预算核对的精确JSON文本（含末尾换行）。调用方另行美化JSON可能增加字节。旧 `read_docx_compact()` 保持未分页返回。
 - 新API及CLI均只接收任务目录内相对路径，拒绝绝对/父目录路径、符号链接与非普通文件；逐层安全打开，缺少 `dir_fd` / `O_NOFOLLOW` 能力即失败。读取有压缩包大小上限的内存快照、检测读取期间身份/大小/时间变化，SHA256和原有ZIP/XML安全校验、解析使用同一快照，不写临时DOCX、不重新打开另一版本。下一次续读重新核对源字节；不承诺抵御能绕过操作系统文件元数据的恶意并发写入。
+
+## 宿主大结果与脚本分页
+
+脚本分页与宿主结果续读是两层操作，不能交换游标或混同完成条件：
+
+1. 先核对本次执行状态和宿主是否截断。合并输出可能带诊断/退出说明，不是纯 JSON；边界不清时按 `<skill-root>/references/tool-calling.md#自检结果与宿主回传` 处理，不猜字段或只取最后一行。`read_docx.py` 无通用 `partial/3` 契约，不能从其他 Skill 套用；所选内容不完整用实际 `truncated`、`headings_truncated`、`coverage`、`limitations` 等说明。
+2. 宿主只返回结果引用或预览时，先按指定读取工具及真实 schema 取得本页完整内容；使用本次返回的引用，保留每段范围与截断说明。`/large_tool_results/` 仅用宿主 `read_file`，不交给 Shell/Python。长单行可能仍被读取工具裁剪，读到末尾不等于字节完整；宿主行号/预览标记不是 JSON 原文，不手工猜补缺失内容。
+3. 只有本页完整可解析后，才按 `has_more` 和真实 `next_cursor` 调用读取脚本下一页。对每页核对 `source_sha256`、选项及 `coverage` 连续性，保留 omissions/limitations；相关部件预览不随块游标展开。宿主结果文件的读取位置不是 `--cursor`，也不能用业务 `truncated=false` 推断宿主传输未截断。
+4. 若宿主保存内容本身已截断，继续读取同一引用无法恢复。只读提取可缩小段落/章节，或选择 `--compact-json --tables rows --max-output-bytes N`；保留原诊断，重新核对源身份。单块/元数据仍放不下时，明确报告并在宿主预算允许时调大字节上限，不切碎 JSON、裁掉诊断或降级为未绑定数字游标。脚本预算只限制结果序列化，不保证宿主包装或长行展示也完整。
+5. 没有受支持的完整读取方式时，明确已读范围和缺口，停止依赖全量数据的结论。不得重跑创建/编辑来获取旧日志，不把有损视图或预览当完整 DOCX，也不把未知/截断当成功。
 
 ## 结构化 JSON
 

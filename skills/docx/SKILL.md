@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261109.2340.5905"
+version: "20261110.0051.1813"
 description: 用于创建 DOCX 公文、报告、通知与表格，读取 DOCX/DOTX 的正文、章节和表格数据，并按明确目标受控编辑 DOCX。保护原件；不支持旧 DOC、RTF 或 WPS 专有格式转换，不承诺任意无损编辑或真实视觉分页验证。
 ---
 
@@ -14,7 +14,7 @@ description: 用于创建 DOCX 公文、报告、通知与表格，读取 DOCX/D
 
 路径占位符说明：由主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`；相对路径按宿主确认的读取基准解析。使用前替换并引用完整路径，无法定位则停止。
 
-读取路径属于读取工具；执行前确认与执行器路径的映射，用执行器路径替换 `<skill-root>`。确认执行器当前目录为任务目录且输入可见；无法确认则停止报告，不猜路径或切换目录。
+确认执行器当前目录为任务目录且输入可见；无法确认则停止报告，不猜路径或切换目录。
 
 1. `./` 为宿主确认的任务目录；输入用任务内相对路径，可带 `./`；交付输出仅裸文件名，拒绝 `./文件名`、子目录、绝对/父目录。拒绝符号链接，不覆盖原件；不自动读取归档历史，不写 Skill 目录。
 2. 仅用已确认的 Python ≥3.10、zlib、Expat ≥2.6.0 与标准库，保留 `-I -S -B`；禁安装包、Office/转换器。`.wps` 交 WPS，`.et/.ett` 交 ET；CFB 按内容交接。
@@ -54,7 +54,7 @@ runner自检、验收、归档、清理；`--compact-receipt` 精简成功stdout
 
 `<skill-root>/scripts/read_docx.py`：`--summary` 概览、`--heading-only` 标题、`--paragraph-range 1:20` 范围、`--section "标题"` 章节、`--compact-json` 精简结构。默认全文；修订见 inspection。
 
-精简 JSON 默认12000字符，含换行；表格默认仅前两行预览，`truncated=false` 非全表；全表加 `--tables rows`。续读用 `--compact-json --max-output-bytes 4000`，原样传 `next_cursor` 给 `--cursor`，选项不变（预算可调）至 `has_more=false`；源字节变化拒绝。UTF-8预算含元数据/换行；单块或元数据超限报错，不裁剪诊断。核对 `coverage`，读完视图仍非完整DOCX。旧 `next_block` / `--start-block` 未绑定身份，勿混用新模式。纯文本默认不限长；超限有 TRUNCATED、无游标；完整 JSON 超限拒绝。
+精简 JSON 默认12000字符，含换行；表格默认仅前两行预览，`truncated=false` 非全表；全表加 `--tables rows`。续读用 `--compact-json --max-output-bytes 4000`，原样传 `next_cursor` 给 `--cursor`，选项不变（预算可调）至 `has_more=false`；源字节变化拒绝。UTF-8含元数据/换行，超限报错，不裁剪诊断。核对 `coverage`；视图非完整DOCX。旧 `next_block` / `--start-block` 未绑定身份，勿混用新模式。纯文本默认不限长；超限有 TRUNCATED、无游标；完整 JSON 超限拒绝。
 
 ## 按任务直达 references
 
@@ -75,11 +75,13 @@ runner自检、验收、归档、清理；`--compact-receipt` 精简成功stdout
 | cleanup_incomplete/原清单恢复|`<skill-root>/references/task-cleanup.md`；仅原登记项|
 | 旧CLI/配置/命名|`<skill-root>/references/generation-runtime.md`|
 
-仅上下文及路径/版本未变时复用参考，否则复核；不递归预读、不控制宿主缓存/计费、不跨任务复用授权。编辑须明确锚点、输出新文件，保真不足拒绝。
+仅上下文完整且路径/版本未变时复用参考；不递归预读、不控制宿主缓存/计费、不跨任务复用授权。编辑明确锚点、输出新文件，保真不足拒绝。
 
 ## 工具调用约定
 
-提交完整命令/stdin；create一次，不并发同名。超时核状态；未执行schema错误最多纠正一次、规格错误最多重试两次；安全/环境失败停止。
+完整提交命令/stdin；create一次，不并发同名。超时核状态；未执行schema错误仅纠正一次、规格错误最多重试两次；安全/环境失败停止。
+
+按实际回传读正文、诊断及退出状态；合并 output 未必纯JSON，外层 success 非业务成功。续读/缺项见 `<skill-root>/references/tool-calling.md`。
 
 `--question-id` 传可信ID，冲突拒绝。
 
@@ -87,7 +89,7 @@ runner自检、验收、归档、清理；`--compact-receipt` 精简成功stdout
 
 创建核对 `status=verified`，编辑核对 `status=edited`；查 `task_status`、实际 `output`、主文件非空及 warnings。静态非视觉验收，退出0不代表归档成功。仅 `archive_status=copied` 且非空完整清单全 copied/already_archived 才提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”。保留 archive_message，展示 archive_user_notice；其他状态如实报告。业务/归档/清理独立，业务失败不称成功。不等映射确认、不承诺上传时效；隐藏归档路径/目录/ID/日志，保留主文件链接，不虚构下载。见 `<skill-root>/references/delivery.md`。
 
-核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；`cleanup_incomplete`/退出3如实说明，不乱删或重发。`/large_tool_results/` 仅用宿主 `read_file`，不得绕过。
+核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；退出3仍读回执，不重生成。`/large_tool_results/` 仅用宿主 `read_file` 续读，截断JSON不可作完整结果。
 
 ## 维护资源
 

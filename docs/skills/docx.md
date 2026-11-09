@@ -1,6 +1,6 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期：2026-11-09；源码基线：[9e262bc](https://github.com/JohnParken/PSL-SKILLS/tree/9e262bc587c44788b8de49a8498de14ceb9102ce)；Skill 版本：`20261109.2340.5905`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收。
+> 文档核对日期：2026-11-09；源码基线：[9e262bc](https://github.com/JohnParken/PSL-SKILLS/tree/9e262bc587c44788b8de49a8498de14ceb9102ce)；Skill 版本：`20261110.0051.1813`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -112,7 +112,7 @@ flowchart TD
     G -->|"环境或状态无法确认"| N["停止依赖操作并核查原任务"]
 ```
 
-常用创建只需主入口，不重复预跑 preflight；单独读取先做只读自检。调用始终在宿主确认的任务目录中，执行前确认读取后端路径与执行器可访问路径的映射，无法确认映射或执行器工作目录时停止；脚本位置由本轮实际读取 `SKILL.md` 的路径确定，不能把当前工作目录当成 Skill 安装目录。下例只说明调用形态，`<skill-root>` 必须替换为真实根目录；本次文档工作未执行该示例。
+常用创建只需主入口，不重复预跑 preflight；单独读取先做只读自检。调用始终在宿主确认的任务目录中，执行前确认执行器当前目录为任务目录且输入可见，无法确认时停止，不猜路径或切换目录；脚本位置由本轮实际读取 `SKILL.md` 的路径确定，不能把当前工作目录当成 Skill 安装目录。下例只说明调用形态，`<skill-root>` 必须替换为真实根目录；本次文档工作未执行该示例。
 
 ```sh
 python -I -S -B "<skill-root>/scripts/run_docx_task.py" create "工作情况说明.docx" --compact-receipt <<'JSON'
@@ -134,10 +134,22 @@ JSON
 | --- | --- |
 | 创建/编辑 runner | 创建成功 `status=verified`；编辑成功 `status=edited`。`0`：业务未失败且无 `cleanup_incomplete`；仍须检查归档状态及警告。`1`：`status=failed`。`3`：业务未失败但 `task_status=cleanup_incomplete`。参数解析失败通常为 `2`。 |
 | 显式归档 CLI | `status=completed` 只表示清单处理结束；冲突可退出 `0` 且 `archive_status=failed`、文件项 `error_code=archive_conflict`。核对汇总及完整非空明细，不凭退出码宣称已归档。 |
-| `read_docx.py` | 成功 `0`、读取/安全检查失败 `1`、参数错误 `2`。不采用 WPS 的通用 `partial/3` 契约；有界结果须看截断及覆盖字段。 |
+| `read_docx.py` | 正常返回 `0`；环境自检或显式 unsupported 失败 `1`；参数及通过 `parser.error` 报告的读取、预算、安全错误 `2`。不采用 WPS 的通用 `partial/3` 契约；有界结果须看截断及覆盖字段。 |
 | `validate_layout.py` | 结构正常默认 `0`，可同时有风险警告；结构失败 `1`；显式 `--strict-pagination` 遇分页风险 `2`。该 `2` 不表示真实出现空白页。 |
 
 错误优先看 `error_code`、`next_action` 与真实退出码。失败后若已成为 `failed_cleaned`、原清单已删除，纠正规格后建立新任务，不再对旧清单 `retry`。超时或发布状态不明时先检查原状态；安全或环境失败不能通过降低检查、切换路径或原样重试规避。
+
+### 执行结果与宿主大结果
+
+先读本次工具实际返回的正文、诊断、退出状态和截断说明，再解析边界明确的完整业务 JSON。CLI 的 JSON stdout、stderr 诊断和退出码不变；宿主可能合并呈现，不臆造独立通道字段，也不把带状态后缀的整个工具消息当纯 JSON。外层工具 success 不代表文档已生成、归档或清理成功；非零退出仍检查回执，未知/截断不判成功，退出3不重跑生成。
+
+已静态核对 DeepAgents checkout `7764f1f8d21a594f0cbd31d273a7cad36597d6ba`：`ExecuteResponse.output` 为合并 stdout/stderr，`exit_code` 可未知，`truncated` 表示后端截断；中间件附加模型可见状态说明，已知退出码才进入 artifact。`ToolMessage.status=success` 仅表示命令执行过，非零退出也使用 success。这是源码核对，不证明用户部署版本、模型实际可见字段或真实宿主链路已经验收。
+
+宿主结果引用和脚本游标分别处理：先用宿主指定读取工具及真实 schema 完整读取本页，再用脚本的 `next_cursor` 取下一页。`/large_tool_results/` 仅用宿主 `read_file`，不通过 Shell/Python 猜路径。预览截断但保存完整时可续读；保存内容已截断、超长行被裁剪或缺少完整读取能力时，不能靠读到文件结尾宣称完整。只读提取可缩小范围或字节预算，写任务不因补日志重新执行；保留所有限制及原失败诊断。
+
+详见 [宿主结果处理](../../skills/docx/references/tool-calling.md#自检结果与宿主回传) 与 [大结果和分页](../../skills/docx/references/inspection.md#宿主大结果与脚本分页)。本轮不修改路径定位、首步自检或业务实现，保留既有 DOCX 路径说明调整。
+
+本轮 macOS / Python 3.12.12、Expat 2.6.3 实测：源绑定分页 18、读取快路径 19、加载路由 4、自动任务 26、可靠性 15、回执清理 7，共 89 项回归通过，0 跳过；覆盖中文/emoji UTF-8 预算、超长单块、源与选项变更拒绝、连续表格行、截断及退出3回执。使用 `-I -S -B`，目标严格结构检查通过，主入口 7,991 字节，未放宽原 8,000 字节上限。源码核对和本机回归不代表 Linux、Windows、Word/WPS 视觉或真实 DeepAgents 模型回传已验证；未新增 Python，未运行 Pylint。
 
 ### 读取结果
 
