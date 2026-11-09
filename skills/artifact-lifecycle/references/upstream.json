@@ -1,5 +1,5 @@
 {
-  "origin": "DOCX 20261108.0102.2369; bare-filename delivery outputs and preserved internal archival",
+  "origin": "DOCX 20261109.2340.5905; bare-filename delivery outputs and protected input path normalization",
   "policy": "Explicit vendored distribution; repository parity test must pass for changes to either copy. No runtime cross-skill imports.",
   "files": [
     {
@@ -20,7 +20,7 @@
     {
       "file": "controlled_cleanup.py",
       "mode": "exact",
-      "sha256": "4fa9e5308cc1e1b64d788a23798561a8bd742f22dbadb1a10fa3bd31743f3dec"
+      "sha256": "af485799ba77d93f41b56ba3baaf859f419e1ebd382e717eb6fb2c29cd6e7a73"
     },
     {
       "file": "cleanup_task.py",

@@ -25,6 +25,19 @@ def _parts(value):
     return tuple(parts)
 
 
+def _normalize_protected_path(value):
+    """Accept dot components only after validating the raw task-relative path."""
+    if (not isinstance(value, str) or not value or "\\" in value
+            or ":" in value or "\0" in value or value.startswith("/")):
+        raise ValueError("Use a task-relative path without links or parent traversal")
+    parts = value.split("/")
+    if any(part in ("", "..") for part in parts):
+        raise ValueError("Use relative paths without empty components or parent traversal")
+    normalized = "/".join(part for part in parts if part != ".")
+    _parts(normalized)
+    return normalized
+
+
 def _overlap(left, right):
     first, second = _parts(left), _parts(right)
     return first[:len(second)] == second or second[:len(first)] == first
@@ -222,6 +235,7 @@ def _validate(data, manifest, task):
 def plan_cleanup(manifest, *, files=(), directories=(), protected=(), deliverables=()):
     """Register absent targets BEFORE the caller creates its intermediate files."""
     files, directories = tuple(files), tuple(directories)
+    protected = tuple(_normalize_protected_path(path) for path in protected)
     if len(_parts(manifest)) != 1 or directories or any(len(_parts(path)) != 1 for path in files):
         raise ValueError("New temporary files and cleanup manifest must be directly in task ./; temporary directories are forbidden")
     with TaskFiles() as task:
