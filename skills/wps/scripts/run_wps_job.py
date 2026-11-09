@@ -11,7 +11,7 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _wps_artifact_runtime.archive_deliverables import validate_input_path, validate_output_path
-from _wps_artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, finalize_cleanup, finalize_failed_cleanup, _unique_object
+from _wps_artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, finalize_cleanup, finalize_failed_cleanup, _unique_object, _normalize_protected_path
 
 SCRIPTS = ('run_wps_task.py', 'run_wps_edit.py', 'export_wps.py')
 MAX_JOB_BYTES = 2 * 1024 * 1024
@@ -81,6 +81,7 @@ def _command(spec):
             protected.append(arguments[index])
     protected = list(dict.fromkeys(protected))
     for item in protected:
+        _normalize_protected_path(item)  # Validate raw spelling before Path normalizes it.
         validate_input_path(Path(item))
     output = validate_output_path(Path(spec['output']), protected_inputs=protected)
     if output.exists():

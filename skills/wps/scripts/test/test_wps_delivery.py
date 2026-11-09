@@ -80,6 +80,93 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual((self.root / 'created.wps').read_bytes(), original)
         self.assertEqual(json.loads((self.root / 'spec.json').read_text(encoding='utf-8')), SPEC)
 
+    def test_runner_accepts_dot_prefixed_inputs_with_owned_config(self):
+        source = br'{\rtf1 Reliable text\par}'
+        (self.root / 'inputs').mkdir()
+        (self.root / 'inputs/source.rtf').write_bytes(source)
+        operations = [{'operation': 'replace_text', 'find': 'Reliable', 'replace': 'Edited'}]
+        with self.working():
+            code, result = run_job({'script': 'run_wps_edit.py',
+                'arguments': ['batch', './inputs/source.rtf', 'edited.wps', '--spec', '@ops'],
+                'output': 'edited.wps', 'inputs': ['./inputs/source.rtf'], 'configs': {'ops': operations}})
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result['job_cleanup']['cleanup_complete'])
+        self.assertEqual((self.root / 'inputs/source.rtf').read_bytes(), source)
+        read = self.cli('read_wps.py', 'edited.wps')
+        self.assertEqual(read.returncode, 0, read.stdout + read.stderr)
+        self.assertIn('Edited text', read.stdout)
+        self.assertFalse(list(self.root.glob('wps-job-*')))
+
+    def test_runner_rejects_unsafe_inputs_before_normalization(self):
+        (self.root / 'source.rtf').write_bytes(br'{\rtf1 Source\par}')
+        (self.root / 'linked.rtf').symlink_to('source.rtf')
+        (self.root / 'linked-dir').symlink_to('.')
+        with self.working():
+            for name in ('../source.rtf', './a/../source.rtf', str(self.root / 'source.rtf'),
+                         r'..\source.rtf', 'a//source.rtf', 'linked.rtf', 'linked-dir/./source.rtf'):
+                with self.subTest(name=name), self.assertRaises(ValueError):
+                    run_job({'script': 'run_wps_edit.py',
+                             'arguments': ['batch', name, 'out.wps', '--spec', '@ops'],
+                             'output': 'out.wps', 'configs': {'ops': []}})
+        self.assertFalse((self.root / 'out.wps').exists())
+        self.assertFalse(list(self.root.glob('wps-job-*')))
+
+    def test_runner_checks_auto_inputs_in_both_config_modes(self):
+        source = br'{\rtf1 Reliable text\par}'
+        (self.root / 'inputs').mkdir()
+        (self.root / 'inputs/source.rtf').write_bytes(source)
+        operations = [{'operation': 'replace_text', 'find': 'Reliable', 'replace': 'Edited'}]
+        (self.root / 'ops.json').write_text(json.dumps(operations), encoding='utf-8')
+        with self.working():
+            for with_config in (False, True):
+                configs = {'ops': operations} if with_config else {}
+                spec_arg = '@ops' if with_config else 'ops.json'
+                invalid = {'script': 'run_wps_edit.py',
+                           'arguments': ['batch', './inputs//source.rtf', 'bad.wps', '--spec', spec_arg],
+                           'output': 'bad.wps', 'configs': configs}
+                with self.subTest(config=with_config), self.assertRaises(ValueError):
+                    run_job(invalid)
+                output = f'good-{with_config}.wps'
+                valid = {'script': 'run_wps_edit.py',
+                         'arguments': ['batch', './inputs/./source.rtf', output, '--spec', spec_arg],
+                         'output': output, 'configs': configs}
+                code, result = run_job(valid)
+                self.assertEqual(code, 0, result)
+                read = self.cli('read_wps.py', output)
+                self.assertEqual(read.returncode, 0, read.stdout + read.stderr)
+                self.assertIn('Edited text', read.stdout)
+        self.assertEqual((self.root / 'inputs/source.rtf').read_bytes(), source)
+        self.assertFalse((self.root / 'bad.wps').exists())
+        self.assertFalse(list(self.root.glob('wps-job-*')))
+
+    def test_explicit_inputs_reject_empty_components_in_both_config_modes(self):
+        (self.root / 'inputs').mkdir()
+        (self.root / 'inputs/source.rtf').write_bytes(br'{\rtf1 Source\par}')
+        (self.root / 'spec.json').write_text(json.dumps(SPEC), encoding='utf-8')
+        with self.working():
+            for with_config in (False, True):
+                for name in ('inputs//source.rtf', 'inputs/source.rtf/'):
+                    spec_arg = '@spec' if with_config else 'spec.json'
+                    configs = {'spec': SPEC} if with_config else {}
+                    with self.subTest(config=with_config, name=name), self.assertRaises(ValueError):
+                        run_job({'script': 'run_wps_task.py',
+                                 'arguments': ['create', 'out.wps', '--spec', spec_arg],
+                                 'output': 'out.wps', 'inputs': [name], 'configs': configs})
+        self.assertFalse((self.root / 'out.wps').exists())
+        self.assertFalse(list(self.root.glob('wps-job-*')))
+
+    def test_runner_does_not_overwrite_dot_prefixed_input(self):
+        source = br'{\rtf1 Reliable text\par}'
+        (self.root / 'source.rtf').write_bytes(source)
+        with self.working():
+            for configs in ({}, {'ops': []}):
+                spec_arg = '@ops' if configs else '[]'
+                with self.subTest(configs=bool(configs)), self.assertRaises(ValueError):
+                    run_job({'script': 'run_wps_edit.py',
+                             'arguments': ['batch', './source.rtf', 'source.rtf', '--spec', spec_arg],
+                             'output': 'source.rtf', 'configs': configs})
+        self.assertEqual((self.root / 'source.rtf').read_bytes(), source)
+
     def test_missing_or_invalid_config_skips_but_keeps_main_and_cleans_owned_json(self):
         for value in (None, 'invalid JSON'):
             with self.subTest(value=value), self.working():
