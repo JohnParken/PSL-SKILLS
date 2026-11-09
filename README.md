@@ -6,8 +6,8 @@
 
 - [裸文件名输出契约与迁移](docs/output-filenames.md)：全 Skill 输出范围、接口版本与兼容边界。
 - [架构与功能文档](docs/README.md)：10 个独立 Skill 的模块、架构图、流程图和输入输出边界。
-- 当前导读基于源码 `9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`（裸文件名输出契约，已于 2026-11-07 UTC 发布）。Skill 版本以各自 `SKILL.md` 为准；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
-- [本轮文档核验](docs/skill-docs-validation-20261107.json) 与 [文档防漂移检查](tools/check_project_docs.py) 分别记录实际检查结果和可重复检查入口。
+- 当前导读以 2026-11-09 核对的源码 `9e262bc587c44788b8de49a8498de14ceb9102ce` 为基线，Skill 版本以各自 `SKILL.md` 为准。下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
+- [历史文档核验](docs/skill-docs-validation-20261107.json) 与 [文档防漂移检查](tools/check_project_docs.py) 分别记录实际检查结果和可重复检查入口。
 - 本项目维护 Skill 层，不修改 Deep Agents 宿主或加载机制。基础包自包含；组合型 workflow 通过声明的公开契约协作，不能推断存在自动路由服务或 token 节省保证。
 
 - [Python 文件行数硬规范与模块拆分](docs/python-file-limit.md)：所有 Skill Python 文件最多 1000 物理行；超过为 error，1000 行允许。包含测试与内嵌引擎，不设第三方代码豁免。
@@ -78,7 +78,7 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 - **et**：Python 3.9 及以上标准库；OOXML 表格分支另需 Expat >=2.6。
 - **ofd**：读取需 Python >=3.10，生成另需 Python >=3.12.11；均只用自带标准库（含 zlib、Expat >=2.6.0），并检查各入口实际需要的描述符相对安全文件操作能力。零第三方包、零外部软件；缺失能力时停止，不安装组件或降低安全要求。
 - **pptx**：Python >=3.10 标准库，含 zlib、Expat >=2.6.0 及 POSIX 描述符相对安全 I/O；Linux 为目标平台，Windows 不支持，不依赖外部程序。macOS 上已有维护回归不等于目标 Linux 当前版本验收。
-- **artifact-lifecycle**：Python 3.10 及以上标准库（需 POSIX 锁与文件描述符操作能力）；零第三方包、零外部软件。
+- **artifact-lifecycle**：Python 3.10 及以上标准库（需描述符相对安全文件操作及不跟随链接等能力）；零第三方包、零外部软件。实际操作前以自检结果为准。
 - **skill-development-standards**：Python 3.10 及以上标准库（需系统 IANA 时区支持以生成规范版本时间戳）；零第三方包依赖。
 - 办公格式处理与生命周期纯 Python 主流程无需安装第三方 Python 包；WPS 二进制导出可选使用系统 LibreOffice。脚本使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存；纯文本写作不需要 Python。
 - XLSX 目录中保留的旧 legacy 工具可能依赖 pandas、openpyxl 或 LibreOffice，不属于推荐流程；不要据此为主流程安装依赖。
@@ -131,13 +131,13 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch
 
 运行分发使用专用 [打包器](tools/package_docx_runtime.py) 和 [显式清单](packaging/runtime-manifests/docx.json)，默认输出新的 `dist/runtime/docx-runtime-<version>.zip`，不覆盖旧包。全部业务代码、标准库安全边界、自然分页、归档与清理保持不变；测试、维护历史/加载审计和兼容测试样本留在源码、不进入运行包。构建与独立验收方法见 [DOCX 运行包边界](docs/skills/docx.md#运行包与源码维护边界)。
 
-当前平台的 Bash 执行示例统一使用 `execute(command="…")`；每条表示一次工具调用，JSON 输入与 Python API 源码保留各自格式。历史维护记录中的终端命令仅供追溯，不作为业务调用示例。
+调用前以宿主实际工具 schema 为准，将命令参数与 Python stdin 中的 JSON 区分；下方 shell 示例说明命令形态，不预设所有宿主均使用同一工具接口。历史维护记录中的终端命令仅供追溯。
 
 普通生成按 [主入口简单创建流程](skills/docx/SKILL.md#简单创建仅本入口) 执行。先核对宿主实际工具 schema：执行工具的参数与传给 Python stdin 的文档 JSON 分开；要求 `command` 时传完整非空命令。缺参且确认尚未执行才修正一次，断流或状态不明不盲目重发。工具接入、流式拼接和 Qwen/DeepSeek 排查按需见 [工具调用故障](skills/docx/references/tool-calling.md)；Skill 不自动配置宿主门禁或模型参数，未验证真实模型成功率改善。
 
 依赖、只读、工具间文件不可见、版本/长会话、断流及下载问题按需查 [环境与交付故障表](skills/docx/references/troubleshooting.md)。表中按当前标准库实现修正平台经验；不强制固定虚拟环境、不把 check 当下载验证、不在执行状态未知时直接重发。
 
-标准新建直接调用 `run_docx_task.py create`；代码自动检查 Python/Expat、实际文件锁、安全文件操作及任务根目录写入，必要条件失败在生成前返回退出 1 和具体原因。模型无需单独调用 check 或判断自检日志。缺少归档配置、归档不可用、复制或收尾清理失败只提示；已验收且指纹未变的主文件仍成功返回退出 0。`check` 仅保留为可选诊断命令。
+标准新建直接调用 `run_docx_task.py create`；代码自动检查 Python/Expat、实际文件锁、安全文件操作及任务根目录写入，必要条件失败在生成前返回退出 1 和具体原因。模型无需单独调用 check 或判断自检日志。缺少归档配置、归档不可用或复制失败时保留已验收主文件并报告归档状态；清理未完成时主文件仍可保留，但 `task_status=cleanup_incomplete`，runner 返回退出码 3。`check` 仅保留为可选诊断命令。
 
 按照 [主入口](skills/docx/SKILL.md#简单创建仅本入口) 组织普通生成 JSON，复杂任务按需读取专项 reference，直接送入统一入口的 stdin，不另建临时 .py 或 document.json。未指定排版时显式使用 official；用户指定格式优先。命令示例：
 
@@ -230,7 +230,7 @@ python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect ./input.pptx --slides 1-
 
 ### 交付物归档与受控清理（artifact-lifecycle）
 
-独立入口见 [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md)。用于在任务生成业务交付物后，统一进行临时文件登记、交付物原子归档与安全清理。
+独立入口见 [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md)。用于在创建临时文件前登记本轮路径，在业务交付物验收后进行原子归档与安全清理。
 
 首次操作前运行自检，要求退出码为 0 且 JSON `status` 为 `environment-ok`、`task_writable` 为 true：
 
@@ -249,13 +249,14 @@ python3 -I -S -B "<skill-root>/scripts/lifecycle.py" check
 
 用于开发、审查与发布 Skill。主入口见 [Skill 开发规范](skills/skill-development-standards/SKILL.md)。
 
-自检检查器入口可用性：
+首次检查前确认目标目录及 `SKILL.md` 可读，执行下列两项只读自检；两条均须退出 0，第一条输出 `environment-ok`，第二条显示用法。使用已确认的 Python 3.10+：
 
 ```console
+python3 -I -S -B -c "import sys; assert sys.version_info >= (3, 10), 'Python >=3.10 required'; print('environment-ok')"
 python3 -I -S -B "<skill-root>/scripts/check_skill.py" --help
 ```
 
-对指定 Skill 目录进行严格结构检查（检查 `<skill-root>` 资源路径规范、YAML 标头、依赖声明、文件名规范与链接有效性）：
+以下示例在已确认的仓库根目录执行，对指定 Skill 目录进行严格结构检查（检查 `<skill-root>` 资源路径规范、YAML 标头、依赖声明、文件名规范与链接有效性）：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/check_skill.py" skills/docx --strict

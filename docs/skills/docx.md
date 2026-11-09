@@ -1,10 +1,10 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期：2026-11-09；源码基线：[926505d](https://github.com/JohnParken/PSL-SKILLS/tree/926505d9b1ca6ef03fe36ffab7634c8f7045820a) 加本轮字体编辑路由、差异保护与回归维护（尚未提交）；Skill 版本：`20261109.1818.2343`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收。
+> 文档核对日期：2026-11-09；源码基线：[9e262bc](https://github.com/JohnParken/PSL-SKILLS/tree/9e262bc587c44788b8de49a8498de14ceb9102ce)；Skill 版本：`20261109.1818.2343`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
-当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
+Python 模块拆分及文件行数规则见 [行数规范与重构记录](../python-file-limit.md)；该记录保留其验收时的历史基线，不等同于当前版本重测。运行能力和安全边界不因拆分扩大。
 
 ## 运行包与源码维护边界
 
@@ -49,13 +49,16 @@ DOCX Skill 用 Python 标准库构建 OOXML 文档包，适合公文、通知、
 flowchart TD
     A["SKILL.md：最短入口与按需参考"] --> B["run_docx_task.py：创建与恢复编排"]
     A --> C["read_docx.py：全文与有界读取"]
-    A --> D["run_docx_edit.py：五类编辑编排"]
+    A --> D["run_docx_edit.py：五类编辑及候选核验发布"]
     B --> E["create_docx.py：稳定创建 API 与交付编排"]
     E --> ES["docx_create_validation.py：输入规格与图片校验"]
     ES --> EC["docx_create_common.py：约束、样式与格式原语"]
     E --> EX["docx_create_xml.py：OOXML 部件构建"]
     EX --> EC
     D --> F["文字、结构、表格、图片、批注模块"]
+    D -->|"format-checked 候选"| FG["format_guard：核对声明的字体差异"]
+    F -->|"structure 的格式阶段"| FG
+    FG -->|"核验通过后继续受控发布；候选模式使用同一快照"| I
     E --> G["office：ZIP/XML 安全与结构、生成验证"]
     F --> G
     C --> G
@@ -78,7 +81,8 @@ flowchart TD
 | [create_docx.py](../../skills/docx/scripts/create_docx.py) | `_validate_spec`、`_package_parts` 构建规范化规格与 ZIP 部件；`create_document_delivery()` 默认验证并归档。低层 `create_document()` 默认 `verify=False`，不能据此假定完成标准交付闭环。 |
 | [docx_create_common.py](../../skills/docx/scripts/docx_create_common.py)、[docx_create_validation.py](../../skills/docx/scripts/docx_create_validation.py)、[docx_create_xml.py](../../skills/docx/scripts/docx_create_xml.py) | 同包内部职责模块：共享格式约束、规格/图片校验和 OOXML 组包；原 `create_docx.py` 的公开/兼容入口继续可用，不依赖相邻 Skill。 |
 | [read_docx.py](../../skills/docx/scripts/read_docx.py) | `read_docx()` 文本、`read_docx_structure()` 显式结构、`read_docx_compact()` 精简视图、`read_docx_page()` 源绑定分页与 `serialize_docx_page()` 精确序列化；CLI 默认文本，`--format json` 与 `--compact-json` 是不同契约。 |
-| [run_docx_edit.py](../../skills/docx/scripts/run_docx_edit.py) | `text/structure/tables/image/comments` 五类写操作，stdin 接收操作规格；批注 `list` 应使用原只读入口，不走此写入编排。 |
+| [run_docx_edit.py](../../skills/docx/scripts/run_docx_edit.py) | `text/structure/tables/image/comments` 五类编辑及 `format-checked` 候选核验发布，stdin 接收操作规格；批注 `list` 使用原只读入口。 |
+| [format_guard.py](../../skills/docx/scripts/format_guard.py) | 核对指定普通正文 run 的受控格式差异；structure 格式阶段及候选发布模式复用，不支持任意 OOXML 修改。 |
 | [edit_docx.py](../../skills/docx/scripts/edit_docx.py)、[edit_structure.py](../../skills/docx/scripts/edit_structure.py) | 文字精确匹配与次数校验；段落索引及 `expected_text` 双重定位；拒绝受保护或复杂锚点。 |
 | [edit_tables.py](../../skills/docx/scripts/edit_tables.py)、[replace_image.py](../../skills/docx/scripts/replace_image.py)、[manage_comments.py](../../skills/docx/scripts/manage_comments.py) | 分别处理规则数据行、已知媒体及关系、经典/现代批注的有限动作。各自保留独立保护与验证范围。 |
 | [office/archiveio.py](../../skills/docx/scripts/office/archiveio.py)、[office/xmlio.py](../../skills/docx/scripts/office/xmlio.py) | 受限 ZIP/XML 访问、解析预算与外来内容安全边界，不执行宏、域或文档内指令。 |
@@ -202,11 +206,11 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --
 
 ## 源码追溯
 
-- 固定基线：[DOCX 源目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/docx)。
+- 历史快照：[DOCX 源目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/docx)。
 - 入口和创建闭环：[SKILL.md](../../skills/docx/SKILL.md)、[run_docx_task.py](../../skills/docx/scripts/run_docx_task.py)、[create_docx.py](../../skills/docx/scripts/create_docx.py)、[生成核心规范](../../skills/docx/references/generation-core.md)。
 - 安全与验收：[office/xmlio.py](../../skills/docx/scripts/office/xmlio.py)、[StructureValidator](../../skills/docx/scripts/office/validators/structure.py)、[生成验证](../../skills/docx/scripts/office/validators/generation.py)、[分页治理](../../skills/docx/references/pagination-governance.md)。
 - 状态与恢复：[受控流程](../../skills/docx/references/controlled-flow.md)、[run_docx_edit.py](../../skills/docx/scripts/run_docx_edit.py)、[controlled_cleanup.py](../../skills/docx/scripts/controlled_cleanup.py)。
 
 ## 归档结果与用户提示
 
-核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+完整回执应核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived`，保留 `archive_message` 并展示 `archive_user_notice`。`--compact-receipt` 仅在创建、归档和清理达到成功条件后输出投影，包含 `archive_status` 与 `archive_user_notice`，不包含 `files` 和 `archive_message`；需要逐项证据时使用非精简回执，不因缺少投影字段重复生成。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
