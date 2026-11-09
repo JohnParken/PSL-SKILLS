@@ -34,4 +34,4 @@ python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --slides 1-3,
 
 分页不是读取错误，结构通过退出 0。显式允许有限 PNG 零填充时仍保留 `structural_validation=partial`、完整逐文件 diagnostics 和退出码 3；预算不足则拒绝本次输出，不丢弃诊断来凑预算。
 `visual_validation=not_run` 始终保留。不将所选范围、概况、分页完成或结构检查当成完整格式支持、桌面显示验证或所有内容均已返回。
-宿主必须保留 stdout、stderr 和退出码；宿主自身截断不是合法分页，不可继续把截断 JSON 当完整结果处理。
+按主入口的结果消费规则检查实际可见输出、退出码及截断提示；stdout/stderr 可能合并并附有宿主说明，不假定两个独立字段。宿主自身截断不是合法分页，工具层 `status=success` 也不证明本页业务成功。转存引用仅用宿主提供的 `read_file` 按真实 schema 分段补读，核对完整范围后再解析本页 JSON；缺工具、未读全或退出状态未知时停止依赖该结果，不把预览或最后一段当作完整页面，不用 Shell/Python 读取宿主引用。

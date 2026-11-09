@@ -1,6 +1,6 @@
 # artifact-lifecycle：显式归档与受控清理
 
-> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.2340.5905`。本文描述固定基线的实际实现，不是清理任意目录的操作授权。
+> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261110.0051.1813`。本文描述固定基线的实际实现，不是清理任意目录的操作授权。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -84,7 +84,9 @@ flowchart TD
 | `seal MANIFEST` | `--outcome`、可选 `--verified`、`--archive-status`、`--retain PATH REASON` | 成功为 `status=sealed`；成功结果要求非空交付物、验证声明和有效归档状态，但程序不验证业务声明真实性 |
 | `clean MANIFEST` | 原清单 | 最终核对和清理；查看 `cleanup_complete`、`manifest_removed`、`deleted`、`retained`、`failed`、`deliverables_unchanged` |
 
-`plan/seal/clean` 的退出码为：0 成功、3 保留、1 失败/阻止/受控错误。所有子命令的 argparse 参数错误为退出 2，不能假定这种错误也输出正常结果 JSON。宿主须保留同次调用的 stdout、stderr、真实退出码和调用标识；截断 JSON、超时或无真实退出码的结果不能当成完整结果。
+`plan/seal/clean` 的退出码为：0 成功、3 保留、1 失败/阻止/受控错误。所有子命令的 argparse 参数错误为退出 2，不能假定这种错误也输出正常结果 JSON。执行结果按宿主真实 schema 与可见证据消费；stdout/stderr 可能合并并附状态说明，不假定固定外层字段。只解析边界明确且完整的业务 JSON；工具层 `status=success`、调用完成或存在 artifact 不等于业务成功。核对真实退出码与截断/转存提示，缺失、为空或不可判断时如实说明并停止依赖步骤，不伪造退出码。 归档/清理仍核对完整清单和业务字段。
+
+转存引用（如 `/large_tool_results/`）只用宿主提供的 `read_file` 按真实 schema 补读，核对顺序、覆盖及结束；不能用 Shell/Python、换路径或复制绕过。缺工具、仍截断或无法确认完整性时报告缺口，不为补日志重复有副作用操作。补读不消除原结果的摘要、partial 或遗漏；本地捕获不能证明真实宿主回传已验证。 不为补日志重复 archive/seal/clean；未知结果的恢复继续按原清单契约。
 
 清单路径使用规范化相对文件名，例如 `task.cleanup.json`、`worker.py`，而不是带 `./` 的清单成员字符串。新临时项不能放子目录；保护输入、交付物和旧清单恢复仍按其真实契约处理。内部清单 schema 保留 `docx_cleanup_v1` 兼容名称，不表示只能清理 DOCX。
 

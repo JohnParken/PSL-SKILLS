@@ -85,7 +85,7 @@ python -I -S -B "<skill-root>/scripts/table_workflow.py" apply --xlsx-root "XLSX
 
 每区域最多 200000 个单元格、源文件64 MiB、合计快照128 MiB、最多10000次写入、请求2 MiB/深度32、审计16 MiB。超限拒绝，不截断参与运算的数据。stdout 上限24000字符、默认10项写入预览；截断与 omitted 计数是投影限制，不是计算覆盖范围。极长诊断进一步缩至核心回执，仍保留 status/verification、实际 output/audit、写入状态、归档状态与残留计数；不改变已完成业务或 partial 状态。投影不修改完整内存结果。
 
-成功/失败均返回 JSON，CLI用法错误由 argparse 输出 stderr/退出2；宿主应保留同次调用 stdout、stderr、退出码，不把非零结果丢弃或截断JSON继续解析。内部异常细节供定位，不原样展示敏感原文或归档配置给最终用户。依赖子进程自检有60秒超时；超时、信号终止、未启动分别返回真实状态与 exit_code=null，保留可得 stdout/stderr。XLSX 自检解析完整 JSON 和必需标记，不以字符串包含 ready 判成功；整个业务过程仍受宿主预算控制。
+成功/失败均返回 JSON，CLI用法错误由 argparse 输出 stderr/退出2；按宿主实际分流或合流回传保留同次调用的输出、诊断和可知退出状态，不把非零结果丢弃或截断JSON继续解析。内部异常细节供定位，不原样展示敏感原文或归档配置给最终用户。依赖子进程自检有60秒超时；超时、信号终止、未启动分别返回真实状态与 exit_code=null，保留可得 stdout/stderr。XLSX 自检解析完整 JSON 和必需标记，不以字符串包含 ready 判成功；整个业务过程仍受宿主预算控制。
 
 主文件、审计、归档分别验收。输出过程中失败可能已有本轮最终文件，报告 output_written/audit_written 和 verification：写前失败为 false；主文件已验收但审计失败时 output_written=true；审计打开后未完整写入为 incomplete；无法确认的写入为 unknown，另保留实际存在诊断。源公式计算失败保留原 calculation 报告。不能把存在当成完整验收，且不自动删除或覆盖重跑；强杀不承诺事务性两文件发布。归档由 XLSX finish_delivery 分别处理两份最终文件；有 temporary_residuals 时明确清理未完成，不再重复登记/清理。没有本编排器自建中间文件，探针仅删除本次独占文件。未知历史文件始终受保护。
 

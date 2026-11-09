@@ -16,6 +16,8 @@ python -I -S -B "<skill-root>/scripts/lifecycle.py" archive 报告.txt --protect
 
 仅在用户明确授权覆盖所列归档后，给上述archive命令增加`--replace-existing`；API为`archive_outputs(outputs, protected_inputs, replace_existing=True)`。必须继续列全保护输入，不因配置或同名推断授权。
 
+消费执行结果先按主入口 `<skill-root>/SKILL.md#执行环境约束与首步自检` 核对可见退出状态、完整性与宿主转存读取；合并 stdout/stderr 不改变以下业务契约，工具层 `status=success` 不代表归档成功。
+
 输出JSON含archive_status、files、warnings及archive_message。退出0为copied，3为skipped，1为failed，2为参数错误；0/3/1均需读取完整JSON。原DOCX归档CLI的历史退出行为未更改。用户回复按下方归档用户话术映射，不逐字转贴archive_message，主交付物链接仍保留；失败不将内部路径泄露在用户提示中，内部警告用于定位。
 
 ## 归档用户话术

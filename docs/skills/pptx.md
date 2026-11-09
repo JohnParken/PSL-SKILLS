@@ -1,6 +1,6 @@
 # PPTX：受限 SVG 到可编辑演示文稿
 
-文档核对日期：2026-11-07。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261109.2340.5905`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
+文档核对日期：2026-11-07。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.0051.1813`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -157,7 +157,8 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 - [requirements.txt](../../skills/pptx/requirements.txt)：Python 3.10+、仅标准库，需 zlib、Expat 2.6+ 和 POSIX 描述符相对文件操作。当前目标为 Linux，Windows 不支持；不安装包、不调用外部程序或网络服务。
 - `check` 必须实际退出 0，完整 JSON 含 `ok=true`、`status=environment-ok`、`in_memory_export=passed`。`check_kind=environment`、`artifact_validation=not_run` 表明这里只验内存样例，不是用户产物。
 - 写入任务可用 `check --write-probe` 独占创建、读回并清理探针，要求 `write_probe=passed`；不接受输出子目录，纯读取无需探针。
-- 宿主须返回同次调用的完整 stdout、stderr 和真实退出码；未启动、超时、强杀、截断与脚本业务失败分别报告，不解析截断 JSON 或伪造成功。
+- 执行结果按宿主真实 schema 与可见证据消费；stdout/stderr 可能合并并附状态说明，不假定固定外层字段。只解析边界明确且完整的业务 JSON；工具层 `status=success`、调用完成或存在 artifact 不等于业务成功。核对真实退出码与截断/转存提示，缺失、为空或不可判断时如实说明并停止依赖步骤，不伪造退出码。
+- 转存引用（如 `/large_tool_results/`）只用宿主提供的 `read_file` 按真实 schema 补读，核对顺序、覆盖及结束；不能用 Shell/Python、换路径或复制绕过。缺工具、仍截断或无法确认完整性时报告缺口，不为补日志重复有副作用操作。补读不消除原结果的摘要、partial 或遗漏；本地捕获不能证明真实宿主回传已验证。 宿主转存补读与 PPTX 原生分页分别核对，不凭预览交付或重复创建。
 - 业务验收后，按宿主发现的真实 `artifact-lifecycle` 入口交接最终清单、来源和验证结果。公共能力不可用报告归档 skipped；失败保留主文件，不重新生成或删除已验收 PPTX。归档与业务成功分别判断。
 - [来源记录](../../skills/pptx/references/provenance.md) 固定 PPT Master v6.8.0 来源提交 `5e8856be0da8e6bc85c4aa28acc614478f7b7137`，记录保留的标准库适配、静态数据与 MIT/Apache 等许可。没有移植上游完整工作流、浏览器审查、渲染、任意模板导入或媒体流程。
 - [源码测试](../../skills/pptx/scripts/test/) 不随业务运行包分发；它与仓库级来源清单属于维护证据。结构、合成对象、独立内容预期、真实业务样本、PowerPoint/WPS 显示、只读安装及宿主触发验收必须分别报告，不能相互替代。

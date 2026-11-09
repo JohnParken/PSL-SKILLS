@@ -8,6 +8,20 @@
 
 默认命令接受一个相对输入参数及可选 --version-policy known|compatible，输出一个 UTF-8 JSON 对象到 stdout，无磁盘产物。只接受任务目录内路径，拒绝绝对路径、父目录段和所有层级的符号链接（包括指向任务内的链接）。以可信任务根的目录描述符逐级打开，并在同一文件描述符上核对普通文件、大小和读取期间变化；不是针对特权并发写者的完整文件系统沙箱。无丢弃诊断的纯文本模式；新增可选JSON概况/单页视图见 `<skill-root>/references/output-views.md`，默认完整结果不变。`--help` 为 argparse 帮助。参数错误退出 2，帮助与参数错误采用 argparse 常规通道，不保证 JSON。
 
+## 执行器回传与业务结果判定
+
+先记录本次调用、实际命令和宿主提供的执行状态，再按本参考所述CLI通道识别结果；本节不改变脚本stdout、stderr、JSON schema或退出码。
+
+1. 区分参数校验/启动失败、超时或强杀、正常进程退出。没有真实退出码就标记未知，不用工具调用成功替代退出0；入口usage退出2不保证业务JSON，不能猜补空结果。
+2. 宿主可能分别回传stdout/stderr，也可能只回传合并输出。已核对的DeepAgents接口为 `ExecuteResponse.output`（合并stdout/stderr）、`exit_code`（可为None）、`truncated`。middleware可能将退出状态和截断提示追加到模型文本，工具artifact只在退出码已知时携带 `exit_code`；工具 `status=success` 只表明执行调用完成，不保证命令成功。不要要求模型读取根本未提供的独立通道，也不要把这些宿主字段当成OFD JSON字段。具体安装版本、后端和实际模型回传仍须核验，不将某个后端的stderr前缀或格式推广到所有宿主。
+3. 先查看截断及预览/保存文件提示。后端未截断不代表后续模型消息未缩短；保存了输出也不保证文件完整，仍核对捕获状态。宿主明确提供完整原始stdout或其边界时再解析那一个JSON对象，不对合并日志整体直接调用JSON解析，不按“第一个左花括号到最后一个右花括号”猜边界或删除任意诊断。无法恢复可靠边界时报告回传不足，使用宿主支持的独立捕获或已核验结果文件；不降低安全限制、不通过重跑生成猜测原结果。
+4. 对完整JSON先核对schema、全局status及退出码，然后读正文和子状态。读取 `complete/0`、`partial/3`、`unsupported/4`、`failed/1` 必须对应；非零退出不丢stdout。partial的正文与diagnostics一同保留，failed/unsupported不交付此前累积正文。状态不一致、JSON缺失/截断或退出码未知时，报告实际可知内容和无法确认之处，不认定完整成功。
+5. `--check` 的文本/JSON仅用于环境判定；生成器使用独立的 `ofd-generation-result-1` 与 generated/failed语义，见 `<skill-root>/references/generation.md`。不能把环境成功、工具成功或读取complete当作生成成功。大结果按 `<skill-root>/references/output-views.md` 选择视图或完整捕获，不改写机器JSON、不丢诊断来迎合工具显示长度。
+
+以上是消费与集成要求；本地subprocess捕获、源码审阅和真实执行器/模型回传验收分别记录，前两者不证明第三者已经通过。
+
+## 读取状态与字段
+
 | status | 退出码 | 含义 |
 |---|---:|---|
 | complete | 0 | 声明的 XML/存储文字范围已读取且无已知缺口；不是全格式支持 |

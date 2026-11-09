@@ -1,6 +1,6 @@
 ---
 name: ofd
-version: "20261109.2340.5905"
+version: "20261110.0051.1813"
 description: 读取 OFD 1.0、1.1、1.2 的结构与文字；仅在明确指定 OFD 时生成基础 OFD 1.0 多页文件，含固定文字、线框、图片及简单表格。可离线用随包朱雀仿宋预览示例或自备字体，缺字明确拒绝。不编辑第三方文件，不做 OCR、签章、复杂排版或格式转换。
 ---
 
@@ -30,7 +30,9 @@ python -I -S -B "<skill-root>/scripts/read_ofd.py" --check
 
 **自检结果与回传：**`--check` 成功 stdout 保留原 `environment-ok` 行，另输出 `check_kind=environment artifact_validation=not_run`。受控失败仍按原 JSON stdout、status/diagnostics及退出1/4返回，并在JSON中增加同名范围字段；不混入普通文字。参数错误仍退出2并写usage到stderr。此结果只说明环境，不读取、生成或验收OFD产物。
 
-宿主须向模型返回同一次调用的 stdout、stderr、真实退出码及调用标识，非零退出不能丢stdout，空通道用空字符串。未启动/超时/强杀没有正常退出码时明确状态，不填0；截断须注明通道与长度，不解析截断JSON。仅调用print或在子进程内捕获并不证明工具结果已送达模型；缺少回传时标记无法确认，不能宣称通过。实际提取仍按下文complete/partial/unsupported/failed与范围说明验收。
+**执行结果先判定，再消费：** 将结果与本次命令对应，先核对是否实际执行、退出码或未知状态、截断说明，再读业务 JSON。宿主分别提供 stdout/stderr 时保留两者；只提供合并 `output` 时按其真实契约读取，不虚构独立通道。DeepAgents 的 `ExecuteResponse.output` 为合并输出，`exit_code` 可为 `None`，`truncated` 表示后端截断；模型可见的工具文本还可能附加执行状态或被缩短，工具 `status=success` 不等于命令退出0或OFD业务成功。包装说明不是OFD JSON字段，不把合并文本整体直接当JSON；仅在宿主明确标识完整stdout边界时提取，否则报告无法确认并按 `<skill-root>/references/contract.md` 处理。
+
+非零退出不能丢弃stdout或诊断；退出3的partial保留可靠记录与缺口，其他状态按下文处理。退出码缺失不能填0，未启动、超时、强杀与业务失败分别报告；截断或只有预览时不解析为完整JSON、不宣称全文已读，也不为补回执盲目重跑生成。只有同一次调用的完整业务结果与退出状态一致，才继续依赖该结果；自检成功仍不代表产物验收。仅调用print或子进程捕获不能证明结果已送达模型，真实宿主未核验时明确该限制。
 
 未指定 OFD 格式的普通“生成文档”、Word/PDF/报告等请求，不触发本技能的生成流程，也不默认选择 OFD；按已明确的其他格式流程处理，格式确实缺失时再按任务需要确认。只有本轮授权或明确的续接任务指定 OFD，才生成 OFD；读取或讨论 OFD 不等于授权新建。明确要求 OFD 的任务继续执行，不额外重复确认格式。
 
@@ -53,7 +55,7 @@ python -I -S -B "<skill-root>/scripts/read_ofd.py" --check
 | 任务 | 操作与按需参考 |
 |---|---|
 | 按明确模型新建基础 OFD | 先读 `<skill-root>/references/generation.md`，完成生成自检；支持 OFD 1.0 固定位置横排文字、线框、受限PNG/JPEG和显式网格表格，不编辑原文件。 |
-| 只需概况/定位页；只取指定页文字 | `--view summary`或`--view page-text --document 1 --page 1`，按需读 `<skill-root>/references/output-views.md`；不是完整结构，保留全局partial与诊断 |
+| 只需概况/定位页；只取指定页文字；大结果读取 | `--view summary`或`--view page-text --document 1 --page 1`，按需读 `<skill-root>/references/output-views.md`；核对来源与页范围，无页内游标。需要完整结构仍用full，不把投影或截断当全文，保留全局partial与诊断 |
 | 完整结构与存储文字 | 默认读取 1.0/1.1/1.2，先看 structure、text_assessment 与全局 status；使用说明见 结构与文字模型 (`<skill-root>/references/structure.md`)。 |
 | 其他版本或归档子集 | 先读 版本与兼容性 (`<skill-root>/references/compatibility.md`)，不通过强改版本或命名空间取得成功。 |
 | 提取文字、核对页码和来源 | 默认命令输出 JSON；先读状态，再使用 `documents[].pages[].text_runs`。每段含来源、对象、TextCode 原始字符串与属性、祖先属性与复合引用链，并解释四位十六进制转义。 |

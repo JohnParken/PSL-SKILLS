@@ -1,6 +1,6 @@
 # table-workflow：多源表格分析与模板填报
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.2340.5905`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261110.0051.1813`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -151,6 +151,12 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 [requirements.txt](../../skills/table-workflow/requirements.txt) 声明 Python ≥3.12，维护参考版本 3.12.11，仅标准库；无需运行时网络、安装包或外部办公软件。必须另行安装兼容 XLSX；ET/ETT 来源再安装 ET，且 OOXML 分支要求 Expat ≥2.6。依赖通过宿主确认的真实根目录显式提供，单独复制 table-workflow 不会自动获得解析器。
 
 文件快照要求 `O_NOFOLLOW/O_NONBLOCK` 等安全原语；缺少即停止，归档还继承 XLSX 的平台及硬链接条件。只读安装允许，但任务目录必须可按所需操作读写；这不是敌对并发写者沙箱。
+
+## 执行结果与宿主转存
+
+执行结果按宿主真实 schema 与可见证据消费；stdout/stderr 可能合并并附状态说明，不假定固定外层字段。只解析边界明确且完整的业务 JSON；工具层 `status=success`、调用完成或存在 artifact 不等于业务成功。核对真实退出码与截断/转存提示，缺失、为空或不可判断时如实说明并停止依赖步骤，不伪造退出码。 本脚本依赖自检结果中的 stdout/stderr 字段继续保持，不能用它推断宿主回传结构。非零退出保留 partial、已写文件与收尾诊断。
+
+转存引用（如 `/large_tool_results/`）只用宿主提供的 `read_file` 按真实 schema 补读，核对顺序、覆盖及结束；不能用 Shell/Python、换路径或复制绕过。缺工具、仍截断或无法确认完整性时报告缺口，不为补日志重复有副作用操作。补读不消除原结果的摘要、partial 或遗漏；本地捕获不能证明真实宿主回传已验证。 不重复 `apply`；补读不能把 stdout 投影变成完整审计，原生 `names` 分页仍按 SHA 和 offset 规则核对。
 
 ## partial、失败与模板保护
 

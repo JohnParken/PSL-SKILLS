@@ -1,6 +1,6 @@
 # bank-writing：银行专业写作与文本交接
 
-> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.2340.5905`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
+> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261110.0051.1813`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -105,7 +105,9 @@ flowchart TD
 
 纯文本路径不依赖 Python、第三方包或办公软件，不要求文件写入探针。首次操作通过人工核对任务、素材可读性和必要参考可读性完成自检，不存在可调用的 `--check`。
 
-读取本地材料时，以宿主确认的任务工作目录和附件映射为准；内部资料由实际读取 `SKILL.md` 的真实路径定位。大结果若由宿主转存到 `/large_tool_results/`，按 [source-access.md](../../skills/bank-writing/references/source-access.md) 使用宿主 `read_file`，不能把路径当作 Shell/Python 可见文件或绕过隔离。
+读取本地材料时，以宿主确认的任务工作目录和附件映射为准；内部资料由实际读取 `SKILL.md` 的真实路径定位。按工具真实 schema 核对可见状态、素材覆盖与截断提示，不假定固定字段。工具层 `status=success` 不证明已读全文或素材真实；接收其他技能回执时，stdout/stderr 可能合并并附宿主说明，仍需核对实际退出状态及完整业务 JSON，不能把存在 artifact 当成文件成功。无需执行的读取工具不虚构退出码。
+
+大结果由宿主转存到 `/large_tool_results/` 等引用时，按 [source-access.md](../../skills/bank-writing/references/source-access.md) 仅用宿主 `read_file` 和实际 schema 补读，核对顺序、覆盖、重叠/遗漏与结束标记；预览或最后一段不是全文。不能把引用当作 Shell/Python 可见路径或复制到其他目录绕过。缺工具、仍截断或完整性未知时报告缺口，只继续不依赖缺口的部分。补读不消除原工具的摘要/partial，不为取回日志重复有副作用操作，也不能证明真实宿主回传已验证。
 
 DOCX 是显式、可选的能力交接，不是默认运行时依赖。宿主必须定位其真实入口；不假定安装在 bank-writing 旁边，也不因写作任务提前运行 docx 自检。导出阶段的复杂 JSON 序列化和文件生命周期均由 docx 的当前契约处理。
 

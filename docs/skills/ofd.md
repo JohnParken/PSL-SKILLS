@@ -1,6 +1,6 @@
 # OFD：结构读取与受限固定版式生成
 
-文档核对日期：2026-11-07。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261109.2340.5905`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
+文档核对日期：2026-11-09。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.0051.1813`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -119,7 +119,15 @@ python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd --view page-text 
 
 默认 `version-policy=known` 接受 1.0/1.1/1.2；显式 `compatible` 可尝试规定范围内未知 1.x 共同子集，但必须 partial。OFD-A 的存储读取不等于归档规范认证，详见 [兼容策略](../../skills/ofd/references/compatibility.md)。
 
-[输出视图](../../skills/ofd/references/output-views.md) 使用 `ofd-view-1`，保留全局状态和诊断。概况不含正文，`page-text` 只含指定文档/页出现记录；可用 SHA-256 校验来源未变。视图超预算明确失败，不裁剪文字或诊断后假报完整；它不是完整结构模型。
+[输出视图](../../skills/ofd/references/output-views.md) 使用 `ofd-view-1`，保留全局状态和诊断。概况不含正文，`page-text` 只含指定文档/页出现记录；可用 `--source-sha256` 校验来源未变，并按文档index、page_count及响应scope核对所需页覆盖。顶层 `omitted_top_level_fields` 与文档/页 `omitted_fields` 表示未返回，不表示内容不存在。视图超预算明确failed/1，不裁剪文字或诊断后假报完整；它不是完整结构模型。
+
+### 执行回传与大结果消费
+
+执行前置条件不变。取得结果后，先判断实际执行状态、退出码或未知状态、截断，再解析业务JSON；工具调用成功不等于业务成功。宿主若只有合并输出，不假设独立stdout/stderr字段。已核对的DeepAgents接口使用 `ExecuteResponse.output`、可为None的 `exit_code` 与 `truncated`；middleware可在模型文本追加状态/截断说明，工具 `status=success` 也可对应非零命令退出。包装文本不属于OFD JSON，须由宿主明确完整stdout边界后解析；回传边界不足时报告无法确认，不猜拆日志。
+
+按任务选summary、整页page-text或full。OFD没有页内游标或分段参数，单页/诊断超预算时只能在宿主可完整承载的前提下显式提高预算，或安全捕获一次完整full结果后由确定性程序消费，不能切到下一页就声称前页已读完。即使所有页文字均取得，非页面存储文字与XML仍未因此覆盖。后端截断、模型预览及文件捕获不完整分别核对；单行JSON不能用head/tail假装分页。保留原始JSON、来源、退出码和partial诊断，不为显示长度改写接口或省略错误。
+
+这些说明不新增落盘、缓存或执行器能力。需要结果文件时，由宿主独占写入本轮受控任务文件，保留独立诊断与完整捕获证据；没有该能力时如实报告范围和阻塞。源码审阅、本地CLI捕获和真实宿主/模型回传是不同验证层，不相互替代。
 
 ## 生成输入、发布与失败边界
 
@@ -161,7 +169,9 @@ python -I -S -B "<skill-root>/scripts/generate_ofd.py" ./layout.json new-documen
 
 [验证记录](../../skills/ofd/references/validation.md) 和 [生成证据](../../skills/ofd/references/generation.md) 区分合成测试、固定 OFDRW 原件、独立文字预期、真实字体/图片核对和平台范围。JDK 字形/图片交叉检查属于历史维护工具，不是运行时依赖，也没有渲染 OFD 页面。近期生成及资源恢复记录主要来自 macOS，不能推断已完成 Linux、Windows、客户端或视觉验收。
 
-本文只进行固定基线源码与契约审阅，未运行 OFD 自检、业务生成、样本读取、维护测试或客户端验收。测试存在于 [scripts/test](../../skills/ofd/scripts/test/)，不属于普通业务运行依赖；历史通过不等于本轮通过。
+此前固定基线文档整理只进行源码与契约审阅，未运行 OFD 自检、业务生成、样本读取、维护测试或客户端验收。测试存在于 [scripts/test](../../skills/ofd/scripts/test/)，不属于普通业务运行依赖；历史通过不等于本轮通过。
+
+2026-11-09 本轮仅更新执行结果消费和大结果读取说明及版本，description经核对保持原适用范围；未修改CLI、执行路径、首步自检、依赖或业务实现。在macOS/Python 3.12.12/Expat 2.6.3使用 `-I -S -B` 实测读取自检通过，OFD严格结构检查通过；`python -I -S -B -m unittest discover -s skills/ofd/scripts/test -p 'test_*.py' -v` 共156项通过（含视图8项），另用独占临时合成文件验证20000字单页默认预算failed/1且无正文、显式100000预算完整返回42170字符JSON、cursor/offset参数usage/2、下一页越界与partial/3诊断保留。对该JSON模拟截取12000字符后解析失败，仅为截断模拟，不是实际DeepAgents回传测试。未执行Linux/Windows、真实宿主模型回传、OFD客户端视觉验收或新真实外部样本验收；未修改Python，因此未新增Pylint运行。
 
 ## 归档结果与用户提示
 
