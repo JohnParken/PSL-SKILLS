@@ -123,8 +123,13 @@ class QuickStartTests(unittest.TestCase):
         self.assertEqual(child.returncode, 0, child.stderr)
         data = json.loads(child.stdout)
         self.assertEqual(data['coverage'], 'overview_only_no_cell_values')
-        self.assertNotIn('001', child.stdout)
-        self.assertNotIn('cells', data['sheets'][0])
+        # Source fingerprints can contain the same digits as cell text.
+        # Check the parsed worksheet projection, not arbitrary JSON substrings.
+        self.assertEqual(data['sheets'], [{'name': '清单', 'stored_cells': 4}])
+        for sheet in data['sheets']:
+            self.assertNotIn('cells', sheet)
+            self.assertNotIn('value', sheet)
+            self.assertNotIn('001', json.dumps(sheet, ensure_ascii=False))
 
     def test_formula_partial_keeps_diagnostics_and_cleans(self):
         spec = json.loads(self.spec_text)

@@ -20,7 +20,10 @@
     "requirements.txt",
     "scripts/check_generated_ofd.py",
     "scripts/generate_ofd.py",
+    "scripts/ofd_common.py",
     "scripts/ofd_generation_assets.py",
+    "scripts/ofd_package.py",
+    "scripts/ofd_structure.py",
     "scripts/read_ofd.py"
   ],
   "exclude_prefixes": [

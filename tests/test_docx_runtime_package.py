@@ -70,7 +70,7 @@ class RuntimePackageBuildTests(unittest.TestCase):
         expected = {n for n in actual if not n.startswith('scripts/test/') and n not in EXCLUDED}
         self.assertEqual(set(files), expected)
         self.assertTrue(EXCLUDED.isdisjoint(files))
-        self.assertEqual(len(files), 80)
+        self.assertEqual(len(files), 83)
         self.assertEqual(json.loads(MANIFEST.read_text(encoding='utf-8'))['exclude_files'], {})
         for name in ('maintenance-validation.md', 'reference-loading.md', 'token-optimization.md'):
             self.assertFalse((SOURCE / 'references' / name).exists())
@@ -79,7 +79,9 @@ class RuntimePackageBuildTests(unittest.TestCase):
         self.assertTrue((SOURCE / 'scripts/test/fixtures/libreoffice-control.docx').is_file())
         for name, contents in files.items():
             self.assertEqual(contents, (SOURCE / name).read_bytes(), name)
-        for name in ('scripts/create_docx.py', 'scripts/read_docx.py', 'scripts/run_docx_edit.py',
+        for name in ('scripts/create_docx.py', 'scripts/docx_create_common.py',
+                     'scripts/docx_create_validation.py', 'scripts/docx_create_xml.py',
+                     'scripts/read_docx.py', 'scripts/run_docx_edit.py',
                      'scripts/manage_comments.py', 'scripts/comment.py', 'scripts/merge_runs.py', 'scripts/format_guard.py',
                      'scripts/controlled_cleanup.py', 'scripts/office/validators/generation.py'):
             self.assertIn(name, files)

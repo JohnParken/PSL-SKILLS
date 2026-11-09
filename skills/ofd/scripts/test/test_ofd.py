@@ -597,13 +597,36 @@ class ReaderTests(unittest.TestCase):
         finally:
             READER.LIMITS['output_chars']=original
 
+    def test_split_runtime_keeps_shared_api_identities(self):
+        import ofd_common
+        import ofd_package
+        import ofd_structure
+        self.assertIs(READER.ReadError, ofd_common.ReadError)
+        self.assertIs(READER.LIMITS, ofd_common.LIMITS)
+        self.assertIs(READER.LIMITS, ofd_package.LIMITS)
+        self.assertIs(READER.Package, ofd_package.Package)
+        self.assertIs(READER.catalogue_structure, ofd_structure.catalogue_structure)
+        self.assertIs(READER.read_input, ofd_common.read_input)
+
+    def test_cli_ignores_task_local_module_shadow(self):
+        write_package(self.path, fixture())
+        (self.root / 'ofd_common.py').write_text(
+            'raise RuntimeError("task-local code must never execute")\n', encoding='utf-8')
+        result = subprocess.run(
+            [sys.executable, '-I', '-S', '-B', str(Path(READER.__file__).resolve()), 'sample.ofd'],
+            cwd=self.root, env={'PATH': ''}, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(result.stdout)['status'], 'complete')
+
     def test_cli_and_readonly_isolation(self):
         installation=self.root/'install'
         installation.mkdir()
         source=(Path(__file__).parents[1] / 'read_ofd.py')
         target=installation/'read_ofd.py'
-        shutil.copyfile(source,target)
-        target.chmod(0o444)
+        for name in ('read_ofd.py', 'ofd_common.py', 'ofd_package.py', 'ofd_structure.py'):
+            destination = installation / name
+            shutil.copyfile(source.with_name(name), destination)
+            destination.chmod(0o444)
         installation.chmod(0o555)
         write_package(self.path,fixture())
         before={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in installation.iterdir()}
@@ -620,7 +643,8 @@ class ReaderTests(unittest.TestCase):
             self.assertEqual(before,after)
         finally:
             installation.chmod(0o755)
-            target.chmod(0o644)
+            for installed in installation.iterdir():
+                installed.chmod(0o644)
 
 
 if __name__=='__main__':

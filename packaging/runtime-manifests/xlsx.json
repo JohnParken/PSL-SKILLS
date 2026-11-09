@@ -82,6 +82,7 @@
     "scripts/docs/cli-contract.md",
     "scripts/formula_check.py",
     "scripts/formula_engine.py",
+    "scripts/formula_wildcards.py",
     "scripts/libreoffice_recalc.py",
     "scripts/requirements.txt",
     "scripts/run_xlsx_task.py",
