@@ -4,7 +4,7 @@
 Checks current inventory/version tables and ordinary inline/reference Markdown
 links, ATX heading anchors and explicit HTML ids. Not a CommonMark parser,
 semantic/source-claim validator, Mermaid parser or network checker. Fenced code
-and inline code are ignored for links. No recursive directory traversal.
+and inline code are ignored for links. Recursively checks repository docs, including separated maintenance pages.
 """
 import argparse
 import json
@@ -113,7 +113,7 @@ def check_project_docs(root):
     for path in sorted((root / 'docs/skills').glob('*.md')):
         if path.stem not in inventory:
             issue(path, 'coverage', 'Detail page has no current Skill')
-    pages = sorted({root / 'README.md', root / 'AGENTS.md', root / 'docs/README.md', *(root / 'docs').glob('*.md'), *(root / 'docs/skills').glob('*.md')})
+    pages = sorted({root / 'README.md', root / 'AGENTS.md', root / 'docs/README.md', *(root / 'docs').rglob('*.md')})
     checked = 0
     for path in pages:
         for destination in links(read(path)):

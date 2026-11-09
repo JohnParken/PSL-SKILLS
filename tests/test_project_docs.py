@@ -32,6 +32,10 @@ class DocumentationChecks(unittest.TestCase):
     def test_valid(self):
         self.assertTrue(checker.check_project_docs(self.root)['ok'])
 
+    def test_nested_maintenance_links_are_checked(self):
+        self.write('docs/maintenance/example/history.md', '[missing](missing.md)')
+        self.assertIn('missing-link', self.codes())
+
     def test_version_drift(self):
         self.write('docs/skills/example.md', '> Skill 版本：`20261105.1556.4829`')
         self.assertIn('version-drift', self.codes())
