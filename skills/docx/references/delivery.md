@@ -52,11 +52,12 @@
 | `create_docx.create_document_delivery` | `spec, output, base_dir=None`；`verify=True`, `require_no_placeholders=False` |
 | `edit_docx.replace_text_delivery` | `source, destination, specification`；`parts=None`, `require_no_placeholders=False` |
 | `edit_structure.edit_structure_delivery` | `source, destination, specification`；`require_no_placeholders=False` |
+| `format_guard.publish_format_candidate_delivery` | `original, candidate, output, specification`；仅受控 run 格式候选，核验后发布同一内存快照 |
 | `edit_tables.edit_tables_delivery` | `source, destination, specification`；`require_no_placeholders=False` |
 | `replace_image.replace_image_delivery` | `source, replacement, destination, specification` |
 | `manage_comments.manage_comments_delivery` | `source, specification, destination=None`；只读 `list` 返回原结果，不归档 |
 
-表中专用选项均为关键字参数；所有接口另接受 `protected_inputs=()`，列出从磁盘加载的 JSON、模板或其他需保护的输入。新建自动保护已验证的正文/表格图片；编辑自动保护源文档，图片替换还保护替换图片。CLI 自动补齐其输入清单；字典 API 不知道字典来自哪个磁盘文件，调用方必须通过 `protected_inputs` 提供这些路径。主文件写入前检查输入同源，归档前再次保护输入和其他交付物；标准runner按主路径和归档冲突自动递增版本名称；表中兼容API的主输出行为保留，归档统一默认拒绝覆盖。
+表中专用选项均为关键字参数；所有接口另接受 `protected_inputs=()`，列出从磁盘加载的 JSON、模板或其他需保护的输入。新建自动保护已验证的正文/表格图片；编辑自动保护源文档，图片替换还保护替换图片。候选格式交付同时保护原件和候选。CLI 自动补齐其输入清单；字典 API 不知道字典来自哪个磁盘文件，调用方必须通过 `protected_inputs` 提供这些路径。主文件写入前检查输入同源，归档前再次保护输入和其他交付物；标准runner按主路径和归档冲突自动递增版本名称；表中兼容API的主输出行为保留，归档统一默认拒绝覆盖。
 
 新建示例（完成主入口自检，模块从上述真实脚本目录加载后）：
 
@@ -85,6 +86,8 @@ result = replace_text_delivery(
 ```
 
 新建 `output` 与编辑 `destination` 均只接收裸文件名，主文件固定写入任务根目录，拒绝 `./文件名`、子目录、绝对或父目录参数。编辑返回 `output="采购管理办法_修订版.docx"` 时，后续读取任务根目录中的该主文件；内部归档副本为 `output/{questionId}/采购管理办法_修订版.docx`，不把归档路径作为业务输出参数。已有底层函数 `create_document`、`replace_text`、`edit_structure`、`edit_tables`、`replace_image`、`manage_comments` 的签名和返回值保持兼容，不自动归档；不得将其用于最终交付后省略归档。多步处理中间结果不归档；若最终文件已由低层或其他工具生成并验收，显式调用 `archive_outputs(outputs, protected_inputs, *, replace_existing=False)` 或对应清单 CLI，不为归档重跑编辑。
+
+格式候选交付使用 `<skill-root>/scripts/run_docx_edit.py` 的 `format-checked` 模式及 `--candidate`，流程和拒绝边界见 `<skill-root>/references/ooxml-editing.md#字体修改与候选文件保护`。先检查后另行直接归档不具备候选快照保护；格式检查失败不进入主文件发布和归档。
 
 这些入口保证经过它们的主文件成功后触发归档；不能拦截任意外部代码写文件，也未接入宿主交付钩子。目录缺失由归档代码自动创建；配置缺失/无效时由代码返回 `skipped`，无须模型判断是否执行。归档记录须区分执行后跳过与从未调用，不能仅凭没有单独复制命令就判断未执行。
 

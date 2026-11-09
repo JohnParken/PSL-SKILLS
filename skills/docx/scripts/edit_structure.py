@@ -5,6 +5,7 @@ All operations address the original document and write a separate output file.
 """
 
 import argparse
+import copy
 import json
 import math
 import re
@@ -16,7 +17,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from edit_docx import XML_NS, XMLNS_NS, _eligible, _range_text_nodes, _serialize_checked, _text
-from office.memory_package import package_workspace
+from office.memory_package import MemoryPath, package_workspace
 from office.package import pack_document
 from office.helpers import reject_signed_package
 from office.validators.structure import StructureValidator, W
@@ -207,6 +208,7 @@ def _apply_format(run, specification):
 
 def edit_structure(source, destination, specification, *, require_no_placeholders=False):
     """Apply operations to direct body paragraphs; indices refer to original XML."""
+    specification = copy.deepcopy(specification)
     source, destination = Path(source), validate_delivery_output(destination, [source])
     if source.suffix.lower() not in {".docx", ".dotx"} or source.suffix.lower() != destination.suffix.lower():
         raise ValueError("Input and output must have the same DOCX/DOTX extension")
@@ -274,10 +276,24 @@ def edit_structure(source, destination, specification, *, require_no_placeholder
             if key in seen:
                 raise ValueError("Multiple operations on the same target/position are unsupported")
             seen.add(key)
-        for kind, target, options in plan:
-            if kind == "format_run":
+        format_plan = [item for item in plan if item[0] == "format_run"]
+        insert_plan = [item for item in plan if item[0] == "insert_paragraph"]
+        if format_plan:
+            original_snapshot = MemoryPath(dict(unpacked.files))
+            guard_specification = {
+                "operations": [operation for operation in operations
+                                if operation.get("type") == "format_run"],
+            }
+            for _, target, options in format_plan:
                 _apply_format(target, options)
-                continue
+            format_stage = _serialize_checked(dom)
+            (unpacked / "word/document.xml").write_bytes(format_stage)
+            from format_guard import compare_format_edits
+            compare_format_edits(
+                original_snapshot, unpacked, guard_specification,
+                extension=source.suffix.lower(),
+            )
+        for _, target, options in insert_plan:
             paragraph = _new_element(dom, "p")
             if "style" in options:
                 properties = _new_element(dom, "pPr")
@@ -292,7 +308,8 @@ def edit_structure(source, destination, specification, *, require_no_placeholder
             run.appendChild(text)
             paragraph.appendChild(run)
             body.insertBefore(paragraph, target if options["position"] == "before" else target.nextSibling)
-        (unpacked / "word/document.xml").write_bytes(_serialize_checked(dom))
+        if insert_plan:
+            (unpacked / "word/document.xml").write_bytes(_serialize_checked(dom))
         if not StructureValidator(unpacked, extension=destination.suffix.lower(),
                                   require_no_placeholders=require_no_placeholders).validate():
             raise ValueError("Edited document failed implemented structure checks")

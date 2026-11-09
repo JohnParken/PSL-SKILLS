@@ -21,6 +21,8 @@
 - 结构化 JSON
 - 进阶检查范围
 
+读取结果只用于定位和检查，不是保格式重建规格；纯文本/compact 缺少原缩进、行距和完整继承关系，显式结构 JSON 也不是生成器输入。修改已有字体/字号必须带原 DOCX 调用 `<skill-root>/scripts/run_docx_edit.py` 的 `structure` 模式下的 `format_run`，详见 `<skill-root>/references/structure-editing.md`；不能保留的范围明确拒绝，不转为 `create`。
+
 ## 轻量读取 Fast Path（优先用于内容问答）
 
 普通问题优先只加载 `SKILL.md`，直接调用 `<skill-root>/scripts/read_docx.py`，不要为了“查看标题 / 统计结构 / 读取某节”加载完整 `inspection.md` 或先获取 `--format json` 的全部 XML 节点。**仅修改读出的内容表示，绝不修改原件。**

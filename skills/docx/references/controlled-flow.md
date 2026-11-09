@@ -18,7 +18,7 @@ retry/resume仅保留为历史或强杀遗留任务的兼容接口，必须有�
 execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" text ./原件.docx 修订版.docx <<'JSON'\n{\"replacements\":[{\"old\":\"原文\",\"new\":\"新文\",\"count\":1}]}\nJSON\n")
 ```
 
-operation为text、structure、tables、image、comments；各自stdin规格与原API相同，image另传 `--replacement ./替换.png`。comments list继续原只读入口，不创建无用临时文件。入口只调用固定的五类已有编辑API，不执行输入脚本。
+operation为text、structure、tables、image、comments，另提供format-checked候选格式发布；前五类stdin规格与原API相同，image另传 `--replacement ./替换.png`。format-checked传 `--candidate ./候选.docx`，stdin仅接受format_run规格，先独立核对原件/候选的目标值与非目标差异，再发布同一候选快照；拒绝不产生主文件或归档。范围和命令见 `<skill-root>/references/ooxml-editing.md#字体修改与候选文件保护`。comments list继续原只读入口，不创建无用临时文件。入口只调用固定的编辑/核验API，不执行输入脚本。
 
 入口自动必要环境自检，在任务根创建前登记本轮独占平铺spec.json和manifest；保护原件、替换图片及最终文件，已有主文件或归档同名时选择递增版本名，返回实际output，不认领旧配置。任务根非阻塞锁与生成runner协作；锁内重查输出、调用编辑校验及自动归档，主文件已验收后按真实归档结果封存并清理配置JSON；归档failed/skipped也清理，不因此保留配置或清单。成功主文件经收尾前后指纹确认；全部成功后，在同一任务根锁内核对本次清单身份、内容及单链接条件并删除清单，不扫描同前缀文件。摘要返回task_manifest=null、cleanup.manifest_retained=null、cleanup.manifest_removed=true，并在deleted记录清单。清单变化、链接替换或删除失败时保留并报告cleanup_incomplete，不返回已删除标记；清理失败保留主成功并报告cleanup_incomplete，不能声称已清理。编辑拒绝同样自动清理；锁忙、文件变化或删除失败则报告cleanup_incomplete，不自动修改匹配锚点或重跑。
 

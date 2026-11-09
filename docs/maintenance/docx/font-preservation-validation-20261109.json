@@ -1,0 +1,109 @@
+{
+  "date_utc": "2026-11-09T08:12:14.644742+00:00",
+  "baseline_commit": "926505d9b1ca6ef03fe36ffab7634c8f7045820a",
+  "publication": "uncommitted local changes; no push",
+  "skill_version": "20261109.1506.5300",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "expat": "expat_2.6.3",
+  "runtime_python_changed": [],
+  "entry_bytes": 7997,
+  "results": [
+    {
+      "name": "docx_source",
+      "command": "python -I -S -B tools/run_skill_tests.py skills/docx/scripts/test",
+      "cwd": "repository root",
+      "exit_code": 0,
+      "tests": 429,
+      "skipped": 0,
+      "stdout": "Collected 429 tests from skills/docx/scripts/test (test_*.py)\n",
+      "stderr_summary": "anifest_cannot_be_renamed_or_rebound (test_run_docx_task.AutomaticTaskTests.test_v2_manifest_cannot_be_renamed_or_rebound) ... ok\ntest_archive_and_cleanup_import_without_docx_generator (test_runtime_modules.RuntimeModuleTests.test_archive_and_cleanup_import_without_docx_generator) ... ok\ntest_cleanup_compatibility_exports_same_implementation (test_runtime_modules.RuntimeModuleTests.test_cleanup_compatibility_exports_same_implementation) ... ok\ntest_environment_mapping_is_explicit_and_unmodified (test_runtime_modules.RuntimeModuleTests.test_environment_mapping_is_explicit_and_unmodified) ... ok\ntest_named_common_parameter_preserves_value_type (test_runtime_modules.RuntimeModuleTests.test_named_common_parameter_preserves_value_type) ... ok\ntest_named_lookup_rejects_duplicates_and_invalid_json (test_runtime_modules.RuntimeModuleTests.test_named_lookup_rejects_duplicates_and_invalid_json) ... ok\ntest_named_string_parameter_strips_edges_only_without_mutating_environment (test_runtime_modules.RuntimeModuleTests.test_named_string_parameter_strips_edges_only_without_mutating_environment) ... ok\ntest_non_docx_artifact_archive_and_controlled_cleanup (test_runtime_modules.RuntimeModuleTests.test_non_docx_artifact_archive_and_controlled_cleanup) ... ok\ntest_invalid_generation_cleans_all_helpers_and_preserves_originals (test_terminal_cleanup.TerminalCleanupTests.test_invalid_generation_cleans_all_helpers_and_preserves_originals) ... ok\ntest_manifest_removal_failure_is_incomplete_and_recoverable (test_terminal_cleanup.TerminalCleanupTests.test_manifest_removal_failure_is_incomplete_and_recoverable) ... ok\ntest_recreated_entry_blocks_manifest_retirement (test_terminal_cleanup.TerminalCleanupTests.test_recreated_entry_blocks_manifest_retirement) ... ok\ntest_stopped_task_removes_plan_and_helpers_but_preserves_inputs_and_history (test_terminal_cleanup.TerminalCleanupTests.test_stopped_task_removes_plan_and_helpers_but_preserves_inputs_and_history) ... ok\ntest_successive_generations_leave_only_current_and_historical_deliveries (test_terminal_cleanup.TerminalCleanupTests.test_successive_generations_leave_only_current_and_historical_deliveries) ... ok\ntest_worker_timeout_cleans_all_helpers (test_terminal_cleanup.TerminalCleanupTests.test_worker_timeout_cleans_all_helpers) ... ok\n\n----------------------------------------------------------------------\nRan 429 tests in 19.652s\n\nOK\n"
+    },
+    {
+      "name": "docx_runtime",
+      "command": "python -I -S -B -m unittest discover -s tests -p test_docx_runtime_package.py -q",
+      "cwd": "repository root",
+      "exit_code": 0,
+      "tests": 23,
+      "skipped": 0,
+      "stdout": "",
+      "stderr_summary": "----------------------------------------------------------------------\nRan 23 tests in 4.095s\n\nOK\n"
+    },
+    {
+      "name": "runtime_packager",
+      "command": "python -I -S -B -m unittest discover -s tests -p test_runtime_packager.py -q",
+      "cwd": "repository root",
+      "exit_code": 0,
+      "tests": 11,
+      "skipped": 0,
+      "stdout": "",
+      "stderr_summary": "----------------------------------------------------------------------\nRan 11 tests in 0.013s\n\nOK\n"
+    },
+    {
+      "name": "all_independent_packages",
+      "command": "python -I -S -B -m unittest discover -s tests -p test_skill_runtime_packages.py -q",
+      "cwd": "repository root",
+      "exit_code": 0,
+      "tests": 11,
+      "skipped": 0,
+      "stdout": "{\"platform\": \"macOS-27.2-arm64-arm-64bit\", \"python\": \"3.12.12\", \"expat\": \"expat_2.6.3\", \"fixtures\": \"synthetic only\", \"not_verified\": [\"other operating systems\", \"Office/WPS rendering\", \"real native ET\", \"OS-level network/read sandbox\", \"host/model result delivery\"]}\n",
+      "stderr_summary": "----------------------------------------------------------------------\nRan 11 tests in 4.592s\n\nOK\n"
+    },
+    {
+      "name": "docx_strict",
+      "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict",
+      "cwd": "repository root",
+      "exit_code": 0,
+      "tests": null,
+      "skipped": 0,
+      "stdout": "OK skills/docx\n",
+      "stderr_summary": ""
+    },
+    {
+      "name": "project_docs",
+      "command": "python -I -S -B tools/check_project_docs.py",
+      "cwd": "repository root",
+      "exit_code": 0,
+      "tests": null,
+      "skipped": 0,
+      "stdout": "PASS\nStructural checks only; no semantic claims, Mermaid rendering, external links or complete CommonMark validation.\n",
+      "stderr_summary": ""
+    }
+  ],
+  "runtime_package": {
+    "path": "dist/runtime/docx-runtime-20261109.1506.5300.zip",
+    "members": 79,
+    "bytes": 296934,
+    "uncompressed_bytes": 841364,
+    "sha256": "69c9af89106e24eae9d611b2d0d0dabe16fe251ea6e490337e74b4df23fbbe17",
+    "crc": "passed",
+    "source_member_byte_parity": true,
+    "tests_in_runtime": false
+  },
+  "git_diff_check": "passed",
+  "earlier_failure_resolved": {
+    "check": "DOCX source regression",
+    "tests": 421,
+    "failures": 1,
+    "reason": "New routing text exceeded existing 8000-byte entry ceiling. Repeated wording was shortened; ceiling unchanged."
+  },
+  "format_preservation_evidence": "Synthetic OOXML; 8 new focused tests plus 3 independent-package tests. Exact non-target semantics and ZIP member bytes, not rendering.",
+  "description_review": "Scope and protection claims retained; redundant Word-delivery phrase removed to keep entry compact; no expanded capability.",
+  "not_verified": [
+    "Linux",
+    "Windows",
+    "Word/WPS visual rendering",
+    "real user documents",
+    "host model routing behavior",
+    "full Pylint (not installed)"
+  ],
+  "maintenance_only": true,
+  "final_documentation_link_check": "passed after adding current validation record link",
+  "python_static_checks": {
+    "ast": "passed for 4 changed/new Python maintenance/test files",
+    "maximum_line_length": 158,
+    "line_limit": 200,
+    "semicolon_statement_tokens": 0,
+    "pylint": "not installed; not run"
+  }
+}

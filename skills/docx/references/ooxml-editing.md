@@ -12,10 +12,43 @@
 
 ## 目录
 
+- 字体修改与候选文件保护（`<skill-root>/references/ooxml-editing.md#字体修改与候选文件保护`）
 - 受控编辑与占位符填充（`<skill-root>/references/ooxml-editing.md#受控编辑与占位符填充`）
 - 放置批注锚点（`<skill-root>/references/ooxml-editing.md#放置批注锚点`）
 - 标记插入和删除（`<skill-root>/references/ooxml-editing.md#标记插入和删除`）
 - 使用低层辅助工具（`<skill-root>/references/ooxml-editing.md#使用低层辅助工具`）
+
+## 字体修改与候选文件保护
+
+**本参考不是任意 XML 改写的保真授权。** 已有文档只改字体/字号，优先使用 `<skill-root>/scripts/run_docx_edit.py` 的 `structure` 模式和 `format_run`，详见 `<skill-root>/references/structure-editing.md#已有文档字体修改`。在原 run 上仅合并目标属性；禁止提取文字重建段落、整体替换 `w:pPr` 或 `w:rPr`，也不改 `styles.xml`/`numbering.xml` 来间接重设格式。`edit_docx.py` 只接受文字替换，不能传字体字段。
+
+正式 `structure` 入口在写出前自动执行独立格式差异核验。若已有低层 XML 编辑候选，不把候选直接交付或归档；仅对可可靠核对的普通正文 run 使用以下受控发布模式。将用户明确要求的变更写成原文定位的 `operations.json`，例如：
+
+```json
+{"operations":[{"type":"format_run","paragraph_index":0,"expected_text":"现有正文","run_index":0,"expected_run_text":"现有正文","format":{"font_east_asia":"黑体"}}]}
+```
+
+在已确认的任务目录执行（候选、原件和规格均为任务内相对路径，最终输出仅裸文件名）：
+
+```sh
+python -I -S -B "<skill-root>/scripts/run_docx_edit.py" format-checked ./原文档.docx 字体修订版.docx --candidate ./字体候选.docx < ./operations.json
+```
+
+该模式保护原件和候选，只在差异核验通过后将同一内存候选快照发布为新主文件，再自动归档并清理 runner 自建配置。核验失败不发布最终文件、不归档已有输出；按失败回执收尾，不用 `package.py pack` 或显式归档绕过检查。原件、用户提供候选/规格不作为 runner 可清理项；自行生成的候选/规格继续按创建前登记的本轮清单收尾，不扫描删除。
+
+只读排查可单独运行以下命令，退出 0 仅证明该时刻指定文件和规格通过检查，不发布或归档；最终交付仍走上面的受控模式，不能检查后另读、替换候选再直接交付：
+
+```sh
+python -I -S -B "<skill-root>/scripts/format_guard.py" ./原文档.docx ./字体候选.docx ./operations.json
+```
+
+保护范围与拒绝条件：
+
+- 规格只接受非空 `format_run` 操作，索引、原文锚点及六个格式字段沿用 `<skill-root>/references/structure-editing.md#修改普通-run-格式`；只列用户要求的字段。目标必须确实达到请求值；字体对应主题属性一并清除，未指定属性不得改变。
+- 比较原件/候选的成员集合及非正文部件内容字节，保护样式继承、编号、关系、媒体、页眉页脚等；在正文中仅放行指定 run 的指定属性，保护所有段落属性、文字、非目标 run 及未知 XML 内容。不解析或重建完整 Word 样式级联。
+- 拆分/合并 run、插入/删除段落、改文字或样式定义、重复目标、表格/页眉页脚/字段/修订/书签等复杂目标均不属于候选发布范围。命名空间重写、全 XML 重新排版或其他无法可靠证明的变化也可保守拒绝；不要将拒绝解释为文档一定损坏，更不能扩大白名单让它通过。
+- `office/validate.py --original` 仍是结构与正文修订文字检查；`_serialize_checked` 是修改后 XML 的序列化保真检查。两者都不能代替原件与候选之间的格式差异核验。`package.py pack` 只负责包装，不证明格式保留。
+- 这里的保护不是任意 OOXML 无损编辑、XSD 或 Word/WPS 视觉验证。字符单位缩进、自动行距、换行和字体替代仍可能随字体度量改变显示。
 
 ## 受控编辑与占位符填充
 

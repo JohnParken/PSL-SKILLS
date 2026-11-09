@@ -1,0 +1,232 @@
+{
+  "date_utc": "2026-11-09T09:33:43.706324+00:00",
+  "baseline_commit": "926505d9b1ca6ef03fe36ffab7634c8f7045820a",
+  "working_tree": "Local uncommitted maintenance; no commit or push",
+  "skill_version": "20261109.1605.3000",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "expat": "expat_2.6.3",
+  "results": [
+    {
+      "command": "python -I -S -B tools/run_skill_tests.py skills/docx/scripts/test",
+      "exit_code": 0,
+      "test_counts": [
+        442
+      ],
+      "skipped": 0,
+      "stdout": "Collected 442 tests from skills/docx/scripts/test (test_*.py)\n",
+      "stderr": "ost_three_attempts_and_retains_original_plan (test_run_docx_task.AutomaticTaskTests.test_failed_generation_has_at_most_three_attempts_and_retains_original_plan) ... ok\ntest_hardlinked_and_symlinked_helpers_are_retained (test_run_docx_task.AutomaticTaskTests.test_hardlinked_and_symlinked_helpers_are_retained) ... ok\ntest_invalid_spec_retains_helpers_then_corrected_retry_finishes (test_run_docx_task.AutomaticTaskTests.test_invalid_spec_retains_helpers_then_corrected_retry_finishes) ... ok\ntest_missing_and_invalid_router_configuration_do_not_block_document (test_run_docx_task.AutomaticTaskTests.test_missing_and_invalid_router_configuration_do_not_block_document) ... ok\ntest_partial_cleanup_failure_can_resume_original_sealed_plan (test_run_docx_task.AutomaticTaskTests.test_partial_cleanup_failure_can_resume_original_sealed_plan) ... ok\ntest_probe_close_error_after_successful_checks_is_warning_only (test_run_docx_task.AutomaticTaskTests.test_probe_close_error_after_successful_checks_is_warning_only) ... ok\ntest_protected_output_and_traversal_fail_before_any_mutation (test_run_docx_task.AutomaticTaskTests.test_protected_output_and_traversal_fail_before_any_mutation) ... ok\ntest_repeated_resume_does_not_regenerate_or_delete_final_document (test_run_docx_task.AutomaticTaskTests.test_repeated_resume_does_not_regenerate_or_delete_final_document) ... ok\ntest_seal_interruption_can_resume_receipt_without_regeneration (test_run_docx_task.AutomaticTaskTests.test_seal_interruption_can_resume_receipt_without_regeneration) ... ok\ntest_success_removes_executed_python_and_json_after_real_document_delivery (test_run_docx_task.AutomaticTaskTests.test_success_removes_executed_python_and_json_after_real_document_delivery) ... ok\ntest_unregistered_scripts_json_and_protected_inputs_survive_success (test_run_docx_task.AutomaticTaskTests.test_unregistered_scripts_json_and_protected_inputs_survive_success) ... ok\ntest_v1_internal_generation_entrypoints_refuse_to_create_files (test_run_docx_task.AutomaticTaskTests.test_v1_internal_generation_entrypoints_refuse_to_create_files) ... ok\ntest_v2_manifest_cannot_be_renamed_or_rebound (test_run_docx_task.AutomaticTaskTests.test_v2_manifest_cannot_be_renamed_or_rebound) ... ok\ntest_archive_and_cleanup_import_without_docx_generator (test_runtime_modules.RuntimeModuleTests.test_archive_and_cleanup_import_without_docx_generator) ... ok\ntest_cleanup_compatibility_exports_same_implementation (test_runtime_modules.RuntimeModuleTests.test_cleanup_compatibility_exports_same_implementation) ... ok\ntest_environment_mapping_is_explicit_and_unmodified (test_runtime_modules.RuntimeModuleTests.test_environment_mapping_is_explicit_and_unmodified) ... ok\ntest_named_common_parameter_preserves_value_type (test_runtime_modules.RuntimeModuleTests.test_named_common_parameter_preserves_value_type) ... ok\ntest_named_lookup_rejects_duplicates_and_invalid_json (test_runtime_modules.RuntimeModuleTests.test_named_lookup_rejects_duplicates_and_invalid_json) ... ok\ntest_named_string_parameter_strips_edges_only_without_mutating_environment (test_runtime_modules.RuntimeModuleTests.test_named_string_parameter_strips_edges_only_without_mutating_environment) ... ok\ntest_non_docx_artifact_archive_and_controlled_cleanup (test_runtime_modules.RuntimeModuleTests.test_non_docx_artifact_archive_and_controlled_cleanup) ... ok\ntest_invalid_generation_cleans_all_helpers_and_preserves_originals (test_terminal_cleanup.TerminalCleanupTests.test_invalid_generation_cleans_all_helpers_and_preserves_originals) ... ok\ntest_manifest_removal_failure_is_incomplete_and_recoverable (test_terminal_cleanup.TerminalCleanupTests.test_manifest_removal_failure_is_incomplete_and_recoverable) ... ok\ntest_recreated_entry_blocks_manifest_retirement (test_terminal_cleanup.TerminalCleanupTests.test_recreated_entry_blocks_manifest_retirement) ... ok\ntest_stopped_task_removes_plan_and_helpers_but_preserves_inputs_and_history (test_terminal_cleanup.TerminalCleanupTests.test_stopped_task_removes_plan_and_helpers_but_preserves_inputs_and_history) ... ok\ntest_successive_generations_leave_only_current_and_historical_deliveries (test_terminal_cleanup.TerminalCleanupTests.test_successive_generations_leave_only_current_and_historical_deliveries) ... ok\ntest_worker_timeout_cleans_all_helpers (test_terminal_cleanup.TerminalCleanupTests.test_worker_timeout_cleans_all_helpers) ... ok\n\n----------------------------------------------------------------------\nRan 442 tests in 20.599s\n\nOK\n",
+      "stdout_truncated": false,
+      "stderr_truncated": true
+    },
+    {
+      "command": "python -I -S -B -m unittest discover -s tests -p test_docx_runtime_package.py -q",
+      "exit_code": 0,
+      "test_counts": [
+        26
+      ],
+      "skipped": 0,
+      "stdout": "",
+      "stderr": "----------------------------------------------------------------------\nRan 26 tests in 5.693s\n\nOK\n",
+      "stdout_truncated": false,
+      "stderr_truncated": false
+    },
+    {
+      "command": "python -I -S -B -m unittest discover -s tests -p test_runtime_packager.py -q",
+      "exit_code": 0,
+      "test_counts": [
+        11
+      ],
+      "skipped": 0,
+      "stdout": "",
+      "stderr": "----------------------------------------------------------------------\nRan 11 tests in 0.014s\n\nOK\n",
+      "stdout_truncated": false,
+      "stderr_truncated": false
+    },
+    {
+      "command": "python -I -S -B -m unittest discover -s tests -p test_skill_runtime_packages.py -q",
+      "exit_code": 0,
+      "test_counts": [
+        11
+      ],
+      "skipped": 0,
+      "stdout": "{\"platform\": \"macOS-27.2-arm64-arm-64bit\", \"python\": \"3.12.12\", \"expat\": \"expat_2.6.3\", \"fixtures\": \"synthetic only\", \"not_verified\": [\"other operating systems\", \"Office/WPS rendering\", \"real native ET\", \"OS-level network/read sandbox\", \"host/model result delivery\"]}\n",
+      "stderr": "----------------------------------------------------------------------\nRan 11 tests in 4.642s\n\nOK\n",
+      "stdout_truncated": false,
+      "stderr_truncated": false
+    },
+    {
+      "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict",
+      "exit_code": 0,
+      "test_counts": [],
+      "skipped": 0,
+      "stdout": "OK skills/docx\n",
+      "stderr": "",
+      "stdout_truncated": false,
+      "stderr_truncated": false
+    },
+    {
+      "command": "python -I -S -B tools/check_project_docs.py",
+      "exit_code": 0,
+      "test_counts": [],
+      "skipped": 0,
+      "stdout": "PASS\nStructural checks only; no semantic claims, Mermaid rendering, external links or complete CommonMark validation.\n",
+      "stderr": "",
+      "stdout_truncated": false,
+      "stderr_truncated": false
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "scope": "Synthetic DOCX formatting preservation, fail-closed candidate publication, and independent installed packages",
+  "not_verified": [
+    "Linux",
+    "Windows",
+    "Word/WPS rendering",
+    "real user incident document",
+    "host model automatic routing",
+    "Pylint (not installed)"
+  ],
+  "description_review": "Existing description remains accurate: controlled editing, original protection, no arbitrary lossless editing or visual guarantee.",
+  "entry_bytes": 7991,
+  "unchanged_entry_ceiling_bytes": 8000,
+  "workflow": "Formal structure edits validate their formatting stage before publication. format-checked validates and publishes one candidate snapshot. Mixed insertion batches preserve the existing insertion contract.",
+  "guard_scope": "Plain direct body run format_run operations only; exact target values and allowlisted attributes; other document XML and all non-document member bytes preserved.",
+  "source_test_additions_this_round": 13,
+  "installed_test_additions_this_round": 3,
+  "artifact": {
+    "path": "dist/runtime/docx-runtime-20261109.1605.3000.zip",
+    "members": 80,
+    "bytes": 304188,
+    "uncompressed_bytes": 866695,
+    "sha256": "59107f3e1c6f79e91f39fd3f2cea2d1a4b15edd9df10dcf71551ac77fd6a6cf2",
+    "crc_and_member_parity": true,
+    "tests_in_package": false
+  },
+  "total_distinct_tests": 490,
+  "static_checks": {
+    "skills/docx/scripts/format_guard.py": {
+      "ast_valid": true,
+      "max_line_chars": 98,
+      "semicolon_statement_tokens": 0,
+      "sha256": "251e2f4d07e678bdcbbde19caf2d7146a747cede3f451766a8769fa7cacf01b0"
+    },
+    "skills/docx/scripts/edit_structure.py": {
+      "ast_valid": true,
+      "max_line_chars": 119,
+      "semicolon_statement_tokens": 0,
+      "sha256": "bd05332668fb3c8ce5d7153c4040fe24607d9044ec6d73d2b78622d49381d0be"
+    },
+    "skills/docx/scripts/run_docx_edit.py": {
+      "ast_valid": true,
+      "max_line_chars": 139,
+      "semicolon_statement_tokens": 0,
+      "sha256": "159a79b67d1386586141e8e2a230f4c89bdfc627f1aa63bfe63c9ac2ca3c2e78"
+    },
+    "skills/docx/scripts/test/test_format_guard.py": {
+      "ast_valid": true,
+      "max_line_chars": 103,
+      "semicolon_statement_tokens": 0,
+      "sha256": "492eefb93195ff29ebd55c1e110c9c70163d1d960437d3dd67e64491902ce23f"
+    },
+    "tests/test_docx_runtime_package.py": {
+      "ast_valid": true,
+      "max_line_chars": 128,
+      "semicolon_statement_tokens": 0,
+      "sha256": "d2053cee9e2480d133f6fece91cd76b17c6c66f80b3585444593ded6d580f138"
+    }
+  },
+  "runtime_fingerprints": {
+    "SKILL.md": "064310a9a3c4b08e148b464f5955dfde1804436aab8dd4dfbd11d123fae2efd0",
+    "assets/comments/comments.xml": "a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d",
+    "assets/comments/commentsExtended.xml": "544eeecfeceed4b468fff163cd9c366d33641c8b8ab691ce002576197846afe8",
+    "assets/comments/commentsExtensible.xml": "bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631",
+    "assets/comments/commentsIds.xml": "db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420",
+    "assets/profiles/academic.json": "d4214a7920639a68728734e9ab5befa630295f0d609c37859568c2147e603f84",
+    "assets/profiles/business-report.json": "98505ef74493aaa1ddf65d919c114392a5b2566a12bd53b06df22a39e33d69d0",
+    "assets/profiles/official-basic.json": "cb647ca499c3ce5d6d7b4665fc667473a61ea64c4de913ca3eab0e3531533ae0",
+    "assets/profiles/presentation-material.json": "53b5ff45470fa3969288c541db01cf5eb59b4882c45631a72a70a0241ccffab7",
+    "references/binary-reading.md": "6a51947ce567c2af3f54ef3e572ae2af7f660011a77933d8742d0ca37d783ddb",
+    "references/comments-management.md": "84fc0c3553345a660c34207ca1c04f83118cfcf8b6d3429b7ac7adf2a5676c07",
+    "references/complex-json.md": "a4995b82609f3ab609b2b566556f1515c93a0a3190c252cb80e0a4c5e2224d3a",
+    "references/controlled-flow.md": "58a9a3610e2adf729e265a70a140a13fa5e28d8a671b05ed7b0a7480c0007219",
+    "references/delivery.md": "618b6c36627528858d2b2a1d503f710595ec07ac1842249df0c3e46bba9ee27e",
+    "references/generation-blocks.md": "77eb98ffab5ec93bf19d05e3c7a7863d5ea399f67160aa226ea5249762e26d58",
+    "references/generation-core.md": "36e4cb319decd8801f2e30e3f5cc629b532128411380bf7ded53c0ae8366564e",
+    "references/generation-details.md": "1e7e6dd2b9a72b8990ee5625d4fa11fca9dd6702f992a8a3df3b6556e7680fb8",
+    "references/generation-examples.md": "6433685501ef2a28cbcd4901988ece25ee8c3f00e1dedd7d3a66db12b4b546e0",
+    "references/generation-runtime.md": "d3e7f66665d3d4468d166986be110beff785d5c5886780b8f9e297e1dde4b29c",
+    "references/generation-styles.md": "12871161cd002b1e87b6a29936863579ec587a918f46d8d0afd405db721d8d43",
+    "references/generation-tables.md": "d427d326ecd28e7120117cfdec79609a8e1b817895791b88be983c080d26271c",
+    "references/generation.md": "0ea645759bf3aae735800181371b507c812c10db2cdf08e10f555352214cbefc",
+    "references/inspection.md": "7fb18c387f7ff59ba5c1ffb78030e971719770bcf17c49fa2d7522f26d037801",
+    "references/ooxml-editing.md": "851c78a70d3b042e9e019e5875628c98a037c7a81e96e695f9b8f79383f2da9a",
+    "references/p1-layout.md": "37569668a1c3b1e67165bbb114a2ec916df86273739ecc0516baf94244f896b0",
+    "references/p2-layout.md": "27074ce6c2e04f4a5db06cbc3f15604513f34abe8b5b69b4073b5473d4b1070b",
+    "references/pagination-governance.md": "01d9bcbd9933d92ac09632199365ac61dabba47932d6dde4e739a0b632e29e6f",
+    "references/security.md": "dd832bbb293d621fc964ad57453fc6166278d48ba6333d7c86fa01ce71dd8a0b",
+    "references/stability-governance.md": "88bcf7967602f7a4fcbf84f58443dd5b271ae44f31f9b12d8a4843c2a9bb418b",
+    "references/structure-editing.md": "827c4126a22188ae2ac54a480c4e78491ac9f7e381dcc2c643447e1d7cbfbb27",
+    "references/table-media-editing.md": "5e3f83337ac6e94d620e1b3b9972cfdfe78824c7b25b2dc453d8c3c5f2da0dd4",
+    "references/task-cleanup.md": "f5fc171ad80ba6591cc0e79ca7ec846e0394a20974675c8ef1bafaa303770f92",
+    "references/tool-calling.md": "a9157f6869b1465ee4aeb9dd67043e431d65650e28481b19b6f5aeeb66a29d1b",
+    "references/troubleshooting.md": "12f0eaf60991b720a33dbcaa828ae5034ba45f2682e21c13ee36ef26b8e74f68",
+    "references/typography.md": "efc87dbf591e27c15fa5ca2fd62d20b22028a71c9d75b3b20340f7b23552cc9d",
+    "references/validation.md": "587288236ae11e1e291d0c8461b5c3e7cab43a7962f041aa1bbce07c3d988629",
+    "requirements.txt": "413b514c05bea475af5f206801b6b42692c259d9c2a10f829411e6803af8d098",
+    "scripts/__init__.py": "530303bfb28a74538aa91aa58238823d350d2206a34212ec0579e80cd135ac09",
+    "scripts/archive_deliverables.py": "7829e44221eca6782d6ca82b12f0be52ac434001c3e35da85830b337442c8b58",
+    "scripts/artifact_files.py": "83c7a6c62afc2cb66d21bc1e9edcdd142ed0b559da668b0abd99eb7c63ebe4b6",
+    "scripts/audit_package.py": "41fc468bbab7e6486cbee22f93d5ecf2610cc5d8f3611a3d5d831811616cee47",
+    "scripts/cleanup_task.py": "26e2d633dbbf21822bb4b51dbbff4049a0e08934f9c02422d68f39c4eee4cc89",
+    "scripts/comment.py": "397c4e7aff054865b2e17baac192f53edec264ed178d75530affde0bf23fb6d4",
+    "scripts/controlled_cleanup.py": "4fa9e5308cc1e1b64d788a23798561a8bd742f22dbadb1a10fa3bd31743f3dec",
+    "scripts/create_docx.py": "54370d9713c3d86440c366079628561e3527adfc18fe1fa9ef080f744e0038b6",
+    "scripts/docx_outcome.py": "c98351f0a760e66ebece3e8c55bb067c4f3d8a878b932f870c24a252d3627555",
+    "scripts/docx_task_state.py": "d29f670716bfd71abc93e9f16a20edb5a236b85e3fd590036b34e6ce6a5edfe6",
+    "scripts/edit_docx.py": "ad3b686a7f8a01b50424077ed21374c6f7950a3ffef90ca301b2d4dedcbeebcc",
+    "scripts/edit_structure.py": "bd05332668fb3c8ce5d7153c4040fe24607d9044ec6d73d2b78622d49381d0be",
+    "scripts/edit_tables.py": "5bc7c949ca7ea7787194e3427072cd392e0a31943c8c251dfb41e5b49e345fd6",
+    "scripts/format_guard.py": "251e2f4d07e678bdcbbde19caf2d7146a747cede3f451766a8769fa7cacf01b0",
+    "scripts/manage_comments.py": "ee9bb0506e55879361be10b9c1b5af1d394447a7dc803a7fa43ddbfc1b9b39dd",
+    "scripts/merge_runs.py": "04952da15d64be06977a7274293fb9bd499b4d7d83b1283bf563596c96be110b",
+    "scripts/office/archiveio.py": "832de2e5f37387fa0a7ec86fc4ccad7914e898e2d0aff33bc616e8c8a67e7e6e",
+    "scripts/office/binary_doc.py": "ff55deadcf93ad088c2e4975aed8b72d77a9b5d2aec4968448f57c406b86520a",
+    "scripts/office/formatting/__init__.py": "1f55a5fb08dc46d541c8fdad4aa91a9b1ad4a737740690a3a89d223b56f83a4e",
+    "scripts/office/formatting/audit.py": "1d9e5f173064249a0541c51a74001b2ffd88409e1e8eeb6227d51eb90b355d0e",
+    "scripts/office/formatting/pagination.py": "b64c52ffbee9df770a21009599a134de439c414c25f9796e86e19cc9dfa04927",
+    "scripts/office/formatting/paragraphs.py": "ba4d277add2061851dd3b31ecbe50da4b1e90d6ed45c00fb5a559f3047fc6927",
+    "scripts/office/formatting/profiles.py": "3bb05d743cd3539fc6eceb01ae91ba82e4f8631d2382f73c434963386038a7ea",
+    "scripts/office/formatting/sections.py": "130d14b4925551ec54d8510abdbdc7016d5c214d66f6b0fd43b94a13ed34abde",
+    "scripts/office/formatting/tables.py": "72222a7274ca0aa1c71c681e589b9177cc4e3040c1936a7b591a1582413d4791",
+    "scripts/office/helpers/__init__.py": "a235f1b55873d8de78a05cba5e65d00e21b18b044544dff19a76652f748942cd",
+    "scripts/office/memory_package.py": "d20b74e5924bde220af5e66ab3ef6aa64ec590f4f389d12ebe4e7c88e4cef2d8",
+    "scripts/office/package.py": "86aaad98485d0b4c0daa9cc3042d2980e20113961ffcf9da4cb0b35c8d75b52a",
+    "scripts/office/runtime.py": "a0f5edd39c0a39e86e68077b3470cdbf18f4bf81f388bf91fea2db004127ad4d",
+    "scripts/office/validate.py": "d4773a022aafa62cc75ee01b30e32038990388bc2201e707413d1bc3e831f492",
+    "scripts/office/validators/__init__.py": "e451211d10bd74a44a0ec311b93e1dd4f55cf0796b3249848000f5437846a2e5",
+    "scripts/office/validators/advanced.py": "9e9332a59743ba2df51787c964837c85fd79be4b0c999ec8cea9f8cf7c3d88c3",
+    "scripts/office/validators/generation.py": "8dcfaf3d1cefdf2b9fc579089d7d8318bc7b1479383338a27725615877fde13d",
+    "scripts/office/validators/redlining.py": "12f2e3ad0f7598195c9cd6391dd45a9b168b4a57363248bead63e3dab7fcb853",
+    "scripts/office/validators/structure.py": "bb9264b0815c2e1a11b50ecb65bd6aaa610cb2edc5dda930091eb1000bdb9038",
+    "scripts/office/xmlio.py": "402318a64a16c3474f4b82e9323e4182c7e3403946e754a4c6ebd7598bcc27b4",
+    "scripts/output_location.py": "6f85dfd2cbf5ced0bf15215853d97bc2659f32797bb986589ca36e32d7fec9d4",
+    "scripts/read_docx.py": "2cccc3316f9da4009e30c07f5b6e2e11b2bf0d0c3c0d9aa039ae1e3b1c861b37",
+    "scripts/replace_image.py": "74d58a1c39a1425060a8b92f39338a1da6e32cc99f71e565095f1c6b929b2568",
+    "scripts/router_config.py": "60074b4eeb4a8e105f0c77b614dbdd89ed94c6fc3afc05d511620bc75b47cfdf",
+    "scripts/run_docx_edit.py": "159a79b67d1386586141e8e2a230f4c89bdfc627f1aa63bfe63c9ac2ca3c2e78",
+    "scripts/run_docx_task.py": "acd3a16421e0c7305676c8225f67c133f7698eb120c3513ced27e8b1a463e794",
+    "scripts/validate_layout.py": "2d41d1526674685b17b2df7d4383b08985258d984a112901f63b456ce6adc519"
+  },
+  "review_notes": [
+    "The comparator does not call the mutator to derive expected output.",
+    "Independent target-value checks precede masking of explicitly permitted attributes.",
+    "Non-target namespace declarations are preserved; ambiguous rewrites fail closed.",
+    "Fault-injection proves validation blocks writing and archival, rather than only documenting a check.",
+    "The existing --original text-redlining contract is unchanged."
+  ]
+}

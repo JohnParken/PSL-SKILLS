@@ -51,6 +51,7 @@
     "scripts/edit_docx.py",
     "scripts/edit_structure.py",
     "scripts/edit_tables.py",
+    "scripts/format_guard.py",
     "scripts/manage_comments.py",
     "scripts/merge_runs.py",
     "scripts/office/archiveio.py",

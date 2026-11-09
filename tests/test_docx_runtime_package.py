@@ -3,6 +3,7 @@
 No test code is installed into the runtime. These are synthetic, non-visual tests;
 the operating system and interpreter executing this suite are the tested platform.
 """
+import copy
 import hashlib
 import importlib.util
 import json
@@ -15,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from xml.dom import minidom
 from xml.etree import ElementTree as ET
 from xml.parsers import expat
 import zipfile
@@ -68,7 +70,7 @@ class RuntimePackageBuildTests(unittest.TestCase):
         expected = {n for n in actual if not n.startswith('scripts/test/') and n not in EXCLUDED}
         self.assertEqual(set(files), expected)
         self.assertTrue(EXCLUDED.isdisjoint(files))
-        self.assertEqual(len(files), 79)
+        self.assertEqual(len(files), 80)
         self.assertEqual(json.loads(MANIFEST.read_text(encoding='utf-8'))['exclude_files'], {})
         for name in ('maintenance-validation.md', 'reference-loading.md', 'token-optimization.md'):
             self.assertFalse((SOURCE / 'references' / name).exists())
@@ -78,7 +80,7 @@ class RuntimePackageBuildTests(unittest.TestCase):
         for name, contents in files.items():
             self.assertEqual(contents, (SOURCE / name).read_bytes(), name)
         for name in ('scripts/create_docx.py', 'scripts/read_docx.py', 'scripts/run_docx_edit.py',
-                     'scripts/manage_comments.py', 'scripts/comment.py', 'scripts/merge_runs.py',
+                     'scripts/manage_comments.py', 'scripts/comment.py', 'scripts/merge_runs.py', 'scripts/format_guard.py',
                      'scripts/controlled_cleanup.py', 'scripts/office/validators/generation.py'):
             self.assertIn(name, files)
 
@@ -310,6 +312,255 @@ class InstalledRuntimeTests(unittest.TestCase):
         with zipfile.ZipFile(self.work / 'edited-comments.docx') as package:
             self.assertIn('核对金额', package.read('word/comments.xml').decode())
         self.assertEqual({n: (self.work / n).read_bytes() for n in before}, before)
+
+    def test_font_and_size_edits_preserve_layout_in_readonly_installation(self):
+        source = self.create('font-source.docx', [
+            {'type': 'paragraph', 'format': {
+                'left_indent_pt': 54, 'right_indent_pt': 18, 'first_line_indent_pt': 36,
+                'line_spacing_multiple': 1.5, 'space_before_pt': 8, 'space_after_pt': 6,
+                'keep_together': True, 'tab_stops': [{'position_pt': 72, 'align': 'left'}]},
+             'runs': [{'text': '字体目标', 'bold': True, 'color': '123456'},
+                      {'text': '保持原样', 'italic': True, 'underline': True}]},
+            {'type': 'paragraph', 'text': '悬挂缩进', 'format': {
+                'left_indent_pt': 45, 'right_indent_pt': 9, 'hanging_indent_pt': 18,
+                'line_spacing_pt': 24}},
+            {'type': 'paragraph', 'text': '继承正文'},
+            {'type': 'list', 'ordered': True, 'items': ['编号正文']},
+        ], styles={'body': {'left_indent_pt': 24, 'right_indent_pt': 12, 'first_line_chars': 2}})
+        original = source.read_bytes()
+        with zipfile.ZipFile(source) as package:
+            before = {name: package.read(name) for name in package.namelist()}
+        document = ET.fromstring(before['word/document.xml'])
+        paragraphs = document.find(W + 'body').findall(W + 'p')
+
+        def snapshot(node):
+            if node is None:
+                return None
+            return (node.tag, tuple(sorted(node.attrib.items())), node.text, node.tail,
+                    tuple(snapshot(child) for child in node))
+
+        variants = [('east', {'font_east_asia': '黑体'}), ('latin', {'font_latin': 'Arial'}),
+                    ('both', {'font_east_asia': '黑体', 'font_latin': 'Arial'}), ('size', {'size_pt': 18})]
+        for label, formatting in variants:
+            with self.subTest(formatting=label):
+                operations = []
+                for index, paragraph in enumerate(paragraphs):
+                    run = paragraph.find(W + 'r')
+                    operations.append({'type': 'format_run', 'paragraph_index': index,
+                                       'expected_text': ''.join(node.text or '' for node in paragraph.iter(W + 't')),
+                                       'run_index': 0,
+                                       'expected_run_text': ''.join(node.text or '' for node in run.iter(W + 't')),
+                                       'format': formatting})
+                result = self.run_script('run_docx_edit.py', 'structure', source.name,
+                                         'font-' + label + '.docx', payload={'operations': operations})
+                receipt = json.loads(result.stdout)
+                self.assert_delivery(receipt, 'edited')
+                with zipfile.ZipFile(self.work / receipt['output']) as package:
+                    after = {name: package.read(name) for name in package.namelist()}
+                self.assertEqual(set(before), set(after))
+                for name in set(before) - {'word/document.xml'}:
+                    self.assertEqual(before[name], after[name], name)
+                edited = ET.fromstring(after['word/document.xml'])
+                actual_paragraphs = edited.find(W + 'body').findall(W + 'p')
+                self.assertEqual(len(paragraphs), len(actual_paragraphs))
+                for paragraph, actual in zip(paragraphs, actual_paragraphs):
+                    self.assertEqual(snapshot(paragraph.find(W + 'pPr')), snapshot(actual.find(W + 'pPr')))
+                    left, right = copy.deepcopy(paragraph), copy.deepcopy(actual)
+                    left_run, right_run = left.find(W + 'r'), right.find(W + 'r')
+                    left_props, right_props = left_run.find(W + 'rPr'), right_run.find(W + 'rPr')
+                    if label == 'size':
+                        for name in ('sz', 'szCs'):
+                            self.assertEqual(right_props.find(W + name).get(W + 'val'), '36')
+                    else:
+                        previous_fonts = None if left_props is None else left_props.find(W + 'rFonts')
+                        expected = {} if previous_fonts is None else dict(previous_fonts.attrib)
+                        for field, names in (('font_east_asia', ('eastAsia',)), ('font_latin', ('ascii', 'hAnsi'))):
+                            if field in formatting:
+                                for name in names:
+                                    expected[W + name] = formatting[field]
+                                    expected.pop(W + name + 'Theme', None)
+                        self.assertEqual(right_props.find(W + 'rFonts').attrib, expected)
+                    changed = {W + 'sz', W + 'szCs'} if label == 'size' else {W + 'rFonts'}
+                    for properties in (left_props, right_props):
+                        if properties is not None:
+                            for node in list(properties):
+                                if node.tag in changed:
+                                    properties.remove(node)
+                    if left_props is None and len(right_props) == 0 and not right_props.attrib:
+                        right_run.remove(right_props)
+                    self.assertEqual(snapshot(left), snapshot(right))
+                for paragraph in list(document.find(W + 'body')):
+                    if paragraph.tag != W + 'p':
+                        self.assertEqual(snapshot(paragraph), snapshot(edited.find(W + 'body').find(paragraph.tag)))
+                self.assertEqual(source.read_bytes(), original)
+
+    def test_unsupported_font_target_is_rejected_without_rebuilding(self):
+        source = self.create('table-font-source.docx', [
+            {'type': 'table', 'rows': [['表格文字']], 'header': False}])
+        original = source.read_bytes()
+        result = self.run_script('run_docx_edit.py', 'structure', source.name, 'unsupported-font.docx',
+                                 payload={'operations': [{'type': 'format_run', 'paragraph_index': 0,
+                                          'expected_text': '表格文字', 'run_index': 0,
+                                          'expected_run_text': '表格文字', 'format': {'font_east_asia': '黑体'}}]},
+                                 expected=1)
+        receipt = json.loads(result.stdout)
+        self.assertEqual(receipt['status'], 'failed')
+        self.assertEqual(receipt['error_code'], 'edit_rejected')
+        self.assertEqual(receipt['task_status'], 'failed_cleaned')
+        self.assertTrue(receipt['cleanup']['cleanup_complete'])
+        self.assertFalse((self.work / 'unsupported-font.docx').exists())
+        self.assertFalse(list(self.work.glob('docx-edit-*')))
+        self.assertEqual(source.read_bytes(), original)
+
+    def test_font_edit_routing_is_preserved_in_runtime_documentation(self):
+        for root in (SOURCE, self.skill):
+            with self.subTest(root='source' if root == SOURCE else 'installed'):
+                entry = (root / 'SKILL.md').read_text(encoding='utf-8')
+                self.assertIn('已有 DOCX 改字体/字号', entry)
+                self.assertIn('run_docx_edit.py', entry)
+                self.assertIn('`structure` 模式', entry)
+                self.assertIn('format_run', entry)
+                self.assertIn('禁止提取纯文本/compact 后 `create` 重建', entry)
+                self.assertIn('不静默跳过、部分成功或回退重建', entry)
+                styles = (root / 'references/generation-styles.md').read_text(encoding='utf-8')
+                self.assertIn('不是已有文件的保格式编辑入口', styles)
+                structure = (root / 'references/structure-editing.md').read_text(encoding='utf-8')
+                self.assertIn('只提交用户明确要求改变的字段', structure)
+                self.assertIn('用户明确缩小范围后才能按新范围编辑', structure)
+                ooxml = (root / 'references/ooxml-editing.md').read_text(encoding='utf-8')
+                self.assertIn('format-checked', ooxml)
+                self.assertIn('format_guard.py', ooxml)
+                self.assertIn('不能代替原件与候选之间的格式差异核验', ooxml)
+
+
+    def format_candidate_fixture(self):
+        source = self.create('guard-source.docx', [
+            {'type': 'paragraph', 'format': {'left_indent_pt': 42, 'first_line_indent_pt': 24,
+                                            'line_spacing_pt': 28},
+             'runs': [{'text': '字体目标', 'bold': True, 'color': '123456'},
+                      {'text': '保持原样', 'italic': True}]},
+            {'type': 'list', 'ordered': True, 'items': ['编号正文']},
+        ])
+        spec = {'operations': [{'type': 'format_run', 'paragraph_index': 0,
+                               'expected_text': '字体目标保持原样', 'run_index': 0,
+                               'expected_run_text': '字体目标', 'format': {'font_east_asia': '黑体'}}]}
+        spec_path = self.work / 'guard-operations.json'
+        spec_path.write_text(json.dumps(spec, ensure_ascii=False), encoding='utf-8')
+        with zipfile.ZipFile(source) as package:
+            parts = {name: package.read(name) for name in package.namelist()}
+        dom = minidom.parseString(parts['word/document.xml'])
+        uri = W[1:-1]
+        run = dom.getElementsByTagNameNS(uri, 'p')[0].getElementsByTagNameNS(uri, 'r')[0]
+        props = run.getElementsByTagNameNS(uri, 'rPr')[0]
+        fonts = dom.createElementNS(uri, 'w:rFonts')
+        fonts.setAttributeNS(uri, 'w:eastAsia', '黑体')
+        props.insertBefore(fonts, props.firstChild)
+        parts['word/document.xml'] = dom.toxml(encoding='UTF-8', standalone=dom.standalone)
+        candidate = self.work / 'guard-candidate.docx'
+        with zipfile.ZipFile(candidate, 'w', compression=zipfile.ZIP_DEFLATED) as package:
+            for name, data in parts.items():
+                package.writestr(name, data)
+        return source, candidate, spec, spec_path
+
+    def test_format_candidate_guard_and_publish_in_readonly_installation(self):
+        source, candidate, spec, spec_path = self.format_candidate_fixture()
+        protected = {path.name: path.read_bytes() for path in (source, candidate, spec_path)}
+        self.run_script('format_guard.py', source.name, candidate.name, spec_path.name)
+        result = self.run_script('run_docx_edit.py', 'format-checked', source.name,
+                                 'guard-accepted.docx', '--candidate', candidate.name, payload=spec)
+        receipt = json.loads(result.stdout)
+        self.assert_delivery(receipt, 'edited')
+        with zipfile.ZipFile(candidate) as expected, zipfile.ZipFile(self.work / receipt['output']) as actual:
+            self.assertEqual(set(expected.namelist()), set(actual.namelist()))
+            for name in expected.namelist():
+                self.assertEqual(expected.read(name), actual.read(name), name)
+        self.assertEqual({name: (self.work / name).read_bytes() for name in protected}, protected)
+        self.assertFalse((self.work / 'output/runtime-acceptance' / candidate.name).exists())
+
+    def test_format_candidate_rejects_non_target_changes_before_delivery(self):
+        source, candidate, spec, spec_path = self.format_candidate_fixture()
+        protected = {path.name: path.read_bytes() for path in (source, candidate, spec_path)}
+        with zipfile.ZipFile(candidate) as package:
+            initial = {name: package.read(name) for name in package.namelist()}
+        for kind in ('paragraph', 'other_run', 'text', 'styles', 'numbering', 'extra_part', 'split'):
+            with self.subTest(kind=kind):
+                parts = dict(initial)
+                if kind in ('styles', 'numbering'):
+                    parts['word/' + kind + '.xml'] += b'\n'
+                elif kind == 'extra_part':
+                    parts['extra.txt'] = b'unrequested member'
+                else:
+                    uri = W[1:-1]
+                    dom = minidom.parseString(parts['word/document.xml'])
+                    paragraph = dom.getElementsByTagNameNS(uri, 'p')[0]
+                    runs = paragraph.getElementsByTagNameNS(uri, 'r')
+                    if kind == 'paragraph':
+                        paragraph.removeChild(paragraph.getElementsByTagNameNS(uri, 'pPr')[0])
+                    elif kind == 'other_run':
+                        props = runs[1].getElementsByTagNameNS(uri, 'rPr')[0]
+                        runs[1].removeChild(props)
+                    elif kind == 'text':
+                        runs[0].getElementsByTagNameNS(uri, 't')[0].firstChild.data = '错误文字'
+                    else:
+                        extra = runs[0].cloneNode(True)
+                        runs[0].getElementsByTagNameNS(uri, 't')[0].firstChild.data = '字体'
+                        extra.getElementsByTagNameNS(uri, 't')[0].firstChild.data = '目标'
+                        paragraph.insertBefore(extra, runs[0].nextSibling)
+                    parts['word/document.xml'] = dom.toxml(encoding='UTF-8', standalone=dom.standalone)
+                bad = self.work / ('bad-' + kind + '.docx')
+                with zipfile.ZipFile(bad, 'w', compression=zipfile.ZIP_DEFLATED) as package:
+                    for name, data in parts.items():
+                        package.writestr(name, data)
+                bad_bytes = bad.read_bytes()
+                self.run_script('format_guard.py', source.name, bad.name, spec_path.name, expected=1)
+                output = 'rejected-' + kind + '.docx'
+                result = self.run_script('run_docx_edit.py', 'format-checked', source.name,
+                                         output, '--candidate', bad.name, payload=spec, expected=1)
+                receipt = json.loads(result.stdout)
+                self.assertEqual(receipt['status'], 'failed')
+                self.assertEqual(receipt['task_status'], 'failed_cleaned')
+                self.assertTrue(receipt['cleanup']['cleanup_complete'])
+                self.assertFalse((self.work / output).exists())
+                self.assertFalse((self.work / 'output/runtime-acceptance' / output).exists())
+                self.assertEqual(bad.read_bytes(), bad_bytes)
+                self.assertFalse(list(self.work.glob('docx-edit-*')))
+        self.assertEqual({name: (self.work / name).read_bytes() for name in protected}, protected)
+
+    def test_installed_structure_guard_blocks_injected_format_loss(self):
+        source, candidate, spec, spec_path = self.format_candidate_fixture()
+        protected = {path.name: path.read_bytes() for path in (source, candidate, spec_path)}
+        code = '''
+import json
+import sys
+from unittest.mock import patch
+sys.path.insert(0, sys.argv[1])
+import edit_structure
+import run_docx_edit
+original = edit_structure._apply_format
+
+def faulty(run, formatting):
+    original(run, formatting)
+    paragraph = run.parentNode
+    props = edit_structure._elements(paragraph, 'pPr')[0]
+    paragraph.removeChild(props)
+
+with open('guard-operations.json', encoding='utf-8') as handle:
+    specification = json.load(handle)
+with patch.object(edit_structure, '_apply_format', faulty):
+    result = run_docx_edit.edit_task('structure', 'guard-source.docx', 'fault-injected.docx', specification)
+print(json.dumps(result))
+'''
+        result = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', code, str(self.skill / 'scripts')],
+                                cwd=self.work, env=self.environment, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        receipt = json.loads(result.stdout)
+        self.assertEqual(receipt['status'], 'failed')
+        self.assertEqual(receipt['task_status'], 'failed_cleaned')
+        self.assertTrue(receipt['cleanup']['cleanup_complete'])
+        self.assertFalse((self.work / 'fault-injected.docx').exists())
+        self.assertFalse((self.work / 'output/runtime-acceptance/fault-injected.docx').exists())
+        self.assertFalse(list(self.work.glob('docx-edit-*')))
+        self.assertEqual({name: (self.work / name).read_bytes() for name in protected}, protected)
 
     def test_bound_pages_collect_full_table_and_reject_changed_source(self):
         expected = [[str(i), '产品' + str(i)] for i in range(42)]

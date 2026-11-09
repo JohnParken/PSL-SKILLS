@@ -38,6 +38,7 @@ TASKS = {
     "edit": ("SKILL.md", "references/ooxml-editing.md"),
     "edit-text": ("SKILL.md", "references/ooxml-editing.md"),
     "edit-structure": ("SKILL.md", "references/structure-editing.md"),
+    "edit-font": ("SKILL.md", "references/structure-editing.md"),
     "edit-table": ("SKILL.md", "references/table-media-editing.md"),
     # Broad requests still start with the core contract, then expand by need.
     "full-report": ("SKILL.md", "references/generation-core.md"),

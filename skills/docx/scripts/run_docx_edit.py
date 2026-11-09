@@ -1,4 +1,4 @@
-"""One controlled entry for five existing edit APIs; never discover disposable files."""
+"""Controlled editing and checked format-candidate delivery; never discover disposable files."""
 import argparse
 import json
 import os
@@ -11,7 +11,7 @@ from run_docx_task import task_environment, _finish_delivery, finish_failed_task
 from archive_deliverables import validate_output_path, choose_delivery_output
 from docx_outcome import failure
 
-OPERATIONS = ('text', 'structure', 'tables', 'image', 'comments')
+OPERATIONS = ('text', 'structure', 'tables', 'image', 'comments', 'format-checked')
 
 
 def _retire_manifest(task, manifest, expected, payload):
@@ -90,6 +90,13 @@ def _edit_task(kind, source, output, specification, *, replacement=None):
                         raise ValueError('Image replacement input is required')
                     from replace_image import replace_image_delivery
                     result = replace_image_delivery(source, replacement, output, specification, protected_inputs=[config])
+                elif kind == 'format-checked':
+                    if replacement is None:
+                        raise ValueError('Format candidate input is required')
+                    from format_guard import publish_format_candidate_delivery
+                    result = publish_format_candidate_delivery(
+                        source, replacement, output, specification, protected_inputs=[config]
+                    )
                 else:
                     from manage_comments import manage_comments_delivery
                     result = manage_comments_delivery(source, specification, output, protected_inputs=[config])
@@ -122,7 +129,7 @@ def main(argv=None):
     parser.add_argument('operation', choices=OPERATIONS)
     parser.add_argument('input')
     parser.add_argument('output')
-    parser.add_argument('--replacement')
+    parser.add_argument('--replacement', '--candidate', dest='replacement')
     args = parser.parse_args(argv)
     try:
         raw = sys.stdin.buffer.read(MAX_TASK_BYTES + 1)

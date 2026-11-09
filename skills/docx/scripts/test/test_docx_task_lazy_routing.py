@@ -58,6 +58,8 @@ class TaskLazyRoutingTests(unittest.TestCase):
             'styles': ['SKILL.md', 'references/generation-styles.md'],
             'sections': ['SKILL.md', 'references/p2-layout.md'],
             'edit-text': ['SKILL.md','references/ooxml-editing.md'],
+            'edit-font': ['SKILL.md','references/structure-editing.md'],
+            'edit-structure': ['SKILL.md','references/structure-editing.md'],
             'edit-table': ['SKILL.md','references/table-media-editing.md'],
             'full-report': ['SKILL.md','references/generation-core.md'],
         }
