@@ -64,6 +64,84 @@ class DeliveryTests(unittest.TestCase):
         self.assertFalse(list(Path('.').glob('xlsx-task-*')))
         self.assertEqual(Workbook.load('report.xlsx').cells['Data']['A1']['value'], '中文')
 
+    def test_runner_accepts_dot_prefixed_inputs_with_owned_config(self):
+        Path('inputs').mkdir()
+        Workbook.create(SPEC).save('source.xlsx')
+        Path('source.xlsx').rename('inputs/source.xlsx')
+        original = Path('inputs/source.xlsx').read_bytes()
+        patch_spec = {'sheets': [{'name': 'Data', 'cells': {'B1': {'value': 99}}}]}
+        code, result = run_task({'script': 'stdlib_xlsx.py',
+            'arguments': ['edit', './inputs/source.xlsx', '@spec', 'edited.xlsx'],
+            'output': 'edited.xlsx', 'inputs': ['./inputs/source.xlsx'], 'configs': {'spec': patch_spec}})
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result['cleanup']['cleanup_complete'])
+        self.assertEqual(Path('inputs/source.xlsx').read_bytes(), original)
+        self.assertEqual(Workbook.load('edited.xlsx').cells['Data']['B1']['value'], 99)
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
+
+    def test_runner_rejects_unsafe_inputs_before_normalization(self):
+        Path('source.json').write_text('{}', encoding='utf-8')
+        Path('linked.json').symlink_to('source.json')
+        Path('linked-dir').symlink_to('.')
+        for name in ('../source.json', './a/../source.json', str(Path.cwd() / 'source.json'),
+                     r'..\source.json', 'a//source.json', 'linked.json', 'linked-dir/./source.json'):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                run_task({'script': 'stdlib_xlsx.py', 'arguments': ['create', '@spec', 'out.xlsx'],
+                          'output': 'out.xlsx', 'inputs': [name], 'configs': {'spec': SPEC}})
+        self.assertFalse(Path('out.xlsx').exists())
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
+
+    def test_runner_checks_auto_inputs_in_both_config_modes(self):
+        Path('inputs').mkdir()
+        Workbook.create(SPEC).save('source.xlsx')
+        Path('source.xlsx').rename('inputs/source.xlsx')
+        original = Path('inputs/source.xlsx').read_bytes()
+        patch_spec = {'sheets': [{'name': 'Data', 'cells': {'B1': {'value': 101}}}]}
+        Path('patch.json').write_text(json.dumps(patch_spec), encoding='utf-8')
+        for with_config in (False, True):
+            config = {'spec': patch_spec} if with_config else {}
+            spec_arg = '@spec' if with_config else 'patch.json'
+            with self.subTest(config=with_config):
+                invalid = {'script': 'stdlib_xlsx.py',
+                           'arguments': ['edit', './inputs//source.xlsx', spec_arg, 'bad.xlsx'],
+                           'output': 'bad.xlsx', 'configs': config}
+                with self.assertRaises(ValueError):
+                    run_task(invalid)
+                valid = {'script': 'stdlib_xlsx.py',
+                         'arguments': ['edit', './inputs/./source.xlsx', spec_arg, f'good-{with_config}.xlsx'],
+                         'output': f'good-{with_config}.xlsx', 'configs': config}
+                code, result = run_task(valid)
+                self.assertEqual(code, 0, result)
+                self.assertEqual(Workbook.load(valid['output']).cells['Data']['B1']['value'], 101)
+        self.assertEqual(Path('inputs/source.xlsx').read_bytes(), original)
+        self.assertFalse(Path('bad.xlsx').exists())
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
+
+    def test_explicit_inputs_reject_empty_components_in_both_config_modes(self):
+        Path('inputs').mkdir()
+        Path('inputs/source.json').write_text('{}', encoding='utf-8')
+        Path('spec.json').write_text(json.dumps(SPEC), encoding='utf-8')
+        for with_config in (False, True):
+            for name in ('inputs//source.json', 'inputs/source.json/'):
+                spec_arg = '@spec' if with_config else 'spec.json'
+                configs = {'spec': SPEC} if with_config else {}
+                with self.subTest(config=with_config, name=name), self.assertRaises(ValueError):
+                    run_task({'script': 'stdlib_xlsx.py', 'arguments': ['create', spec_arg, 'out.xlsx'],
+                              'output': 'out.xlsx', 'inputs': [name], 'configs': configs})
+        self.assertFalse(Path('out.xlsx').exists())
+        self.assertFalse(list(Path('.').glob('xlsx-task-*')))
+
+    def test_runner_does_not_overwrite_dot_prefixed_input(self):
+        Workbook.create(SPEC).save('source.xlsx')
+        original = Path('source.xlsx').read_bytes()
+        for configs in ({}, {'spec': SPEC}):
+            spec_arg = '@spec' if configs else 'source.xlsx'
+            with self.subTest(configs=bool(configs)), self.assertRaises(ValueError):
+                run_task({'script': 'stdlib_xlsx.py',
+                          'arguments': ['edit', './source.xlsx', spec_arg, 'source.xlsx'],
+                          'output': 'source.xlsx', 'configs': configs})
+        self.assertEqual(Path('source.xlsx').read_bytes(), original)
+
     def test_partial_result_archive_residual_never_reports_cleaned(self):
         def partial_child(script, arguments):
             Path('report.xlsx').write_bytes(b'partial output')

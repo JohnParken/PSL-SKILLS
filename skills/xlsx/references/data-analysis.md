@@ -150,7 +150,9 @@ extract cells. Locate the selected Skill independently; never rename input to by
 
 ## Analyze a WPS result without conversion
 
-Save the original spreadsheet JSON result from the et skill, then pass that `.json` to the same region-based
+For these stdout-only commands, use an existing, user-provided ET extraction JSON as a protected input; do not create a temporary JSON solely for this flow. The documented successful cleanup protocol requires a verified final file and an archive result, neither of which this flow produces. Do not label a successful analysis as failed to bypass that requirement, and do not delete or claim an existing JSON. If no suitable input or supported non-file handoff is available, stop and report the missing handoff.
+
+Pass the existing original spreadsheet JSON result from the et skill to the same region-based
 analysis command. Accepted typed-cell schemas are `biff8_readonly_v1` and
 `ooxml_spreadsheet_readonly_v1`; successful/partial extraction retains its actual
 input schema and diagnostics. Failed extraction and Word-text results are rejected.

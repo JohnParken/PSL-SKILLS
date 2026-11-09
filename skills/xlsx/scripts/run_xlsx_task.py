@@ -9,7 +9,7 @@ import sys
 import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, finalize_failed_cleanup, _unique_object
+from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, finalize_failed_cleanup, _unique_object, _normalize_protected_path
 from _artifact_runtime.archive_deliverables import validate_output_path, validate_delivery_output, choose_delivery_output
 
 SCRIPTS = {'stdlib_xlsx.py', 'xlsx_tabular.py', 'xlsx_result_export.py', 'xlsx_management.py',
@@ -109,9 +109,10 @@ def _run_task(specification):
         if index == output_index:
             continue
         if not item.startswith(('-', '@')) and Path(item).is_file():
-            validate_output_path(Path(item))
             protected.append(item)
+    protected = list(dict.fromkeys(protected))
     for item in protected:
+        _normalize_protected_path(item)  # Validate raw spelling before Path normalizes it.
         validate_output_path(Path(item))
     output = choose_delivery_output(output, protected_inputs=protected)
     arguments = list(arguments)
