@@ -4,7 +4,7 @@
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
-当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
+Python 模块拆分及文件行数规则见 [行数规范与重构记录](../python-file-limit.md)；该记录保留其验收时的历史基线，不等同于当前版本重测。运行能力和安全边界不因拆分扩大。
 
 ## 功能与适用范围
 
@@ -46,7 +46,7 @@ flowchart TD
 | [pptx_core/runtime.py](../../skills/pptx/scripts/pptx_core/runtime.py) | 环境与目录边界、严格 JSON/SVG 校验、资源准备、创建及读取编排、独占发布 |
 | [pptx_core/svg_limits.py](../../skills/pptx/scripts/pptx_core/svg_limits.py) | 在展开 `use` 等引用前限制节点、深度和成本，拒绝循环/异常引用 |
 | [pptx_core/images.py](../../skills/pptx/scripts/pptx_core/images.py) | 标准库 PNG/JPEG 验证，保留原始图像字节 |
-| [_engine/svg_to_pptx/drawingml/converter.py](../../skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py) | 受支持 SVG 到可编辑 DrawingML 的核心转换 |
+| [_engine/svg_to_pptx/drawingml/converter.py](../../skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter.py)、[converter_slide.py](../../skills/pptx/scripts/_engine/svg_to_pptx/drawingml/converter_slide.py) | 前者保留兼容入口，页面转换在后者及其分发、分组和校验模块实现，将受支持 SVG 转为可编辑 DrawingML。 |
 | [_engine/svg_to_pptx/native_objects](../../skills/pptx/scripts/_engine/svg_to_pptx/native_objects/) | 原生图表/表格、嵌入数据工作簿和有限公式转换 |
 | [_engine/pptx_ooxml/package.py](../../skills/pptx/scripts/_engine/pptx_ooxml/package.py) | `PackagePartRegistry`，在整稿分配不冲突的图表等部件名 |
 | [pptx_core/package.py](../../skills/pptx/scripts/pptx_core/package.py) | 幻灯片、母版、主题、备注、内容类型与关系的内存组包 |
@@ -160,7 +160,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 - 宿主须返回同次调用的完整 stdout、stderr 和真实退出码；未启动、超时、强杀、截断与脚本业务失败分别报告，不解析截断 JSON 或伪造成功。
 - 业务验收后，按宿主发现的真实 `artifact-lifecycle` 入口交接最终清单、来源和验证结果。公共能力不可用报告归档 skipped；失败保留主文件，不重新生成或删除已验收 PPTX。归档与业务成功分别判断。
 - [来源记录](../../skills/pptx/references/provenance.md) 固定 PPT Master v6.8.0 来源提交 `5e8856be0da8e6bc85c4aa28acc614478f7b7137`，记录保留的标准库适配、静态数据与 MIT/Apache 等许可。没有移植上游完整工作流、浏览器审查、渲染、任意模板导入或媒体流程。
-- [随包测试](../../skills/pptx/scripts/test/) 与仓库级来源清单属于维护证据。结构、合成对象、独立内容预期、真实业务样本、PowerPoint/WPS 显示、只读安装及宿主触发验收必须分别报告，不能相互替代。
+- [源码测试](../../skills/pptx/scripts/test/) 不随业务运行包分发；它与仓库级来源清单属于维护证据。结构、合成对象、独立内容预期、真实业务样本、PowerPoint/WPS 显示、只读安装及宿主触发验收必须分别报告，不能相互替代。
 
 本文按固定基线入口、核心实现及引用契约编写；本轮已执行的有界读取合成回归与限制见 [核验记录](../skill-docs-validation-20261107.json)。未对真实用户演示文稿执行创建/读取、全量回归或桌面视觉验收；源码中的步骤不等于全部已执行。
 

@@ -1,10 +1,10 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 核对日期：2026-11-07；源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1939.2825`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1939.2825`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
-当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
+Python 模块拆分及文件行数规则见 [行数规范与重构记录](../python-file-limit.md)；该记录保留其验收时的历史基线，不等同于当前版本重测。运行能力和安全边界不因拆分扩大。
 
 ## 功能与适用范围
 
@@ -148,7 +148,7 @@ flowchart TD
 - [requirements.txt](../../skills/xlsx/requirements.txt)：主流程 Python 3.9+，无第三方依赖；完整目录包含运行时与 `assets/minimal_xlsx`。XML 解析由 [xlsx_xml.py](../../skills/xlsx/scripts/xlsx_xml.py) 拒绝 DTD/实体声明。
 - 归档/清理要求实际平台支持 `dir_fd`、`O_NOFOLLOW`、`O_DIRECTORY` 等安全原语；默认归档发布需同文件系统硬链接，缺失不降级覆盖或不安全删除。
 - `xlsx_reader.py`、`libreoffice_recalc.py` 等是旧工具，不是主流程：前者需 pandas/openpyxl，后者需外部软件。旧行插入/移动 CLI 已禁用；`formula_check.py` 仅启发式静态检查，不能证明已计算。见 [legacy 边界](../../skills/xlsx/references/validate.md#legacy-utilities)。
-- 随包测试位于 [scripts/test](../../skills/xlsx/scripts/test)；跨 Skill/生命周期一致性测试位于仓库 `tests/`，不属于普通任务步骤。历史 [validate.md](../../skills/xlsx/references/validate.md) 和 [跨表 CLI 验证记录](../../skills/table-workflow/scripts/docs/cli-contract.md) 记录 macOS 上的合成、部分真实公开样本及隔离安装验证，不代表本次重新运行，也不能替代云端 Linux、Windows、Excel 视觉/重算或真实宿主交付验收。
+- 源码测试位于 [scripts/test](../../skills/xlsx/scripts/test)，不随业务运行包分发；跨 Skill/生命周期一致性测试位于仓库 `tests/`，不属于普通任务步骤。历史 [validate.md](../../skills/xlsx/references/validate.md) 和 [跨表 CLI 验证记录](../../skills/table-workflow/scripts/docs/cli-contract.md) 记录 macOS 上的合成、部分真实公开样本及隔离安装验证，不代表本次重新运行，也不能替代云端 Linux、Windows、Excel 视觉/重算或真实宿主交付验收。
 
 本次导读只核对入口、关键实现、引用契约与基线树，不声称任何未执行的功能测试通过。
 

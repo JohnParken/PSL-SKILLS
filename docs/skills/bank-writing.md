@@ -1,6 +1,6 @@
 # bank-writing：银行专业写作与文本交接
 
-> 文档核对日期：2026-11-07；源码基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1939.2825`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
+> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1939.2825`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -119,7 +119,7 @@ DOCX 是显式、可选的能力交接，不是默认运行时依赖。宿主必
 
 ## 可追溯源码
 
-- [固定基线的 bank-writing 目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/bank-writing)
+- [历史快照中的 bank-writing 目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/bank-writing)
 - [主入口与默认文本边界](../../skills/bank-writing/SKILL.md)
 - [多轮编辑与来源冲突规则](../../skills/bank-writing/references/editing-and-integration.md)
 - [素材读取边界](../../skills/bank-writing/references/source-access.md)

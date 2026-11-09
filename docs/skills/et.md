@@ -4,7 +4,7 @@
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
-当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
+Python 模块拆分及文件行数规则见 [行数规范与重构记录](../python-file-limit.md)；该记录保留其验收时的历史基线，不等同于当前版本重测。运行能力和安全边界不因拆分扩大。
 
 ## 功能与适用范围
 
@@ -168,7 +168,7 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 - [公开能力与编码契约](../../skills/et/scripts/docs/cli-contract.md)
 - [结果预算编码](../../skills/et/scripts/wps_result.py)
 - [字节预算与分页定点回归](../../skills/et/scripts/test/test_et_output_budget.py)、[元数据回归](../../skills/et/scripts/test/test_metadata_api.py)
-- [随包测试目录](../../skills/et/scripts/test/)
+- [源码测试目录](../../skills/et/scripts/test/)（不随业务运行包分发）
 
 ## 归档提示更新（2026-11-07）
 

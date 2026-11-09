@@ -20,7 +20,7 @@ WPS Skill 面向公文、报告、段落和基础表格，提供四条任务路�
 | 输入读取 | 按内容签名判断；历史 `.doc` 文件实际包含 RTF 或 OOXML 时可按受支持内容读取。未知原生 WPS/Works/ET 私有格式不支持。 |
 | 创建与重排 | 只输出 RTF，后缀限 `.wps/.rtf`。不能将 RTF 写成 `.doc`。 |
 | 兼容导出 | RTF 可写 `.wps/.rtf`；受支持的 MS-DOC/CFB 可写 `.doc/.wps`；OOXML 不能改名冒充导出成功。 |
-| 电子表格 | 识别到 OOXML spreadsheet 或 CFB Workbook/Book 后转交 ET Skill；本 Skill 不继续处理单元格任务。 |
+| 电子表格 | 按实际格式和任务交接：原生 XLSX/XLSM 交给 xlsx，ET/ETT 交给 et；识别到电子表格容器时不继续按文字处理，也不自动转换。 |
 
 ## 架构图
 
@@ -87,7 +87,7 @@ flowchart TD
     N -->|"不确定或验证失败"| H
 ```
 
-读取与创建自检需退出 `0` 且输出 `environment-ok`；导出自检需退出 `0` 且 JSON `status=environment-ok`。读取用 `read_wps.py --check`，创建/编辑用 `run_wps_task.py check`，RTF 导出用 `export_wps.py check --backend rtf`；需要二进制后端时才检查 `libreoffice`。自检不代替输入或产物验收。
+读取与创建自检需退出 `0` 且输出 `environment-ok`；导出自检需退出 `0` 且 JSON `status=environment-ok`。读取用 `read_wps.py --check`，创建用 `run_wps_task.py check`，编辑须两项均通过，RTF 导出用 `export_wps.py check --backend rtf`；需要二进制后端时才检查 `libreoffice`。自检不代替输入或产物验收。
 
 下例是调用形态而非本次执行记录。`<skill-root>` 须由本轮实际读取的主入口路径确定并整体替换；数据路径相对宿主确认的任务目录。
 
@@ -179,7 +179,7 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 
 ## 源码追溯
 
-- 固定基线：[WPS 源目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/wps)。
+- 历史快照：[WPS 源目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/wps)。
 - 统一入口与格式路由：[SKILL.md](../../skills/wps/SKILL.md)、[read_wps.py](../../skills/wps/scripts/read_wps.py)、[wps_output_contract.py](../../skills/wps/scripts/wps_output_contract.py)。
 - 创建、编辑及计划校验：[run_wps_task.py](../../skills/wps/scripts/run_wps_task.py)、[run_wps_edit.py](../../skills/wps/scripts/run_wps_edit.py)、[wps_content_validation.py](../../skills/wps/scripts/wps_content_validation.py)。
 - 新边界回归（本轮未执行）：[入口流程](../../skills/wps/scripts/test/test_wps_entry_workflows.py)、[二进制表格](../../skills/wps/scripts/test/test_wps_binary_tables.py)。

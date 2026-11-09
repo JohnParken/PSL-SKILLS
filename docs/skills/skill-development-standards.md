@@ -1,10 +1,10 @@
 # skill-development-standards：开发规范与只读结构检查
 
-> 文档核对日期：2026-11-07；源码基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1939.2825`。本文说明规范、工具及其边界，不修改或替代原规范。
+> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1939.2825`。本文说明规范、工具及其边界，不修改或替代原规范。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
-当前 Python 模块拆分以 `926505d` 加保留的 DOCX 字体保护修改及本轮未提交工作树为基线；所有 Skill Python 文件最多 1000 物理行，运行能力和安全边界不因拆分扩大。详见 [行数规范与重构记录](../python-file-limit.md)。
+Python 模块拆分及文件行数规则见 [行数规范与重构记录](../python-file-limit.md)；该记录保留其验收时的历史基线，不等同于当前版本重测。运行能力和安全边界不因拆分扩大。
 
 ## 功能与适用范围
 
@@ -157,7 +157,7 @@ python -I -S -B -m unittest discover -s skills/skill-development-standards/scrip
 
 ## 可追溯源码
 
-- [固定基线的规范目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/skill-development-standards)
+- [历史快照中的规范目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/skill-development-standards)
 - [仓库约定](../../AGENTS.md)、[规范正文](../../skills/skill-development-standards/SKILL.md)
 - [结构检查实现](../../skills/skill-development-standards/scripts/check_skill.py)
 - [检查器测试](../../skills/skill-development-standards/scripts/test/test_check_skill.py)
