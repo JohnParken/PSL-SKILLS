@@ -20,15 +20,15 @@
 
 | Skill | 基线版本 | 文档内容与核心边界 |
 | --- | --- | --- |
-| [bank-writing](skills/bank-writing.md) | 20261109.2340.5905 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
-| [docx](skills/docx.md) | 20261109.2340.5905 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
-| [xlsx](skills/xlsx.md) | 20261109.2340.5905 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261109.2340.5905 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
-| [et](skills/et.md) | 20261109.2340.5905 | ET/ETT 的 BIFF8/OOXML 保存值读取、表头与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261109.2340.5905 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建，不渲染或验签。 |
-| [pptx](skills/pptx.md) | 20261109.2340.5905 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
-| [table-workflow](skills/table-workflow.md) | 20261109.2340.5905 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
-| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261109.2340.5905 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
+| [bank-writing](skills/bank-writing.md) | 20261110.0051.1813 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
+| [docx](skills/docx.md) | 20261110.0051.1813 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
+| [xlsx](skills/xlsx.md) | 20261110.0051.1813 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [wps](skills/wps.md) | 20261110.0051.1813 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
+| [et](skills/et.md) | 20261110.0051.1813 | ET/ETT 的 BIFF8/OOXML 保存值读取、表头与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261110.0051.1813 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建，不渲染或验签。 |
+| [pptx](skills/pptx.md) | 20261110.0051.1813 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
+| [table-workflow](skills/table-workflow.md) | 20261110.0051.1813 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
+| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261110.0051.1813 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
 | [skill-development-standards](skills/skill-development-standards.md) | 20261109.1939.2825 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
 ## 整体架构图
@@ -73,7 +73,7 @@ flowchart TD
     D -->|"否或不明"| E["停止依赖操作，报告具体缺口"]
     D -->|"是"| F["按任务直达参考；有界读取保留绑定续读与覆盖"]
     F --> OP["执行实际任务或调用适用入口"]
-    OP --> G["核对业务状态；有进程时检查 stdout、stderr 和退出码"]
+    OP --> G["检查可见执行状态、退出与截断；按入口核对业务状态"]
     G --> H{"内容与产物按约定完成核验？"}
     H -->|"失败"| I["保留真实失败状态，按原清单安全收尾"]
     H -->|"部分结果"| J["保留 partial、覆盖与遗漏；仅按允许范围继续"]

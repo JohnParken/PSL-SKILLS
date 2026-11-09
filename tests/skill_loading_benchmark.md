@@ -78,3 +78,5 @@ XLSX纯概况after使用入口完整命令，不预读bounded-reading；baseline
 ## 环境与首步自检前移（2026-11-09）
 
 人工复核31个选择案例及57个读取计划，入口调整未改变技能的任务、格式边界与按需参考；保留各技能自己的依赖和自检。更新前的当前选择与加载快照分别保存在 `skill_selection_current_cases_before_environment_alignment_20261109.json` 与 `runtime_loading_profiles_before_environment_alignment_20261109.json`。新快照由 macOS / Python 3.12.12 重算，只反映静态计划读取的字符、字节与哈希，不代表真实模型选路、宿主 usage 或业务验收。
+
+本轮人工复核31项选择期望与57个计划读取范围：仅调整结果判读和大结果续读，业务 description 与选择边界不变。更新前保留本地快照；新快照仍是静态字符/字节，不代表真实宿主读取、模型选路或 token usage。

@@ -39,21 +39,21 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4882,
-            "bytes": 7983,
-            "sha256": "8051b93e173ea3c9f5d15f50dd17c8b08b6e6e45cb23ee385b1e6661cca6b452",
+            "chars": 4908,
+            "bytes": 7991,
+            "sha256": "f61afb6272c6aa9f5ea5b960fd8c43486c34eb63e86b19ba07b4c204b7f0c906",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 4882,
-        "bytes": 7983,
+        "chars": 4908,
+        "bytes": 7991,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 502,
-        "bytes": 988,
+        "chars": 528,
+        "bytes": 996,
         "tokens": null,
         "read_events": 0
       }
@@ -89,21 +89,21 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 7766,
-        "bytes": 14509,
+        "chars": 8235,
+        "bytes": 15518,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -5065,
-        "bytes": -6244,
+        "chars": -4596,
+        "bytes": -5235,
         "tokens": null,
         "read_events": -1
       }
@@ -153,21 +153,21 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 7766,
-        "bytes": 14509,
+        "chars": 8235,
+        "bytes": 15518,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -13521,
-        "bytes": -15296,
+        "chars": -13052,
+        "bytes": -14287,
         "tokens": null,
         "read_events": -3
       }
@@ -231,9 +231,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -266,21 +266,21 @@
           },
           {
             "path": "xlsx/references/complex-json.md",
-            "chars": 4182,
-            "bytes": 6850,
-            "sha256": "b76c668ea762aebd678e537edca62b6e2325ac1be64e264fb6bf70cac7c0c43d",
+            "chars": 4206,
+            "bytes": 6922,
+            "sha256": "1876a96f177afe9cef1a02d477c781ca9fc342af02345003147a896ed09a4bf2",
             "tokens": null
           }
         ],
         "read_events": 6,
         "unique_files": 6,
-        "chars": 31577,
-        "bytes": 45678,
+        "chars": 32070,
+        "bytes": 46759,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -2116,
-        "bytes": -87,
+        "chars": -1623,
+        "bytes": 994,
         "tokens": null,
         "read_events": 0
       }
@@ -323,16 +323,16 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
             "path": "xlsx/references/tool-execution.md",
-            "chars": 1890,
-            "bytes": 4330,
-            "sha256": "45a51becb8645824e25d9f399f064d4a4757747f25e4fe19ce776720a4b2e35e",
+            "chars": 2419,
+            "bytes": 5571,
+            "sha256": "cb8548c163fdb0cea4517b5410ddfa5c3fc96a4e4edaea0c7c5ed6054fa2f18a",
             "tokens": null
           },
           {
@@ -345,13 +345,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 11021,
-        "bytes": 20732,
+        "chars": 12019,
+        "bytes": 22982,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -2492,
-        "bytes": -753,
+        "chars": -1494,
+        "bytes": 1497,
         "tokens": null,
         "read_events": 0
       }
@@ -401,9 +401,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -415,9 +415,9 @@
           },
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
@@ -430,13 +430,13 @@
         ],
         "read_events": 4,
         "unique_files": 4,
-        "chars": 35771,
-        "bytes": 54076,
+        "chars": 36689,
+        "bytes": 56072,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -1099,
-        "bytes": 1644,
+        "chars": -181,
+        "bytes": 3640,
         "tokens": null,
         "read_events": 0
       }
@@ -465,21 +465,21 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 7241,
-        "bytes": 15387,
+        "chars": 7690,
+        "bytes": 16374,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 794,
-        "bytes": 1694,
+        "chars": 1243,
+        "bytes": 2681,
         "tokens": null,
         "read_events": 0
       }
@@ -515,28 +515,28 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
             "path": "et/references/bounded-reading.md",
-            "chars": 3498,
-            "bytes": 7424,
-            "sha256": "e469a6aff7bbac70f20a2ab842cd2d0837423ba708c998fe97b7ea7374df68c6",
+            "chars": 4201,
+            "bytes": 9091,
+            "sha256": "c2233534d2c43083620ed3a854bdb2c2cbead50ad0e41fdc33a15b251fd0bbbd",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 10739,
-        "bytes": 22811,
+        "chars": 11891,
+        "bytes": 25465,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1198,
-        "bytes": 2718,
+        "chars": 2350,
+        "bytes": 5372,
         "tokens": null,
         "read_events": 0
       }
@@ -565,21 +565,21 @@
         "files": [
           {
             "path": "wps/SKILL.md",
-            "chars": 5769,
-            "bytes": 11454,
-            "sha256": "1d0bef2c97112c97be660b63a8515f24c49455eceebabf0789c588decb74880d",
+            "chars": 6192,
+            "bytes": 12403,
+            "sha256": "7e704e0f11bb1d09516551e3119cb044574cc37dc23c0214ae8adbb012118ea4",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5769,
-        "bytes": 11454,
+        "chars": 6192,
+        "bytes": 12403,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -3504,
-        "bytes": -6287,
+        "chars": -3081,
+        "bytes": -5338,
         "tokens": null,
         "read_events": 0
       }
@@ -608,21 +608,21 @@
         "files": [
           {
             "path": "wps/SKILL.md",
-            "chars": 5769,
-            "bytes": 11454,
-            "sha256": "1d0bef2c97112c97be660b63a8515f24c49455eceebabf0789c588decb74880d",
+            "chars": 6192,
+            "bytes": 12403,
+            "sha256": "7e704e0f11bb1d09516551e3119cb044574cc37dc23c0214ae8adbb012118ea4",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5769,
-        "bytes": 11454,
+        "chars": 6192,
+        "bytes": 12403,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -3504,
-        "bytes": -6287,
+        "chars": -3081,
+        "bytes": -5338,
         "tokens": null,
         "read_events": 0
       }
@@ -658,9 +658,9 @@
         "files": [
           {
             "path": "wps/SKILL.md",
-            "chars": 5769,
-            "bytes": 11454,
-            "sha256": "1d0bef2c97112c97be660b63a8515f24c49455eceebabf0789c588decb74880d",
+            "chars": 6192,
+            "bytes": 12403,
+            "sha256": "7e704e0f11bb1d09516551e3119cb044574cc37dc23c0214ae8adbb012118ea4",
             "tokens": null
           },
           {
@@ -673,13 +673,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 12911,
-        "bytes": 25416,
+        "chars": 13334,
+        "bytes": 26365,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -3506,
-        "bytes": -6289,
+        "chars": -3083,
+        "bytes": -5340,
         "tokens": null,
         "read_events": 0
       }
@@ -736,42 +736,42 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
             "path": "et/references/bounded-reading.md",
-            "chars": 3498,
-            "bytes": 7424,
-            "sha256": "e469a6aff7bbac70f20a2ab842cd2d0837423ba708c998fe97b7ea7374df68c6",
+            "chars": 4201,
+            "bytes": 9091,
+            "sha256": "c2233534d2c43083620ed3a854bdb2c2cbead50ad0e41fdc33a15b251fd0bbbd",
             "tokens": null
           },
           {
             "path": "wps/SKILL.md",
-            "chars": 5769,
-            "bytes": 11454,
-            "sha256": "1d0bef2c97112c97be660b63a8515f24c49455eceebabf0789c588decb74880d",
+            "chars": 6192,
+            "bytes": 12403,
+            "sha256": "7e704e0f11bb1d09516551e3119cb044574cc37dc23c0214ae8adbb012118ea4",
             "tokens": null
           }
         ],
         "read_events": 4,
         "unique_files": 4,
-        "chars": 24274,
-        "bytes": 48774,
+        "chars": 26318,
+        "bytes": 53386,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -7371,
-        "bytes": -9813,
+        "chars": -5327,
+        "bytes": -5201,
         "tokens": null,
         "read_events": -1
       }
@@ -849,28 +849,28 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 1,
-        "chars": 15532,
-        "bytes": 29018,
+        "chars": 16470,
+        "bytes": 31036,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -27042,
-        "bytes": -30592,
+        "chars": -26104,
+        "bytes": -28574,
         "tokens": null,
         "read_events": -6
       }
@@ -920,21 +920,21 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 7766,
-        "bytes": 14509,
+        "chars": 8235,
+        "bytes": 15518,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -13521,
-        "bytes": -15296,
+        "chars": -13052,
+        "bytes": -14287,
         "tokens": null,
         "read_events": -3
       }
@@ -1012,28 +1012,28 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 1,
-        "chars": 15532,
-        "bytes": 29018,
+        "chars": 16470,
+        "bytes": 31036,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -27042,
-        "bytes": -30592,
+        "chars": -26104,
+        "bytes": -28574,
         "tokens": null,
         "read_events": -6
       }
@@ -1069,9 +1069,9 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4882,
-            "bytes": 7983,
-            "sha256": "8051b93e173ea3c9f5d15f50dd17c8b08b6e6e45cb23ee385b1e6661cca6b452",
+            "chars": 4908,
+            "bytes": 7991,
+            "sha256": "f61afb6272c6aa9f5ea5b960fd8c43486c34eb63e86b19ba07b4c204b7f0c906",
             "tokens": null
           },
           {
@@ -1084,13 +1084,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 16967,
-        "bytes": 32293,
+        "chars": 16993,
+        "bytes": 32301,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 941,
-        "bytes": 1665,
+        "chars": 967,
+        "bytes": 1673,
         "tokens": null,
         "read_events": 0
       }
@@ -1126,9 +1126,9 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4882,
-            "bytes": 7983,
-            "sha256": "8051b93e173ea3c9f5d15f50dd17c8b08b6e6e45cb23ee385b1e6661cca6b452",
+            "chars": 4908,
+            "bytes": 7991,
+            "sha256": "f61afb6272c6aa9f5ea5b960fd8c43486c34eb63e86b19ba07b4c204b7f0c906",
             "tokens": null
           },
           {
@@ -1141,13 +1141,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 15104,
-        "bytes": 28947,
+        "chars": 15130,
+        "bytes": 28955,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 531,
-        "bytes": 1065,
+        "chars": 557,
+        "bytes": 1073,
         "tokens": null,
         "read_events": 0
       }
@@ -1183,9 +1183,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -1198,13 +1198,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 24770,
-        "bytes": 32241,
+        "chars": 25239,
+        "bytes": 33250,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -1893,
-        "bytes": -50,
+        "chars": -1424,
+        "bytes": 959,
         "tokens": null,
         "read_events": 0
       }
@@ -1240,28 +1240,28 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 6458,
-            "bytes": 14289,
-            "sha256": "89fc996c70ab208f58451c0d723309165490857afffdf37b5584a7ebbeb8a340",
+            "chars": 6864,
+            "bytes": 15215,
+            "sha256": "62742c7adf75ab272f32b3b7f3221dd12c8539f69ac837bf4b29e5e314ad1885",
             "tokens": null
           },
           {
             "path": "ofd/references/output-views.md",
-            "chars": 1602,
-            "bytes": 3388,
-            "sha256": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+            "chars": 3203,
+            "bytes": 6981,
+            "sha256": "d824affcd66da80a04a6b2f701a05c61d94da4b1d5c7b90927053e5d870b5f30",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 8060,
-        "bytes": 17677,
+        "chars": 10067,
+        "bytes": 22196,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 649,
-        "bytes": 1600,
+        "chars": 2656,
+        "bytes": 6119,
         "tokens": null,
         "read_events": 0
       }
@@ -1290,21 +1290,21 @@
         "files": [
           {
             "path": "bank-writing/SKILL.md",
-            "chars": 5912,
-            "bytes": 13916,
-            "sha256": "d06be6c8fab95222528480368d053d75f6ebef4a3c41dad8052275fac374f693",
+            "chars": 6138,
+            "bytes": 14444,
+            "sha256": "6dc6e108c3f28a81841b635ba90ab24288c06f4bec43e05491b2489c5a8cc960",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5912,
-        "bytes": 13916,
+        "chars": 6138,
+        "bytes": 14444,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 321,
-        "bytes": 825,
+        "chars": 547,
+        "bytes": 1353,
         "tokens": null,
         "read_events": 0
       }
@@ -1340,28 +1340,28 @@
         "files": [
           {
             "path": "artifact-lifecycle/SKILL.md",
-            "chars": 3586,
-            "bytes": 8363,
-            "sha256": "3a03eca68f7886141ba692bd6f23ab85bf10e49cc2379b6fe5b27212721e41d6",
+            "chars": 4221,
+            "bytes": 9966,
+            "sha256": "a62a369c373b6aac78b314c4520e3953363bb8a06edc3152238c39d7a890a9c6",
             "tokens": null
           },
           {
             "path": "artifact-lifecycle/references/contract.md",
-            "chars": 4332,
-            "bytes": 9153,
-            "sha256": "f66ce8abfd299f048d3794960aba069116d072700e2190aa049fe60423f3f103",
+            "chars": 4458,
+            "bytes": 9409,
+            "sha256": "f246c90802ce21c31dec4f7aecd465c8aa13bd9c5b367847169d20d332ec9e7a",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 7918,
-        "bytes": 17516,
+        "chars": 8679,
+        "bytes": 19375,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 738,
-        "bytes": 1771,
+        "chars": 1499,
+        "bytes": 3630,
         "tokens": null,
         "read_events": 0
       }
@@ -1433,21 +1433,21 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4882,
-            "bytes": 7983,
-            "sha256": "8051b93e173ea3c9f5d15f50dd17c8b08b6e6e45cb23ee385b1e6661cca6b452",
+            "chars": 4908,
+            "bytes": 7991,
+            "sha256": "f61afb6272c6aa9f5ea5b960fd8c43486c34eb63e86b19ba07b4c204b7f0c906",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 4882,
-        "bytes": 7983,
+        "chars": 4908,
+        "bytes": 7991,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 502,
-        "bytes": 988,
+        "chars": 528,
+        "bytes": 996,
         "tokens": null,
         "read_events": 0
       }
@@ -1476,21 +1476,21 @@
         "files": [
           {
             "path": "pptx/SKILL.md",
-            "chars": 5830,
-            "bytes": 12766,
-            "sha256": "9a72d776485cc822ee27287db3574fa9cafadbc2b8c937c577f8f1ad10cace66",
+            "chars": 6359,
+            "bytes": 14077,
+            "sha256": "2f06fcabc2d9aeafcd4ec84d470ed341ed277d53d6da4b451bc46304ba551db9",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5830,
-        "bytes": 12766,
+        "chars": 6359,
+        "bytes": 14077,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 682,
-        "bytes": 1573,
+        "chars": 1211,
+        "bytes": 2884,
         "tokens": null,
         "read_events": 0
       }
@@ -1519,21 +1519,21 @@
         "files": [
           {
             "path": "pptx/SKILL.md",
-            "chars": 5830,
-            "bytes": 12766,
-            "sha256": "9a72d776485cc822ee27287db3574fa9cafadbc2b8c937c577f8f1ad10cace66",
+            "chars": 6359,
+            "bytes": 14077,
+            "sha256": "2f06fcabc2d9aeafcd4ec84d470ed341ed277d53d6da4b451bc46304ba551db9",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5830,
-        "bytes": 12766,
+        "chars": 6359,
+        "bytes": 14077,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 682,
-        "bytes": 1573,
+        "chars": 1211,
+        "bytes": 2884,
         "tokens": null,
         "read_events": 0
       }
@@ -1562,21 +1562,21 @@
         "files": [
           {
             "path": "pptx/SKILL.md",
-            "chars": 5830,
-            "bytes": 12766,
-            "sha256": "9a72d776485cc822ee27287db3574fa9cafadbc2b8c937c577f8f1ad10cace66",
+            "chars": 6359,
+            "bytes": 14077,
+            "sha256": "2f06fcabc2d9aeafcd4ec84d470ed341ed277d53d6da4b451bc46304ba551db9",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5830,
-        "bytes": 12766,
+        "chars": 6359,
+        "bytes": 14077,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 682,
-        "bytes": 1573,
+        "chars": 1211,
+        "bytes": 2884,
         "tokens": null,
         "read_events": 0
       }
@@ -1605,28 +1605,28 @@
         "files": [
           {
             "path": "pptx/SKILL.md",
-            "chars": 5830,
-            "bytes": 12766,
-            "sha256": "9a72d776485cc822ee27287db3574fa9cafadbc2b8c937c577f8f1ad10cace66",
+            "chars": 6359,
+            "bytes": 14077,
+            "sha256": "2f06fcabc2d9aeafcd4ec84d470ed341ed277d53d6da4b451bc46304ba551db9",
             "tokens": null
           },
           {
             "path": "pptx/references/bounded-reading.md",
-            "chars": 2017,
-            "bytes": 4181,
-            "sha256": "7fdeffe7640fa69bfb2764248962d76f6bd75e59e3d163de4d59868db8ca275f",
+            "chars": 2187,
+            "bytes": 4587,
+            "sha256": "3ee86bb2782946c78230d59d5b25397dbf128333f6a8bac522d36f0c79ef3a89",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 7847,
-        "bytes": 16947,
+        "chars": 8546,
+        "bytes": 18664,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 2699,
-        "bytes": 5754,
+        "chars": 3398,
+        "bytes": 7471,
         "tokens": null,
         "read_events": 1
       }
@@ -1655,21 +1655,21 @@
         "files": [
           {
             "path": "pptx/SKILL.md",
-            "chars": 5830,
-            "bytes": 12766,
-            "sha256": "9a72d776485cc822ee27287db3574fa9cafadbc2b8c937c577f8f1ad10cace66",
+            "chars": 6359,
+            "bytes": 14077,
+            "sha256": "2f06fcabc2d9aeafcd4ec84d470ed341ed277d53d6da4b451bc46304ba551db9",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5830,
-        "bytes": 12766,
+        "chars": 6359,
+        "bytes": 14077,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 682,
-        "bytes": 1573,
+        "chars": 1211,
+        "bytes": 2884,
         "tokens": null,
         "read_events": 0
       }
@@ -1705,28 +1705,28 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
             "path": "et/references/bounded-reading.md",
-            "chars": 3498,
-            "bytes": 7424,
-            "sha256": "e469a6aff7bbac70f20a2ab842cd2d0837423ba708c998fe97b7ea7374df68c6",
+            "chars": 4201,
+            "bytes": 9091,
+            "sha256": "c2233534d2c43083620ed3a854bdb2c2cbead50ad0e41fdc33a15b251fd0bbbd",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 10739,
-        "bytes": 22811,
+        "chars": 11891,
+        "bytes": 25465,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1198,
-        "bytes": 2718,
+        "chars": 2350,
+        "bytes": 5372,
         "tokens": null,
         "read_events": 0
       }
@@ -1762,9 +1762,9 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
@@ -1777,13 +1777,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 10326,
-        "bytes": 21710,
+        "chars": 10775,
+        "bytes": 22697,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -5660,
-        "bytes": -10304,
+        "chars": -5211,
+        "bytes": -9317,
         "tokens": null,
         "read_events": 0
       }
@@ -1819,9 +1819,9 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
@@ -1834,13 +1834,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 13129,
-        "bytes": 27339,
+        "chars": 13578,
+        "bytes": 28326,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -2857,
-        "bytes": -4675,
+        "chars": -2408,
+        "bytes": -3688,
         "tokens": null,
         "read_events": 0
       }
@@ -1876,9 +1876,9 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
@@ -1891,13 +1891,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 11001,
-        "bytes": 21835,
+        "chars": 11450,
+        "bytes": 22822,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 794,
-        "bytes": 1694,
+        "chars": 1243,
+        "bytes": 2681,
         "tokens": null,
         "read_events": 0
       }
@@ -1940,16 +1940,16 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
             "path": "et/references/bounded-reading.md",
-            "chars": 3498,
-            "bytes": 7424,
-            "sha256": "e469a6aff7bbac70f20a2ab842cd2d0837423ba708c998fe97b7ea7374df68c6",
+            "chars": 4201,
+            "bytes": 9091,
+            "sha256": "c2233534d2c43083620ed3a854bdb2c2cbead50ad0e41fdc33a15b251fd0bbbd",
             "tokens": null
           },
           {
@@ -1962,13 +1962,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 14199,
-        "bytes": 28537,
+        "chars": 15351,
+        "bytes": 31191,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1198,
-        "bytes": 2718,
+        "chars": 2350,
+        "bytes": 5372,
         "tokens": null,
         "read_events": 0
       }
@@ -2004,28 +2004,28 @@
         "files": [
           {
             "path": "table-workflow/SKILL.md",
-            "chars": 5616,
-            "bytes": 12563,
-            "sha256": "3d83c774fd7f88fa3ef464683e9fbb78ca545dd8524d3da77739c8a35e1d7a52",
+            "chars": 6450,
+            "bytes": 14659,
+            "sha256": "fabaa6853514a2bfa618a8b82a8b42bfa875a695889c8bb1db358cf6333c767a",
             "tokens": null
           },
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 13382,
-        "bytes": 27072,
+        "chars": 14685,
+        "bytes": 30177,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -1898,
-        "bytes": 605,
+        "chars": -595,
+        "bytes": 3710,
         "tokens": null,
         "read_events": 0
       }
@@ -2082,23 +2082,23 @@
         "files": [
           {
             "path": "table-workflow/SKILL.md",
-            "chars": 5616,
-            "bytes": 12563,
-            "sha256": "3d83c774fd7f88fa3ef464683e9fbb78ca545dd8524d3da77739c8a35e1d7a52",
+            "chars": 6450,
+            "bytes": 14659,
+            "sha256": "fabaa6853514a2bfa618a8b82a8b42bfa875a695889c8bb1db358cf6333c767a",
             "tokens": null
           },
           {
             "path": "table-workflow/references/plan-contract.md",
-            "chars": 7006,
-            "bytes": 13166,
-            "sha256": "4aa2db39d72b837b9da4aa95848bc344b84aabafac15602b56faf0a032a3ff11",
+            "chars": 7010,
+            "bytes": 13204,
+            "sha256": "00d56c79c397adf13008489430d5a3bd822b047634727dd87fd455683de00509",
             "tokens": null
           },
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2118,13 +2118,13 @@
         ],
         "read_events": 5,
         "unique_files": 5,
-        "chars": 29894,
-        "bytes": 51774,
+        "chars": 31201,
+        "bytes": 54917,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -1632,
-        "bytes": 991,
+        "chars": -325,
+        "bytes": 4134,
         "tokens": null,
         "read_events": 0
       }
@@ -2181,30 +2181,30 @@
         "files": [
           {
             "path": "table-workflow/SKILL.md",
-            "chars": 5616,
-            "bytes": 12563,
-            "sha256": "3d83c774fd7f88fa3ef464683e9fbb78ca545dd8524d3da77739c8a35e1d7a52",
+            "chars": 6450,
+            "bytes": 14659,
+            "sha256": "fabaa6853514a2bfa618a8b82a8b42bfa875a695889c8bb1db358cf6333c767a",
             "tokens": null
           },
           {
             "path": "table-workflow/references/plan-contract.md",
-            "chars": 7006,
-            "bytes": 13166,
-            "sha256": "4aa2db39d72b837b9da4aa95848bc344b84aabafac15602b56faf0a032a3ff11",
+            "chars": 7010,
+            "bytes": 13204,
+            "sha256": "00d56c79c397adf13008489430d5a3bd822b047634727dd87fd455683de00509",
             "tokens": null
           },
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
@@ -2217,13 +2217,13 @@
         ],
         "read_events": 5,
         "unique_files": 5,
-        "chars": 31389,
-        "bytes": 62073,
+        "chars": 33145,
+        "bytes": 66203,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -1062,
-        "bytes": 2399,
+        "chars": 694,
+        "bytes": 6529,
         "tokens": null,
         "read_events": 0
       }
@@ -2259,9 +2259,9 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 6458,
-            "bytes": 14289,
-            "sha256": "89fc996c70ab208f58451c0d723309165490857afffdf37b5584a7ebbeb8a340",
+            "chars": 6864,
+            "bytes": 15215,
+            "sha256": "62742c7adf75ab272f32b3b7f3221dd12c8539f69ac837bf4b29e5e314ad1885",
             "tokens": null
           },
           {
@@ -2274,13 +2274,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 14819,
-        "bytes": 31272,
+        "chars": 15225,
+        "bytes": 32198,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 996,
-        "bytes": 2472,
+        "chars": 1402,
+        "bytes": 3398,
         "tokens": null,
         "read_events": 0
       }
@@ -2323,16 +2323,16 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 6458,
-            "bytes": 14289,
-            "sha256": "89fc996c70ab208f58451c0d723309165490857afffdf37b5584a7ebbeb8a340",
+            "chars": 6864,
+            "bytes": 15215,
+            "sha256": "62742c7adf75ab272f32b3b7f3221dd12c8539f69ac837bf4b29e5e314ad1885",
             "tokens": null
           },
           {
             "path": "ofd/references/output-views.md",
-            "chars": 1602,
-            "bytes": 3388,
-            "sha256": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+            "chars": 3203,
+            "bytes": 6981,
+            "sha256": "d824affcd66da80a04a6b2f701a05c61d94da4b1d5c7b90927053e5d870b5f30",
             "tokens": null
           },
           {
@@ -2345,13 +2345,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 11245,
-        "bytes": 24487,
+        "chars": 13252,
+        "bytes": 29006,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 649,
-        "bytes": 1600,
+        "chars": 2656,
+        "bytes": 6119,
         "tokens": null,
         "read_events": 0
       }
@@ -2394,16 +2394,16 @@
         "files": [
           {
             "path": "pptx/SKILL.md",
-            "chars": 5830,
-            "bytes": 12766,
-            "sha256": "9a72d776485cc822ee27287db3574fa9cafadbc2b8c937c577f8f1ad10cace66",
+            "chars": 6359,
+            "bytes": 14077,
+            "sha256": "2f06fcabc2d9aeafcd4ec84d470ed341ed277d53d6da4b451bc46304ba551db9",
             "tokens": null
           },
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
@@ -2416,13 +2416,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 18959,
-        "bytes": 40105,
+        "chars": 19937,
+        "bytes": 42403,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -2175,
-        "bytes": -3102,
+        "chars": -1197,
+        "bytes": -804,
         "tokens": null,
         "read_events": 0
       }
@@ -2458,9 +2458,9 @@
         "files": [
           {
             "path": "et/SKILL.md",
-            "chars": 7241,
-            "bytes": 15387,
-            "sha256": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+            "chars": 7690,
+            "bytes": 16374,
+            "sha256": "5da9611bfd0587a386c1cc66829ab9d4a8988be6b5990b4979691422d405fe58",
             "tokens": null
           },
           {
@@ -2473,13 +2473,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 17681,
-        "bytes": 35521,
+        "chars": 18130,
+        "bytes": 36508,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1695,
-        "bytes": 3507,
+        "chars": 2144,
+        "bytes": 4494,
         "tokens": null,
         "read_events": 0
       }
@@ -2522,9 +2522,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2544,13 +2544,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 17253,
-        "bytes": 27666,
+        "chars": 17722,
+        "bytes": 28675,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -2593,9 +2593,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2615,13 +2615,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 18441,
-        "bytes": 28848,
+        "chars": 18910,
+        "bytes": 29857,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -2664,9 +2664,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2686,13 +2686,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 18324,
-        "bytes": 28747,
+        "chars": 18793,
+        "bytes": 29756,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -2735,9 +2735,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2757,13 +2757,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 16782,
-        "bytes": 27193,
+        "chars": 17251,
+        "bytes": 28202,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -2806,9 +2806,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2828,13 +2828,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 14987,
-        "bytes": 25394,
+        "chars": 15456,
+        "bytes": 26403,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -2877,9 +2877,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2899,13 +2899,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 16399,
-        "bytes": 26806,
+        "chars": 16868,
+        "bytes": 27815,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -15326,
-        "bytes": -11107,
+        "chars": -14857,
+        "bytes": -10098,
         "tokens": null,
         "read_events": 0
       }
@@ -2948,9 +2948,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -2970,13 +2970,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 17116,
-        "bytes": 27521,
+        "chars": 17585,
+        "bytes": 28530,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -3026,9 +3026,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3055,13 +3055,13 @@
         ],
         "read_events": 4,
         "unique_files": 4,
-        "chars": 22420,
-        "bytes": 33445,
+        "chars": 22889,
+        "bytes": 34454,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16571,
-        "bytes": -12294,
+        "chars": -16102,
+        "bytes": -11285,
         "tokens": null,
         "read_events": 0
       }
@@ -3104,9 +3104,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3126,13 +3126,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 16147,
-        "bytes": 26552,
+        "chars": 16616,
+        "bytes": 27561,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16674,
-        "bytes": -12455,
+        "chars": -16205,
+        "bytes": -11446,
         "tokens": null,
         "read_events": 0
       }
@@ -3175,9 +3175,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3197,13 +3197,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 15396,
-        "bytes": 25815,
+        "chars": 15865,
+        "bytes": 26824,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16292,
-        "bytes": -12059,
+        "chars": -15823,
+        "bytes": -11050,
         "tokens": null,
         "read_events": 0
       }
@@ -3246,9 +3246,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3268,13 +3268,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 14764,
-        "bytes": 25182,
+        "chars": 15233,
+        "bytes": 26191,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -3317,9 +3317,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3339,13 +3339,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 14941,
-        "bytes": 25346,
+        "chars": 15410,
+        "bytes": 26355,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -3388,9 +3388,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3410,13 +3410,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 14295,
-        "bytes": 24700,
+        "chars": 14764,
+        "bytes": 25709,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -3459,9 +3459,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3481,13 +3481,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 14865,
-        "bytes": 25284,
+        "chars": 15334,
+        "bytes": 26293,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16673,
-        "bytes": -12440,
+        "chars": -16204,
+        "bytes": -11431,
         "tokens": null,
         "read_events": 0
       }
@@ -3530,9 +3530,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3552,13 +3552,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 13804,
-        "bytes": 24209,
+        "chars": 14273,
+        "bytes": 25218,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -3601,9 +3601,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3623,13 +3623,13 @@
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 16737,
-        "bytes": 27274,
+        "chars": 17206,
+        "bytes": 28283,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16670,
-        "bytes": -12451,
+        "chars": -16201,
+        "bytes": -11442,
         "tokens": null,
         "read_events": 0
       }
@@ -3679,9 +3679,9 @@
         "files": [
           {
             "path": "xlsx/SKILL.md",
-            "chars": 7766,
-            "bytes": 14509,
-            "sha256": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7",
+            "chars": 8235,
+            "bytes": 15518,
+            "sha256": "9562f95c6a49e25871c3293467abfd8ee033d6893bdc53037dbe9c08bbd65ad3",
             "tokens": null
           },
           {
@@ -3708,13 +3708,13 @@
         ],
         "read_events": 4,
         "unique_files": 4,
-        "chars": 17222,
-        "bytes": 29311,
+        "chars": 17691,
+        "bytes": 30320,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -16221,
-        "bytes": -11886,
+        "chars": -15752,
+        "bytes": -10877,
         "tokens": null,
         "read_events": 0
       }
