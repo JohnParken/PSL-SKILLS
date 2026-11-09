@@ -20,16 +20,16 @@
 
 | Skill | 基线版本 | 文档内容与核心边界 |
 | --- | --- | --- |
-| [bank-writing](skills/bank-writing.md) | 20261108.0102.2369 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
+| [bank-writing](skills/bank-writing.md) | 20261109.1939.2825 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
 | [docx](skills/docx.md) | 20261109.1818.2343 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
-| [xlsx](skills/xlsx.md) | 20261109.1818.2343 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261109.1911.3810 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
-| [et](skills/et.md) | 20261109.1911.3810 | ET/ETT 的 BIFF8/OOXML 保存值读取、表头与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261109.1911.3810 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建，不渲染或验签。 |
-| [pptx](skills/pptx.md) | 20261109.1911.3810 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
-| [table-workflow](skills/table-workflow.md) | 20261109.0953.3643 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
-| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261109.0953.3643 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
-| [skill-development-standards](skills/skill-development-standards.md) | 20261109.1818.2343 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
+| [xlsx](skills/xlsx.md) | 20261109.1939.2825 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [wps](skills/wps.md) | 20261109.1939.2825 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
+| [et](skills/et.md) | 20261109.1939.2825 | ET/ETT 的 BIFF8/OOXML 保存值读取、表头与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261109.1939.2825 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建，不渲染或验签。 |
+| [pptx](skills/pptx.md) | 20261109.1939.2825 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
+| [table-workflow](skills/table-workflow.md) | 20261109.1939.2825 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
+| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261109.1939.2825 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
+| [skill-development-standards](skills/skill-development-standards.md) | 20261109.1939.2825 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
 ## 整体架构图
 

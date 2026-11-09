@@ -74,3 +74,7 @@ XLSX纯概况after使用入口完整命令，不预读bounded-reading；baseline
 ## 归档提示维护后的当前快照（2026-11-07）
 
 归档提示与入口版本更新后，人工复核31个选择案例和57个读取计划，任务/格式边界及计划路径不变，仅刷新当前入口哈希与加载快照。更新前的当前快照逐字保存在 `runtime_loading_profiles_before_archive_notice_20261107.json`；它与原 `runtime_loading_profiles_history_20261107.json` 均为历史证据，预期检查为 stale，不为通过而改写。新快照仍只测计划读取字节/字符，不代表宿主 token、选路或云端上传验证。
+
+## 环境与首步自检前移（2026-11-09）
+
+人工复核31个选择案例及57个读取计划，入口调整未改变技能的任务、格式边界与按需参考；保留各技能自己的依赖和自检。更新前的当前选择与加载快照分别保存在 `skill_selection_current_cases_before_environment_alignment_20261109.json` 与 `runtime_loading_profiles_before_environment_alignment_20261109.json`。新快照由 macOS / Python 3.12.12 重算，只反映静态计划读取的字符、字节与哈希，不代表真实模型选路、宿主 usage 或业务验收。

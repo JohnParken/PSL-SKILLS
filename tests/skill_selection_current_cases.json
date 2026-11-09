@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
-  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。",
+  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。 2026-11-09 环境说明调整：人工复核31例选择期望及57个计划读取路径，业务描述、触发边界与按需参考不变；将任务目录、自检前移并保留各技能真实依赖，更新入口哈希。此为人工预期与静态测量，不代表模型选路或宿主 usage 实测。",
   "entry_sha256": {
-    "artifact-lifecycle": "f6de41a1f229fd7eae90bc2c2803d765b74dc83eb05fbeb4ee54281c88ee1d20",
-    "bank-writing": "83317df3c37dfa1eabadc28b38ed28d2b97e2ff958a7e89c44c606d8df7d8435",
+    "artifact-lifecycle": "9049bf4bb21a8f4ac9530d74b2df28fab020d2c9538697962329b0ceece5c466",
+    "bank-writing": "3449bb1a25456c3c16e7ef65c8a739c7e86220c07cae0d128d8211a1ca7d3181",
     "docx": "96d787dd47b7950963714ecd3f5afbfcc5f58ac35ac7ac419078a02e818cbe7b",
-    "et": "2b286c1df6f98c09e572ce56dbb3f3bc6833cd6c14384f67eb6e549801d06f59",
-    "ofd": "1086a30260cafe394eee02fedaf8365f08cff34ba5a7a1c7adedf8c7c07122a3",
-    "pptx": "4415cc3d71bbf1783c74db34d3f7049add98c7fbecea84aef91ca75ba4399bc8",
-    "skill-development-standards": "c1bf7754e735252af08c1fdd38be7b8d4cb0760d2c885bc9590c75cdb21e9317",
-    "table-workflow": "ded5c18ae1bb4134af69cbda42cca00ca9d7c2cc9a67919f692a07367d62b548",
-    "wps": "cbde1e82f19acf74a46afd3235d94f9ea70c2e4ad970103b4f22c388c20b7121",
-    "xlsx": "1e9fd0d879d48c5fba55496c133dea4aaa627d0dde3f579ea0bbef46dfba7840"
+    "et": "cdf750aed51d1ca9daec6b01d84cc04836a106b1d8292b48bc17e0dc012e7921",
+    "ofd": "f3466737906588659a3298db0c887268d9e38a61e184d90102fd438cfd033298",
+    "pptx": "9373516baafd9070ccc251aaf5502f28d0da463c25114305ba6a3f6efca77a50",
+    "skill-development-standards": "f911d79be86ce4bd7cbf4fdf41bc99000366fd4c4b1346263360371fb9d47081",
+    "table-workflow": "3e26c085f8705745d25458635e61d5b615142c2b370d30950dd21fc11524989f",
+    "wps": "09a5527cb52749186bd2bac9cd3e28171181aeb3d38c8cc6259cbaa2d865b069",
+    "xlsx": "b89243dcef1fe2223a6e48e22b3987f18f954bc4b58869a1f88c8b1801d0961e"
   },
   "cases": [
     {

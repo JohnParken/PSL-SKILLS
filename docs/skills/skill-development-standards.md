@@ -1,6 +1,6 @@
 # skill-development-standards：开发规范与只读结构检查
 
-> 文档核对日期：2026-11-07；源码基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1818.2343`。本文说明规范、工具及其边界，不修改或替代原规范。
+> 文档核对日期：2026-11-07；源码基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.1939.2825`。本文说明规范、工具及其边界，不修改或替代原规范。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 

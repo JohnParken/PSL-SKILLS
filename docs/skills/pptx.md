@@ -1,6 +1,6 @@
 # PPTX：受限 SVG 到可编辑演示文稿
 
-文档核对日期：2026-11-07。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261109.1911.3810`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
+文档核对日期：2026-11-07。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261109.1939.2825`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
