@@ -1,0 +1,1842 @@
+{
+  "status": "packaged",
+  "packages": [
+    {
+      "status": "packaged",
+      "skill": "artifact-lifecycle",
+      "version": "20261109.0953.3643",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/artifact-lifecycle-runtime-20261109.0953.3643.zip",
+      "files": 12,
+      "uncompressed_bytes": 72901,
+      "zip_bytes": 28452,
+      "sha256": "1af3de3d54d00da9a3003139fd4c52ba2bca9780b660cc4e6ef281256dccdcc3",
+      "excluded_files": [
+        {
+          "path": "scripts/test/__init__.py",
+          "bytes": 79,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_lifecycle.py",
+          "bytes": 10273,
+          "reason": "source-only tests"
+        }
+      ],
+      "excluded_bytes": 10352,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "bank-writing",
+      "version": "20261108.0102.2369",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/bank-writing-runtime-20261108.0102.2369.zip",
+      "files": 21,
+      "uncompressed_bytes": 168693,
+      "zip_bytes": 90082,
+      "sha256": "b98de8c4377e04c26d9570d37be69e386eccd7a2baea6408b06b7e5bf071f0d4",
+      "excluded_files": [],
+      "excluded_bytes": 0,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "docx",
+      "version": "20261109.0953.3643",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/docx-runtime-20261109.0953.3643.zip",
+      "files": 79,
+      "uncompressed_bytes": 838611,
+      "zip_bytes": 295752,
+      "sha256": "d183146e614ea011310d3b6cdaa7fb4120307674e4a14bc8cbf608aa7d2f717e",
+      "excluded_files": [
+        {
+          "path": "scripts/test/__init__.py",
+          "bytes": 79,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/fixture_delivery.py",
+          "bytes": 523,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/fixtures/libreoffice-control.docx",
+          "bytes": 5006,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/reference_loading_audit.py",
+          "bytes": 12797,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_archive_collision.py",
+          "bytes": 9659,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_archive_deliverables.py",
+          "bytes": 12825,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_cleanup_task.py",
+          "bytes": 17205,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_cli_task_paths.py",
+          "bytes": 3376,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_delivery_api.py",
+          "bytes": 26910,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_bound_pages.py",
+          "bytes": 14797,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_compact_receipt.py",
+          "bytes": 6046,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_controlled_flow.py",
+          "bytes": 14520,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_delivery.py",
+          "bytes": 42606,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_editing.py",
+          "bytes": 16076,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_generation.py",
+          "bytes": 8028,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_io.py",
+          "bytes": 13780,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_layout_delivery.py",
+          "bytes": 12829,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_legacy_entry.py",
+          "bytes": 2486,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_official_pagination_defaults.py",
+          "bytes": 6656,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_output_channels.py",
+          "bytes": 1652,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_p1_layout.py",
+          "bytes": 10654,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_p2_layout.py",
+          "bytes": 16870,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_pagination_governance.py",
+          "bytes": 10571,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_read_fastpath.py",
+          "bytes": 10382,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_receipt_cleanup.py",
+          "bytes": 15184,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_reference_loading.py",
+          "bytes": 7817,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_routing.py",
+          "bytes": 4874,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_runtime.py",
+          "bytes": 5643,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_simple_fastpath.py",
+          "bytes": 3763,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_stability.py",
+          "bytes": 9457,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_task_lazy_routing.py",
+          "bytes": 3826,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_task_reliability.py",
+          "bytes": 24684,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_token_routing.py",
+          "bytes": 3878,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_docx_typography.py",
+          "bytes": 10354,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_edit_delivery.py",
+          "bytes": 25263,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_flat_temporary.py",
+          "bytes": 7134,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_output_location.py",
+          "bytes": 17225,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_root_delivery_names.py",
+          "bytes": 5216,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_run_docx_task.py",
+          "bytes": 27475,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_runtime_modules.py",
+          "bytes": 5531,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_terminal_cleanup.py",
+          "bytes": 5110,
+          "reason": "source-only tests"
+        }
+      ],
+      "excluded_bytes": 458767,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "et",
+      "version": "20261109.0953.3643",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/et-runtime-20261109.0953.3643.zip",
+      "files": 70,
+      "uncompressed_bytes": 602622,
+      "zip_bytes": 238851,
+      "sha256": "1cf38dcb9d5fb908f79df6edc57903ddfe79410002cf54974b9bc178ae961460",
+      "excluded_files": [
+        {
+          "path": "scripts/__pycache__/read_et.cpython-312.pyc",
+          "bytes": 10906,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/read_wps.cpython-312.pyc",
+          "bytes": 894,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_et_cli.cpython-312.pyc",
+          "bytes": 3630,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_accounting.cpython-312.pyc",
+          "bytes": 5105,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8.cpython-312.pyc",
+          "bytes": 29443,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8_audit.cpython-312.pyc",
+          "bytes": 17153,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8_builtin_names.cpython-312.pyc",
+          "bytes": 19700,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8_names.cpython-312.pyc",
+          "bytes": 15162,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8_noncell.cpython-312.pyc",
+          "bytes": 14078,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8_print_titles_memfunc.cpython-312.pyc",
+          "bytes": 9981,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8_salvage.cpython-312.pyc",
+          "bytes": 17551,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff8_salvage_hardening.cpython-312.pyc",
+          "bytes": 14034,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff_codepage_decl.cpython-312.pyc",
+          "bytes": 10422,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff_reading.cpython-312.pyc",
+          "bytes": 24903,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_biff_tablestyles.cpython-312.pyc",
+          "bytes": 13077,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_cfb.cpython-312.pyc",
+          "bytes": 41652,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_continue.cpython-312.pyc",
+          "bytes": 8834,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_data_policy.cpython-312.pyc",
+          "bytes": 18054,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_dxf.cpython-312.pyc",
+          "bytes": 11515,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_dxf_integration.cpython-312.pyc",
+          "bytes": 9366,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_dxf_readability.cpython-312.pyc",
+          "bytes": 9887,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_dxf_semantics.cpython-312.pyc",
+          "bytes": 12317,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_embedded_charts.cpython-312.pyc",
+          "bytes": 11829,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_et_capacity.cpython-312.pyc",
+          "bytes": 13359,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_et_errors.cpython-312.pyc",
+          "bytes": 10552,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_file_access.cpython-312.pyc",
+          "bytes": 19665,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_format_rules.cpython-312.pyc",
+          "bytes": 6067,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_formula_groups.cpython-312.pyc",
+          "bytes": 13148,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_internal_links.cpython-312.pyc",
+          "bytes": 3380,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_iso_date.cpython-312.pyc",
+          "bytes": 5649,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_legacy_compat.cpython-312.pyc",
+          "bytes": 24213,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_numeric.cpython-312.pyc",
+          "bytes": 6853,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_ooxml_sheet.cpython-312.pyc",
+          "bytes": 14684,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_phonetic.cpython-312.pyc",
+          "bytes": 19672,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_pure_tables.cpython-312.pyc",
+          "bytes": 18221,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_read_view.cpython-312.pyc",
+          "bytes": 19589,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_rich_strings.cpython-312.pyc",
+          "bytes": 14831,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_row_column_formats.cpython-312.pyc",
+          "bytes": 5352,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_sheet_comments.cpython-312.pyc",
+          "bytes": 9551,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_spreadsheet_stability.cpython-312.pyc",
+          "bytes": 5598,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_style_inheritance.cpython-312.pyc",
+          "bytes": 9256,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_template_metadata.cpython-312.pyc",
+          "bytes": 8111,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_visibility.cpython-312.pyc",
+          "bytes": 7396,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_vml_notes.cpython-312.pyc",
+          "bytes": 7620,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/verify_et_samples.cpython-312.pyc",
+          "bytes": 9953,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_access.cpython-312.pyc",
+          "bytes": 9566,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8.cpython-312.pyc",
+          "bytes": 85698,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_audit.cpython-312.pyc",
+          "bytes": 11685,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_audit_sources.cpython-312.pyc",
+          "bytes": 7131,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_charts.cpython-312.pyc",
+          "bytes": 4932,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_headers.cpython-312.pyc",
+          "bytes": 7112,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_merges.cpython-312.pyc",
+          "bytes": 2516,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_names.cpython-312.pyc",
+          "bytes": 11759,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_noncell.cpython-312.pyc",
+          "bytes": 1161,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_biff8_tablestyles.cpython-312.pyc",
+          "bytes": 4319,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_cfb.cpython-312.pyc",
+          "bytes": 27265,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_diagnostics.cpython-312.pyc",
+          "bytes": 17214,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_dxf.cpython-312.pyc",
+          "bytes": 9435,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_format_rules.cpython-312.pyc",
+          "bytes": 4192,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_iso_date.cpython-312.pyc",
+          "bytes": 2360,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_numeric.cpython-312.pyc",
+          "bytes": 11656,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_ooxml.cpython-312.pyc",
+          "bytes": 48841,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_ooxml_sheet.cpython-312.pyc",
+          "bytes": 40936,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_read_view.cpython-312.pyc",
+          "bytes": 9265,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_result.cpython-312.pyc",
+          "bytes": 1232,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_sheet_comments.cpython-312.pyc",
+          "bytes": 8069,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_style_formats.cpython-312.pyc",
+          "bytes": 5030,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_visibility.cpython-312.pyc",
+          "bytes": 7055,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_vml_notes.cpython-312.pyc",
+          "bytes": 8735,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/test/__init__.py",
+          "bytes": 79,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_et_cli.py",
+          "bytes": 1971,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_et_cli_contract.py",
+          "bytes": 2809,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_et_output_budget.py",
+          "bytes": 14521,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_et_table_analysis.py",
+          "bytes": 23341,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_et_table_quality_preview.py",
+          "bytes": 16495,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_et_table_row_selection.py",
+          "bytes": 13994,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_metadata_api.py",
+          "bytes": 6242,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_unknown_drawing_objects.py",
+          "bytes": 2964,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_accounting.py",
+          "bytes": 2681,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8.py",
+          "bytes": 14020,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_audit.py",
+          "bytes": 10454,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_builtin_names.py",
+          "bytes": 12103,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_conditional.py",
+          "bytes": 10069,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_drawing_notes.py",
+          "bytes": 11920,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_names.py",
+          "bytes": 8814,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_noncell.py",
+          "bytes": 8468,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_print_titles_memfunc.py",
+          "bytes": 6413,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_salvage.py",
+          "bytes": 10103,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff8_salvage_hardening.py",
+          "bytes": 8819,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff_codepage_decl.py",
+          "bytes": 6522,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff_reading.py",
+          "bytes": 15603,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_biff_tablestyles.py",
+          "bytes": 6306,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_cfb.py",
+          "bytes": 13784,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_continue.py",
+          "bytes": 3942,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_data_policy.py",
+          "bytes": 9203,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_dxf.py",
+          "bytes": 6626,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_dxf_integration.py",
+          "bytes": 5578,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_dxf_readability.py",
+          "bytes": 5750,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_dxf_semantics.py",
+          "bytes": 6939,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_embedded_charts.py",
+          "bytes": 5496,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_et_capacity.py",
+          "bytes": 6602,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_et_errors.py",
+          "bytes": 5474,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_file_access.py",
+          "bytes": 11194,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_format_rules.py",
+          "bytes": 3711,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_formula_groups.py",
+          "bytes": 5768,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_internal_links.py",
+          "bytes": 1874,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_iso_date.py",
+          "bytes": 3202,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_legacy_compat.py",
+          "bytes": 7406,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_numeric.py",
+          "bytes": 3694,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_ooxml_sheet.py",
+          "bytes": 8113,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_phonetic.py",
+          "bytes": 10892,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_pure_tables.py",
+          "bytes": 9387,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_read_view.py",
+          "bytes": 9551,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_rich_strings.py",
+          "bytes": 7325,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_row_column_formats.py",
+          "bytes": 3057,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_sheet_comments.py",
+          "bytes": 6090,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_spreadsheet_stability.py",
+          "bytes": 2948,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_style_inheritance.py",
+          "bytes": 4854,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_template_compatibility.py",
+          "bytes": 12697,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_template_metadata.py",
+          "bytes": 4177,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_visibility.py",
+          "bytes": 3193,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_vml_notes.py",
+          "bytes": 4393,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/verify_et_analysis.py",
+          "bytes": 10951,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/verify_et_samples.py",
+          "bytes": 7559,
+          "reason": "source-only tests"
+        }
+      ],
+      "excluded_bytes": 1355518,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "ofd",
+      "version": "20261109.0953.3643",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/ofd-runtime-20261109.0953.3643.zip",
+      "files": 21,
+      "uncompressed_bytes": 9028686,
+      "zip_bytes": 6042483,
+      "sha256": "34af0b45607aeb924c2a266691964a1cdc8ebfa2655bcdad27715f17d57e6217",
+      "excluded_files": [
+        {
+          "path": "scripts/test/__init__.py",
+          "bytes": 79,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd.py",
+          "bytes": 32792,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd_bundled_fonts.py",
+          "bytes": 10632,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd_compat.py",
+          "bytes": 10548,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd_generate.py",
+          "bytes": 28118,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd_postfix_review.py",
+          "bytes": 7051,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd_resource_recovery.py",
+          "bytes": 7643,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd_structure.py",
+          "bytes": 21983,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_ofd_views.py",
+          "bytes": 5627,
+          "reason": "source-only tests"
+        }
+      ],
+      "excluded_bytes": 124473,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "pptx",
+      "version": "20261108.0102.2369",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/pptx-runtime-20261108.0102.2369.zip",
+      "files": 88,
+      "uncompressed_bytes": 2338337,
+      "zip_bytes": 494379,
+      "sha256": "f7b14e770e2b789c776777d4c8986e2ea4afabe0c06abdf150092467b651b0b5",
+      "excluded_files": [
+        {
+          "path": "scripts/test/__init__.py",
+          "bytes": 79,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_bounded_inspection.py",
+          "bytes": 9793,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_images.py",
+          "bytes": 11815,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_package.py",
+          "bytes": 12264,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_svg_limits.py",
+          "bytes": 5133,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_v680_inspection.py",
+          "bytes": 8361,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_v680_native.py",
+          "bytes": 13917,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_v680_render.py",
+          "bytes": 10112,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_validation.py",
+          "bytes": 18813,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_workflow.py",
+          "bytes": 23578,
+          "reason": "source-only tests"
+        }
+      ],
+      "excluded_bytes": 113865,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "skill-development-standards",
+      "version": "20261108.0102.2369",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/skill-development-standards-runtime-20261108.0102.2369.zip",
+      "files": 4,
+      "uncompressed_bytes": 76978,
+      "zip_bytes": 24903,
+      "sha256": "2ced495966188b87ae4ede1cd6fb3ab7d28fbe88d2a0af809c5cdedfb80a64db",
+      "excluded_files": [],
+      "excluded_bytes": 0,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "table-workflow",
+      "version": "20261109.0953.3643",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/table-workflow-runtime-20261109.0953.3643.zip",
+      "files": 10,
+      "uncompressed_bytes": 136288,
+      "zip_bytes": 50817,
+      "sha256": "523d443d6284f6bc36309db270a9bdfbbcaa702f460ba7bf555a47979b4a6b76",
+      "excluded_files": [],
+      "excluded_bytes": 0,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "wps",
+      "version": "20261109.0953.3643",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/wps-runtime-20261109.0953.3643.zip",
+      "files": 67,
+      "uncompressed_bytes": 610457,
+      "zip_bytes": 217403,
+      "sha256": "624feb19083db7a5f261c615e8ae9912c05d0caa890e29ccb6a20c4d6247bdf7",
+      "excluded_files": [
+        {
+          "path": "scripts/__pycache__/docx_to_wps_rtf.cpython-312.pyc",
+          "bytes": 15386,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/export_wps.cpython-312.pyc",
+          "bytes": 25921,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/read_wps.cpython-312.pyc",
+          "bytes": 50344,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/run_wps_edit.cpython-312.pyc",
+          "bytes": 16642,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/run_wps_task.cpython-312.pyc",
+          "bytes": 9735,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps.cpython-312.pyc",
+          "bytes": 41870,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_binary_comments.cpython-312.pyc",
+          "bytes": 8756,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_binary_headers.cpython-312.pyc",
+          "bytes": 12952,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_binary_ownership.cpython-312.pyc",
+          "bytes": 4255,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_binary_refs.cpython-312.pyc",
+          "bytes": 9976,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_binary_shapes.cpython-312.pyc",
+          "bytes": 7797,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_binary_tables.cpython-312.pyc",
+          "bytes": 14669,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_cfb.cpython-312.pyc",
+          "bytes": 41653,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_charprops.cpython-312.pyc",
+          "bytes": 10672,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_diagnostics.cpython-312.pyc",
+          "bytes": 17548,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_doc_extensions.cpython-312.pyc",
+          "bytes": 10183,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_doc_versions.cpython-312.pyc",
+          "bytes": 9140,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_edit.cpython-312.pyc",
+          "bytes": 5189,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_export.cpython-312.pyc",
+          "bytes": 19166,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_failure_diagnostics.cpython-312.pyc",
+          "bytes": 3499,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_hidden.cpython-312.pyc",
+          "bytes": 20414,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_lazy_render.cpython-312.pyc",
+          "bytes": 10702,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_ooxml.cpython-312.pyc",
+          "bytes": 12241,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_ooxml_related.cpython-312.pyc",
+          "bytes": 15816,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_paragraph_evidence.cpython-312.pyc",
+          "bytes": 7191,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_paragraph_sources.cpython-312.pyc",
+          "bytes": 11006,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_routing.cpython-312.pyc",
+          "bytes": 9073,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_rtf_reading.cpython-312.pyc",
+          "bytes": 7734,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_sample_acceptance.cpython-312.pyc",
+          "bytes": 18558,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_selective.cpython-312.pyc",
+          "bytes": 4945,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_stories.cpython-312.pyc",
+          "bytes": 11684,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_strict_word.cpython-312.pyc",
+          "bytes": 6825,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_tables.cpython-312.pyc",
+          "bytes": 22268,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_task.cpython-312.pyc",
+          "bytes": 5508,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_text_recovery.cpython-312.pyc",
+          "bytes": 12686,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/test_wps_word_profile.cpython-312.pyc",
+          "bytes": 7460,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/verify_wps_sample.cpython-312.pyc",
+          "bytes": 18313,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_access.cpython-312.pyc",
+          "bytes": 9567,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_binary_comments.cpython-312.pyc",
+          "bytes": 7505,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_binary_headers.cpython-312.pyc",
+          "bytes": 9860,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_binary_refs.cpython-312.pyc",
+          "bytes": 5556,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_binary_shapes.cpython-312.pyc",
+          "bytes": 3525,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_binary_tables.cpython-312.pyc",
+          "bytes": 14839,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_cfb.cpython-312.pyc",
+          "bytes": 27266,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_diagnostics.cpython-312.pyc",
+          "bytes": 17215,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_msdoc_charprops.cpython-312.pyc",
+          "bytes": 9776,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_ooxml.cpython-312.pyc",
+          "bytes": 49951,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_ooxml_tables.cpython-312.pyc",
+          "bytes": 15760,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_paragraph_evidence.cpython-312.pyc",
+          "bytes": 4283,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_paragraph_sources.cpython-312.pyc",
+          "bytes": 1842,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_result.cpython-312.pyc",
+          "bytes": 1233,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_rtf_builder.cpython-312.pyc",
+          "bytes": 28802,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_rtf_read.cpython-312.pyc",
+          "bytes": 7572,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_selective.cpython-312.pyc",
+          "bytes": 6735,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/__pycache__/wps_word_visibility.cpython-312.pyc",
+          "bytes": 9280,
+          "reason": "cache"
+        },
+        {
+          "path": "scripts/test/__init__.py",
+          "bytes": 79,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_task_cli_support.py",
+          "bytes": 2703,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps.py",
+          "bytes": 29127,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_binary_comments.py",
+          "bytes": 4441,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_binary_headers.py",
+          "bytes": 7372,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_binary_ownership.py",
+          "bytes": 2609,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_binary_refs.py",
+          "bytes": 5439,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_binary_shapes.py",
+          "bytes": 5187,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_binary_tables.py",
+          "bytes": 12167,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_cfb.py",
+          "bytes": 15130,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_cfb_padding.py",
+          "bytes": 3779,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_charprops.py",
+          "bytes": 6063,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_content_validation.py",
+          "bytes": 4180,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_delivery.py",
+          "bytes": 17037,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_delivery_filenames.py",
+          "bytes": 6145,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_diagnostics.py",
+          "bytes": 11600,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_doc_extensions.py",
+          "bytes": 6515,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_doc_versions.py",
+          "bytes": 6370,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_edit.py",
+          "bytes": 3686,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_entry_workflows.py",
+          "bytes": 5278,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_export.py",
+          "bytes": 10438,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_failure_diagnostics.py",
+          "bytes": 2001,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_hidden.py",
+          "bytes": 11050,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_huge_papx.py",
+          "bytes": 6710,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_lazy_render.py",
+          "bytes": 2663,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_next_iteration.py",
+          "bytes": 13723,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_official_defaults.py",
+          "bytes": 9866,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_ooxml.py",
+          "bytes": 7755,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_ooxml_related.py",
+          "bytes": 9664,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_output_contract.py",
+          "bytes": 25029,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_paragraph_evidence.py",
+          "bytes": 5344,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_paragraph_sources.py",
+          "bytes": 7478,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_partial_reflow.py",
+          "bytes": 4253,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_publication.py",
+          "bytes": 9247,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_publish_failure.py",
+          "bytes": 3104,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_routing.py",
+          "bytes": 5110,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_rtf_geometry.py",
+          "bytes": 3613,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_rtf_layout.py",
+          "bytes": 3100,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_rtf_merges.py",
+          "bytes": 3094,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_rtf_reading.py",
+          "bytes": 5159,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_rtf_recovery.py",
+          "bytes": 6067,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_rtf_structure.py",
+          "bytes": 3912,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_sample_acceptance.py",
+          "bytes": 11933,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_selective.py",
+          "bytes": 4090,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_stories.py",
+          "bytes": 6368,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_strict_word.py",
+          "bytes": 3726,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_table_layout.py",
+          "bytes": 3691,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_tables.py",
+          "bytes": 11452,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_task.py",
+          "bytes": 4296,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_task_paths.py",
+          "bytes": 9427,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_text_recovery.py",
+          "bytes": 6743,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_wps_word_profile.py",
+          "bytes": 4336,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/verify_wps_sample.py",
+          "bytes": 13554,
+          "reason": "source-only tests"
+        }
+      ],
+      "excluded_bytes": 1161247,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    },
+    {
+      "status": "packaged",
+      "skill": "xlsx",
+      "version": "20261109.0953.3643",
+      "output": "/Users/yangxuezhen/git/PSL-SKILLS/dist/runtime/xlsx-runtime-20261109.0953.3643.zip",
+      "files": 122,
+      "uncompressed_bytes": 953966,
+      "zip_bytes": 357835,
+      "sha256": "98821cddd2ae1662c8fa4cb278cae872089ddda1f00f6c8c8f9b8903797749ff",
+      "excluded_files": [
+        {
+          "path": "scripts/test/__init__.py",
+          "bytes": 79,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/benchmark_write_index.py",
+          "bytes": 4045,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/task_directory.py",
+          "bytes": 649,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_bulk_metadata_api.py",
+          "bytes": 6424,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_calculation_reliability.py",
+          "bytes": 8903,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_cli_contract.py",
+          "bytes": 7527,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_formula_engine.py",
+          "bytes": 9997,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_formula_functions.py",
+          "bytes": 12958,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_formula_workflows.py",
+          "bytes": 8495,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_output_filenames.py",
+          "bytes": 5217,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_stdlib_xlsx.py",
+          "bytes": 17337,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_write_index.py",
+          "bytes": 6979,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_advanced.py",
+          "bytes": 11915,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_analysis.py",
+          "bytes": 9311,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_appearance.py",
+          "bytes": 12009,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_archive_sync.py",
+          "bytes": 6367,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_boundary.py",
+          "bytes": 5678,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_cli_boundaries.py",
+          "bytes": 6032,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_customers.py",
+          "bytes": 10328,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_daily.py",
+          "bytes": 9844,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_dashboard.py",
+          "bytes": 9201,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_delivery.py",
+          "bytes": 20940,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_deposit_structure.py",
+          "bytes": 5800,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_deposits.py",
+          "bytes": 10834,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_et_entrypoint.py",
+          "bytes": 3577,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_header_candidates.py",
+          "bytes": 3272,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_headers.py",
+          "bytes": 12246,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_hierarchy.py",
+          "bytes": 8029,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_identify.py",
+          "bytes": 2905,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_management.py",
+          "bytes": 16882,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_management_integration.py",
+          "bytes": 6221,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_management_policy.py",
+          "bytes": 11391,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_match.py",
+          "bytes": 5657,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_maturity.py",
+          "bytes": 7497,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_paths.py",
+          "bytes": 10934,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_quick_start.py",
+          "bytes": 7710,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_rank_share.py",
+          "bytes": 7051,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_read_view.py",
+          "bytes": 8015,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_reconcile.py",
+          "bytes": 8249,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_result_export.py",
+          "bytes": 7553,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_rows.py",
+          "bytes": 5743,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_safety_regressions.py",
+          "bytes": 9852,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_tabular.py",
+          "bytes": 7234,
+          "reason": "source-only tests"
+        },
+        {
+          "path": "scripts/test/test_xlsx_wps_result.py",
+          "bytes": 14704,
+          "reason": "source-only tests"
+        }
+      ],
+      "excluded_bytes": 371591,
+      "verification": "CRC, exact members and source snapshot byte parity",
+      "runtime_tests": "not run by packager"
+    }
+  ]
+}

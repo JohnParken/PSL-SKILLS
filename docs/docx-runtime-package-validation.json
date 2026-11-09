@@ -1,0 +1,211 @@
+{
+  "date_utc": "2026-11-09T02:35:57.777207+00:00",
+  "baseline_commit": "e86522e01a11f544b4187d1f5ea00a2ffa1e7145",
+  "worktree_status": "local changes, not committed or pushed",
+  "docx_version": "20261109.0930.2426",
+  "version_clock": {
+    "America/New_York": "2026-11-08T21:30:24.268512-05:00",
+    "rule": "calendar time plus 12 hours, centiseconds truncated"
+  },
+  "scope": "Runtime distribution only; existing production Python and assets unchanged.",
+  "description_review": "Existing DOCX description remains accurate; unchanged.",
+  "platform": {
+    "system": "Darwin",
+    "release": "27.2.0",
+    "machine": "arm64",
+    "python": "3.13.12",
+    "expat": "expat_2.6.3",
+    "non_root": true
+  },
+  "package": {
+    "path": "skills/docx-runtime-20261109.0930.2426.zip",
+    "files": 79,
+    "zip_bytes": 295691,
+    "uncompressed_bytes": 838297,
+    "sha256": "1e287251048acee5b5126d85cfd515fdb2e7bf9e7a4f85e2f8948b92ac31534c"
+  },
+  "old_package": {
+    "path": "skills/docx-20261108.0102.2369.zip",
+    "files": 123,
+    "zip_bytes": 459195,
+    "uncompressed_bytes": 1406476,
+    "sha256": "ba2ce54ce8678a35a0618fb1fc59feee1068f77e76d1aa8f4d9bd34a3f3615a7",
+    "unchanged": true
+  },
+  "reduction": {
+    "zip_percent": 35.61,
+    "uncompressed_percent": 40.4,
+    "excluded_source_bytes": 568042
+  },
+  "source_only": {
+    "test_files": 39,
+    "test_prefix": "scripts/test/",
+    "additional_files": {
+      "references/maintenance-validation.md": "maintenance history, retained in source",
+      "references/reference-loading.md": "opt-in maintenance loading audit guide",
+      "references/token-optimization.md": "historical maintenance optimization notes",
+      "scripts/reference_loading_audit.py": "opt-in maintenance telemetry tool",
+      "assets/compatibility/libreoffice-control.docx": "maintenance-only compatibility fixture"
+    },
+    "all_retained_in_source": true
+  },
+  "checks": [
+    {
+      "command": "python -I -S -B -m unittest discover -s skills/docx/scripts/test -p test_*.py -q",
+      "tests": 421,
+      "passed": 421,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    {
+      "command": "python -I -S -B tests/test_docx_runtime_package.py -q",
+      "tests": 18,
+      "passed": 18,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    {
+      "command": "python -I -S -B -m unittest discover -s tests -p test_artifact_lifecycle_parity.py -v",
+      "tests": 1,
+      "passed": 1,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    {
+      "command": "python -I -S -B -m unittest discover -s tests -p test_wps_docx_official_parity.py -v",
+      "tests": 2,
+      "passed": 2,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    {
+      "command": "check_skill.py skills/docx --strict",
+      "exit_code": 0
+    },
+    {
+      "command": "check_skill.py <exact delivered ZIP extraction>/docx --strict",
+      "exit_code": 0
+    },
+    {
+      "command": "tools/check_project_docs.py",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "isolated_acceptance": [
+    "non-root read-only installation actually rejects write",
+    "empty PATH and no PYTHONPATH, -I -S -B",
+    "runtime code has no source checkout or test imports",
+    "creation and all five edit kinds",
+    "legacy comment, merge and original-comparison validation",
+    "natural pagination, repeated headers and output conflict naming",
+    "bounded full table read and changed-source cursor rejection",
+    "invalid spec and non-bare output rejection",
+    "archive failure preserves primary",
+    "cleanup failure preserves primary and reports incomplete",
+    "installation file hashes unchanged before/after"
+  ],
+  "build_verification": [
+    "explicit manifest, reject unclassified/missing/symlink source",
+    "deterministic rebuild on tested interpreter/zlib",
+    "no overwrite of existing ZIP or symlink destination",
+    "CRC, member set and all bytes match source snapshot",
+    "production Python/assets unchanged from baseline",
+    "old ZIP unchanged"
+  ],
+  "corrected_during_validation": [
+    "Initial full source run failed only entry byte budget: 8002 >= 8000. Shortened equivalent maintenance notice to 7984 bytes; no threshold relaxed; final 421 passed."
+  ],
+  "limits": [
+    "Linux and Windows not tested in this record",
+    "Word/WPS/LibreOffice visual rendering not tested",
+    "No real model token usage measurement",
+    "No production host crash/SIGKILL/end-to-end cloud mapping verification",
+    "Synthetic isolated acceptance is not full real-user document coverage",
+    "Deterministic ZIP verified on tested interpreter/zlib; cross-zlib compressed-byte identity not promised"
+  ],
+  "runtime_file_sha256": {
+    "SKILL.md": "aa7d8b5a911157caab0062c7328885847b9e2844e7853d09755e674302b3a5b8",
+    "assets/comments/comments.xml": "a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d",
+    "assets/comments/commentsExtended.xml": "544eeecfeceed4b468fff163cd9c366d33641c8b8ab691ce002576197846afe8",
+    "assets/comments/commentsExtensible.xml": "bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631",
+    "assets/comments/commentsIds.xml": "db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420",
+    "assets/profiles/academic.json": "d4214a7920639a68728734e9ab5befa630295f0d609c37859568c2147e603f84",
+    "assets/profiles/business-report.json": "98505ef74493aaa1ddf65d919c114392a5b2566a12bd53b06df22a39e33d69d0",
+    "assets/profiles/official-basic.json": "cb647ca499c3ce5d6d7b4665fc667473a61ea64c4de913ca3eab0e3531533ae0",
+    "assets/profiles/presentation-material.json": "53b5ff45470fa3969288c541db01cf5eb59b4882c45631a72a70a0241ccffab7",
+    "references/binary-reading.md": "6a51947ce567c2af3f54ef3e572ae2af7f660011a77933d8742d0ca37d783ddb",
+    "references/comments-management.md": "84fc0c3553345a660c34207ca1c04f83118cfcf8b6d3429b7ac7adf2a5676c07",
+    "references/complex-json.md": "a4995b82609f3ab609b2b566556f1515c93a0a3190c252cb80e0a4c5e2224d3a",
+    "references/controlled-flow.md": "b90d0a3d3a05332a152193cf47102e87b4a0336e2b7c040ecee2cfa224dfe537",
+    "references/delivery.md": "2bb1659ee011423c3b0d45a30a0c7e782197d004f8deec8d3dda02c58d2a942e",
+    "references/generation-blocks.md": "77eb98ffab5ec93bf19d05e3c7a7863d5ea399f67160aa226ea5249762e26d58",
+    "references/generation-core.md": "36e4cb319decd8801f2e30e3f5cc629b532128411380bf7ded53c0ae8366564e",
+    "references/generation-details.md": "1e7e6dd2b9a72b8990ee5625d4fa11fca9dd6702f992a8a3df3b6556e7680fb8",
+    "references/generation-examples.md": "6433685501ef2a28cbcd4901988ece25ee8c3f00e1dedd7d3a66db12b4b546e0",
+    "references/generation-runtime.md": "d3e7f66665d3d4468d166986be110beff785d5c5886780b8f9e297e1dde4b29c",
+    "references/generation-styles.md": "33500078455985af86a9ed8afab20948f1a7529c116e3d91285f9d21e722b5a5",
+    "references/generation-tables.md": "d427d326ecd28e7120117cfdec79609a8e1b817895791b88be983c080d26271c",
+    "references/generation.md": "0ea645759bf3aae735800181371b507c812c10db2cdf08e10f555352214cbefc",
+    "references/inspection.md": "8445531d0ef48226114063e416c30e2c7fb34abc6a7faacb2fcf7c7c21835dba",
+    "references/ooxml-editing.md": "3365c22114954104da48dcb33188531e8a228bc04fbe6aa6af376c7d2617319e",
+    "references/p1-layout.md": "37569668a1c3b1e67165bbb114a2ec916df86273739ecc0516baf94244f896b0",
+    "references/p2-layout.md": "27074ce6c2e04f4a5db06cbc3f15604513f34abe8b5b69b4073b5473d4b1070b",
+    "references/pagination-governance.md": "01d9bcbd9933d92ac09632199365ac61dabba47932d6dde4e739a0b632e29e6f",
+    "references/security.md": "dd832bbb293d621fc964ad57453fc6166278d48ba6333d7c86fa01ce71dd8a0b",
+    "references/stability-governance.md": "88bcf7967602f7a4fcbf84f58443dd5b271ae44f31f9b12d8a4843c2a9bb418b",
+    "references/structure-editing.md": "2ec091adf145b6726dba75d61ee90e307a8f262cfb867a20e1c71251f41294eb",
+    "references/table-media-editing.md": "5e3f83337ac6e94d620e1b3b9972cfdfe78824c7b25b2dc453d8c3c5f2da0dd4",
+    "references/task-cleanup.md": "f5fc171ad80ba6591cc0e79ca7ec846e0394a20974675c8ef1bafaa303770f92",
+    "references/tool-calling.md": "a9157f6869b1465ee4aeb9dd67043e431d65650e28481b19b6f5aeeb66a29d1b",
+    "references/troubleshooting.md": "12f0eaf60991b720a33dbcaa828ae5034ba45f2682e21c13ee36ef26b8e74f68",
+    "references/typography.md": "efc87dbf591e27c15fa5ca2fd62d20b22028a71c9d75b3b20340f7b23552cc9d",
+    "references/validation.md": "9b9577806fd10c8db4d1209339a47178aca9ccbd914af8ded769525a237577ac",
+    "requirements.txt": "413b514c05bea475af5f206801b6b42692c259d9c2a10f829411e6803af8d098",
+    "scripts/__init__.py": "530303bfb28a74538aa91aa58238823d350d2206a34212ec0579e80cd135ac09",
+    "scripts/archive_deliverables.py": "7829e44221eca6782d6ca82b12f0be52ac434001c3e35da85830b337442c8b58",
+    "scripts/artifact_files.py": "83c7a6c62afc2cb66d21bc1e9edcdd142ed0b559da668b0abd99eb7c63ebe4b6",
+    "scripts/audit_package.py": "41fc468bbab7e6486cbee22f93d5ecf2610cc5d8f3611a3d5d831811616cee47",
+    "scripts/cleanup_task.py": "26e2d633dbbf21822bb4b51dbbff4049a0e08934f9c02422d68f39c4eee4cc89",
+    "scripts/comment.py": "397c4e7aff054865b2e17baac192f53edec264ed178d75530affde0bf23fb6d4",
+    "scripts/controlled_cleanup.py": "4fa9e5308cc1e1b64d788a23798561a8bd742f22dbadb1a10fa3bd31743f3dec",
+    "scripts/create_docx.py": "54370d9713c3d86440c366079628561e3527adfc18fe1fa9ef080f744e0038b6",
+    "scripts/docx_outcome.py": "c98351f0a760e66ebece3e8c55bb067c4f3d8a878b932f870c24a252d3627555",
+    "scripts/docx_task_state.py": "d29f670716bfd71abc93e9f16a20edb5a236b85e3fd590036b34e6ce6a5edfe6",
+    "scripts/edit_docx.py": "ad3b686a7f8a01b50424077ed21374c6f7950a3ffef90ca301b2d4dedcbeebcc",
+    "scripts/edit_structure.py": "2369c627dd068977becc6dcbb4251335df0f90380278164c497c5816c2b3e035",
+    "scripts/edit_tables.py": "5bc7c949ca7ea7787194e3427072cd392e0a31943c8c251dfb41e5b49e345fd6",
+    "scripts/manage_comments.py": "ee9bb0506e55879361be10b9c1b5af1d394447a7dc803a7fa43ddbfc1b9b39dd",
+    "scripts/merge_runs.py": "04952da15d64be06977a7274293fb9bd499b4d7d83b1283bf563596c96be110b",
+    "scripts/office/archiveio.py": "832de2e5f37387fa0a7ec86fc4ccad7914e898e2d0aff33bc616e8c8a67e7e6e",
+    "scripts/office/binary_doc.py": "ff55deadcf93ad088c2e4975aed8b72d77a9b5d2aec4968448f57c406b86520a",
+    "scripts/office/formatting/__init__.py": "1f55a5fb08dc46d541c8fdad4aa91a9b1ad4a737740690a3a89d223b56f83a4e",
+    "scripts/office/formatting/audit.py": "1d9e5f173064249a0541c51a74001b2ffd88409e1e8eeb6227d51eb90b355d0e",
+    "scripts/office/formatting/pagination.py": "b64c52ffbee9df770a21009599a134de439c414c25f9796e86e19cc9dfa04927",
+    "scripts/office/formatting/paragraphs.py": "ba4d277add2061851dd3b31ecbe50da4b1e90d6ed45c00fb5a559f3047fc6927",
+    "scripts/office/formatting/profiles.py": "3bb05d743cd3539fc6eceb01ae91ba82e4f8631d2382f73c434963386038a7ea",
+    "scripts/office/formatting/sections.py": "130d14b4925551ec54d8510abdbdc7016d5c214d66f6b0fd43b94a13ed34abde",
+    "scripts/office/formatting/tables.py": "72222a7274ca0aa1c71c681e589b9177cc4e3040c1936a7b591a1582413d4791",
+    "scripts/office/helpers/__init__.py": "a235f1b55873d8de78a05cba5e65d00e21b18b044544dff19a76652f748942cd",
+    "scripts/office/memory_package.py": "d20b74e5924bde220af5e66ab3ef6aa64ec590f4f389d12ebe4e7c88e4cef2d8",
+    "scripts/office/package.py": "86aaad98485d0b4c0daa9cc3042d2980e20113961ffcf9da4cb0b35c8d75b52a",
+    "scripts/office/runtime.py": "a0f5edd39c0a39e86e68077b3470cdbf18f4bf81f388bf91fea2db004127ad4d",
+    "scripts/office/validate.py": "d4773a022aafa62cc75ee01b30e32038990388bc2201e707413d1bc3e831f492",
+    "scripts/office/validators/__init__.py": "e451211d10bd74a44a0ec311b93e1dd4f55cf0796b3249848000f5437846a2e5",
+    "scripts/office/validators/advanced.py": "9e9332a59743ba2df51787c964837c85fd79be4b0c999ec8cea9f8cf7c3d88c3",
+    "scripts/office/validators/generation.py": "8dcfaf3d1cefdf2b9fc579089d7d8318bc7b1479383338a27725615877fde13d",
+    "scripts/office/validators/redlining.py": "12f2e3ad0f7598195c9cd6391dd45a9b168b4a57363248bead63e3dab7fcb853",
+    "scripts/office/validators/structure.py": "bb9264b0815c2e1a11b50ecb65bd6aaa610cb2edc5dda930091eb1000bdb9038",
+    "scripts/office/xmlio.py": "402318a64a16c3474f4b82e9323e4182c7e3403946e754a4c6ebd7598bcc27b4",
+    "scripts/output_location.py": "6f85dfd2cbf5ced0bf15215853d97bc2659f32797bb986589ca36e32d7fec9d4",
+    "scripts/read_docx.py": "2cccc3316f9da4009e30c07f5b6e2e11b2bf0d0c3c0d9aa039ae1e3b1c861b37",
+    "scripts/replace_image.py": "74d58a1c39a1425060a8b92f39338a1da6e32cc99f71e565095f1c6b929b2568",
+    "scripts/router_config.py": "60074b4eeb4a8e105f0c77b614dbdd89ed94c6fc3afc05d511620bc75b47cfdf",
+    "scripts/run_docx_edit.py": "59e7f1e5c3173273354e9712f67d74a7bc039781b86f1e5fc82631cd7d7a1e56",
+    "scripts/run_docx_task.py": "acd3a16421e0c7305676c8225f67c133f7698eb120c3513ced27e8b1a463e794",
+    "scripts/validate_layout.py": "2d41d1526674685b17b2df7d4383b08985258d984a112901f63b456ce6adc519"
+  }
+}

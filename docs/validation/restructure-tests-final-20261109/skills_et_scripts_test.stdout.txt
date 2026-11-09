@@ -1,0 +1,4 @@
+Collected 480 tests from /Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/test (test_*.py)
+check_kind=environment artifact_validation=not_run
+ooxml-sheet=available
+environment-ok

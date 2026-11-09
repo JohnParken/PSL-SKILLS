@@ -1,0 +1,212 @@
+Collected 447 tests from /Users/yangxuezhen/git/PSL-SKILLS/skills/wps/scripts/test (test_*.py)
+{
+  "status": "success",
+  "output_written": true,
+  "publication_target": "cli_text.wps",
+  "publication_outcome": "published_verified",
+  "publication_verification": "identity_and_bytes_verified",
+  "cleanup_complete": true,
+  "cleanup_issues": [],
+  "published_sha256": "67557b02bbd5289885fdfa3422b40f76c28d123c61462d1858988005e6cd5149",
+  "content_validation": {
+    "status": "verified_within_scope",
+    "basis": "normalized_document_tree",
+    "verified": [
+      "main_text",
+      "block_order",
+      "physical_cell_text",
+      "supported_merge_flags"
+    ],
+    "normalization": "outer paragraph/cell whitespace stripped; adjacent tables compared as consecutive physical rows",
+    "unverified": [
+      "field_freshness",
+      "formatting",
+      "related_content",
+      "visual_pagination"
+    ]
+  },
+  "format_validation": {
+    "status": "verified_raw_controls",
+    "verified": [
+      "page_dimensions",
+      "page_margins",
+      "main_paragraph_alignment_spacing_indent_keep_outline"
+    ],
+    "unverified": [
+      "font_glyphs",
+      "table_formatting",
+      "related_content_formatting",
+      "actual_page_breaks",
+      "client_rendering"
+    ]
+  },
+  "target": "cli_text.wps",
+  "source": "base.wps",
+  "file_size": 1996,
+  "edit_stats": {
+    "text_replacements": 1,
+    "paragraphs_modified": 0,
+    "paragraphs_deleted": 0,
+    "cells_updated": 0,
+    "appended_blocks": []
+  },
+  "readback_status": "ok",
+  "edit_mode": "content_reflow_not_lossless",
+  "layout_verification": "not_run",
+  "native_wps": false,
+  "output_format": "rtf",
+  "binary_doc": false,
+  "partial": false,
+  "spec_warnings": [],
+  "spec_warning_count": 0,
+  "lossy_reflow_authorized": false,
+  "order_status": "available_source_order",
+  "losses": [
+    "Original formatting, fields, objects and pagination are not preserved"
+  ],
+  "source_omitted_regions": [],
+  "source_issues": [],
+  "source_diagnostics": [],
+  "source_reading_assessment": {
+    "schema_version": "wps_reading_assessment_v1",
+    "outcome": "ok",
+    "completeness": "within_declared_scope",
+    "scope": "unspecified",
+    "full_format_verified": false,
+    "events": [],
+    "events_truncated": 0,
+    "regions": [],
+    "visibility": {
+      "policy": "not_available",
+      "recorded_run_decisions": {},
+      "by_part": {},
+      "positions": "See original visibility.runs source paths; not duplicated",
+      "coverage": "recorded decisions only; unrecorded runs are not inferred"
+    },
+    "coverage": [
+      {
+        "category": "related_content",
+        "state": "unknown",
+        "evidence_count": 0,
+        "locations": [],
+        "locations_truncated": 0
+      },
+      {
+        "category": "binary_tables",
+        "state": "unknown",
+        "evidence_count": 0,
+        "locations": [],
+        "locations_truncated": 0
+      },
+      {
+        "category": "objects",
+        "state": "unknown",
+        "evidence_count": 0,
+        "locations": [],
+        "locations_truncated": 0
+      }
+    ],
+    "position_policy": "Only recorded positions are reported; absent positions are unknown",
+    "text_policy": "No omitted or excluded document text is copied into this summary"
+  },
+  "paragraphs_count": 3,
+  "tables_count": 1,
+  "delivery": {
+    "status": "completed",
+    "archive_status": "skipped",
+    "used_fallback": true,
+    "fallback_reason": "missing_router_config",
+    "files": [
+      {
+        "output": "cli_text.wps",
+        "archive_output": null,
+        "archive_status": "skipped"
+      }
+    ],
+    "warnings": [],
+    "archive_message": "归档未执行",
+    "archive_user_notice": "本次未执行归档，请先核对文件结果。"
+  }
+}
+check_kind=environment artifact_validation=not_run
+environment-ok
+{
+  "status": "success",
+  "output_written": true,
+  "publication_target": "cli_test.wps",
+  "publication_outcome": "published_verified",
+  "publication_verification": "identity_and_bytes_verified",
+  "cleanup_complete": true,
+  "cleanup_issues": [],
+  "published_sha256": "4498f25306bb3121018a062d17ec2484d59a352a60cf38263f907d126a1b102d",
+  "content_validation": {
+    "status": "verified_within_scope",
+    "basis": "normalized_document_tree",
+    "verified": [
+      "main_text",
+      "block_order",
+      "physical_cell_text",
+      "supported_merge_flags"
+    ],
+    "normalization": "outer paragraph/cell whitespace stripped; adjacent tables compared as consecutive physical rows",
+    "unverified": [
+      "field_freshness",
+      "formatting",
+      "related_content",
+      "visual_pagination"
+    ]
+  },
+  "format_validation": {
+    "status": "verified_raw_controls",
+    "verified": [
+      "page_dimensions",
+      "page_margins",
+      "main_paragraph_alignment_spacing_indent_keep_outline"
+    ],
+    "unverified": [
+      "font_glyphs",
+      "table_formatting",
+      "related_content_formatting",
+      "actual_page_breaks",
+      "client_rendering"
+    ]
+  },
+  "target": "cli_test.wps",
+  "file_size": 814,
+  "blocks_count": 1,
+  "readback_status": "partial",
+  "layout_verification": "not_run",
+  "native_wps": false,
+  "output_format": "rtf",
+  "binary_doc": false,
+  "partial": true,
+  "spec_warnings": [],
+  "spec_warning_count": 0,
+  "issues": [
+    {
+      "code": "rtf_destination_skipped",
+      "destination": "footer",
+      "message": "Related content or object omitted from main content"
+    }
+  ],
+  "receipt": {
+    "format": "wps_rtf",
+    "theme": "general"
+  },
+  "delivery": {
+    "status": "completed",
+    "archive_status": "skipped",
+    "used_fallback": true,
+    "fallback_reason": "missing_router_config",
+    "files": [
+      {
+        "output": "cli_test.wps",
+        "archive_output": null,
+        "archive_status": "skipped"
+      }
+    ],
+    "warnings": [],
+    "archive_message": "归档未执行",
+    "archive_user_notice": "本次未执行归档，请先核对文件结果。"
+  }
+}

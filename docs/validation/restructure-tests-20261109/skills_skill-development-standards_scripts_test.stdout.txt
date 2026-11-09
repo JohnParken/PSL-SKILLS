@@ -1,0 +1,1 @@
+Collected 31 tests from /Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/test (test_*.py)

@@ -1,0 +1,81 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12",
+  "expat": "expat_2.6.3",
+  "suites": [
+    {
+      "suite": "skills/artifact-lifecycle/scripts/test",
+      "exit_code": 0,
+      "tests": 17,
+      "skipped": 0,
+      "seconds": 0.101
+    },
+    {
+      "suite": "skills/docx/scripts/test",
+      "exit_code": 0,
+      "tests": 421,
+      "skipped": 0,
+      "seconds": 20.658
+    },
+    {
+      "suite": "skills/et/scripts/test",
+      "exit_code": 0,
+      "tests": 480,
+      "skipped": 0,
+      "seconds": 5.204
+    },
+    {
+      "suite": "skills/ofd/scripts/test",
+      "exit_code": 0,
+      "tests": 152,
+      "skipped": 0,
+      "seconds": 2.004
+    },
+    {
+      "suite": "skills/pptx/scripts/test",
+      "exit_code": 0,
+      "tests": 100,
+      "skipped": 0,
+      "seconds": 11.617
+    },
+    {
+      "suite": "skills/skill-development-standards/scripts/test",
+      "exit_code": 0,
+      "tests": 31,
+      "skipped": 0,
+      "seconds": 0.146
+    },
+    {
+      "suite": "skills/wps/scripts/test",
+      "exit_code": 0,
+      "tests": 447,
+      "skipped": 0,
+      "seconds": 6.671
+    },
+    {
+      "suite": "skills/xlsx/scripts/test",
+      "exit_code": 0,
+      "tests": 401,
+      "skipped": 0,
+      "seconds": 15.713
+    },
+    {
+      "suite": "tests",
+      "exit_code": 0,
+      "tests": 316,
+      "skipped": 0,
+      "seconds": 67.759
+    },
+    {
+      "suite": "tests/pptx",
+      "exit_code": 0,
+      "tests": 3,
+      "skipped": 0,
+      "seconds": 0.309
+    }
+  ],
+  "tests": 2368,
+  "skipped": 0,
+  "ok": true,
+  "limitations": "Regression results only; not all-platform, client visual or production host acceptance."
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "path": "dist/archive/artifact-lifecycle-20261108.0102.2369.zip",
+    "sha256": "20bec294f308d48205129b7b0804b90fa5ab2cc557a3fead43567d268dc6019c",
+    "bytes": 32432
+  },
+  {
+    "path": "dist/archive/bank-writing-20261108.0102.2369.zip",
+    "sha256": "9c6a785031bc9bdeff7108b20944e54acb1bad16bcea06f2167b760a824ce30b",
+    "bytes": 90082
+  },
+  {
+    "path": "dist/archive/docx-20261108.0102.2369.zip",
+    "sha256": "ba2ce54ce8678a35a0618fb1fc59feee1068f77e76d1aa8f4d9bd34a3f3615a7",
+    "bytes": 459195
+  },
+  {
+    "path": "dist/archive/docx-runtime-20261109.0930.2426.zip",
+    "sha256": "1e287251048acee5b5126d85cfd515fdb2e7bf9e7a4f85e2f8948b92ac31534c",
+    "bytes": 295691
+  },
+  {
+    "path": "dist/archive/docx-runtime-20261109.0943.0546.zip",
+    "sha256": "97eee4a4403df0839b20f843345ab067c5e7356a7987e62e34315da2dbf23fb7",
+    "bytes": 295752
+  },
+  {
+    "path": "dist/archive/et-20261108.0102.2369.zip",
+    "sha256": "462a48ea559abe8cc285a688f0d1c2dcb2c16590143102ba51611a21eded7d35",
+    "bytes": 434611
+  },
+  {
+    "path": "dist/archive/ofd-20261108.0102.2369.zip",
+    "sha256": "e2535785748d0ffe20fe0ae98e2739296d70d6f39aae9fcb611faf11c7a15078",
+    "bytes": 6084411
+  },
+  {
+    "path": "dist/archive/pptx-20261108.0102.2369.zip",
+    "sha256": "1a9a49a05fe1db43f52e6360ae93361f97bb1f9ff7caa55d18718eb4f69fba24",
+    "bytes": 528963
+  },
+  {
+    "path": "dist/archive/skill-development-standards-20261108.0102.2369.zip",
+    "sha256": "15f4b7804d3812d4980d437f4e17501135e474d3941f6da90f729a55457f8391",
+    "bytes": 24903
+  },
+  {
+    "path": "dist/archive/table-workflow-20261108.0102.2369.zip",
+    "sha256": "83637a367a43bc65478dac293d76a5c24ec23da8648fe6604de2ebfecdd52761",
+    "bytes": 53304
+  },
+  {
+    "path": "dist/archive/wps-20261108.0102.2369.zip",
+    "sha256": "d355cb4b70bd3a7c50876f5b7af9696299c34fb87c1ad98db46323af4801d024",
+    "bytes": 380726
+  },
+  {
+    "path": "dist/archive/xlsx-20261108.0102.2369.zip",
+    "sha256": "1854b6a7d0bf02c1d20535f7531059cbcf3101ae7c5b9c7e7c7614fc7982e44b",
+    "bytes": 472311
+  }
+]

@@ -1,0 +1,1 @@
+Collected 100 tests from /Users/yangxuezhen/git/PSL-SKILLS/skills/pptx/scripts/test (test_*.py)

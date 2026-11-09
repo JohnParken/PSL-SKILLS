@@ -15,69 +15,56 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261108.0102.2369 | 银行综合材料起草、改写与审校；长文、会议及多源摘要，范文结构与文风仿写，先摘要再仿写；仅交付文本，获授权后规范交接由 docx 技能生成文件 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261108.0102.2369 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261108.0102.2369 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261108.0102.2369 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261108.0102.2369 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261108.0102.2369 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261109.0953.3643 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261109.0953.3643 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261109.0953.3643 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261109.0953.3643 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261109.0953.3643 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261108.0102.2369 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
-| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261108.0102.2369 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
-| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261108.0102.2369 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
+| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261109.0953.3643 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261109.0953.3643 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261108.0102.2369 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构
 
 ```text
 PSL-SKILLS/
-├── AGENTS.md
-├── .agents/skills/skill-development-standards  # 指向规范目录的相对链接
+├── AGENTS.md                       # 项目维护约定；不等同于单 Skill 目录规范
+├── .agents/skills/skill-development-standards  # 唯一规范的相对发现链接
 ├── README.md
+├── skills/<name>/                  # 可安装 Skill 源码与必要运行资源
+│   ├── SKILL.md
+│   ├── requirements.txt            # 有脚本时声明实际依赖
+│   ├── scripts/                    # 正式运行时；scripts/test 保留源码测试
+│   ├── references/                 # 当前操作、契约、边界和来源记录
+│   └── assets/                     # 运行模板、示例、字体与许可证
+├── packaging/runtime-manifests/    # 每个 Skill 的显式发布文件白名单
+├── tools/                         # 仓库构建、检查和测试入口，不随业务包分发
+├── tests/                         # 跨 Skill 回归、发布验收与测试样本
+│   └── fixtures/docx/             # 原 skills/ 根部的七个跨技能样本
 ├── docs/
-│   ├── README.md                  # 当前源码基线、10 个 Skill 索引与整体流程
-│   ├── skills/                    # 各 Skill 的功能、架构图与流程图
-│   ├── check-execution.md         # 自检结果与执行回传入口契约
-│   └── linux-release-acceptance.md # 历史三包 Linux 验收方案及当前源码入口
-├── tools/
-│   ├── run_skill_check.py         # 固定环境入口与分离通道 JSON
-│   ├── run_skill_tests.py         # 测试发现、零测试/失败拒绝
-│   └── check_project_docs.py      # 导读覆盖、版本与本地链接核对
-├── tests/                         # 单元测试、自检契约回归、生命周期一致性与版本验收记录
-├── licenses/
-│   └── minimax-skills-MIT.txt
-└── skills/
-    ├── skill-development-standards/ # 开发规范、<skill-root> 检查器及其测试
-    ├── bank-writing/              # 纯文本写作与七份分类参考
-    ├── docx/
-    │   ├── SKILL.md
-    │   ├── requirements.txt
-    │   ├── scripts/               # 生成、读取、编辑、递增命名与收尾工具
-    │   ├── references/            # 文档结构、生成、复杂 JSON、故障排查和编辑说明
-    │   └── assets/                # 批注 XML 资源
-    ├── xlsx/
-    │   ├── SKILL.md
-    │   ├── requirements.txt
-    │   ├── scripts/               # 标准库入口、分析模块、复杂模板与测试
-    │   ├── references/            # 输入格式、能力边界、公式计算与生命周期说明
-    │   └── assets/                # XLSX 模板和示例数据
-    ├── table-workflow/            # 跨表任务编排、显式计划、源/模板核验与溯源
-    ├── wps/
-    │   ├── SKILL.md
-    │   ├── requirements.txt
-    │   ├── scripts/               # WPS 文字生成、读取、编辑、导出与合成回归
-    │   └── references/            # 文字格式、生成、编辑、选择性读取、导出与验收限制
-    ├── et/
-    │   ├── SKILL.md
-    │   ├── requirements.txt
-    │   ├── scripts/               # ET/ETT 读取、BIFF8、OOXML 与合成回归
-    │   └── references/            # 表格格式、样本来源、保存值与验证限制
-    ├── ofd/                       # OFD 三版本只读提取及显式模型的基础 OFD 1.0 生成
-    ├── pptx/                      # 受限 SVG 创建、整包验证、有界文本/备注读取
-    └── artifact-lifecycle/        # 交付物原子归档与受控临时文件清理公共技能
-        ├── SKILL.md
-        ├── requirements.txt
-        ├── scripts/               # 生命周期 CLI、原子归档、受控清理与测试
-        └── references/            # 契约规则与来源一致性说明
+│   ├── README.md                  # 当前版本与功能索引
+│   ├── skills/                    # 架构及功能说明
+│   ├── maintenance/<name>/        # 不随包的历史验收与维护证据
+│   ├── validation/                # 项目重组/发布证据与历史包指纹
+│   └── packaging.md               # 项目边界、构建与验证命令
+├── dist/                          # 生成物；不纳入 Git
+│   ├── runtime/                   # 新运行 ZIP 与逐包发布清单
+│   └── archive/                   # 保留原字节的旧 ZIP，不覆盖
+└── licenses/                      # 仓库来源许可
 ```
+
+
+## 精简运行包与维护源码
+
+全 10 个 Skill 使用 [统一打包器](tools/package_skills.py) 与 [发布说明](docs/packaging.md)。只排除测试、缓存、历史验收和维护工具，不裁剪已支持的业务功能；运行脚本与静态资源按显式清单逐字节发布，新增未分类文件使构建失败。OFD 内置字体及许可、PPTX引擎数据、XLSX模板、生命周期副本来源信息必须保留。
+
+```console
+python -I -S -B tools/package_skills.py
+python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/review
+```
+
+输出目录必须未含同名包，工具不覆盖。旧 ZIP 已保留在 `dist/archive/`；不要用运行时归档清理器删除发布历史。`bank-writing` 已全部是业务参考，保留完整内容；`skill-development-standards` 的自测是其维护功能的一部分，随包保留。其他业务包不含 `scripts/test`。`table-workflow` 仍显式依赖已定位并验证的 XLSX/ET 公开接口，不伪装成无依赖基础技能。
 
 ## 环境要求
 
@@ -137,6 +124,8 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch
 标准任务入口 `run_xlsx_task.py` 支持从配置与 stdin 接收完整规格，并在生成前定点检测主输出与归档副本同名，自动递增版本命名（如“_第2版.xlsx”）；业务成功或失败均立即清理本轮登记的中间文件和清单。复杂 JSON 建议通过 Python `json.dumps` 序列化后由 stdin 传入，详见 [复杂 JSON 调用](skills/xlsx/references/complex-json.md)。
 
 ### DOCX
+
+运行分发使用专用 [打包器](tools/package_docx_runtime.py) 和 [显式清单](packaging/runtime-manifests/docx.json)，默认输出新的 `dist/runtime/docx-runtime-<version>.zip`，不覆盖旧包。全部业务代码、标准库安全边界、自然分页、归档与清理保持不变；测试、维护历史/加载审计和兼容测试样本留在源码、不进入运行包。构建与独立验收方法见 [DOCX 运行包边界](docs/skills/docx.md#运行包与源码维护边界)。
 
 当前平台的 Bash 执行示例统一使用 `execute(command="…")`；每条表示一次工具调用，JSON 输入与 Python API 源码保留各自格式。历史维护记录中的终端命令仅供追溯，不作为业务调用示例。
 
@@ -221,7 +210,7 @@ python3 -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
 
 字体与独立包历史验证见 [朱雀记录](tests/ofd_zhuque_validation_20261104.json)，其中源码路径以仓库根目录为基准；后续输入简化与私有字体引用分别见 [输入契约记录](tests/ofd_font_input_simplification_20261104.json) 和 [私有字体记录](tests/ofd_private_fonts_validation_20261104.json)。这些记录保留各自测试时的版本与结果，不视为全部针对当前源码重跑。
 
-OFD 离线分发包沿用仓库现有位置 `skills/ofd-<version>.zip`；完整目录独立安装，不依赖相邻 wps/docx/xlsx。版本化 ZIP 按现有 `.gitignore` 规则不纳入版本控制，源目录和 README 是维护入口。
+OFD 离线运行包由统一工具构建到 `dist/runtime/ofd-runtime-<version>.zip`；完整目录独立安装，不依赖相邻 wps/docx/xlsx。版本化 ZIP 按现有 `.gitignore` 规则不纳入版本控制，源目录和 README 是维护入口。
 
 ### PPTX
 
@@ -326,7 +315,7 @@ python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skill
 python3 -I -S -B -m unittest discover -s skills/skill-development-standards/scripts/test -p 'test_check_skill.py' -v
 ```
 
-各 Skill 自带测试位于 `scripts/test/`，生产流程不调用测试。仓库维护可使用 `tools/run_skill_tests.py <测试目录>`：显示发现数量，零发现、导入错误或测试失败均返回非零；不同 Skill 分进程执行，避免同名夹具模块互相污染。独立 Skill 包继续使用下列标准库 unittest 命令，不依赖仓库工具。跨 Skill 集成及仓库适配器测试留在仓库 `tests/`。
+各 Skill 自带测试位于 `scripts/test/`，生产流程不调用测试。仓库维护可使用 `tools/run_skill_tests.py <测试目录>`：显示发现数量，零发现、导入错误或测试失败均返回非零；不同 Skill 分进程执行，避免同名夹具模块互相污染。下列标准库 unittest 命令用于源码维护；业务运行包不携带测试，独立安装由仓库发布验收从包外驱动。开发规范 Skill 保留其流程必需的自测，避免删减维护能力。跨 Skill 集成及仓库适配器测试留在仓库 `tests/`。
 
 在仓库根目录运行 XLSX 与 ET 自带测试：
 
@@ -341,7 +330,7 @@ DOCX 已包含标准库固定预期回归，覆盖生成、编辑、ZIP/XML 拒�
 python3 -I -S -B tools/run_skill_tests.py skills/docx/scripts/test
 ```
 
-原生行为测试要求 Python >=3.10、Expat >=2.6.0；跳过测试不算行为验收。范围、命令和证据见 [DOCX 维护测试与历史验证记录](skills/docx/references/maintenance-validation.md)。环境自检、固定预期回归和视觉验收覆盖不同内容，当前流程不调用办公软件做视觉验证。
+原生行为测试要求 Python >=3.10、Expat >=2.6.0；跳过测试不算行为验收。范围、命令和证据见 [DOCX 维护测试与历史验证记录](docs/maintenance/docx/maintenance-validation.md)。环境自检、固定预期回归和视觉验收覆盖不同内容，当前流程不调用办公软件做视觉验证。
 
 PPTX 从仓库根目录运行隔离环境回归；要求满足其 Linux/Python/Expat 与描述符操作条件。测试覆盖的结构与内容不等于桌面软件显示或真实宿主触发验收：
 

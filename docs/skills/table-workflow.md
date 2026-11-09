@@ -1,6 +1,6 @@
 # table-workflow：多源表格分析与模板填报
 
-> 核对日期：2026-11-07；源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261108.0102.2369`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261109.0953.3643`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -178,7 +178,7 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 
 ## 验证证据与本次未验证范围
 
-维护证据入口为 [validation.md](../../skills/table-workflow/references/validation.md) 和 [CLI 契约的维护记录](../../skills/table-workflow/scripts/docs/cli-contract.md)。跨 Skill 测试位于仓库 `tests/test_table_workflow*.py`，不随该 Skill 单独运行，也不是普通成功任务的必读材料。
+维护证据入口为 [validation.md](../maintenance/table-workflow/validation.md) 和 [CLI 契约的维护记录](../../skills/table-workflow/scripts/docs/cli-contract.md)。跨 Skill 测试位于仓库 `tests/test_table_workflow*.py`，不随该 Skill 单独运行，也不是普通成功任务的必读材料。
 
 已有记录区分了合成 XLSX/BIFF/OOXML ET 后缀样例、公开银行 XLSX 样本及合成维表/模板；真实银行样本的期望采用独立 OOXML/Fraction 核对，不能据此声称多份真实 ET 附件验收。CLI 记录还包含 macOS/Python 3.12.11 上的公开能力传输、只读独立安装、空外部 PATH、归档及兼容回放。基准中 CLI 比 legacy 有额外序列化成本，不是性能提升证明。
 
@@ -191,7 +191,7 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 - 默认依赖路径：[workflow_runtime.py](../../skills/table-workflow/scripts/workflow_runtime.py)、[workflow_cli_client.py](../../skills/table-workflow/scripts/workflow_cli_client.py)、[CLI 契约](../../skills/table-workflow/scripts/docs/cli-contract.md)。
 - 格式所有方：[XLSX 公开 CLI](../../skills/xlsx/scripts/xlsx_cli.py)、[XLSX 能力契约](../../skills/xlsx/scripts/docs/cli-contract.md)、[xlsx 导读](xlsx.md)、[ET 主入口](../../skills/et/SKILL.md)。
 - 新能力回归（本轮执行范围见核验记录）：[名称分页](../../tests/test_table_workflow_names.py)、[大表与批量目标键](../../tests/test_table_workflow_large_tables.py)。
-- 证据边界：[validation.md](../../skills/table-workflow/references/validation.md)。
+- 证据边界：[validation.md](../maintenance/table-workflow/validation.md)。
 
 ## 归档提示更新（2026-11-07）
 

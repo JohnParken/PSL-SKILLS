@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "skills": {
+    "artifact-lifecycle": "20261109.0953.3643",
+    "bank-writing": "20261108.0102.2369",
+    "docx": "20261109.0953.3643",
+    "et": "20261109.0953.3643",
+    "ofd": "20261109.0953.3643",
+    "pptx": "20261108.0102.2369",
+    "skill-development-standards": "20261108.0102.2369",
+    "table-workflow": "20261109.0953.3643",
+    "wps": "20261109.0953.3643",
+    "xlsx": "20261109.0953.3643"
+  },
+  "pages_checked": 32,
+  "local_links_checked": 446,
+  "issues": [],
+  "limitations": "Structural checks only; no semantic claims, Mermaid rendering, external links or complete CommonMark validation."
+}

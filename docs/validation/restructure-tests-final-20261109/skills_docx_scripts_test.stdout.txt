@@ -1,0 +1,1 @@
+Collected 421 tests from /Users/yangxuezhen/git/PSL-SKILLS/skills/docx/scripts/test (test_*.py)

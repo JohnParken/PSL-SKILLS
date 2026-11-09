@@ -1,8 +1,34 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期：2026-11-07；源码基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261108.0102.2369`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收；本轮定点回归见 [核验记录](../skill-docs-validation-20261107.json)。
+> 文档核对日期：2026-11-09；源码基线：[e86522e](https://github.com/JohnParken/PSL-SKILLS/tree/e86522e01a11f544b4187d1f5ea00a2ffa1e7145) 加本轮运行包维护（验收记录生成于分批提交前；发布状态以 Git 历史为准）；Skill 版本：`20261109.0953.3643`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收；本轮定点回归见 [核验记录](../skill-docs-validation-20261107.json)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
+
+## 运行包与源码维护边界
+
+本次只精简分发内容，不削减生成、读取、五类受控编辑、旧兼容入口或正式诊断能力，也不改变标准库、独立运行、自然分页、输入保护、裸文件名输出、归档与清理契约。生产 Python 文件及运行资源保持原有实现。
+
+- 运行包由仓库维护工具 [package_docx_runtime.py](../../tools/package_docx_runtime.py) （兼容入口，复用 [统一打包器](../../tools/package_skills.py)）和 [显式文件清单](../../packaging/runtime-manifests/docx.json) 构建；工具、清单不作为运行依赖。
+- 运行清单保留 79 个文件。源码中的 `scripts/test/` 全部保留，但不随运行包分发。
+- 维护历史与加载审计说明已迁到 `docs/maintenance/docx/`；审计辅助脚本及兼容夹具归入 `skills/docx/scripts/test/`。这些不进入运行包；79个正式运行文件保留完整业务能力。
+- `audit_package.py`、`validate_layout.py`、ZIP/XML 和结构/内容校验等正式诊断继续分发。四个批注模板、四个样式 profile 和旧 CLI 也保留。
+- 构建拒绝未知源文件、缺失清单项和符号链接；缓存不进入包。新文件必须先人工归类，不能静默漏掉新依赖。文件按固定顺序、时间戳及压缩级别打包，逐成员验证 CRC、成员集合和源码快照字节一致。既有目标拒绝覆盖，旧 ZIP 不改动。
+- 运行包内主入口及参考不再要求读取未分发的维护文件。完整源码的历史记录、测试命令及审计工具继续可用；业务执行不依赖源码仓库或相邻 Skill。
+- 压缩包/展开字节数与模型 token 分开计量。此改动不构成 token 节省实测；按需读取策略保持。
+
+维护者在已确认的仓库根目录，使用满足 Python/Expat 约束的解释器：
+
+```sh
+python -I -S -B tools/package_docx_runtime.py
+python -I -S -B tools/run_skill_tests.py skills/docx/scripts/test
+python -I -S -B -m unittest discover -s tests -p 'test_docx_runtime_package.py' -v
+python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict
+python -I -S -B tools/check_project_docs.py
+```
+
+默认生成 `dist/runtime/docx-runtime-<version>.zip`；可通过 `--output` 指定尚不存在的维护包路径。解压后安装完整 `docx/` 目录，不把源码测试复制到生产安装中。解压包仍须通过独立业务验收；打包成功只证明清单/字节完整性，不代表已通过功能测试或 Word/WPS 视觉验收。
+
+源码测试保留原有布局。发布集成测试从源码运行、在隔离临时目录解压新包，生产子进程仅能导入运行包；安装目录只读、任务目录独立，禁用 site-packages 和第三方可执行工具搜索。当前修订包 macOS 验收：421 项源码回归、20 项独立运行包验收通过，无跳过；严格结构和仓库文档检查通过。包为 295,752 字节，展开 838,611 字节，较原完整包分别减少 35.59% / 40.38%。创建/编辑成功状态及显式归档退出码的澄清、精确两文件差异与哈希见 [状态契约修订验收](../docx-runtime-contract-validation.json)；[上一运行包记录](../docx-runtime-package-validation.json) 保留原事实。此新 ZIP 尚未验证 Linux、Windows 和 Office 视觉，上一 ZIP 的 Linux 结果不能视为新包通过。
 
 ## 功能与适用范围
 
@@ -95,7 +121,8 @@ JSON
 
 | 入口 | 退出码及结果含义 |
 | --- | --- |
-| 创建/编辑 runner | `0`：业务未失败且无 `cleanup_incomplete`；仍须检查归档状态及警告。`1`：`status=failed`。`3`：业务未失败但 `task_status=cleanup_incomplete`。参数解析失败通常为 `2`。 |
+| 创建/编辑 runner | 创建成功 `status=verified`；编辑成功 `status=edited`。`0`：业务未失败且无 `cleanup_incomplete`；仍须检查归档状态及警告。`1`：`status=failed`。`3`：业务未失败但 `task_status=cleanup_incomplete`。参数解析失败通常为 `2`。 |
+| 显式归档 CLI | `status=completed` 只表示清单处理结束；冲突可退出 `0` 且 `archive_status=failed`、文件项 `error_code=archive_conflict`。核对汇总及完整非空明细，不凭退出码宣称已归档。 |
 | `read_docx.py` | 成功 `0`、读取/安全检查失败 `1`、参数错误 `2`。不采用 WPS 的通用 `partial/3` 契约；有界结果须看截断及覆盖字段。 |
 | `validate_layout.py` | 结构正常默认 `0`，可同时有风险警告；结构失败 `1`；显式 `--strict-pagination` 遇分页风险 `2`。该 `2` 不表示真实出现空白页。 |
 

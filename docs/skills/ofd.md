@@ -1,6 +1,6 @@
 # OFD：结构读取与受限固定版式生成
 
-文档核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261108.0102.2369`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
+文档核对日期：2026-11-07。本文对应仓库基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，Skill 版本为 `20261109.0953.3643`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -47,7 +47,7 @@ flowchart TD
 | [generate_ofd.py](../../skills/ofd/scripts/generate_ofd.py) | JSON 输入约束、`Builder`、几何定位、资源组包、模型核对及安全发布 |
 | [ofd_generation_assets.py](../../skills/ofd/scripts/ofd_generation_assets.py) | 静态 TrueType 的 cmap/度量/嵌入限制和受限 PNG/JPEG 检查 |
 | [check_generated_ofd.py](../../skills/ofd/scripts/check_generated_ofd.py) | 独立 ZIP/XML 子集审计、ID、引用、边界、文字/字形计数和许可保留 |
-| [package_ofd.py](../../skills/ofd/scripts/package_ofd.py) | 维护分发包；排除私人字体和缓存，使用新 ZIP 文件，不属于业务生成入口 |
+| [package_ofd.py](../../tools/package_ofd.py) | 维护分发包；排除私人字体和缓存，使用新 ZIP 文件，不属于业务生成入口 |
 
 ## 任务流程
 
@@ -149,7 +149,7 @@ python -I -S -B "<skill-root>/scripts/generate_ofd.py" ./layout.json new-documen
 
 读取预算与生成预算独立。读取器当前上限包括原文件 64 MiB、4096 成员、单成员 16 MiB、总展开 128 MiB、单 XML 2 MiB、XML 总量 32 MiB，以及页数、节点、深度、引用和输出预算。触发安全/资源上限不得以部分成功规避，详见 [边界说明](../../skills/ofd/references/boundaries.md) 与 `LIMITS`。
 
-生成后的归档交由宿主通过已确认的公共生命周期入口处理，本包不猜安装位置、不自动上传。主文件、归档、清理及未验证项分别报告；公共归档不可用不应删除或重新生成主文件。维护分发使用 `package_ofd.py` 排除私人字体，不能直接递归压缩安装目录泄露用户字体。
+生成后的归档交由宿主通过已确认的公共生命周期入口处理，本包不猜安装位置、不自动上传。主文件、归档、清理及未验证项分别报告；公共归档不可用不应删除或重新生成主文件。维护分发使用仓库 `tools/package_skills.py`（或兼容入口 `tools/package_ofd.py`）排除私人字体，不能直接递归压缩安装目录泄露用户字体。
 
 [验证记录](../../skills/ofd/references/validation.md) 和 [生成证据](../../skills/ofd/references/generation.md) 区分合成测试、固定 OFDRW 原件、独立文字预期、真实字体/图片核对和平台范围。JDK 字形/图片交叉检查属于历史维护工具，不是运行时依赖，也没有渲染 OFD 页面。近期生成及资源恢复记录主要来自 macOS，不能推断已完成 Linux、Windows、客户端或视觉验收。
 

@@ -1,0 +1,18 @@
+{
+  "version_rule": "America/New_York local datetime plus 12 hours; truncate to centiseconds",
+  "sampled_version": "20261109.0953.3643",
+  "changed_skills": [
+    "artifact-lifecycle",
+    "docx",
+    "et",
+    "ofd",
+    "table-workflow",
+    "wps",
+    "xlsx"
+  ],
+  "unchanged_skills": [
+    "bank-writing",
+    "pptx",
+    "skill-development-standards"
+  ]
+}

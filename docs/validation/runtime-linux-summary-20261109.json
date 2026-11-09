@@ -1,0 +1,32 @@
+{
+  "bundle_sha256": "42302625d01235aaca0d4f85c7cd6a1c7a0557cbb555ad9ba96134c4b55a1332",
+  "platform": "Debian 13.6 Linux x86_64 glibc 2.41",
+  "uid": 1000,
+  "python": "3.12.14",
+  "expat": "2.8.3",
+  "command": "python -I -S -B verification/tools/verify_release.py --release-dir .",
+  "exit_code": 0,
+  "tests": 11,
+  "skipped": 0,
+  "seconds": 7.367,
+  "additional_boundary_tests": {
+    "passed": 5,
+    "cases": [
+      "incorrect SHA256",
+      "symlink ZIP",
+      "ZIP parent path traversal",
+      "duplicate ZIP members",
+      "release filename traversal"
+    ]
+  },
+  "exact_packages": "All ten archive hashes, member counts and safe paths checked; release files unchanged after verification.",
+  "evidence": "Original stdout/stderr, exit-code metadata and boundary results are retained in the Linux validation workspace.",
+  "limitations": [
+    "synthetic OOXML ET only; expected partial preserved",
+    "no Office/WPS visual acceptance",
+    "no real host/model delivery",
+    "no cloud-space sync",
+    "no Windows validation",
+    "outer filesystem/process isolation used; separate network namespace unavailable; no network installation"
+  ]
+}

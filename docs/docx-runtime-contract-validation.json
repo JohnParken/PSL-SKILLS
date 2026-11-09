@@ -1,0 +1,91 @@
+{
+  "date_utc": "2026-11-09T02:45:08.430791+00:00",
+  "version_clock": {
+    "version": "20261109.0943.0546",
+    "clock": "2026-11-08T21:43:05.463492-05:00",
+    "entry_bytes": 7999
+  },
+  "baseline_commit": "e86522e01a11f544b4187d1f5ea00a2ffa1e7145",
+  "worktree_status": "local, not committed or pushed",
+  "version": "20261109.0943.0546",
+  "package": {
+    "path": "skills/docx-runtime-20261109.0943.0546.zip",
+    "files": 79,
+    "zip_bytes": 295752,
+    "uncompressed_bytes": 838611,
+    "sha256": "97eee4a4403df0839b20f843345ab067c5e7356a7987e62e34315da2dbf23fb7"
+  },
+  "previous_runtime_package": {
+    "path": "skills/docx-runtime-20261109.0930.2426.zip",
+    "sha256": "1e287251048acee5b5126d85cfd515fdb2e7bf9e7a4f85e2f8948b92ac31534c",
+    "unchanged": true,
+    "validation": "docx-runtime-package-validation.json"
+  },
+  "exact_package_diff": {
+    "changed_members": [
+      "docx/SKILL.md",
+      "docx/references/delivery.md"
+    ],
+    "added_members": [],
+    "removed_members": [],
+    "all_business_python_and_assets_byte_identical": true
+  },
+  "clarifications": [
+    "Standard create requires status=verified; edit requires status=edited; task/output/warnings/cleanup still checked.",
+    "Explicit archive CLI may exit 0 with status=completed but archive_status=failed and file error_code=archive_conflict. Exit 0 does not prove archive success.",
+    "Replace outdated delivery subdirectory example with current bare-filename input and task-root output contract.",
+    "Shorten maintenance notice to retain existing entry byte budget; do not weaken safety."
+  ],
+  "interface_changes": false,
+  "entry_bytes": 7978,
+  "platform": {
+    "system": "Darwin",
+    "release": "27.2.0",
+    "machine": "arm64",
+    "python": "3.13.12",
+    "expat": "expat_2.6.3"
+  },
+  "checks": [
+    {
+      "command": "python -I -S -B -m unittest discover -s skills/docx/scripts/test -p test_*.py -q",
+      "passed": 421,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    {
+      "command": "python -I -S -B tests/test_docx_runtime_package.py -q",
+      "passed": 20,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    {
+      "command": "source and exact new ZIP extraction: check_skill.py --strict",
+      "exit_code": 0
+    },
+    {
+      "command": "tools/check_project_docs.py",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "new_regression_tests": [
+    "Source and packaged SKILL/docs distinguish creation and edit status and require archive state inspection.",
+    "Explicit conflicting archive CLI exits 0 yet reports completed/failed, preserves primary and historical archive bytes."
+  ],
+  "limits": [
+    "New exact ZIP has not been tested on Linux in this record; prior ZIP Linux results do not certify this revision.",
+    "Windows and Office visual rendering not tested.",
+    "No real model token or production host end-to-end validation."
+  ],
+  "member_sha256": {
+    "docx/SKILL.md": "a1ebe0d4869b608e6e8eeb41e33b553352d990fbb322c21e3f97673c53bc343b",
+    "docx/references/delivery.md": "2341b97cf51325f22fff6cc2bce9e928a899e75280e793564877069dcf3b8f2e"
+  },
+  "reduction_from_original": {
+    "zip_percent": 35.59,
+    "uncompressed_percent": 40.38
+  }
+}
