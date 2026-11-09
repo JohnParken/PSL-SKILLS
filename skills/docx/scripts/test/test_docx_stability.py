@@ -162,7 +162,7 @@ class StabilityTests(unittest.TestCase):
     def test_independent_libreoffice_control_file_passes_audit(self):
         # Fixture was created separately by LibreOffice from plain text;
         # the automated test itself invokes no office software.
-        path = Path(__file__).resolve().parents[2] / 'assets' / 'compatibility' / 'libreoffice-control.docx'
+        path = Path(__file__).resolve().parent / 'fixtures' / 'libreoffice-control.docx'
         report = audit_package(path)
         self.assertTrue(report['structure_valid'], report)
         self.assertFalse(report['warnings'], report)

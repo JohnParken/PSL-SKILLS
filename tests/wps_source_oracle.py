@@ -148,7 +148,9 @@ def oracle(data):
                 cells[address] = {'type': 'number', 'value': value, 'record_offset': offset,
                                   'ieee754_hex': raw.hex(), 'formula': kind == 0x6}
         expected[name] = cells
-    return {'sha256': hashlib.sha256(data).hexdigest(), 'scope': 'plain LabelSst, Number, RK/MulRK and numeric Formula caches; not blank/style/layout/formula calculation semantics', 'expected': expected}
+    return {'sha256': hashlib.sha256(data).hexdigest(),
+            'scope': 'plain LabelSst, Number, RK/MulRK and numeric Formula caches; not blank/style/layout/formula calculation semantics',
+            'expected': expected}
 
 
 if __name__ == '__main__':
@@ -159,7 +161,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if any(p.is_absolute() or '..' in p.parts for p in (args.directory, args.output)):
         parser.error('Use task-relative input/output paths')
-    manifest = json.loads((REPOSITORY_ROOT / 'skills/wps/references/et-real-samples.json').read_text(encoding='utf-8'))
+    manifest = json.loads((REPOSITORY_ROOT / 'docs/maintenance/et/et-real-samples.json').read_text(encoding='utf-8'))
     samples = {}
     for entry in manifest['samples']:
         path = args.directory / entry['filename']

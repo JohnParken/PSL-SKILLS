@@ -1,19 +1,19 @@
 # Original ET/ETT sample validation
 
-路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+维护路径说明：本页以宿主确认的 PSL-SKILLS 仓库根目录为基准；`skills/et/` 是源码目录，`docs/maintenance/et/` 是维护证据目录。先确认仓库位置；不能从独立运行包推断仓库。原记录的测试数量、平台、版本与结论保留历史含义，不代表当前重跑。测试仅在源码树执行，不随精简运行包分发。
 
-Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
+Follow the path and first-operation rules (`skills/et/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
 ## Contents
 
-- Default data-policy acceptance (`<skill-root>/references/et-real-validation.md#default-data-policy-acceptance`)
-- Sources and scope (`<skill-root>/references/et-real-validation.md#sources-and-scope`)
-- Historical explicit-legacy results (`<skill-root>/references/et-real-validation.md#historical-explicit-legacy-results`)
-- Reproduce offline (`<skill-root>/references/et-real-validation.md#reproduce-offline`)
-- Remaining limits (`<skill-root>/references/et-real-validation.md#remaining-limits`)
-- Independent source-value observations (`<skill-root>/references/et-real-validation.md#independent-source-value-observations`)
-- Template compatibility iteration (`<skill-root>/references/et-real-validation.md#template-compatibility-iteration-2026-11-03`)
+- Default data-policy acceptance (`docs/maintenance/et/et-real-validation.md#default-data-policy-acceptance`)
+- Sources and scope (`docs/maintenance/et/et-real-validation.md#sources-and-scope`)
+- Historical explicit-legacy results (`docs/maintenance/et/et-real-validation.md#historical-explicit-legacy-results`)
+- Reproduce offline (`docs/maintenance/et/et-real-validation.md#reproduce-offline`)
+- Remaining limits (`docs/maintenance/et/et-real-validation.md#remaining-limits`)
+- Independent source-value observations (`docs/maintenance/et/et-real-validation.md#independent-source-value-observations`)
+- Template compatibility iteration (`docs/maintenance/et/et-real-validation.md#template-compatibility-iteration-2026-11-03`)
 
 ## Default data-policy acceptance
 
@@ -24,7 +24,7 @@ The original legacy-policy verifier remains available and still expects Schedule
 be refused when its explicit legacy chart policy is reject. To verify default data:
 
 ```console
-python -I -S -B "<skill-root>/scripts/test/verify_et_samples.py" ./samples --compatibility data
+python -I -S -B "skills/et/scripts/test/verify_et_samples.py" ./samples --compatibility data
 ```
 
 No original is rewritten or bundled; this is the same four-file provenance set and
@@ -34,7 +34,7 @@ not a broader producer/version acceptance claim.
 
 Original baseline checked 2026-10-23; the four pinned originals were reacquired and
 stored-value expectations checked 2026-10-26 using only Python standard-library tools.
-The sample manifest (`<skill-root>/references/et-real-samples.json`) records immutable
+The sample manifest (`docs/maintenance/et/et-real-samples.json`) records immutable
 source URLs, original byte lengths, SHA-256 hashes, producer uncertainty, expected
 results and unavailable alternative downloads. Originals retain the source extension;
 no generated or renamed XLS/XLSX file is counted as a real ET/ETT sample.
@@ -60,7 +60,7 @@ mode still rejects these files at metadata records outside its smaller subset.
 
 Before the fix, Template (0x0060) or SupBook (0x01AE) blocked the two now-readable
 ETT files. The reader now validates a narrow internal-reference/static-print-area
-subset and retains known sheet metadata. See BIFF8 details (`<skill-root>/references/biff8-readonly.md#real-template-compatibility-additions`).
+subset and retains known sheet metadata. See BIFF8 details (`skills/et/references/biff8-readonly.md#real-template-compatibility-additions`).
 It does not skip arbitrary records to make these files pass.
 
 Cell counts were independently cross-checked by framing the workbook stream and
@@ -83,15 +83,15 @@ filenames, in a task-relative directory such as `./samples`. Confirm inputs are
 readable and run the skill self-check first. From the confirmed task directory:
 
 ```console
-python3 -I -S -B "<skill-root>/scripts/read_et.py" --check
-python3 -I -S -B "<skill-root>/scripts/test/verify_et_samples.py" ./samples
-python3 -I -S -B "<skill-root>/scripts/test/verify_et_samples.py" ./samples --chart-policy opaque
-python3 -I -S -B "<skill-root>/scripts/read_et.py" ./samples/Balance_Sheet.ett --compatibility legacy_excel_clsid
+python3 -I -S -B "skills/et/scripts/read_et.py" --check
+python3 -I -S -B "skills/et/scripts/test/verify_et_samples.py" ./samples
+python3 -I -S -B "skills/et/scripts/test/verify_et_samples.py" ./samples --chart-policy opaque
+python3 -I -S -B "skills/et/scripts/read_et.py" ./samples/Balance_Sheet.ett --compatibility legacy_excel_clsid
 ```
 
 The verifier checks original hashes before parsing, expected extraction/rejection,
 sheet/cell/merge/formula counts, title spot checks and input hashes after parsing.
-It also compares frozen typed values (`<skill-root>/references/real-value-expectations.json`): 122 in Balance,
+It also compares frozen typed values (`docs/maintenance/et/real-value-expectations.json`): 122 in Balance,
 66 in Schedule and 10 in Telephone List (79 text values and 119 numbers including
 33 formula caches). The empty ET has no stored-value observations. A wrong value,
 type, missing address or lost formula-cache provenance fails independently of counts.
@@ -99,7 +99,7 @@ It is read-only and emits JSON to stdout. Exit 0 and `status: passed` mean the f
 sample expectations matched, including the expected Schedule rejection under the explicit legacy default chart policy; they do
 not mean every sample was readable. Missing or changed originals return exit 1. The opaque policy checks all four files
 for successful extraction and verifies the retained Schedule chart hash. See
-embedded chart scope (`<skill-root>/references/embedded-charts.md`) for its limits.
+embedded chart scope (`skills/et/references/embedded-charts.md`) for its limits.
 
 ## Remaining limits
 
@@ -179,7 +179,7 @@ and match all observations; each returned workbook remains `partial`. The other
 five failures in the initial 12-template survey have not been reassessed here.
 
 Machine evidence, scope and remaining corpus failures are in
-`<skill-root>/references/et-template-compatibility-evidence.json`.
+`docs/maintenance/et/et-template-compatibility-evidence.json`.
 The follow-up ran on macOS using the requested exact Python 3.12.11 with Expat 2.6.3;
 the earlier name/page/conditional iteration also ran on 3.13.12. Linux container
 and Windows validation were not performed. The previously recorded

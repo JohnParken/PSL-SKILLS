@@ -1,5 +1,7 @@
 # DOCX 维护测试与历史验证记录
 
+仓库维护路径说明：本页位于仓库 `docs/maintenance/docx/`，不随 DOCX 运行包发布。`<repo-root>` 表示宿主本次已确认的仓库根目录，使用前替换并引用完整路径；不能从任务工作目录猜测，无法确认则停止。下文 `<skill-root>` 在源码维护时为 `<repo-root>/skills/docx`，不指本页目录。维护审计入口为 `<repo-root>/skills/docx/scripts/test/reference_loading_audit.py`，兼容性夹具为 `<repo-root>/skills/docx/scripts/test/fixtures/libreoffice-control.docx`。历史测试数量、平台和结论保持当时记录，路径更新不代表本次重跑。
+
 路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入、输出和临时文件均在该目录及其子目录内，不写入 Skill 安装目录。
 
 测试脚本路径已按当前布局更新至 `<skill-root>/scripts/test/`；下文历史测试数量、平台及结论仍为当时记录，不代表本次重跑。测试只用于维护，生产不得调用。
@@ -12,28 +14,28 @@
 
 ## 目录
 
-- 审查问题第一批修复（2026-11-02）（`<skill-root>/references/maintenance-validation.md#审查问题第一批修复2026-11-02`）
-- Pylint 行长与语句排版修复（2026-11-02）（`<skill-root>/references/maintenance-validation.md#pylint-行长与语句排版修复2026-11-02`）
-- DOCX路径统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#docx路径统一2026-10-29`）
+- 审查问题第一批修复（2026-11-02）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#审查问题第一批修复2026-11-02`）
+- Pylint 行长与语句排版修复（2026-11-02）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#pylint-行长与语句排版修复2026-11-02`）
+- DOCX路径统一（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#docx路径统一2026-10-29`）
 
-- 受控编辑清单收尾（2026-10-29）（`<skill-root>/references/maintenance-validation.md#受控编辑清单收尾2026-10-29`）
+- 受控编辑清单收尾（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#受控编辑清单收尾2026-10-29`）
 
-- 运行条件与命令（`<skill-root>/references/maintenance-validation.md#运行条件与命令`）
-- 固定预期与失败保护（`<skill-root>/references/maintenance-validation.md#固定预期与失败保护`）
-- 已执行与未验证（`<skill-root>/references/maintenance-validation.md#已执行与未验证`）
-- 任务清理工具验证（`<skill-root>/references/maintenance-validation.md#任务清理工具验证`）
-- 归档用户提示验证（2026-10-28）（`<skill-root>/references/maintenance-validation.md#归档用户提示验证2026-10-28`）
-- 自动新建收尾验证（2026-10-28）（`<skill-root>/references/maintenance-validation.md#自动新建收尾验证2026-10-28`）
-- 重试事务与控制器可靠性验证（2026-10-28）（`<skill-root>/references/maintenance-validation.md#重试事务与控制器可靠性验证2026-10-28`）
-- 安全维护验收（`<skill-root>/references/maintenance-validation.md#安全维护验收`）
-- 临时文件平铺维护（2026-10-28）（`<skill-root>/references/maintenance-validation.md#临时文件平铺维护2026-10-28`）
-- 自动环境判断维护（2026-10-28）（`<skill-root>/references/maintenance-validation.md#自动环境判断维护2026-10-28`）
-- 回执清理异常修复（2026-10-29）（`<skill-root>/references/maintenance-validation.md#回执清理异常修复2026-10-29`）
-- 参数两端空白裁剪（2026-10-29）（`<skill-root>/references/maintenance-validation.md#参数两端空白裁剪2026-10-29`）
-- 工具调用提示与按需排查（2026-10-29）（`<skill-root>/references/maintenance-validation.md#工具调用提示与按需排查2026-10-29`）
-- execute调用形式补充（2026-10-29）（`<skill-root>/references/maintenance-validation.md#execute调用形式补充2026-10-29`）
-- 常见环境与交付故障说明（2026-10-29）（`<skill-root>/references/maintenance-validation.md#常见环境与交付故障说明2026-10-29`）
-- Bash执行示例统一（2026-10-29）（`<skill-root>/references/maintenance-validation.md#bash执行示例统一2026-10-29`）
+- 运行条件与命令（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#运行条件与命令`）
+- 固定预期与失败保护（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#固定预期与失败保护`）
+- 已执行与未验证（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#已执行与未验证`）
+- 任务清理工具验证（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#任务清理工具验证`）
+- 归档用户提示验证（2026-10-28）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#归档用户提示验证2026-10-28`）
+- 自动新建收尾验证（2026-10-28）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#自动新建收尾验证2026-10-28`）
+- 重试事务与控制器可靠性验证（2026-10-28）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#重试事务与控制器可靠性验证2026-10-28`）
+- 安全维护验收（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#安全维护验收`）
+- 临时文件平铺维护（2026-10-28）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#临时文件平铺维护2026-10-28`）
+- 自动环境判断维护（2026-10-28）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#自动环境判断维护2026-10-28`）
+- 回执清理异常修复（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#回执清理异常修复2026-10-29`）
+- 参数两端空白裁剪（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#参数两端空白裁剪2026-10-29`）
+- 工具调用提示与按需排查（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#工具调用提示与按需排查2026-10-29`）
+- execute调用形式补充（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#execute调用形式补充2026-10-29`）
+- 常见环境与交付故障说明（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#常见环境与交付故障说明2026-10-29`）
+- Bash执行示例统一（2026-10-29）（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#bash执行示例统一2026-10-29`）
 
 ## 审查问题第一批修复（2026-11-02）
 
@@ -237,7 +239,7 @@ strict、122条本地资源/锚点和Python AST通过，新增标识符及调用
 ## 安全维护验收
 
 
-维护时先补小规模失败回归，再修复；在 `-I -S -B`、第三方不可见且 `PATH` 为空的环境中运行仓库测试。固定预期覆盖及命令见 固定预期覆盖（`<skill-root>/references/maintenance-validation.md#固定预期与失败保护`），包括生成、编辑、ZIP/XML 和路由；不要假定旧的仓库 `skills/tests/` 目录存在。需要解包的维护流程把暂存目录放在任务 cwd 下，不能沿用系统临时目录。同步正式包，验证成员逐字节一致，解包后重新运行测试和中文生成/编辑/读取冒烟。恶意样本及输出只放在任务临时目录，不访问无关文件，不使用大负载攻击证明限额。
+维护时先补小规模失败回归，再修复；在 `-I -S -B`、第三方不可见且 `PATH` 为空的环境中运行仓库测试。固定预期覆盖及命令见 固定预期覆盖（`<repo-root>/docs/maintenance/docx/maintenance-validation.md#固定预期与失败保护`），包括生成、编辑、ZIP/XML 和路由；不要假定旧的仓库 `skills/tests/` 目录存在。需要解包的维护流程把暂存目录放在任务 cwd 下，不能沿用系统临时目录。同步正式包，验证成员逐字节一致，解包后重新运行测试和中文生成/编辑/读取冒烟。恶意样本及输出只放在任务临时目录，不访问无关文件，不使用大负载攻击证明限额。
 
 
 本批参考范围拆分：业务validation.md仅保留现行验收、有限重试和清理收尾；维护回归命令、固定预期覆盖和历史验证记录逐字迁移至本页，安全维护验收一并迁入。业务路由只链接现行规则，主入口维护区和README维护测试区指向本页；清理业务说明移除历史证据链接。业务使用questionId，旧requestId/idRecord仅保留弃用说明，拒绝测试不变；不改运行代码、依赖或description。

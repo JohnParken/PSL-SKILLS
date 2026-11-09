@@ -13,7 +13,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / 'scripts' / 'reference_loading_audit.py'
+SCRIPT = ROOT / 'scripts' / 'test' / 'reference_loading_audit.py'
 
 
 class ReferenceLoadingTests(unittest.TestCase):
@@ -52,11 +52,11 @@ class ReferenceLoadingTests(unittest.TestCase):
     def test_recorded_source_change_is_refused_without_touching_real_skill(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            scripts = root / 'fixture' / 'scripts'
+            scripts = root / 'fixture' / 'scripts' / 'test'
             scripts.mkdir(parents=True)
             copied = scripts / 'reference_loading_audit.py'
             shutil.copy2(SCRIPT, copied)
-            target = scripts.parent / 'SKILL.md'
+            target = scripts.parents[1] / 'SKILL.md'
             target.write_text('first line\nsecond line\n', encoding='utf-8')
             command = [sys.executable, '-I', '-S', '-B', str(copied)]
             for args in [('init', '--trace', 'trace.jsonl'), ('read', '--file', 'SKILL.md', '--trace', 'trace.jsonl')]:

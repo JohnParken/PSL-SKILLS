@@ -40,7 +40,7 @@ def check_fixed_values(result, expectation):
 def verify(directory, chart_policy=None, compatibility="legacy_excel_clsid"):
     if chart_policy is None:
         chart_policy = "opaque" if compatibility == "data" else "reject"
-    manifest = Path(__file__).resolve().parents[2] / 'references' / 'et-real-samples.json'
+    manifest = Path(__file__).resolve().parents[4] / 'docs/maintenance/et/et-real-samples.json'
     entries = json.loads(manifest.read_text(encoding='utf-8'))['samples']
     expected_path = manifest.with_name('real-value-expectations.json')
     expectations = json.loads(expected_path.read_text(encoding='utf-8'))['samples']

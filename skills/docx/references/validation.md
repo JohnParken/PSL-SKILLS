@@ -94,4 +94,4 @@ clean 前后核对最终文件指纹；前置失败不删除，后置失败不�
 
 ## P1 排版结构验证
 
-新增标题编号实例、`w:gridSpan` / `w:vMerge`、书签和 TOC 字段的生成意图核对，并在静态审计中检查表格网格覆盖与非法垂直合并。专用用例位于 `<skill-root>/scripts/test/test_docx_p1_layout.py`。这些检查只能说明生成 OOXML 与声明输入相符；不能代替 XSD 全面验证、字体测量或 Word/WPS 实际分页验收。参见 `<skill-root>/references/p1-layout.md`。
+新增标题编号实例、`w:gridSpan` / `w:vMerge`、书签和 TOC 字段的生成意图核对，并在静态审计中检查表格网格覆盖与非法垂直合并。专用用例保留在完整源码仓库的 DOCX 测试套件中，不随运行包分发。这些检查只能说明生成 OOXML 与声明输入相符；不能代替 XSD 全面验证、字体测量或 Word/WPS 实际分页验收。参见 `<skill-root>/references/p1-layout.md`。

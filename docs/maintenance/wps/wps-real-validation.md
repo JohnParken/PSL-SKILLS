@@ -1,15 +1,15 @@
 # 真实 WPS 文档的离线验收
 
-路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+维护路径说明：本页以宿主确认的 PSL-SKILLS 仓库根目录为基准；`skills/wps/` 是源码目录，`docs/maintenance/wps/` 是维护证据目录。先确认仓库位置；不能从独立运行包推断仓库。原记录的测试数量、平台、版本与结论保留历史含义，不代表当前重跑。测试仅在源码树执行，不随精简运行包分发。
 
-先完成 入口自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。本验收器只读样本及预期清单，不下载、不生成/修改办公文件，不导出正文到报告。
+先完成 入口自检 (`skills/wps/SKILL.md#执行环境约束与首步自检`)。本验收器只读样本及预期清单，不下载、不生成/修改办公文件，不导出正文到报告。
 
 ## 输入与命令
 
 在已确认的任务目录准备获准使用的原始 `.wps` 和独立内容预期 JSON。两个文件都必须使用任务目录内的相对路径；绝对路径、父目录、解析到任务目录外的符号链接会被拒绝。不要使用 DOC/DOCX 改后缀样例作为真实 WPS 来源证据。
 
 ```console
-python -I -S -B "<skill-root>/scripts/test/verify_wps_sample.py" ./samples/original.wps ./expectations.json
+python -I -S -B "skills/wps/scripts/test/verify_wps_sample.py" ./samples/original.wps ./expectations.json
 ```
 
 清单上限 1 MiB，样本上限 32 MiB，均必须是可读普通文件。报告 JSON 的 `status=passed`、`passed=true` 且退出 0 才是字节和预期匹配；失败报告退出 1。参数解析错误退出 2，不是验收结果。
@@ -39,12 +39,12 @@ python -I -S -B "<skill-root>/scripts/test/verify_wps_sample.py" ./samples/origi
 
 `provenance_status=declared_requires_human_review` 始终提醒：脚本不能证明声明真实、确认生产软件或辨别一个文件是否曾被改后缀。`full_format_verified=false`，即使通过也不代表完整 WPS 兼容。附加故事不在当前预期字段中，不能因 `include_related=true` 就声称脚注/页眉等内容已逐项验收。
 
-验证器的合成测试只验收工具行为。已从政府官网公开附件实际下载 7 份 CFB/OLE `.wps` 文件；其中 6 份 MS-DOC 子集的主正文及段落数组与独立解码算法一致，另 1 份按现有安全边界拒绝。详见政府公开附件实测 (`<skill-root>/references/wps-government-validation.md`)。这些文件的**官方网站发布来源**有据可查，但 WPS Office 实际生成软件及版本仍不能自动确认，亦没有经软件/人工独立验证的完整内容、复杂表格及页面预期，所以严格原生生产来源验收仍未完成。表格（.et/.ett）的处理已迁移至专用的 `et` 技能，不可替代 `.wps` 正文验收。
+验证器的合成测试只验收工具行为。已从政府官网公开附件实际下载 7 份 CFB/OLE `.wps` 文件；其中 6 份 MS-DOC 子集的主正文及段落数组与独立解码算法一致，另 1 份按现有安全边界拒绝。详见政府公开附件实测 (`docs/maintenance/wps/wps-government-validation.md`)。这些文件的**官方网站发布来源**有据可查，但 WPS Office 实际生成软件及版本仍不能自动确认，亦没有经软件/人工独立验证的完整内容、复杂表格及页面预期，所以严格原生生产来源验收仍未完成。表格（.et/.ett）的处理已迁移至专用的 `et` 技能，不可替代 `.wps` 正文验收。
 
 ## 公开候选样本的独立算法交叉核对（2026-10-31）
 
 已在维护 CI 中使用 `listeng/wps2md` 的公开测试文件 `tests/sample.wps`（固定提交 `c4ae028156e44ed8b57ef879dc7bd1d14750c0f1`、SHA-256 `59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d`）。测试时临时下载，经 Git blob SHA-1、SHA-256 和 125952 字节长度核对后，读取器返回 `partial` / 24 个主正文段落；上游测试文件明确给出的 5 个正文文字锚点全部出现。
 
-另外，维护脚本 `tests/wps_public_story_oracle.py` 使用与生产段落解析器分离的 `struct` 逻辑独立解析 FIB/CLX/Pcdt；只复用 WPS Skill 的有界 CFB 容器层。对上述样本的 608 个 UTF-16 码元、24 个段落，**目标读取器输出正文与独立算法结果全文和段落数组均一致**；固定哈希、来源声明、CI 与缺口见候选样本证据 (`<skill-root>/references/wps-public-candidate-evidence.json`)。未将公共二进制样本纳入 Skill 分发包，运行时不联网、不安装或调用外部软件。
+另外，维护脚本 `tests/wps_public_story_oracle.py` 使用与生产段落解析器分离的 `struct` 逻辑独立解析 FIB/CLX/Pcdt；只复用 WPS Skill 的有界 CFB 容器层。对上述样本的 608 个 UTF-16 码元、24 个段落，**目标读取器输出正文与独立算法结果全文和段落数组均一致**；固定哈希、来源声明、CI 与缺口见候选样本证据 (`docs/maintenance/wps/wps-public-candidate-evidence.json`)。未将公共二进制样本纳入 Skill 分发包，运行时不联网、不安装或调用外部软件。
 
 **这不是经证实的 WPS Office 生产来源或真实软件人工完整语义验收。** GitHub 公开仓库只能证明文件的公开可追踪性，不能自动证明具体创建工具/版本；两个独立文本算法一致也不能证明它们与 WPS 显示完全一致。表格合并、字体/段落最终格式、分页、批注及 CHPX/PAPX 关联均缺独立原生样本对照。符合本文件的“真实原件 + 独立人工/软件内容预期”级别验收依然**未完成**，不能将此候选验证替代 `verify_wps_sample.py` 的严格原生样本验收。

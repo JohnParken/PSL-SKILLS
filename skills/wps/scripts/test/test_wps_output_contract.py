@@ -388,7 +388,7 @@ class OutputContractTests(unittest.TestCase):
         self.assertEqual(result['readback']['status'], 'readback-ok')
 
     def test_legacy_converter_reports_complex_table_partial(self):
-        source = SCRIPT_DIR.parents[1] / '03_复杂表格_跨行跨列合并.docx'
+        source = SCRIPT_DIR.parents[2] / 'tests/fixtures/docx/03_复杂表格_跨行跨列合并.docx'
         if not source.is_file():
             self.skipTest('Repository complex-table fixture unavailable in standalone package')
         target = self.root / 'legacy.rtf'

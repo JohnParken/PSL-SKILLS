@@ -12,7 +12,7 @@ import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-PLANNER = ROOT/'scripts'/'reference_loading_audit.py'
+PLANNER = ROOT/'scripts'/'test'/'reference_loading_audit.py'
 
 
 class TaskLazyRoutingTests(unittest.TestCase):

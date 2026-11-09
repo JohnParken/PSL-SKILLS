@@ -1,5 +1,5 @@
 Private user-font drop directory. Place an explicitly selected ASCII-named .ttf here.
 Reference it as {"skill_font":"MyFont.ttf"}. No installation or directory scanning.
-User files are ignored by git and excluded by scripts/package_ofd.py.
+User files are ignored by git and excluded by the repository tools/package_skills.py (or tools/package_ofd.py).
 Do not use git add -f or generic recursive ZIP packaging for this directory.
 Font files are not automatically licensed; fsType and requested glyph coverage are checked.

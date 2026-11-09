@@ -20,6 +20,7 @@ sys.path.insert(0, str(ROOT / 'tests'))
 from wps_source_oracle import oracle, workbook_stream, records
 sys.path.insert(0, str(ROOT / 'skills' / 'et' / 'scripts'))
 from read_et import read_bytes
+sys.path.insert(0, str(ROOT / 'skills/et/scripts/test'))
 from verify_et_samples import check_fixed_values
 
 BASE = ('https://raw.githubusercontent.com/winunix/wps-office-templates/'
@@ -185,7 +186,7 @@ def main():
             reports.append({'sample': entry['path'], 'status': 'failed',
                             'error_type': type(error).__name__, 'message': str(error)})
     if args.include_baseline:
-        refs = ROOT / 'skills' / 'et' / 'references'
+        refs = ROOT / 'docs/maintenance/et'
         samples = json.loads((refs / 'et-real-samples.json').read_text(encoding='utf-8'))['samples']
         expectations = json.loads((refs / 'real-value-expectations.json').read_text(encoding='utf-8'))['samples']
         for entry in samples:

@@ -183,7 +183,7 @@ class TestWpsExport(unittest.TestCase):
             self.assertEqual(res["status"], "missing-dependency")
 
     def test_convert_docx_rtf_backend_real_sample(self):
-        sample_path = Path("skills/01_基础打开_中文字体与样式.docx")
+        sample_path = Path("tests/fixtures/docx/01_基础打开_中文字体与样式.docx")
         if not sample_path.is_file():
             self.skipTest("Sample docx not found")
 
@@ -210,7 +210,7 @@ class TestWpsExport(unittest.TestCase):
 
     @patch('export_wps.find_soffice', return_value=None)
     def test_convert_docx_complex_table_sample(self, _find_soffice):
-        sample_path = Path("skills/03_复杂表格_跨行跨列合并.docx")
+        sample_path = Path("tests/fixtures/docx/03_复杂表格_跨行跨列合并.docx")
         if not sample_path.is_file():
             self.skipTest("Sample table docx not found")
 

@@ -1,5 +1,7 @@
 # 二进制脚注与尾注 CP 引用
 
+维护资源说明：文中 `docs/maintenance/wps/` 与 `skills/wps/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
+
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 显式 include-related 时，读取第2/3对 footnote Ref/Txt、第46/47对 endnote Ref/Txt。Ref为4(n+1)+2n字节，Txt为4(n+2)字节；两者条目数一致。Ref有效锚点必须严格递增且位于主正文内，最后CP未定义并忽略。Txt从0起、有效CP严格递增，倒数第二CP必须ccpStory−1；最后CP未定义并忽略。每个文字范围尾字符为CR。原表偏移、全局CP、编号原值均保留，原正文输出不变。
@@ -10,4 +12,4 @@
 
 批注作者及引用另见批注子集 (`<skill-root>/references/binary-comments.md`)，节与页眉存储槽另见分节范围 (`<skill-root>/references/binary-headers.md`)；本引用映射不计算完整书签或有效页面语义。脚注尾注映射为标准库合成验证，没有真实非空故事的独立内容对照。
 
-官方依据见来源 (`<skill-root>/references/binary-note-evidence.json`)，开发研究用途，运行时不联网。
+官方依据见来源 (`docs/maintenance/wps/binary-note-evidence.json`)，开发研究用途，运行时不联网。

@@ -192,7 +192,7 @@ class PaginationGovernanceTests(unittest.TestCase):
                 self.assertTrue(parsed['structure_valid'])
 
     def test_existing_independent_control_fixture_has_no_pagination_warnings(self):
-        fixture = Path(__file__).resolve().parents[2] / 'assets' / 'compatibility' / 'libreoffice-control.docx'
+        fixture = Path(__file__).resolve().parent / 'fixtures' / 'libreoffice-control.docx'
         report = validate_layout(fixture)
         self.assertTrue(report['structure_valid'], report)
         self.assertFalse({item['code'] for item in report['issues']} & PAGINATION_CODES)

@@ -1,6 +1,6 @@
 ---
 name: docx
-version: "20261108.0102.2369"
+version: "20261109.0953.3643"
 description: 用于创建 DOCX 公文、报告、通知与表格，读取 DOCX/DOTX 的正文、章节和表格数据，并按明确目标受控编辑 DOCX。适合 Word 文档交付并保护原件；不支持旧 DOC、RTF 或 WPS 专有格式转换，不承诺任意无损编辑或真实视觉分页验证。
 ---
 
@@ -69,7 +69,6 @@ runner自动自检、验收、归档、清理；`--compact-receipt` 仅精简成
 | 归档失败/冲突 | `<skill-root>/references/delivery.md`，仅重试归档，不重跑生成 |
 | cleanup_incomplete/原清单恢复 | `<skill-root>/references/task-cleanup.md`；仅原登记项 |
 | 旧CLI/配置/命名 | `<skill-root>/references/generation-runtime.md` |
-| 维护审计 | `<skill-root>/references/reference-loading.md` 与 `<skill-root>/references/maintenance-validation.md`，普通任务禁止预读 |
 
 同任务参考仅在上下文及路径/版本未变时复用，否则复核；不递归预读，不控制宿主缓存/计费，不复用其他任务授权。编辑须明确锚点、新文件交付，保真不足拒绝。
 
@@ -81,12 +80,12 @@ runner自动自检、验收、归档、清理；`--compact-receipt` 仅精简成
 
 ## 验收与收尾
 
-核对 `status=verified`、`task_status`、`output`、非空主文件及 warnings；静态验收非视觉验收。`archive_status=copied` 且完整非空清单全 copied/already_archived 才提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”。不等映射确认，不承诺上传时效。保留 archive_message，展示 archive_user_notice；失败/部分/跳过/待交接/未知如实报告，不套全部成功。业务/归档/清理独立，业务失败不称成功。隐藏归档路径/目录/ID/日志，保留主文件链接，不虚构下载。见 `<skill-root>/references/delivery.md`。
+创建核对 `status=verified`，编辑核对 `status=edited`；再查 `task_status`、`output`、非空主文件及 warnings。静态非视觉验收，退出0不代表归档成功。`archive_status=copied` 且完整非空清单全 copied/already_archived 才提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”。不等映射确认，不承诺上传时效。保留 archive_message，展示 archive_user_notice；失败/部分/跳过/待交接/未知如实报告，不套全部成功。业务/归档/清理独立，业务失败不称成功。隐藏归档路径/目录/ID/日志，保留主文件链接，不虚构下载。见 `<skill-root>/references/delivery.md`。
 
 核对 `cleanup_complete`、`manifest_removed`、`deliverables_unchanged`；`cleanup_incomplete`/退出3如实说明，不乱删或重发。`/large_tool_results/` 仅用宿主 `read_file`，不得绕过。
 
 ## 维护资源
 
-审计不自动截获其他工具读取或模型 Token；usage由宿主提供。禁止在普通文档任务中修改本 Skill。
+运行包不带测试与维护资料；维护用完整源码。审计不自动截获其他工具读取或模型 Token；usage由宿主提供。禁止在普通文档任务中修改本 Skill。
 
 <!-- SKILL_DEFINITION_END -->

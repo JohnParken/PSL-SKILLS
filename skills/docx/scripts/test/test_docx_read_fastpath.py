@@ -157,7 +157,7 @@ class ReadFastpathTests(unittest.TestCase):
         self.assertEqual(data['blocks'][2]['level'],2)
 
     def test_read_plan_only_requires_main_entry(self):
-        planner = ROOT/'reference_loading_audit.py'
+        planner = ROOT/'test'/'reference_loading_audit.py'
         r=subprocess.run([sys.executable,'-I','-S','-B',str(planner),'plan','--task','read'],capture_output=True,text=True)
         self.assertEqual(r.returncode,0,r.stderr)
         self.assertEqual([x['file'] for x in json.loads(r.stdout)['files']],['SKILL.md'])

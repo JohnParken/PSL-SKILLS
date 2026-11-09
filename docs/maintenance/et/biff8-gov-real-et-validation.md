@@ -1,6 +1,6 @@
 # 政府官网原始 ET 的 BIFF8 表格样式兼容验证
 
-路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+维护路径说明：本页以宿主确认的 PSL-SKILLS 仓库根目录为基准；`skills/et/` 是源码目录，`docs/maintenance/et/` 是维护证据目录。先确认仓库位置；不能从独立运行包推断仓库。原记录的测试数量、平台、版本与结论保留历史含义，不代表当前重跑。测试仅在源码树执行，不随精简运行包分发。
 
 ## 目标与真实来源
 
@@ -11,7 +11,7 @@
 - `https://jt.zs.gov.cn/xxml/zwgk/czxx/zbggxx/content/post_2632463.html` — 运输车租赁报价表 `.et`
 - `https://jt.zs.gov.cn/xxml/zwgk/czxx/zbggxx/content/post_2603613.html` — 自卸汽车采购报价表 `.et`
 
-公开附件直链和原件 SHA-256 见固定机器证据（`<skill-root>/references/biff8-gov-real-et-evidence.json`）。官网发布不等于具体 WPS Office 生产者/版本经证实；不把下载文件提交进 Skill 或部署包。
+公开附件直链和原件 SHA-256 见固定机器证据（`docs/maintenance/et/biff8-gov-real-et-evidence.json`）。官网发布不等于具体 WPS Office 生产者/版本经证实；不把下载文件提交进 Skill 或部署包。
 
 ## 实际 CI 结果
 
@@ -28,7 +28,7 @@
 
 ## 有限实现与保留的拒绝边界
 
-新增的独立模块 `<skill-root>/scripts/wps_biff8_tablestyles.py` 仅在 BIFF8 `data` 模式对有前置 TableStyles 集合及已验证 DXF 记录的 Globals 进行表格样式组验证：
+新增的独立模块 `skills/et/scripts/wps_biff8_tablestyles.py` 仅在 BIFF8 `data` 模式对有前置 TableStyles 集合及已验证 DXF 记录的 Globals 进行表格样式组验证：
 
 - `0x088F`：固定 FrtHeader (12 字节)、被支持的保留位、声明不超过 28 个元素、1–255 UTF-16 字符样式名且负载完全消费
 - `0x0890`：必须紧邻对应 TableStyle，数量精确匹配；每条固定 24 字节 FrtHeader/元素区域/条纹尺寸/已存在 DXF 索引
@@ -43,4 +43,4 @@
 - MS-XLS TableStyle：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/32b77a63-30c5-4885-bc94-434923002d6d`
 - MS-XLS TableStyleElement：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/5c1d12a9-01db-4471-897a-e2d2875980c5`
 - MS-XLS FrtHeader：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d56e99f8-a271-4db1-923c-222722d21a37`
-- 既有非单元格分类矩阵：`<skill-root>/references/et-noncell-compatibility.md`
+- 既有非单元格分类矩阵：`skills/et/references/et-noncell-compatibility.md`

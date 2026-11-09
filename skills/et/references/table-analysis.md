@@ -1,5 +1,7 @@
 # ET 保存值统计与结果表处理
 
+维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
+
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 ## 目录
@@ -154,18 +156,18 @@ sum 和 median 在有界 Decimal 精度下精确计算，不经过 float；mean 
 
 整行/整组是最小输出单元，不切开长单元格。header、query、merges、源诊断、quality_report及统计等必要元数据不分页、不裁剪；放不下时明确返回 `output_view_error`/退出1。没有任何行/组能前进时同样失败，不返回带不前进游标的空成功页。有效预算也约束失败JSON；提高预算、明确减少展示列/每页行数，或使用旧完整输出。不要为减少输出而改变统计口径。预览页的合并anchor_in_page和returned_positions按实际返回行重算，合并定义仍覆盖整个选区。
 
-新增回归入口 `<skill-root>/scripts/test/test_et_output_budget.py` 验证真实stdout字节、emoji/转义、超长元数据/单行、源与查询变化、末页移除游标、完整续读、partial/质量分母、默认兼容和独立安装。仅本地macOS/Python3.12验证，不宣称Linux/Windows或真实宿主token测量已完成。
+新增回归入口 `skills/et/scripts/test/test_et_output_budget.py` 验证真实stdout字节、emoji/转义、超长元数据/单行、源与查询变化、末页移除游标、完整续读、partial/质量分母、默认兼容和独立安装。仅本地macOS/Python3.12验证，不宣称Linux/Windows或真实宿主token测量已完成。
 
 ## 验证依据
 
-测试入口为 `<skill-root>/scripts/test/test_et_table_analysis.py` 和 `<skill-root>/scripts/test/test_et_table_row_selection.py`，覆盖手工指定类型/缓存数据、独立 Fraction 精度对照、合并标签、稳定筛选去重排序、分页、错误输入、BIFF/OOXML 实际解析链和 CLI 输出契约。后者另用含明细、小计、总计、重复表头和缺失值的合成报表核对排除行后的总额、均值、中位数及分组结果。真实原件的维护统计核对及平台结果见 `<skill-root>/references/table-analysis-evidence.json`。真实源记录一致性不证明公式最新、视觉布局或业务总额正确。
+测试入口为 `skills/et/scripts/test/test_et_table_analysis.py` 和 `skills/et/scripts/test/test_et_table_row_selection.py`，覆盖手工指定类型/缓存数据、独立 Fraction 精度对照、合并标签、稳定筛选去重排序、分页、错误输入、BIFF/OOXML 实际解析链和 CLI 输出契约。后者另用含明细、小计、总计、重复表头和缺失值的合成报表核对排除行后的总额、均值、中位数及分组结果。真实原件的维护统计核对及平台结果见 `docs/maintenance/et/table-analysis-evidence.json`。真实源记录一致性不证明公式最新、视觉布局或业务总额正确。
 
-`<skill-root>/scripts/test/test_et_table_quality_preview.py` 另验证质量分母与位置样本、重复/空/不可用表头、分组覆盖、跨页/裁切合并预览、blank/空文本缓存及 BIFF/OOXML 实际预览链。Schedule 原件核对 48 个非零保存数值（含 12 个缓存）、12 个分组和 10 个预览保存值；Fraction 独立精确统计及整数商余数实现的 34 位 half-even 均值预期在调用目标分析前冻结。其数值包括序号、日期序列与时长，未把它们冒充已填报金额；未验证源公式新鲜度或业务总额。
+`skills/et/scripts/test/test_et_table_quality_preview.py` 另验证质量分母与位置样本、重复/空/不可用表头、分组覆盖、跨页/裁切合并预览、blank/空文本缓存及 BIFF/OOXML 实际预览链。Schedule 原件核对 48 个非零保存数值（含 12 个缓存）、12 个分组和 10 个预览保存值；Fraction 独立精确统计及整数商余数实现的 34 位 half-even 均值预期在调用目标分析前冻结。其数值包括序号、日期序列与时长，未把它们冒充已填报金额；未验证源公式新鲜度或业务总额。
 
 已按证据中的来源与 SHA-256 单独取得原件后，先自检，再在任务目录运行离线维护核对；文件名可替换成实际相对路径，不因名称相同就接受，核对器必须匹配原始哈希：
 
 ```console
-python -I -S -B "<skill-root>/scripts/test/verify_et_analysis.py" ./Balance_Sheet.ett ./Schedule.ett "./Start-up Expenses.ett"
+python -I -S -B "skills/et/scripts/test/verify_et_analysis.py" ./Balance_Sheet.ett ./Schedule.ett "./Start-up Expenses.ett"
 ```
 
 退出 0 且 `status=passed` 只表示本次提供的固定原件与独立冻结统计一致。Start-up Expenses 原件另核对显式排除五行后 23 个数值的位置和统计、合并表头来源及数值锚点不重复。脚本不会下载、保存或重分发原件；未提供的原件不计为通过。这里的选列仅验证保存值运算，不把包含模板合计行的整列相加解释为业务总额；该模板明细列的零值不能代替多样金额或真实填报业务的验收。

@@ -32,7 +32,7 @@ class SimpleDocumentFastpathTests(unittest.TestCase):
             self.assertIn(token, content)
 
     def test_only_one_reference_for_three_simple_plans(self):
-        planner = SCRIPTS / 'reference_loading_audit.py'
+        planner = SCRIPTS / 'test' / 'reference_loading_audit.py'
         for task in ('simple', 'simple-list', 'simple-table'):
             with self.subTest(task=task):
                 r = subprocess.run([sys.executable, '-I', '-S', '-B', str(planner),

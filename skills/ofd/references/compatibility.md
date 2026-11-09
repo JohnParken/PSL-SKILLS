@@ -1,5 +1,7 @@
 # 版本与兼容性
 
+维护资源说明：文中 `docs/maintenance/ofd/` 与 `skills/ofd/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
+
 本参考覆盖读取器的版本策略；独立生成器目前只输出OFD 1.0固定版式子集，见 `<skill-root>/references/generation.md`。
 
 路径占位符说明：`<skill-root>` 是 OFD Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 OFD 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
@@ -41,4 +43,4 @@ compatible 是用户理解缺口后显式选择的未知小版本存储结构试
 - Page.java 的 PageRes 列表与模板约束：`https://github.com/ofdrw/ofdrw/blob/c633a61fb37d300392a51f67b101f46738866c83/ofdrw-core/src/main/java/org/ofdrw/core/basicStructure/pageObj/Page.java`。
 - CT_VectorG.java 的 Content 与 CompositeObject.java 的 ResourceID：同一提交的 `ofdrw-core/src/main/java/org/ofdrw/core/compositeObj/CT_VectorG.java` 和 `ofdrw-core/src/main/java/org/ofdrw/core/basicStructure/pageObj/layer/block/CompositeObject.java`。
 
-固定提交的原始 1.1/1.2/OFD-A 1.2 测试原件可读取；结构、命名空间及文字维度分别记录。原始1.1样例自定义 XML 的异常命名空间名称以 raw_names 保留，不能据此称该 XML 合规。新版未取得独立的全功能规范/所有真实文件覆盖证据，不将存储模型完整冒充全格式语义认证。复合对象新增能力目前只有合成验证。真实样本清单与结果见 `<skill-root>/references/real-samples.json`，详细方法与平台缺口见 `<skill-root>/references/validation.md`。
+固定提交的原始 1.1/1.2/OFD-A 1.2 测试原件可读取；结构、命名空间及文字维度分别记录。原始1.1样例自定义 XML 的异常命名空间名称以 raw_names 保留，不能据此称该 XML 合规。新版未取得独立的全功能规范/所有真实文件覆盖证据，不将存储模型完整冒充全格式语义认证。复合对象新增能力目前只有合成验证。真实样本清单与结果见 `docs/maintenance/ofd/real-samples.json`，详细方法与平台缺口见 `docs/maintenance/ofd/validation.md`。

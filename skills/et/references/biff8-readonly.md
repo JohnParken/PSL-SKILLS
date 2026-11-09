@@ -1,5 +1,7 @@
 # Bounded BIFF8 stored-value reading
 
+维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
+
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
@@ -43,7 +45,7 @@ Implementation follows the Microsoft MS-XLS online record/structure sections che
 2026-10-22: Record, BOF, BoundSheet8, SST/Unicode strings, Number/RK/MulRk, Blank,
 LabelSst, BoolErr, MergeCells, Date1904, XF/Format, Formula/FormulaValue and String.
 Exact official source URLs are bibliographic entries in
-et-format-evidence.json (`<skill-root>/references/et-format-evidence.json`), not runtime dependencies. No third-party
+et-format-evidence.json (`docs/maintenance/et/et-format-evidence.json`), not runtime dependencies. No third-party
 parser code or binary samples were incorporated. All tests are synthetic MS-XLS record
 fixtures, with manual typed expectations and container fixtures; they are not WPS files.
 
@@ -63,7 +65,7 @@ wps_compatibility_verified always remain false, even after successful BIFF extra
 
 在 `data` 模式中，已观察到政府真实 `.et` 文件的 `TableStyle(0x088F)` 和连续 `TableStyleElement(0x0890)`。通过 `wps_biff8_tablestyles.py` 对前置 TableStyles 集合、FrtHeader、名称、1–28 个元素/类型/条纹大小、源 DXF 索引及完整连续记录进行结构校验，再保留原始 record bytes 与 `table_style_sources` 证据，标记 `effective_formatting=unknown`。该源字段仅对实际含有效组的 BIFF8 结果出现；无该记录的既有输出字段保持不变。
 
-只有受控记录子集才会被保留；严格、legacy 模式继续拒绝新增组，分组未完成、FrtHeader 非法、元素错位、非法 DXF 或未知后续记录仍拒绝，不能扫描恢复或跳过。两份真实政府文件的 32/43 个受限保存单元格已通过，独立记录观察器分别核对 18/19 项可观测保存值；样本哈希、原件来源与未验收范围见政府 ET 实测（`<skill-root>/references/biff8-gov-real-et-validation.md`）。该增强不计算或验证字体、边框、条纹格式、页面渲染，也不声称 WPS Office 生产者版本已确认。
+只有受控记录子集才会被保留；严格、legacy 模式继续拒绝新增组，分组未完成、FrtHeader 非法、元素错位、非法 DXF 或未知后续记录仍拒绝，不能扫描恢复或跳过。两份真实政府文件的 32/43 个受限保存单元格已通过，独立记录观察器分别核对 18/19 项可观测保存值；样本哈希、原件来源与未验收范围见政府 ET 实测（`docs/maintenance/et/biff8-gov-real-et-validation.md`）。该增强不计算或验证字体、边框、条纹格式、页面渲染，也不声称 WPS Office 生产者版本已确认。
 
 ## Default data policy
 
@@ -134,7 +136,7 @@ These new cases have fixed synthetic tests and old/new default comparisons. The 
 allowed original ET/ETT samples still match all 198 independent stored values, but
 contain none of these new non1200/reserved-flag cases. They are regression evidence,
 not producer acceptance of this extension. A real user file exercising it remains
-needed for such acceptance. See validation (`<skill-root>/references/validation.md`) and sources (`<skill-root>/references/et-format-evidence.json`).
+needed for such acceptance. See validation (`docs/maintenance/et/validation.md`) and sources (`docs/maintenance/et/et-format-evidence.json`).
 
 ## Observed legacy compatibility
 
@@ -169,7 +171,7 @@ One public government ET template was read without changing its bytes: three she
 merge sets matched an isolated LibreOffice XLSX conversion. Its Date1904=0 marker also
 matched; it contains no numeric date cells or formulas, so those capabilities still lack
 real-sample validation. Source/hash and limitations are in
-the evidence manifest (`<skill-root>/references/et-format-evidence.json`). The file is not redistributed and its
+the evidence manifest (`docs/maintenance/et/et-format-evidence.json`). The file is not redistributed and its
 WPS version is unknown. This is observed BIFF8 cell-subset interoperability, not general
 native ET/ETT acceptance; native_et_ett_parsed and wps_compatibility_verified stay false.
 
@@ -202,11 +204,11 @@ external XTI, other built-in names, and relative name areas remain refused
 (including experimental salvage mode). Strict and
 explicit `legacy_excel_clsid` keep their historical Print_Area-only subset.
 See defined-name acceptance (`<skill-root>/references/biff8-defined-names.md`)
-and pinned real evidence (`<skill-root>/references/biff8-defined-names-evidence.json`).
+and pinned real evidence (`docs/maintenance/et/biff8-defined-names-evidence.json`).
 The explicit opaque chart policy (`<skill-root>/references/embedded-charts.md`) adds bounded framing/raw retention
 for a supported embedded-chart subset without decoding or rendering charts. Record bytes are retained for diagnosis;
 metadata retention is not full semantic or layout validation. Strict mode is unchanged.
-See real sample validation (`<skill-root>/references/et-real-validation.md`) for original-file hashes, results,
+See real sample validation (`docs/maintenance/et/et-real-validation.md`) for original-file hashes, results,
 spot checks, explicit legacy chart rejection, the data/opaque policy and reproducible offline verification.
 
 ## Supported records and retained values
@@ -265,7 +267,7 @@ Conditional-format metadata retains every group's raw bytes, header range and
 rule-length evidence; `inner_payload_validated=false` prevents treating opaque
 DXFN/formula bytes as verified styles. CF12/CondFmt12/CFEx, orphan CF and arbitrary
 unknown records remain outside this addition. See the real template results in
-`<skill-root>/references/et-real-validation.md#template-compatibility-iteration-2026-11-03`.
+`docs/maintenance/et/et-real-validation.md#template-compatibility-iteration-2026-11-03`.
 Maintenance references: MS-XLS CondFmt
 (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/03ae6098-bdc2-475b-ba2c-b8aef7882174`),
 CF (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d6dcadf2-7e07-4f7d-a60a-0f643780225d`)
@@ -292,10 +294,10 @@ Explicit strict mode still refuses these metadata record kinds. Unknown records
 are not skipped. CFB allocation checks, explicit strict minor `0x003E` (data/legacy also accept observed `0x003B` with diagnostics), explicit Date1904, policy-specific CodePage validation and explicit chart rejection
 are unchanged. Missing date-system information is never silently replaced by 1900.
 
-Source references are recorded in the format evidence (`<skill-root>/references/et-format-evidence.json`).
+Source references are recorded in the format evidence (`docs/maintenance/et/et-format-evidence.json`).
 The original Palette/Pane additions have synthetic coverage; the newer conditional-format, note and validation groups have the limited real ETT evidence linked above. Unlinked BIFF Note,
 HLink and RString, arbitrary XML extensions and private WPS records remain outside
-this addition. Actual verification results are in validation (`<skill-root>/references/validation.md`).
+this addition. Actual verification results are in validation (`docs/maintenance/et/validation.md`).
 
 ## Dates and formula caches
 

@@ -3,15 +3,17 @@ on:
   pull_request:
     paths:
       - 'tests/wps_biff8_audit_real_samples.py'
-      - 'skills/wps/scripts/wps_biff8_audit.py'
-      - 'skills/wps/scripts/wps_biff8.py'
-      - 'skills/wps/scripts/wps_biff8_names.py'
+      - 'skills/et/scripts/wps_biff8_audit.py'
+      - 'skills/et/scripts/wps_biff8.py'
+      - 'skills/et/scripts/wps_biff8_names.py'
       - 'skills/et/scripts/test/test_wps_biff8_print_titles_memfunc.py'
-      - 'skills/wps/scripts/wps_biff8_noncell.py'
+      - 'skills/et/scripts/wps_biff8_noncell.py'
       - 'skills/et/scripts/test/test_wps_biff8_noncell.py'
-      - 'skills/wps/references/et-noncell-compatibility.md'
-      - 'skills/wps/scripts/wps_biff8_audit_sources.py'
-      - 'skills/wps/references/et-real-samples.json'
+      - 'skills/et/references/et-noncell-compatibility.md'
+      - 'skills/et/scripts/wps_biff8_audit_sources.py'
+      - 'docs/maintenance/et/et-real-samples.json'
+      - 'docs/maintenance/et/real-value-expectations.json'
+      - 'skills/et/scripts/test/verify_et_samples.py'
       - '.github/workflows/wps-biff8-real-source.yml'
   workflow_dispatch:
 permissions:
@@ -27,7 +29,7 @@ jobs:
           python-version: '3.13'
       - name: WPS source self-check
         run: |
-          python -I -S -B skills/wps/scripts/read_wps.py --check
+          python -I -S -B skills/et/scripts/read_et.py --check
       - name: Pinned public ET ETT sources and exact saved values (maintenance)
         run: |
           python -I -S -B tests/wps_biff8_audit_real_samples.py

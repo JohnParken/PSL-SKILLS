@@ -1,8 +1,10 @@
+<!-- Repository maintenance only; paths are relative to the confirmed repository root. Historical results retain their own baseline. -->
+
 # 维护验证与待验收范围
 
 路径占位符说明：`<skill-root>` 是 table-workflow Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 table-workflow Skill 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-本页只用于维护审查，运行时正常任务不预读。以宿主确认的仓库根目录为基准，跨 Skill 集成回归位于 仓库 `tests/test_table_workflow.py`、仓库 `tests/test_table_workflow_review.py` 和 仓库 `tests/test_table_workflow_cli_capabilities.py`。历史证据 `tests/table_workflow_validation.json`、`tests/table_workflow_review.json` 则以宿主确认的仓库根目录为基准，不拼接到 `<skill-root>`；其中的历史版本指纹和测试数不代表本轮版本。本轮CLI验证见 `<skill-root>/scripts/docs/cli-contract.md`。部分测试依赖仓库样本，业务运行不依赖这些测试材料。
+本页只用于维护审查，运行时正常任务不预读。以宿主确认的仓库根目录为基准，跨 Skill 集成回归位于 仓库 `tests/test_table_workflow.py`、仓库 `tests/test_table_workflow_review.py` 和 仓库 `tests/test_table_workflow_cli_capabilities.py`。历史证据 `tests/table_workflow_validation.json`、`tests/table_workflow_review.json` 则以宿主确认的仓库根目录为基准，不拼接到 `<skill-root>`；其中的历史版本指纹和测试数不代表本轮版本。本轮CLI验证见 `skills/table-workflow/scripts/docs/cli-contract.md`。部分测试依赖仓库样本，业务运行不依赖这些测试材料。
 
 验收基线 Python 3.12.11 / macOS arm64 / Expat 2.6.3；每个测试在维护专属临时目录创建合成表并清理自己创建的目录。输入含原生 XLSX、合成 BIFF8 CFB 的 ETT 和 OOXML 的 ET 后缀样例，后缀不证明真实 WPS 来源。未提供用户业务原表，没有真实 WPS/Excel 软件视觉或语义验收。
 

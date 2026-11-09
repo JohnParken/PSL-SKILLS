@@ -174,7 +174,9 @@ class PrivateFontTests(unittest.TestCase):
                     paths[1].write_bytes(HELPERS.font_fixture(bits))
                     with self.assertRaises(WRITER.GenerationError):
                         WRITER.Builder(spec)
-            package_spec = importlib.util.spec_from_file_location('ofd_packaging', ROOT / 'scripts/package_ofd.py')
+            import shutil
+            shutil.copytree(ROOT, root, dirs_exist_ok=True, ignore=shutil.ignore_patterns('__pycache__'))
+            package_spec = importlib.util.spec_from_file_location('ofd_packaging', ROOT.parents[1] / 'tools/package_ofd.py')
             module = importlib.util.module_from_spec(package_spec)
             package_spec.loader.exec_module(module)
             # ZIP target lies outside the fake Skill root to avoid packaging itself.
@@ -182,4 +184,5 @@ class PrivateFontTests(unittest.TestCase):
                 destination = Path(target) / 'result.zip'
                 module.package(root, destination)
                 with zipfile.ZipFile(destination) as archive:
-                    self.assertFalse(any(name.startswith('ofd/assets/user_fonts/') for name in archive.namelist()))
+                    self.assertEqual([name for name in archive.namelist() if name.startswith('ofd/assets/user_fonts/')],
+                                     ['ofd/assets/user_fonts/NOTICE.txt'])

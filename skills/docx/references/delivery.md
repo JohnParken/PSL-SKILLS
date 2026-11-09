@@ -84,7 +84,7 @@ result = replace_text_delivery(
 )
 ```
 
-新建 `output` 仍只接收 DOCX 文件名，默认验收后交付；编辑 `destination` 仍接收相对任务目录的路径。编辑返回 `output="deliverables/采购管理办法_修订版.docx"` 时，后续读取该主文件，而归档路径为 `output/{questionId}/采购管理办法_修订版.docx`；不追加 `deliverables/` 层级。已有底层函数 `create_document`、`replace_text`、`edit_structure`、`edit_tables`、`replace_image`、`manage_comments` 的签名和返回值保持兼容，不自动归档；不得将其用于最终交付后省略归档。多步处理中间结果不归档；若最终文件已由低层或其他工具生成并验收，显式调用 `archive_outputs(outputs, protected_inputs, *, replace_existing=False)` 或对应清单 CLI，不为归档重跑编辑。
+新建 `output` 与编辑 `destination` 均只接收裸文件名，主文件固定写入任务根目录，拒绝 `./文件名`、子目录、绝对或父目录参数。编辑返回 `output="采购管理办法_修订版.docx"` 时，后续读取任务根目录中的该主文件；内部归档副本为 `output/{questionId}/采购管理办法_修订版.docx`，不把归档路径作为业务输出参数。已有底层函数 `create_document`、`replace_text`、`edit_structure`、`edit_tables`、`replace_image`、`manage_comments` 的签名和返回值保持兼容，不自动归档；不得将其用于最终交付后省略归档。多步处理中间结果不归档；若最终文件已由低层或其他工具生成并验收，显式调用 `archive_outputs(outputs, protected_inputs, *, replace_existing=False)` 或对应清单 CLI，不为归档重跑编辑。
 
 这些入口保证经过它们的主文件成功后触发归档；不能拦截任意外部代码写文件，也未接入宿主交付钩子。目录缺失由归档代码自动创建；配置缺失/无效时由代码返回 `skipped`，无须模型判断是否执行。归档记录须区分执行后跳过与从未调用，不能仅凭没有单独复制命令就判断未执行。
 
@@ -126,7 +126,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_deliverables.py\
 
 归档采用任务根目录./内独占临时文件，完整复制、同步、设置权限后，以原子独占硬链接发布并删除临时链接；不在归档目录暂存。目标已存在时返回archive_conflict，旧归档字节和权限不变。硬链接不可用或跨文件系统时归档失败，不回退覆盖。主文件仍保持成功；清理失败同时返回temporary_residuals，自动runner报告cleanup_incomplete。仅显式授权更新时使用原子replace并保留旧归档权限。路径、输入及内容验证继续执行；并发目录改写仍须宿主隔离，多文件不构成整批事务。
 
-显式清单的 JSON `status` 为 `completed`，编辑 CLI 成功的 `status` 为 `edited`，新建生成器成功的 `status` 为 `created` 或 `verified`。上述主状态不因归档失败改变，归档步骤异常只警告并返回退出码 0。显式清单的 `completed` 表示处理结束，不是文档内容验收或文件创建证明；不能根据它猜测文件真实存在。
+标准创建 runner 成功须核对 `status=verified`，编辑 runner/CLI 成功须核对 `status=edited`；旧生成器兼容入口可返回 `created` 或 `verified`，不能混作标准 runner 判据。显式归档清单的 `status=completed` 仅表示处理结束，不是归档成功、内容验收或文件创建证明。归档步骤失败不改变已成功的主业务状态；显式归档冲突仍可退出 0，同时返回 `archive_status=failed`，对应文件项为 `error_code=archive_conflict`。退出0不代表归档成功，必须核对汇总及完整非空 `files` 明细；保留主文件和历史副本，不重跑生成或编辑。
 
 显式清单与编辑摘要的顶层 `archive_status` 为 `copied`、`skipped` 或 `failed`，并有 `used_fallback`、`fallback_reason`、`files` 和 `warnings`。每项 `files` 包含主文件 `output`、归档路径 `archive_output`、`archive_status`（`copied`、`already_archived`、`skipped` 或 `failed`）。全部文件已在归档位置时，汇总仍为 `copied`，单项为 `already_archived`。清单预检查失败时 `files` 可为空，原因在 `warnings`，未复制任何文件。复制过程中部分失败，其他文件仍逐项处理；顶层归档状态为 `failed`，主状态不变。CLI 同时将警告输出到 stderr，前缀 `archive-warning`。
 

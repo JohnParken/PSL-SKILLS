@@ -1,5 +1,7 @@
 # BIFF8 原始证据审计：富字符串、公式缓存与 XF
 
+维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
+
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 ## 目标与范围
@@ -47,17 +49,17 @@ python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et
 
 `xf_sources` 仅包含 `xf_index`、`font_index_raw`、`number_format_id_raw`、`format_and_alignment_tail_hex` 及未知格式说明。不推断合并单元格、列宽、字体效果、边框生效状态或日期显示结果。
 
-受控上限：128 工作表、200000 单元格、4096 个带格式 SST 条目、20000 个详细 run 区间、4096 个 XF。超出区间预算时清空受影响条目并返回 `audit_span_budget_exceeded`，不声称完整输出；超出主要输入预算则拒绝。本次对上述两阶段功能仅针对已有合成 BIFF8 样本进行单元测试，没有新增独立 WPS Office 原生富文本/公式缓存/格式的应用级验收。原始真实 ET/ETT 文件样本及范围另见真实样本核验（`<skill-root>/references/et-real-validation.md`）。
+受控上限：128 工作表、200000 单元格、4096 个带格式 SST 条目、20000 个详细 run 区间、4096 个 XF。超出区间预算时清空受影响条目并返回 `audit_span_budget_exceeded`，不声称完整输出；超出主要输入预算则拒绝。本次对上述两阶段功能仅针对已有合成 BIFF8 样本进行单元测试，没有新增独立 WPS Office 原生富文本/公式缓存/格式的应用级验收。原始真实 ET/ETT 文件样本及范围另见真实样本核验（`docs/maintenance/et/et-real-validation.md`）。
 
 ## 四份固定真实 ET/ETT 原件的独立保存值回归
 
 维护专用 GitHub Actions `41185939341` 已按清单中固定的上游 URL 下载 4 份原件，并在校验文件大小与 SHA-256 后运行旧版的独立保存值验证器（`verify_et_samples.py`）。**198 个已冻结的保存值均匹配**，其中 **33 项为仍未验证新鲜度的 Formula 缓存**。新增 BIFF8 审计器也对四份文件成功运行，并再验原件哈希不变。运行时 WPS Skill 不下载文件，不加入新的联网/安装依赖，也没有将这四份第三方文件分发到 Skill 包中。
 
-实际观察：四份样本中共有 **0 条带富格式 SST 字符串**；Font 来源记录分别为 4/9/9/9 条，计算元数据分别为 6/2/2/2 条，XF 记录分别为 21/73/31/42 条。**真实样本验证的是读取及审计操作不会破坏已冻结的保存值**，不是对真实富字符串字体生效、计算结果的新鲜度或复杂格式最终显示的认证。软件制作版本未知，不能将零条富文本样本当作富文本兼容性通过。可复现工具为仓库根目录的 `tests/wps_biff8_audit_real_samples.py`；详见机器证据（`<skill-root>/references/biff8-stored-audit-evidence.json`）与样本清单（`<skill-root>/references/et-real-samples.json`）。
+实际观察：四份样本中共有 **0 条带富格式 SST 字符串**；Font 来源记录分别为 4/9/9/9 条，计算元数据分别为 6/2/2/2 条，XF 记录分别为 21/73/31/42 条。**真实样本验证的是读取及审计操作不会破坏已冻结的保存值**，不是对真实富字符串字体生效、计算结果的新鲜度或复杂格式最终显示的认证。软件制作版本未知，不能将零条富文本样本当作富文本兼容性通过。可复现工具为仓库根目录的 `tests/wps_biff8_audit_real_samples.py`；详见机器证据（`docs/maintenance/et/biff8-stored-audit-evidence.json`）与样本清单（`docs/maintenance/et/et-real-samples.json`）。
 
 ## 回归检查
 
-此前 Linux 自动化完成了 Python 3.11 与 3.13 环境的独立脚本测试（各 10 项）、WPS 全量回归（各 434 项）和严格 Skill 检查。第二阶段新增 Font/计算/XF 证据后，同环境测试各 **15 项**、WPS 全量各 **439 项**通过，严格 Skill 检查也通过。实际 CI、初次 CLI 隔离导入问题及未完成的原生 ET/ETT 应用级验证记于机器证据（`<skill-root>/references/biff8-stored-audit-evidence.json`）。这不是原生富文本/复杂格式的真实生产者验收。
+此前 Linux 自动化完成了 Python 3.11 与 3.13 环境的独立脚本测试（各 10 项）、WPS 全量回归（各 434 项）和严格 Skill 检查。第二阶段新增 Font/计算/XF 证据后，同环境测试各 **15 项**、WPS 全量各 **439 项**通过，严格 Skill 检查也通过。实际 CI、初次 CLI 隔离导入问题及未完成的原生 ET/ETT 应用级验证记于机器证据（`docs/maintenance/et/biff8-stored-audit-evidence.json`）。这不是原生富文本/复杂格式的真实生产者验收。
 
 本工作线的验证应包含以下命令（按真实已确认的仓库路径或 Skill 实际根目录执行）。严格 Skill 检查的脚本是**仓库维护入口**，不是分发 Skill 的运行时依赖：
 

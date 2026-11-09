@@ -1,8 +1,10 @@
 ---
 name: et
-version: "20261108.0102.2369"
+version: "20261109.0953.3643"
 description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，预览表头区域，并按指定范围筛选、排序、去重、统计及分组汇总，提供质量诊断；支持 BIFF8 与 OOXML 子集并保留 partial。公式不重算，不修改原表；原生 XLSX 使用对应技能。
 ---
+
+维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
 # WPS 表格（ET/ETT）只读提取与统计
 
@@ -14,7 +16,7 @@ description: 用于离线读取金山 WPS 表格（.et/.ett）的保存值与公
 
 多份来源计算后填入另附 XLSX 模板时，交由独立 table-workflow 技能编排，ET 仍只读。纯文本或仅 stdout 不归档；文件交接继承提供方已验证的归档状态与用户提示，成功即提示去云空间查看，非成功如实报告，不虚构文件链接或暴露内部归档信息。交接原始完整读取 schema 与 partial/缓存诊断，不能将 et_table_analysis_v1 或预览直接当原工作簿；单表读取与统计继续本入口，不加载跨表流程。
 
-维护CLI或接入跨技能编排时，按需读取 `<skill-root>/scripts/docs/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。回归脚本集中在 `<skill-root>/scripts/test/`。
+维护CLI或接入跨技能编排时，按需读取 `<skill-root>/scripts/docs/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。回归脚本集中在 `skills/et/scripts/test/`。
 
 ## 执行环境约束与首步自检
 
@@ -96,4 +98,4 @@ python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据"
 - 默认 data 可保留受限批注绘图分片链与 `DVal/Dv` 数据验证组，返回 partial；批注文字、作者、绘图效果和验证规则不并入单元格值、不执行或跟随。完整原始记录、对象链接与遗漏诊断保留；除上述有界对象外，未知对象、错误分片边界、截断及资源越界仍拒绝。其他绘图类型和完整规则语义尚未支持。
 - `status=partial`、退出 3：保留提取结果并说明已知缺口。
 - 读取失败退出 1；参数错误退出 2。
-- 维护验收与真实样例验证详见 真实 ET/ETT 记录（`<skill-root>/references/et-real-validation.md`）与 格式说明（`<skill-root>/references/biff8-readonly.md`）。
+- 维护验收与真实样例验证详见 真实 ET/ETT 记录（`docs/maintenance/et/et-real-validation.md`）与 格式说明（`<skill-root>/references/biff8-readonly.md`）。

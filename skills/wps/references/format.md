@@ -1,5 +1,7 @@
 # 格式、路由与精确边界
 
+维护资源说明：文中 `docs/maintenance/wps/` 与 `skills/wps/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
+
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 ## 目录
@@ -69,7 +71,7 @@ U+0001在placeholder模式替换U+FFFC，不推断图片/对象类型。U+0008�
 
 CFB已迁至wps包内唯一实现。CFB迁移基线hash为00dcd269218d94737e9ebad48c06fafa62b1fae72c3807a037fe7f1cd0bfb42a，此后新增只读打开及精确Word策略。OOXML必要读取守卫来自docx。不得自动复制覆盖形成漂移。
 
-官方依据 (`<skill-root>/references/format-evidence.json`)仅开发资料，运行时不联网。Word头例外是明示经验兼容策略，并非宣称符合MS-CFB零CLSID要求。
+官方依据 (`docs/maintenance/wps/format-evidence.json`)仅开发资料，运行时不联网。Word头例外是明示经验兼容策略，并非宣称符合MS-CFB零CLSID要求。
 
 ## 预算与输出
 

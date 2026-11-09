@@ -42,13 +42,14 @@ def fetch_original(entry, destination):
 
 def main():
     root = Path(__file__).resolve().parents[1]
-    scripts = root / 'skills' / 'wps' / 'scripts'
+    scripts = root / 'skills' / 'et' / 'scripts'
     sys.path.insert(0, str(scripts))
+    sys.path.insert(0, str(scripts / 'test'))
     from wps_biff8 import read_file
     from wps_biff8_audit import audit_biff8
     from verify_et_samples import verify, check_fixed_values
 
-    manifest = root / 'skills' / 'wps' / 'references' / 'et-real-samples.json'
+    manifest = root / 'docs/maintenance/et/et-real-samples.json'
     entries = json.loads(manifest.read_text(encoding='utf-8'))['samples']
     frozen_expectations = json.loads(
         manifest.with_name('real-value-expectations.json').read_text(

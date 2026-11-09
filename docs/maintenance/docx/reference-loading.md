@@ -1,5 +1,7 @@
 # Reference 按需读取与真实加载审计（维护阶段）
 
+仓库维护路径说明：本页位于仓库 `docs/maintenance/docx/`，不随 DOCX 运行包发布。`<repo-root>` 表示宿主本次已确认的仓库根目录，使用前替换并引用完整路径；不能从任务工作目录猜测，无法确认则停止。下文 `<skill-root>` 在源码维护时为 `<repo-root>/skills/docx`，不指本页目录。维护审计入口为 `<repo-root>/skills/docx/scripts/test/reference_loading_audit.py`，兼容性夹具为 `<repo-root>/skills/docx/scripts/test/fixtures/libreoffice-control.docx`。历史测试数量、平台和结论保持当时记录，路径更新不代表本次重跑。
+
 路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 > 本页仅限用户明确要求诊断 Token / reference 加载时读取。常规 Word 生成和读取不加载本页、不创建日志、不执行额外工具。所有操作遵循 `SKILL.md` 的权限、执行环境、临时项登记与清理约束。
@@ -21,8 +23,8 @@
 ## 任务规划示例
 
 ```bash
-python -I -S -B "<skill-root>/scripts/reference_loading_audit.py" plan --task simple
-python -I -S -B "<skill-root>/scripts/reference_loading_audit.py" plan --task full-report
+python -I -S -B "<repo-root>/skills/docx/scripts/test/reference_loading_audit.py" plan --task simple
+python -I -S -B "<repo-root>/skills/docx/scripts/test/reference_loading_audit.py" plan --task full-report
 ```
 
 常用 `simple`、`simple-list`、`simple-table`、`read`、`read-summary`、`read-headings`、`read-section` 均仅建议 `SKILL.md`；复杂任务才使用 `styles`、`table`、`complex-table`、`create-numbering`、`sections`、`edit-text`、`edit-table` 等具体路由。`full-report` 只建议主入口与基础规范，随后按实际需求追加专项内容，而非预先加载全部 P1/P2 参考。规划不是自动注入，也不能限制模型使用其他读取工具。
@@ -32,9 +34,9 @@ python -I -S -B "<skill-root>/scripts/reference_loading_audit.py" plan --task fu
 **仅在维护任务需要时启用**。由宿主事先确认和登记工作目录中的独占临时文件名；不要存到 Skill 源码目录或归档目录：
 
 ```bash
-python -I -S -B "<skill-root>/scripts/reference_loading_audit.py" init --trace docx-read-trace.jsonl
-python -I -S -B "<skill-root>/scripts/reference_loading_audit.py" read --file references/generation-tables.md --start-line 1 --end-line 40 --trace docx-read-trace.jsonl
-python -I -S -B "<skill-root>/scripts/reference_loading_audit.py" audit --trace docx-read-trace.jsonl --task table
+python -I -S -B "<repo-root>/skills/docx/scripts/test/reference_loading_audit.py" init --trace docx-read-trace.jsonl
+python -I -S -B "<repo-root>/skills/docx/scripts/test/reference_loading_audit.py" read --file references/generation-tables.md --start-line 1 --end-line 40 --trace docx-read-trace.jsonl
+python -I -S -B "<repo-root>/skills/docx/scripts/test/reference_loading_audit.py" audit --trace docx-read-trace.jsonl --task table
 ```
 
 - `init` 以独占模式创建工作目录下的平铺 `.jsonl` 文件，已存在即失败。

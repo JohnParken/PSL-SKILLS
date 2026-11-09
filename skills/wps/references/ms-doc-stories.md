@@ -1,5 +1,7 @@
 # MS-DOC 存储子文档分区
 
+维护资源说明：文中 `docs/maintenance/wps/` 与 `skills/wps/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
+
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 `--include-related` 为二进制 MS-DOC 增加 `related_stories`；附加区域必须使用JSON：`--include-related --format text`明确参数失败（退出2），避免纯文本只输出正文而静默漏掉所请求区域。默认行为及顶层 `text`、`paragraphs`、`main_cp_units` 不变。附加文字只出现在各区域，不并入主正文，也不推测页码。按FIB长度分区，并不等于完整解析子文档内部各条注释、页眉或文本框。
@@ -18,7 +20,7 @@ FIB的ccpText之后依次为ccpFtn、ccpHdd、ccpAtn、ccpEdn、ccpTxbx、ccpHdr
 
 ## 依据和验证
 
-公开规范仅开发资料，运行时不联网，原始URL见故事依据 (`<skill-root>/references/ms-doc-stories-evidence.json`)。FibRgLw97定义计数；MS-DOC2.3.2至2.3.7明确相邻顺序及引用表；PlcPcd定义最后额外CP规则。Header段落说明guard段落及页眉页脚合并范围。
+公开规范仅开发资料，运行时不联网，原始URL见故事依据 (`docs/maintenance/wps/ms-doc-stories-evidence.json`)。FibRgLw97定义计数；MS-DOC2.3.2至2.3.7明确相邻顺序及引用表；PlcPcd定义最后额外CP规则。Header段落说明guard段落及页眉页脚合并范围。
 
 新test_wps_stories.py仅标准库合成规范样例：正文加全部六区、空区、混合压缩/Unicode、物理逆序、单片段跨区、两种Table、代理对跨区拒绝、字段/对象与组合预算、损坏计数及统一CFB入口。真实样本若无附加区域，不算本能力真实验收；尚无多故事独立语义对照。
 

@@ -80,7 +80,7 @@
 
 `create_document(..., verify=True)` 在原结构、内容、编号与合并网格验收之外，逐节核验 `sectPr` 的页尺寸、页边距、页码、不同首页、页眉页脚关系及文字，校验交叉引用字段和表格标题样式。`validate_layout.py` 逐节估算表格及图片宽度，检查书签目标、页码起始值、节属性和相关结构。检查不等于 OOXML 全量 XSD 校验，亦不能证明 Word/WPS 视觉排版、字段求值、精确分页或字体实际存在。
 
-专项测试：`<skill-root>/scripts/test/test_docx_p2_layout.py`；完整测试仍使用 `python -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_*.py' -q`（仅限 Skill 维护验证）。
+P2 专项和完整回归仅在完整源码仓库中维护，不随运行包分发；维护者按仓库级 DOCX 说明执行，普通文档任务不运行维护测试。
 
 ## 分页策略风险检查（P3 增量）
 

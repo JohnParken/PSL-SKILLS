@@ -13,7 +13,8 @@ from pathlib import Path
 import stat
 import sys
 
-ROOT = Path(__file__).resolve().parent.parent
+# Source-only maintenance tool: scripts/test is two levels below the Skill root.
+ROOT = Path(__file__).resolve().parents[2]
 
 # Suggested *minimum* document sets. These are not an instruction to read all
 # documents, nor evidence of what a model actually loaded.

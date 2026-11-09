@@ -1,12 +1,12 @@
 # 中国农业银行官网公开附件的受控格式读取验证（2026-10-31）
 
-路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
+维护路径说明：本页以宿主确认的 PSL-SKILLS 仓库根目录为基准；`skills/wps/` 是源码目录，`docs/maintenance/wps/` 是维护证据目录。先确认仓库位置；不能从独立运行包推断仓库。原记录的测试数量、平台、版本与结论保留历史含义，不代表当前重跑。测试仅在源码树执行，不随精简运行包分发。
 
 2026-10-31 本轮仅验证中国农业银行 `www.abchina.com` **官网公开附件**，用户不需要注册采购平台。通过正文中的实际下载链接取得五份 `.doc` 和三份 `.pdf`，下载时限制 32 MiB、拒绝跳转到非官方域名，检查真实文件签名及 SHA-256；维护脚本位于**仓库根目录** `tests/wps_abc_official_probe.py`，GitHub Actions workflow 为 `.github/workflows/wps-abc-official-probe.yml`。业务 WPS Skill 本身仍只读、离线、纯 Python 标准库，不自动抓取官网。
 
 ## 实测结果与证据
 
-Linux GitHub Actions Python 3.13 运行 `41181769821` / job `124480463829`：八份文件均实际下载成功，来源链接及详细哈希见机器证据 (`<skill-root>/references/wps-abc-official-evidence.json`)。
+Linux GitHub Actions Python 3.13 运行 `41181769821` / job `124480463829`：八份文件均实际下载成功，来源链接及详细哈希见机器证据 (`docs/maintenance/wps/wps-abc-official-evidence.json`)。
 
 | 官网附件 | 原文件扩展名 | 真实签名 | 读取结果 |
 |---|---|---|---|
@@ -25,4 +25,4 @@ Linux GitHub Actions Python 3.13 运行 `41181769821` / job `124480463829`：八
 
 农行官网真实链接、文件大小及 SHA-256 均由维护 CI 固定，源文件没有保存进入 Skill 安装包。总行采购公告中多次要求“WPS 格式”，只是**材料提交要求**，不证明附件文件格式。本轮并**未找到或验证从农行官网直接发布、签名确认的原生 `.wps` 文件**；因此不能把上述 4/5 份 DOC 的读取结果当成 `.wps` 成功率，也不能证明文件由哪一版本 WPS Office 创建。
 
-若将来取得农行官网直接发布的 `.wps`，仍须先检查真实签名与内部流，冻结 SHA-256，并获得独立的全文和表格预期，再按真实 WPS 验收文档 (`<skill-root>/references/wps-real-validation.md`) 执行；不能用 DOCX 改名或未知来源样本替代。
+若将来取得农行官网直接发布的 `.wps`，仍须先检查真实签名与内部流，冻结 SHA-256，并获得独立的全文和表格预期，再按真实 WPS 验收文档 (`docs/maintenance/wps/wps-real-validation.md`) 执行；不能用 DOCX 改名或未知来源样本替代。

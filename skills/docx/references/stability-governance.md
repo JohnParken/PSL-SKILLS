@@ -38,7 +38,7 @@ python -I -S -B "<skill-root>/scripts/office/validate.py" ./实际文件.docx
 | OPC 完整性 | 类型、关系、内部目标 | `test_docx_stability.py`、原 `structure.py` 测试 | 完整 ISO 29500 XSD 语义 |
 | 样式/节结构 | basedOn、section、heading/footer rel | `test_docx_stability.py` | 最终视觉页码与可用字体 |
 | 复杂内容 | 编号、目录字段、跨行列合并 | P1/P2 回归与综合样例 | Word/WPS 实际更新域结果 |
-| 独立来源样本 | LibreOffice 生成的对照 DOCX 不被误拒绝 | `<skill-root>/assets/compatibility/libreoffice-control.docx` | 所有第三方生成器文件均兼容 |
+| 独立来源样本 | LibreOffice 生成的对照 DOCX 不被误拒绝 | 完整源码仓库中的独立兼容样本（不随运行包分发） | 所有第三方生成器文件均兼容 |
 | 真正的应用兼容 | 在 Word/WPS 中打开、保存和重开 | **尚无自动化环境** | 不能据此宣称 Word/WPS 已验收 |
 
 ## 可重复的办公软件诊断（仅在独立维护环境，不进入 Skill 业务入口）
