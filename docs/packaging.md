@@ -9,7 +9,7 @@
 - `tests/fixtures/docx/`：跨 Skill 使用的七个既有 DOCX 样本，原字节不变。ET 来源清单和固定预期移至 `docs/maintenance/et/`，维护脚本及 CI 同步定位。
 - `packaging/runtime-manifests/`：10份审阅后的显式发布文件清单；不自动吸入新文件。
 - `tools/`：统一构建、自检和回归工具。DOCX、OFD旧打包命令是兼容入口，复用同一构建实现。
-- `dist/runtime/`：当前生成 ZIP 与发布清单；`dist/archive/`：原有12份历史 ZIP，保持原字节。整个 `dist/` 不纳入Git。
+- `dist/runtime/`：本地已生成的 ZIP 与发布清单；`dist/archive/`：保留历史 ZIP，不覆盖原字节。整个 `dist/` 不纳入 Git；包文件名中的版本须与当前 `SKILL.md` 分别核对，已有包不必然对应当前源码。
 - `docs/validation/`：重组基线、历史包指纹和当前验收记录。旧证据保留原日期/版本结论，不伪装为本轮重跑。
 
 ## 保留与排除
