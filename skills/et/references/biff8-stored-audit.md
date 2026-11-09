@@ -65,8 +65,8 @@ python -I -S -B "<skill-root>/scripts/wps_biff8_audit.py" ./input.et
 
 ```console
 python -I -S -B "<skill-root>/scripts/read_et.py" --check
-python -I -S -B -m unittest discover -s skills/wps/scripts/test -p 'test_*.py' -v
-python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/wps --strict
+python -I -S -B -m unittest discover -s skills/et/scripts/test -p 'test_*.py' -v
+python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict
 ```
 
 执行前从 harness 确认是否在仓库维护工作目录；后两条命令所用路径以仓库根目录为基准，不能在普通用户任务中照抄并假定存在。

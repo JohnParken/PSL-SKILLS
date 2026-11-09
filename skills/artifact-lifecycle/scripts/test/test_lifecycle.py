@@ -104,6 +104,63 @@ class LifecycleTests(unittest.TestCase):
         cleanup.seal_cleanup('manifest.json', outcome='success', verified=True, archive_status='skipped')
         self.assertEqual(self.call('clean', 'manifest.json')[0], 0)
 
+    def test_plan_protected_dot_components_and_overlap(self):
+        Path('inputs').mkdir()
+        Path('inputs/user.txt').write_text('original', encoding='utf-8')
+        code, result = self.call('plan', 'manifest.json', '--file', 'worker.py',
+                                 '--protect', './inputs/./user.txt')
+        self.assertEqual((code, result['status']), (0, 'planned'))
+        manifest = json.loads(Path('manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(manifest['protected'][0]['path'], 'inputs/user.txt')
+        Path('worker.py').write_text('owned', encoding='utf-8')
+        self.assertEqual(self.call('seal', 'manifest.json', '--outcome', 'failed')[0], 0)
+        self.assertEqual(self.call('clean', 'manifest.json')[0], 0)
+        self.assertEqual(Path('inputs/user.txt').read_text(encoding='utf-8'), 'original')
+        self.assertFalse(Path('worker.py').exists())
+        self.assertEqual(self.call('plan', 'manifest.json', '--file', 'worker.py',
+                                   '--protect', './worker.py')[0], 1)
+        self.assertFalse(Path('manifest.json').exists())
+
+    def test_protected_dot_path_blocks_hardlink_cleanup(self):
+        Path('user.txt').write_text('original', encoding='utf-8')
+        self.assertEqual(self.call('plan', 'manifest.json', '--file', 'worker.py',
+                                   '--protect', './user.txt')[0], 0)
+        os.link('user.txt', 'worker.py')
+        self.assertEqual(self.call('seal', 'manifest.json', '--outcome', 'failed')[0], 0)
+        code, report = self.call('clean', 'manifest.json')
+        self.assertEqual(code, 3)
+        self.assertFalse(report['cleanup_complete'])
+        self.assertEqual(Path('user.txt').read_text(encoding='utf-8'), 'original')
+        self.assertEqual(Path('worker.py').read_text(encoding='utf-8'), 'original')
+
+    def test_process_cli_plan_accepts_relative_dot_protection(self):
+        Path('user.txt').write_text('original', encoding='utf-8')
+        cli = str(Path(__file__).parents[1] / 'lifecycle.py')
+        result = subprocess.run([sys.executable, '-I', '-S', '-B', cli, 'plan', 'manifest.json',
+                                 '--file', 'worker.py', '--protect', './user.txt'], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['status'], 'planned')
+        manifest = json.loads(Path('manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(manifest['protected'][0]['path'], 'user.txt')
+
+    def test_plan_protection_rejects_unsafe_raw_paths_and_links(self):
+        Path('inputs').mkdir()
+        Path('inputs/user.txt').write_text('original', encoding='utf-8')
+        Path('alias').symlink_to('inputs', target_is_directory=True)
+        Path('link.txt').symlink_to('inputs/user.txt')
+        for raw in ('../user.txt', './inputs/../user.txt', '/inputs/user.txt',
+                    'inputs//user.txt', 'inputs/user.txt/', 'inputs\\user.txt',
+                    'C:/user.txt', '.', './', './alias/user.txt', './link.txt'):
+            with self.subTest(raw=raw):
+                code, _ = self.call('plan', 'manifest.json', '--file', 'worker.py', '--protect', raw)
+                self.assertEqual(code, 1)
+                self.assertFalse(Path('manifest.json').exists())
+                self.assertEqual(Path('inputs/user.txt').read_text(encoding='utf-8'), 'original')
+        for name in ('./manifest.json', '../manifest.json'):
+            self.assertEqual(self.call('plan', name, '--file', 'worker.py')[0], 1)
+        self.assertEqual(self.call('plan', 'manifest.json', '--file', './worker.py')[0], 1)
+        self.assertEqual(self.call('plan', 'manifest.json', '--deliverable', './result.txt')[0], 1)
+
     def test_preexisting_file_cannot_be_adopted(self):
         Path('old.py').write_text('old')
         code, result = self.call('plan', 'manifest.json', '--file', 'old.py')
