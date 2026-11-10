@@ -32,3 +32,11 @@ freshly computed values without disclosing their status. If fresh results are ne
 run `calculate` into a separate workbook and inspect its report before using them.
 
 The old `<skill-root>/scripts/xlsx_reader.py`/pandas pipeline is legacy and is not used by this workflow.
+
+## Identify contents, including ET/ETT candidates
+
+`<skill-root>/scripts/xlsx_identify.py` inspects native OOXML inputs. WPS family suffixes and CFB signatures
+return `unsupported`: `.wps` uses `recommended_skill: wps`, `.et/.ett` uses `et`, and a CFB signature
+with another suffix uses `wps_or_et` pending content identification. These values replace the older generic
+`wps` marker; consumers must handle all three. The inspection does not validate the binary container or
+extract cells. Locate the selected Skill independently; never rename input to bypass routing.

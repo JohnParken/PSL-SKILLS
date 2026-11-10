@@ -36,3 +36,23 @@ BIFF8 `data` 模式额外接受有明确编码编号的 CodePage 874、949、950
 
 需要核对 ET/ETT 中富字符串 FormatRun 位置、公式保存缓存风险、原始 XF 格式证据时，可以在完成上述自检后，使用**独立入口** `execute(command="python -I -S -B \"<skill-root>/scripts/wps_biff8_audit.py\" ./input.et")`。它只接受经当前读取器确认的 `biff8_readonly_v1`，默认正常 `read_et.py` 输出与 Word/MS-DOC 文字读取器均不变；新增可选的 Font 原始记录引用、CalcMode/CalcSaveRecalc/RecalcId 保存值和 XF 父样式直接来源观察，**不计算字体效果、样式级联或公式缓存的最新性**，绝不执行公式。详情、范围、退出码和上限见 BIFF8 保存证据审计（`<skill-root>/references/biff8-stored-audit.md`）。本次为合成及格式证据验证，未证明新审计结果在 WPS Office 原生富文本/公式文档上的完整语义兼容。
 
+
+## 默认 data 诊断与容器恢复
+
+- CFB 文件头声明 FAT 数量为 0 时，默认 data 仅在 DIFAT 列出了 FAT 扇区且全部结构与 BIFF8 校验通过时返回 partial（退出 3），保留 `cfb_zero_fat_count_recovered` 诊断。索引缺失、结构校验失败或严格模式下仍拒绝读取。默认 data 还可忽略不足一扇区的全零尾缀，前提是完整扇区前缀通过分配链及各流声明长度校验，并附 `cfb_zero_trailing_padding_ignored`。
+- 默认 data 可读取仅带隐藏位或非零保留位的已支持静态 `NAME`，保留原记录与 `defined_name_passive_header_fields_ignored` 诊断，继续提取保存值及公式缓存并返回 partial。其他无法解释的名称（包括带宏标志的名称）仅作为原始元数据保留，名称公式和宏均不执行。
+- 默认 BIFF8 文件读取保留外部工作簿和加载项的原始 SupBook/XTI 索引，仅将经验证的内部 XTI 用于名称解析。公式使用 Workbook 流中已有的保存缓存，外部缓存只保留为证据。
+- `0x088D` 按 MS-XLS 标准 DXF 结构读取并保留属性；有界 DXF 内未知/无效格式属性保留原始记录并报告 partial，不阻断可靠单元格读取。错误的 DXF 边界和资源超限仍拒绝。
+- 默认 data 另可保留有界 `CondFmt/CF` 条件格式组与异常分页布局。可读出部分常量比较和填充索引，均不应用到保存值。普通静态名称可指向一个内部绝对单元格。图表、条件格式和数据验证仅在完整组边界及必要字节分区通过校验后，才保留有界语义异常并返回 partial。组边界、宏工作表、外链索引和核心单元格结构仍校验。
+- 默认 data 对边界完整的未知绘图原子及简单 FtCmo/FtEnd 对象保留原始记录、类型与位置，返回 partial 并标明单元格覆盖不确定；不执行对象。未知容器或无法定界的对象仍拒绝。
+- 默认 data 可保留受限批注绘图分片链与 `DVal/Dv` 数据验证组，返回 partial；批注文字、作者、绘图效果和验证规则不并入单元格值、不执行或跟随。完整原始记录、对象链接与遗漏诊断保留；除上述有界对象外，未知对象、错误分片边界、截断及资源越界仍拒绝。其他绘图类型和完整规则语义尚未支持。
+
+## 显示与保存视图
+
+完整读取在工作表的 `visibility` 中附带可解析的保存行高 `height_pt` 与列宽 `width_chars`。已确定为 `General` 的 BIFF8 二进制数值可在 `numeric_interpretation.display_text` 中提供简短显示，统计继续使用保存值。
+
+数字解释可核对 BIFF8 单元格 XF 与父样式，并识别常见科学计数、分数、带颜色的金额和带字面量单位的格式。遇到样式冲突或未支持的格式时，按 `numeric_interpretation` 的状态和原因说明，保留保存值。详见 `<skill-root>/references/numeric-interpretation.md`。
+
+查看文字强调信息时，完整读取可提供富文本分段及保存的字体属性。可支持的 BIFF8 简单公式另返回可读表达式，单元格值仍取保存缓存。
+
+查询冻结窗格或当前单元格时，查看完整结果的 `sheets[].views`。每个保存视图返回冻结行数 `freeze_row`、冻结列数 `freeze_col`、活动窗格 `active_pane` 和当前单元格 `selected_cell`。表头仍由任务显式指定。字段和缺失含义见 `<skill-root>/references/saved-visibility.md#保存的工作表视图`。

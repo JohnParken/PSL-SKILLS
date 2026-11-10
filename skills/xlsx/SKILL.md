@@ -1,7 +1,7 @@
 ---
 name: xlsx
-version: "20261110.2000.2124"
-description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
+version: "20261110.2126.1082"
+description: 读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，适合区域统计、分组汇总、表间核对与公式子集计算。保留原件并报告缓存和未计算项；不做任意结构编辑或直接处理 XLS/XLSB、ET；多源填入既有模板交给 table-workflow。
 license: MIT
 ---
 
@@ -57,7 +57,9 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read 
 | 超出简单静态创建、公式或样式的创建 | `<skill-root>/references/create.md` + `<skill-root>/references/write-contract.md` + `<skill-root>/references/task-delivery.md` |
 | 修改已知单元格；修复公式 | `<skill-root>/references/edit.md`（修复另读 `<skill-root>/references/fix.md`）+ 写入契约 `<skill-root>/references/write-contract.md` + 收尾 `<skill-root>/references/task-delivery.md` |
 | 创建/修改公式、显式计算或公式 issues | `<skill-root>/references/formula-calculation.md` + 写入契约 `<skill-root>/references/write-contract.md` + 收尾 `<skill-root>/references/task-delivery.md` |
-| profile/summarize、格式识别、ET 完整提取 JSON 消费 | `<skill-root>/references/data-analysis.md`；新算公式值另读公式参考 |
+| 原生 XLSX/XLSM 的 profile/summarize 区域统计 | `<skill-root>/references/data-analysis.md`；新算公式值另读公式参考 |
+| 仅识别文件格式 | `<skill-root>/references/read-analyze.md#identify-contents-including-etett-candidates` |
+| 消费已有 ET 完整提取 JSON | `<skill-root>/references/et-result-analysis.md` + `<skill-root>/references/data-analysis.md`，保留来源与统计两层契约 |
 | 存款到期分布；客户/产品覆盖；存款变动、结构与集中度 | 分别直达 `<skill-root>/references/maturity-distribution.md`；`<skill-root>/references/customer-structure.md`；`<skill-root>/references/deposit-analysis.md` |
 | 管理口径/计划/同业比较；两期勾稽；静态看板 | 分别直达 `<skill-root>/references/management-policy.md`；`<skill-root>/references/management-reconciliation.md`；`<skill-root>/references/management-dashboard.md` |
 | 管理宽表；机构层级汇总；日均/日流量累计 | 分别读 `<skill-root>/references/management-wide.md`；层级汇总同时读 `<skill-root>/references/institution-hierarchy.md` 与 management-wide；日统计读 `<skill-root>/references/daily-analysis.md` |
@@ -70,7 +72,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read 
 | 复杂 JSON；工具失败/截断；自检异常 | 分别读 `<skill-root>/references/complex-json.md`、`<skill-root>/references/tool-execution.md`、`<skill-root>/references/environment-results.md` |
 | 自定义临时文件、归档故障或清理恢复 | `<skill-root>/references/delivery-lifecycle.md` |
 
-上述分析专项与 `<skill-root>/references/analysis-contract.md` 组成必需并集，不经 data-analysis 大导航；仅命中基础统计或 ET JSON 消费才读它。专项明确要求的业务依赖仍须读取；导出或创建配置文件还须按写入/收尾规则管理。锚点只定位文字，不是 read_file 的选段参数；按真实 schema 读取，返回截断时补齐所需约束后再执行。
+上述分析专项与 `<skill-root>/references/analysis-contract.md` 组成必需并集，不经 data-analysis 大导航；仅命中基础统计或 ET JSON 消费才读 data-analysis；ET 另加来源契约。专项明确要求的业务依赖仍须读取；导出或创建配置文件还须按写入/收尾规则管理。锚点只定位文字，不是 read_file 的选段参数；按真实 schema 读取，返回截断时补齐所需约束后再执行。
 
 维护跨技能接口时才读 `<skill-root>/scripts/docs/cli-contract.md`；迁移旧内存调用才读 `<skill-root>/references/workflow-api.md`。不把维护或历史验收资料加载到普通业务任务。
 

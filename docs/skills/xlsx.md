@@ -1,6 +1,6 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261110.2000.2124`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261110.2126.1082`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -19,7 +19,7 @@ Python 模块拆分及文件行数规则见 [行数规范与重构记录](../pyt
 | CSV/TSV 交换 | 导入为新 XLSX，按指定范围导出原始标量 | 导入默认保留文本，数值列需显式选择；导出不应用数字格式或日期显示 |
 | 格式间协作 | 分析 `et` 产出的受支持完整类型化 JSON；向 `table-workflow` 提供版本化 CLI | 不直接解析 `.et/.ett/.wps` 原件，不自动转换或调用其他 Skill |
 
-专项分析还包括期间比较、排名占比、匹配、机构汇总、日均/流量、存款与经营报表等。其入口及各自口径见 [专项目录](../../skills/xlsx/references/data-analysis.md#specialized-task-directory)，不把这些明确配置的算法理解为自动识别任意业务报表。
+专项分析还包括期间比较、排名占比、匹配、机构汇总、日均/流量、存款与经营报表等。其入口及各自口径见 [主入口任务路由](../../skills/xlsx/SKILL.md#按需加载与任务路由)，不把这些明确配置的算法理解为自动识别任意业务报表。
 
 ## 架构
 
@@ -174,3 +174,10 @@ flowchart TD
 宿主外置预览与已截断捕获分别处理。结果引用按真实 `read_file` schema 逐段读取并核对覆盖，不作为 Shell 路径；已丢弃内容不能靠读取不完整文件恢复。业务投影按实际游标和来源绑定续读，末页只证明所选投影取完，不消除遗漏或源 partial。详见 [有界读取](../../skills/xlsx/references/bounded-reading.md#宿主大结果与业务分页分开处理)。本轮说明依据 CLI 与本机 Deep Agents 源码核对；真实目标宿主回传、Linux 容器和客户端验收仍需独立验证。
 
 执行调用维护：业务脚本示例使用宿主的 `execute(command=...)`，执行前核对完整命令、stdin、路径及结果；这不改变 CLI 或协议，不代表真实宿主链路已经验收。
+
+
+## 2026-11-10 描述与读取路径优化
+
+本轮将普通 profile/summarize 所需的区域、类型、公式和质量规则保留在 [基础区域分析](../../skills/xlsx/references/data-analysis.md)。只有消费 ET 原始提取 JSON 才并读 [ET 来源契约](../../skills/xlsx/references/et-result-analysis.md)，保留源 partial、缓存与覆盖；格式识别查 [读取参考](../../skills/xlsx/references/read-analyze.md#identify-contents-including-etett-candidates)，专项按主入口直达，避免重复预读目录。新增参考已列入独立运行包白名单。
+
+当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。

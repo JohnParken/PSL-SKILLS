@@ -1,4 +1,4 @@
-# Read-only data analysis and file identification
+# Profile and summarize a declared region
 
 路径占位符说明：`<skill-root>` 是 XLSX Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
@@ -9,12 +9,9 @@ before using this reference; internal resources and task data have different pat
 
 ## Contents
 
-- Specialized task directory (`<skill-root>/references/data-analysis.md#specialized-task-directory`)
 - Profile a sheet or region (`<skill-root>/references/data-analysis.md#profile-a-sheet-or-region`)
 - Filter and summarize (`<skill-root>/references/data-analysis.md#filter-and-summarize`)
 - Reliable amount summaries (`<skill-root>/references/data-analysis.md#reliable-amount-summaries`)
-- Identify contents, including ET/ETT candidates (`<skill-root>/references/data-analysis.md#identify-contents-including-etett-candidates`)
-- Analyze a WPS result without conversion (`<skill-root>/references/data-analysis.md#analyze-a-wps-result-without-conversion`)
 
 Resolve `<skill-root>` from the actual SKILL.md path before running commands. Run the
 entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首步自检`) first, require exit 0 and
@@ -142,70 +139,12 @@ Exit 0 indicates completed analysis; exit 1 returns JSON `status: failed`.
 
 ## Identify contents, including ET/ETT candidates
 
-`<skill-root>/scripts/xlsx_identify.py` inspects native OOXML inputs. WPS family suffixes and CFB signatures
-return `unsupported`: `.wps` uses `recommended_skill: wps`, `.et/.ett` uses `et`, and a CFB signature
-with another suffix uses `wps_or_et` pending content identification. These values replace the older generic
-`wps` marker; consumers must handle all three. The inspection does not validate the binary container or
-extract cells. Locate the selected Skill independently; never rename input to bypass routing.
+仅需格式识别时直达 `<skill-root>/references/read-analyze.md#identify-contents-including-etett-candidates`，不预读区域统计。
 
 ## Analyze a WPS result without conversion
 
-For these stdout-only commands, use an existing, user-provided ET extraction JSON as a protected input; do not create a temporary JSON solely for this flow. The documented successful cleanup protocol requires a verified final file and an archive result, neither of which this flow produces. Do not label a successful analysis as failed to bypass that requirement, and do not delete or claim an existing JSON. If no suitable input or supported non-file handoff is available, stop and report the missing handoff.
-
-Pass the existing original spreadsheet JSON result from the et skill to the same region-based
-analysis command. Accepted typed-cell schemas are `biff8_readonly_v1` and
-`ooxml_spreadsheet_readonly_v1`; successful/partial extraction retains its actual
-input schema and diagnostics. Failed extraction and Word-text results are rejected.
-This validates schema/budgets and restores explicitly tagged numeric values as Decimal;
-text remains text, date serials remain numbers, and no XLSX file is created.
-
-```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile result.json --sheet Data")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize result.json --sheet Data --query query.json")
-```
-
-Extraction diagnostics are included as `source_issues` and `source_status`. When supplied,
-the original `cell_value_coverage`, `omissions_affect_cell_values` and `reading_assessment`
-are preserved as `source_cell_value_coverage`, `source_omissions_affect_cell_values` and
-`source_reading_assessment`. No replacement assessment schema is generated. These optional
-source assertions pass identity/type and consistency checks within the existing 16 MiB JSON
-and depth-64 limits; malformed or conflicting assertions fail. Older valid result JSON may
-omit them, in which case no completeness claim is inferred or added. Unverified saved-value coverage
-is preserved with its issues and partial source status; it must never be treated as complete. The analysis
-CLI retains its existing exit 0 for a successful analysis, including a partial source: inspect `source_status`
-and coverage separately. ET extraction itself returns exit 3 for partial; the codes describe different stages.
-
-Coverage describes the original extraction's declared scope, not completeness of the selected
-analysis region or freshness of formula caches. Missing caches outside the selected region
-remain disclosed in the source coverage; missing/error caches inside it fail when used.
-Formula cells still require explicit `--formulas cached`. Numeric strings retain exact
-`Decimal` values while text identifiers remain text. This analyzes previously extracted JSON,
-not WPS originals or independently validated caches. Other native loader APIs still require
-XLSX/XLSM. Dates, private streams and opaque charts retain source limits.
+消费已有 ET 原始 JSON 时必须加读 `<skill-root>/references/et-result-analysis.md`，保留来源 partial、缓存、覆盖与文件交接边界；不把投影或分析 JSON 当原工作簿。
 
 ## Specialized task directory
 
-专项可从主入口直接选择，不必先读本文件；专项与 `<skill-root>/references/analysis-contract.md` 并读。此目录仅供已在本页的任务发现额外能力，不是必经导航。
-
-Read the selected reference before invoking its script. Paths use the confirmed `<skill-root>`; inputs and outputs remain in the task directory.
-
-| Task | Action | Reference |
-|---|---|---|
-| Summarize explicit deposit maturity buckets and cumulative windows | `<skill-root>/scripts/xlsx_maturity.py` | Explicit deposit maturity distribution (`<skill-root>/references/maturity-distribution.md`) |
-| Aggregate observed customers, product coverage and two-period sets | `<skill-root>/scripts/xlsx_customers.py` | Observed customer aggregation and product structure (`<skill-root>/references/customer-structure.md`) |
-| Validate management policy, explicit plan deviation and comparable peers | `<skill-root>/scripts/xlsx_management_policy.py` | Explicit management statistics policy (`<skill-root>/references/management-policy.md`) |
-| Analyze deposit snapshot changes, daily/end differences and explicit targets | `<skill-root>/scripts/xlsx_deposits.py` | Deposit observations, daily means and concentration (`<skill-root>/references/deposit-analysis.md`) |
-| Calculate explicit deposit category shares and Top N concentration | `<skill-root>/scripts/xlsx_deposit_structure.py` | Deposit observations, daily means and concentration (`<skill-root>/references/deposit-analysis.md`) |
-| Reconcile two comparable management reports and allocate arithmetic changes | `<skill-root>/scripts/xlsx_reconcile.py`; optional `--xlsx` | Management reconciliation and arithmetic change allocation (`<skill-root>/references/management-reconciliation.md`) |
-| Build a static management dashboard from a native wide report | `<skill-root>/scripts/xlsx_dashboard.py`; optional `--xlsx` | Static management dashboard (`<skill-root>/references/management-dashboard.md`) |
-| Roll leaf institutions up a validated static hierarchy | `<skill-root>/scripts/xlsx_management.py` with hierarchy config | Static institution hierarchy rollup (`<skill-root>/references/institution-hierarchy.md`) |
-| Compute explicit daily means or month/YTD daily-flow sums | `<skill-root>/scripts/xlsx_daily.py`, subcommand `average` / `accumulate` | Daily snapshots and controlled flow accumulation (`<skill-root>/references/daily-analysis.md`) |
-| Build configured management wide reports | `<skill-root>/scripts/xlsx_management.py`; optional `--xlsx` | Configured bank management long-to-wide reports (first release) (`<skill-root>/references/management-wide.md`) |
-| Export known analysis JSON to readable XLSX | `<skill-root>/scripts/xlsx_result_export.py` | Export analysis results to a readable XLSX (`<skill-root>/references/result-export.md`) |
-| Rank observations and calculate group shares | `<skill-root>/scripts/xlsx_rank_share.py` | Controlled ranking and within-group shares (`<skill-root>/references/rank-share.md`) |
-| Compute median, quantiles and variance/stddev | `<skill-root>/scripts/xlsx_advanced.py`, subcommand `describe` | Descriptive statistics with explicit Decimal semantics (`<skill-root>/references/advanced-statistics.md`) |
-| Compare explicit monthly periods | `<skill-root>/scripts/xlsx_advanced.py`, subcommand `compare` | Explicit monthly period comparisons (`<skill-root>/references/period-comparison.md`) |
-| Match tables by typed composite keys | `<skill-root>/scripts/xlsx_match.py` | Match two tables by typed composite keys (`<skill-root>/references/table-matching.md`) |
-| Deduplicate and stably sort typed rows | `<skill-root>/scripts/xlsx_rows.py` | Filter, deduplicate and sort typed rows (`<skill-root>/references/row-processing.md`) |
-| Suggest possible header ranges for review | `<skill-root>/scripts/xlsx_header_candidates.py` | Suggest header ranges for review (`<skill-root>/references/header-candidates.md`) |
-| Reconstruct or select multi-level headers | `<skill-root>/scripts/xlsx_headers.py`; `--header-rows` in data operations | Explicit multi-level headers (`<skill-root>/references/multi-level-headers.md`) |
+专项直接从 `<skill-root>/SKILL.md#按需加载与任务路由` 选择，并读取 `<skill-root>/references/analysis-contract.md` 与命中专项；不经本页或递归加载所有分支。以上三个章节保留旧锚点，仅作条件转向。
