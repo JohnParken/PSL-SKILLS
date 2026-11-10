@@ -2,26 +2,14 @@
   "schema_version": 1,
   "files": [
     "SKILL.md",
-    "assets/examples/zhuque_layout.json",
-    "assets/fonts/zhuque_fangsong/LICENSE.txt",
-    "assets/fonts/zhuque_fangsong/LICENSE_Alegreya.txt",
-    "assets/fonts/zhuque_fangsong/NOTICE.txt",
-    "assets/fonts/zhuque_fangsong/ZhuqueFangsong-Regular.ttf",
-    "assets/fonts/zhuque_fangsong/source.json",
-    "assets/user_fonts/NOTICE.txt",
     "references/boundaries.md",
-    "references/bundled-fonts.md",
     "references/compatibility.md",
     "references/contract.md",
-    "references/generation.md",
     "references/output-views.md",
     "references/structure.md",
     "references/validation.md",
     "requirements.txt",
-    "scripts/check_generated_ofd.py",
-    "scripts/generate_ofd.py",
     "scripts/ofd_common.py",
-    "scripts/ofd_generation_assets.py",
     "scripts/ofd_package.py",
     "scripts/ofd_structure.py",
     "scripts/read_ofd.py"
@@ -30,5 +18,17 @@
     "scripts/test/",
     "assets/user_fonts/"
   ],
-  "exclude_files": {}
+  "exclude_files": {
+    "assets/examples/zhuque_layout.json": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "assets/fonts/zhuque_fangsong/LICENSE.txt": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "assets/fonts/zhuque_fangsong/LICENSE_Alegreya.txt": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "assets/fonts/zhuque_fangsong/NOTICE.txt": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "assets/fonts/zhuque_fangsong/ZhuqueFangsong-Regular.ttf": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "assets/fonts/zhuque_fangsong/source.json": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "references/bundled-fonts.md": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "references/generation.md": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "scripts/check_generated_ofd.py": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "scripts/generate_ofd.py": "OFD writing temporarily unavailable; retained source-only for restoration",
+    "scripts/ofd_generation_assets.py": "OFD writing temporarily unavailable; retained source-only for restoration"
+  }
 }

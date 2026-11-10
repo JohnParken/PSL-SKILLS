@@ -18,7 +18,7 @@
 | xlsx | Workbook.save、CSV/TSV与分析导出、标准CLI、runner、publish/delivery及legacy报告出口统一校验；禁用legacy编辑工具未重新启用 |
 | wps | 创建、受控编辑、RTF/DOCX兼容与可选转换导出、builder.save、job均校验；省略导出名时取输入主名，固定写任务根目录 |
 | pptx | create CLI/API校验原始输出字符串；读取、验证与组包内存输出不新增文件出口 |
-| ofd | generate/publish校验原串；读取/检查仅stdout；维护分发ZIP工具不属于业务交付入口 |
+| ofd | 当前仅读取/检查并输出 stdout；写入服务暂停，维护分发 ZIP 工具不属于业务交付入口 |
 | table-workflow | apply的XLSX与audit JSON均限制裸文件名；调用前确认XLSX输出能力契约 |
 | artifact-lifecycle | 最终文件清单、选择交付名及归档入口校验裸文件名；内部归档和原清单恢复仍沿用安全机制 |
 | et | 只读stdout，无新增写文件API；另存或跨Skill交接只给根目录裸文件名 |
@@ -31,7 +31,7 @@ XLSX capabilities 改为 `interface_version=2`，声明 `delivery_filename_only=
 
 ## 同名与安全边界
 
-本轮不将所有旧接口强改成相同覆盖策略。DOCX/XLSX标准runner保持递增命名；XLSX、PPTX、OFD、workflow和WPS正常CLI独占新建。WPS builder.save改为独占验证后发布。DOCX部分旧低层/直接CLI仍原子替换非输入的普通同名文件，WPS部分旧直接API也保留已有替换语义；不能把“仅裸文件名”宣传成“所有API均自动版本化或拒绝任何同名”。优先使用标准runner并遵守每个入口的授权与覆盖契约。
+本轮不将所有旧接口强改成相同覆盖策略。DOCX/XLSX标准runner保持递增命名；XLSX、PPTX、workflow和WPS正常CLI独占新建（OFD 写入服务当前暂停）。WPS builder.save改为独占验证后发布。DOCX部分旧低层/直接CLI仍原子替换非输入的普通同名文件，WPS部分旧直接API也保留已有替换语义；不能把“仅裸文件名”宣传成“所有API均自动版本化或拒绝任何同名”。优先使用标准runner并遵守每个入口的授权与覆盖契约。
 
 符号链接、硬链接输入别名、原件及图片输入保护继续执行，内部安全文件操作未降级。路径校验不是隔离同权限恶意进程的操作系统沙箱；宿主仍须分配可信、独占的任务目录。
 

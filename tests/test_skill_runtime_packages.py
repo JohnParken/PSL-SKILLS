@@ -240,20 +240,26 @@ class SkillRuntimePackages(unittest.TestCase):
         self.assertTrue({'cfb_zero_trailing_padding_ignored', 'external_links_retained_opaque', 'embedded_chart_retained_opaque'} <= codes)
         self.assertEqual(path.read_bytes(), source)
 
-    def test_ofd_bundled_font_generation_readback(self):
-        self.invoke('ofd', 'generate_ofd.py', '--check')
+    def test_ofd_read_only_package(self):
         self.invoke('ofd', 'read_ofd.py', '--check')
-        spec = {'schema_version': 'ofd-generate-1', 'fonts': {'example': {'bundled': 'zhuque-fangsong-v0.212'}},
-                'pages': [{'width': 210, 'height': 297, 'margins': [15, 15, 15, 15], 'items': [
-                    {'kind': 'text', 'x': 25, 'y': 35, 'font': 'example', 'size_mm': 5, 'text': '独立运行验收'}]}]}
-        self.write_json('layout.json', spec)
-        self.invoke('ofd', 'generate_ofd.py', 'layout.json', 'result.ofd')
-        read = self.invoke('ofd', 'read_ofd.py', 'result.ofd', expected=3)
-        self.assertIn('独立运行验收', read.stdout)
-        self.assertEqual(json.loads(read.stdout)['status'], 'partial')
-        with zipfile.ZipFile(self.work / 'result.ofd') as package:
-            self.assertEqual(digest(package.read('Doc_0/Res/Font_1.ttf')),
-                             '558c62730844fe54ba220146ed62f859d4e2880188d92d985f8921c6e3743bc4')
+        installed = self.installs['ofd']
+        for name in ('scripts/generate_ofd.py', 'scripts/check_generated_ofd.py',
+                     'scripts/ofd_generation_assets.py', 'references/generation.md',
+                     'references/bundled-fonts.md', 'assets/fonts/zhuque_fangsong/ZhuqueFangsong-Regular.ttf'):
+            self.assertFalse((installed / name).exists(), name)
+        ns = 'http://www.ofdspec.org/2016'
+        def xml(tag, content, attrs=''):
+            return f'<ofd:{tag} xmlns:ofd="{ns}" {attrs}>{content}</ofd:{tag}>'
+        with zipfile.ZipFile(self.work / 'input.ofd', 'w') as package:
+            package.writestr('OFD.xml', xml('OFD', '<ofd:DocBody><ofd:DocRoot>Doc/Document.xml</ofd:DocRoot></ofd:DocBody>', 'Version="1.0" DocType="OFD"'))
+            package.writestr('Doc/Document.xml', xml('Document', '<ofd:CommonData/><ofd:Pages><ofd:Page ID="1" BaseLoc="Pages/P.xml"/></ofd:Pages>'))
+            page = ('<ofd:Content><ofd:Layer ID="2"><ofd:TextObject ID="3" Boundary="1 2 30 4" Size="3">'
+                    '<ofd:TextCode X="0" Y="3">独立运行验收</ofd:TextCode></ofd:TextObject></ofd:Layer></ofd:Content>')
+            package.writestr('Doc/Pages/P.xml', xml('Page', page))
+        response = self.invoke('ofd', 'read_ofd.py', 'input.ofd', expected=0)
+        result = json.loads(response.stdout)
+        self.assertEqual(result['status'], 'complete')
+        self.assertIn('独立运行验收', response.stdout)
 
     def test_pptx_svg_generation_readback(self):
         self.invoke('pptx', 'pptx.py', 'check')

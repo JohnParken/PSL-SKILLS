@@ -25,7 +25,7 @@
 | [xlsx](skills/xlsx.md) | 20261110.2126.1082 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
 | [wps](skills/wps.md) | 20261110.2126.1082 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
 | [et](skills/et.md) | 20261110.2126.1082 | ET/ETT 的 BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、表头预览与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261110.2126.1082 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建；execute 命令可从 stdin 接收生成规格，不渲染或验签。 |
+| [ofd](skills/ofd.md) | 20261110.2338.4038 | OFD 1.0/1.1/1.2 结构与存储文字读取；创建、生成和编辑服务暂不提供，不渲染或验签。 |
 | [pptx](skills/pptx.md) | 20261110.2126.1082 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
 | [table-workflow](skills/table-workflow.md) | 20261110.2126.1082 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
 | [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261110.1706.5284 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
@@ -41,7 +41,7 @@ flowchart TB
     H --> W["wps：文字读取、RTF 重排、DOCX 转 RTF/MS-DOC"]
     H --> X["xlsx：读写、公式子集与分析"]
     H --> E["et：ET/ETT 只读与统计"]
-    H --> O["ofd：结构读取与显式基础创建"]
+    H --> O["ofd：结构与存储文字读取"]
     H --> P["pptx：受限 SVG 创建与整包验证、有界读页"]
     H --> T["table-workflow：有界发现、批量公开 CLI 与模板填报"]
     B -.->|"已授权 DOCX 交接"| D

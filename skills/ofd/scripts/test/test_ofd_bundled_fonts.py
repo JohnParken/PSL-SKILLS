@@ -184,5 +184,4 @@ class PrivateFontTests(unittest.TestCase):
                 destination = Path(target) / 'result.zip'
                 module.package(root, destination)
                 with zipfile.ZipFile(destination) as archive:
-                    self.assertEqual([name for name in archive.namelist() if name.startswith('ofd/assets/user_fonts/')],
-                                     ['ofd/assets/user_fonts/NOTICE.txt'])
+                    self.assertEqual([name for name in archive.namelist() if name.startswith('ofd/assets/user_fonts/')], [])

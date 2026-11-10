@@ -1,5 +1,3 @@
 # Python >=3.10 with its built-in zlib and Expat >=2.6.0 XML support.
-# Generation additionally requires Python >=3.12.11 and safe dir_fd/link/unlink/stat capabilities.
 # Zero third-party packages and zero external software/runtime components.
 # Missing built-in capability: diagnose and stop; never install anything.
-# Bundled OFL font is static offline data, not an additional runtime component.

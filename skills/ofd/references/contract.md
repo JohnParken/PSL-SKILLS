@@ -1,6 +1,6 @@
 # CLI 与 JSON 契约
 
-本参考只定义读取器接口；明确新建任务的生成CLI、输入模型和输出状态见 `<skill-root>/references/generation.md`，不能把两类schema或complete含义混用。
+本参考只定义读取器接口；OFD 创建与编辑服务暂不可用。
 
 路径占位符说明：`<skill-root>` 是 OFD Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 OFD 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
@@ -16,7 +16,7 @@
 2. 宿主可能分别回传stdout/stderr，也可能只回传合并输出。已核对的DeepAgents接口为 `ExecuteResponse.output`（合并stdout/stderr）、`exit_code`（可为None）、`truncated`。middleware可能将退出状态和截断提示追加到模型文本，工具artifact只在退出码已知时携带 `exit_code`；工具 `status=success` 只表明执行调用完成，不保证命令成功。不要要求模型读取根本未提供的独立通道，也不要把这些宿主字段当成OFD JSON字段。具体安装版本、后端和实际模型回传仍须核验，不将某个后端的stderr前缀或格式推广到所有宿主。
 3. 先查看截断及预览/保存文件提示。后端未截断不代表后续模型消息未缩短；保存了输出也不保证文件完整，仍核对捕获状态。宿主明确提供完整原始stdout或其边界时再解析那一个JSON对象，不对合并日志整体直接调用JSON解析，不按“第一个左花括号到最后一个右花括号”猜边界或删除任意诊断。无法恢复可靠边界时报告回传不足，使用宿主支持的独立捕获或已核验结果文件；不降低安全限制、不通过重跑生成猜测原结果。
 4. 对完整JSON先核对schema、全局status及退出码，然后读正文和子状态。读取 `complete/0`、`partial/3`、`unsupported/4`、`failed/1` 必须对应；非零退出不丢stdout。partial的正文与diagnostics一同保留，failed/unsupported不交付此前累积正文。状态不一致、JSON缺失/截断或退出码未知时，报告实际可知内容和无法确认之处，不认定完整成功。
-5. `--check` 的文本/JSON仅用于环境判定；生成器使用独立的 `ofd-generation-result-1` 与 generated/failed语义，见 `<skill-root>/references/generation.md`。不能把环境成功、工具成功或读取complete当作生成成功。大结果按 `<skill-root>/references/output-views.md` 选择视图或完整捕获，不改写机器JSON、不丢诊断来迎合工具显示长度。
+5. `--check` 的文本/JSON仅用于环境判定；不能把环境成功、工具成功或读取complete当作其他业务成功。大结果按 `<skill-root>/references/output-views.md` 选择视图或完整捕获，不改写机器JSON、不丢诊断来迎合工具显示长度。
 
 以上是消费与集成要求；本地subprocess捕获、源码审阅和真实执行器/模型回传验收分别记录，前两者不证明第三者已经通过。
 

@@ -19,7 +19,7 @@
 
 9个可执行环境自检入口使用 `check_kind=environment artifact_validation=not_run`。文本成功标记仍在stdout，文本受控失败标记在stderr；JSON入口使用同名字段，不在JSON前后插入普通文字。PPTX 的内存样例结构检查放在 `self_test`，不把它当作用户产物验收。未进入main的导入失败、语法错误或参数错误可能只有stderr诊断及非零退出，仍必须完整回传，不能冒称自检已运行。
 
-补充边界：上述 9 个入口是适配器固定注册表，不是当前 10 个 Skill 的全部自检。ET 的 `scripts/read_et.py --check`、`scripts/analyze_et.py --check`、table-workflow 的 `scripts/table_workflow.py check --xlsx-root "<已确认根目录>"`（ET 输入另传 `--et-root`）、WPS 的创建/导出自检及 OFD 生成自检按各自主入口直接调用。`skill-structure --skill` 当前白名单也不含 et/table-workflow；可直接用规范检查器检查其真实目录，不声称适配器已支持。
+补充边界：上述 9 个入口是适配器固定注册表，不是当前 10 个 Skill 的全部自检。ET 的 `scripts/read_et.py --check`、`scripts/analyze_et.py --check`、table-workflow 的 `scripts/table_workflow.py check --xlsx-root "<已确认根目录>"`（ET 输入另传 `--et-root`）、WPS 的创建/导出自检按各自主入口直接调用；OFD 写入服务暂不提供。`skill-structure --skill` 当前白名单也不含 et/table-workflow；可直接用规范检查器检查其真实目录，不声称适配器已支持。
 
 环境自检不产生业务文档，也不证明产物存在。DOCX的`office/validate.py`已有结构验收通过/失败提示及未执行XSD/视觉验证的边界；WPS样本验收脚本已有JSON结果；XLSX的写入/计算结果使用原status、output_written及计算诊断。这些不当作环境自检，也不因增加自检标记而扩大验收能力。XLSX legacy检查工具仍不进入维护后的业务流程。
 
