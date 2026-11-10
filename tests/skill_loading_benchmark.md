@@ -64,14 +64,14 @@ python -I -B tests/benchmark_skill_loading.py --encoding cl100k_base --tokenizer
 
 PPTX的新视图与table-workflow后续表名发现并非baseline已有能力；报告的 `baseline_capability_note` 明确说明。before/after读文件数相同不等于功能相同，新增说明变长也不代表总体任务更慢。分页输出量、公开RPC请求数/耗时与回归正确性另行记录，不能混成token收益。DOCX表格/块续读和ET直接分析原已支持，本轮主要修正入口覆盖说明与分流。
 
-OFD新建仍读取生成契约，保留字体使用权、资源限制、视觉未验证与归档交接；本轮仅扩展该场景评测，不据此声称修改或重新验收OFD生成器。更新快照前须等待所有被测入口修改完成。
+OFD新建场景的历史 before 读取生成契约；当前 after 只读取入口并说明写入服务暂不可用，不调用生成器。快照是人工规划，不证明模型实际选路。
 
 
 ## 当前直达路由与人工选择期望
 
 XLSX纯概况after使用入口完整命令，不预读bounded-reading；baseline无该完整命令仍读该参考，混合读取按同一条件取并集。ET表头预览before读取table-analysis，after读取table-preview；基础列统计after读取basic-statistics，复杂query仍读取table-analysis。PPTX+ET基础统计混合任务取对应并集。baseline已支持ET预览和统计，但没有本轮新分页预算，不能称为完整功能对等对比。17项XLSX专项before经data-analysis再读专项，after读analysis-contract与专项；机构层级两侧保留management-wide依赖，结果导出两侧保留task-delivery。场景使用已有输入/配置，不包含额外公式重算、创建配置或可选导出；真正任务有这些条件时必须另取所需参考，不能机械套本计划。
 
-`skill_selection_current_cases.json` 是人工编写的当前能力边界期望，不是模型选路观测。当前10个入口逐个绑定entry_sha256，包含各技能正反、软件品牌与真实格式、旧DOC/原生DOCX、银行短句、已有runner回执、简单单表与跨表、混合读取等31例。测试核对真实catalog、入口哈希、正反/混合覆盖、重复或矛盾期望；任一入口变动即失败提醒，须先人工复核含义再更新哈希，不能自动刷新以掩盖未复核。该测试不计算或宣称准确率、召回率或宿主token节省。
+`skill_selection_current_cases.json` 是人工编写的当前能力边界期望，不是模型选路观测。当前10个入口逐个绑定entry_sha256，包含各技能正反、软件品牌与真实格式、旧DOC/原生DOCX、银行短句、已有runner回执、简单单表与跨表、混合读取及 OFD 写入暂停边界等43例。测试核对真实catalog、入口哈希、正反/混合覆盖、重复或矛盾期望；任一入口变动即失败提醒，须先人工复核含义再更新哈希，不能自动刷新以掩盖未复核。该测试不计算或宣称准确率、召回率或宿主token节省。
 
 ## 归档提示维护后的当前快照（2026-11-07）
 

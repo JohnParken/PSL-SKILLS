@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "benchmark_sha256": "289c938bbec03c0e867f3c51df41408917f00e8c63497954903405c1ee00d156",
+  "benchmark_sha256": "9c0181995a0be4d840ca73a87bd1cfe7721cd2ceca350e93dca0bb75a44002e0",
   "method": "planned reference read events, not observed model routing",
   "baseline_commit": "4b5a61f51d12d2a9d293898c2f862cbf7271dc8d",
   "after_source": "working tree; per-file SHA256 recorded",
@@ -1311,9 +1311,9 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 7135,
-            "bytes": 15652,
-            "sha256": "7bb3344740e8e41fa76c937438f24c314a49a978ff37e452e4174e604bf3429b",
+            "chars": 5933,
+            "bytes": 13314,
+            "sha256": "9d6e5e86873f2760b06c8772d8959084e7e01806c77c4723c66818b352996428",
             "tokens": null
           },
           {
@@ -1326,13 +1326,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 10383,
-        "bytes": 22678,
+        "chars": 9181,
+        "bytes": 20340,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 2972,
-        "bytes": 6601,
+        "chars": 1770,
+        "bytes": 4263,
         "tokens": null,
         "read_events": 0
       }
@@ -2300,8 +2300,8 @@
       }
     },
     "ofd-basic-create": {
-      "scenario": "Create only when explicitly requested; preserve font rights, resource bounds, publication and archive handoff.",
-      "baseline_capability_note": null,
+      "scenario": "OFD writing is temporarily unavailable; explain the boundary without loading or invoking generation.",
+      "baseline_capability_note": "Historical baseline had a limited generator; current writing service is unavailable.",
       "behavior_validation": "not_measured_by_loading_benchmark",
       "before": {
         "files": [
@@ -2330,30 +2330,23 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 7135,
-            "bytes": 15652,
-            "sha256": "7bb3344740e8e41fa76c937438f24c314a49a978ff37e452e4174e604bf3429b",
-            "tokens": null
-          },
-          {
-            "path": "ofd/references/generation.md",
-            "chars": 10799,
-            "bytes": 20643,
-            "sha256": "2dda57e211d6788cee52211db0991c94c8cd512b3e0e5bb4122e64e1b849b06b",
+            "chars": 5933,
+            "bytes": 13314,
+            "sha256": "9d6e5e86873f2760b06c8772d8959084e7e01806c77c4723c66818b352996428",
             "tokens": null
           }
         ],
-        "read_events": 2,
-        "unique_files": 2,
-        "chars": 17934,
-        "bytes": 36295,
+        "read_events": 1,
+        "unique_files": 1,
+        "chars": 5933,
+        "bytes": 13314,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 4111,
-        "bytes": 7495,
+        "chars": -7890,
+        "bytes": -15486,
         "tokens": null,
-        "read_events": 0
+        "read_events": -1
       }
     },
     "ofd-partial-page-read": {
@@ -2394,9 +2387,9 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 7135,
-            "bytes": 15652,
-            "sha256": "7bb3344740e8e41fa76c937438f24c314a49a978ff37e452e4174e604bf3429b",
+            "chars": 5933,
+            "bytes": 13314,
+            "sha256": "9d6e5e86873f2760b06c8772d8959084e7e01806c77c4723c66818b352996428",
             "tokens": null
           },
           {
@@ -2408,21 +2401,21 @@
           },
           {
             "path": "ofd/references/boundaries.md",
-            "chars": 3185,
-            "bytes": 6810,
-            "sha256": "1fc3f4d203459344d2559663c611801775fe7db1ea6822c3a25b5bda8fc06c02",
+            "chars": 3092,
+            "bytes": 6647,
+            "sha256": "b2fa8cf34a3378b4595c675b7c43d6060d672bc90a80413049b8d311794fb876",
             "tokens": null
           }
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 13568,
-        "bytes": 29488,
+        "chars": 12273,
+        "bytes": 26987,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 2972,
-        "bytes": 6601,
+        "chars": 1677,
+        "bytes": 4100,
         "tokens": null,
         "read_events": 0
       }

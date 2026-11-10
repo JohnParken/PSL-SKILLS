@@ -106,6 +106,9 @@ ITERATION_PROFILES = {
 }
 for _name, _paths in ITERATION_PROFILES.items():
     PROFILES[_name] = (_paths, _paths)
+PROFILES['ofd-basic-create'] = (ITERATION_PROFILES['ofd-basic-create'], ['ofd/SKILL.md'])
+SCENARIOS['ofd-basic-create'] = 'OFD writing is temporarily unavailable; explain the boundary without loading or invoking generation.'
+
 PROFILES['pptx-notes-pagination'] = (ITERATION_PROFILES['pptx-notes-pagination'],
                                      ['pptx/SKILL.md', 'pptx/references/bounded-reading.md'])
 
@@ -124,12 +127,13 @@ SCENARIOS.update({
     'table-inspect-many-sheets': 'Discover the ninth and later sheet names within the output cap; then inspect a chosen sheet, not all previews.',
     'table-plan-apply': 'Use explicit source and template semantics; public provider capabilities preserve decimal precision and protected cells.',
     'table-partial-et-source': 'Carry ET source coverage through inspection and enforce the existing plan acceptance gate.',
-    'ofd-basic-create': 'Create only when explicitly requested; preserve font rights, resource bounds, publication and archive handoff.',
+    'ofd-basic-create': 'OFD writing is temporarily unavailable; explain the boundary without loading or invoking generation.',
     'ofd-partial-page-read': 'Select a bounded page/text view without hiding source partial, unreturned regions or lack of visual validation.',
     'mixed-pptx-et-read': 'Union only selected-slide inspection and direct ET region analysis instructions; no recursive reference loading.',
 })
 
 CAPABILITY_CHANGES = {
+    'ofd-basic-create': 'Historical baseline had a limited generator; current writing service is unavailable.',
     'docx-complete-table-read': 'Baseline implementation supported full table rows and block continuation; entry guidance was incomplete.',
     'pptx-summary': 'Baseline has full inspect only; the requested projection is unavailable before this iteration.',
     'pptx-selected-slides': 'Baseline has full inspect only; explicit selected-slide projection is unavailable before this iteration.',

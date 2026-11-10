@@ -44,7 +44,7 @@ class LoadingBenchmarkTests(unittest.TestCase):
         allowed = {'xlsx-static-create', 'repeated-create-cold',
                    'repeated-create-retained', 'repeated-create-compacted', 'pptx-notes-pagination',
                    'et-header-preview', 'et-direct-statistics', 'mixed-pptx-et-read', 'xlsx-summary', 'mixed-format-read',
-                   'xlsx-et-analysis', 'xlsx-wps-analysis'}
+                   'xlsx-et-analysis', 'xlsx-wps-analysis', 'ofd-basic-create'}
         for name, (before, after) in BENCH.PROFILES.items():
             if name not in allowed and not name.startswith('xlsx-specialized-'):
                 self.assertEqual(before, after, name)
@@ -76,8 +76,8 @@ class LoadingBenchmarkTests(unittest.TestCase):
         for paths in BENCH.PROFILES['table-partial-et-source']:
             self.assertIn('et/SKILL.md', paths)
             self.assertNotIn('wps/SKILL.md', paths)
-        for paths in BENCH.PROFILES['ofd-basic-create']:
-            self.assertIn('ofd/references/generation.md', paths)
+        self.assertIn('ofd/references/generation.md', BENCH.PROFILES['ofd-basic-create'][0])
+        self.assertEqual(BENCH.PROFILES['ofd-basic-create'][1], ['ofd/SKILL.md'])
 
     def test_new_capabilities_are_not_claimed_at_baseline(self):
         report = BENCH.build_report()
