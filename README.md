@@ -22,7 +22,7 @@
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261110.0051.1813 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261110.0051.1813 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261110.0051.1813 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261110.0051.1813 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261110.0655.4106 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261110.0051.1813 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261110.0051.1813 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261109.1939.2825 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
@@ -228,7 +228,7 @@ python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect ./input.pptx --summary
 python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect ./input.pptx --slides 1-3 --notes omit --max-output-bytes 12000
 ```
 
-`inspect` 默认仍返回完整结果；选页、备注省略与字节预算不绕过未选页、关系和媒体的整包安全检查。分页只在完整幻灯片边界切分，继续时原样传回 `--cursor` 并重复原选项，单页过大明确失败。有限 PNG 零填充兼容需显式启用，结果保留 partial 并退出 3；不是对任意损坏文件的恢复。创建只接受声明的 SVG/配置子集并拒绝覆盖，不代表任意 PPTX 编辑或视觉验收。详细接口见 [PPTX 文档](docs/skills/pptx.md)。
+`inspect` 默认仍返回完整结果；选页、备注省略与字节预算不绕过未选页、关系和媒体的整包安全检查。备注读取包括受支持的文本形状和原生表格段落。分页只在完整幻灯片边界切分，继续时原样传回 `--cursor` 并重复原选项，单页过大明确失败。有限 PNG 零填充兼容需显式启用，结果保留 partial 并退出 3；不是对任意损坏文件的恢复。创建只接受声明的 SVG/配置子集并拒绝覆盖，不代表任意 PPTX 编辑或视觉验收。详细接口见 [PPTX 文档](docs/skills/pptx.md)。
 
 ### 交付物归档与受控清理（artifact-lifecycle）
 

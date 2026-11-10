@@ -12,7 +12,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --slides 1-3,
 
 - 无新参数时保留原完整结果及字段。新参数只控制返回内容，不改变安全检查或支持格式。
 - `--slides` 为 1 起算、包含端点、升序无重叠的页号或范围列表；越界、倒序、重复与空选择拒绝。
-- `--notes include|omit` 默认 include。omit 删除逐页 notes 字段，不把遗漏备注写为空数组。
+- `--notes include|omit` 默认 include。备注按对象和段落顺序包含受支持的文本形状及原生表格文字，空段落保留；omit 删除逐页 notes 字段，不把遗漏备注写为空数组。
 - `--summary` 返回每页 number、objects、text_paragraphs、notes_paragraphs，保留文档标题和包摘要，不返回正文与备注原文。summary 优先于 notes，notes 只影响游标参数绑定。
 - `coverage.validation=all_package_parts` 表示全包安全检查；`coverage.selected_slides` 是请求页号，`coverage.content` 区分概况和内容，`coverage.notes` 表示备注返回方式。未返回不代表不存在。
 - 全包验证仍检查未选页、所有关系、媒体、嵌入工作簿和 MCE 分支。筛选不减弱拒绝条件，也不是流式输入或降低解析内存的承诺。

@@ -87,6 +87,43 @@ class BoundedInspectionTests(unittest.TestCase):
         for budget in ("0", "1", "511", "67108865"):
             self.assertEqual(self.assert_failure("inspect", "deck.pptx", "--max-output-bytes", budget)["error"]["code"], "invalid_budget")
 
+    def test_notes_table_in_summary_omission_and_pages(self):
+        self.deck(2, "Speaker note")
+        members = parts((self.root / "deck.pptx").read_bytes())
+        name = "ppt/notesSlides/notesSlide1.xml"
+        frame = (
+            '<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="4" name="Table"/>'
+            '<p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>'
+            '<p:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></p:xfrm>'
+            '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">'
+            '<a:tbl><a:tblPr/><a:tblGrid><a:gridCol w="914400"/></a:tblGrid><a:tr h="914400">'
+            '<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>备注表格</a:t></a:r></a:p>'
+            '</a:txBody><a:tcPr/></a:tc></a:tr></a:tbl></a:graphicData></a:graphic></p:graphicFrame>'
+        )
+        xml = members[name].decode("utf-8")
+        members[name] = xml.replace('</p:spTree>', frame + '</p:spTree>').encode("utf-8")
+        (self.root / "deck.pptx").write_bytes(zipped(members))
+        _, full = self.invoke("inspect", "deck.pptx")
+        self.assertEqual(full["slides"][0]["notes"], ["Speaker note0", "备注表格"])
+        _, summary = self.invoke("inspect", "deck.pptx", "--summary")
+        self.assertEqual(summary["slides"][0]["notes_paragraphs"], 2)
+        _, omitted = self.invoke("inspect", "deck.pptx", "--notes", "omit")
+        self.assertNotIn("notes", omitted["slides"][0])
+        collected, cursor = [], None
+        for _ in range(2):
+            args = ["inspect", "deck.pptx", "--max-output-bytes", "1200"]
+            if cursor:
+                args += ["--cursor", cursor]
+            process, page = self.invoke(*args)
+            self.assertEqual(process.returncode, 0, page)
+            self.assertLessEqual(len(process.stdout.encode("utf-8")), 1200)
+            collected.extend(page["slides"])
+            cursor = page["pagination"]["next_cursor"]
+            if cursor is None:
+                break
+        self.assertIsNone(cursor)
+        self.assertEqual(collected, full["slides"])
+
     def test_long_notes_recoverable_and_not_truncated(self):
         note = "注释和换行\n" * 1000
         self.deck(1, note)

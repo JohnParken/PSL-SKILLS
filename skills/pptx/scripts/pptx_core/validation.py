@@ -552,15 +552,35 @@ def _paragraph_text(root: ET.Element, understood_choices: set[ET.Element], *, ke
     return paragraphs
 
 
+def _semantic_child(root: ET.Element, tag: str, understood_choices: set[ET.Element]) -> ET.Element | None:
+    """Find a direct semantic child, transparently traversing MCE wrappers."""
+    for child in root:
+        if child.tag == tag:
+            return child
+        if child.tag == "{" + MC_NS + "}AlternateContent":
+            branch = _alternate_content_branch(child, understood_choices, "PPTX")
+            if branch is None:
+                raise ValidationError("PPTX: AlternateContent has no supported Choice or Fallback for inspection")
+            found = _semantic_child(branch, tag, understood_choices)
+            if found is not None:
+                return found
+    return None
+
+
 def _notes_text(root: ET.Element, understood_choices: set[ET.Element]) -> list[str]:
     paragraphs = []
     for shape in _semantic_elements(root, understood_choices):
-        if shape.tag != "{" + P_NS + "}sp":
-            continue
-        placeholder = shape.find("{" + P_NS + "}nvSpPr/{" + P_NS + "}nvPr/{" + P_NS + "}ph")
-        if placeholder is not None and placeholder.get("type") in ("sldImg", "sldNum", "dt", "ftr", "hdr"):
-            continue
-        paragraphs.extend(_paragraph_text(shape, understood_choices, keep_empty=True))
+        if shape.tag == "{" + P_NS + "}sp":
+            nonvisual = _semantic_child(shape, "{" + P_NS + "}nvSpPr", understood_choices)
+            properties = _semantic_child(nonvisual, "{" + P_NS + "}nvPr", understood_choices) if nonvisual is not None else None
+            placeholder = _semantic_child(properties, "{" + P_NS + "}ph", understood_choices) if properties is not None else None
+            if placeholder is not None and placeholder.get("type") in ("sldImg", "sldNum", "dt", "ftr", "hdr"):
+                continue
+            paragraphs.extend(_paragraph_text(shape, understood_choices, keep_empty=True))
+        elif shape.tag == "{" + P_NS + "}graphicFrame":
+            for element in _semantic_elements(shape, understood_choices):
+                if element.tag == "{" + A_NS + "}tbl":
+                    paragraphs.extend(_paragraph_text(element, understood_choices, keep_empty=True))
     return paragraphs
 
 

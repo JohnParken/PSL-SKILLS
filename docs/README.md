@@ -26,7 +26,7 @@
 | [wps](skills/wps.md) | 20261110.0051.1813 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
 | [et](skills/et.md) | 20261110.0051.1813 | ET/ETT 的 BIFF8/OOXML 保存值读取、表头与统计；不重算公式、不写回办公文件。 |
 | [ofd](skills/ofd.md) | 20261110.0051.1813 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建，不渲染或验签。 |
-| [pptx](skills/pptx.md) | 20261110.0051.1813 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
+| [pptx](skills/pptx.md) | 20261110.0655.4106 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
 | [table-workflow](skills/table-workflow.md) | 20261110.0051.1813 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
 | [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261110.0051.1813 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
 | [skill-development-standards](skills/skill-development-standards.md) | 20261109.1939.2825 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |

@@ -89,6 +89,46 @@ class AlternateContentInspectionTests(unittest.TestCase):
         self.assertEqual(slide["text"], ["ratio x holds"])
         self.assertEqual(slide["notes"], ["selected note"])
 
+    def test_notes_table_text_preserves_order_and_mce_selection(self) -> None:
+        # Each cell paragraph, including empty ones, occupies its own notes entry.
+        selected = '<a:p><a:r><a:t>单元格 A</a:t></a:r></a:p><a:p/>'
+        fallback = '<a:p><a:r><a:t>duplicate fallback</a:t></a:r></a:p>'
+        table = (
+            '<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="4" name="Notes table"/>'
+            '<p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>'
+            '<p:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></p:xfrm>'
+            '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">'
+            '<a:tbl><a:tblPr/><a:tblGrid><a:gridCol w="100"/></a:tblGrid><a:tr h="100">'
+            '<a:tc><a:txBody><a:bodyPr/><a:lstStyle/>' + alternate(choice(selected), fallback) +
+            '</a:txBody><a:tcPr/></a:tc></a:tr></a:tbl></a:graphicData></a:graphic></p:graphicFrame>'
+        )
+        footer = text_shape(5, "footer should not appear").replace('<p:nvPr/>', '<p:nvPr><p:ph type="ftr"/></p:nvPr>')
+        parts = read_parts(presentation(text_shape(2, "slide"), notes="Regular body"))
+        name = "ppt/notesSlides/notesSlide1.xml"
+        note_xml = parts[name].decode("utf-8")
+        parts[name] = note_xml.replace('</p:spTree>', table + footer + '</p:spTree>').encode("utf-8")
+        slide = inspect_presentation(zipped(parts))["slides"][0]
+        self.assertEqual(slide["text"], ["slide"])
+        self.assertEqual(slide["notes"], ["Regular body", "单元格 A", ""])
+
+    def test_notes_placeholder_uses_selected_mce_branch(self) -> None:
+        placeholder = alternate(choice('<p:ph type="sldNum"/>'), '<p:ph type="body"/>')
+        page = text_shape(4, "PAGE 99").replace('<p:nvPr/>', '<p:nvPr>' + placeholder + '</p:nvPr>')
+        parts = read_parts(presentation(text_shape(2, "slide"), notes="Regular body"))
+        name = "ppt/notesSlides/notesSlide1.xml"
+        xml = parts[name].decode("utf-8")
+        parts[name] = xml.replace('</p:spTree>', page + '</p:spTree>').encode("utf-8")
+        self.assertEqual(inspect_presentation(zipped(parts))["slides"][0]["notes"], ["Regular body"])
+        reversed_page = page.replace('<p:ph type="sldNum"/>', '<p:ph type="body"/>', 1)
+        reversed_page = reversed_page.replace('<mc:Fallback><p:ph type="body"/>', '<mc:Fallback><p:ph type="ftr"/>')
+        parts[name] = xml.replace('</p:spTree>', reversed_page + '</p:spTree>').encode("utf-8")
+        self.assertEqual(inspect_presentation(zipped(parts))["slides"][0]["notes"], ["Regular body", "PAGE 99"])
+        wrapped_properties = alternate(choice('<p:nvPr><p:ph type="sldNum"/></p:nvPr>'),
+                                       '<p:nvPr><p:ph type="body"/></p:nvPr>')
+        wrapped_page = text_shape(4, "PAGE 99").replace('<p:nvPr/>', wrapped_properties)
+        parts[name] = xml.replace('</p:spTree>', wrapped_page + '</p:spTree>').encode("utf-8")
+        self.assertEqual(inspect_presentation(zipped(parts))["slides"][0]["notes"], ["Regular body"])
+
     def test_unselected_branches_are_still_structurally_validated(self) -> None:
         invalid = text_shape(3, "fallback").replace('<a:rPr lang="zh-CN" sz="2400"/>', '<a:rPr><a:hlinkClick r:id="missing"/></a:rPr>')
         parts = read_parts(presentation(text_shape(2, "selected")))

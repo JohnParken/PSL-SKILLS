@@ -236,6 +236,25 @@ class SkillRuntimePackages(unittest.TestCase):
             'schema': 'psl.pptx.v1', 'width': 1280, 'height': 720, 'slides': [{'svg': svg, 'notes': '验收备注'}]})
         self.invoke('pptx', 'pptx.py', 'validate', 'deck.pptx')
         self.assertIn('独立演示验收', self.invoke('pptx', 'pptx.py', 'inspect', 'deck.pptx').stdout)
+        with zipfile.ZipFile(self.work / 'deck.pptx') as package:
+            members = {name: package.read(name) for name in package.namelist()}
+        name = 'ppt/notesSlides/notesSlide1.xml'
+        frame = (
+            '<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="4" name="Table"/>'
+            '<p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>'
+            '<p:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></p:xfrm>'
+            '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">'
+            '<a:tbl><a:tblPr/><a:tblGrid><a:gridCol w="914400"/></a:tblGrid><a:tr h="914400">'
+            '<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>独立备注表格</a:t></a:r></a:p>'
+            '</a:txBody><a:tcPr/></a:tc></a:tr></a:tbl></a:graphicData></a:graphic></p:graphicFrame>'
+        )
+        members[name] = members[name].replace(b'</p:spTree>', frame.encode('utf-8') + b'</p:spTree>')
+        with zipfile.ZipFile(self.work / 'notes-table.pptx', 'w', zipfile.ZIP_DEFLATED) as package:
+            for member, data in members.items():
+                package.writestr(member, data)
+        result = json.loads(self.invoke('pptx', 'pptx.py', 'inspect', 'notes-table.pptx', '--max-output-bytes', '1500').stdout)
+        self.assertEqual(result['slides'][0]['notes'], ['验收备注', '独立备注表格'])
+        self.assertTrue(result['pagination']['complete'])
 
     def test_artifact_archive_and_registered_cleanup(self):
         self.invoke('artifact-lifecycle', 'lifecycle.py', 'check')
