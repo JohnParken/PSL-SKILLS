@@ -62,4 +62,5 @@ class FormatRules(unittest.TestCase):
             self.assertEqual(item['status'],'unknown')
             self.assertNotIn('display_text',item)
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

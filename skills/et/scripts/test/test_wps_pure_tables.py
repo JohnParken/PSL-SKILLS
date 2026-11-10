@@ -128,10 +128,10 @@ class PureTableTests(unittest.TestCase):
         with self.assertRaises(ParseError):
             self.data(rec(0x204, cell(0, 0) + prefix) + rec(0x3C, b'\x80AB'))
 
-    def test_malformed_utf16_and_tail_or_unknown_record_still_fail(self):
+    def test_malformed_utf16_and_tail_or_orphan_continuation_still_fail(self):
         for body in [rec(0x204, cell(0, 0) + b'\1\0\x81\0\xd8'),
                      rec(0x204, cell(0, 0) + b'\2\0\x81A\0'),
-                     label('中', 0x81) + rec(0x7777),
+                     label('中', 0x81) + rec(0x003C),
                      rec(0x204, cell(0, 0) + plain('中', 0x81) + b'x')]:
             with self.assertRaises(ParseError):
                 self.data(body)
@@ -153,7 +153,8 @@ class PureTableTests(unittest.TestCase):
     def test_cli_default_partial_strict_failure_and_input_unchanged(self):
         data = synthetic_cfb({'Workbook': workbook([label('中文', 0x81)], strings=[], extra_global=rec(0x42, struct.pack('<H', 936)))})
         with tempfile.TemporaryDirectory(dir='.') as directory:
-            path = Path(directory) / 'table.et'; path.write_bytes(data)
+            path = Path(directory) / 'table.et'
+            path.write_bytes(data)
             command = [sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / 'read_wps.py')), str(path)]
             result = subprocess.run(command, capture_output=True, text=True, encoding='utf8')
             self.assertEqual(result.returncode, 3, result.stderr)

@@ -15,6 +15,37 @@ class UnsafeDefinedName(ValueError):
 MAX_STATIC_NAMES = 256
 AREA3D_TOKENS = frozenset((0x3B, 0x5B, 0x7B))
 REF3D_TOKENS = frozenset((0x3A, 0x5A, 0x7A))
+LBL_HIDDEN = 0x0001
+LBL_BUILTIN = 0x0020
+LBL_RESERVED_FLAGS = 0x9000
+
+
+def normalize_data_name_header(payload):
+    """Ignore passive header bits for validation while keeping raw evidence."""
+    if len(payload) < 15:
+        return payload, None
+    flags = struct.unpack_from('<H', payload)[0]
+    ignored_flags = flags & LBL_RESERVED_FLAGS
+    # The existing built-in parser already handles hidden Print_Titles and
+    # _FilterDatabase. Print_Area uses its own exact legacy layout check.
+    print_area = len(payload) >= 16 and payload[15] == 0x06
+    if not flags & LBL_BUILTIN or print_area:
+        ignored_flags |= flags & LBL_HIDDEN
+    reserved = payload[6:8] + payload[10:14]
+    name_options = payload[14]
+    if not ignored_flags and not any(reserved) and name_options in (0, 1):
+        return payload, None
+    normalized = (struct.pack('<H', flags & ~ignored_flags) + payload[2:6] +
+                  bytes(2) + payload[8:10] + bytes(4) +
+                  bytes((name_options & 1,)) + payload[15:])
+    return normalized, {
+        'code': 'defined_name_passive_header_fields_ignored',
+        'flags_raw': flags,
+        'ignored_flag_bits': ignored_flags,
+        'reserved_fields_raw_hex': reserved.hex(),
+        'name_options_raw': name_options,
+        'message': 'Hidden or reserved Name header fields preserved raw and ignored during static reference validation.',
+    }
 
 
 def _refuse(message):

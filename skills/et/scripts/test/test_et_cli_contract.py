@@ -10,12 +10,33 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(SCRIPTS))
 from et_cli_protocol import PROTOCOL, dumps, loads
-from test_wps_biff8 import workbook
+from test_wps_biff8 import rec, workbook
 from test_wps_cfb import synthetic_cfb
 from read_et import read_bytes, encode_result
 
 
 class EtContractTests(unittest.TestCase):
+    def test_omitted_compatibility_uses_data_and_strict_refusal_is_not_retried(self):
+        stream = workbook(extra_global=rec(0x7777, b'opaque'))
+        raw = synthetic_cfb({'Workbook': stream})
+        gateway = [sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'et_cli.py')]
+        for operation in ('read', 'metadata'):
+            with self.subTest(operation=operation):
+                request = {'protocol': PROTOCOL, 'id': 8, 'operation': operation,
+                           'parameters': {'raw': raw, 'source': 'source.et'}}
+                result = subprocess.run([*gateway, operation], input=dumps(request), capture_output=True, timeout=20)
+                response = loads(result.stdout.strip())
+                self.assertEqual(result.returncode, 3, result.stderr)
+                self.assertTrue(response['ok'])
+                self.assertEqual(response['result']['exit_code'], 3)
+                request['parameters']['compatibility'] = 'strict'
+                result = subprocess.run([*gateway, operation], input=dumps(request), capture_output=True, timeout=20)
+                response = loads(result.stdout.strip())
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertFalse(response['ok'])
+                self.assertEqual(response['error']['location']['record_id'], '0x7777')
+                self.assertEqual(response['error']['location']['compatibility_mode'], 'strict')
+
     def test_original_extraction_and_exit_are_preserved(self):
         raw = synthetic_cfb({'Workbook': workbook()})
         expected = read_bytes(raw, source='source.et')

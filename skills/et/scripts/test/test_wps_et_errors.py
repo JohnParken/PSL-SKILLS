@@ -21,8 +21,8 @@ from test_wps_cfb import synthetic_cfb
 
 
 class EtErrorLocationTests(unittest.TestCase):
-    def test_unknown_sheet_record_preserves_status_and_exact_location(self):
-        payload = rec(0x7777, b'not interpreted')
+    def test_unhandled_cell_record_preserves_status_and_exact_location(self):
+        payload = rec(0x00D6, b'not interpreted')
         data = workbook([payload], strings=[])
         expected_offset = data.index(payload)
         with self.assertRaises(ParseError) as error:
@@ -30,7 +30,7 @@ class EtErrorLocationTests(unittest.TestCase):
         self.assertEqual(error.exception.status, 'unsupported')
         self.assertEqual(error.exception.location['sheet'], '中文表1')
         self.assertEqual(error.exception.location['record_offset'], expected_offset)
-        self.assertEqual(error.exception.location['record_id'], '0x7777')
+        self.assertEqual(error.exception.location['record_id'], '0xd6')
         self.assertNotIn('not interpreted', str(error.exception.location))
 
     def test_malformed_cell_record_keeps_source_location(self):

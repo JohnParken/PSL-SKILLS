@@ -18,10 +18,12 @@ class IsoDateTests(unittest.TestCase):
             self.assertFalse(item['serial_conversion_performed'])
     def test_bad_calendar_clock_and_zone(self):
         for raw in ('1900-02-29','2023-02-29','0000-01-01','2024-13-01','2024-02-30','2024-01-01T24:00Z','2024-01-01T23:59:60Z','2024-01-01T12:60Z','2024-01-01T12:00+14:01','2024-01-01T12:00+00:60'):
-            with self.subTest(raw=raw), self.assertRaises(ValueError): parse_iso_date(raw)
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                parse_iso_date(raw)
     def test_bounded_lexical_subset(self):
         for raw in (' 2024-01-01','20240101','-0001-01-01','10000-01-01','2024-W01-1','2024-001','2024-01-01T01:01:01.'+'1'*100000,'2024-01-01T12:00+1400'):
-            with self.assertRaisesRegex(ValueError,'Unsupported'): parse_iso_date(raw)
+            with self.assertRaisesRegex(ValueError,'Unsupported'):
+                parse_iso_date(raw)
 
 @unittest.skipUnless(expat.version_info >= (2,6,0),'requires Expat >=2.6')
 class IsoDatePackageTests(unittest.TestCase):
@@ -65,4 +67,5 @@ class IsoDatePackageTests(unittest.TestCase):
         value=result(package('<c r="A1" t="d"><v>-0001-01-01</v></c>'))
         self.assertEqual(value['status'],'unsupported')
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

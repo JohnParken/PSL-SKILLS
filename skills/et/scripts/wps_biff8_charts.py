@@ -54,7 +54,7 @@ def drawing_frame(data, expected_root, *, allow_unknown_atoms=False):
     return unknown
 
 
-def chart_end(records, index):
+def chart_end(records, index, *, tolerate_semantics=False):
     """Return the exclusive end index and diagnostics for one embedded chart."""
     offset, kind, payload = records[index]
     if kind != 0x0809 or len(payload) != 16 or payload[:4] != b'\x00\x06\x20\x00':
@@ -62,6 +62,7 @@ def chart_end(records, index):
     start = index
     depth = 0
     begins = charts = units = 0
+    payload_issues = []
     while index + 1 < len(records):
         index += 1
         _, kind, payload = records[index]
@@ -71,9 +72,12 @@ def chart_end(records, index):
             if payload or depth or not begins or charts != 1 or units != 1:
                 raise ValueError('Incomplete/unbalanced embedded chart')
             raw = b''.join(struct.pack('<HH', k, len(p)) + p for _, k, p in records[start:index + 1])
-            return index + 1, {'offset': offset, 'end_offset': records[index][0] + 4,
-                               'record_count': index - start + 1, 'sha256': hashlib.sha256(raw).hexdigest(),
-                               'decoded': False, 'rendered': False, 'grammar_validation': 'bounded_record_framing_only'}
+            report = {'offset': offset, 'end_offset': records[index][0] + 4,
+                      'record_count': index - start + 1, 'sha256': hashlib.sha256(raw).hexdigest(),
+                      'decoded': False, 'rendered': False, 'grammar_validation': 'bounded_record_framing_only'}
+            if payload_issues:
+                report['payload_issues'] = payload_issues
+            return index + 1, report
         if kind not in CHART_RECORDS:
             raise ValueError('Unsupported embedded chart record ' + hex(kind))
         if kind == 0x1033:
@@ -87,10 +91,14 @@ def chart_end(records, index):
             depth -= 1
         elif kind == 0x1002:
             if len(payload) != 16:
-                raise ValueError('Malformed Chart rectangle')
+                if not tolerate_semantics:
+                    raise ValueError('Malformed Chart rectangle')
+                payload_issues.append({'record_offset': records[index][0], 'message': 'Malformed Chart rectangle'})
             charts += 1
         elif kind == 0x1001:
             if len(payload) != 2:
-                raise ValueError('Malformed chart Units')
+                if not tolerate_semantics:
+                    raise ValueError('Malformed chart Units')
+                payload_issues.append({'record_offset': records[index][0], 'message': 'Malformed chart Units'})
             units += 1
     raise ValueError('Truncated embedded chart without EOF')

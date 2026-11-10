@@ -47,4 +47,5 @@ class SpreadsheetStability(unittest.TestCase):
         self.assertNotIn('interpreted_value',item['numeric_interpretation'])
         self.assertEqual(out['sheets'][0]['visibility']['columns'][0]['style_index_raw'],'2')
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

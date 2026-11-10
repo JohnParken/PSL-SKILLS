@@ -156,7 +156,8 @@ class TablePreviewTests(unittest.TestCase):
     @unittest.skipUnless(expat.version_info >= (2, 6, 0), 'requires Expat >=2.6')
     def test_ooxml_preview_preserves_text_identifiers_missing_positions_and_cached_formula(self):
         sheet = (f'<worksheet xmlns="{T}"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>001</t></is></c>'
-                 '<c r="C1"><f>1+1</f><v>7</v></c></row></sheetData><mergeCells count="1">'
+                 '<c r="C1"><f t="shared" si="0" ref="C1:C2">1+1</f><v>7</v></c></row>'
+                 '<row r="2"><c r="C2"><f t="shared" si="0"/><v>8</v></c></row></sheetData><mergeCells count="1">'
                  '<mergeCell ref="A1:B1"/></mergeCells></worksheet>')
         data = package(overrides={'xl/worksheets/sheet1.xml': sheet})
         result = preview(read_bytes(data), {'sheet': 'Data', 'range': 'A1:C2'})
@@ -164,6 +165,10 @@ class TablePreviewTests(unittest.TestCase):
         self.assertEqual(result['rows'][0]['cells']['B']['type'], 'missing')
         self.assertEqual(result['rows'][0]['cells']['C']['value'], Decimal(7))
         self.assertEqual(result['rows'][0]['cells']['C']['cache_status'], 'unverified')
+        self.assertEqual(result['rows'][0]['cells']['C']['formula_text'], '1+1')
+        self.assertEqual(result['rows'][1]['cells']['C']['value'], Decimal(8))
+        self.assertEqual(result['rows'][1]['cells']['C']['cache_status'], 'unverified')
+        self.assertNotIn('formula_text', result['rows'][1]['cells']['C'])
         self.assertTrue(result['merges'][0]['anchor_in_page'])
         self.assertFalse(result['formulas_executed'])
 
@@ -238,6 +243,7 @@ class TablePreviewTests(unittest.TestCase):
         parsed = read_bytes(data)
         direct = preview(parsed, {'sheet': '中文表1', 'range': 'A1:B3'})
         self.assertEqual(direct['rows'][2]['cells']['A']['value'], Decimal(999))
+        self.assertEqual(direct['rows'][2]['cells']['A']['formula_text'], '=42')
         self.assertEqual(direct['rows'][2]['cells']['B']['type'], 'missing')
         directory = Path('et-preview-' + uuid.uuid4().hex)
         self.assertFalse(directory.exists())

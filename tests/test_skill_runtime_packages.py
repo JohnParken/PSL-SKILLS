@@ -15,10 +15,12 @@ from pathlib import Path
 import platform
 import re
 import stat
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import xml.parsers.expat as expat
 import zipfile
 
@@ -213,6 +215,30 @@ class SkillRuntimePackages(unittest.TestCase):
         self.assertEqual(str(numeric[0]['sum']), '20')
         self.assertEqual(numeric[0]['numeric_count'], 2)
         self.assertEqual((self.work / 'synthetic.et').read_bytes(), source)
+
+    def test_et_synthetic_biff8_compatibility_in_readonly_package(self):
+        fixture_root = ROOT / 'skills/et/scripts/test'
+        with patch.object(sys, 'path', [str(fixture_root), *sys.path]):
+            from test_wps_biff8 import cell, rec, workbook
+            from test_wps_biff8_links import external_book
+            from test_wps_cfb import synthetic_cfb
+            from test_wps_embedded_charts import CHART, DRAWING, GROUP, OBJECT
+        malformed_chart = CHART.replace(rec(0x1001, bytes(2)), rec(0x1001, b'x'))
+        sheet = rec(0xEC, DRAWING) + rec(0x5D, OBJECT) + malformed_chart
+        sheet += rec(0x0203, cell(1, 0) + struct.pack('<d', 42))
+        xti = rec(0x0017, struct.pack('<HHhh', 1, 0, 0, 0))
+        stream = workbook([sheet], extra_global=external_book() + xti + rec(0xEB, GROUP))
+        source = synthetic_cfb({'Workbook': stream}) + b'\0' * 3
+        path = self.work / 'synthetic.et'
+        path.write_bytes(source)
+        response = self.invoke('et', 'et_cli.py', 'run', path.name, expected=3)
+        result = json.loads(response.stdout)
+        cell_result = result['sheets'][0]['cells']['A2']
+        self.assertEqual((cell_result['type'], cell_result['value']), ('number', '42'))
+        self.assertEqual(result['cell_value_coverage'], 'complete_within_declared_sheets')
+        codes = {item['code'] for item in result['issues']}
+        self.assertTrue({'cfb_zero_trailing_padding_ignored', 'external_links_retained_opaque', 'embedded_chart_retained_opaque'} <= codes)
+        self.assertEqual(path.read_bytes(), source)
 
     def test_ofd_bundled_font_generation_readback(self):
         self.invoke('ofd', 'generate_ofd.py', '--check')

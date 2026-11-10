@@ -36,6 +36,23 @@ def chart_workbook(chart=CHART, drawing=DRAWING, obj=OBJECT, extra=b''):
 
 
 class EmbeddedChartTests(unittest.TestCase):
+    def test_file_data_retains_bad_chart_payload_only_in_complete_group(self):
+        from read_et import ParseError, read_bytes
+
+        malformed = CHART.replace(rec(0x1001, bytes(2)), rec(0x1001, b'x'))
+        result = read_bytes(synthetic_cfb({'Workbook': chart_workbook(chart=malformed)}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['sheets'][0]['cells']['A2']['value'], 42)
+        self.assertEqual(result['embedded_charts'][0]['payload_issues'][0]['message'], 'Malformed chart Units')
+        self.assertEqual(result['cell_value_coverage'], 'complete_within_declared_sheets')
+        for damaged in (malformed[:-4], malformed.replace(rec(0x1034), b'')):
+            with self.subTest(chart=damaged), self.assertRaises(ParseError):
+                read_bytes(synthetic_cfb({'Workbook': chart_workbook(chart=damaged)}))
+        with self.assertRaises(ParseError):
+            read_bytes(synthetic_cfb({'Workbook': chart_workbook(chart=malformed, extra=rec(0x0203, b'bad cell'))}))
+        with self.assertRaises(ValueError):
+            self.read(chart_workbook(chart=malformed))
+
     def read(self, data):
         return parse_stream(data, compatibility='legacy_excel_clsid', chart_policy='opaque')
 
@@ -91,7 +108,8 @@ class EmbeddedChartTests(unittest.TestCase):
         class Runner:
             def run_read(self, data, suffix, *options):
                 with tempfile.TemporaryDirectory() as tmp:
-                    path = Path(tmp)/('input'+suffix); path.write_bytes(data)
+                    path = Path(tmp)/('input'+suffix)
+                    path.write_bytes(data)
                     command = [sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / 'read_wps.py')), str(path), *options]
                     result = subprocess.run(command, capture_output=True, text=True)
                     assert path.read_bytes() == data

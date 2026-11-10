@@ -58,7 +58,7 @@ class MetadataTests(unittest.TestCase):
         self.assertTrue(original['reading_assessment'])
 
     def test_invalid_container_nonselected_sheet_and_parameters_fail(self):
-        for raw in (b'unknown', synthetic_cfb({'Workbook': workbook([b'', rec(0xFFFF)])})):
+        for raw in (b'unknown', synthetic_cfb({'Workbook': workbook([b'', rec(0x0203)])})):
             child, response = self.invoke(raw)
             self.assertEqual(child.returncode, 1)
             self.assertFalse(response['ok'])

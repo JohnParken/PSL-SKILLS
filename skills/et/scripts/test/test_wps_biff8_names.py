@@ -15,6 +15,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from test_wps_biff8 import workbook, rec
 from test_wps_biff8_salvage import values
+from test_wps_cfb import synthetic_cfb
+from read_et import read_bytes
 from wps_biff8 import parse_stream, ResourceLimitError, UnsupportedError
 from wps_biff8_names import classify_static_name, MAX_STATIC_NAMES, UnsafeDefinedName
 
@@ -42,6 +44,63 @@ def named_workbook(payload, *, before=b'', after=b''):
 
 
 class StaticNameTests(unittest.TestCase):
+    def test_file_reader_retains_unusable_name_and_palette_and_continues(self):
+        macro_name = name_payload('Budget', flags=0x0008)
+        palette = b'\x38\x00\x99'
+        original = read_bytes(synthetic_cfb({'Workbook': workbook()}))
+        for name in (macro_name, b'\x00', name_payload(formula=b'\x21' + bytes(10))):
+            with self.subTest(name=name.hex()):
+                stream = named_workbook(name, after=rec(0x0092, palette))
+                raw = synthetic_cfb({'Workbook': stream})
+                result = read_bytes(raw)
+                self.assertEqual(values(result), values(original))
+                self.assertEqual(result['status'], 'partial')
+                self.assertTrue(result['omissions_affect_cell_values'])
+                self.assertFalse(result['formulas_executed'])
+                self.assertFalse(result['external_links_followed'])
+                records = {item['name']: item for item in result['uninterpreted_metadata']}
+                self.assertEqual(records['DefinedNameOpaque']['payload_hex'], name.hex())
+                self.assertTrue(records['DefinedNameOpaque']['validation_error'])
+                self.assertEqual(records['PaletteOpaque']['payload_hex'], palette.hex())
+                self.assertFalse(records['DefinedNameOpaque']['semantics_verified'])
+
+    def test_default_file_reader_preserves_cells_and_caches_with_passive_name_fields(self):
+        original = name_payload()
+        baseline = read_bytes(synthetic_cfb({'Workbook': named_workbook(original)}))
+        variants = ((0x0001, b'\0\0', 1), (0, b'\x12\x34', 1), (0, b'\0\0', 0x81), (0x9001, b'\x12\x34', 0x81))
+        for flags, reserved, options in variants:
+            with self.subTest(flags=flags, reserved=reserved, options=options):
+                payload = struct.pack('<H', flags) + original[2:6] + reserved + original[8:14] + bytes((options,)) + original[15:]
+                result = read_bytes(synthetic_cfb({'Workbook': named_workbook(payload)}))
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'], baseline['sheets'])
+                self.assertEqual(result['cell_value_coverage'], 'complete_within_declared_sheets')
+                self.assertFalse(result['omissions_affect_cell_values'])
+                self.assertFalse(result['formulas_executed'])
+                self.assertTrue(result['sheets'][0]['cells']['B4']['formula']['cache_may_be_stale'])
+                evidence = next(item for item in result['uninterpreted_metadata'] if item['record_id'] == '0x18')
+                issue = next(item for item in result['issues'] if item['code'] == 'defined_name_passive_header_fields_ignored')
+                self.assertEqual(evidence['payload_hex'], payload.hex())
+                self.assertEqual(issue['record_offset'], evidence['offset'])
+                self.assertEqual(issue['ignored_flag_bits'], flags)
+                self.assertEqual(issue['reserved_fields_raw_hex'], (reserved + bytes(4)).hex())
+                self.assertEqual(issue['name_options_raw'], options)
+
+    def test_passive_name_fields_do_not_hide_other_failures(self):
+        for payload in (
+            name_payload(flags=0x9009),
+            name_payload(flags=1, shortcut=65),
+            name_payload(flags=1, ref=7),
+            name_payload(flags=1, sheet=3),
+            name_payload(flags=1)[:-1],
+        ):
+            with self.subTest(payload=payload.hex()), self.assertRaises(ValueError):
+                parse_stream(named_workbook(payload), compatibility='data')
+        duplicate = named_workbook(name_payload('Budget', flags=1),
+                                   after=rec(0x0018, name_payload('budget')))
+        with self.assertRaisesRegex(ValueError, 'Duplicate ordinary static name'):
+            parse_stream(duplicate, compatibility='data')
+
     def test_ordinary_internal_named_range_no_cell_changes(self):
         raw = named_workbook(name_payload('部门甲_统计区域',rows=(2,6),cols=(1,4)))
         base = workbook()
@@ -127,12 +186,18 @@ class StaticNameTests(unittest.TestCase):
         for idx,p in enumerate(candidates):
             with self.subTest(idx=idx),self.assertRaises(ValueError):
                 classify_static_name(p,1,[(0,0)])
-        p=bytearray(valid);struct.pack_into('<H',p,6,1)
-        with self.assertRaises(ValueError): classify_static_name(bytes(p),1,[(0,0)])
-        p=bytearray(valid);p[10]=0x01
-        with self.assertRaises(ValueError): classify_static_name(bytes(p),1,[(0,0)])
-        p=bytearray(valid);p[2]=ord('Z')
-        with self.assertRaises(ValueError): classify_static_name(bytes(p),1,[(0,0)])
+        p=bytearray(valid)
+        struct.pack_into('<H',p,6,1)
+        with self.assertRaises(ValueError):
+            classify_static_name(bytes(p),1,[(0,0)])
+        p=bytearray(valid)
+        p[10]=0x01
+        with self.assertRaises(ValueError):
+            classify_static_name(bytes(p),1,[(0,0)])
+        p=bytearray(valid)
+        p[2]=ord('Z')
+        with self.assertRaises(ValueError):
+            classify_static_name(bytes(p),1,[(0,0)])
 
     def test_area_invalid_coordinate_order_relative_and_scope(self):
         for props in (
@@ -169,6 +234,22 @@ class StaticNameTests(unittest.TestCase):
                            rec(0x0018,data)),compatibility='data')
         label=[x for x in parsed['uninterpreted_metadata'] if x['record_id']=='0x18']
         self.assertEqual(label[0]['name'],'PrintAreaStatic')
+        extended = bytearray(data)
+        extended[0] |= 1
+        extended[10:14] = b'\x01\x02\x03\x04'
+        stream = named_workbook(bytes(extended))
+        recovered = parse_stream(stream, compatibility='data')
+        self.assertEqual(recovered['status'], 'partial')
+        self.assertEqual(recovered['sheets'], parsed['sheets'])
+        for mode in ('strict', 'legacy_excel_clsid'):
+            with self.subTest(mode=mode), self.assertRaises(ValueError):
+                parse_stream(stream, compatibility=mode)
+        invalid = data[:17] + b'\x08\0' + data[19:]
+        result = read_bytes(synthetic_cfb({'Workbook': named_workbook(invalid)}))
+        self.assertEqual(values(result), values(parsed))
+        self.assertTrue(result['omissions_affect_cell_values'])
+        opaque = next(item for item in result['uninterpreted_metadata'] if item['name'] == 'DefinedNameOpaque')
+        self.assertEqual(opaque['payload_hex'], invalid.hex())
 
     def test_optin_does_not_skip_unsafe_name(self):
         unsafe=name_payload('RunAnything', flags=0x0008)

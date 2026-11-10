@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from test_wps_biff8 import rec, cell
 from test_wps_biff8_salvage import values
 from test_wps_template_compatibility import template_workbook
+from test_wps_cfb import synthetic_cfb
+from read_et import ParseError, read_bytes
 from wps_biff8 import parse_stream, ResourceLimitError
 from wps_biff8_conditional import validation_group
 
@@ -27,6 +29,24 @@ def rule(condition=1, comparison=3, first=b'\x1e\x05\0', second=b'', style=bytes
 
 
 class ConditionalGroupTests(unittest.TestCase):
+    def test_numeric_comparison_and_fill_are_observed_not_applied(self):
+        def literal(value):
+            return b'\x1e' + struct.pack('<H', value)
+
+        fill = struct.pack('<I3H', 0x20040000, 0, 1 << 10, 10 | (40 << 7))
+        first = rule(comparison=5, first=literal(100), style=fill)
+        second = rule(comparison=1, first=literal(10), second=literal(20))
+        third = rule(comparison=5, first=b'\x44\0\0\0\0')
+        tail = rec(0x1B0, header(3)) + b''.join(rec(0x1B1, item) for item in (first, second, third))
+        result = parse_stream(template_workbook(extra_sheet=tail), compatibility='data')
+        rules = [item['structure'] for item in result['uninterpreted_metadata'] if item['name'] == 'CFOpaque']
+        self.assertEqual(rules[0]['cell_value_comparison'], {'operator': 'greaterThan', 'operands': ['100']})
+        self.assertEqual(rules[0]['differential_fill'], {'pattern_id': 1, 'foreground_color_index': 10})
+        self.assertEqual(rules[1]['cell_value_comparison'], {'operator': 'between', 'operands': ['10', '20']})
+        self.assertNotIn('cell_value_comparison', rules[2])
+        self.assertFalse(rules[0]['formatting_applied'])
+        self.assertEqual(values(result), values(parse_stream(template_workbook(), compatibility='data')))
+
     def test_opaque_groups_preserve_saved_values_caches_and_source_bytes(self):
         for condition, comparison, second in ((1, 1, b'\x1e\x09\0'), (1, 3, b''), (2, 255, b'')):
             source_header = header()
@@ -94,6 +114,27 @@ def validation_rule(*, strings=('标题', '', '提示', ''), first=b'\x1e\x01\0'
     text = b''.join(struct.pack('<HB', len(value.encode('utf-16le')) // 2, 1) + value.encode('utf-16le') for value in strings)
     formulas = b''.join(struct.pack('<HH', len(value), 0) + value for value in (first, second))
     return bytes(4) + text + formulas + struct.pack('<H', len(ranges)) + b''.join(struct.pack('<4H', *region) for region in ranges)
+
+
+class RuleGroupFileTests(unittest.TestCase):
+    def test_bounded_rule_semantic_errors_do_not_consume_later_cell(self):
+        cf = rule(condition=3)
+        dv = validation_rule(ranges=((9, 0, 0, 1),))
+        tail = rec(0x203, cell(10, 0) + struct.pack('<d', 42))
+        for prefix, member, payload in ((rec(0x1B0, header()), 0x1B1, cf),
+                                        (rec(0x1B2, validation_header()), 0x1BE, dv)):
+            with self.subTest(member=member):
+                stream = template_workbook(extra_sheet=prefix + rec(member, payload) + tail)
+                result = read_bytes(synthetic_cfb({'Workbook': stream}))
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A11']['value'], 42)
+                self.assertEqual(result['cell_value_coverage'], 'complete_within_declared_sheets')
+                source = next(item for item in result['uninterpreted_metadata'] if item['record_id'] == hex(member))
+                self.assertEqual(source['payload_hex'], payload.hex())
+                self.assertIn('semantic_issue', source['structure'])
+                for broken in (prefix + tail, prefix + rec(member, bytes(3)) + tail):
+                    with self.assertRaises(ParseError):
+                        read_bytes(synthetic_cfb({'Workbook': template_workbook(extra_sheet=broken)}))
 
 
 class ValidationGroupTests(unittest.TestCase):

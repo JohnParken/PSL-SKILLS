@@ -10,7 +10,7 @@ import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from wps_cfb import CompoundFile, MAX_FILE_BYTES, MAX_STREAM_BYTES, SIGNATURE
-from wps_access import ParseError, read_input, load_compound, resolve_chart_policy
+from wps_access import DEFAULT_FILE_COMPATIBILITY, ParseError, read_input, load_compound, resolve_chart_policy
 
 MAX_JSON_OUTPUT_BYTES = 16 * 1024 * 1024
 
@@ -33,7 +33,7 @@ def failure(status, location, message):
     }
 
 
-def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
+def _read_bytes(data, *, source=None, compatibility=DEFAULT_FILE_COMPATIBILITY, chart_policy=None,
                 requested_chart_policy=None, **ignored_kwargs):
     """Identify content first; suffix is provenance, never a format selector."""
     require(isinstance(data, bytes) and len(data) <= MAX_FILE_BYTES,
@@ -113,7 +113,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
     parser.add_argument('--format', choices=('json',), default='json')
-    parser.add_argument('--compatibility', choices=('data', 'strict', 'legacy_excel_clsid'), default='data')
+    parser.add_argument('--compatibility', choices=('data', 'strict', 'legacy_excel_clsid'), default=DEFAULT_FILE_COMPATIBILITY)
     parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None)
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--include-related', action='store_true')

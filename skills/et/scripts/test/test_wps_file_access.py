@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from read_wps import ParseError, read, read_bytes
 from wps_biff8 import read_file
 from test_wps_biff8 import workbook, rec, formula, special
-from test_wps_cfb import synthetic_cfb
+from test_wps_cfb import END, FREE, synthetic_cfb
 from test_wps_legacy_compat import legacy_container
 
 MODES = ('data', 'strict', 'legacy_excel_clsid')
@@ -25,6 +25,38 @@ SCRIPTS = ('read_wps.py', 'wps_biff8.py')
 
 
 class FileAccessTests(unittest.TestCase):
+    def test_zero_cfb_tail_only_after_full_allocation_checks(self):
+        for major, sector_size in ((3, 512), (4, 4096)):
+            with self.subTest(major=major):
+                # The workbook is in the mini stream and Other uses regular sectors.
+                raw = synthetic_cfb({'Workbook': workbook(), 'Other': b'x' * 4096}, major=major)
+                expected = read_bytes(raw)
+                padded = raw + bytes(sector_size - 1)
+                result = read_bytes(padded)
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'], expected['sheets'])
+                self.assertEqual(result['cell_value_coverage'], expected['cell_value_coverage'])
+                issue = next(item for item in result['container_issues'] if item['code'] == 'cfb_zero_trailing_padding_ignored')
+                self.assertEqual((issue['offset'], issue['padding_bytes']), (len(raw), sector_size - 1))
+                for mode in ('strict', 'legacy_excel_clsid'):
+                    with self.subTest(mode=mode), self.assertRaises(ParseError):
+                        read_bytes(padded, compatibility=mode)
+                with self.assertRaises(ParseError):
+                    read_bytes(raw + b'\0x')
+                # Remove a required sector and leave a zero sub-sector suffix.
+                with self.assertRaises(ParseError):
+                    read_bytes(raw[:-sector_size] + b'\0')
+                directory_offset = 2 * sector_size
+                corrupt = bytearray(padded)
+                struct.pack_into('<Q', corrupt, directory_offset + 2 * 128 + 120, 4097)
+                with self.assertRaises(ParseError):
+                    read_bytes(bytes(corrupt))
+                # Repoint the directory FAT entry to itself while keeping the suffix zero.
+                cycle = bytearray(padded)
+                struct.pack_into('<I', cycle, sector_size + 4, 1)
+                with self.assertRaises(ParseError):
+                    read_bytes(bytes(cycle))
+
     def cli(self, name, path, mode='data'):
         return subprocess.run(
             [sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / name)),
@@ -81,6 +113,50 @@ class FileAccessTests(unittest.TestCase):
                 self.assertEqual(read(path, compatibility='strict')['status'], 'unsupported')
                 self.assertEqual(path.read_bytes(), data)
 
+    def test_zero_fat_count_uses_validated_difat_in_data_mode(self):
+        for major in (3, 4):
+            with self.subTest(major=major), tempfile.TemporaryDirectory(dir='.') as directory:
+                original = synthetic_cfb({'Workbook': workbook()}, major=major)
+                expected = read_bytes(original)
+                self.assertEqual(expected['status'], 'ok')
+                data = bytearray(original)
+                struct.pack_into('<I', data, 44, 0)
+                path = Path(directory) / 'input.et'
+                path.write_bytes(data)
+                for result in (read(path), read_file(path), read_bytes(bytes(data))):
+                    self.assertEqual(result['status'], 'partial')
+                    self.assertEqual(result['sheets'], expected['sheets'])
+                    self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+                    issue, = result['container_issues']
+                    self.assertEqual(issue['code'], 'cfb_zero_fat_count_recovered')
+                    self.assertEqual((issue['declared_fat_count'], issue['inferred_fat_count']), (0, 1))
+                for mode in ('strict', 'legacy_excel_clsid'):
+                    failure = read(path, compatibility=mode)
+                    self.assertEqual(failure['location']['reason_code'], 'cfb_zero_fat_count')
+                    self.assertNotIn('sheets', failure)
+                cli = Path(__file__).resolve().parents[1] / 'et_cli.py'
+                process = subprocess.run([sys.executable, '-I', '-S', '-B', str(cli), 'run', str(path)],
+                                         capture_output=True, text=True, encoding='utf-8', timeout=5)
+                self.assertEqual(process.returncode, 3, process.stdout + process.stderr)
+                self.assertEqual(json.loads(process.stdout)['status'], 'partial')
+                self.assertEqual(path.read_bytes(), data)
+
+    def test_zero_fat_count_requires_sound_allocation_and_supported_payload(self):
+        original = bytearray(synthetic_cfb({'Workbook': workbook()}))
+        struct.pack_into('<I', original, 44, 0)
+        for offset, value in ((76, FREE), (80, 0), (76, 999999), (512, END), (516, 1)):
+            with self.subTest(offset=offset, value=value):
+                data = bytearray(original)
+                struct.pack_into('<I', data, offset, value)
+                self.rejected(bytes(data), 'invalid_or_unsupported')
+                if value == FREE:
+                    with self.assertRaises(ParseError) as caught:
+                        read_bytes(bytes(data))
+                    self.assertEqual(caught.exception.location['reason_code'], 'cfb_zero_fat_count')
+        data = bytearray(synthetic_cfb({'Workbook': b'private payload'}))
+        struct.pack_into('<I', data, 44, 0)
+        self.rejected(bytes(data))
+
     def test_truncated_reserved_and_bad_sector_headers_refused_everywhere(self):
         original = synthetic_cfb({'Workbook': workbook()})
         reserved = bytearray(original)
@@ -108,9 +184,9 @@ class FileAccessTests(unittest.TestCase):
         self.rejected(synthetic_cfb({'Workbook': workbook(), 'WordDocument': b'not interpreted'}),
                       'unsupported', cli=True)
 
-    def test_encrypted_biff_and_unknown_data_are_not_partial(self):
+    def test_encrypted_biff_and_unhandled_cell_records_are_not_partial(self):
         for stream in (workbook(extra_global=rec(0x2F, b'x')),
-                       workbook(extra_global=rec(0x7777, b'x'))):
+                       workbook([rec(0x00D6, b'x')])):
             self.rejected(synthetic_cfb({'Workbook': stream}))
 
     def test_resource_limit_precedes_read_for_both_file_apis(self):

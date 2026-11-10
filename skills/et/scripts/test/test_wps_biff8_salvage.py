@@ -177,10 +177,11 @@ class Biff8SalvageTests(unittest.TestCase):
                           salvage_unknown_metadata=True)
             self.assertEqual(path.read_bytes(), raw)
 
-    def test_standalone_cli_explicit_only_and_original_bytes_unchanged(self):
+    def test_standalone_cli_default_partial_and_original_bytes_unchanged(self):
         raw=synthetic_cfb({'Workbook':workbook(extra_global=rec(0x7777,b'X'))})
         with tempfile.TemporaryDirectory() as folder:
-            p=Path(folder)/'example.et';p.write_bytes(raw)
+            p=Path(folder)/'example.et'
+            p.write_bytes(raw)
             cmd=[sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'wps_biff8.py')),str(p)]
             result=subprocess.run(cmd+['--salvage-unknown-metadata'],text=True,capture_output=True,timeout=20)
             self.assertEqual(result.returncode,3,result.stdout+result.stderr)
@@ -189,7 +190,16 @@ class Biff8SalvageTests(unittest.TestCase):
             self.assertTrue(obj['omissions_affect_cell_values'])
             self.assertEqual(obj['salvage_unknown_record_count'],1)
             regular=subprocess.run(cmd,text=True,capture_output=True,timeout=20)
-            self.assertEqual(regular.returncode,1,regular.stdout+regular.stderr)
+            self.assertEqual(regular.returncode,3,regular.stdout+regular.stderr)
+            default = json.loads(regular.stdout)
+            self.assertEqual(default['sheets'], obj['sheets'])
+            self.assertTrue(default['omissions_affect_cell_values'])
+            self.assertNotIn('salvage_requested', default)
+            entry = Path(__file__).resolve().parents[1] / 'et_cli.py'
+            unified = subprocess.run([sys.executable, '-I', '-S', '-B', str(entry), 'run', str(p)],
+                                     text=True, capture_output=True, timeout=20)
+            self.assertEqual(unified.returncode, 3, unified.stdout + unified.stderr)
+            self.assertEqual(json.loads(unified.stdout)['sheets'], default['sheets'])
             self.assertEqual(p.read_bytes(),raw)
             self.assertEqual([x.name for x in Path(folder).iterdir()],['example.et'])
 

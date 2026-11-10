@@ -11,31 +11,50 @@ class SavedVisibility:
 
     def add(self, kind, payload, offset):
         if kind == 0x208:
-            if len(payload) != 16: raise ValueError('Malformed Row at '+str(offset))
-            row, first, last = struct.unpack_from('<HHH', payload)
-            if not first <= last <= 256 or row in self.rows: raise ValueError('Invalid/duplicate Row at '+str(offset))
+            if len(payload) != 16:
+                raise ValueError('Malformed Row at '+str(offset))
+            row, first, last, height_twips = struct.unpack_from('<4H', payload)
+            if not first <= last <= 256 or row in self.rows:
+                raise ValueError('Invalid/duplicate Row at '+str(offset))
             flags = struct.unpack_from('<H', payload, 12)[0]
-            self.rows[row] = {'row_zero_based': row, 'hidden_saved': bool(flags & 32), 'hidden_cause': 'unknown', 'record_offset': offset}
+            item = {'row_zero_based': row, 'hidden_saved': bool(flags & 32), 'hidden_cause': 'unknown',
+                    'record_offset': offset, 'height_twips_raw': height_twips}
+            if 2 <= height_twips <= 8192:
+                item['height_pt'] = str(height_twips / 20)
+            else:
+                item['height_pt_status'] = 'uninterpreted'
+            self.rows[row] = item
         elif kind == 0x7D:
-            if len(payload) != 12: raise ValueError('Malformed ColInfo at '+str(offset))
-            first, last = struct.unpack_from('<HH', payload)
-            if not first <= last <= 256: raise ValueError('Invalid ColInfo at '+str(offset))
-            if any(not(last < x['first_zero_based'] or first > x['last_zero_based']) for x in self.columns): raise ValueError('Overlapping ColInfo at '+str(offset))
+            if len(payload) != 12:
+                raise ValueError('Malformed ColInfo at '+str(offset))
+            first, last, width_units = struct.unpack_from('<3H', payload)
+            if not first <= last <= 256:
+                raise ValueError('Invalid ColInfo at '+str(offset))
+            if any(not(last < x['first_zero_based'] or first > x['last_zero_based']) for x in self.columns):
+                raise ValueError('Overlapping ColInfo at '+str(offset))
             flags = struct.unpack_from('<H', payload, 8)[0]
-            self.columns.append({'first_zero_based': first, 'last_zero_based': last, 'hidden_saved': bool(flags & 1), 'hidden_cause': 'unknown', 'record_offset': offset, 'default_column_format_included': last == 256, 'actual_last_zero_based': min(last,255) if first < 256 else None})
+            self.columns.append({'first_zero_based': first, 'last_zero_based': last, 'hidden_saved': bool(flags & 1), 'hidden_cause': 'unknown', 'record_offset': offset,
+                                'width_256th_char_raw': width_units, 'width_chars': str(width_units / 256),
+                                'default_column_format_included': last == 256, 'actual_last_zero_based': min(last,255) if first < 256 else None})
         elif kind == 0x9B:
-            if payload or self.filter_mode: raise ValueError('Malformed/duplicate FilterMode at '+str(offset))
+            if payload or self.filter_mode:
+                raise ValueError('Malformed/duplicate FilterMode at '+str(offset))
             self.filter_mode = True
         elif kind == 0x9D:
-            if len(payload) < 24 or len(self.filter_records) >= 256: raise ValueError('Malformed/oversized AutoFilter at '+str(offset))
+            if len(payload) < 24 or len(self.filter_records) >= 256:
+                raise ValueError('Malformed/oversized AutoFilter at '+str(offset))
             column = struct.unpack_from('<H', payload)[0]
-            if column >= 256 or any(x['column_relative'] == column for x in self.filter_records): raise ValueError('Invalid/duplicate AutoFilter at '+str(offset))
+            if column >= 256 or any(x['column_relative'] == column for x in self.filter_records):
+                raise ValueError('Invalid/duplicate AutoFilter at '+str(offset))
             self.filter_records.append({'column_relative': column, 'record_offset': offset, 'payload_hex': payload.hex(), 'conditions_decoded': False})
         elif kind == 0x9E:
-            if len(payload) != 2 or self.filter_count is not None: raise ValueError('Malformed/duplicate AutoFilterInfo at '+str(offset))
+            if len(payload) != 2 or self.filter_count is not None:
+                raise ValueError('Malformed/duplicate AutoFilterInfo at '+str(offset))
             self.filter_count = struct.unpack('<H', payload)[0]
-            if not 1 <= self.filter_count <= 256: raise ValueError('Invalid AutoFilterInfo at '+str(offset))
-        else: return False
+            if not 1 <= self.filter_count <= 256:
+                raise ValueError('Invalid AutoFilterInfo at '+str(offset))
+        else:
+            return False
         return True
 
     def report(self):
@@ -50,7 +69,8 @@ class SavedVisibility:
 
 def select_rows(sheet, mode='all'):
     """Return saved row visibility decisions without dropping unknown rows."""
-    if mode not in ('all', 'saved_visible'): raise ValueError('Unknown row selection')
+    if mode not in ('all', 'saved_visible'):
+        raise ValueError('Unknown row selection')
     rows = {x['row_zero_based']: x['hidden_saved'] for x in sheet.get('visibility', {}).get('rows', [])}
     result = []
     for address, cell in sheet['cells'].items():

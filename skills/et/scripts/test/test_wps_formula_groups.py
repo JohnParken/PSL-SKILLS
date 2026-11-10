@@ -71,7 +71,8 @@ class FormulaGroupTests(unittest.TestCase):
              member(0)+group(uses=1)+member(1), group(),
              member(1,shared=False,anchor=(1,0))+group('array')]
         for raw in bad:
-            with self.subTest(raw=raw.hex()), self.assertRaises(ValueError): self.parse(raw)
+            with self.subTest(raw=raw.hex()), self.assertRaises(ValueError):
+                self.parse(raw)
 
     def test_shared_range_can_have_nonmember_cells(self):
         result=self.parse(member(0)+group(bounds=(0,9,0,0))+member(9))
@@ -80,7 +81,8 @@ class FormulaGroupTests(unittest.TestCase):
     def test_bounds_lengths_and_budget_rejected(self):
         for definition in [group(bounds=(1,0,0,0)),group(uses=0),rec(0x4BC,bytes(9)),
                            rec(0x4BC,struct.pack('<HHBB',0,1,0,0)+b'\0\2\xff\xff\1')]:
-            with self.assertRaises(ValueError): self.parse(member(0)+definition+member(1))
+            with self.assertRaises(ValueError):
+                self.parse(member(0)+definition+member(1))
         with patch('wps_biff8.MAX_CELLS',1),self.assertRaises(ResourceLimitError):
             self.parse(member(0)+group())
         with patch('wps_biff8.MAX_METADATA_BYTES',1),self.assertRaises(ResourceLimitError):
@@ -102,6 +104,8 @@ class FormulaGroupTests(unittest.TestCase):
 
     def test_group_must_immediately_follow_anchor_formula(self):
         raw=member(0,cache=special(0))+rec(0x207,string('x'))+group()+member(1)
-        with self.assertRaises(ValueError): self.parse(raw)
+        with self.assertRaises(ValueError):
+            self.parse(raw)
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

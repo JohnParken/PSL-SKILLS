@@ -14,8 +14,10 @@ from wps_style_formats import NumberFormats, parse_xfs
 
 def xf(fmt, apply=None, parent=None):
     attrs={'numFmtId':str(fmt)}
-    if apply is not None:attrs['applyNumberFormat']=str(apply)
-    if parent is not None:attrs['xfId']=str(parent)
+    if apply is not None:
+        attrs['applyNumberFormat']=str(apply)
+    if parent is not None:
+        attrs['xfId']=str(parent)
     return {'number_format_id_raw':fmt,'apply_number_format':apply in ('1',1,'true'), 'attributes_raw':attrs}
 
 
@@ -41,7 +43,8 @@ class StyleAncestry(unittest.TestCase):
                ([xf(10,parent=0)],[xf(10,parent=1),xf(10,parent=0)],'style_parent_cycle'),
                ([xf(10,parent=0)],[xf(10,parent=1),xf(10)],'style_parent_chain_not_allowed')]
         for cells,parents,reason in cases:
-            with self.subTest(reason=reason):self.assertEqual(NumberFormats(cells,parents).resolve(0)['reason'],reason)
+            with self.subTest(reason=reason):
+                self.assertEqual(NumberFormats(cells,parents).resolve(0)['reason'],reason)
         with patch('wps_style_formats.MAX_STYLE_DEPTH',2):
             parents=[xf(10,parent=1),xf(10,parent=2),xf(10)]
             self.assertEqual(NumberFormats([xf(10,parent=0)],parents).resolve(0)['reason'],'style_parent_depth_limit')
@@ -49,7 +52,8 @@ class StyleAncestry(unittest.TestCase):
     def test_collection_count_flags_and_budget(self):
         self.assertEqual(parse_xfs(fromstring('<cellXfs count="1"><xf numFmtId="10"/></cellXfs>'),lambda n:n)[0]['number_format_id_raw'],10)
         for xml in ('<cellXfs count="2"><xf/></cellXfs>', '<cellXfs><xf applyNumberFormat="yes"/></cellXfs>', '<cellXfs><xf numFmtId="999999"/></cellXfs>'):
-            with self.assertRaises(ValueError):parse_xfs(fromstring(xml),lambda n:n)
+            with self.assertRaises(ValueError):
+                parse_xfs(fromstring(xml),lambda n:n)
         with patch('wps_style_formats.MAX_XFS',1),self.assertRaises(ValueError):
             parse_xfs(fromstring('<cellXfs><xf/><xf/></cellXfs>'),lambda n:n)
 
@@ -59,16 +63,28 @@ class StyleIntegration(unittest.TestCase):
     def test_cell_and_row_linked_format_agreement_and_conflict(self):
         import io,zipfile
         from test_wps_ooxml_sheet import package,result,T,R
-        with zipfile.ZipFile(io.BytesIO(package())) as archive:parts={n:archive.read(n).decode() for n in archive.namelist()}
-        parts['[Content_Types].xml']=parts['[Content_Types].xml'].replace('</Types>','<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>')
+        with zipfile.ZipFile(io.BytesIO(package())) as archive:
+            parts={n:archive.read(n).decode() for n in archive.namelist()}
+        parts['[Content_Types].xml']=parts['[Content_Types].xml'].replace(
+    '</Types>','<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>')
         parts['xl/_rels/workbook.xml.rels']=parts['xl/_rels/workbook.xml.rels'].replace('</Relationships>',f'<Relationship Id="sty" Type="{R}/styles" Target="styles.xml"/></Relationships>')
-        parts['xl/styles.xml']=f'<styleSheet xmlns="{T}"><cellStyleXfs count="1"><xf numFmtId="10"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="10" xfId="0"/><xf numFmtId="0" xfId="0"/></cellXfs></styleSheet>'
-        parts['xl/worksheets/sheet1.xml']=f'<worksheet xmlns="{T}"><sheetData><row r="1" s="0" customFormat="1"><c r="A1"><v>0.125</v></c><c r="B1" s="1"><v>0.125</v></c></row></sheetData></worksheet>'
-        out=result(package(overrides=parts));cells=out['sheets'][0]['cells']
+        parts['xl/styles.xml']= (
+            f'<styleSheet xmlns="{T}"><cellStyleXfs count="1"><xf numFmtId="10"/></cellStyleXfs><cellXfs count="3">'
+            '<xf numFmtId="10" xfId="0"/><xf numFmtId="0" xfId="0"/><xf numFmtId="11" xfId="0" applyNumberFormat="1"/></cellXfs></styleSheet>'
+        )
+        parts['xl/worksheets/sheet1.xml']= (
+            f'<worksheet xmlns="{T}"><sheetData><row r="1" s="0" customFormat="1"><c r="A1"><v>0.125</v></c><c r="B1" s="1">'
+            '<v>0.125</v></c><c r="C1" s="2"><v>12200000</v></c></row></sheetData></worksheet>'
+        )
+        out=result(package(overrides=parts))
+        cells=out['sheets'][0]['cells']
         self.assertEqual(cells['A1']['numeric_interpretation']['display_text'],'12.50%')
         self.assertEqual(cells['A1']['numeric_interpretation']['style_source']['kind'],'row')
         self.assertEqual(cells['B1']['numeric_interpretation']['reason'],'cell_parent_number_format_conflict')
+        self.assertEqual(cells['C1']['numeric_interpretation']['display_text'], '1.22E+07')
+        self.assertEqual(str(cells['C1']['value']), '12200000')
         self.assertEqual(str(cells['A1']['value']),'0.125')
         self.assertEqual(len(out['style_xfs']),1)
 
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

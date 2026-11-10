@@ -41,6 +41,19 @@ class RichStringTests(unittest.TestCase):
             self.assertEqual(item['sst_index'],0)
             self.assertEqual(item['run_count'],2)
             self.assertEqual(item['runs_raw_hex'],'0000000001000100')
+            self.assertEqual(item['segments'], [{'text': text[:1], 'font_index': 0}, {'text': text[1:], 'font_index': 1}])
+            self.assertEqual(result['rich_string_fonts']['1']['font_name'], 'A')
+
+    def test_font_properties_and_unresolvable_surrogate_boundary(self):
+        raw = rich_workbook(rich('😀Z', [(0, 0), (2, 1)]))
+        old_font = rec(0x31, bytes(14) + b'\1\0A')
+        font = rec(0x31, struct.pack('<4H', 220, 2, 10, 700) + bytes(6) + b'\1\0B')
+        result = parse_stream(raw.replace(old_font, font, 1))
+        self.assertEqual(result['rich_string_fonts']['0'], {'font_name': 'B', 'bold': True, 'italic': True,
+                                                          'color_index_raw': 10, 'weight_raw': 700, 'height_twips_raw': 220})
+        result = parse_stream(rich_workbook(rich('😀Z', [(0, 0), (1, 1)])))
+        self.assertEqual(result['shared_string_formatting'][0]['segments_status'], 'run_splits_surrogate_pair')
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '😀Z')
 
     def test_end_marker_font_is_undefined_and_ignored(self):
         result=parse_stream(rich_workbook(rich('Ab',[(0,0),(2,65535)])))
@@ -51,7 +64,8 @@ class RichStringTests(unittest.TestCase):
             with self.subTest(runs=runs),self.assertRaises(ValueError):
                 parse_stream(rich_workbook(rich('Ab',runs)))
         bad=struct.pack('<HBH',1,9,1)+b'\0\xd8'+struct.pack('<HH',0,0)
-        with self.assertRaises(ValueError): parse_stream(rich_workbook(bad))
+        with self.assertRaises(ValueError):
+            parse_stream(rich_workbook(bad))
 
     def test_continued_runs_and_phonetic_rejection(self):
         raw=rich('Ab',[(0,0),(1,1)])
@@ -112,7 +126,8 @@ class RichStringTests(unittest.TestCase):
         for split in range(1,5):
             header=struct.pack('<HBH',1,8,1)
             cursor=ContinuedStrings([(0,0xFC,header[:split]),(10,0x3C,header[split:]+b'A'+bytes(4))],0)
-            with self.assertRaises(ValueError): cursor.string(True)
+            with self.assertRaises(ValueError):
+                cursor.string(True)
 
     def test_long_rich_string_with_many_record_boundaries(self):
         text='中A'*4000
@@ -138,4 +153,5 @@ class RichStringTests(unittest.TestCase):
                 continue
             self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'Ab')
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

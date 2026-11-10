@@ -64,7 +64,8 @@ class DataPolicyTests(unittest.TestCase):
         self.assertEqual(result['source']['container_compatibility'], 'legacy_excel_clsid')
         with self.assertRaises(ParseError):
             read_bytes(data, compatibility='strict')
-        unknown = bytearray(data); unknown[8:24] = b'?' * 16
+        unknown = bytearray(data)
+        unknown[8:24] = b'?' * 16
         with self.assertRaises(ParseError):
             read_bytes(bytes(unknown))
         with self.assertRaises(ParseError):
@@ -80,12 +81,27 @@ class DataPolicyTests(unittest.TestCase):
         with self.assertRaises(ParseError):
             read_bytes(synthetic_cfb({'Workbook': chart_workbook()}), chart_policy='reject')
 
-    def test_unknown_records_never_turn_into_empty_or_partial_success(self):
-        for stream in [workbook(extra_global=rec(0x7777, b'x')),
-                       workbook([rec(0x7777, b'x')]),
-                       chart_workbook(chart=CHART.replace(rec(0x1001, bytes(2)), rec(0x7777)))]:
-            with self.subTest(stream=stream[:10]), self.assertRaises(ParseError):
-                read_bytes(synthetic_cfb({'Workbook': stream}))
+    def test_unknown_records_preserve_values_and_uncertain_coverage(self):
+        known_cell = rec(0x0203, cell(0, 0) + struct.pack('<d', 42))
+        unknown = rec(0x7777, b'x')
+        for scope, stream in (
+            ('globals', workbook([known_cell], extra_global=unknown)),
+            ('中文表1', workbook([unknown + known_cell])),
+        ):
+            with self.subTest(scope=scope):
+                raw = synthetic_cfb({'Workbook': stream})
+                result = read_bytes(raw)
+                self.assertEqual((result['status'], result['cell_count']), ('partial', 1))
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'], 42)
+                self.assertEqual(result['cell_value_coverage'], 'unverified_due_to_best_effort_salvage')
+                self.assertTrue(result['omissions_affect_cell_values'])
+                issue = next(item for item in result['issues'] if item['code'] == 'unknown_biff_record_salvaged')
+                self.assertEqual((issue['scope'], issue['offset']), (scope, stream.index(unknown)))
+                with self.assertRaises(ParseError):
+                    read_bytes(raw, compatibility='strict')
+        malformed_chart = chart_workbook(chart=CHART.replace(rec(0x1001, bytes(2)), unknown))
+        with self.assertRaises(ParseError):
+            read_bytes(synthetic_cfb({'Workbook': malformed_chart}))
 
     def test_encryption_truncation_and_bad_cell_remain_failures(self):
         for stream in [workbook(extra_global=rec(0x2F, b'x')),
@@ -115,7 +131,8 @@ class DataPolicyTests(unittest.TestCase):
     def test_low_and_unified_file_apis_and_cli_agree_on_partial(self):
         data = legacy_container({'Workbook': workbook(extra_global=rec(0xE1, b'x'))})
         with tempfile.TemporaryDirectory(dir='.') as directory:
-            path = Path(directory) / 'input.et'; path.write_bytes(data)
+            path = Path(directory) / 'input.et'
+            path.write_bytes(data)
             for result in [read_file(path), read(path)]:
                 self.assertEqual(result['status'], 'partial')
                 self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')

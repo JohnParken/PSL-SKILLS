@@ -203,7 +203,7 @@ class StaticBuiltInNameTests(unittest.TestCase):
                               if x['name'] in ('PrintTitlesStatic',
                                               'FilterDatabaseStatic')]),2)
 
-    def test_missing_final_BoundSheet8_not_accepted_just_from_header(self):
+    def test_missing_final_bound_sheet8_not_accepted_just_from_header(self):
         # An internal ExternSheet references second sheet; physical BoundSheet8
         # collection has one sheet. Deferred post-Globals check must fail.
         sup=rec(0x01AE,b'\x01\x00\x01\x04')

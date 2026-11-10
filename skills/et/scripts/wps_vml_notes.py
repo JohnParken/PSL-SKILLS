@@ -45,10 +45,12 @@ def read_note_anchors(package, path, budget, comments):
     need(len(shapes) == sum(node.tag == '{' + VML + '}shape' for node in nodes), 'Nested VML shapes unsupported')
     need(sum(node.tag == '{' + EXCEL + '}ClientData' for node in nodes) == len(shapes), 'Unbound VML ClientData')
     expected = {note['cell']: note for note in comments}
-    seen = set(); ids = set()
+    seen = set()
+    ids = set()
     for index, shape in enumerate(shapes):
         identity = shape.get('id')
-        need(identity and identity not in ids, 'Missing/duplicate VML shape ID'); ids.add(identity)
+        need(identity and identity not in ids, 'Missing/duplicate VML shape ID')
+        ids.add(identity)
         if shape.get('type') is not None:
             need(re.fullmatch(r'#[A-Za-z_][A-Za-z0-9_.-]{0,255}', shape.get('type')) is not None, 'Unsupported VML shape type target')
         clients = shape.findall('{' + EXCEL + '}ClientData')
@@ -60,11 +62,14 @@ def read_note_anchors(package, path, budget, comments):
             return found[0].text or ''
         row = integer(one('Row').strip(), 1048575)
         col = integer(one('Column').strip(), 16383)
-        number = col + 1; letters = ''
+        number = col + 1
+        letters = ''
         while number:
-            number, digit = divmod(number - 1, 26); letters = chr(65 + digit) + letters
+            number, digit = divmod(number - 1, 26)
+            letters = chr(65 + digit) + letters
         cell = letters + str(row + 1)
-        need(cell in expected and cell not in seen, 'Unbound/duplicate VML comment cell'); seen.add(cell)
+        need(cell in expected and cell not in seen, 'Unbound/duplicate VML comment cell')
+        seen.add(cell)
         raw = one('Anchor')
         fields = [value.strip() for value in raw.split(',')]
         need(len(fields) == 8, 'Invalid VML anchor length')

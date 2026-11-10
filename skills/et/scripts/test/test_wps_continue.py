@@ -62,9 +62,13 @@ class ContinueTests(unittest.TestCase):
 
     def test_malformed_continuations_fail_without_partial_result(self):
         head=struct.pack('<IIHB',1,1,2,1)
-        for parts in ([head+b'\x2d',b'\1\x4e\x2d\x4e'],[head+b'\x2d\x4e',b'\2xx'],[head+b'\x2d\x4e',b''],[head+b'\x2d\x4e',b'\1'],[head+b'\x3d\xd8',b'\0A'],[head+b'\x2d\x4e'],[struct.pack('<II',1,1)+b'\2',b'\0\0AB']):
-            with self.subTest(parts=parts), self.assertRaises(ValueError): parse_stream(build(parts))
+        for parts in ([head+b'\x2d',b'\1\x4e\x2d\x4e'],[head+b'\x2d\x4e',b'\2xx'],[head+b'\x2d\x4e',b''],[head+b'\x2d\x4e',b'\1'],
+                      [head+b'\x3d\xd8',b'\0A'],[head+b'\x2d\x4e'],[struct.pack('<II',1,1)+b'\2',b'\0\0AB']):
+            with self.subTest(parts=parts), self.assertRaises(ValueError):
+                parse_stream(build(parts))
         # Orphan Continue after complete SST is not silently ignored.
-        with self.assertRaises(ValueError): parse_stream(build([struct.pack('<IIHB',1,1,0,0),b'\0']))
+        with self.assertRaises(ValueError):
+            parse_stream(build([struct.pack('<IIHB',1,1,0,0),b'\0']))
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

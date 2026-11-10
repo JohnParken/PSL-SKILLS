@@ -17,13 +17,20 @@ class InternalLinks(unittest.TestCase):
             self.assertEqual(str(v['sheets'][0]['cells']['A1']['value']),'12.5')
             h=v['sheets'][0]['hyperlinks'][0]
             self.assertEqual((h['cell'],h['location_raw'],h['display_raw']),('A1','Data!B2','跳转'))
-            self.assertFalse(h['followed']);self.assertFalse(h['target_resolved'])
+            self.assertFalse(h['followed'])
+            self.assertFalse(h['target_resolved'])
     def test_invalid_duplicate_or_relationship_refused(self):
-        for body in ('<hyperlink ref="XFE1" location="x"/>','<hyperlink ref="A1"/>','<hyperlink ref="A1" location="x"/><hyperlink ref="A1" location="y"/>','<hyperlink ref="A1" location="x" id="rId1"/>'):
+        for body in (
+            '<hyperlink ref="XFE1" location="x"/>',
+            '<hyperlink ref="A1"/>',
+            '<hyperlink ref="A1" location="x"/><hyperlink ref="A1" location="y"/>',
+            '<hyperlink ref="A1" location="x" id="rId1"/>',
+        ):
             v=result(package(sheet_extra='<hyperlinks>'+body+'</hyperlinks>'))
             self.assertNotIn(v['status'],('ok','partial'))
         self.assertNotIn(result(package(sheet_extra='<hyperlinks/><hyperlinks/>'))['status'],('ok','partial'))
     def test_count_budget(self):
         v=result(package(sheet_extra='<hyperlinks>'+ '<hyperlink ref="A1" location="x"/>'*4097+'</hyperlinks>'))
         self.assertEqual(v['status'],'resource_limit')
-if __name__=='__main__':unittest.main()
+if __name__=='__main__':
+    unittest.main()

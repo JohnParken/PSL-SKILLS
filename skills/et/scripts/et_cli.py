@@ -8,6 +8,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from et_cli_protocol import PROTOCOL, MAX_FRAME, dumps, loads
 from read_et import read_bytes, encode_result
+from wps_access import DEFAULT_FILE_COMPATIBILITY
 
 
 def metadata(result):
@@ -60,7 +61,7 @@ def main():
         if (not isinstance(p, dict) or not {'raw', 'source'} <= set(p) or set(p) - {'raw', 'source', 'compatibility'} or not isinstance(p['raw'], bytes)
                 or not isinstance(p['source'], str) or len(p['raw']) > 64 * 1024 * 1024):
             raise ValueError('Invalid ET read request or input exceeds 64 MiB')
-        result = read_bytes(p['raw'], source=p['source'], compatibility=p.get('compatibility', 'data'))
+        result = read_bytes(p['raw'], source=p['source'], compatibility=p.get('compatibility', DEFAULT_FILE_COMPATIBILITY))
         # Validate the full producer output budget even when returning only metadata.
         raw = encode_result(result).encode('utf-8')
         status = result.get('status')

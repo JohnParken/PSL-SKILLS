@@ -5,16 +5,24 @@ duplicates, encryption and complete BIFF stream boundaries.
 """
 import struct
 
+from wps_biff8_errors import require
+
+MAX_HORIZONTAL_PAGE_BREAKS = 1026
+MAX_VERTICAL_PAGE_BREAKS = 255
+
 
 def inspect_page_break_layout(kind, payload, previous_key, ends_by_axis):
-    """Inspect already count/length-bounded page-break entries, without applying them.
+    """Validate framing and inspect page-break entries without applying them.
 
-    The caller enforces exact framing and the shared raw metadata budget.
+    The caller enforces the shared raw metadata budget.
     Layout anomalies are counted by kind, keeping diagnostics bounded even
     for many invalid entries. No entry is normalized or used to hide cells.
     """
-    problems = {}
+    require(len(payload) >= 2, 'Truncated page-break record')
     count = struct.unpack_from('<H', payload)[0]
+    limit = MAX_HORIZONTAL_PAGE_BREAKS if kind == 0x001B else MAX_VERTICAL_PAGE_BREAKS
+    require(count <= limit and len(payload) == 2 + 6 * count, 'Malformed/oversized page-break record')
+    problems = {}
     for index, start in enumerate(range(2, len(payload), 6)):
         axis, interval_start, interval_end = struct.unpack_from('<3H', payload, start)
         key = (axis, interval_start)

@@ -18,7 +18,8 @@ def sample(strict=False, body=None, relation=None, content_type=None):
     raw = package(strict=strict)
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         types = archive.read('[Content_Types].xml').decode()
-    types = types.replace('</Types>', '<Override PartName="/xl/notes/c.xml" ContentType="' + (content_type or 'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml') + '"/></Types>')
+    types = types.replace('</Types>', '<Override PartName="/xl/notes/c.xml" ContentType="' + \
+                          (content_type or 'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml') + '"/></Types>')
     comments = body or '<authors><author>审阅人</author></authors><commentList><comment ref="B2" authorId="0"><text><r><t>核对</t></r><r><t>余额</t></r></text></comment></commentList>'
     return package(strict=strict, overrides={
         '[Content_Types].xml': types,
@@ -70,8 +71,12 @@ class CommentsTests(unittest.TestCase):
         with zipfile.ZipFile(io.BytesIO(raw)) as archive:
             parts = {name: archive.read(name).decode() for name in archive.namelist()}
         parts['xl/workbook.xml'] = parts['xl/workbook.xml'].replace('</sheets>', '<sheet name="Second" sheetId="8" r:id="s2"/></sheets>')
-        parts['xl/_rels/workbook.xml.rels'] = parts['xl/_rels/workbook.xml.rels'].replace('</Relationships>', '<Relationship Id="s2" Type="' + R + '/worksheet" Target="worksheets/sheet2.xml"/></Relationships>')
-        parts['[Content_Types].xml'] = parts['[Content_Types].xml'].replace('</Types>', '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>')
+        parts['xl/_rels/workbook.xml.rels'] = parts['xl/_rels/workbook.xml.rels'].replace(
+            '</Relationships>', '<Relationship Id="s2" Type="' + R + '/worksheet" Target="worksheets/sheet2.xml"/></Relationships>',
+        )
+        parts['[Content_Types].xml'] = parts['[Content_Types].xml'].replace(
+            '</Types>', '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+        )
         parts['xl/worksheets/sheet2.xml'] = parts['xl/worksheets/sheet1.xml']
         parts['xl/worksheets/_rels/sheet2.xml.rels'] = parts['xl/worksheets/_rels/sheet1.xml.rels']
         self.assertEqual(result(package(overrides=parts))['status'], 'corrupt')
@@ -84,4 +89,5 @@ class CommentsTests(unittest.TestCase):
         with patch('wps_sheet_comments.MAX_COMMENTS', 0):
             self.assertEqual(result(sample())['status'], 'resource_limit')
 
-if __name__ == '__main__': unittest.main()
+if __name__ == '__main__':
+    unittest.main()

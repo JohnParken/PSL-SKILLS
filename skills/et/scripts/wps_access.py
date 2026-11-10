@@ -5,6 +5,9 @@ import struct
 from wps_cfb import (CompoundFile, MAX_FILE_BYTES, SIGNATURE,
                      LEGACY_EXCEL_CLSID, LEGACY_WORD_CLSID)
 
+DEFAULT_FILE_COMPATIBILITY = 'data'
+
+
 class ParseError(ValueError):
     def __init__(self, status, location, message):
         self.status = status
@@ -98,7 +101,9 @@ def load_compound(data, compatibility):
         raise ParseError('unsupported', {'stream': 'CFB header', 'offset': 8},
                          'Nonzero CFB header CLSID outside the explicitly supported profile')
     try:
-        compound = CompoundFile(data, compatibility=container_mode(data, compatibility))
+        compound = CompoundFile(data, compatibility=profile,
+                                recover_zero_fat_count=compatibility == 'data',
+                                allow_zero_trailing_padding=compatibility == 'data')
     except ValueError as exc:
         message = str(exc)
         location = {'stage': 'CFB'}
@@ -106,6 +111,8 @@ def load_compound(data, compatibility):
             location['reason_code'] = 'cfb_unaligned_physical_length'
         elif message.startswith('FAT allocates sectors beyond physical input'):
             location['reason_code'] = 'cfb_fat_unbacked_allocation'
+        elif message.startswith('CFB header declares zero FAT sectors'):
+            location.update(stream='CFB header', offset=44, reason_code='cfb_zero_fat_count')
         if 'reason_code' not in location:
             if any(token in message for token in ('cycle', 'cross-link', 'duplicate allocation')):
                 location['reason_code'] = 'cfb_allocation_conflict'

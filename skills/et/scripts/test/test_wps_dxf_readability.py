@@ -63,7 +63,7 @@ class DxfReadabilityTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_dxf(payload)
 
-    def test_framing_damage_resource_limits_and_unknown_data_still_refused(self):
+    def test_framing_damage_resource_limits_and_orphan_continuation_still_refused(self):
         valid = dxf([(0x14, b'\x01')])
         overrun = bytearray(valid)
         overrun[20:22] = b'\xff\xff'
@@ -73,7 +73,7 @@ class DxfReadabilityTests(unittest.TestCase):
         with patch('wps_biff8.MAX_METADATA_BYTES', 0), self.assertRaises(ParseError):
             read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x088D, CASES['invalid_wrap_enum']))}))
         with self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x7777, b'could contain data'))}))
+            read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x003C, b'orphan continuation'))}))
 
     def test_unsupported_scope_flags_do_not_invent_property_interpretation(self):
         payload = bytearray(dxf([(0x14, b'\x01')]))

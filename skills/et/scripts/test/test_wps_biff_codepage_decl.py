@@ -99,7 +99,7 @@ class BiffCodePageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Conflicting CodePage'):
             parse_stream(workbook(extra_global=extra), compatibility='data')
 
-    def test_missing_Date1904_is_not_inferred_from_known_codepage(self):
+    def test_missing_date1904_is_not_inferred_from_known_codepage(self):
         input_file = workbook(extra_global=rec(0x0042, struct.pack('<H', 950)))
         at = 20
         self.assertEqual(input_file[at:at+2], b'\x22\x00')
