@@ -4,8 +4,8 @@
 
 先完成主入口的任务目录、路径与读取边界核对；使用已确认 Python 3.9+、-I -S -B，仅标准库、离线、不调用办公软件。输入使用已确认任务目录内相对路径，确认可读，不改原件。首次分析执行以下自检，要求退出0且 environment-ok；OOXML 另需 ooxml-sheet=available，自检失败停止依赖操作：
 
-```console
-python -I -S -B "<skill-root>/scripts/analyze_et.py" --check
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
 ```
 
 默认 data 解析，不自动 salvage；未知格式、结构、安全和资源错误仍拒绝。仅读 stdout 无需写探针/清单；确需保存查询/输出时先核对写权限，并按主入口的生命周期规则保护输入及收尾。只读取本页即可处理此分支，不预读复杂 query。
@@ -14,8 +14,8 @@ python -I -S -B "<skill-root>/scripts/analyze_et.py" --check
 
 ## 最小操作与口径
 
-```console
-python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D100 --header-rows 1")
 ```
 
 工作表、矩形和表头由任务明确；无 --header-rows 时首行也是数据。默认不填充合并、不自动应用隐藏/筛选，不识别小计/总计。先确认金额单位、日期意义、统计期间和分母；不能把明细和合计同时求和。需要非连续 exclude_rows、筛选/分组/去重/排序/fill_text 或 API 时改读 `<skill-root>/references/table-analysis.md`；只查看表头改读 `<skill-root>/references/table-preview.md`。

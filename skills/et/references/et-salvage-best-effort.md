@@ -14,12 +14,12 @@
 
 先从实际读取目标 `SKILL.md` 的 `file_path` 确认并替换 `<skill-root>`，从 harness 已确认的任务工作目录读取用户指定输入。完成 Skill 的 `--check` 自检后，**显式选择**仅用于 BIFF8 的独立低层 CLI：
 
-```console
-python -I -S -B "<skill-root>/scripts/read_et.py" --check
-python -I -S -B "<skill-root>/scripts/wps_biff8.py" ./input.et --compatibility data --salvage-unknown-metadata
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/wps_biff8.py\" ./input.et --compatibility data --salvage-unknown-metadata")
 ```
 
-这不是默认策略；普通 `read_et.py ./input.et` 仍按原来的安全与准确性边界拒绝。**此选项对 .wps/MS-DOC 和 OOXML 无效**，不自动切换其他格式，也不在一次失败后悄悄重试。Python 标准库运行，不使用办公软件、外部 API、联网、写文件或第三方组件。只读 `.ett` 也可采用相同显式命令。
+普通 `read_et.py ./input.et` 已保留边界完整的未知记录并报告覆盖不确定。这个显式选项另允许未知 CodePage 以及缺少 Date1904 或 WsBool 的部分读取。**此选项对 .wps/MS-DOC 和 OOXML 无效**，不自动切换其他格式，也不在一次失败后悄悄重试。Python 标准库运行，不使用办公软件、外部 API、联网、写文件或第三方组件。只读 `.ett` 也可采用相同显式命令。
 
 ## 在宽松模式下会发生什么
 

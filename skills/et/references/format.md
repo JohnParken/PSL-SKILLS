@@ -19,7 +19,8 @@
 |---|---|---|
 | BIFF8 plain SST/String Continue | typed cells/长字符串/日期元数据/缓存 | 四个既有真实ET/ETT及合成；不重算缓存 |
 | BIFF8 plain Label及Continue | 内联单元格文字，保留来源与类型 | 新增布局仅合成；data普通Unicode兼容 (`<skill-root>/references/biff8-readonly.md#pure-table-unicode-compatibility`)忽略保留位并报告partial；不支持RString或实际富格式/注音尾布局，不按GBK猜解码 |
-| BIFF8视图/分页元数据 | data默认或显式legacy_excel_clsid保留Palette/Pane/横纵分页原始字节 | 结构检查后保留，不应用布局；显式strict仍拒绝，新增布局仅合成 |
+| BIFF8 与 OOXML 保存视图 | 窗口视图中的冻结行列与活动窗格的单元格 | 支持两种格式的合成样本，不参与表头推断 |
+| BIFF8 调色板、独立窗格及分页元数据 | data 默认或显式 legacy_excel_clsid 保留 Palette、独立 Pane 及横纵分页原始字节 | 校验记录边界，不应用布局；显式 strict 仍拒绝这些独立记录 |
 | BIFF8 DXF（0x088D） | FrtHeader及XFProps/属性边界校验、原始属性保留，partial | data/legacy支持；不应用差异格式；新增仅合成，无反馈原件验收 |
 | BIFF8 rich SST及Continue | 文字+原始格式run信息，partial | 仅合成；字符编码与run续段分开，不应用字体布局；phonetic ExtRst 另保留原始字节且未解码 |
 | BIFF8共享/数组公式 | 各单元格保存的缓存+组范围/锚点，partial | 仅合成；不恢复表达式、不重算，不将锚点缓存广播 |

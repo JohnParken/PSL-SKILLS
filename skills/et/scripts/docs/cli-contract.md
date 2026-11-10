@@ -8,18 +8,17 @@
 
 标准读取与外部编排共用 `<skill-root>/scripts/et_cli.py`；实际解析仍由原read_et实现，旧read_et CLI/API保留。先按主入口完成环境自检；原生XLSX交给对应技能。
 
-```console
-python -I -S -B "<skill-root>/scripts/et_cli.py" capabilities
-python -I -S -B "<skill-root>/scripts/et_cli.py" run --check
-python -I -S -B "<skill-root>/scripts/et_cli.py" run ./明细.et
-python -I -S -B "<skill-root>/scripts/et_cli.py" read
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" capabilities")
+execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./明细.et")
 ```
 
 capabilities为普通JSON：skill=et、interface_version=1、operations=[read,metadata]；不代表OOXML环境或文件验收。run原样调用旧主入口并保留参数、JSON、分页、stderr和退出码。read仅供程序编排，从stdin读取一个完整协议请求，不是Shell路径参数或分页接口。
 
 ## read 输入输出
 
-逻辑请求：protocol、id、operation=read、parameters={raw:bytes,source:str,compatibility?:data|strict|legacy_excel_clsid}。raw最多64MiB；source是来源标签，不会据此扫描或读取其他路径。默认data，安全、加密及资源检查仍由原解析器执行；不执行公式、宏或外链，不写入ET。
+逻辑请求：protocol、id、operation=read、parameters={raw:bytes,source:str,compatibility?:data|strict|legacy_excel_clsid}。raw最多64MiB；source是来源标签，不会据此扫描或读取其他路径。省略 compatibility 时与 run 和文件 API 共用代码默认值 data。显式 strict 在解析前生效，拒绝后不自动重试。安全、加密及资源检查仍由原解析器执行；不执行公式、宏或外链，不写入ET。
 
 成功执行返回result={extraction:bytes,exit_code:int}，extraction是原生产者encode_result的完整UTF-8 JSON，维持原16MiB预算与schema。读取ok退出0，partial退出3，失败退出1；参数usage退出2。部分结果保留可靠单元格、原值与格式解释/缓存/coverage/issues的区别。partial不能按ok处理，消费方不能擅自制造覆盖断言或使用缺失缓存。
 

@@ -21,35 +21,8 @@ JSON CLI：ok/0、partial/3；读取失败为失败JSON/1；参数错误usage写
 
 默认 data 读取从共同自检开始，不需要先了解 BIFF 记录或 legacy 参数。下例使用标准库调用统一 CLI：先将 `<skill-root>` 替换为已确认的真实 Skill 目录，再在任务目录执行；`./input.et` 可换成允许读取的 `.ett`。它不创建文件，退出 0/3 均接收完整 JSON；退出 3 的数据和原诊断一起交给后续处理。退出 1/2、JSON 无效、状态/退出码不符或 schema 不符均停止，不能把文档或失败字典送入表格分析。
 
-```sh
-python -I -S -B - "<skill-root>" ./input.et <<'PY'
-import json
-from pathlib import Path
-import subprocess
-import sys
-
-skill_dir = Path(sys.argv[1]).resolve()
-process = subprocess.run(
-    [sys.executable, '-I', '-S', '-B',
-     str(skill_dir / 'scripts' / 'read_et.py'), sys.argv[2]],
-    capture_output=True, text=True, encoding='utf-8', check=False,
-)
-if process.returncode not in (0, 3):
-    raise SystemExit(process.stderr or process.stdout or 'Reading failed')
-result = json.loads(process.stdout)
-expected_status = 'ok' if process.returncode == 0 else 'partial'
-if result.get('status') != expected_status:
-    raise SystemExit('Unexpected status/exit-code combination')
-if result.get('schema_version') not in (
-    'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1',
-):
-    raise SystemExit('Spreadsheet schema required')
-# Pass this same result to the chosen consumer; do not rebuild a reduced schema.
-print(json.dumps(result, ensure_ascii=False, allow_nan=False))
-if process.returncode == 3:
-    print('Partial data retained; report the original issues and reading_assessment.',
-          file=sys.stderr)
-PY
+```python
+execute(command="python -I -S -B - \"<skill-root>\" ./input.et <<'PY'\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\n\nskill_dir = Path(sys.argv[1]).resolve()\nprocess = subprocess.run(\n    [sys.executable, '-I', '-S', '-B',\n     str(skill_dir / 'scripts' / 'read_et.py'), sys.argv[2]],\n    capture_output=True, text=True, encoding='utf-8', check=False,\n)\nif process.returncode not in (0, 3):\n    raise SystemExit(process.stderr or process.stdout or 'Reading failed')\nresult = json.loads(process.stdout)\nexpected_status = 'ok' if process.returncode == 0 else 'partial'\nif result.get('status') != expected_status:\n    raise SystemExit('Unexpected status/exit-code combination')\nif result.get('schema_version') not in (\n    'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1',\n):\n    raise SystemExit('Spreadsheet schema required')\n# Pass this same result to the chosen consumer; do not rebuild a reduced schema.\nprint(json.dumps(result, ensure_ascii=False, allow_nan=False))\nif process.returncode == 3:\n    print('Partial data retained; report the original issues and reading_assessment.',\n          file=sys.stderr)\nPY\n")
 ```
 
 表格消费者按 `type` 解释 `value`：JSON 中的数字字符串保持保存值精度，不与文本长编号混为一类，不先转换成 float。`numeric_interpretation` 是有限数字格式/日期解释的附加字段，不替换 `value`。有 `formula` 的值属于保存缓存；`cache_status=missing` 不能当空值或零，`unverified` 等状态不能证明缓存最新。内置分析默认排除公式并明确计数；显式 cached 才使用已保存且非错误的缓存，错误/缺失缓存保留为不可用于计算的单元格并报告 partial，绝不补零或重算。其他消费者若要求拒绝缺失缓存，仍按其自身契约交接，不通过删诊断规避。

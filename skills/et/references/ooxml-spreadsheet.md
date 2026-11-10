@@ -10,6 +10,12 @@
 
 输出 schema_version 为 ooxml_spreadsheet_readonly_v1，spreadsheet_parsed=true；cells、merges、date_system 和 cache_status 与 BIFF 分析契约对应，不冒称 biff_parsed。默认全部行；保存隐藏行列的原因未知，筛选不执行。工作表可见性使用包内 select_rows 的同一字段契约。元数据未解释会明确诊断。
 
+`visibility` 保留可解释的保存行高和列宽，单位及缺失处理见 `<skill-root>/references/saved-visibility.md`。预览可直接返回工作表 XML 中已保存的公式文本，取值仍使用单元格缓存。
+
+共享富文本使用单元格 `sst_index` 关联 `shared_string_formatting`。内联富文本在单元格的 `rich_text.segments` 中返回文字、字体名称、粗体、斜体和保存的颜色标识。颜色索引和主题色保留为来源值。整个工作簿最多附加 16384 段，超限时保留原文字并标记 `segments_status`。
+
+完整读取的 `views` 提取各 `sheetView` 保存的冻结行列与活动窗格的单元格。`frozen` 与 `frozenSplit` 提供冻结行列计数。普通分割的距离不转换为冻结计数。字段和缺失含义见 `<skill-root>/references/saved-visibility.md#保存的工作表视图`。
+
 限制：工作表必须显式 row r / cell r，最多128表、200000单元格/行元数据、10000共享字符串、4096列元数据/样式、256合并、8Mi文字及1000诊断，另有既有ZIP/XML和最终JSON预算。拒绝重复ID/名字/坐标、错误共享索引、重叠合并、越界坐标、命名空间混淆、宏、外部关系和未知工作簿关系；工作表关联部件只支持严格验证的传统comments纯文本；其他绘图、线程批注、外部超链接及其他关联部件仍拒绝，不悄悄漏读。ISO日期类型d的有限词法支持见日期边界 (`<skill-root>/references/iso-date.md`)。音标字符串、富样式渲染、计算链与高级表结构仍未实现。严格有限路径可能拒绝合法但超出范围的文件。
 
 新增验证使用纯标准库合成 OPC/SpreadsheetML，不是改后缀的真实WPS来源。没有新增真实 .et/.ett 内部 OOXML 电子表格的语义对照；不能据测试推断多数WPS兼容率。开发依据见来源记录 (`docs/maintenance/et/ooxml-spreadsheet-evidence.json`)，运行时不访问网络。

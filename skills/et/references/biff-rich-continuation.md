@@ -8,6 +8,8 @@
 
 记录原字符串起始流偏移与 payload 偏移，保留每个 SST 字符串的一份原始 run 字节。run 索引递增且不得越出字符串；末尾哨兵的 font 按规范忽略。其他 font 必须是已存在的有效索引。返回 rich_string_formatting_not_applied 诊断，仍为 partial。
 
+`shared_string_formatting[].segments` 按保存顺序返回文字片段和 `font_index`。`rich_string_fonts` 按索引提供可读的 Font 名称、粗体、斜体与颜色索引等属性。未明确指定字体的前缀使用 `null`。run 切到代理对内部或超过 16384 段的工作簿输出预算时，用 `segments_status` 标记，原文字与 run 字节仍保留。
+
 cch≤32767，继续沿用记录数和文件/流预算；在收集正文或元数据前检查 run 与 ExtRst 合并字节预算及共享条目数预算。缺 Continue、空续段、非法编码、截断、奇数字节断点及不完整固定头明确拒绝。SST 的 fExtSt/ExtRst 注音扩展按声明长度原样读取，续段不消费字符编码字节；返回 `shared_string_phonetics` 及 partial 诊断，不把扩展字节误当正文或格式 run。不解释注音结构，负长度与截断仍拒绝。公式 String 富格式和注音扩展仍不支持。
 
 依据：Microsoft MS-XLS XLUnicodeRichExtendedString（2.5.293）、FormatRun（2.5.132）、Continue（2.4.58）；继续使用原有字符循环。MS-XLS 对 variable fields 续段的概括文字没有单独解释 run 阶段编码 byte，因此交叉检查 Apache POI 自有 UnicodeString writer：字符与 run 独立输出，run 续段没有编码 byte。未复制 POI 代码，未安装或执行 Java/POI。对 run 内切分采用长度限定的原始数组拼接；不猜测私有变体。

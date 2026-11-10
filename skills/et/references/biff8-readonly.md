@@ -49,8 +49,8 @@ et-format-evidence.json (`docs/maintenance/et/et-format-evidence.json`), not run
 parser code or binary samples were incorporated. All tests are synthetic MS-XLS record
 fixtures, with manual typed expectations and container fixtures; they are not WPS files.
 
-```console
-python -I -S -B "<skill-root>/scripts/read_et.py" ./input.et
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et")
 ```
 
 The file must pass the CFB container reader (`<skill-root>/references/et-ett-readonly.md`), contain exactly one
@@ -69,20 +69,49 @@ wps_compatibility_verified always remain false, even after successful BIFF extra
 
 ## Default data policy
 
-File APIs `read_wps.read`, `read_bytes`, `wps_biff8.read_file` and both reading CLIs
-now default to `compatibility="data"`. This selects the existing bounded metadata
-allowlists and supported opaque chart framing before parsing; no failed parse is retried.
-Only the already evidenced exact Excel v3 header GUID selects the legacy container
-profile; zero headers use strict CFB checks. Unknown GUIDs and private formats still fail.
+ET BIFF8 file APIs `read_wps.read`, `read_bytes`, `wps_biff8.read_file` and both
+reading CLIs use the shared `DEFAULT_FILE_COMPATIBILITY` in
+`<skill-root>/scripts/wps_access.py` when compatibility is omitted. The default is
+`data`, which selects
+the bounded metadata allowlists and supported opaque chart framing before parsing;
+no failed parse is retried. Explicit strict/legacy modes and direct byte-parser defaults
+retain their previous behavior.
+Only the already evidenced exact Excel v3 header GUID selects the legacy spreadsheet
+container profile. Unknown GUIDs and private formats still fail.
 All file modes share bounded regular-file loading and CFB header/safety prechecks;
-policy selection does not bypass these checks. The expert byte-stream parser
-`parse_stream` remains strict unless data is explicit.
+data mode can recover a zero header FAT count from explicitly listed DIFAT entries
+when the existing CFB allocation and BIFF8 checks pass. The result is partial with
+`cfb_zero_fat_count_recovered`. Strict and explicit legacy modes reject a zero FAT count.
+This existing FAT-count recovery is independent of the narrowly checked zero-tail
+padding rule described in CFB investigation (`<skill-root>/references/et-ett-readonly.md#default-biff8-data-trailing-padding`).
+The expert byte-stream parser `parse_stream` retains its existing compatibility and
+validation defaults. File entry points enable `extract_stored_values=True` with data
+compatibility.
+
+For an otherwise supported static Lbl (`NAME`, `0x0018`), data mode accepts
+hidden ordinary names and hidden variants of the supported Print_Area shape.
+Validation ignores only the reserved Lbl flag bits and reserved3–7 fields
+defined by MS-XLS, plus the seven reserved XLUnicodeStringNoCch option bits.
+It retains the original payload and reports `defined_name_passive_header_fields_ignored`.
+Name length, encoding, scope, duplicate checks and supported internal reference
+forms still apply for interpreted names. File data mode retains unclassified
+name records (including macro-marked names) and invalid palettes as opaque
+metadata. It also retains correctly framed `SupBook`/`ExternSheet` link metadata in
+its original order and indices. `ExternSheet` may use only bounded adjacent
+`Continue` records needed to reach its declared XTI byte count; adjacent `ExternName`
+and `XCT/CRN` groups remain opaque. A name is interpreted only when its XTI resolves
+to a verified internal-workbook reference; valid external-workbook and add-in entries
+remain opaque. Malformed or truncated link framing and invalid indices still reject.
+No external workbook is opened or downloaded, and no add-in is loaded or invoked.
+Formula cells use only saved `Formula` caches; formulas and external content are
+never evaluated.
 
 `--compatibility strict` preserves the old narrow record subset. Explicit legacy modes
 retain their previous rules and default chart rejection. In data mode only, omitted
-`chart_policy` selects opaque; explicit reject always wins. Data is not a recovery scan:
-no cell, worksheet, unknown record, invalid framing or resource error is skipped.
-No new record IDs or private-format interpretation were added by this default change.
+`chart_policy` selects opaque; explicit reject always wins. File data mode retains
+framed unknown globals/worksheet records under the existing metadata budget.
+Recognized core structural, cell and group records, encryption and resource limits
+retain their rejection rules. Opaque records yield partial with uncertain coverage.
 
 A successful data read returns ok/0 or partial/3 through both file CLIs. Known unread
 metadata is reported with ID, first offset and count, with every original location and
@@ -90,9 +119,10 @@ payload retained in `uninterpreted_metadata`. Container deviations and other str
 are visible diagnostics. Legacy/strict low-level APIs keep their historical reader
 status strings and CLI success exit 0; the unified entry always normalizes its status.
 
-`cell_value_coverage` is `complete_within_declared_sheets` only when no formula string
-cache is missing; otherwise `missing_formula_caches`, with
-`omissions_affect_cell_values=true`. All supported literal values and present caches
+`cell_value_coverage` reports `unverified_due_to_best_effort_salvage` when opaque
+records make coverage uncertain. Without such uncertainty, missing string caches
+produce `missing_formula_caches`; otherwise coverage is `complete_within_declared_sheets`.
+The first two cases set `omissions_affect_cell_values=true`. All supported literal values and present caches
 are retained. No unverified cache is certified or recalculated, no private stream is
 applied, and no full-format equivalence is claimed. `reading_assessment.cell_values`
 exposes the same distinction. Existing analysis accepts partial and preserves source
@@ -142,8 +172,8 @@ needed for such acceptance. See validation (`docs/maintenance/et/validation.md`)
 
 For the previous explicit legacy policy (data is now the file default):
 
-```console
-python3 -I -S -B "<skill-root>/scripts/wps_biff8.py" input.et --compatibility legacy_excel_clsid
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_biff8.py\" input.et --compatibility legacy_excel_clsid")
 ```
 
 This accepts only the exact observed WorksheetClass header GUID in CFB v3, with a root
@@ -199,9 +229,9 @@ or a two-area same-sheet `PtgUnion` with strict framing; selected built-in
 single-sheet region) have their own equally narrow checks. All are validated
 against a self-linked ExternSheet and final BoundSheet8 scope. It retains original
 bytes and marks partial; it never evaluates defined-name expressions or changes
-saved cells, print settings or filtered rows. Complex functions, macros,
-external XTI, other built-in names, and relative name areas remain refused
-(including experimental salvage mode). Strict and
+saved cells, print settings or filtered rows. The static classifier rejects complex expressions, macros, external XTI, other
+built-in names and relative areas. In file data mode, a rejected name payload can
+be retained as opaque evidence after BIFF record framing is verified. Strict and
 explicit `legacy_excel_clsid` keep their historical Print_Area-only subset.
 See defined-name acceptance (`<skill-root>/references/biff8-defined-names.md`)
 and pinned real evidence (`docs/maintenance/et/biff8-defined-names-evidence.json`).
@@ -248,11 +278,11 @@ records in `uninterpreted_metadata`, with scope, record offset, ID and raw paylo
 |---|---|
 | Global DXF (`0x088D`) | Validate the matching FrtHeader, scope flags, XFProps count, property types and byte framing; retain raw payload plus structural property metadata. Differential formatting is not applied to cells. |
 | Global Palette (`0x0092`) | Exactly 56 colors and 226 payload bytes; colors are not applied to styles. |
-| Worksheet Pane (`0x0041`) | Ten bytes, a valid active-pane byte and a BIFF8 column index; reserved byte is retained but ignored. Split positions and Window2-dependent display semantics are not interpreted. |
+| Standalone worksheet Pane (`0x0041`) | Ten bytes, a valid active-pane byte and a BIFF8 column index. The reserved byte is retained and ignored. A standalone record does not establish a saved view. |
 | HorizontalPageBreaks (`0x001B`) | At most 1026 six-byte entries, exact length. Data retains invalid layout with explicit diagnostics; legacy still requires valid, sorted nonoverlapping column intervals. |
 | VerticalPageBreaks (`0x001A`) | At most 255 six-byte entries, exact length. Data retains invalid layout with explicit diagnostics; legacy still requires valid columns and sorted nonoverlapping row intervals. |
-| CondFmt (`0x01B0`) + CF (`0x01B1`), data only | Exactly 1–3 adjacent CF rules; bounded CondFmt range list contained by its bounding rectangle; CF header/type/comparison and formula-length partitions checked. The DXFN and formula bodies remain opaque and unvalidated, never applied or executed. |
-| DVal (`0x01B2`) + Dv (`0x01BE`), data only | Exact adjacent rule count, bounded four Unicode strings, two formula-length partitions and 1–432 ranges per rule. Rule flags and formula semantics remain unvalidated, never enforced, executed or followed. |
+| CondFmt (`0x01B0`) + CF (`0x01B1`), data only | Declared 1–3 adjacent CF rules; bounded CondFmt range list contained by its bounding rectangle; group boundaries and inner byte partitions checked. Bounded geometry/operator or in-bounds text semantic issues may be retained as raw evidence with partial status; contents are never applied or executed. Structural ambiguity, truncation or misgrouping rejects. |
+| DVal (`0x01B2`) + Dv (`0x01BE`), data only | Declared adjacent rule count, bounded four Unicode strings, two formula-length partitions and 1–432 ranges per rule. A bounded geometry/operator or in-bounds text semantic issue may be retained as raw evidence with partial status; rule flags and formula semantics are never enforced, executed or followed. Structural ambiguity, truncation or misgrouping rejects. |
 
 For page breaks, data records `structure.layout_checks_passed`, bounded
 `layout_issues` counts/first indices and `layout_applied=false`; invalid bounds,
@@ -263,9 +293,13 @@ exact byte framing and resource limits still fail closed. The invalid
 Its subsequent note drawing and validation records now pass the bounded opaque
 subsets below; the returned saved cells still carry partial status.
 
-Conditional-format metadata retains every group's raw bytes, header range and
-rule-length evidence; `inner_payload_validated=false` prevents treating opaque
-DXFN/formula bytes as verified styles. CF12/CondFmt12/CFEx, orphan CF and arbitrary
+Conditional-format metadata retains every group's raw bytes, ranges and
+rule-length/partition evidence. `cell_value_comparison` lists recognized operators
+and exact literal operands. `differential_fill` exposes saved fill pattern and palette
+indices when DXFN contains only the fill structure. `inner_payload_validated=false`
+marks the limits of that interpretation. Bounded geometry/operator or
+in-bounds text semantic faults can be retained with raw evidence and partial status,
+while structural ambiguity still rejects. CF12/CondFmt12/CFEx, orphan CF and arbitrary
 unknown records remain outside this addition. See the real template results in
 `docs/maintenance/et/et-real-validation.md#template-compatibility-iteration-2026-11-03`.
 Maintenance references: MS-XLS CondFmt
@@ -273,11 +307,13 @@ Maintenance references: MS-XLS CondFmt
 CF (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/d6dcadf2-7e07-4f7d-a60a-0f643780225d`)
 and DXFN (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/a1141f1d-f607-45ef-b8dd-4a1f2b27b4f9`).
 
-Data-validation metadata checks DVal's exact 18-byte header and following Dv count,
-four string byte boundaries, both DVParsedFormula partitions and exact SqRefU bounds.
-It retains source bytes and `formula_semantics_validated=false`; validation flags,
-prompt/error display, allowed-value decisions and formula contents are not applied.
-Orphan/interrupted Dv groups and malformed lengths still fail, including in salvage.
+Data-validation metadata checks DVal's exact 18-byte header and declared adjacent Dv
+count, four string byte boundaries, both DVParsedFormula partitions and exact SqRefU
+bounds. It retains source bytes and `formula_semantics_validated=false`; validation
+flags, prompt/error display, allowed-value decisions and formula contents are not
+applied. Semantic issues in a bounded payload may remain as raw evidence with partial
+status only for bounded geometry/operator or in-bounds text cases; orphan/interrupted
+Dv groups, malformed lengths and ambiguous partitions still fail, including in salvage.
 Sources: MS-XLS DVal (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/f88c3d08-b7fe-4730-9068-39a5dcd41db5`),
 Dv (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/862bbc7c-009a-4fd6-a93e-3e32e591c2f8`),
 DVParsedFormula (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/f30fbda8-d382-4d5a-901f-4691743f83e2`).
@@ -288,10 +324,13 @@ TxO/text/run continuations and linked Note records. See the precise scope and
 omissions in `<skill-root>/references/embedded-charts.md#fragmented-note-drawings-data-only`.
 
 Zero-entry page-break lists are allowed. These additions share the existing
-metadata byte/count limits and compatibility diagnostic; they do not apply print
+metadata byte/count limits and compatibility diagnostics; they do not apply print
 layout, hide/filter cells, render colors or claim complete metadata validation.
-Explicit strict mode still refuses these metadata record kinds. Unknown records
-are not skipped. CFB allocation checks, explicit strict minor `0x003E` (data/legacy also accept observed `0x003B` with diagnostics), explicit Date1904, policy-specific CodePage validation and explicit chart rejection
+The standard `Window2` group can also be read in strict mode. It exposes saved freeze counts and the active pane's cell in `sheets[].views`; see `<skill-root>/references/saved-visibility.md#保存的工作表视图`. Strict mode still refuses the standalone additions above. Unknown BIFF records
+are not skipped. CFB allocation checks remain in force; the separately documented
+file-data FAT-count and zero-tail compatibility rules do not bypass them. Explicit
+strict minor `0x003E` (data/legacy also accept observed `0x003B` with diagnostics),
+explicit Date1904, policy-specific CodePage validation and explicit chart rejection
 are unchanged. Missing date-system information is never silently replaced by 1900.
 
 Source references are recorded in the format evidence (`docs/maintenance/et/et-format-evidence.json`).
@@ -303,15 +342,17 @@ this addition. Actual verification results are in validation (`docs/maintenance/
 
 Require explicit Date1904, preserving the 1900/1904 system. A numeric date serial stays
 numeric with raw XF/number-format ID and any explicit custom format text. The separate
-`numeric_interpretation` field can explain supported formats under the bounded rules in
-number interpretation (`<skill-root>/references/numeric-interpretation.md`); it never replaces the saved numeric
-value or establishes general locale, effective-style or rendered-display equivalence.
+`numeric_interpretation` explains supported formats and reports the parent StyleXF when a
+linked CellXF agrees with its stored format ID. See `<skill-root>/references/numeric-interpretation.md`
+for the supported subset. Calculations continue to use the saved numeric value.
 Serial 60 in the 1900 system is not invented as a real calendar date; fractional serials
 and the original bytes remain available for later, separately verified interpretation.
 
-Formula records retain opaque token bytes, ancillary bytes, raw flags and cache bytes.
-Tokens are not decompiled, semantically validated or executed; unknown token semantics do
-not trigger any formula evaluation. Shared/array formula rules (`<skill-root>/references/formula-groups.md`)
+Formula records retain token bytes, ancillary bytes, raw flags and cache bytes. A bounded
+standalone expression can also return `formula.formula_text`. It supports numeric and
+Boolean constants, same-sheet cell and range references, basic arithmetic and a small
+function list including SUM and AVERAGE. Shared, array, external and unsupported tokens
+remain opaque. The reader never evaluates expressions. Shared/array formula rules (`<skill-root>/references/formula-groups.md`)
 define the supported bounded group subset and its partial status; Table data-table
 formulas remain refused. Supported caches are numeric, boolean, text (String record
 with the group ordering described in that reference), error
@@ -326,8 +367,8 @@ This example assumes an existing `Data` sheet and explicitly chosen header rows 
 within A1:F20. Select the actual sheet/range for the task; error cells cannot form
 header paths, and formula headers require the explicit cache policy described below.
 
-```console
-python3 -I -S -B "<skill-root>/scripts/wps_biff8.py" input.xls --sheet Data --range A1:F20 --header-rows 1:3
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_biff8.py\" input.xls --sheet Data --range A1:F20 --header-rows 1:3")
 ```
 
 Explicit header reconstruction reuses the explicit merge-only header rules in `<skill-root>/scripts/wps_biff8_headers.py`,
@@ -349,17 +390,28 @@ optional and is not a dependency of this package. Its current WPS JSON adapter s
 
 ## Rejection rules and validation limits
 
-Reject unknown/private records, FilePass, unsupported BOF versions, offset aliases/gaps,
-truncated/oversized payloads, nonfinite numbers, duplicate cells, bad SST/XF references,
-malformed strings/merges, orphan String records and trailing unbound data. No data-bearing
-record is silently skipped. Present but opaque formulas remain explicitly unverified.
+Reject unknown/private records outside the default file-data metadata allowlist,
+FilePass, unsupported BOF versions, offset aliases/gaps, truncated/oversized payloads,
+nonfinite numbers, duplicate cells, bad SST/XF references, malformed strings/merges,
+orphan String records and trailing unbound BIFF data. Default file data mode retains
+only correctly framed unknown global/worksheet metadata within its existing budget;
+no record is silently skipped. Present but opaque formulas remain explicitly unverified.
 
 Limits: stream 8 MiB, records 100000, cells 200000, sheets 128, XFs 4096, SST strings
 200000, merges 65536 per workbook, uninterpreted metadata 1 MiB/4096 records, diagnostics 1000, JSON output
-16 MiB. Payloads over 8224 bytes and Continue uses outside SST characters/runs/opaque phonetic tails and plain Label/cached String character data are outside the subset. Header
-regions are capped at 200000 cells and BIFF8's 65536 rows/256 columns. Inherited CFB chain,
-allocation and memory budgets apply before record decoding. Trailing producer padding is
-not guessed or discarded, so some noncanonical streams are deliberately refused.
+16 MiB. Payloads over 8224 bytes remain outside the subset. String-specific Continue
+handling is limited to SST character/run/opaque phonetic tails and plain Label/cached
+String character data. Separate bounded adjacent continuation is supported only for
+ExternSheet through its declared XTI byte count and the linked note drawings described
+in `<skill-root>/references/embedded-charts.md#fragmented-note-drawings-data-only`;
+other Continue uses remain outside the subset. Header regions are capped at 200000
+cells and BIFF8's 65536 rows/256 columns. Inherited CFB chain,
+allocation and memory budgets apply before record decoding. At the CFB layer, only the
+default BIFF8 file-data route accepts an all-zero trailing remainder shorter than one
+sector after full-sector allocation and declared-stream checks succeed; it reports a
+warning/partial result. Nonzero tails, truncated referenced sectors and trailing
+unbound BIFF data still reject. Padding is not treated as stream content; see CFB
+investigation (`<skill-root>/references/et-ett-readonly.md#default-biff8-data-trailing-padding`).
 
 The earlier public ET comparison above and newer template checks do not establish WPS
 private-extension semantics, general ET/ETT support, numeric-date rendering, formula-cache
@@ -399,9 +451,10 @@ expanding into unbounded JSON text; the 16 MiB final serialized JSON limit still
 
 Rich SST character segments and raw FormatRun segments can cross Continue records.
 The character phase consumes continuation encoding bytes; the run phase does not.
-Fixed headers stay in one record; per-string and remaining aggregate budgets are
-checked before collecting run data. Formatting is retained once by SST index and
-reported partial, never applied. Phonetic extensions are retained as opaque ExtRst bytes, not applied or interpreted; rich/phonetic cached String records remain unsupported. See continuation rules and evidence (`<skill-root>/references/biff-rich-continuation.md`).
+Fixed headers stay in one record. Per-string and remaining aggregate budgets are
+checked before collecting run data. The result retains source run bytes and supported
+text segments once per SST index. `rich_string_fonts` maps saved font indices to
+limited properties. Rendering remains partial. Phonetic extensions are retained as opaque ExtRst bytes, and rich/phonetic cached String records remain unsupported. See `<skill-root>/references/biff-rich-continuation.md`.
 
 For shared/array groups, use formula-group rules and evidence (`<skill-root>/references/formula-groups.md`)
 as the single detailed contract for supported records, member caches, ordering,
@@ -418,7 +471,7 @@ not four complete-format successes; hashes and existing text/metric expectations
 
 ## Additive number and saved visibility interpretation
 
-Raw values and cache provenance remain unchanged. See number interpretation (`<skill-root>/references/numeric-interpretation.md`) for the bounded explicit CellXF format subset and unknown inheritance/complex formats; this is not effective-style or Excel display rendering. See saved visibility (`<skill-root>/references/saved-visibility.md`) for Row/ColInfo flags and raw filter metadata. Default extraction includes all cells. Row selection keeps unknown states; filter conditions are not decoded or executed. These BIFF helpers do not parse OOXML; the unified entrypoint separately routes OOXML packages to the OOXML spreadsheet reader (`<skill-root>/references/ooxml-spreadsheet.md`).
+Raw values and cache provenance remain unchanged. See `<skill-root>/references/numeric-interpretation.md` for the bounded CellXF format and inheritance rules. See saved visibility (`<skill-root>/references/saved-visibility.md`) for Row/ColInfo flags and raw filter metadata. Default extraction includes all cells. Row selection keeps unknown states; filter conditions are not decoded or executed. The unified entrypoint routes OOXML packages to the OOXML spreadsheet reader (`<skill-root>/references/ooxml-spreadsheet.md`).
 
 ## ET parser capacity and failure locations
 

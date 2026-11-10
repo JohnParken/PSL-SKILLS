@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-07。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.0051.1813`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-10。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.1748.2190`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -25,9 +25,12 @@ flowchart TD
     B --> C["read_et.py：按内容路由"]
     C --> D["wps_cfb.py：CFB 容器校验"]
     D --> E["wps_biff8.py：BIFF8 子集"]
+    E --> ER["wps_biff8_records.py：记录分帧与元数据白名单"]
+    E --> EH["wps_biff8_headers.py：表头重建"]
     E --> EV["wps_biff8_values.py：数值、字符串和 SST"]
     E --> EE["wps_biff8_errors.py：共享异常与断言"]
     EV --> EE
+    ER --> EE
     C --> F["wps_ooxml_sheet.py：OOXML 表格子集"]
     F --> G["wps_ooxml.py：ZIP 与 XML 安全原语"]
     E --> H["wps_diagnostics.py：范围与缺口诊断"]
@@ -43,7 +46,7 @@ flowchart TD
     I --> O["公开能力契约：跨 Skill 消费"]
 ```
 
-标准入口和跨 Skill 接口复用 `read_et.read_bytes()`，不是两套解析器。分析 CLI 也先调用同一读取器，再进入区域分析。`wps_ooxml.py` 虽含其他历史格式辅助逻辑，ET 的公开路由只选择电子表格，不能据模块内容扩大产品能力。
+标准入口、跨 Skill 接口及分析 CLI 共用 `read_et.read_bytes()`。OOXML 电子表格解析使用 `wps_ooxml.py` 提供的 ZIP 和 XML 校验。
 
 ### 主要模块与入口
 
@@ -61,7 +64,7 @@ flowchart TD
 | [et_table_analysis.py](../../skills/et/scripts/et_table_analysis.py) | `analyze(result, query)`、类型化过滤、稳定排序、统计和分组 |
 | [et_table_preview.py](../../skills/et/scripts/et_table_preview.py)、[et_table_quality.py](../../skills/et/scripts/et_table_quality.py) | 物理网格预览及有界位置样本、统计分母、缓存缺口 |
 
-内部拆分将基础数值、字符串和 SST 解码放入 `wps_biff8_values.py`，稳定异常类别放入 `wps_biff8_errors.py`；原 `wps_biff8.py` 继续导出旧入口，BIFF8 元数据及资源限制不变。三个模块随同一运行清单分发。
+BIFF8 读取器调用 [记录分帧模块](../../skills/et/scripts/wps_biff8_records.py) 校验记录边界并应用元数据白名单，调用 [表头模块](../../skills/et/scripts/wps_biff8_headers.py) 重建指定区域的表头。数值、字符串和 SST 解码由 `wps_biff8_values.py` 提供，异常类别由 `wps_biff8_errors.py` 提供。`wps_biff8.py` 保留读取和表头入口及资源上限，所需模块随同一运行清单分发。
 
 ## 任务流程
 
@@ -84,6 +87,10 @@ flowchart TD
 ```
 
 表头不明确时先预览小矩形；预览不自动发现表头、合计行或业务口径。隐藏行和已筛选行仍属于物理选区，不自动排除。需要排除重复表头或总计行时，由任务明确 `exclude_rows` 中的原始行号。
+
+完整读取的 `visibility` 提供可解释的保存行高 `height_pt` 与列宽 `width_chars`。预览的 `display_text` 来自数字解释，`formula_text` 来自 OOXML 保存文本或受支持的 BIFF8 公式转写。数值与统计使用精确的保存值，公式缓存继续带缓存状态。
+
+BIFF8 和 OOXML 完整读取的 `sheets[].views` 按保存窗口报告冻结行数 `freeze_row`、冻结列数 `freeze_col`、活动窗格 `active_pane` 以及当前单元格 `selected_cell`。视图数据仅供查看，预览和分析仍由调用方明确给出范围及所需表头行。 [保存视图字段](../../skills/et/references/saved-visibility.md#保存的工作表视图)
 
 ## 输入、输出与公开契约
 
@@ -108,10 +115,14 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 | BIFF8 原始完整提取 | `biff8_readonly_v1` | 按 `type` 使用 `value`，保留缓存、覆盖、诊断 |
 | OOXML 原始完整提取 | `ooxml_spreadsheet_readonly_v1` | 同上；不能据读取成功推断完整格式支持 |
 | 概况或单元格分页 | `wps_read_view_v1` | 输出投影；保留原 schema、遗漏字段和源状态，不能代替原始提取 |
-| 矩形物理网格预览 | `et_table_preview_v1` | 含空位、保存值与合并锚点；不计算统计，不推断表头 |
+| 矩形物理网格预览 | `et_table_preview_v1` | 含空位、保存值与合并锚点，可选数字显示文本和 OOXML 原公式文本 |
 | 统计结果 | `et_table_analysis_v1` | 派生结果；`rows`、`groups` 是预览，统计覆盖全部匹配行 |
 
 原始提取中的数字及分析输出必须保留精度，文本编号 `"001"` 不转为数字；`blank`、`missing`、空文本和布尔分别处理。`numeric_interpretation` 是格式解释，不能替换原始保存值。
+
+BIFF8 数字格式在父样式引用有效且保存 ID 一致时会返回继承依据。两种格式的数字解释均支持受限科学计数、分数、可选小数、位置段颜色和明确日期格式。格式冲突或超出解释范围的样式返回 `unknown`。 [数字解释范围](../../skills/et/references/numeric-interpretation.md)
+
+完整读取提供被引用的共享富文本分段，OOXML 还可返回内联富文本。BIFF8 `CondFmt/CF` 的保存证据可包含常量比较和仅含填充的格式信息。 [BIFF8 读取范围](../../skills/et/references/biff8-readonly.md) · [OOXML 读取范围](../../skills/et/references/ooxml-spreadsheet.md)
 
 公式默认 `formula_policy=exclude`：展示保存值，但排除出计算并报告缺口。显式采用 `cached` 才使用可用保存缓存；缓存未验证是否最新，错误或缺失缓存不当作零。分析采用 Decimal；均值使用 34 位有效数字和 `ROUND_HALF_EVEN`，并报告舍入，不承诺复现 Excel 二进制运算。
 
@@ -136,7 +147,11 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 | 读取或分析失败 / 1 | 停止依赖操作，不将失败当作空表；失败状态可能细分原因 |
 | 参数错误 / 2 | 常规 usage 与 stderr，不能假定有业务 JSON |
 
-默认 `data` 策略可保留有明确结构边界的非单元格元数据并报告 partial，例如部分条件格式、批注绘图分片和数据验证记录；这些内容不应用到保存值，也不表示完整规则语义、打印布局或批注正文均已理解。有严格帧边界的未知 OfficeArt atom 或 FtCmo/FtEnd 对象在 data 策略下可保留原始证据，但其值影响未知，标记 `unverified_due_to_best_effort_salvage`、`omissions_affect_cell_values=true` 和源 partial；strict 仍拒绝。这不表示自动启用独立 salvage 入口。其余未知数据、加密、结构错误和资源超限仍按拒绝契约处理。Salvage 不是自动失败回退，只有明确请求最大限度部分读取时才按高级参考使用独立 BIFF 入口。
+文件 API、读取 CLI 及程序协议共用代码里的默认 `data`，显式参数在解析前生效，失败后不切换策略。该模式可保留有明确结构边界的非单元格元数据并报告 partial，例如部分条件格式、批注绘图分片和数据验证记录；这些内容不应用到保存值，也不表示完整规则语义、打印布局或批注正文均已理解。有严格帧边界的未知 OfficeArt atom 或 FtCmo/FtEnd 对象在 data 策略下可保留原始证据，但其值影响未知，标记 `unverified_due_to_best_effort_salvage`、`omissions_affect_cell_values=true` 和源 partial；strict 仍拒绝。这不表示自动启用独立 salvage 入口。默认读取还保留边界完整的未知全局/表内记录，按相同覆盖不确定契约返回 partial。核心数据、已识别记录组、加密、结构和资源错误仍拒绝。显式 salvage 进一步容忍部分未知或缺失的声明。
+
+默认 `data` 模式遇到 CFB 文件头 FAT 数量为 0 时，可从 DIFAT 明确列出的 FAT 扇区推导数量。通过既有扇区、分配链、目录和 BIFF8 校验后返回 `partial`（退出 3），并附 `cfb_zero_fat_count_recovered`。索引缺失、链损坏或严格模式下仍失败。默认模式可在完整扇区前缀通过目录、分配链和声明长度校验后忽略不足一扇区的全零尾缀，并返回 `cfb_zero_trailing_padding_ignored`。
+
+默认 `data` 对受支持的静态内部 `NAME` 容忍隐藏位以及规范要求读取时忽略的保留字段，保留原始记录及 `defined_name_passive_header_fields_ignored` 并返回 `partial`。已识别名称继续校验作用域和重复。不受支持的名称表达式、宏标志名称及不可解释的调色板保留原始记录，覆盖不确定。宏存储和宏表仍拒绝。外部工作簿与加载项的链接记录按原 SupBook/XTI 顺序保留，仅验证并解析内部引用。外部缓存不参与单元格赋值，公式继续使用 Workbook 内未核验的保存缓存。条件格式、数据验证及嵌入图表仅在整组边界与必要分区验证后降级选定语义异常。
 
 关键预算包括：原输入 64 MiB、原结果 JSON 16 MiB；协议帧 128 MiB；查询 64 KiB；分析矩形最多 200000 个位置、256 列；最多 10000 组。分析行/组预览默认各 100，物理网格预览默认 10 行、最多 50 行及 10000 个位置。完整边界以 [表格分析](../../skills/et/references/table-analysis.md) 和源码常量为准。
 
@@ -183,3 +198,5 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 本轮仅更新结果判读与续读说明，不改执行路径、首步自检或 CLI 行为。工具调用成功、进程退出与业务 JSON 分别核对；允许宿主合并 stdout/stderr 并附状态文字，不要求不存在的字段或固定分隔符，退出码未知不补成0。保留非零退出的结果、partial、诊断以及业务/归档/清理边界；状态不明不盲目重跑写操作。
 
 宿主外置预览与已截断捕获分别处理。结果引用按真实 `read_file` schema 逐段读取并核对覆盖，不作为 Shell 路径；已丢弃内容不能靠读取不完整文件恢复。业务投影按实际游标和来源绑定续读，末页只证明所选投影取完，不消除遗漏或源 partial。详见 [有界读取](../../skills/et/references/bounded-reading.md#宿主大结果与业务分页分开处理)。本轮说明依据 CLI 与本机 Deep Agents 源码核对；真实目标宿主回传、Linux 容器和客户端验收仍需独立验证。
+
+执行调用维护：业务脚本示例使用宿主的 `execute(command=...)`，执行前核对完整命令、stdin、路径及结果；这不改变 CLI 或协议，不代表真实宿主链路已经验收。

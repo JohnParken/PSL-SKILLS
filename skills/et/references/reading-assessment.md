@@ -34,7 +34,7 @@ CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返�
 - `events` 汇总原有诊断的 code、来源字段和已记录位置；缺失偏移不推测。
 - `full_format_verified` 始终 false。原始诊断仍是完整依据，摘要不是隐私或安全认证。
 
-CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 `location.reason_code=cfb_unaligned_physical_length` 区分；FAT 宣告分配未具备物理存储扇区时为 `cfb_fat_unbacked_allocation`。两类错误均属于 `invalid_or_unsupported`，不补齐缺失扇区，不忽略非零尾随数据。错误分层并非损坏文件读取成功。
+默认 data 在完整扇区前缀通过校验后可忽略不足一扇区的全零尾缀，`container_issues` 保留 `cfb_zero_trailing_padding_ignored`、尾缀起点和字节数。拒绝未对齐长度时，失败原因码为 `cfb_unaligned_physical_length`；FAT 宣告分配未具备物理存储扇区时为 `cfb_fat_unbacked_allocation`。严格模式遇到 FAT 数量为 0，或默认 data 模式遇到 FAT 数量为 0 且 DIFAT 未列出 FAT 扇区，失败原因码为 `cfb_zero_fat_count`。上述原因均返回 `invalid_or_unsupported`。默认 data 模式用 DIFAT 核对 FAT 数量并通过全部校验时返回 partial，`container_issues` 保留 `cfb_zero_fat_count_recovered`、文件头原值及推导数量。
 
 ## 消费电子表格 JSON
 
@@ -42,19 +42,8 @@ CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 
 
 ## 可运行的契约示例
 
+以下将 API 示例作为完整 stdin 执行；先替换已确认的 Skill 真实目录，并使用任务顶层的实际输入。
+
 ```python
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
-from read_et import read, read_bytes, check_environment
-
-# 环境自检
-assert check_environment() == 0
-
-# 读取示例
-result = read('./sample.et')
-if result['status'] in ('ok', 'partial'):
-    print(f"提取成功，工作表数量: {len(result.get('sheets', []))}")
-    if result['status'] == 'partial':
-        print(f"已知缺口: {len(result.get('issues', []))}")
+execute(command="python -I -S -B - \"<skill-root>\" <<'PY'\nimport sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(sys.argv[1]) / 'scripts'))\nfrom read_et import read, read_bytes, check_environment\n\n# 环境自检\nassert check_environment() == 0\n\n# 读取示例\nresult = read('./sample.et')\nif result['status'] in ('ok', 'partial'):\n    print(f\"提取成功，工作表数量: {len(result.get('sheets', []))}\")\n    if result['status'] == 'partial':\n        print(f\"已知缺口: {len(result.get('issues', []))}\")\nPY\n")
 ```

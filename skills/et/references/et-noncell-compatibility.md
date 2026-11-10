@@ -6,7 +6,7 @@
 
 ## 目标
 
-针对 `.et/.ett` 的 **BIFF8 保存值读取**，把非单元格元数据和单元格值记录区别处理。仅在 MS-XLS 明确规定记录结构、所属 substream、顺序、大小、预算和后续记录边界时开放受限兼容；保留原始字节、来源位置与 `partial` 诊断。**不进行未知记录通用跳过、回退扫描、容器修复、加密绕过、公式执行或完整格式/视觉推断**。该记录兼容分支只作用于 ET 的 BIFF8 读取；不修改 `.wps` MS-DOC 文字读取器。
+针对 `.et/.ett` 的 **BIFF8 保存值读取**，把非单元格元数据和单元格值记录区别处理。仅在 MS-XLS 明确规定记录结构、所属 substream、顺序、大小、预算和后续记录边界时开放受限兼容；保留原始字节、来源位置与 `partial` 诊断。默认文件读取另可对完整分帧的未知记录保留原始证据和覆盖不确定诊断；已识别组仍按自身边界校验。读取不扫描恢复、不解密、不执行公式或推断完整视觉效果。该记录兼容分支只作用于 ET 的 BIFF8 读取；不修改 `.wps` MS-DOC 文字读取器。
 
 ## 已实施的两类明确记录（仅 compatibility=data）
 
@@ -23,7 +23,7 @@
 
 ## 条件格式组与分页布局的部分读取
 
-默认 data 对已识别的 `CondFmt/CF` 组保留原始负载，验证组数量、区域及公式长度边界，不解释 DXFN 或执行条件公式。对完整分帧且数量受限的 `HorizontalPageBreaks/VerticalPageBreaks`，布局越界、倒序与重叠改为原始元数据和 `page_break_layout_not_applied` 诊断；不应用或修复布局，保存值继续按原结构验证。严格/legacy 规则不扩大。分帧截断、数量/资源越界、孤立 CF、未知记录仍按既有边界拒绝；这不是未知记录通用跳过。
+默认 data 对已识别的 `CondFmt/CF` 组保留原始负载，验证组数量、区域及公式长度边界，不解释 DXFN 或执行条件公式。对完整分帧且数量受限的 `HorizontalPageBreaks/VerticalPageBreaks`，布局越界、倒序与重叠改为原始元数据和 `page_break_layout_not_applied` 诊断；不应用或修复布局，保存值继续按原结构验证。严格/legacy 规则不扩大。分帧截断、数量/资源越界和孤立 CF 仍拒绝。
 
 Start-up Expenses 后续 `0x00EC` 拒绝来自跨记录绘图分片；现已按实际 Escher 容器及 ClientData/ClientTextbox 边界保留受限批注链，并补齐有界 `DVal/Dv` 组。单元格保存值继续读取，批注、绘图与规则语义仍不应用或执行，边界错误和未知对象仍拒绝。完整字段见 `<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata` 与 `<skill-root>/references/embedded-charts.md#fragmented-note-drawings-data-only`；三份真实 ETT 的受限成功和独立预期对照记录于 `docs/maintenance/et/et-real-validation.md#template-compatibility-iteration-2026-11-03`。
 
@@ -45,7 +45,7 @@ Start-up Expenses 后续 `0x00EC` 拒绝来自跨记录绘图分片；现已按�
 | 情况 | 保持拒绝的原因 |
 |---|---|
 | 未知 Global/Worksheet ID、`Continue (0x003C)` | 无法证明记录不是某段的实际数据或分段正文；不对任意 ID 采用 `continue` |
-| `FILEPASS`、宏与 VBA、未知外链、非法 `SupBook` | 可能涉及加密、安全操作与外部来源；不能通过只读默认策略绕过 |
+| `FILEPASS`、宏与 VBA、外链边界或索引损坏 | 可能涉及加密、安全操作与外部来源；不能通过只读默认策略绕过 |
 | `BOF/EOF`、`BoundSheet8`、工作表偏移、`WsBool`、`SST/LabelSst` | 属于记录流结构或单元格寻址依赖；即使保存值部分可见，也无法安全证明完整区间 |
 | `Date1904` 缺失、CodePage 超出证据范围 | 必须先进一步证明缺省与文本、日期的独立关系；本轮不猜年份系统或字符编码 |
 | `Formula/String` 缓存、`ShrFmla/Array`、`PtgExp`、非标准空隙 | 与单元格计算结果/引用关系相关；不能按元信息静默跳过 |

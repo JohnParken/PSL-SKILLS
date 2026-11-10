@@ -23,9 +23,9 @@
 
 先遵守主入口的任务目录、输入边界及执行环境约束（`<skill-root>/SKILL.md#执行环境约束与首步自检`）。输入及可选查询 JSON 使用任务目录下相对路径；仅依赖 Python 3.9+ 标准库，不安装包、不联网、不调用办公软件。确认输入可读；仅读 stdout 不创建探针或归档清单。
 
-```console
-python -I -S -B "<skill-root>/scripts/analyze_et.py" --check
-python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.ett --sheet "数据" --range A1:D100 --header-rows 1
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.ett --sheet \"数据\" --range A1:D100 --header-rows 1")
 ```
 
 自检要求退出 0 且输出 `environment-ok`；OOXML 还要求 `ooxml-sheet=available`。自检失败停止依赖操作。完成后读取输入的默认 data 结果，不改读取策略，不自动尝试 salvage。后缀不证明内部格式；未知格式和原读取器的结构/安全/资源拒绝仍生效。
@@ -61,8 +61,8 @@ python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.ett --sheet "数据
 }
 ```
 
-```console
-python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.ett --sheet "数据" --range A1:D100 --header-rows 1 --query ./query.json
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.ett --sheet \"数据\" --range A1:D100 --header-rows 1 --query ./query.json")
 ```
 
 上例的 20、40 仅演示物理行号，不表示它们是输入文件的合计行；实际没有需排除的行时省略 `exclude_rows`。查询重复键、未知字段、错误类型和不支持的操作明确失败。查询不接受 Python 表达式、SQL、任意函数、脚本或公式；文字筛选只是大小写敏感的字符串比较。
@@ -166,8 +166,8 @@ sum 和 median 在有界 Decimal 精度下精确计算，不经过 float；mean 
 
 已按证据中的来源与 SHA-256 单独取得原件后，先自检，再在任务目录运行离线维护核对；文件名可替换成实际相对路径，不因名称相同就接受，核对器必须匹配原始哈希：
 
-```console
-python -I -S -B "skills/et/scripts/test/verify_et_analysis.py" ./Balance_Sheet.ett ./Schedule.ett "./Start-up Expenses.ett"
+```python
+execute(command="python -I -S -B \"skills/et/scripts/test/verify_et_analysis.py\" ./Balance_Sheet.ett ./Schedule.ett \"./Start-up Expenses.ett\"")
 ```
 
 退出 0 且 `status=passed` 只表示本次提供的固定原件与独立冻结统计一致。Start-up Expenses 原件另核对显式排除五行后 23 个数值的位置和统计、合并表头来源及数值锚点不重复。脚本不会下载、保存或重分发原件；未提供的原件不计为通过。这里的选列仅验证保存值运算，不把包含模板合计行的整列相加解释为业务总额；该模板明细列的零值不能代替多样金额或真实填报业务的验收。

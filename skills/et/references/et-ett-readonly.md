@@ -55,9 +55,9 @@ Renamed XLS/XLSX or simulated containers are never counted as real ET/ETT accept
 
 ## CLI and support levels
 
-```console
-python3 -I -S -B "<skill-root>/scripts/read_et.py" input.et
-python3 -I -S -B "<skill-root>/scripts/wps_cfb.py" input.et
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" input.et")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_cfb.py\" input.et")
 ```
 
 Content, not extension, selects the container probe. Non-CFB data is rejected by wps_cfb;
@@ -108,6 +108,19 @@ name collision checks, and aligned root mini-stream sizes. Report outside-subset
 than silently dropping payload. The CFB entrypoint interprets no spreadsheet types, dates, merges, formulas or styles.
 A separate strict BIFF8 record reader (`<skill-root>/references/biff8-readonly.md`) now provides a bounded record
 subset and explicit header adapter, without changing CFB-only or ET compatibility claims.
+
+## Default BIFF8 data trailing padding
+
+Only the default ET/ETT BIFF8 file-data route accepts a final CFB remainder shorter
+than one sector, and only when every byte in that remainder is zero. Before accepting
+it, existing FAT/MiniFAT chains, the directory graph and declared stream lengths must
+validate using the complete sectors; the tail is not included in a stream. The read
+remains read-only and reports a warning/partial result. A nonzero tail, truncated
+referenced sector, malformed allocation or declared-length mismatch still rejects.
+This rule does not weaken any bounds or permit scanning for a later record. It is
+separate from the existing default-data recovery of a zero header FAT count when
+explicit DIFAT entries describe a valid allocation. Explicit strict/legacy modes and
+direct byte-parser defaults retain their previous behavior.
 
 Limits: input 32 MiB (+ one limit-detection byte), individual user stream 8 MiB, aggregate
 user streams 32 MiB, directory 4096 entries, graph depth 32, 512 FAT and 16 DIFAT sectors.
