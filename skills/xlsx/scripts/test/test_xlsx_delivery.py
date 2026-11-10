@@ -159,7 +159,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(Path('archive-owned.tmp').read_bytes(), b'archive residual')
 
     def test_no_config_archive_residual_never_reports_successful_cleanup(self):
-        Path('user-spec.json').write_text(json.dumps(SPEC))
+        Path('user-spec.json').write_text(json.dumps(SPEC), encoding='utf-8')
         result = {'status': 'created', 'delivery': {
             'archive_status': 'failed', 'temporary_residuals': ['archive-owned.tmp']}}
         with patch('run_xlsx_task._run_child', return_value=(0, result)):
@@ -169,17 +169,19 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(code, 3)
         self.assertFalse(report['cleanup']['cleanup_complete'])
         self.assertEqual(report['task_status'], 'cleanup_incomplete')
-        self.assertEqual(json.loads(Path('user-spec.json').read_text()), SPEC)
+        self.assertEqual(
+            json.loads(Path('user-spec.json').read_text(encoding='utf-8')), SPEC
+        )
 
     def test_failure_cleans_spec_and_preserves_original(self):
-        Path('user.json').write_text('original')
+        Path('user.json').write_text('original', encoding='utf-8')
         code, result = self.task(spec={'invalid': True})
         self.assertEqual(code, 1)
         self.assertEqual(result['task_status'], 'failed_cleaned')
         self.assertIsNone(result['manifest'])
         self.assertFalse(list(Path('.').glob('xlsx-task-*')))
         self.assertTrue(result['cleanup']['cleanup_complete'])
-        self.assertEqual(Path('user.json').read_text(), 'original')
+        self.assertEqual(Path('user.json').read_text(encoding='utf-8'), 'original')
         self.assertFalse(Path('report.xlsx').exists())
 
     def test_existing_output_never_adopted(self):
@@ -210,7 +212,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(target.read_bytes(), b'authorized update')
 
     def test_archive_failure_keeps_primary_and_removes_helpers(self):
-        Path('output').write_text('blocked')
+        Path('output').write_text('blocked', encoding='utf-8')
         code, result = self.task()
         self.assertEqual(code, 0)
         self.assertEqual(result['delivery']['archive_status'], 'failed')
@@ -268,7 +270,10 @@ class DeliveryTests(unittest.TestCase):
         code, result = self.cli('stdlib_xlsx.py', 'create', 'spec.json', 'new.xlsx')
         self.assertEqual(code, 0)
         self.assert_archived(result, 'new.xlsx')
-        Path('patch.json').write_text(json.dumps({'sheets': [{'name': 'Data', 'cells': {'B1': {'value': 99}}}]}))
+        Path('patch.json').write_text(
+            json.dumps({'sheets': [{'name': 'Data', 'cells': {'B1': {'value': 99}}}]}),
+            encoding='utf-8',
+        )
         code, result = self.cli('stdlib_xlsx.py', 'edit', 'new.xlsx', 'patch.json', 'edited.xlsx')
         self.assertEqual(code, 0)
         self.assert_archived(result, 'edited.xlsx')
@@ -279,32 +284,37 @@ class DeliveryTests(unittest.TestCase):
         Path('input.csv').write_text('Name,Value\n甲,42\n', encoding='utf-8')
         original = Path('input.csv').read_bytes()
         code, result = self.cli('xlsx_tabular.py', 'import', 'input.csv', 'imported.xlsx')
-        self.assertEqual(code, 0); self.assert_archived(result, 'imported.xlsx')
+        self.assertEqual(code, 0)
+        self.assert_archived(result, 'imported.xlsx')
         code, result = self.cli('xlsx_tabular.py', 'export', 'imported.xlsx', 'table.tsv', '--sheet', 'Sheet1')
-        self.assertEqual(code, 0); self.assert_archived(result, 'table.tsv')
+        self.assertEqual(code, 0)
+        self.assert_archived(result, 'table.tsv')
         self.assertEqual(Path('input.csv').read_bytes(), original)
 
     def test_wide_dashboard_and_generic_result_exports(self):
         Workbook.create(spec_for(fictional_facts())).save('facts.xlsx')
-        Path('query.json').write_text(json.dumps(config_example()))
+        Path('query.json').write_text(json.dumps(config_example()), encoding='utf-8')
         code, result = self.cli('xlsx_management.py', 'facts.xlsx', '--sheet', 'Facts', '--query', 'query.json', '--xlsx', 'wide.xlsx')
-        self.assertEqual(code, 0); self.assert_archived(result, 'wide.xlsx')
+        self.assertEqual(code, 0)
+        self.assert_archived(result, 'wide.xlsx')
         wide = build('facts.xlsx', 'Facts', config_example())
-        Path('wide.json').write_text(json.dumps(wide, default=str))
-        Path('dash.json').write_text(json.dumps(query()))
+        Path('wide.json').write_text(json.dumps(wide, default=str), encoding='utf-8')
+        Path('dash.json').write_text(json.dumps(query()), encoding='utf-8')
         code, result = self.cli('xlsx_dashboard.py', 'wide.json', '--query', 'dash.json', '--xlsx', 'dashboard.xlsx')
-        self.assertEqual(code, 0); self.assert_archived(result, 'dashboard.xlsx')
+        self.assertEqual(code, 0)
+        self.assert_archived(result, 'dashboard.xlsx')
         code, result = self.cli('xlsx_result_export.py', 'wide.json', 'export.xlsx')
-        self.assertEqual(code, 0); self.assert_archived(result, 'export.xlsx')
+        self.assertEqual(code, 0)
+        self.assert_archived(result, 'export.xlsx')
 
     def test_archive_alias_never_overwrites_input(self):
-        Path('source.json').write_text('input')
+        Path('source.json').write_text('input', encoding='utf-8')
         Path('output/test').mkdir(parents=True)
         os.link('source.json', 'output/test/report.xlsx')
         Workbook.create(SPEC).save('report.xlsx')
         result = finish_delivery({'status': 'ok'}, 'report.xlsx', ['source.json'])
         self.assertEqual(result['delivery']['archive_status'], 'failed')
-        self.assertEqual(Path('source.json').read_text(), 'input')
+        self.assertEqual(Path('source.json').read_text(encoding='utf-8'), 'input')
 
     def test_concurrent_same_request_preserves_unique_successful_outputs(self):
         spec = {'script': 'stdlib_xlsx.py', 'arguments': ['create', '@spec', 'same.xlsx'], 'output': 'same.xlsx', 'configs': {'spec': SPEC}}
@@ -312,7 +322,8 @@ class DeliveryTests(unittest.TestCase):
         def run():
             p = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS/'run_xlsx_task.py')], input=payload, text=True, capture_output=True)
             return p.returncode, json.loads(p.stdout)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool: results = list(pool.map(lambda _: run(), range(2)))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _: run(), range(2)))
         winners = [result for code, result in results if code == 0]
         # A later selector may observe the first publication and choose version 2.
         # Selectors that choose the same path must still have only one publisher.
@@ -328,7 +339,8 @@ class DeliveryTests(unittest.TestCase):
 
     def test_unknown_script_or_wrong_output_rejected_before_creation(self):
         for spec in ({'script':'unknown.py','arguments':[],'output':'x.xlsx'}, {'script':'stdlib_xlsx.py','arguments':['create','@spec','other.xlsx'],'output':'x.xlsx','configs':{'spec':SPEC}}):
-            with self.assertRaises(ValueError): run_task(spec)
+            with self.assertRaises(ValueError):
+                run_task(spec)
         self.assertFalse(list(Path('.').iterdir()))
 
     def test_cleanup_error_reports_incomplete_without_regeneration(self):
@@ -340,7 +352,10 @@ class DeliveryTests(unittest.TestCase):
 
     def test_macro_cli_preserves_opaque_vba_and_archives(self):
         book = Workbook.create(SPEC)
-        book.parts['[Content_Types].xml'] = book.parts['[Content_Types].xml'].replace(b'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml', b'application/vnd.ms-excel.sheet.macroEnabled.main+xml')
+        book.parts['[Content_Types].xml'] = book.parts['[Content_Types].xml'].replace(
+            b'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml',
+            b'application/vnd.ms-excel.sheet.macroEnabled.main+xml',
+        )
         book.parts['xl/vbaProject.bin'] = b'opaque-macro-sentinel'
         book.save('source.xlsm')
         code, result = self.cli('stdlib_xlsx.py', 'calculate', 'source.xlsm', 'result.xlsm')
@@ -369,11 +384,13 @@ class DeliveryTests(unittest.TestCase):
         self.assertTrue(result['cleanup']['cleanup_complete'])
 
     def test_symlink_output_and_parent_traversal_rejected(self):
-        Path('user.txt').write_text('original')
+        Path('user.txt').write_text('original', encoding='utf-8')
         Path('report.xlsx').symlink_to('user.txt')
-        with self.assertRaises(ValueError): self.task()
-        with self.assertRaises(ValueError): self.task(filename='../escape.xlsx')
-        self.assertEqual(Path('user.txt').read_text(), 'original')
+        with self.assertRaises(ValueError):
+            self.task()
+        with self.assertRaises(ValueError):
+            self.task(filename='../escape.xlsx')
+        self.assertEqual(Path('user.txt').read_text(encoding='utf-8'), 'original')
 
     def test_remaining_report_clis_archive_relative_task_outputs(self):
         from copy import deepcopy
@@ -402,7 +419,8 @@ class DeliveryTests(unittest.TestCase):
         all_facts = []
         for index, period in enumerate(('2025-01', '2025-02', '2025-03')):
             facts = deepcopy(two_branches())
-            for row in facts: row[0] = period
+            for row in facts:
+                row[0] = period
             facts = [row for row in facts if row[6] == 'balance']
             all_facts.extend(facts)
             name = 'period%d.xlsx' % index

@@ -193,7 +193,8 @@ def described_table(result,report,mapping):
     for column in columns:
         if not isinstance(column,dict) or not isinstance(column.get('column'),str) or column['column'] in identifiers:
             raise ValueError('Invalid described column entry')
-        identifier=column['column']; identifiers.append(identifier)
+        identifier=column['column']
+        identifiers.append(identifier)
         numeric_count=count(column.get('count'),'numeric count')
         missing=count(column.get('missing_omitted'),'missing omitted')
         ignored=count(column.get('non_numeric_omitted'),'nonnumeric omitted')
@@ -220,7 +221,8 @@ def described_table(result,report,mapping):
                 raise ValueError('Invalid quantile record')
             append('quantile',{'value':metric['value'],'rounded':metric['rounded']},status,report.number(metric['probability'],'probability'))
         for mode,metrics in variances.items():
-            if not isinstance(metrics,dict) or set(metrics)!={'status','ddof','variance','standard_deviation'} or metrics['status'] not in ('ok','insufficient_numeric_samples') or type(metrics['ddof']) is not int or metrics['ddof']!=(1 if mode=='sample' else 0):
+            if not isinstance(metrics,dict) or set(metrics)!={'status','ddof','variance','standard_deviation'} or metrics['status'] not in (
+                'ok','insufficient_numeric_samples') or type(metrics['ddof']) is not int or metrics['ddof']!=(1 if mode=='sample' else 0):
                 raise ValueError('Invalid variance record')
             for name in ('variance','standard_deviation'):
                 append(mode+'_'+name,metrics[name],metrics['status'],ddof=metrics['ddof'])
@@ -241,7 +243,8 @@ def management_table(result,report,mapping):
         raise ValueError('Management-wide headers must be a list')
     translated=[]
     for index,row in enumerate(result['rows'],1):
-        if not isinstance(row,dict) or set(row)!={'row_id','cells','source_rows','quality_flags'} or row['row_id']!=index or not isinstance(row['source_rows'],list) or not isinstance(row['quality_flags'],list):
+        if not isinstance(row,dict) or set(row)!={'row_id','cells','source_rows','quality_flags'} or row['row_id']!=index or not isinstance(
+            row['source_rows'],list) or not isinstance(row['quality_flags'],list):
             raise ValueError('Invalid management-wide row')
         if any(type(number) is not int or number<1 for number in row['source_rows']) or any(not isinstance(flag,str) for flag in row['quality_flags']):
             raise ValueError('Invalid management-wide lineage/quality flags')
@@ -263,7 +266,9 @@ def daily_table(result,report,mapping):
 
 
 def management_audit_tables(result,report,table_name="Wide"):
-    dictionary=result.get('metric_dictionary'); validations=result.get('validation'); lineage=result.get('lineage')
+    dictionary=result.get('metric_dictionary')
+    validations=result.get('validation')
+    lineage=result.get('lineage')
     if not isinstance(dictionary,list) or not isinstance(validations,list) or not isinstance(lineage,list):
         raise ValueError('Management report needs dictionary, validation and lineage lists')
     definitions=[['Metric ID','Label','Unit','Kind','Time basis','Aggregation','Additive dimensions','Reduction dimensions','Numerator','Denominator','Scale','Definition version']]
@@ -282,7 +287,8 @@ def management_audit_tables(result,report,table_name="Wide"):
     for item in lineage:
         if not isinstance(item,dict) or set(item)!={'output_row','source_file','sheet','source_row','metric_id'}:
             raise ValueError('Invalid management lineage record')
-        row=count(item['output_row'],'lineage output_row'); source_row=count(item['source_row'],'lineage source_row')
+        row=count(item['output_row'],'lineage output_row')
+        source_row=count(item['source_row'],'lineage source_row')
         if not 1<=row<=result['output_rows'] or not source_row or any(not isinstance(item[field],str) for field in ('source_file','sheet','metric_id')):
             raise ValueError('Management lineage points outside output')
         sources.append([row,row+1,item['source_file'],item['sheet'],source_row,item['metric_id']])
@@ -312,7 +318,12 @@ def export_result(result,output,readable=True):
               ['display_labels',1,'Joined path labels are display only; Columns and source JSON retain structured identity']]
     metadata += [['source_json',index+1,snapshot[start:start+30000]] for index,start in enumerate(range(0,len(snapshot),30000))]
     warning_rows=[['Location','Issue','Original value']]+report.warnings
-    sheets=[report.sheet('Wide' if result['status']=='management_wide' else 'Daily' if result['status']=='daily_summary' else 'Results',data),report.sheet('Columns',column_rows),report.sheet('Metadata',metadata),report.sheet('Warnings',warning_rows)]
+    sheets = [
+        report.sheet('Wide' if result['status'] == 'management_wide' else 'Daily' if result['status'] == 'daily_summary' else 'Results', data),
+        report.sheet('Columns', column_rows),
+        report.sheet('Metadata', metadata),
+        report.sheet('Warnings', warning_rows),
+    ]
     if result['status'] in ('management_wide','daily_summary'):
         sheets += management_audit_tables(result,report,'Daily' if result['status']=='daily_summary' else 'Wide')
     preset=None

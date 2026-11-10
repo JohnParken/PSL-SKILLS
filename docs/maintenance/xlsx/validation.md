@@ -13,6 +13,14 @@ this does not authorize business workflows to choose a different temporary root.
 python3 -I -S -B -m unittest discover -s skills/xlsx/scripts/test -p 'test_*.py' -v
 ```
 
+### Pylint maintenance, 2026-11-09
+
+Scanned all 95 Python source files under `skills/xlsx`, including tests and maintenance scripts, from the repository root on macOS arm64 with Python 3.12.12 and Expat 2.6.3. The full command was `python -B -m pylint --max-line-length=200 --output-format=json2 --reports=n` with the file list from `rg --files skills/xlsx -g '*.py'`. Pylint 4.1.3 and Astroid 4.3.4 ran from an isolated maintenance directory with the XLSX scripts and tests on the import path. The same directory supplied the legacy reader's declared optional pandas 2.2.3 and openpyxl 3.1.5 for the final scan. The maintained runtime used the standard library in its isolated self-check and test suite.
+
+The initial scan reported three missing pandas imports and one dynamic benchmark attribute error. Providing the declared legacy dependency and changing the benchmark to read the executed module namespace brought Error/Fatal to 0/0. C0301 went from 80 to 0, C0321 from 604 to 0, C0103 from 3 to 0, and W1514 from 16 to 0. The final full scan exited 28 with 1484 Convention, 345 Warning, and 272 Refactor diagnostics. Common categories include docstrings, isolation-related import placement, synchronous callbacks over loop variables, and function complexity. The focused run with `--disable=all --enable=E,F,C0103,C0301,C0321,W1514 --reports=n --score=n` exited 0.
+
+Formatting-only files were checked against their original ASTs with source positions omitted. The isolated XLSX self-check returned `ready`; all 408 XLSX tests passed. A 10-row benchmark smoke test compared generated package parts for create, patch, and calculate. A synthetic CSV smoke test checked the legacy reader's outlier result. The XLSX runtime copy parity check, strict structure check, 11 packager checks, 11 independent installation checks and 177 table-workflow tests passed. Project docs and whitespace checks passed. The description and supported task routes remain accurate. Only temporary runtime ZIPs were built for testing. Linux, Windows, real business workbooks, Office rendering, and model routing were outside this run.
+
 2026-11-02 XML output maintenance: synthetic creation/calculation/save/reopen tests
 cover preferred declarations across every XML/relationship member, default namespace
 URIs, `r:id`, Chinese text and XML escaping, plus no mutation of the input tree or

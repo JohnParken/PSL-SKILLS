@@ -19,14 +19,16 @@ class Hierarchy:
         self.end=parse_month(('text',spec['valid_to']),'hierarchy valid_to')
         if self.end<self.start:
             raise ValueError('Hierarchy validity interval is reversed')
-        self.levels=spec['levels']; self.report_levels=spec['report_levels']
+        self.levels=spec['levels']
+        self.report_levels=spec['report_levels']
         if not isinstance(self.levels,list) or not 1<=len(self.levels)<=10 or any(not isinstance(level,str) or not level.strip() for level in self.levels) or len(set(self.levels))!=len(self.levels):
             raise ValueError('Hierarchy levels must be 1..10 unique ordered labels')
         if not isinstance(self.report_levels,list) or not self.report_levels or any(level not in self.levels for level in self.report_levels) or len(set(self.report_levels))!=len(self.report_levels):
             raise ValueError('Invalid/duplicate hierarchy report_levels')
         if not isinstance(spec['nodes'],list) or not 1<=len(spec['nodes'])<=5000:
             raise ValueError('Hierarchy needs 1..5000 institution nodes')
-        self.nodes={}; self.children={}
+        self.nodes={}
+        self.children={}
         for node in spec['nodes']:
             if not isinstance(node,dict) or set(node)!={'id','parent','level','name'}:
                 raise ValueError('Hierarchy nodes require id/parent/level/name')
@@ -46,11 +48,13 @@ class Hierarchy:
                 self.children[parent].append(identifier)
         # Parent walks are bounded by declared node count; cycles are never tolerated.
         for identifier in self.nodes:
-            seen=set(); current=identifier
+            seen=set()
+            current=identifier
             while current is not None:
                 if current in seen:
                     raise ValueError('Institution hierarchy cycle at '+current)
-                seen.add(current); current=self.nodes[current]['parent']
+                seen.add(current)
+                current=self.nodes[current]['parent']
         for identifier,node in self.nodes.items():
             if node['level'] not in self.levels:
                 raise ValueError('Unknown institution level: '+node['level'])
@@ -82,7 +86,8 @@ class Hierarchy:
 
     def ancestors(self,identifier,period):
         self.node(identifier,period,leaf=True)
-        output=[]; current=identifier
+        output=[]
+        current=identifier
         while current is not None:
             node=self.nodes[current]
             if node['level'] in self.report_levels:

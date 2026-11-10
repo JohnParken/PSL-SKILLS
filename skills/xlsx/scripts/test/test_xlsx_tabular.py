@@ -135,7 +135,8 @@ class TabularTests(unittest.TestCase):
             result = subprocess.run(base + arguments, cwd=self.root, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             self.assertTrue(json.loads(result.stdout)['output_written'])
-        result = subprocess.run(base + ['import', str((self.source).relative_to(self.root)), str((self.book).relative_to(self.root)), '--encoding', 'bad-encoding'], cwd=self.root, capture_output=True, text=True)
+        result = subprocess.run(base + ['import', str((self.source).relative_to(self.root)), str((self.book).relative_to(self.root)),
+                                '--encoding', 'bad-encoding'], cwd=self.root, capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)
         self.assertFalse(json.loads(result.stdout)['output_written'])
         self.assertNotIn('Traceback', result.stderr)

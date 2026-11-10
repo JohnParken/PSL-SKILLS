@@ -105,7 +105,8 @@ class MatchTests(unittest.TestCase):
         self.save([['ID'],['A']],[['ID'],['A'],['A']])
         query=self.left.with_suffix('.json')
         query.write_text(json.dumps(self.config))
-        run=subprocess.run([sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'xlsx_match.py')),str(self.left),str(self.right),'--query',str(query)],capture_output=True,text=True)
+        run=subprocess.run([sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'xlsx_match.py')),
+                           str(self.left),str(self.right),'--query',str(query)],capture_output=True,text=True)
         self.assertEqual(run.returncode,1)
         report=json.loads(run.stdout)
         self.assertEqual(report['right']['duplicate_key_row_samples'],[[2,3]])

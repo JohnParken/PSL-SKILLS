@@ -197,11 +197,14 @@ def audit_quality(sheets: dict) -> dict:
             series = df[col].dropna()
             if len(series) < 4:
                 continue
-            Q1, Q3 = series.quantile(0.25), series.quantile(0.75)
-            IQR = Q3 - Q1
-            if IQR == 0:
+            first_quartile, third_quartile = series.quantile(0.25), series.quantile(0.75)
+            interquartile_range = third_quartile - first_quartile
+            if interquartile_range == 0:
                 continue
-            outlier_mask = (df[col] < Q1 - 1.5 * IQR) | (df[col] > Q3 + 1.5 * IQR)
+            outlier_mask = (
+                (df[col] < first_quartile - 1.5 * interquartile_range)
+                | (df[col] > third_quartile + 1.5 * interquartile_range)
+            )
             outlier_count = int(outlier_mask.sum())
             if outlier_count > 0:
                 sheet_findings.append({
@@ -209,7 +212,8 @@ def audit_quality(sheets: dict) -> dict:
                     "column": col,
                     "count": outlier_count,
                     "note": f"Column '{col}' has {outlier_count} potential outlier(s) "
-                            f"(outside 1.5×IQR bounds: [{Q1 - 1.5*IQR:.2f}, {Q3 + 1.5*IQR:.2f}])."
+                            f"(outside 1.5×IQR bounds: [{first_quartile - 1.5*interquartile_range:.2f}, "
+                            f"{third_quartile + 1.5*interquartile_range:.2f}])."
                 })
 
         findings[sheet_name] = sheet_findings

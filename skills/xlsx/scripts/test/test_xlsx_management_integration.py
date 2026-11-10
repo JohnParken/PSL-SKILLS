@@ -28,26 +28,53 @@ from test_xlsx_daily import daily_config,daily_spec
 
 
 def policy_config(metric='eligible_principal'):
-    return {'metric_id':metric,'scope':{'report_level':'branch','currency':'CNY','version':'v1','definition_version':'v1','unit':'元','kind':'stock','time_basis':'point_in_time','period_granularity':'month'},
-            'periods':['2024-02'],'institutions':[{'id':'A','level':'branch','peer_group':'group-1'},{'id':'B','level':'branch','peer_group':'group-1'}],
-            'context':{'observation_date':'2024-02-28'},'plan_definition':{'target_type':'balance','unit':'元','kind':'stock','time_basis':'point_in_time','currency':'CNY','version':'v1','definition_version':'v1','plan_version':'explicit-plan','direction':'at_least'},
-            'plans':[{'institution':institution,'period':'2024-02','applicability':'applicable','value':100} for institution in ('A','B')],'rank_method':'competition'}
+    return {
+        'metric_id':metric,
+        'scope':{
+            'report_level':'branch','currency':'CNY','version':'v1',
+            'definition_version':'v1','unit':'元','kind':'stock',
+            'time_basis':'point_in_time','period_granularity':'month',
+        },
+        'periods':['2024-02'],
+        'institutions':[
+            {'id':'A','level':'branch','peer_group':'group-1'},
+            {'id':'B','level':'branch','peer_group':'group-1'},
+        ],
+        'context':{'observation_date':'2024-02-28'},
+        'plan_definition':{
+            'target_type':'balance','unit':'元','kind':'stock',
+            'time_basis':'point_in_time','currency':'CNY','version':'v1',
+            'definition_version':'v1','plan_version':'explicit-plan',
+            'direction':'at_least',
+        },
+        'plans':[
+            {'institution':institution,'period':'2024-02',
+             'applicability':'applicable','value':100}
+            for institution in ('A','B')
+        ],
+        'rank_method':'competition',
+    }
 
 
 class ManagementIntegrationTests(unittest.TestCase):
     def setUp(self):
-        self.temp=TaskDirectory(); self.addCleanup(self.temp.cleanup)
+        self.temp=TaskDirectory()
+        self.addCleanup(self.temp.cleanup)
         self.folder=Path(self.temp.name)
 
     def save(self,name,spec):
-        path=self.folder/name; Workbook.create(spec).save(path); return path
+        path=self.folder/name
+        Workbook.create(spec).save(path)
+        return path
 
     def test_maturity_wide_dashboard_policy_and_readback(self):
         source=self.save('maturity.xlsx',maturity_spec(fictional_rows()))
-        wide=maturity(source,maturity_config()); export_result(wide,self.folder/'wide.xlsx')
+        wide=maturity(source,maturity_config())
+        export_result(wide,self.folder/'wide.xlsx')
         dashboard_result=dashboard(wide,{'overview_period':'2024-02','metrics':['eligible_principal'],'ranks':{'eligible_principal':{'method':'competition','descending':True}}})
         export_dashboard(dashboard_result,self.folder/'dashboard.xlsx')
-        progress=policy(wide,policy_config()); export_policy(progress,self.folder/'policy.xlsx')
+        progress=policy(wide,policy_config())
+        export_policy(progress,self.folder/'policy.xlsx')
         self.assertEqual(progress['rows'][0]['actual'],90)
         self.assertEqual(progress['rows'][0]['gap'],10)
         self.assertEqual(progress['rows'][1]['comparison_status'],'unverified_or_quality_actual')
@@ -55,12 +82,14 @@ class ManagementIntegrationTests(unittest.TestCase):
             book=Workbook.load(self.folder/name)
             self.assertTrue(book.cells)
             self.assertFalse(any(cell.get('formula') for sheet in book.cells.values() for cell in sheet.values()))
-        with self.assertRaisesRegex(ValueError,'management_wide_v1'): dashboard(progress,{'overview_period':'2024-02','metrics':['eligible_principal']})
+        with self.assertRaisesRegex(ValueError,'management_wide_v1'):
+            dashboard(progress,{'overview_period':'2024-02','metrics':['eligible_principal']})
 
     def test_customer_wide_preserves_peer_group_for_dashboard(self):
         left,right=records()
         result=customers(self.save('customers-left.xlsx',customer_spec(left)),self.save('customers-right.xlsx',customer_spec(right)),customer_config())
-        wide=result['management_wide']; export_result(wide,self.folder/'customers-wide.xlsx')
+        wide=result['management_wide']
+        export_result(wide,self.folder/'customers-wide.xlsx')
         report=dashboard(wide,{'overview_period':'2025-02','metrics':['observed_customers'],'ranks':{'observed_customers':{'method':'competition','descending':True}}})
         institution=[row for row in report['overview'] if row['dimensions']['report_level']=='institution']
         self.assertEqual(len(institution),2)
@@ -74,20 +103,28 @@ class ManagementIntegrationTests(unittest.TestCase):
         export_deposits(result,self.folder/'deposits.xlsx')
         self.assertEqual(result['totals']['residual'],0)
         self.assertIn('Checks',Workbook.load(self.folder/'deposits.xlsx').cells)
-        with self.assertRaisesRegex(ValueError,'management_wide_v1'): dashboard(result,{'overview_period':'2024-03','metrics':['balance']})
+        with self.assertRaisesRegex(ValueError,'management_wide_v1'):
+            dashboard(result,{'overview_period':'2024-03','metrics':['balance']})
 
     def test_complete_daily_policy_adapter_and_native_readback(self):
         days=[date(2024,2,1)+timedelta(days=index) for index in range(29)]
         rows=[['A','balance',day.isoformat(),10,'元','CNY','v1','daily_snapshot'] for day in days]
-        source=self.save('daily.xlsx',daily_spec(rows)); query=daily_config()
-        query.update(start='2024-02-01',end='2024-02-29'); query['metrics'][0]['unit']='元'
+        source=self.save('daily.xlsx',daily_spec(rows))
+        query=daily_config()
+        query.update(start='2024-02-01',end='2024-02-29')
+        query['metrics'][0]['unit']='元'
         daily=summarize(source,'DailyFacts',query)
-        config=policy_config('balance'); config['scope']['time_basis']='daily_average'
+        config=policy_config('balance')
+        config['scope']['time_basis']='daily_average'
         config['plan_definition'].update(time_basis='daily_average',target_type='daily_average')
-        config.update(context={},daily_entity_role='institution'); config['institutions']=config['institutions'][:1]; config['plans']=config['plans'][:1]
-        result=policy(daily,config); self.assertEqual(result['rows'][0]['actual'],10)
+        config.update(context={},daily_entity_role='institution')
+        config['institutions']=config['institutions'][:1]
+        config['plans']=config['plans'][:1]
+        result=policy(daily,config)
+        self.assertEqual(result['rows'][0]['actual'],10)
         export_policy(result,self.folder/'daily-policy.xlsx')
         self.assertIn('Dictionary',Workbook.load(self.folder/'daily-policy.xlsx').cells)
 
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

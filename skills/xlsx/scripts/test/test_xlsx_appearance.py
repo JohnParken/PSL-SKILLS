@@ -74,7 +74,8 @@ class AppearanceTests(unittest.TestCase):
         for book in (plain,styled):
             self.assertFalse(book.calculate()['issues'])
         left,right=self.root/'plain.xlsx',self.root/'styled.xlsx'
-        plain.save(left); styled.save(right)
+        plain.save(left)
+        styled.save(right)
         left_book,right_book=Workbook.load(left),Workbook.load(right)
         for ref in spec['sheets'][0]['cells']:
             for key in ('value','formula','type'):
@@ -157,7 +158,8 @@ class AppearanceTests(unittest.TestCase):
     def test_editing_loaded_book_preserves_styles_and_disallows_preset(self):
         spec=specification({'A1':{'value':'V'},'A2':{'value':1}})
         book=Workbook.create(spec,appearance=appearance())
-        original=self.root/'original.xlsx'; book.save(original)
+        original=self.root/'original.xlsx'
+        book.save(original)
         loaded=Workbook.load(original)
         before=loaded.parts['xl/styles.xml']
         with self.assertRaisesRegex(ValueError,'newly created'):
@@ -167,7 +169,8 @@ class AppearanceTests(unittest.TestCase):
         self.assertEqual(loaded.cells['Data']['A2']['style'],book.cells['Data']['A2']['style'])
 
     def test_csv_import_header_count_numeric_types_and_headerless_preset(self):
-        source=self.root/'source.csv'; source.write_text('ID,Amount\n001,19.90\n002,2\n')
+        source=self.root/'source.csv'
+        source.write_text('ID,Amount\n001,19.90\n002,2\n')
         output=self.root/'import.xlsx'
         report=import_table(source,output,numeric_columns=['B'],appearance={'preset':'readable','sheets':{'Sheet1':{}}})
         self.assertEqual(report['appearance']['sheets'][0]['header_rows'],'1:1')
@@ -181,19 +184,23 @@ class AppearanceTests(unittest.TestCase):
         self.assertIsNone(xml(Workbook.load(output).parts['xl/worksheets/sheet1.xml']).find(NS+'sheetViews'))
 
     def test_cli_creation_and_import_appearance_json(self):
-        spec=self.root/'spec.json'; config=self.root/'appearance.json'
+        spec=self.root/'spec.json'
+        config=self.root/'appearance.json'
         spec.write_text(json.dumps(specification({'A1':{'value':'V'},'A2':{'formula':'1+2'}})))
         config.write_text(json.dumps(appearance()))
         scripts=Path(__file__).resolve().parents[1]
         base=[sys.executable,'-I','-S','-B']
         output=self.root/'result.xlsx'
-        run=subprocess.run(base+[str(scripts/'stdlib_xlsx.py'),'create',str((spec).relative_to(self.root)),str((output).relative_to(self.root)),'--appearance',str((config).relative_to(self.root))],cwd=self.root, capture_output=True,text=True)
+        run=subprocess.run(base+[str(scripts/'stdlib_xlsx.py'),'create',str((spec).relative_to(self.root)),str((output).relative_to(self.root)),
+                           '--appearance',str((config).relative_to(self.root))],cwd=self.root, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         self.assertEqual(json.loads(run.stdout)['appearance']['preset'],'readable')
         self.assertEqual(Workbook.load(output).cells['Data']['A2']['value'],3)
-        source=self.root/'source.csv'; source.write_text('K,V\n001,2\n')
+        source=self.root/'source.csv'
+        source.write_text('K,V\n001,2\n')
         config.write_text(json.dumps({'preset':'readable','sheets':{'Sheet1':{}}}))
-        run=subprocess.run(base+[str(scripts/'xlsx_tabular.py'),'import',str((source).relative_to(self.root)),str((self.root/'import.xlsx').relative_to(self.root)),'--appearance',str((config).relative_to(self.root))],cwd=self.root, capture_output=True,text=True)
+        run=subprocess.run(base+[str(scripts/'xlsx_tabular.py'),'import',str((source).relative_to(self.root)),str((self.root/'import.xlsx').relative_to(self.root)),
+                           '--appearance',str((config).relative_to(self.root))],cwd=self.root, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         self.assertTrue(json.loads(run.stdout)['output_written'])
 

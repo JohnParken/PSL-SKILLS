@@ -61,6 +61,9 @@ class FamilyRoutingTests(unittest.TestCase):
         with TaskDirectory() as tmp:
             native = Path(tmp)/'native.xlsx'
             Workbook.create({'sheets':[{'name':'Data','cells':{}}]}).save(native)
-            path = native.with_suffix('.et'); path.write_bytes(native.read_bytes())
-            with self.assertRaisesRegex(ValueError, 'wps skill'): Workbook.load(path)
-if __name__ == '__main__': unittest.main()
+            path = native.with_suffix('.et')
+            path.write_bytes(native.read_bytes())
+            with self.assertRaisesRegex(ValueError, 'wps skill'):
+                Workbook.load(path)
+if __name__ == '__main__':
+    unittest.main()

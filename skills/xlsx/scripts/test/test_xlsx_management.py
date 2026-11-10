@@ -108,7 +108,8 @@ class ManagementTests(unittest.TestCase):
         self.source.unlink()
         facts=fictional_facts()
         for row in facts:
-            if row[6]=='income': row[10]='ytd'
+            if row[6]=='income':
+                row[10]='ytd'
         self.config['metrics'][-1]['time_basis']='ytd'
         self.save(facts)
         self.assertEqual(self.value(build(self.source,'Facts',self.config),'income'),8)
@@ -116,50 +117,69 @@ class ManagementTests(unittest.TestCase):
     def test_protected_dimensions_and_additivity_permissions(self):
         self.save(fictional_facts())
         for name in ('period','currency','version'):
-            config=deepcopy(self.config); config['row_dimensions'].remove(name)
+            config=deepcopy(self.config)
+            config['row_dimensions'].remove(name)
             with self.subTest(name=name),self.assertRaises(ValueError):
                 build(self.source,'Facts',config)
-        config=deepcopy(self.config); config['metrics'][0]['additive_dimensions']=[]
+        config=deepcopy(self.config)
+        config['metrics'][0]['additive_dimensions']=[]
         with self.assertRaisesRegex(ValueError,'does not permit'):
             build(self.source,'Facts',config)
 
     def test_duplicate_grain_and_mixed_summary_scope_fail(self):
-        facts=fictional_facts(); self.save(facts+[facts[0]])
+        facts=fictional_facts()
+        self.save(facts+[facts[0]])
         with self.assertRaisesRegex(ValueError,'Duplicate fact grain'):
             build(self.source,'Facts',self.config)
-        self.source.unlink(); facts=fictional_facts(); facts[0][9]='summary'; self.save(facts)
+        self.source.unlink()
+        facts=fictional_facts()
+        facts[0][9]='summary'
+        self.save(facts)
         with self.assertRaisesRegex(ValueError,'scope'):
             build(self.source,'Facts',self.config)
 
     def test_unit_basis_version_and_numeric_text_mismatches(self):
         for index,value in ((8,'元'),(10,'ytd'),(4,'v2'),(7,'100'),(1,123)):
-            facts=fictional_facts(); facts[0][index]=value; self.save(facts)
+            facts=fictional_facts()
+            facts[0][index]=value
+            self.save(facts)
             with self.subTest(index=index),self.assertRaises(ValueError):
                 build(self.source,'Facts',self.config)
             self.source.unlink()
 
     def test_missing_is_not_zero_and_zero_ratio_denominator_is_diagnostic(self):
-        facts=fictional_facts(); facts[0][7]=None; self.save(facts)
+        facts=fictional_facts()
+        facts[0][7]=None
+        self.save(facts)
         result=build(self.source,'Facts',self.config)
         self.assertIsNone(self.value(result,'balance'))
         self.assertIsNone(self.value(result,'risk_rate'))
         self.assertIn('missing_values:balance',result['rows'][0]['quality_flags'])
         with self.assertRaises(ValueError):
             build(self.source,'Facts',{**self.config,'missing':'reject'})
-        self.source.unlink(); facts=fictional_facts()
+        self.source.unlink()
+        facts=fictional_facts()
         for row in facts:
-            if row[6]=='balance': row[7]=0
+            if row[6]=='balance':
+                row[7]=0
         self.save(facts)
         result=build(self.source,'Facts',self.config)
         self.assertIsNone(self.value(result,'risk_rate'))
         self.assertIn('zero_denominator:risk_rate',result['rows'][0]['quality_flags'])
 
     def test_missing_metric_and_raw_ratio_facts_refused(self):
-        facts=[row for row in fictional_facts() if row[6]!='income']; self.save(facts)
+        facts=[row for row in fictional_facts() if row[6]!='income']
+        self.save(facts)
         result=build(self.source,'Facts',self.config)
         self.assertIsNone(self.value(result,'income'))
         self.assertIn('missing_metric:income',result['rows'][0]['quality_flags'])
-        self.source.unlink(); facts=fictional_facts(); row=deepcopy(facts[0]); row[6]='risk_rate'; row[8]='%'; row[10]='ratio'; self.save(facts+[row])
+        self.source.unlink()
+        facts=fictional_facts()
+        row=deepcopy(facts[0])
+        row[6]='risk_rate'
+        row[8]='%'
+        row[10]='ratio'
+        self.save(facts+[row])
         with self.assertRaisesRegex(ValueError,'Raw ratio'):
             build(self.source,'Facts',self.config)
 
@@ -167,34 +187,45 @@ class ManagementTests(unittest.TestCase):
         self.save(fictional_facts())
         for changes in ({'unit':'元'},{'kind':'flow'},{'time_basis':'ytd'},{'definition_version':'v2'},
                         {'report_level':'regional'},{'mode':'automatic'}):
-            config=deepcopy(self.config); config['targets']=[self.target('balance',500,**changes)]
+            config=deepcopy(self.config)
+            config['targets']=[self.target('balance',500,**changes)]
             with self.subTest(changes=changes),self.assertRaises(ValueError):
                 build(self.source,'Facts',config)
-        config=deepcopy(self.config); target=self.target('balance',500); config['targets']=[target,target]
+        config=deepcopy(self.config)
+        target=self.target('balance',500)
+        config['targets']=[target,target]
         with self.assertRaisesRegex(ValueError,'Duplicate target'):
             build(self.source,'Facts',config)
 
     def test_zero_negative_targets_and_missing_targets_are_diagnostic(self):
         self.save(fictional_facts())
         for value,flag in ((0,'zero_target'),(-10,'negative_target')):
-            config=deepcopy(self.config); config['targets']=[self.target('balance',value)]
+            config=deepcopy(self.config)
+            config['targets']=[self.target('balance',value)]
             result=build(self.source,'Facts',config)
             self.assertIsNone(self.value(result,'balance','achievement'))
             self.assertIn(flag+':balance',result['rows'][0]['quality_flags'])
-        target=self.target('balance',500); target['dimensions']['institution']='not-in-input'
+        target=self.target('balance',500)
+        target['dimensions']['institution']='not-in-input'
         result=build(self.source,'Facts',{**self.config,'targets':[target]})
         self.assertIsNone(self.value(result,'balance','target'))
         self.assertTrue(any(item['check']=='unmatched_targets' for item in result['validation']))
 
     def test_min_max_count_have_declared_reduction_semantics(self):
         config=deepcopy(self.config)
-        config['metrics']=[]; facts=[]
+        config['metrics']=[]
+        facts=[]
         for identifier,method,unit in (('low','MIN','万元'),('high','MAX','万元'),('observations','COUNT','records')):
             config['metrics'].append({'metric_id':identifier,'label':identifier,'unit':unit,'kind':'stock','time_basis':'point_in_time',
                                       'aggregation':method,'additive_dimensions':['product'] if method=='COUNT' else [],
                                       'reduction_dimensions':['product'] if method!='COUNT' else []})
             for product,value in (('P1',10),('P2',20)):
-                row=deepcopy(fictional_facts()[0]); row[5]=product; row[6]=identifier; row[7]=value; row[8]=unit; facts.append(row)
+                row=deepcopy(fictional_facts()[0])
+                row[5]=product
+                row[6]=identifier
+                row[7]=value
+                row[8]=unit
+                facts.append(row)
         self.save(facts)
         result=build(self.source,'Facts',config)
         self.assertEqual(self.value(result,'low'),10)
@@ -207,13 +238,15 @@ class ManagementTests(unittest.TestCase):
         for extra in ({'hierarchy':{}},{'daily_average':True}):
             with self.assertRaises(ValueError):
                 build(self.source,'Facts',{**self.config,**extra})
-        config=deepcopy(self.config); config['metrics'][0]['aggregation']='AVERAGE'
+        config=deepcopy(self.config)
+        config['metrics'][0]['aggregation']='AVERAGE'
         with self.assertRaises(ValueError):
             build(self.source,'Facts',config)
 
     def test_filtered_scope_and_formula_policy(self):
         self.save(fictional_facts())
-        config=deepcopy(self.config); config['filters']=[{'column':'F','op':'eq','value':'P1'}]
+        config=deepcopy(self.config)
+        config['filters']=[{'column':'F','op':'eq','value':'P1'}]
         result=build(self.source,'Facts',config)
         self.assertEqual(result['selected_facts'],3)
         self.assertEqual(self.value(result,'balance'),100)
@@ -221,18 +254,21 @@ class ManagementTests(unittest.TestCase):
         self.assertEqual(result['requested_query']['filters'],config['filters'])
         book=Workbook.load(self.source)
         book.patch({'sheets':[{'name':'Facts','cells':{'H2':{'formula':'50+50'}}}]})
-        formula=self.source.with_name('formula.xlsx'); book.save(formula)
+        formula=self.source.with_name('formula.xlsx')
+        book.save(formula)
         with self.assertRaises(ValueError):
             build(formula,'Facts',self.config)
 
     def test_ytd_periods_never_accumulate_across_months(self):
         facts=fictional_facts()
         for row in facts:
-            if row[6]=='income': row[10]='ytd'
+            if row[6]=='income':
+                row[10]='ytd'
         second=deepcopy(facts)
         for row in second:
             row[0]='2025-02'
-            if row[6]=='income': row[7]=20 if row[5]=='P1' else 30
+            if row[6]=='income':
+                row[7]=20 if row[5]=='P1' else 30
         self.config['metrics'][-1]['time_basis']='ytd'
         self.save(facts+second)
         result=build(self.source,'Facts',self.config)
@@ -241,7 +277,8 @@ class ManagementTests(unittest.TestCase):
     def test_signed_denominator_and_inverse_target_zero_actual(self):
         facts=fictional_facts()
         for row in facts:
-            if row[6]=='balance': row[7]=-row[7]
+            if row[6]=='balance':
+                row[7]=-row[7]
         self.save(facts)
         result=build(self.source,'Facts',self.config)
         self.assertIsNone(self.value(result,'risk_rate'))
@@ -249,9 +286,11 @@ class ManagementTests(unittest.TestCase):
         result=build(self.source,'Facts',self.config)
         self.assertEqual(self.value(result,'risk_rate'),Decimal('-2.5'))
         self.assertIn('negative_denominator_allowed:risk_rate',result['rows'][0]['quality_flags'])
-        self.source.unlink(); facts=fictional_facts()
+        self.source.unlink()
+        facts=fictional_facts()
         for row in facts:
-            if row[6]=='bad': row[7]=0
+            if row[6]=='bad':
+                row[7]=0
         self.save(facts)
         self.config['targets']=[self.target('risk_rate',3,'at_most')]
         result=build(self.source,'Facts',self.config)
@@ -260,13 +299,16 @@ class ManagementTests(unittest.TestCase):
         self.assertIn('nonpositive_actual_for_inverse_achievement:risk_rate',result['rows'][0]['quality_flags'])
 
     def test_explicit_scope_filter_and_mixed_basis_ratios(self):
-        facts=fictional_facts(); summary=deepcopy(facts[0]); summary[9]='summary'
+        facts=fictional_facts()
+        summary=deepcopy(facts[0])
+        summary[9]='summary'
         self.save(facts+[summary])
         self.config['filters']=[{'column':'J','op':'eq','value':'leaf'}]
         result=build(self.source,'Facts',self.config)
         self.assertEqual(result['selected_facts'],6)
         self.assertEqual(result['filtered_out_rows'],1)
-        config=deepcopy(self.config); config['metrics'][2]['numerator']='income'
+        config=deepcopy(self.config)
+        config['metrics'][2]['numerator']='income'
         with self.assertRaisesRegex(ValueError,'Mixed-unit/basis'):
             build(self.source,'Facts',config)
 
@@ -280,14 +322,24 @@ class ManagementTests(unittest.TestCase):
 
     def test_cli_wide_xlsx_and_empty_result(self):
         self.save(fictional_facts())
-        query=self.source.with_suffix('.json'); query.write_text(json.dumps(self.config))
+        query=self.source.with_suffix('.json')
+        query.write_text(json.dumps(self.config))
         output=self.source.with_name('management.xlsx')
-        run=subprocess.run([sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'xlsx_management.py')),
-                            str((self.source).relative_to(self.source.parent)),'--sheet','Facts','--query',str((query).relative_to(self.source.parent)),'--xlsx',str((output).relative_to(self.source.parent))],cwd=self.source.parent, capture_output=True,text=True)
+        run=subprocess.run(
+            [
+                sys.executable, '-I', '-S', '-B',
+                str((Path(__file__).resolve().parents[1] / 'xlsx_management.py')),
+                str((self.source).relative_to(self.source.parent)), '--sheet',
+                'Facts', '--query', str((query).relative_to(self.source.parent)),
+                '--xlsx', str((output).relative_to(self.source.parent)),
+            ],
+            cwd=self.source.parent, capture_output=True, text=True,
+        )
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         self.assertTrue(json.loads(run.stdout)['export']['output_written'])
         self.assertEqual(Workbook.load(output).cells['Wide']['B2']['value'],'00012345678901234567890')
-        config=deepcopy(self.config); config['filters']=[{'column':'F','op':'eq','value':'absent'}]
+        config=deepcopy(self.config)
+        config['filters']=[{'column':'F','op':'eq','value':'absent'}]
         result=build(self.source,'Facts',config)
         self.assertEqual(result['rows'],[])
         export_result(result,self.source.with_name('empty.xlsx'))

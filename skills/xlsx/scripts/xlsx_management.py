@@ -76,7 +76,8 @@ def metric_dictionary(items,dimensions,dropped):
         definitions[identifier]=item
     for identifier,item in definitions.items():
         if item['kind']=='ratio':
-            numerator=definitions.get(item['numerator']); denominator=definitions.get(item['denominator'])
+            numerator=definitions.get(item['numerator'])
+            denominator=definitions.get(item['denominator'])
             if numerator is None or denominator is None or numerator['kind']=='ratio' or denominator['kind']=='ratio':
                 raise ValueError('Ratios require two defined base metrics, not ratio chains')
             if numerator['unit']!=denominator['unit'] or numerator['time_basis']!=denominator['time_basis'] or numerator['kind']!=denominator['kind']:
@@ -139,7 +140,8 @@ def build(source,sheet,config,**options):
     if not isinstance(dimensions,dict) or not PROTECTED|{'institution'}<=set(dimensions) or set(dimensions)-DIMENSIONS:
         raise ValueError('Dimensions require period/institution/currency/version and only supported management dimensions')
     row_dimensions=config.get('row_dimensions')
-    if not isinstance(row_dimensions,list) or any(not isinstance(name,str) or name not in dimensions for name in row_dimensions) or len(row_dimensions)!=len(set(row_dimensions)) or not PROTECTED<=set(row_dimensions):
+    if not isinstance(row_dimensions,list) or any(not isinstance(name,str) or name not in dimensions for name in row_dimensions) or len(
+        row_dimensions)!=len(set(row_dimensions)) or not PROTECTED<=set(row_dimensions):
         raise ValueError('Report rows must retain period/currency/version with unique declared dimensions')
     grain=config.get('fact_grain')
     if not isinstance(grain,list) or any(not isinstance(name,str) for name in grain) or len(grain)!=len(set(grain)) or set(grain)!=set(dimensions)|{'metric_id'}:
@@ -182,7 +184,9 @@ def build(source,sheet,config,**options):
     selected=[record for record in rows if matches(record[1],filters)]
     if hierarchy is not None and len(selected)*len(hierarchy.report_levels)>20000:
         raise ValueError('Hierarchy expansion exceeds 20000 lineage rows; narrow filters/levels')
-    buckets={}; seen={}; lineage=[]
+    buckets={}
+    seen={}
+    lineage=[]
     for number,row in selected:
         if row[columns.index(scope_column)]!=('text',scope['value']):
             raise ValueError('Mixed/unknown record scope at row '+str(number)+'; filter explicitly to one trusted leaf management scope')
@@ -190,7 +194,8 @@ def build(source,sheet,config,**options):
         metric=row[columns.index(fields['metric_column'])]
         if metric[0]!='text' or metric[1] not in definitions:
             raise ValueError('Unknown/nontext metric ID at row '+str(number))
-        identifier=metric[1]; definition=definitions[identifier]
+        identifier=metric[1]
+        definition=definitions[identifier]
         if definition['kind']=='ratio':
             raise ValueError('Raw ratio facts are refused; supply numerator/denominator facts')
         if row[columns.index(fields['unit_column'])]!=('text',definition['unit']) or row[columns.index(fields['basis_column'])]!=('text',definition['time_basis']):
@@ -223,7 +228,8 @@ def build(source,sheet,config,**options):
             bucket['metric_leaves'].setdefault(identifier,set()).add(dims['institution'])
             bucket['sources'].append(number)
             lineage.append({'group':key,'source_file':str(source),'sheet':sheet,'source_row':number,'metric_id':identifier})
-    output_columns=[]; generated=[]
+    output_columns=[]
+    generated=[]
     def add(parts,path):
         identifier=column_id(*parts)
         output_columns.append(identifier)
@@ -244,9 +250,12 @@ def build(source,sheet,config,**options):
     add(('quality','flags'),('质量标记',))
     if len(output_columns)>16384 or len(buckets)*len(output_columns)>MAX_CELLS:
         raise ValueError('Wide report exceeds output column/cell budget')
-    output=[]; matched_targets=set(); group_numbers={}
+    output=[]
+    matched_targets=set()
+    group_numbers={}
     for row_id,(key,bucket) in enumerate(buckets.items(),1):
-        flags=[]; actual={}
+        flags=[]
+        actual={}
         for identifier,definition in definitions.items():
             if definition['kind']=='ratio':
                 continue
@@ -268,7 +277,8 @@ def build(source,sheet,config,**options):
         for identifier,definition in definitions.items():
             if definition['kind']!='ratio':
                 continue
-            numerator=actual[definition['numerator']]; denominator=actual[definition['denominator']]
+            numerator=actual[definition['numerator']]
+            denominator=actual[definition['denominator']]
             value=None
             if numerator is None or denominator is None:
                 flags.append('missing_components:'+identifier)
@@ -303,7 +313,8 @@ def build(source,sheet,config,**options):
             values.append(('blank',None) if value is None else ('number',value))
             if identifier not in targeted:
                 continue
-            target=targets.get((key,identifier)); attainment=gap=None
+            target=targets.get((key,identifier))
+            attainment=gap=None
             target_value=None if target is None else target['value']
             if target is None:
                 flags.append('missing_target:'+identifier)
@@ -357,16 +368,26 @@ def build(source,sheet,config,**options):
                              'at_most':'positive target/positive actual; gap=max(actual-target,0)',
                              'nonpositive_targets':'achievement null with explicit zero/negative diagnostic; no success classification'},
             'arithmetic':{'exact_precision_limit':1000,'result_precision':precision,'intermediate_precision':precision+16,'rounding':'ROUND_HALF_EVEN'},
-            'unsupported':(['automatic historical institution restatement'] if hierarchy is not None else ['institution hierarchy rollup'])+['customer distinct counts','daily or weighted averages','fiscal/YTD time accumulation','regulatory reporting or thresholds']}
+            'unsupported':(
+                (['automatic historical institution restatement'] if hierarchy is not None
+                 else ['institution hierarchy rollup'])
+                + ['customer distinct counts', 'daily or weighted averages',
+                   'fiscal/YTD time accumulation', 'regulatory reporting or thresholds']
+            )}
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('input'); parser.add_argument('--sheet',required=True); parser.add_argument('--query',required=True)
+    parser.add_argument('input')
+    parser.add_argument('--sheet',required=True)
+    parser.add_argument('--query',required=True)
     parser.add_argument('--xlsx',help='Optional new readable XLSX output')
-    parser.add_argument('--range',dest='cell_range'); parser.add_argument('--header-rows')
-    parser.add_argument('--no-header',action='store_true'); parser.add_argument('--header-exclude',nargs='*',type=int,default=[])
-    parser.add_argument('--include-spanning-headings',action='store_true'); parser.add_argument('--formulas',choices=('reject','cached'),default='reject')
+    parser.add_argument('--range',dest='cell_range')
+    parser.add_argument('--header-rows')
+    parser.add_argument('--no-header',action='store_true')
+    parser.add_argument('--header-exclude',nargs='*',type=int,default=[])
+    parser.add_argument('--include-spanning-headings',action='store_true')
+    parser.add_argument('--formulas',choices=('reject','cached'),default='reject')
     args=parser.parse_args()
     from xlsx_delivery import finish_delivery, validate_cli_paths
     try:

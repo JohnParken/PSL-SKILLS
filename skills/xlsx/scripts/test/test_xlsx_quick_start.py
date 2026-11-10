@@ -3,6 +3,7 @@
 Synthetic maintenance fixtures, not live Deep Agents, Excel or business acceptance.
 The copied production package contains no tests and no neighboring Skill.
 """
+import ast
 import hashlib
 import json
 import os
@@ -35,7 +36,10 @@ class QuickStartTests(unittest.TestCase):
             path.chmod(0o555 if path.is_dir() else 0o444)
         cls.skill.chmod(0o555)
         entry = (cls.skill / 'SKILL.md').read_text(encoding='utf-8')
-        match = re.search(r"run_xlsx_task\.py[^\n]* <<'JSON'\n(.*?)\nJSON", entry, re.S)
+        calls = re.findall(r'(?m)^\s*(execute\(command=.*\))\s*$', entry)
+        commands = [ast.literal_eval(ast.parse(call, mode='eval').body.keywords[0].value) for call in calls]
+        command = next((item for item in commands if 'run_xlsx_task.py' in item and "<<'JSON'" in item), '')
+        match = re.search(r"<<'JSON'\n(.*?)\nJSON", command, re.S)
         if match is None:
             raise AssertionError('The entry must contain the runnable stdin example')
         cls.spec_text = match.group(1)

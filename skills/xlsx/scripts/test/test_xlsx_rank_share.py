@@ -64,7 +64,8 @@ class RankShareTests(unittest.TestCase):
         self.assertEqual(self.ranks(result),[1,2])
         self.assertEqual(self.shares(result),[None,None])
         self.assertTrue(all(row['cells'][-2]['value']=='zero_total' for row in result['rows']))
-        self.source.unlink(); self.save([10,-2])
+        self.source.unlink()
+        self.save([10,-2])
         result=analyze(self.source,'报表',{'measure':'B'})
         self.assertEqual(self.shares(result),[Decimal('1.25'),Decimal('-.25')])
         self.assertEqual(result['group_statistics'][0]['negative_numeric_count'],1)
@@ -112,14 +113,17 @@ class RankShareTests(unittest.TestCase):
 
     def test_cli_rank_then_export(self):
         self.save([10,30])
-        query=self.source.with_suffix('.json'); query.write_text('{"group_by":["A"],"measure":"B"}')
+        query=self.source.with_suffix('.json')
+        query.write_text('{"group_by":["A"],"measure":"B"}')
         scripts=Path(__file__).resolve().parents[1]
         run=subprocess.run([sys.executable,'-I','-S','-B',str(scripts/'xlsx_rank_share.py'),str((self.source).relative_to(self.source.parent)),
                             '--sheet','报表','--query',str((query).relative_to(self.source.parent))],cwd=self.source.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
-        result=self.source.with_name('result.json'); result.write_text(run.stdout)
+        result=self.source.with_name('result.json')
+        result.write_text(run.stdout)
         output=self.source.with_name('result.xlsx')
-        run=subprocess.run([sys.executable,'-I','-S','-B',str(scripts/'xlsx_result_export.py'),str((result).relative_to(self.source.parent)),str((output).relative_to(self.source.parent))],cwd=self.source.parent, capture_output=True,text=True)
+        run=subprocess.run([sys.executable,'-I','-S','-B',str(scripts/'xlsx_result_export.py'),str((result).relative_to(self.source.parent)),
+                           str((output).relative_to(self.source.parent))],cwd=self.source.parent, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stderr+run.stdout)
         book=Workbook.load(output)
         self.assertEqual(book.cells['Results']['D2']['value'],2)

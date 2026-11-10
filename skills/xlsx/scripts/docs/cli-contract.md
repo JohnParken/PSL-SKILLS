@@ -14,12 +14,10 @@
 
 先按主入口自检。标准任务和外部编排共用 `<skill-root>/scripts/xlsx_cli.py`，内部仍调用原有算法，未复制解析器或计算器。
 
-```console
-python -I -S -B "<skill-root>/scripts/xlsx_cli.py" capabilities
-python -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./输入.xlsx
-python -I -S -B "<skill-root>/scripts/xlsx_cli.py" run edit ./模板.xlsx ./修改.json 结果.xlsx
-python -I -S -B "<skill-root>/scripts/xlsx_cli.py" call
-python -I -S -B "<skill-root>/scripts/xlsx_cli.py" serve
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" capabilities")
+execute(command="python -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read ./输入.xlsx")
+execute(command="python -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run edit ./模板.xlsx ./修改.json 结果.xlsx")
 ```
 
 capabilities输出普通JSON（接口版本、skill、operations、限制），成功退出0，不代替环境自检。run原样转交标准主CLI参数，保留完整JSON/原退出码/归档行为；旧stdlib_xlsx入口仍可用。call从stdin接收一个有换行的协议请求，输出一个响应，ok退出0、error退出1。serve保持一个进程的多轮会话；单次请求错误使用ok=false，会话可继续，EOF退出0、帧损坏退出1。serve进程退出0不代表其中所有操作成功，必须逐响应检查。调用方不能并发乱序使用同一会话。patch/calculate/publish抛错后对应句柄失效，不允许把可能已部分修改的对象继续发布；须检查已存在文件并从原始输入重新建立计划，不自动重跑。

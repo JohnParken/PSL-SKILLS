@@ -28,16 +28,23 @@ def structure_config():
 
 class DepositStructureTests(unittest.TestCase):
     def setUp(self):
-        self.temp=TaskDirectory(); self.addCleanup(self.temp.cleanup)
-        self.folder=Path(self.temp.name); self.source=self.folder/'snapshot.xlsx'
-        self.rows=rows_example()[1]; self.config=structure_config(); self.save()
+        self.temp=TaskDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.folder=Path(self.temp.name)
+        self.source=self.folder/'snapshot.xlsx'
+        self.rows=rows_example()[1]
+        self.config=structure_config()
+        self.save()
 
     def save(self,customers=None):
-        if self.source.exists(): self.source.unlink()
+        if self.source.exists():
+            self.source.unlink()
         spec=snapshot_spec(self.rows)
         if customers is not None:
-            cells=spec['sheets'][0]['cells']; cells['J1']={'value':'脱敏客户'}
-            for index,value in enumerate(customers,2): cells['J'+str(index)]={'value':value}
+            cells=spec['sheets'][0]['cells']
+            cells['J1']={'value':'脱敏客户'}
+            for index,value in enumerate(customers,2):
+                cells['J'+str(index)]={'value':value}
         Workbook.create(spec).save(self.source)
 
     def test_explicit_structure_and_account_top_n(self):
@@ -50,7 +57,8 @@ class DepositStructureTests(unittest.TestCase):
 
     def test_customer_aggregated_before_top_n(self):
         self.save(['customer-A','customer-A','customer-B'])
-        self.config['concentration_grain']='customer'; self.config['customer_column']='J'
+        self.config['concentration_grain']='customer'
+        self.config['customer_column']='J'
         self.config['classifications'].append({'id':'segment','field':'customer','mapping':{'customer-A':'对公','customer-B':'零售'}})
         result=analyze(self.source,self.config)
         self.assertEqual(result['concentration'][0]['balance'],330)
@@ -61,38 +69,62 @@ class DepositStructureTests(unittest.TestCase):
             self.assertEqual(sum(row['balance'] for row in result['structure'] if row['axis']==axis),400)
 
     def test_classification_crossing_and_identity_fail(self):
-        for mutate in [lambda config:config['classifications'][0]['mapping'].pop('活期'),lambda config:config['classifications'][0]['mapping'].update({'活期':['活期','定期']}),lambda config:config['classifications'].append(deepcopy(config['classifications'][0])),lambda config:config.update(concentration_grain='customer'),lambda config:config.update(customer_column='J'),lambda config:config.update(top_n=[True])]:
-            config=deepcopy(self.config); mutate(config)
-            with self.assertRaises(ValueError): analyze(self.source,config)
-        self.rows.append(deepcopy(self.rows[0])); self.save()
-        with self.assertRaisesRegex(ValueError,'Duplicate stable'): analyze(self.source,self.config)
+        for mutate in [
+            lambda config:config['classifications'][0]['mapping'].pop('活期'),
+            lambda config:config['classifications'][0]['mapping'].update({'活期':['活期','定期']}),
+            lambda config:config['classifications'].append(
+                deepcopy(config['classifications'][0])),
+            lambda config:config.update(concentration_grain='customer'),
+            lambda config:config.update(customer_column='J'),
+            lambda config:config.update(top_n=[True]),
+        ]:
+            config=deepcopy(self.config)
+            mutate(config)
+            with self.assertRaises(ValueError):
+                analyze(self.source,config)
+        self.rows.append(deepcopy(self.rows[0]))
+        self.save()
+        with self.assertRaisesRegex(ValueError,'Duplicate stable'):
+            analyze(self.source,self.config)
 
     def test_zero_total_negative_and_tie_order(self):
-        for row in self.rows: row[3]=0
-        self.save(); result=analyze(self.source,self.config)
+        for row in self.rows:
+            row[3]=0
+        self.save()
+        result=analyze(self.source,self.config)
         self.assertTrue(all(row['share']['value'] is None for row in result['structure']+result['concentration']))
         self.assertEqual(result['ranked_entities'][0]['entity'],self.rows[0][0])
         self.assertEqual(result['quality_flags'],['zero_total_balance'])
-        self.rows[0][3]=-1; self.save()
-        with self.assertRaises(ValueError): analyze(self.source,self.config)
+        self.rows[0][3]=-1
+        self.save()
+        with self.assertRaises(ValueError):
+            analyze(self.source,self.config)
 
     def test_customer_ids_no_guessing(self):
         self.config.update(concentration_grain='customer',customer_column='J')
         for customers in [['a',None,'b'],['a',123,'b']]:
             self.save(customers)
-            with self.assertRaisesRegex(ValueError,'Customer IDs'): analyze(self.source,self.config)
+            with self.assertRaisesRegex(ValueError,'Customer IDs'):
+                analyze(self.source,self.config)
 
     def test_cli_readback_precision_and_source_untouched(self):
-        self.rows[0][3]=Decimal('12345678901234567890.01'); self.save()
-        query=self.folder/'config.json'; query.write_text(json.dumps(self.config)); output=self.folder/'structure.xlsx'
+        self.rows[0][3]=Decimal('12345678901234567890.01')
+        self.save()
+        query=self.folder/'config.json'
+        query.write_text(json.dumps(self.config))
+        output=self.folder/'structure.xlsx'
         original=self.source.read_bytes()
-        run=subprocess.run([sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'xlsx_deposit_structure.py')),str((self.source).relative_to(self.folder)),'--query',str((query).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))],cwd=self.folder, capture_output=True,text=True)
+        run=subprocess.run([sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'xlsx_deposit_structure.py')),str((self.source).relative_to(self.folder)),
+                           '--query',str((query).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))],cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stdout+run.stderr)
-        book=Workbook.load(output); self.assertEqual(len(book.sheets),6)
+        book=Workbook.load(output)
+        self.assertEqual(len(book.sheets),6)
         self.assertTrue(any(cell['value']=='12345678901234567890.01' for cell in book.cells['Entities'].values()))
         self.assertTrue(all(not cell.get('formula') for cells in book.cells.values() for cell in cells.values()))
         self.assertEqual(self.source.read_bytes(),original)
-        with self.assertRaisesRegex(ValueError,'already exists'): export_structure(analyze(self.source,self.config),output)
+        with self.assertRaisesRegex(ValueError,'already exists'):
+            export_structure(analyze(self.source,self.config),output)
 
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

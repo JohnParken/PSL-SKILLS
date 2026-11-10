@@ -144,7 +144,8 @@ def style_sheet(book, sheet, settings, explicit, registry):
         if not isinstance(spec,str) or len(spec.split(':')) not in (1,2):
             raise ValueError('Appearance range must be A1 or A1:D20')
         ends = spec.split(':')
-        r1,c1 = address(ends[0]); r2,c2 = address(ends[-1])
+        r1,c1 = address(ends[0])
+        r2,c2 = address(ends[-1])
     elif cells:
         positions = [address(ref) for ref in cells]
         r1,c1 = 1,1
@@ -180,7 +181,8 @@ def style_sheet(book, sheet, settings, explicit, registry):
             ends = merge.get('ref','').split(':')
             if len(ends)!=2:
                 raise ValueError('Header merges need two-cell ranges')
-            top,left = address(ends[0]); bottom,right = address(ends[1])
+            top,left = address(ends[0])
+            bottom,right = address(ends[1])
             if not header_first or not header_first<=top<=bottom<=header_last or not c1<=left<=right<=c2:
                 raise ValueError('Only complete merges inside declared header rows are supported')
     if header_spec is not None:

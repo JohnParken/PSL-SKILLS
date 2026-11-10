@@ -26,7 +26,7 @@ class CliBoundaryTests(unittest.TestCase):
         self.task.mkdir()
         (self.root / 'outside').mkdir()
         os.chdir(self.task)
-        Path('input.json').write_text('{}')
+        Path('input.json').write_text('{}', encoding='utf-8')
         self.environment = patch.dict(os.environ, {'DOCX_DEBUG_ROUTER_CONFIG': '0'}, clear=True)
         self.environment.start()
 
@@ -64,7 +64,7 @@ class CliBoundaryTests(unittest.TestCase):
                     self.assertFalse(Path('output').exists())
 
     def test_inputs_and_aliases_are_rejected_without_output(self):
-        (self.root / 'outside/spec.json').write_text('{}')
+        (self.root / 'outside/spec.json').write_text('{}', encoding='utf-8')
         Path('spec-link.json').symlink_to(self.root / 'outside/spec.json')
         for source in ('../outside/spec.json', 'spec-link.json', str(self.root / 'outside/spec.json')):
             code, result = self.invoke('stdlib_xlsx.py', ['create', source, 'report.xlsx'])
@@ -75,11 +75,14 @@ class CliBoundaryTests(unittest.TestCase):
         code, result = self.invoke('stdlib_xlsx.py', ['create', 'input.json', 'alias.xlsx'])
         self.assertEqual(code, 1)
         self.assertIn('input', result['message'])
-        self.assertEqual(Path('input.json').read_text(), '{}')
+        self.assertEqual(Path('input.json').read_text(encoding='utf-8'), '{}')
 
     def test_root_filename_success_and_no_overwrite(self):
         Path('reports').mkdir()
-        Path('input.json').write_text(json.dumps({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': 42}}}]}))
+        Path('input.json').write_text(
+            json.dumps({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': 42}}}]}),
+            encoding='utf-8',
+        )
         code, result = self.invoke('stdlib_xlsx.py', ['create', 'input.json', 'report.xlsx'])
         self.assertEqual(code, 0)
         self.assertTrue(result['output_written'])
@@ -109,7 +112,7 @@ class CliBoundaryTests(unittest.TestCase):
         self.assertIsNone(result['child_execution']['exit_code'])
         self.assertIsNone(result['manifest'])
         self.assertEqual({p.name for p in Path('.').iterdir()}, {'input.json'})
-        self.assertEqual(Path('input.json').read_text(), '{}')
+        self.assertEqual(Path('input.json').read_text(encoding='utf-8'), '{}')
         self.assertNotIn('secret', json.dumps(result))
 
 

@@ -22,7 +22,7 @@ def load_core(path, runtime, name):
     # Use identical sibling modules/templates, varying only the saved core source.
     module.__file__ = str(runtime)
     exec(compile(source, str(path), 'exec'), module.__dict__)
-    return module.Workbook, hashlib.sha256(source).hexdigest()
+    return vars(module)['Workbook'], hashlib.sha256(source).hexdigest()
 
 
 def spec(cells):

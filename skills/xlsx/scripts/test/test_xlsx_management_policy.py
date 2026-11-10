@@ -28,25 +28,52 @@ FIRST='00012345678901234567890'
 
 
 def policy_config():
-    return {'metric_id':'balance','scope':{'report_level':'branch','currency':'CNY','version':'v1','definition_version':'v1','unit':'万元','kind':'stock','time_basis':'point_in_time','period_granularity':'month'},
-            'periods':['2025-01','2025-02','2025-03'],
-            'institutions':[{'id':FIRST,'level':'branch','peer_group':'comparable-A'},{'id':'0002','level':'branch','peer_group':'comparable-A'}],
-            'context':{'line':'retail'},'plan_definition':{'target_type':'balance','unit':'万元','kind':'stock','time_basis':'point_in_time','currency':'CNY','version':'v1','definition_version':'v1','plan_version':'fictional-plan-v1','direction':'at_least'},
-            'plans':[{'institution':institution,'period':period,'applicability':'applicable','value':target} for institution,target in [(FIRST,500),('0002',300)] for period in ('2025-01','2025-02','2025-03')],
-            'rank_method':'competition'}
+    return {
+        'metric_id':'balance',
+        'scope':{
+            'report_level':'branch','currency':'CNY','version':'v1',
+            'definition_version':'v1','unit':'万元','kind':'stock',
+            'time_basis':'point_in_time','period_granularity':'month',
+        },
+        'periods':['2025-01','2025-02','2025-03'],
+        'institutions':[
+            {'id':FIRST,'level':'branch','peer_group':'comparable-A'},
+            {'id':'0002','level':'branch','peer_group':'comparable-A'},
+        ],
+        'context':{'line':'retail'},
+        'plan_definition':{
+            'target_type':'balance','unit':'万元','kind':'stock',
+            'time_basis':'point_in_time','currency':'CNY','version':'v1',
+            'definition_version':'v1','plan_version':'fictional-plan-v1',
+            'direction':'at_least',
+        },
+        'plans':[
+            {'institution':institution,'period':period,
+             'applicability':'applicable','value':target}
+            for institution,target in [(FIRST,500),('0002',300)]
+            for period in ('2025-01','2025-02','2025-03')
+        ],
+        'rank_method':'competition',
+    }
 
 
 class ManagementPolicyTests(unittest.TestCase):
     def setUp(self):
-        self.temp=TaskDirectory(); self.addCleanup(self.temp.cleanup)
-        self.folder=Path(self.temp.name); facts=[]
+        self.temp=TaskDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.folder=Path(self.temp.name)
+        facts=[]
         for period in ('2025-01','2025-02','2025-03'):
             rows=deepcopy(two_branches())
-            for row in rows: row[0]=period
+            for row in rows:
+                row[0]=period
             facts += [row for row in rows if row[6]=='balance']
-        path=self.folder/'facts.xlsx'; Workbook.create(spec_for(facts)).save(path)
-        config=config_with_tree(); config['metrics']=[metric for metric in config['metrics'] if metric['metric_id']=='balance']
-        self.source=build(path,'Facts',config); self.config=policy_config()
+        path=self.folder/'facts.xlsx'
+        Workbook.create(spec_for(facts)).save(path)
+        config=config_with_tree()
+        config['metrics']=[metric for metric in config['metrics'] if metric['metric_id']=='balance']
+        self.source=build(path,'Facts',config)
+        self.config=policy_config()
 
     def test_explicit_progress_comparable_rank_and_continuity(self):
         result=analyze(self.source,self.config)
@@ -62,7 +89,8 @@ class ManagementPolicyTests(unittest.TestCase):
         result=analyze(self.source,self.config)
         self.assertTrue(all(row['peer_count']==1 for row in result['rows']))
         self.config['institutions'].append(deepcopy(self.config['institutions'][0]))
-        with self.assertRaisesRegex(ValueError,'Duplicate institution'): analyze(self.source,self.config)
+        with self.assertRaisesRegex(ValueError,'Duplicate institution'):
+            analyze(self.source,self.config)
 
     def test_missing_period_is_unknown_not_zero_and_no_linear_plan(self):
         index=self.source['columns'].index(column_id('dimension','period'))
@@ -80,7 +108,8 @@ class ManagementPolicyTests(unittest.TestCase):
 
     def test_not_applicable_zero_and_negative_plan_are_distinct(self):
         self.config['plans'][0].update(applicability='not_applicable',value=None)
-        self.config['plans'][1]['value']=0; self.config['plans'][2]['value']=-1
+        self.config['plans'][1]['value']=0
+        self.config['plans'][2]['value']=-1
         result=analyze(self.source,self.config)
         self.assertEqual([row['comparison_status'] for row in result['rows'][:3]],['not_applicable','nonpositive_plan','nonpositive_plan'])
         self.assertTrue(all(row['attainment'] is None for row in result['rows'][:3]))
@@ -98,21 +127,30 @@ class ManagementPolicyTests(unittest.TestCase):
         self.assertTrue(all(row['peer_rank'] is None for row in result['rows']))
 
     def test_incompatible_types_versions_levels_and_periods_fail(self):
-        for mutate in [lambda value:value['institutions'][0].update(level='region'),lambda value:value['plan_definition'].update(target_type='ytd'),lambda value:value['plan_definition'].update(unit='元'),lambda value:value['plan_definition'].update(version='v2'),lambda value:value.update(periods=['2025-01','2025-03']),lambda value:value.update(context={})]:
-            config=deepcopy(self.config); mutate(config)
-            with self.assertRaises(ValueError): analyze(self.source,config)
-        source=deepcopy(self.source); source['definition_version']='v2'
-        with self.assertRaisesRegex(ValueError,'definition version'): analyze(source,self.config)
+        for mutate in [lambda value:value['institutions'][0].update(level='region'),lambda value:value['plan_definition'].update(target_type='ytd'),lambda value:value['plan_definition'].update(
+            unit='元'),lambda value:value['plan_definition'].update(version='v2'),lambda value:value.update(periods=['2025-01','2025-03']),lambda value:value.update(context={})]:
+            config=deepcopy(self.config)
+            mutate(config)
+            with self.assertRaises(ValueError):
+                analyze(self.source,config)
+        source=deepcopy(self.source)
+        source['definition_version']='v2'
+        with self.assertRaisesRegex(ValueError,'definition version'):
+            analyze(source,self.config)
         index=source['columns'].index(column_id('dimension','version'))
-        source=deepcopy(self.source); source['rows'][0]['cells'][index]['value']='v2'
-        with self.assertRaisesRegex(ValueError,'incompatible'): analyze(source,self.config)
+        source=deepcopy(self.source)
+        source['rows'][0]['cells'][index]['value']='v2'
+        with self.assertRaisesRegex(ValueError,'incompatible'):
+            analyze(source,self.config)
 
     def test_at_most_zero_actual_does_not_invent_infinite_rank(self):
         self.config['plan_definition']['direction']='at_most'
         value=self.source['columns'].index(column_id('metric','balance','actual'))
         self.source['rows'][0]['cells'][value]['value']=Decimal(0)
         row=analyze(self.source,self.config)['rows'][0]
-        self.assertFalse(row['behind_plan']); self.assertIsNone(row['attainment']); self.assertIsNone(row['peer_rank'])
+        self.assertFalse(row['behind_plan'])
+        self.assertIsNone(row['attainment'])
+        self.assertIsNone(row['peer_rank'])
         self.assertIn('undefined_attainment_nonpositive_actual',row['quality_flags'])
 
     def daily_case(self,missing=False):
@@ -120,10 +158,15 @@ class ManagementPolicyTests(unittest.TestCase):
         rows=[[FIRST,'balance',day.isoformat(),100,'万元','CNY','v1','daily_snapshot'] for day in days if not missing or day.day!=29]
         path=self.folder/('daily-missing.xlsx' if missing else 'daily.xlsx')
         Workbook.create(daily_spec(rows)).save(path)
-        query=daily_config(); query.update(start='2024-02-01',end='2024-02-29')
+        query=daily_config()
+        query.update(start='2024-02-01',end='2024-02-29')
         source=summarize(path,'DailyFacts',query)
-        config=policy_config(); config['context']={}; config['periods']=['2024-02']; config['institutions']=config['institutions'][:1]
-        config['scope']['time_basis']='daily_average'; config['plan_definition'].update(time_basis='daily_average',target_type='daily_average')
+        config=policy_config()
+        config['context']={}
+        config['periods']=['2024-02']
+        config['institutions']=config['institutions'][:1]
+        config['scope']['time_basis']='daily_average'
+        config['plan_definition'].update(time_basis='daily_average',target_type='daily_average')
         config['plans']=[{'institution':FIRST,'period':'2024-02','applicability':'applicable','value':120}]
         config['daily_entity_role']='institution'
         return source,config
@@ -136,17 +179,22 @@ class ManagementPolicyTests(unittest.TestCase):
         self.assertEqual(result['source_row_kind'],'daily_summary_row')
         export_policy(result,self.folder/'daily-policy.xlsx')
         config['plan_definition']['target_type']='balance'
-        with self.assertRaisesRegex(ValueError,'target type'): analyze(source,config)
+        with self.assertRaisesRegex(ValueError,'target type'):
+            analyze(source,config)
 
     def test_daily_missing_day_or_undeclared_institution_does_not_rank(self):
         source,config=self.daily_case(missing=True)
         row=analyze(source,config)['rows'][0]
-        self.assertIsNone(row['actual']); self.assertIsNone(row['peer_rank'])
+        self.assertIsNone(row['actual'])
+        self.assertIsNone(row['peer_rank'])
         self.assertEqual(row['comparison_status'],'unverified_or_quality_actual')
         del config['daily_entity_role']
-        with self.assertRaisesRegex(ValueError,'institution entity role'): analyze(source,config)
-        config['daily_entity_role']='institution'; source['requested_query']['start']='2024-02-02'
-        with self.assertRaisesRegex(ValueError,'natural-month'): analyze(source,config)
+        with self.assertRaisesRegex(ValueError,'institution entity role'):
+            analyze(source,config)
+        config['daily_entity_role']='institution'
+        source['requested_query']['start']='2024-02-02'
+        with self.assertRaisesRegex(ValueError,'natural-month'):
+            analyze(source,config)
 
     def test_contradictory_daily_coverage_is_not_a_clean_actual(self):
         source,config=self.daily_case()
@@ -156,20 +204,30 @@ class ManagementPolicyTests(unittest.TestCase):
             report['rows'][0]['cells'][index]['value']=value
             with self.assertRaisesRegex(ValueError,'coverage|Coverage'):
                 analyze(report,config)
-        report=deepcopy(source); report['source_metric_dictionary']=[None]
-        with self.assertRaisesRegex(ValueError,'dictionary'): analyze(report,config)
+        report=deepcopy(source)
+        report['source_metric_dictionary']=[None]
+        with self.assertRaisesRegex(ValueError,'dictionary'):
+            analyze(report,config)
 
     def test_cli_safe_export_dictionary_lineage_and_no_overwrite(self):
-        source=self.folder/'wide.json'; source.write_text(json.dumps(self.source,default=str))
-        query=self.folder/'policy.json'; query.write_text(json.dumps(self.config)); output=self.folder/'policy.xlsx'
-        command=[sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'xlsx_management_policy.py')),str((source).relative_to(self.folder)),'--query',str((query).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))]
+        source=self.folder/'wide.json'
+        source.write_text(json.dumps(self.source,default=str))
+        query=self.folder/'policy.json'
+        query.write_text(json.dumps(self.config))
+        output=self.folder/'policy.xlsx'
+        command=[sys.executable,'-I','-S','-B',str((Path(__file__).resolve().parents[1] / 'xlsx_management_policy.py')),str((source).relative_to(self.folder)),
+                                                   '--query',str((query).relative_to(self.folder)),'--xlsx',str((output).relative_to(self.folder))]
         run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
         self.assertEqual(run.returncode,0,run.stdout+run.stderr)
-        book=Workbook.load(output); self.assertEqual(len(book.sheets),8)
+        book=Workbook.load(output)
+        self.assertEqual(len(book.sheets),8)
         self.assertEqual(book.cells['Progress']['A2']['value'],FIRST)
         self.assertTrue(all(not cell.get('formula') for cells in book.cells.values() for cell in cells.values()))
-        original=output.read_bytes(); run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
-        self.assertEqual(run.returncode,1); self.assertEqual(output.read_bytes(),original)
+        original=output.read_bytes()
+        run=subprocess.run(command,cwd=self.folder, capture_output=True,text=True)
+        self.assertEqual(run.returncode,1)
+        self.assertEqual(output.read_bytes(),original)
 
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':
+    unittest.main()

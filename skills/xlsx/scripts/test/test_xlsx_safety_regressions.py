@@ -37,8 +37,18 @@ class SafetyRegressions(unittest.TestCase):
         self.root = Path(self.temp.name)
 
     def cli(self, script, *args):
-        return subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS / script),
-                               *[str(arg.relative_to(self.root)) if isinstance(arg, Path) and arg.is_absolute() else str(arg) for arg in args]], cwd=self.root, capture_output=True, text=True, timeout=15)
+        return subprocess.run(
+            [
+                sys.executable, '-I', '-S', '-B', str(SCRIPTS / script),
+                *[
+                    str(arg.relative_to(self.root))
+                    if isinstance(arg, Path) and arg.is_absolute()
+                    else str(arg)
+                    for arg in args
+                ],
+            ],
+            cwd=self.root, capture_output=True, text=True, timeout=15,
+        )
 
     def test_xml_declarations_rejected_for_all_encodings_and_builders(self):
         for encoding in ('utf-8', 'utf-16', 'utf-16-le', 'utf-16-be'):

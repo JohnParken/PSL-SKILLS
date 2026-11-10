@@ -29,7 +29,8 @@ def reconcile(left,right,config):
     dimensions=views[0]['dimensions']
     if set(dimensions)!=set(views[1]['dimensions']):
         raise ValueError('Report dimensions differ; normalize explicitly before reconciliation')
-    keys=config['keys']; groups=config['group_by']
+    keys=config['keys']
+    groups=config['group_by']
     expected=set(dimensions)-{'period','institution_name'}
     if not isinstance(keys,list) or any(not isinstance(key,str) for key in keys) or len(set(keys))!=len(keys) or set(keys)!=expected:
         raise ValueError('Keys must explicitly retain every dimension except period/institution_name')
@@ -54,9 +55,11 @@ def reconcile(left,right,config):
             if record['actual'] is None or record['quality_flags']:
                 raise ValueError('Missing or quality-flagged actuals cannot produce complete reconciliation')
             key=tuple(record['dimensions'][name] for name in keys)+(record['metric_id'],)
-            if key in index: raise ValueError('Duplicate composite key')
+            if key in index:
+                raise ValueError('Duplicate composite key')
             index[key]=record
-        if not index: raise ValueError('No observations for explicit period and comparison scope')
+        if not index:
+            raise ValueError('No observations for explicit period and comparison scope')
         indexes.append(index)
     for metric in config['metrics']:
         selected=[record for index in indexes for record in index.values() if record['metric_id']==metric]
@@ -66,11 +69,16 @@ def reconcile(left,right,config):
             raise ValueError('Invalid additive dimension declaration')
         if varying-set(additive):
             raise ValueError('Totals cross dimensions not declared additive: '+metric)
-    output=[]; buckets={}; totals={}
+    output=[]
+    buckets={}
+    totals={}
     for key in dict.fromkeys(list(indexes[0])+list(indexes[1])):
-        before=indexes[0].get(key); after=indexes[1].get(key)
-        record=after or before; metric=record['metric_id']
-        old=None if before is None else before['actual']; new=None if after is None else after['actual']
+        before=indexes[0].get(key)
+        after=indexes[1].get(key)
+        record=after or before
+        metric=record['metric_id']
+        old=None if before is None else before['actual']
+        new=None if after is None else after['actual']
         delta=exact(lambda:(Decimal(0) if new is None else new)-(Decimal(0) if old is None else old))
         status='added' if before is None else 'removed' if after is None else 'unchanged_within_tolerance' if delta.copy_abs()<=tolerance else 'changed'
         dimensions={name:record['dimensions'][name] for name in keys}
@@ -81,23 +89,31 @@ def reconcile(left,right,config):
         group=(metric,tuple(dimensions[name] for name in groups))
         buckets.setdefault(group,[]).append(delta)
         totals.setdefault(metric,{'before':[],'after':[],'deltas':[]})
-        if old is not None: totals[metric]['before'].append(old)
-        if new is not None: totals[metric]['after'].append(new)
+        if old is not None:
+            totals[metric]['before'].append(old)
+        if new is not None:
+            totals[metric]['after'].append(new)
         totals[metric]['deltas'].append(delta)
-        if len(output)>20000: raise ValueError('Reconciliation exceeds 20000 records')
-    checks=[]; net={}
+        if len(output)>20000:
+            raise ValueError('Reconciliation exceeds 20000 records')
+    checks=[]
+    net={}
     for metric,values in totals.items():
-        old=exact(lambda:sum(values['before'],Decimal(0))); new=exact(lambda:sum(values['after'],Decimal(0)))
-        delta=exact(lambda:new-old); detail=exact(lambda:sum(values['deltas'],Decimal(0)))
+        old=exact(lambda:sum(values['before'],Decimal(0)))
+        new=exact(lambda:sum(values['after'],Decimal(0)))
+        delta=exact(lambda:new-old)
+        detail=exact(lambda:sum(values['deltas'],Decimal(0)))
         residual=exact(lambda:delta-detail)
-        if residual.copy_abs()>tolerance: raise ValueError('Arithmetic reconciliation failed')
+        if residual.copy_abs()>tolerance:
+            raise ValueError('Arithmetic reconciliation failed')
         net[metric]=delta
         checks.append({'metric_id':metric,'unit':definitions[0][metric]['unit'],'before':old,'after':new,'net_change':delta,
                        'detail_change':detail,'residual':residual,'status':'reconciled',
                        'net_status':'zero_net_change' if delta==0 else 'negative_net_change' if delta<0 else 'positive_net_change'})
     contributions=[]
     for (metric,group),values in buckets.items():
-        delta=exact(lambda:sum(values,Decimal(0))); denominator=net[metric]
+        delta=exact(lambda:sum(values,Decimal(0)))
+        denominator=net[metric]
         share=None if denominator==0 else rounded(lambda:delta/denominator,precision)
         contributions.append({'metric_id':metric,'group':dict(zip(groups,group)),'unit':definitions[0][metric]['unit'],
                               'delta':delta,'net_change':denominator,'signed_share':None if share is None else share['value'],
@@ -115,40 +131,53 @@ def reconcile(left,right,config):
 
 def export_reconciliation(result,output):
     result=reconcile(result['sources']['left'],result['sources']['right'],result['requested_query'])
-    report=Report(); keys=result['requested_query']['keys']; groups=result['requested_query']['group_by']
+    report=Report()
+    keys=result['requested_query']['keys']
+    groups=result['requested_query']['group_by']
     records=[keys+['Metric','Unit','Before','After','Delta','Status','Left wide row','Right wide row']]
     for item in result['records']:
-        records.append([item['keys'][key] for key in keys]+[item['metric_id'],item['unit']]+[report.number(item[key],key) for key in ('before','after','delta')]+[item['status'],item['left_wide_row'],item['right_wide_row']])
+        records.append([item['keys'][key] for key in keys]+[item['metric_id'],item['unit']]+[report.number(item[key],key)
+                       for key in ('before','after','delta')]+[item['status'],item['left_wide_row'],item['right_wide_row']])
     checks=[['Metric','Unit','Before','After','Net change','Detail change','Residual','Check','Net status']]
     for item in result['checks']:
         checks.append([item['metric_id'],item['unit']]+[report.number(item[key],key) for key in ('before','after','net_change','detail_change','residual')]+[item['status'],item['net_status']])
     contributions=[groups+['Metric','Unit','Delta','Net change','Signed share','Share rounded','Share status']]
     for item in result['contributions']:
-        contributions.append([item['group'][key] for key in groups]+[item['metric_id'],item['unit']]+[report.number(item[key],key) for key in ('delta','net_change','signed_share')]+[item['share_rounded'],item['share_status']])
+        contributions.append([item['group'][key] for key in groups]+[item['metric_id'],item['unit']]+[report.number(item[key],key)
+                             for key in ('delta','net_change','signed_share')]+[item['share_rounded'],item['share_status']])
     snapshot=json.dumps(result,ensure_ascii=False,allow_nan=False,default=str)
-    if len(snapshot.encode('utf-8'))>MAX_INPUT_BYTES: raise ValueError('Reconciliation snapshot exceeds 16 MiB')
+    if len(snapshot.encode('utf-8'))>MAX_INPUT_BYTES:
+        raise ValueError('Reconciliation snapshot exceeds 16 MiB')
     metadata=[['Section','Part','JSON/text']]+[['reconciliation_json',index+1,snapshot[start:start+30000]] for index,start in enumerate(range(0,len(snapshot),30000))]
     sheets=[report.sheet(name,rows) for name,rows in [('Records',records),('Checks',checks),('Contributions',contributions),('Metadata',metadata)]]
     sheets.append(report.sheet('Warnings',[['Location','Issue','Original']]+report.warnings))
     appearance={'preset':'readable','sheets':{sheet['name']:{'header_rows':'1','column_widths':{'A':24},'wrap_text':sheet['name'] in ('Metadata','Warnings')} for sheet in sheets}}
-    book=Workbook.create({'sheets':sheets},appearance=appearance); book.save(output)
+    book=Workbook.create({'sheets':sheets},appearance=appearance)
+    book.save(output)
     return {'status':'exported','output_written':True,'output':str(output),'formulas_created':0,'total_cells':report.count}
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('left'); parser.add_argument('right'); parser.add_argument('--query',required=True); parser.add_argument('--xlsx')
+    parser.add_argument('left')
+    parser.add_argument('right')
+    parser.add_argument('--query',required=True)
+    parser.add_argument('--xlsx')
     args=parser.parse_args()
     from xlsx_delivery import finish_delivery, validate_cli_paths
     try:
         validate_cli_paths(args)
         result=reconcile(read_spec(args.left,max_bytes=MAX_INPUT_BYTES),read_spec(args.right,max_bytes=MAX_INPUT_BYTES),read_spec(args.query,max_bytes=65536))
-        if args.xlsx: result['export']=export_reconciliation(result,args.xlsx)
+        if args.xlsx:
+            result['export']=export_reconciliation(result,args.xlsx)
         if args.xlsx:
             finish_delivery(result, args.xlsx, [getattr(args, field, None) for field in ('input', 'left', 'right', 'query', 'daily')])
-        print(json.dumps(result,ensure_ascii=False,default=str)); return 0
+        print(json.dumps(result,ensure_ascii=False,default=str))
+        return 0
     except (ValueError,OSError,LookupError,DecimalException) as exc:
-        print(json.dumps({'status':'failed','message':str(exc),'output_written':False},ensure_ascii=False)); return 1
+        print(json.dumps({'status':'failed','message':str(exc),'output_written':False},ensure_ascii=False))
+        return 1
 
 
-if __name__=='__main__': sys.exit(main())
+if __name__=='__main__':
+    sys.exit(main())
