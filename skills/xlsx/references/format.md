@@ -264,9 +264,9 @@ combination for a cross-sheet reference.
 For an existing workbook, follow Edit existing cells (`<skill-root>/references/edit.md`) and the JSON contract in
 Standard-library calculation and file contract (`<skill-root>/references/python-calculation.md`):
 
-```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read input.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit input.xlsx patch.json output.xlsx
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read input.xlsx")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" edit input.xlsx patch.json output.xlsx")
 ```
 
 Inspect the target cell's value or formula and the workbook's existing style indices.

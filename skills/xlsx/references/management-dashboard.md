@@ -20,12 +20,12 @@ Use existing task-local `facts.json`, `hierarchy.json` and `dashboard.json` inpu
 
 `facts.xlsx` is a retained example deliverable as well as input to the next command; do not register it as temporary. Check its creation result and archive status before using it. The final `dashboard.xlsx` is a separate retained deliverable. Register `wide.json` and `dashboard-result.json` before redirecting into them; protect all original inputs and both deliverables. Each write CLI reports its own archive result: inspect and report them separately, and do not claim full archive success if either was skipped or failed.
 
-```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create facts.json facts.xlsx
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create facts.json facts.xlsx")
 # Inspect and verify the creation and archive result before the next command.
-( set -C; python3 -I -S -B "<skill-root>/scripts/xlsx_management.py" facts.xlsx --sheet Facts --query hierarchy.json > wide.json )
+execute(command="( set -C; python3 -I -S -B \"<skill-root>/scripts/xlsx_management.py\" facts.xlsx --sheet Facts --query hierarchy.json > wide.json )")
 # Check the complete wide result and exit status before continuing.
-( set -C; python3 -I -S -B "<skill-root>/scripts/xlsx_dashboard.py" wide.json --query dashboard.json --xlsx dashboard.xlsx > dashboard-result.json )
+execute(command="( set -C; python3 -I -S -B \"<skill-root>/scripts/xlsx_dashboard.py\" wide.json --query dashboard.json --xlsx dashboard.xlsx > dashboard-result.json )")
 ```
 
 Input is native management_wide_v1 JSON, not arbitrary spreadsheets or daily-summary

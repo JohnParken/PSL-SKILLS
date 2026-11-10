@@ -1,0 +1,360 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
+  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。 2026-11-09 环境说明调整：人工复核31例选择期望及57个计划读取路径，业务描述、触发边界与按需参考不变；将任务目录、自检前移并保留各技能真实依赖，更新入口哈希。此为人工预期与静态测量，不代表模型选路或宿主 usage 实测。 2026-11-09 已逐项复核31条人工期望：本轮澄清路径映射、清理及输入输出边界，不改变技能选择范围；保留全部期望。刷新仅表示源码绑定，不代表真实模型选路或宿主使用量测量。",
+  "entry_sha256": {
+    "artifact-lifecycle": "3a03eca68f7886141ba692bd6f23ab85bf10e49cc2379b6fe5b27212721e41d6",
+    "bank-writing": "d06be6c8fab95222528480368d053d75f6ebef4a3c41dad8052275fac374f693",
+    "docx": "8051b93e173ea3c9f5d15f50dd17c8b08b6e6e45cb23ee385b1e6661cca6b452",
+    "et": "05e80cab6db216de34c25bd86c66e63e349b4d4635a70fbc9df3e5bb0e043e2c",
+    "ofd": "89fc996c70ab208f58451c0d723309165490857afffdf37b5584a7ebbeb8a340",
+    "pptx": "9a72d776485cc822ee27287db3574fa9cafadbc2b8c937c577f8f1ad10cace66",
+    "skill-development-standards": "f911d79be86ce4bd7cbf4fdf41bc99000366fd4c4b1346263360371fb9d47081",
+    "table-workflow": "3d83c774fd7f88fa3ef464683e9fbb78ca545dd8524d3da77739c8a35e1d7a52",
+    "wps": "1d0bef2c97112c97be660b63a8515f24c49455eceebabf0789c588decb74880d",
+    "xlsx": "474254a10634c688e108f7733e046ace9cb51f1e9c337e20aa06de1295d722e7"
+  },
+  "cases": [
+    {
+      "id": "artifact-lifecycle-positive",
+      "kind": "positive",
+      "prompt": "将本轮已验收文件归档并清理已登记临时项",
+      "expected_include": [
+        "artifact-lifecycle"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "artifact-lifecycle-negative",
+      "kind": "negative",
+      "prompt": "递归删除历史下载文件",
+      "expected_include": [],
+      "expected_exclude": [
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "bank-writing-positive",
+      "kind": "positive",
+      "prompt": "根据这些经营数据起草银行汇报，只要文字",
+      "expected_include": [
+        "bank-writing"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "bank-writing-negative",
+      "kind": "negative",
+      "prompt": "创建带公式的工作簿",
+      "expected_include": [],
+      "expected_exclude": [
+        "bank-writing"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "docx-positive",
+      "kind": "positive",
+      "prompt": "生成含标题和表格的DOCX报告",
+      "expected_include": [
+        "docx"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "docx-negative",
+      "kind": "negative",
+      "prompt": "将旧DOC无损转换为DOCX",
+      "expected_include": [],
+      "expected_exclude": [
+        "docx"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "et-positive",
+      "kind": "positive",
+      "prompt": "读取ET保存值并按部门汇总",
+      "expected_include": [
+        "et"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "et-negative",
+      "kind": "negative",
+      "prompt": "修改ET中的公式并写回",
+      "expected_include": [],
+      "expected_exclude": [
+        "et"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "ofd-positive",
+      "kind": "positive",
+      "prompt": "读取OFD文字和结构",
+      "expected_include": [
+        "ofd"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "ofd-negative",
+      "kind": "negative",
+      "prompt": "对扫描图片做OCR并签章",
+      "expected_include": [],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "pptx-positive",
+      "kind": "positive",
+      "prompt": "将已有内容和受限SVG制作成可编辑PPTX",
+      "expected_include": [
+        "pptx"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "pptx-negative",
+      "kind": "negative",
+      "prompt": "无损编辑任意现有演示文稿",
+      "expected_include": [],
+      "expected_exclude": [
+        "pptx"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "skill-development-standards-positive",
+      "kind": "positive",
+      "prompt": "修改本项目Skill参考并检查规范",
+      "expected_include": [
+        "skill-development-standards"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "skill-development-standards-negative",
+      "kind": "negative",
+      "prompt": "仅使用现有Skill生成报告，不维护Skill",
+      "expected_include": [],
+      "expected_exclude": [
+        "skill-development-standards"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "table-workflow-positive",
+      "kind": "positive",
+      "prompt": "从多份XLSX和ET按键汇总填入既有XLSX模板副本",
+      "expected_include": [
+        "table-workflow"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "table-workflow-negative",
+      "kind": "negative",
+      "prompt": "只读取单个ET文件",
+      "expected_include": [],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "wps-positive",
+      "kind": "positive",
+      "prompt": "读取WPS文字并生成RTF内容的WPS副本",
+      "expected_include": [
+        "wps"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "wps-negative",
+      "kind": "negative",
+      "prompt": "读取ET表格并统计",
+      "expected_include": [],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "xlsx-positive",
+      "kind": "positive",
+      "prompt": "创建XLSX并计算支持的公式",
+      "expected_include": [
+        "xlsx"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "xlsx-negative",
+      "kind": "negative",
+      "prompt": "读取XLSB或执行宏",
+      "expected_include": [],
+      "expected_exclude": [
+        "xlsx"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "mixed-bank-docx",
+      "kind": "mixed",
+      "prompt": "根据银行经营材料起草汇报，并生成DOCX文件",
+      "expected_include": [
+        "bank-writing",
+        "docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "起草与文件生成分别负责。"
+    },
+    {
+      "id": "mixed-et-xlsx",
+      "kind": "mixed",
+      "prompt": "读取ET数据并创建XLSX结果表",
+      "expected_include": [
+        "et",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "ET只读，XLSX承担结果创建。"
+    },
+    {
+      "id": "wps-app-native-xlsx",
+      "kind": "boundary",
+      "prompt": "读取由WPS软件保存的原生.xlsx工作簿",
+      "expected_include": [
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "wps",
+        "et"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。按实际文件格式而非软件品牌选择。"
+    },
+    {
+      "id": "native-docx-reading",
+      "kind": "boundary",
+      "prompt": "读取原生.docx文档正文和表格",
+      "expected_include": [
+        "docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。常规原生DOCX读取使用docx。"
+    },
+    {
+      "id": "legacy-doc-reading",
+      "kind": "boundary",
+      "prompt": "兼容读取旧版二进制.doc文件中支持的文字内容",
+      "expected_include": [
+        "wps"
+      ],
+      "expected_exclude": [
+        "docx"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。旧DOC有限兼容读取，不能承诺无损转换。"
+    },
+    {
+      "id": "bank-short-polish",
+      "kind": "boundary",
+      "prompt": "润色这句银行汇报文字，只返回一句话不要文件",
+      "expected_include": [
+        "bank-writing"
+      ],
+      "expected_exclude": [
+        "docx",
+        "wps",
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。短句润色可用银行写作，不扩大到文件交付。"
+    },
+    {
+      "id": "wps-existing-receipt",
+      "kind": "boundary",
+      "prompt": "WPS runner已经完成自动归档清理，请核对已有回执",
+      "expected_include": [
+        "wps"
+      ],
+      "expected_exclude": [
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。核对原runner已有状态，不重复归档或登记清理。"
+    },
+    {
+      "id": "table-existing-receipt",
+      "kind": "boundary",
+      "prompt": "table-workflow已自动归档清理，请核对已有回执",
+      "expected_include": [
+        "table-workflow"
+      ],
+      "expected_exclude": [
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。核对原流程已有状态，不二次调用公共生命周期。"
+    },
+    {
+      "id": "single-xlsx-analysis",
+      "kind": "boundary",
+      "prompt": "只统计一个XLSX表明确区域的总额，结果直接回复",
+      "expected_include": [
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。简单单表分析不引入跨表填报。"
+    },
+    {
+      "id": "single-et-analysis",
+      "kind": "boundary",
+      "prompt": "只统计一个ET表明确区域的保存值，结果直接回复",
+      "expected_include": [
+        "et"
+      ],
+      "expected_exclude": [
+        "table-workflow",
+        "wps"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。基础ET分析不引入跨表流程或WPS文字。"
+    },
+    {
+      "id": "mixed-ofd-pptx-read",
+      "kind": "mixed",
+      "prompt": "分别读取OFD文字与PPTX指定页内容，不生成文件",
+      "expected_include": [
+        "ofd",
+        "pptx"
+      ],
+      "expected_exclude": [
+        "docx",
+        "xlsx",
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。混合读取只选必要入口，不隐含生成归档。"
+    }
+  ]
+}

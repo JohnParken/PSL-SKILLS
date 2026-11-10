@@ -5,9 +5,9 @@
 
 ## 选择返回内容
 
-```console
-python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --summary
-python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --slides 1-3,5 --notes omit --max-output-bytes 12000
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" inspect report.pptx --summary")
+execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" inspect report.pptx --slides 1-3,5 --notes omit --max-output-bytes 12000")
 ```
 
 - 无新参数时保留原完整结果及字段。新参数只控制返回内容，不改变安全检查或支持格式。

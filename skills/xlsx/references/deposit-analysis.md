@@ -26,14 +26,8 @@ as left.json, right (`<skill-root>/assets/fictional_deposit_right.json`) as righ
 change config (`<skill-root>/assets/fictional_deposit_config.json`) as deposits.json, and
 structure config (`<skill-root>/assets/fictional_deposit_structure_config.json`) as structure.json.
 
-```console
-(
-set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create left.json left.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create right.json right.xlsx
-python3 -I -S -B "<skill-root>/scripts/xlsx_deposits.py" left.xlsx right.xlsx --query deposits.json --xlsx deposits.xlsx > deposits-result.json
-python3 -I -S -B "<skill-root>/scripts/xlsx_deposit_structure.py" right.xlsx --query structure.json --xlsx structure.xlsx > structure-result.json
-)
+```python
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create left.json left.xlsx\npython3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create right.json right.xlsx\npython3 -I -S -B \"<skill-root>/scripts/xlsx_deposits.py\" left.xlsx right.xlsx --query deposits.json --xlsx deposits.xlsx > deposits-result.json\npython3 -I -S -B \"<skill-root>/scripts/xlsx_deposit_structure.py\" right.xlsx --query structure.json --xlsx structure.xlsx > structure-result.json\n)")
 ```
 
 Snapshot columns are entity, institution, product, balance, currency, unit, version,

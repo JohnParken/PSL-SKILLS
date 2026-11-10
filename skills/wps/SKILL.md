@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261110.0051.1813"
+version: "20261110.2000.2124"
 description: 用于读取 .wps、.rtf 与旧 DOC 兼容文字，创建 RTF 内容的 .wps/.rtf 文档或受控重排。不生成金山原生格式、不承诺无损；原生 DOCX 常规任务优先 docx，.et/.ett 交给 et，原生 XLSX/XLSM 交给 xlsx。
 ---
 
@@ -8,17 +8,21 @@ description: 用于读取 .wps、.rtf 与旧 DOC 兼容文字，创建 RTF 内�
 
 ## 执行环境约束与首步自检
 
+脚本由宿主 `execute(command=完整非空命令字符串)` 执行，按实际 schema 提交；包含 stdin 时在同一命令完整提供。替换路径并安全引用参数，不把 `execute(...)` 嵌入命令。执行工具或路径映射不可用时停止并报告；独立调用逐项核对结果，状态未知不盲目重试。
+
+**用户文件定位：** 优先附件映射和用户指定文件名。上传文件和待查交付物只定位任务 `./` 顶层，不递归或到子目录查找；无映射仅列顶层候选，歧义询问，无候选或指定位置不在顶层时报告。内部归档、Skill 资源与程序输入安全契约不变。
+
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 宿主路径与执行器：读取工具中的 `file_path` 属于该工具的路径空间；先用它定位和读取 Skill 内部资料。执行脚本前另确认该位置与执行器实际可访问路径的映射，并用执行器路径替换命令中的 `<skill-root>`；只有宿主确认两者一致时才可直接复用。确认执行器的当前目录就是宿主指定的任务目录，且任务输入在该执行器可见；不能确认映射或工作目录时停止并报告，不猜测或切换目录。
 
-1. **任务目录与输入。** `./` 为宿主确认的任务工作目录；在该目录运行并保持不变，该目录不是 Skill 源码目录；若仍在源码目录，先确认任务目录。输入及受控临时文件沿用该目录内相对路径规则。交付输出只传裸文件名（例如 `报告.wps`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。优先本轮附件映射与用户指定路径；唯一可访问候选直接处理，多候选无法消歧才询问。没有映射时只列出 `./` 候选，不递归搜索或读取历史归档；无可访问文件如实报告，不要求用户重复已知文件名。
+1. **任务目录与输入。** `./` 为宿主确认的任务工作目录；在该目录运行并保持不变，该目录不是 Skill 源码目录；若仍在源码目录，先确认任务目录。输入及受控临时文件沿用该目录内相对路径规则。交付输出只传裸文件名（例如 `报告.wps`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。优先本轮附件映射与用户指定路径；唯一可访问候选直接处理，多候选无法消歧才询问。没有映射时只列出 `./` 顶层候选，不递归搜索或读取历史归档；无可访问文件如实报告，不要求用户重复已知文件名。
 2. **定位与环境。** 按上述真实 `file_path` 定位脚本，不为调用切换安装目录。使用宿主确认的 Python 3.10+、保留 `-I -S -B`；仅标准库（`<skill-root>/requirements.txt`），禁止安装包或运行时联网。OOXML 另需 Expat >=2.6；二进制导出需预装 LibreOffice。
 3. **首次操作前仅自检相关分支。** 读取用第一条，创建用第二条；编辑先完成两者，导出按专项参考自检。均要求退出 0 且输出 `environment-ok`，不只看无报错：
 
-```console
-python -I -S -B "<skill-root>/scripts/read_wps.py" --check
-python -I -S -B "<skill-root>/scripts/run_wps_task.py" check
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" check")
 ```
 
 4. **读写与失败。** 输入须为可读普通文件。仅读无需写探针；写任务在任务目录以独占探针实际写入、读回并只清理本次探针。自检失败、缺标记、输入缺失、解析/生成失败或结果不明时停止依赖操作，报告具体失败；不原样重试掩盖问题，环境修复后再验。环境自检不是产物验收。压缩后约束缺失时重新读取本入口，保留已确认的目录与文件名。
@@ -38,28 +42,21 @@ python -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 
 ### 读取：先按问题选输出
 
-```console
+```python
 # 全文分析、完整结构证据：默认完整 JSON
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps")
 # 只问大小/结构概况，不需要正文
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --summary
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --summary")
 # 已明确只需这段正文；需要诊断时保持 JSON
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --paragraph-range 1:20
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --paragraph-range 1:20")
 ```
 
 概况不含正文，不用它回答全文问题。段落范围为1-based闭区间，只投影主段落；核对 `selection_status`、`source_status`、`projection_scope`，不把源 `reading_assessment` 当投影覆盖全文。保留本次可见输出、真实退出状态及 partial/遗漏诊断，按末节判读；宿主截断结果不是完整 JSON。纯文本 `--format text` 只在确实不需结构/诊断时用，partial 诊断仍在 stderr；合并流时不能把诊断混作正文，不替代结果契约。
 
 ### 创建：标题、正文、基础表格
 
-```console
-python -I -S -B "<skill-root>/scripts/run_wps_task.py" create "通知.wps" --compact-receipt <<'JSON'
-{"theme":"official","blocks":[
-  {"type":"title","text":"工作情况通报"},
-  {"type":"heading","level":1,"text":"一、总体情况"},
-  {"type":"paragraph","text":"本阶段工作已完成。"},
-  {"type":"table","rows":[["事项","状态"],["联调","通过"]]}
-]}
-JSON
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create \"通知.wps\" --compact-receipt <<'JSON'\n{\"theme\":\"official\",\"blocks\":[\n  {\"type\":\"title\",\"text\":\"工作情况通报\"},\n  {\"type\":\"heading\",\"level\":1,\"text\":\"一、总体情况\"},\n  {\"type\":\"paragraph\",\"text\":\"本阶段工作已完成。\"},\n  {\"type\":\"table\",\"rows\":[[\"事项\",\"状态\"],[\"联调\",\"通过\"]]}\n]}\nJSON\n")
 ```
 
 默认 official 公文预设，用户明确格式优先，不凭标题切换主题。默认自然分页，不擅自加 `page_break` / `page_break_before`；标题默认与下文同页。显式新页只选一种分页机制；不以分页符冒充分节。预设不等于GB/T认证，字体只写名称，不安装/嵌入或保证可用；回读不等于视觉分页验收。其他主题、页眉页脚、列表或自定义版式再读生成参考。

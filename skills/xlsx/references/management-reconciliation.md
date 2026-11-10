@@ -22,11 +22,8 @@ scope per run. Other periods and scopes are explicitly excluded, not aggregated.
 Copy the fictional configuration (`<skill-root>/assets/fictional_reconciliation_config.json`) to the
 task directory as reconcile.json. Provide left.json and right.json for January/February:
 
-```console
-(
-set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill-root>/scripts/xlsx_reconcile.py" left.json right.json --query reconcile.json --xlsx reconciliation.xlsx > reconciliation.json
-)
+```python
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_reconcile.py\" left.json right.json --query reconcile.json --xlsx reconciliation.xlsx > reconciliation.json\n)")
 ```
 
 `keys` must explicitly retain all native dimensions except period and institution_name.

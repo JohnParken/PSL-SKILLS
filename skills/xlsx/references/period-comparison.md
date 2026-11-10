@@ -20,8 +20,8 @@ Task-local `periods.json`:
  "non_numeric":"reject","precision":34}
 ```
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_advanced.py" compare history.xlsx --sheet Sales --query periods.json
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_advanced.py\" compare history.xlsx --sheet Sales --query periods.json")
 ```
 
 Entity, period and metric selectors accept column letters, col: IDs or exact paths under

@@ -23,9 +23,9 @@ Create task-local `rows.json`:
 }
 ```
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" input.xlsx --sheet Sales --query rows.json
-python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" input.xlsx --sheet Sales --query rows.json --range A3:C100 --no-header
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" input.xlsx --sheet Sales --query rows.json")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" input.xlsx --sheet Sales --query rows.json --range A3:C100 --no-header")
 ```
 
 Use absolute column letters or explicit IDs. Multi-level path selectors require

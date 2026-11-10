@@ -12,52 +12,39 @@
 
 在全篇段落、标题与表格中执行精准文字替换：
 
-```console
-python -I -S -B "<skill-root>/scripts/run_wps_edit.py" text "./原文档.wps" "修订后.wps" \
-  --find "旧项目组" --replace "新综合运营中心"
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_edit.py\" text \"./原文档.wps\" \"修订后.wps\" \\\n  --find \"旧项目组\" --replace \"新综合运营中心\"")
 ```
 
 ### 2. 段落结构修改与追加（Structure Modification）
 
 - **替换指定段落**：按 1-based 序号替换段落内容：
-  ```console
-  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "修订后.wps" \
-    --replace-paragraph 2 --text "第二段修改后的全新正文内容。"
+  ```python
+  execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_edit.py\" structure \"./原文档.wps\" \"修订后.wps\" \\\n  --replace-paragraph 2 --text \"第二段修改后的全新正文内容。\"")
   ```
 - **删除指定段落**：按 1-based 序号移除过时段落：
-  ```console
-  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "修订后.wps" \
-    --delete-paragraph 3
+  ```python
+  execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_edit.py\" structure \"./原文档.wps\" \"修订后.wps\" \\\n  --delete-paragraph 3")
   ```
 - **末尾追加段落**：
-  ```console
-  python -I -S -B "<skill-root>/scripts/run_wps_edit.py" structure "./原文档.wps" "修订后.wps" \
-    --text "补充说明：本通知自发布之日起施行。"
+  ```python
+  execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_edit.py\" structure \"./原文档.wps\" \"修订后.wps\" \\\n  --text \"补充说明：本通知自发布之日起施行。\"")
   ```
 
 ### 3. 表格单元格修改（Table Cell Update）
 
 按表格索引、行号与列号（均为 0-based）更新特定单元格数据：
 
-```console
-python -I -S -B "<skill-root>/scripts/run_wps_edit.py" table "./原文档.wps" "修订后.wps" \
-  --table-index 0 --row 1 --col 2 --text "已完成"
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_edit.py\" table \"./原文档.wps\" \"修订后.wps\" \\\n  --table-index 0 --row 1 --col 2 --text \"已完成\"")
 ```
 
 ### 4. 批量操作（Batch Editing）
 
 通过 JSON 规范一次性执行多个复合修改操作：
 
-```console
-python -I -S -B "<skill-root>/scripts/run_wps_edit.py" batch "./原文档.wps" "修订后.wps" <<'JSON'
-{
-  "operations": [
-    {"operation": "replace_text", "find": "旧计划", "replace": "新战略"},
-    {"operation": "update_cell", "table_index": 0, "row": 1, "col": 1, "text": "通过"},
-    {"operation": "append_blocks", "blocks": [{"type": "paragraph", "text": "附件：推进时间表"}]}
-  ]
-}
-JSON
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_edit.py\" batch \"./原文档.wps\" \"修订后.wps\" <<'JSON'\n{\n  \"operations\": [\n    {\"operation\": \"replace_text\", \"find\": \"旧计划\", \"replace\": \"新战略\"},\n    {\"operation\": \"update_cell\", \"table_index\": 0, \"row\": 1, \"col\": 1, \"text\": \"通过\"},\n    {\"operation\": \"append_blocks\", \"blocks\": [{\"type\": \"paragraph\", \"text\": \"附件：推进时间表\"}]}\n  ]\n}\nJSON\n")
 ```
 
 ## 质量与安全性保障

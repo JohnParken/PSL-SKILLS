@@ -30,16 +30,16 @@
 
 在已确认的任务目录执行（候选、原件和规格均为任务内相对路径，最终输出仅裸文件名）：
 
-```sh
-python -I -S -B "<skill-root>/scripts/run_docx_edit.py" format-checked ./原文档.docx 字体修订版.docx --candidate ./字体候选.docx < ./operations.json
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" format-checked ./原文档.docx 字体修订版.docx --candidate ./字体候选.docx < ./operations.json")
 ```
 
 该模式保护原件和候选，只在差异核验通过后将同一内存候选快照发布为新主文件，再自动归档并清理 runner 自建配置。核验失败不发布最终文件、不归档已有输出；按失败回执收尾，不用 `package.py pack` 或显式归档绕过检查。原件、用户提供候选/规格不作为 runner 可清理项；自行生成的候选/规格继续按创建前登记的本轮清单收尾，不扫描删除。
 
 只读排查可单独运行以下命令，退出 0 仅证明该时刻指定文件和规格通过检查，不发布或归档；最终交付仍走上面的受控模式，不能检查后另读、替换候选再直接交付：
 
-```sh
-python -I -S -B "<skill-root>/scripts/format_guard.py" ./原文档.docx ./字体候选.docx ./operations.json
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/format_guard.py\" ./原文档.docx ./字体候选.docx ./operations.json")
 ```
 
 保护范围与拒绝条件：

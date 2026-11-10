@@ -76,70 +76,10 @@ CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 
 
 ## 可运行的契约示例
 
-普通使用从任务目录执行 `python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps`，按上述退出码消费结果。以下自包含示例不需要真实文件：先替换 `<skill-root>`，使用已自检且 Expat >=2.6 的解释器，在任务目录运行。它用标准库生成明确标注的合成 OOXML 字节，以独占临时子目录验证 API 和 CLI 成功、partial、读取失败与参数错误；结束时只清理自己创建的子目录。生成的 `.wps` 后缀仅测试内容路由，不是真实 WPS 来源证据。
+普通使用从任务目录执行 `execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps")`，按上述退出码消费结果。以下自包含示例不需要真实文件：先替换 `<skill-root>`，使用已自检且 Expat >=2.6 的解释器，在任务目录运行。它用标准库生成明确标注的合成 OOXML 字节，以独占临时子目录验证 API 和 CLI 成功、partial、读取失败与参数错误；结束时只清理自己创建的子目录。生成的 `.wps` 后缀仅测试内容路由，不是真实 WPS 来源证据。
 
-```sh
-python -I -S -B - "<skill-root>" <<'PY'
-import io
-import json
-from pathlib import Path
-import subprocess
-import sys
-import tempfile
-from xml.parsers import expat
-import zipfile
-
-assert expat.version_info >= (2, 6, 0), 'Expat >=2.6 required for this example'
-skill_dir = Path(sys.argv[1]).resolve()
-sys.path.insert(0, str(skill_dir / 'scripts'))
-from read_wps import ParseError, read, read_bytes
-
-files = {
-    '[Content_Types].xml': '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>',
-    '_rels/.rels': '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>',
-    'word/document.xml': '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>示例</w:t></w:r></w:p></w:body></w:document>',
-}
-
-def package(parts):
-    output = io.BytesIO()
-    with zipfile.ZipFile(output, 'w') as archive:
-        for name, text in parts.items():
-            archive.writestr(name, text)
-    return output.getvalue()
-
-payload = package(files)
-result = read_bytes(payload)
-assert result['status'] == 'ok' and result['text'] == '示例'
-assert result['reading_assessment']['completeness'] == 'within_declared_scope'
-try:
-    read_bytes(b'unknown container')
-except ParseError as error:
-    assert error.status == 'unsupported'
-else:
-    raise AssertionError('Expected ParseError for unknown bytes')
-
-with tempfile.TemporaryDirectory(prefix='wps-contract-', dir='.') as directory:
-    good = Path(directory) / 'synthetic.wps'
-    bad = Path(directory) / 'unknown.wps'
-    partial = Path(directory) / 'partial.wps'
-    good.write_bytes(payload)
-    bad.write_bytes(b'unknown container')
-    parts = dict(files)
-    parts['word/document.xml'] = parts['word/document.xml'].replace('</w:p>', '<w:drawing/></w:p>')
-    partial.write_bytes(package(parts))
-    assert read(good)['status'] == 'ok'
-    failure = read(bad)
-    assert failure['status'] == 'unsupported' and failure['text'] is None
-    assert failure['reading_assessment']['completeness'] == 'no_content_delivered'
-    command = [sys.executable, '-I', '-S', '-B', str(skill_dir / 'scripts' / 'read_wps.py')]
-    for path, code, status in ((good, 0, 'ok'), (partial, 3, 'partial'), (bad, 1, 'unsupported')):
-        process = subprocess.run(command + [str(path)], capture_output=True, text=True)
-        assert process.returncode == code, process.stderr
-        assert json.loads(process.stdout)['status'] == status
-    process = subprocess.run(command + [str(good), '--format', 'invalid'], capture_output=True, text=True)
-    assert process.returncode == 2 and not process.stdout and process.stderr
-print('contract-examples-ok')
-PY
+```python
+execute(command="python -I -S -B - \"<skill-root>\" <<'PY'\nimport io\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\nimport tempfile\nfrom xml.parsers import expat\nimport zipfile\n\nassert expat.version_info >= (2, 6, 0), 'Expat >=2.6 required for this example'\nskill_dir = Path(sys.argv[1]).resolve()\nsys.path.insert(0, str(skill_dir / 'scripts'))\nfrom read_wps import ParseError, read, read_bytes\n\nfiles = {\n    '[Content_Types].xml': '<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Override PartName=\"/word/document.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"/></Types>',\n    '_rels/.rels': '<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"r1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\"/></Relationships>',\n    'word/document.xml': '<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:r><w:t>示例</w:t></w:r></w:p></w:body></w:document>',\n}\n\ndef package(parts):\n    output = io.BytesIO()\n    with zipfile.ZipFile(output, 'w') as archive:\n        for name, text in parts.items():\n            archive.writestr(name, text)\n    return output.getvalue()\n\npayload = package(files)\nresult = read_bytes(payload)\nassert result['status'] == 'ok' and result['text'] == '示例'\nassert result['reading_assessment']['completeness'] == 'within_declared_scope'\ntry:\n    read_bytes(b'unknown container')\nexcept ParseError as error:\n    assert error.status == 'unsupported'\nelse:\n    raise AssertionError('Expected ParseError for unknown bytes')\n\nwith tempfile.TemporaryDirectory(prefix='wps-contract-', dir='.') as directory:\n    good = Path(directory) / 'synthetic.wps'\n    bad = Path(directory) / 'unknown.wps'\n    partial = Path(directory) / 'partial.wps'\n    good.write_bytes(payload)\n    bad.write_bytes(b'unknown container')\n    parts = dict(files)\n    parts['word/document.xml'] = parts['word/document.xml'].replace('</w:p>', '<w:drawing/></w:p>')\n    partial.write_bytes(package(parts))\n    assert read(good)['status'] == 'ok'\n    failure = read(bad)\n    assert failure['status'] == 'unsupported' and failure['text'] is None\n    assert failure['reading_assessment']['completeness'] == 'no_content_delivered'\n    command = [sys.executable, '-I', '-S', '-B', str(skill_dir / 'scripts' / 'read_wps.py')]\n    for path, code, status in ((good, 0, 'ok'), (partial, 3, 'partial'), (bad, 1, 'unsupported')):\n        process = subprocess.run(command + [str(path)], capture_output=True, text=True)\n        assert process.returncode == code, process.stderr\n        assert json.loads(process.stdout)['status'] == status\n    process = subprocess.run(command + [str(good), '--format', 'invalid'], capture_output=True, text=True)\n    assert process.returncode == 2 and not process.stdout and process.stderr\nprint('contract-examples-ok')\nPY\n")
 ```
 
 要求示例退出 0 且输出 `contract-examples-ok`；这验证调用和失败契约，不是文档生产、转换能力或真实 WPS 兼容验收。

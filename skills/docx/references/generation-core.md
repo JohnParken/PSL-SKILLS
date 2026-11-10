@@ -7,7 +7,7 @@
 ## 基本流程
 
 1. 获得宿主实际读取的 `SKILL.md` 的真实位置，取父目录为 `<skill-root>`；任务数据放宿主已确认的 `./`，不得把 `<skill-root>` 占位符原样用于命令。
-2. 普通新建只调用 `python -I -S -B "<skill-root>/scripts/run_docx_task.py" create "真实主题.docx"`，用 stdin 传完整 JSON；无需先运行 preflight/check。调用时保留真实退出码与 stdout/stderr；不要重复提交状态不明的任务。
+2. 普通新建使用 `<skill-root>/scripts/run_docx_task.py` 的 `create`，按主入口以 `execute(command=...)` 同次提交完整命令和 stdin JSON；无需先运行 preflight/check。调用时保留真实退出码与 stdout/stderr；不要重复提交状态不明的任务。
 3. 结果中核对 `status`、`task_status`、实际 `output`、`archive_status`、`cleanup` 和 warnings。归档失败不否定已验收的主文件，但清理未完成必须如实说明；不得交付旧文件冒充新成果。
 
 ## 常用 JSON 字段

@@ -47,10 +47,8 @@
 
 首次按主入口完成 `"<skill-root>/scripts/stdlib_xlsx.py" check`；写任务确认目标目录独占探针可写。需要受控JSON时，在已确认任务目录调用：
 
-```console
-python3 -I -S -B "<skill-root>/scripts/run_xlsx_task.py" <<'JSON'
-{"script":"stdlib_xlsx.py","arguments":["create","@spec","经营报告.xlsx"],"output":"经营报告.xlsx","configs":{"spec":{"sheets":[{"name":"Data","cells":{"A1":{"value":"项目"},"B1":{"value":42}}}]}}}
-JSON
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/run_xlsx_task.py\" <<'JSON'\n{\"script\":\"stdlib_xlsx.py\",\"arguments\":[\"create\",\"@spec\",\"经营报告.xlsx\"],\"output\":\"经营报告.xlsx\",\"configs\":{\"spec\":{\"sheets\":[{\"name\":\"Data\",\"cells\":{\"A1\":{\"value\":\"项目\"},\"B1\":{\"value\":42}}}]}}}\nJSON\n")
 ```
 
 允许脚本即上表10个写文件CLI；arguments沿用原CLI参数；为可靠定位输出，主命令和位置参数放在选项之前。必须明确输出裸文件名，与output完全一致；两处都不带 `./` 或目录。具名配置引用写为`@spec`、`@query`或其他合法键；configs为JSON对象而非磁盘文件。输入正文最多2MiB、最多16个配置，仅创建任务根中的独占平铺配置文件，不写临时Python。inputs可额外列出需要保护的任务相对路径；所有既存文件参数也被保守保护。未引用配置、未知脚本或声明不匹配会拒绝，不执行任意命令。
@@ -76,15 +74,15 @@ runner创建前plan其专属平铺JSON和清单；写入使用独占、不跟随
 
 现有CLI传入的JSON、图片、原表、用户脚本都是输入，不自动删除。若调用者另建临时Python等，必须在创建前登记尚不存在的规范相对路径：
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_lifecycle.py" plan task.cleanup.json --file worker.py --file query.json --protect 原件.xlsx --deliverable 分析报告.xlsx
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_lifecycle.py\" plan task.cleanup.json --file worker.py --file query.json --protect 原件.xlsx --deliverable 分析报告.xlsx")
 ```
 
 完成实际业务验收、取得归档结果并等待worker退出后，seal/clean：
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_lifecycle.py" seal task.cleanup.json --outcome success --verified --archive-status copied
-python3 -I -S -B "<skill-root>/scripts/xlsx_lifecycle.py" clean task.cleanup.json
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_lifecycle.py\" seal task.cleanup.json --outcome success --verified --archive-status copied")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_lifecycle.py\" clean task.cleanup.json")
 ```
 
 copied须换成实际归档结果。失败使用outcome failed后clean，不用retry/retain保留中间文件。禁止按.py/.json扩展名扫描、补登既存文件、删除输入或最终产物；指纹变化、符号/硬链接、非空目录等按公共核心保守处理。未验证清理结果不能声称已清理。

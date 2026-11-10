@@ -1,0 +1,1779 @@
+{
+  "schema": "psl.test_script_migration.v1",
+  "started_new_york": "2026-11-05 04:09:01.540561-05:00",
+  "version": "20261105.1609.0154",
+  "platform": "macOS 27.2 arm64 / Python 3.12.11 / Expat 2.6.3",
+  "scope": {
+    "moved_files": 101,
+    "skills": [
+      "docx",
+      "wps",
+      "ofd",
+      "artifact-lifecycle",
+      "et",
+      "pptx"
+    ],
+    "production_implementation_changes": false,
+    "commit_or_push": false,
+    "release_zips_changed": false
+  },
+  "decisions": [
+    "迁移92个包内命名测试、6个仓库单Skill测试及3个固定样本验收脚本。真实跨Skill集成、仓库工具/适配器测试留在tests；tests/pptx仅保留仓库适配器测试与历史验证记录。",
+    "只修正__file__相对定位、独立启动导入和发现配置；保留原断言、预期结果和已存在的未提交修改。",
+    "PPTX运行时导入检查排除新测试目录，并从允许的运行时根模块中剔除test；生产依赖检查范围未放宽。",
+    "新增tools/run_skill_tests.py作为仓库维护入口，默认拒绝零发现，导入/执行错误非零；独立包不依赖此工具，继续使用unittest。",
+    "OFD沿用现有递归打包器并验证实际成员，无须修改生产打包代码；其他Skill以内存临时ZIP核对成员及独立安装，不改写发布ZIP。",
+    "测试夹具引用所用固定期望/来源记录仍作为references验证证据保留，未搬动用户样本、未知残留或已有缓存。"
+  ],
+  "moves": [
+    {
+      "from": "skills/artifact-lifecycle/scripts/test_lifecycle.py",
+      "to": "skills/artifact-lifecycle/scripts/test/test_lifecycle.py",
+      "kind": "skill_test",
+      "skill": "artifact-lifecycle",
+      "before_sha256": "ac7bff6acbc5fd7c58f625447c36dddb68efba049c9953ecd844cf9a0d36c44f",
+      "after_sha256": "159db3d55ae7afec836a729b855b5bbbb43fa3dd4440d91d4976d7021fa50986"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_delivery.py",
+      "to": "skills/docx/scripts/test/test_docx_delivery.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "0a804a20bb3ad80d0ab12bf31c3eb058e86bbbca279e618aa883ba76d88ff76e",
+      "after_sha256": "6dfbadd6973f5abfc3cceb4fd121a13dac7f1817891fc3d42b51bf025e1e1329"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_layout_delivery.py",
+      "to": "skills/docx/scripts/test/test_docx_layout_delivery.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "b72ca2445716035e3f0376b57f6e27a6ebbc5fd29136ce209b5e5e145728ffff",
+      "after_sha256": "fcef18b4b43808583b9cb387ceb9d7f7715b0cb08e82085e0baff58e545e0166"
+    },
+    {
+      "from": "skills/docx/scripts/test_delivery_api.py",
+      "to": "skills/docx/scripts/test/test_delivery_api.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "8bbd2ba369186f5ff1010f08c9d9a52a22c4f4552126feceae106e0b9d5d97f9",
+      "after_sha256": "9f171271875c2f9c0f4112cbf8b99bc71ea0214647acce502a3bff6c1e79e139"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_compact_receipt.py",
+      "to": "skills/docx/scripts/test/test_docx_compact_receipt.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "ec0f8ec868f1df67fb2bc581832c95ea52e262550e23011f1894b3916f2bb3ce",
+      "after_sha256": "1fd35b6859d63a9b46c9543b11593891824d997e230a32faf53877abfd2e499a"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_routing.py",
+      "to": "skills/docx/scripts/test/test_docx_routing.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "2b35a7914ba51865e86ca78a78c20ef581216671679206af3dae6b647dda41b7",
+      "after_sha256": "78dbcf80395f384a976a78c85b3f08ab3ce81cd402efe17c1016e4103f72f3bf"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_stability.py",
+      "to": "skills/docx/scripts/test/test_docx_stability.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "17c6079e881b8c177bbe0063bc3a62993ddae15ac806113256e9f73b59b2103c",
+      "after_sha256": "5f3b28fc6b69adbe25892d28d98c499332ae8c0a5202873cd8228ec398284f39"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_task_reliability.py",
+      "to": "skills/docx/scripts/test/test_docx_task_reliability.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "756b5ce5fb25811a15e31ae5d7e0e27e98b89dc85022bef28d64a0156ee0c6ba",
+      "after_sha256": "458b33ab6081062232f803e0ac178c8442cf9ea00d1ad095156b2dfaab08692b"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_token_routing.py",
+      "to": "skills/docx/scripts/test/test_docx_token_routing.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "1d8a104ed2c282d2cb04d1b409f54f209eac2014ea3cab9ed59dabfb0164aa49",
+      "after_sha256": "6d389db5c643f1dda7e67fff1c0848753247ee085a1c9a74c5ccb061151894c8"
+    },
+    {
+      "from": "skills/docx/scripts/test_cleanup_task.py",
+      "to": "skills/docx/scripts/test/test_cleanup_task.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "d494d14f99ec8edda7caeb8c1b16c742489cd5903095fa33c833b9836dccb3b7",
+      "after_sha256": "1a5e2dc4b48c0a85d19e1845ead8cce9ff46bc8703ec15a263909480cf0dac3f"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_controlled_flow.py",
+      "to": "skills/docx/scripts/test/test_docx_controlled_flow.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "0d8b28f4231dfdabc5b3c8606209da507fcb75bfbc5a55999c87d48d687cc215",
+      "after_sha256": "bdd3de4a7a22b6fcf3d735005f58b7945f575d2e5f8796be6dd398cc4dcaa4dd"
+    },
+    {
+      "from": "skills/docx/scripts/test_archive_collision.py",
+      "to": "skills/docx/scripts/test/test_archive_collision.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "dee959c6d20bac1bf72a6b26c82dc85527ab3ec2e5b2d570e77ea243496fd937",
+      "after_sha256": "e41220fe97c7947f04f1adcc0d46068bc3316be31d09bfa7c9bbe492e5ac55a6"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_p1_layout.py",
+      "to": "skills/docx/scripts/test/test_docx_p1_layout.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "bb7f3ab6cbcb8dd759825d86baa9e8fd810d61b1962f0362834dff444f30c60b",
+      "after_sha256": "bd5e210d1d3196a105ec8188d8a6ac546939f06f1342618b8500741061fde573"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_pagination_governance.py",
+      "to": "skills/docx/scripts/test/test_docx_pagination_governance.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "1789186f7e6cc84ca22b68e5d3262a6c759ed46554eaf621c6bf829fc8ddd4e8",
+      "after_sha256": "3adae3f16d900fac58bf2ede2495adb9e42bca3e60ac5e1b6b8bba4f7de4f534"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_io.py",
+      "to": "skills/docx/scripts/test/test_docx_io.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "31ad03e77bf247eeceb02af56c84e9a0d4987ebc79eca574ac45702bad3e2b93",
+      "after_sha256": "a6316b2228aac1f2d237692c7401b35658231e4551a97dea7795fce1640c4a95"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_output_channels.py",
+      "to": "skills/docx/scripts/test/test_docx_output_channels.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "e5875685f79a088b5a9457cd35ef8783e5b06b51f69b8750a14eeaab406774b4",
+      "after_sha256": "cfcb3e4d2ad1b75f495ac7bfd9118d9c97e77a92a7e156baaca80bc51d48c699"
+    },
+    {
+      "from": "skills/docx/scripts/test_archive_deliverables.py",
+      "to": "skills/docx/scripts/test/test_archive_deliverables.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "66c0ab7f4357b2b83fc8ed814af334ca6541ec5edde735ba5e2a5e779384b0e2",
+      "after_sha256": "6113ea0496e04f060ac2de310edf63f717c1f5c7126290a779b2bccf5f52d7e1"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_generation.py",
+      "to": "skills/docx/scripts/test/test_docx_generation.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "fa67eb48bcd123dd82e2dff97e28dddc8734df77b20f2b4f4a709d15937968d3",
+      "after_sha256": "8e673a6aef8948273d88a25013fb2dc17043d0cea2ea5ba4c3c3b3a1a23dfd36"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_official_pagination_defaults.py",
+      "to": "skills/docx/scripts/test/test_docx_official_pagination_defaults.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "5c11374e9b4fe02e14aedea7c71162e5fa8b146d84e7fd358b18b5704e527545",
+      "after_sha256": "6da82fcc917fe54b2a9cbeb2c79c6a2edd559b8c7d7b4ed5342099d8a8374153"
+    },
+    {
+      "from": "skills/docx/scripts/test_terminal_cleanup.py",
+      "to": "skills/docx/scripts/test/test_terminal_cleanup.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "67c7c6ddf39aae69351349ea11d840c74a48d94131667df5434ba89cafab0a34",
+      "after_sha256": "8775ebb4f2392f1015fc3d19012bc0bfc7fb34cd52c00de74236781c2a209b4b"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_read_fastpath.py",
+      "to": "skills/docx/scripts/test/test_docx_read_fastpath.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "07c33880d949909cc1e8d58276b78f95fe74963311a9dfb49f71989e6a0b315f",
+      "after_sha256": "42f0e02f9026ec03ae81d37c89949f5fea3c37fd2eca0f45a57ebd53e0b83b64"
+    },
+    {
+      "from": "skills/docx/scripts/test_cli_task_paths.py",
+      "to": "skills/docx/scripts/test/test_cli_task_paths.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "bc920864dd6fdbe86d4755e197dd4945506daf63c4a54a7e4fb734b7672aee8c",
+      "after_sha256": "376882e5ba9dcf7d29c1afa39313f735d6ac3d6c6bda5048fef05e8caf838820"
+    },
+    {
+      "from": "skills/docx/scripts/test_runtime_modules.py",
+      "to": "skills/docx/scripts/test/test_runtime_modules.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "4c01bf1c0b779329eaeef5965184a082d56be6dce2ab6724a2e92e6e25b6f1bb",
+      "after_sha256": "3bd9ac6a5f53df174da955fd0f2ce7472f251f07b50660a3884593438729fa54"
+    },
+    {
+      "from": "skills/docx/scripts/test_run_docx_task.py",
+      "to": "skills/docx/scripts/test/test_run_docx_task.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "c04f76ef66c3f90e14e044eb9e680064a93430b922266c501e1eb76014bfd047",
+      "after_sha256": "af1e198ad91ff479d32624a2a537a0eef5eb9fae5cfa066d81b013f33ed24a79"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_p2_layout.py",
+      "to": "skills/docx/scripts/test/test_docx_p2_layout.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "3798b114923fc1afab417a8d7d2dc98c0f2cd398a8c617f5c2562d91a1b2020b",
+      "after_sha256": "540179d0cbbef4b462dd86d90d8900a7ddba9e7d93d80b027dedb954ad9c0673"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_simple_fastpath.py",
+      "to": "skills/docx/scripts/test/test_docx_simple_fastpath.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "97e215ddc400a7fbe3be35b02ea320559c9238e400108140cc859d9f8721ee7b",
+      "after_sha256": "b7fd7a07479c6704063dcac4db69b34820e32bea3bc74d8dab9d72c882a457fe"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_editing.py",
+      "to": "skills/docx/scripts/test/test_docx_editing.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "2ac04f94b4d2c617f5a615ce735629ef3f7fa12fb3ec79f301b44e4fdfae76a3",
+      "after_sha256": "e0d94e92878295d442c61b38c2180b41be6d1845f1100426d4fe1acf66cb02c0"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_typography.py",
+      "to": "skills/docx/scripts/test/test_docx_typography.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "cebbde6e29d8fd8b7d00176a67cc0d1856799966c5cb5c8fb2c46667f38b594d",
+      "after_sha256": "c5baa2b8615e01e0ad72504323deceab65f1e2c3de9de90f1b9801ddeb3e95d4"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_legacy_entry.py",
+      "to": "skills/docx/scripts/test/test_docx_legacy_entry.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "5a90aed9a0842d3e3af07211f56a228cf3fca11c09a6432e0d85ba4daa5bb65d",
+      "after_sha256": "ab68f52f9fb2565540e7e8a5d3c56878d3332401e06f3b1e3d7b62378075469f"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_receipt_cleanup.py",
+      "to": "skills/docx/scripts/test/test_docx_receipt_cleanup.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "3ca71b6dccd872ab3a2ebfa835954f00cf33cd5d0fe626185930d9a31f7445f0",
+      "after_sha256": "29b9290e664ce00eb890695c39d9489409a57337557543c1c9b6f139f799b3d0"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_reference_loading.py",
+      "to": "skills/docx/scripts/test/test_docx_reference_loading.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "c32baba2daed9c5be776252a5d11407d51bc4c638262770eec79ceb4a62e7e0a",
+      "after_sha256": "92f1898dd2b2ad66b2a6a71ffab222a3bd89d254fd02f71f4bbc216409187c45"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_runtime.py",
+      "to": "skills/docx/scripts/test/test_docx_runtime.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "38df0bce3c7dbb61ecabce98e9a8e45cf487635f431a6fd8a978ff9f63057617",
+      "after_sha256": "8243340aa3d48efe35514cde8e6b3dcfbfb2db5c3fae74de22ba698ab6a6c67d"
+    },
+    {
+      "from": "skills/docx/scripts/test_flat_temporary.py",
+      "to": "skills/docx/scripts/test/test_flat_temporary.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "5cb2f45b4ce57f3ac32fc84a16be28a6386bcd9580458565ac2ff35ef7a29789",
+      "after_sha256": "926f728731d5f488bbe1d7e071e5d1f879cf2c823f553f4918958e457fc2f316"
+    },
+    {
+      "from": "skills/docx/scripts/test_docx_task_lazy_routing.py",
+      "to": "skills/docx/scripts/test/test_docx_task_lazy_routing.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "7912956b1b3e8555d0fc5e982fee85607c52f7339ae6229cafa17bc0c305d395",
+      "after_sha256": "209d587e13671af1791b3821ba517010d3d0eaa247313870077c60d436f795d0"
+    },
+    {
+      "from": "skills/docx/scripts/test_output_location.py",
+      "to": "skills/docx/scripts/test/test_output_location.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "40ad2cde526643299d8665408f81f7e8cbcd2ae8b12ed285ccde621c390eb0ab",
+      "after_sha256": "1cf59071948045f20a042d54676592a7c736bbf9ff1497837058a4cf7464cd19"
+    },
+    {
+      "from": "skills/docx/scripts/test_edit_delivery.py",
+      "to": "skills/docx/scripts/test/test_edit_delivery.py",
+      "kind": "skill_test",
+      "skill": "docx",
+      "before_sha256": "8dfd6c0df0452c929fd97f54e4a371372ccae7fa4af2e872963d9b405aea2717",
+      "after_sha256": "b0958ffe92cbef49d2e942c725970850019bd07b770a8c0f00652053b606057c"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_bundled_fonts.py",
+      "to": "skills/ofd/scripts/test/test_ofd_bundled_fonts.py",
+      "kind": "skill_test",
+      "skill": "ofd",
+      "before_sha256": "d16755b0d9a6be16006d32c98af13a1b7e8ead8552279170dee499030adb94ab",
+      "after_sha256": "aac51c7d73e1f0ac1a2086622e497f687e587d44fe126703c0aafbee398b1812"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_generate.py",
+      "to": "skills/ofd/scripts/test/test_ofd_generate.py",
+      "kind": "skill_test",
+      "skill": "ofd",
+      "before_sha256": "3c02afdc60f6c4d1f361d4c15f327a63c291906a7e26fbc5092bf8bd17c6d2e4",
+      "after_sha256": "7a9d3cbbf4c64225c46bbe7b6c89628bb4671fac876d0cc23ba4f8972de6455a"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_views.py",
+      "to": "skills/ofd/scripts/test/test_ofd_views.py",
+      "kind": "skill_test",
+      "skill": "ofd",
+      "before_sha256": "a3057f07490c66b746e21e0577b66a77dd1f0ddc4a89f06cba98af945667f4ff",
+      "after_sha256": "ff5dd2c1b8b8abd52688a751b2b2ad5419a95e6cdca10618ffa1a10bcc9d34ec"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_compat.py",
+      "to": "skills/ofd/scripts/test/test_ofd_compat.py",
+      "kind": "skill_test",
+      "skill": "ofd",
+      "before_sha256": "73ea4a11cf2b3a71ebedc05491d71314cb3cd7ee944c45eaff41b3caa4fbc4d1",
+      "after_sha256": "099d292944d02d98f3e41d134b35cb454f83d1ecb1eb1bc7e479cb4e48e7f1e0"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd.py",
+      "to": "skills/ofd/scripts/test/test_ofd.py",
+      "kind": "skill_test",
+      "skill": "ofd",
+      "before_sha256": "858f0873a262d6001b18bbca271d4c68194723d78c08a65046f56ca60b198bda",
+      "after_sha256": "128b941d936b066522eb0148ed2f7e3016f3f68f3ce6afdb23cb8b2b2f4b9a38"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_resource_recovery.py",
+      "to": "skills/ofd/scripts/test/test_ofd_resource_recovery.py",
+      "kind": "skill_test",
+      "skill": "ofd",
+      "before_sha256": "f3349178a08b7d182d442e249fedf698b1cbf96e25151ce21a1abe8a3f97d622",
+      "after_sha256": "21c83ba423822d88e96f8b9b19745c4fc5d0501771b485ce96f0899bced1f003"
+    },
+    {
+      "from": "skills/ofd/scripts/test_ofd_structure.py",
+      "to": "skills/ofd/scripts/test/test_ofd_structure.py",
+      "kind": "skill_test",
+      "skill": "ofd",
+      "before_sha256": "33499b069079b53243c37a3462a2516d7980b256c92f1c251dfcde2ccc5c99cb",
+      "after_sha256": "c3bdfbe88b3e2def6a4508db3430668cf87bdd15ed78e609d89795bb0f158edd"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_publication.py",
+      "to": "skills/wps/scripts/test/test_wps_publication.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "a889f5951b72ca30271f3a9fee0f6e3ee64bbc37cddbb248eeb27514395e8abf",
+      "after_sha256": "ee6304e9f2bf513bf3dab310e3f434a027401ed3625b114f857fc133aa4133c7"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_next_iteration.py",
+      "to": "skills/wps/scripts/test/test_wps_next_iteration.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "417961a7ead710ee1b030ac73e39cb6fa3d6436cba8dbe6ce566e26ef26d95a3",
+      "after_sha256": "a68e879e7606d85eca5ea4ff055f2b57970ee6825daf92d7b49a6fe5a8831fbf"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_charprops.py",
+      "to": "skills/wps/scripts/test/test_wps_charprops.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "91936a78465e872e5fc46e5c13c10e8e92c57e3b7765d5ff3c2dac7fadcd06db",
+      "after_sha256": "e8cb8aeab86a6111104d08ce3d30e655ac48319e2c3c005524c88cfffa9e46b2"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_stories.py",
+      "to": "skills/wps/scripts/test/test_wps_stories.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "0f1e9eb435b8195491d3de55d34a992774a54c42a71e139d0d2941dc1b205832",
+      "after_sha256": "c41d29bc15dd3c709a9624286b6e879b9129bac00e3ae2c73afa109961534c53"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_ooxml_related.py",
+      "to": "skills/wps/scripts/test/test_wps_ooxml_related.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "fb094a6968ea7f0a8438b52e9e7aa25c355e11ff3232b4b97b15aefdd188b53f",
+      "after_sha256": "6785683d6fa470e14ef2a58e419f95731d30a3bad17a9de957774429e06a5759"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_doc_versions.py",
+      "to": "skills/wps/scripts/test/test_wps_doc_versions.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "fd95fb9d4e028eea9b4139fb24b53055db89c7f75984c6a92f1b542dd2a50944",
+      "after_sha256": "443545eb2a8bf7a433bb987cc47d550e98ddb863d9a1721fd9b2b42a0dc00d7f"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_lazy_render.py",
+      "to": "skills/wps/scripts/test/test_wps_lazy_render.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "0e549c4b0d832a408aa6342bbfc9c4a4b569ff6fe77aa60f40804046c4ef51f6",
+      "after_sha256": "d11fdf31f06c1f78f8f40cc64b1a126cffade1a0de1446c365172db29dfb7aa8"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_refs.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_refs.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "578160036e52f4d32873d0eb23cb6e2625ed366a509e42413db075c7829b1b45",
+      "after_sha256": "f51ef47cb795aee76117502d2c063ca7abd761b405e86fe12b93cfdfd5f336ca"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_shapes.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_shapes.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "0287b7bfb4671631a803d893800216627b966ef822574a029ff00b0c5f3a9cc3",
+      "after_sha256": "51de79c9c595700d68cf64e470dc948335918720f6b6e95d8b2a97d86280bc6f"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_delivery.py",
+      "to": "skills/wps/scripts/test/test_wps_delivery.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "7e58f811a9b7d279686797a34610fe1a0b82aa3219e7b2e4a7d74dee1a1971a6",
+      "after_sha256": "4ed078488f5c6ac1f7b72de0143272f143222906ca96f58d489603caeb852066"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_recovery.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_recovery.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "555e2b21bcaab71a4e72025676c73c83696939a2009b61ae5c6d85e7e3c426b3",
+      "after_sha256": "71fb859e4afcc7a2db5716a2420b703a0d2e9ab85b51c30893d43137d3685217"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_output_contract.py",
+      "to": "skills/wps/scripts/test/test_wps_output_contract.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "fd9aa6b1ad433ca1547d76fe653882bc5ab045e87a774b14b07513a75be30081",
+      "after_sha256": "242a74348647cfd47f9f869eb17ac1fe3a1e23860d89ea9f2b973f983e44090a"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_official_defaults.py",
+      "to": "skills/wps/scripts/test/test_wps_official_defaults.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "0e1b26c9a198ee361c2f8acf03e5ccbde8ddf6477c33b08a3824d0b3dc9e14f3",
+      "after_sha256": "2c1c50a9dbb0f51299c90394bd5496e7b04b629e898709487ff909a65dfc2b56"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_content_validation.py",
+      "to": "skills/wps/scripts/test/test_wps_content_validation.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "792902f979b508eac719f8f1a050736d2ddd98352e4b1bea2225818764ac8c9f",
+      "after_sha256": "6cf378b44032e792687b152cddd71f02162ecd7c2cc66571f4cc1b0f7b4afcbd"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_selective.py",
+      "to": "skills/wps/scripts/test/test_wps_selective.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "3a4b29cae68e453b33eefe8b5df8a96bdabbe328388b3514ca1ae3be232952c8",
+      "after_sha256": "6c05dd23bda1ac7ba02d917bfeea0d44d67974523050014356527a01af1063db"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_layout.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_layout.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "1e5d98bcae318e6cf3fcf29e0b5b99748a04276c0358272e6ce21659d721f902",
+      "after_sha256": "c63b74b21438b2219352f2a9737ab487330233063a33bdf698e7819b481da8ad"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_structure.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_structure.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "0584a4ab4236433b3643ae699043331ec6d559f7fa39698af28763862879d49e",
+      "after_sha256": "4741eae90828f15598548c4d692aa70216f0de6b05d4d9398881b9cbbcb93169"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_publish_failure.py",
+      "to": "skills/wps/scripts/test/test_wps_publish_failure.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "61878a00ebb24b7e5466817fe0069f7b9e1d6c825b54167b0d3e4195b039f32b",
+      "after_sha256": "d1f5192fb446947063a5821891d1a4c4bacfc33ae4a6c0cb32e8495a78aa8e3e"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_reading.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_reading.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "4e2c1f5a9c9ff67ab26ae57d02f69ab188bbdc2ee201c86cdeb758ab4e0618c6",
+      "after_sha256": "4ade0196212117592d4a8f66b268554882e44c05b2a267500a7202e397e8c64f"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_huge_papx.py",
+      "to": "skills/wps/scripts/test/test_wps_huge_papx.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "45c720509644cd1277219c2b6fba071a444b7417a413e20e2aeea138dc461e42",
+      "after_sha256": "974a3cf97800891d6d8fad9dff4b2620e9d7c87f1974f380aabc7f436326942b"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_tables.py",
+      "to": "skills/wps/scripts/test/test_wps_tables.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "ca4dee4fd1984d7738fa61e808dc12a52e495613b505397986951b6835ff0f92",
+      "after_sha256": "c8196ac30d4223e252e193f30019f0916e44f2af12768f80fcbfa9ea89afc074"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_cfb.py",
+      "to": "skills/wps/scripts/test/test_wps_cfb.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "ae2fec04dfa449d24c9af711a4e1ca1a7d3d13fffb217b7238d4aab5addfbf77",
+      "after_sha256": "22cfd536d9b1ab3dc2694c53e65b74b7f2fde309bd54581c8fd3241b9e619ae3"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_paragraph_evidence.py",
+      "to": "skills/wps/scripts/test/test_wps_paragraph_evidence.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "db03525987d9cf8c8f6c29d15423024943bd6ad883dd60fb552f1d82a4cc5ee6",
+      "after_sha256": "6ba72e6fd2e2b91379403c9d9f61fc4b3094519242ddf27007b3adf4689a6301"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_cfb_padding.py",
+      "to": "skills/wps/scripts/test/test_wps_cfb_padding.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "110129f8a1ad92324879ede4e956653e9ba69c07c108481c311a894d1ed79472",
+      "after_sha256": "9c8076705c8662f73135396d8289a760d5e5d3fbc2900778b4a4f23eef7f2d99"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_table_layout.py",
+      "to": "skills/wps/scripts/test/test_wps_table_layout.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "dcede3418c2f29fd1f9161f0af54c8e731869226a5d1bb55092844109eaa99d6",
+      "after_sha256": "1885518797db2b9056d4eb32ef901129f91068996269519a42c872be71a550ca"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_task.py",
+      "to": "skills/wps/scripts/test/test_wps_task.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "0dc0b2befc3286a768e3fbc3602b0b9a815112e3304b4b55ec31079a775d1bcf",
+      "after_sha256": "f25e3478465ff070cc1fd1a5e4f71895baa9214bbb4c72ce3eb8ba1c4b638951"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_sample_acceptance.py",
+      "to": "skills/wps/scripts/test/test_wps_sample_acceptance.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "c45347c385f5241b845ba7ae5d696f56d057d7c44cbb064fd9d04756ad1c6318",
+      "after_sha256": "d8718688ffe8a9aa56a61401fec19f9817109bf90fdfd1a0cc621f8a8d8c29a7"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_hidden.py",
+      "to": "skills/wps/scripts/test/test_wps_hidden.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "bb423c99abc472abb227a607492241d1b634ef697abe622f3c258ccda29ecb08",
+      "after_sha256": "695a754443cf13164dd079292c3d977a9c97175fca9ec9fd67f1cbde8ff169bf"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_text_recovery.py",
+      "to": "skills/wps/scripts/test/test_wps_text_recovery.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "9424716041832ec3ef17bbe5d0dee3020a5633bd6b97e23fbf2a30182a77a7c0",
+      "after_sha256": "e34248d08eb41af43d17763939879e85af02a8e7da92f505c3ba0bb1ed57364e"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_failure_diagnostics.py",
+      "to": "skills/wps/scripts/test/test_wps_failure_diagnostics.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "0973042103e4c6f5af5903836bb84ff3d83a67d4652c550194053e257e05d32d",
+      "after_sha256": "af7c25f4f994ffbde5db1acf37380638883f6140d090b4ea1e831b18742d1d96"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_paragraph_sources.py",
+      "to": "skills/wps/scripts/test/test_wps_paragraph_sources.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "50f194dec2ff12abd2970ba30fc4c4b30cb8dfc2d0dc998654d95d66a9c0afdc",
+      "after_sha256": "03865dab7d62d1cf74004a42d4c5cf945dfdfcf61e62ce611de72fabb5a31297"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_export.py",
+      "to": "skills/wps/scripts/test/test_wps_export.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "d53b68ebcb98f7d3cf31b425ea9f9ce633677acdc84d6f6b12a6747b9e093e70",
+      "after_sha256": "4c3be06e1300643f0583a1b58943489d70acee68caa53cc23116fef0a01f4161"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_comments.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_comments.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "ceae1d08ff97dbbdf016d484b760f30d870e2efe229c9f137809bcb306312ca3",
+      "after_sha256": "26f918e1c716ad19ee2dd0fb6e468e939b981614d3dbe13d8a225d82fe6591ac"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_tables.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_tables.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "207a280e83bb451950eca7de0722978a387d05b595c314db591b4eadcd221c64",
+      "after_sha256": "8e7e2a7647feadd61bec07c89dc3c93285e020dc32dfd39993ff8b8a75847895"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_geometry.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_geometry.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "237b7b942472e9ff0e07c763fb2fe2e1a435d188510e9cac1bc933ee8fb86581",
+      "after_sha256": "0206b8ef07a0f92fe0003bee60ba4628ca9b6ed3d850c30bc879505f87d1e022"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_task_paths.py",
+      "to": "skills/wps/scripts/test/test_wps_task_paths.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "1e947623ecc4e262cacc2ba02dc6cb2276732af8b67cc55b03560dabc476c2ec",
+      "after_sha256": "936e647d2d7a567eef11361436d322eb6b890c8015658988829944198d0fa234"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_strict_word.py",
+      "to": "skills/wps/scripts/test/test_wps_strict_word.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "9a9ec2f501ca46b592ae5197d7699eb3a958da0c943ad799bb5c1b183151ed67",
+      "after_sha256": "bd81eb9b8fb4dace5f9dfee79d478e203af3a6fd9a64fdee3d43cb88c7ed83b1"
+    },
+    {
+      "from": "skills/wps/scripts/test_task_cli_support.py",
+      "to": "skills/wps/scripts/test/test_task_cli_support.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "17b4979496e3fc486b1034dae71569890cc4e07318dec80c802046db025f0ae5",
+      "after_sha256": "1f6c1def2cc8a9b63b3ece3946cca7ecd650eee49213985cec85b9f7e837da16"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_ownership.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_ownership.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "47e1bb6bd8f575c5b006256157b8bf0ee6f9c358630d9f3215fe193cef5da1ba",
+      "after_sha256": "24391db13eb68d408fdea9279f53bee46713c5a9bd9830143bde90153620c4d8"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_rtf_merges.py",
+      "to": "skills/wps/scripts/test/test_wps_rtf_merges.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "bbea2767d72112d9d40356c4afa194f01a97f6b94cca842a700fd4d3ca5f6254",
+      "after_sha256": "4d92f93f96e4ed7aead86987ac025f707c2cc8af617b61b60d5f86c67cc676ef"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_ooxml.py",
+      "to": "skills/wps/scripts/test/test_wps_ooxml.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "5853386d72814df0b6c5132f951386e1780eedac03e1c4d05ab52cae3bc6219b",
+      "after_sha256": "8db4ee0be4506456bb46eed08929f1bc6b63b021563069ed69b27518070889df"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_routing.py",
+      "to": "skills/wps/scripts/test/test_wps_routing.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "9f15e04639fd84667c74f8152f56c6692acb73f019d322d8b9295f23e06e9861",
+      "after_sha256": "2e15478a3fd5dcc297f7764f2b23988718d3c385c80381ec10a6b3472c5e0fbd"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_word_profile.py",
+      "to": "skills/wps/scripts/test/test_wps_word_profile.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "d2eb76af9a941dfb0d5e676e773be9ea1fcc7dda11851708131ce93b361c5847",
+      "after_sha256": "40c32c11b8511f0d719b8ec5447005df9ae4a430febd3d0aae1c87bfec58f5ad"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_doc_extensions.py",
+      "to": "skills/wps/scripts/test/test_wps_doc_extensions.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "1431ecf61b4b10fc224f01510609a7d480800b1f0b64d6f6d64dfbfe08c2334d",
+      "after_sha256": "e8a9ac7281cc3eec45ac66ce7da86882ccb5ab070d5181b9baaeaf178a53601a"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_diagnostics.py",
+      "to": "skills/wps/scripts/test/test_wps_diagnostics.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "d0d86ef584ea525dc348f794ba31751cbd604bea06ecfa9ce3df1b3e56d83104",
+      "after_sha256": "5b2307775f876131486599d18c3c43d8460610026544a65d107d2f6bbcccfc8c"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_partial_reflow.py",
+      "to": "skills/wps/scripts/test/test_wps_partial_reflow.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "62a89ecca01de22c5dede93796e6c305c85b05c632038e947ec2a42fc01a8946",
+      "after_sha256": "107d1982d80921e4e54acacb2c8f0956328156132ca3eb59472fc7a6304d3d8e"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps.py",
+      "to": "skills/wps/scripts/test/test_wps.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "c9f655fb75715efa5dc8bf93967b3eb0c0fa23f44af2bf248da6c743c5fac8bd",
+      "after_sha256": "59e1c622f6ef6eb8e2ac06d4c59e9c77eee272f54b5217cc18cfe4be37ba471d"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_edit.py",
+      "to": "skills/wps/scripts/test/test_wps_edit.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "70d10528643bbcadd44401cfdc82e7fc1fca7aa53bbe82ca998d571215d9a67b",
+      "after_sha256": "260e96cdb08a9b91fc9b04870d8ec2c9d1119c3485ce21c0ab38e2f3ed500d52"
+    },
+    {
+      "from": "skills/wps/scripts/test_wps_binary_headers.py",
+      "to": "skills/wps/scripts/test/test_wps_binary_headers.py",
+      "kind": "skill_test",
+      "skill": "wps",
+      "before_sha256": "6519923e7ac82f1fa59c64458308f34e8c7fc41f6db93e98fb311f9335787b43",
+      "after_sha256": "27567d71e2fc94eb21766bdbe98352c16938634c463dfa28467608ea1cd337db"
+    },
+    {
+      "from": "skills/et/scripts/verify_et_samples.py",
+      "to": "skills/et/scripts/test/verify_et_samples.py",
+      "kind": "sample_verifier",
+      "skill": "et",
+      "before_sha256": "9c7477007d91e1816c8263a60e0701b8f8888f131c1dbf0cf2f8b18ffa796cec",
+      "after_sha256": "4e0af1ecfceb251ad0c31fd3ec83ed13277e615066f663ef46c8813eeadbd0ab"
+    },
+    {
+      "from": "skills/et/scripts/verify_et_analysis.py",
+      "to": "skills/et/scripts/test/verify_et_analysis.py",
+      "kind": "sample_verifier",
+      "skill": "et",
+      "before_sha256": "9475568ce171c884da49205e2cbe41a2e28a5ca535e5360c2c31f63a23b49215",
+      "after_sha256": "bd97b723e00c539c60c98d5d455464233c4e083dd7a85bc4340fdba464181834"
+    },
+    {
+      "from": "skills/wps/scripts/verify_wps_sample.py",
+      "to": "skills/wps/scripts/test/verify_wps_sample.py",
+      "kind": "sample_verifier",
+      "skill": "wps",
+      "before_sha256": "22c90059a15e0d4f9dd668fa075794b4a0b13219feb3e8569e7b0566a007c662",
+      "after_sha256": "8551448fe7599473860ac6af4b6a7d9a4e6e2626b53137f2dfe7162fb9a145bb"
+    },
+    {
+      "from": "tests/pptx/test_svg_limits.py",
+      "to": "skills/pptx/scripts/test/test_svg_limits.py",
+      "kind": "repository_single_skill",
+      "skill": "pptx",
+      "before_sha256": "b0099d90db5353e38e68349a6be29b7c569155f98baeec3467bfc39fc045a204",
+      "after_sha256": "a2e417bff72acbdd4b7fde9506cffe7eb32a733778704843cbfd3fd4a3d183a4"
+    },
+    {
+      "from": "tests/pptx/test_workflow.py",
+      "to": "skills/pptx/scripts/test/test_workflow.py",
+      "kind": "repository_single_skill",
+      "skill": "pptx",
+      "before_sha256": "04d4e6dbeb06072b39927b0d3f6b6792d06c7b30a5877bc841517509755f116b",
+      "after_sha256": "721da476d88d13bc964456722b5edaaf3664b29db87d4f35f37686f5ae8498b6"
+    },
+    {
+      "from": "tests/pptx/test_images.py",
+      "to": "skills/pptx/scripts/test/test_images.py",
+      "kind": "repository_single_skill",
+      "skill": "pptx",
+      "before_sha256": "ee0d327b265b168dde3b8fb0b6357ec8f2a4e4cc9e43f53bfe13611c48917273",
+      "after_sha256": "7616659e073549233309f624a0e231565aa6679019700cd6d837b98164c2264f"
+    },
+    {
+      "from": "tests/pptx/test_package.py",
+      "to": "skills/pptx/scripts/test/test_package.py",
+      "kind": "repository_single_skill",
+      "skill": "pptx",
+      "before_sha256": "74fbab2896240af19a83c5a9293369c93581209640b8a9542d3e913815ba5885",
+      "after_sha256": "ad0ce4ee7be71689fdc5da9147a2a3509ca7b1a9905f59a82dcfb02721873156"
+    },
+    {
+      "from": "tests/pptx/test_validation.py",
+      "to": "skills/pptx/scripts/test/test_validation.py",
+      "kind": "repository_single_skill",
+      "skill": "pptx",
+      "before_sha256": "df5453938d23c65cf0c6ae379de874845d10df4b6ca4a5781ddc3e4a7cff8e8c",
+      "after_sha256": "7038c026f653c4f8ad73148cea4ecc335ac55bc06af1897ce9fff39b1ce1ea40"
+    },
+    {
+      "from": "tests/test_ofd_postfix_review.py",
+      "to": "skills/ofd/scripts/test/test_ofd_postfix_review.py",
+      "kind": "repository_single_skill",
+      "skill": "ofd",
+      "before_sha256": "326dcc337bc85adcc060bcd89df74d64b77c016ae49f058e2c8151a202b5099c",
+      "after_sha256": "6ff34fcd89ca2944104c085ad17cf8a02a48f0894a02b0244949b11d84e7ab1f"
+    }
+  ],
+  "description_review": "六个Skill业务能力未变，description人工核对仍准确，保持不变；未执行宿主自动选择评测。",
+  "baseline": {
+    "docx": {
+      "directory": "skills/docx/scripts",
+      "pattern": "test_*.py",
+      "collected": 399,
+      "run": 399,
+      "passed": 399,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 20.177056540967897,
+      "test_counts_by_module": {
+        "test_archive_collision": 11,
+        "test_archive_deliverables": 13,
+        "test_cleanup_task": 18,
+        "test_cli_task_paths": 3,
+        "test_delivery_api": 12,
+        "test_docx_compact_receipt": 4,
+        "test_docx_controlled_flow": 16,
+        "test_docx_delivery": 34,
+        "test_docx_editing": 17,
+        "test_docx_generation": 9,
+        "test_docx_io": 20,
+        "test_docx_layout_delivery": 13,
+        "test_docx_legacy_entry": 2,
+        "test_docx_official_pagination_defaults": 6,
+        "test_docx_output_channels": 3,
+        "test_docx_p1_layout": 12,
+        "test_docx_p2_layout": 15,
+        "test_docx_pagination_governance": 14,
+        "test_docx_read_fastpath": 19,
+        "test_docx_receipt_cleanup": 7,
+        "test_docx_reference_loading": 9,
+        "test_docx_routing": 5,
+        "test_docx_runtime": 6,
+        "test_docx_simple_fastpath": 3,
+        "test_docx_stability": 12,
+        "test_docx_task_lazy_routing": 4,
+        "test_docx_task_reliability": 15,
+        "test_docx_token_routing": 5,
+        "test_docx_typography": 12,
+        "test_edit_delivery": 9,
+        "test_flat_temporary": 7,
+        "test_output_location": 25,
+        "test_run_docx_task": 26,
+        "test_runtime_modules": 7,
+        "test_terminal_cleanup": 6
+      }
+    },
+    "wps": {
+      "directory": "skills/wps/scripts",
+      "pattern": "test_*.py",
+      "collected": 435,
+      "run": 435,
+      "passed": 435,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 6.7249799580313265,
+      "test_counts_by_module": {
+        "test_wps": 22,
+        "test_wps_binary_comments": 7,
+        "test_wps_binary_headers": 8,
+        "test_wps_binary_ownership": 2,
+        "test_wps_binary_refs": 9,
+        "test_wps_binary_shapes": 5,
+        "test_wps_binary_tables": 12,
+        "test_wps_cfb": 16,
+        "test_wps_cfb_padding": 7,
+        "test_wps_charprops": 7,
+        "test_wps_content_validation": 4,
+        "test_wps_delivery": 16,
+        "test_wps_diagnostics": 14,
+        "test_wps_doc_extensions": 11,
+        "test_wps_doc_versions": 7,
+        "test_wps_edit": 4,
+        "test_wps_export": 16,
+        "test_wps_failure_diagnostics": 3,
+        "test_wps_hidden": 14,
+        "test_wps_huge_papx": 8,
+        "test_wps_lazy_render": 4,
+        "test_wps_next_iteration": 16,
+        "test_wps_official_defaults": 8,
+        "test_wps_ooxml": 10,
+        "test_wps_ooxml_related": 11,
+        "test_wps_output_contract": 34,
+        "test_wps_paragraph_evidence": 8,
+        "test_wps_paragraph_sources": 11,
+        "test_wps_partial_reflow": 3,
+        "test_wps_publication": 9,
+        "test_wps_publish_failure": 3,
+        "test_wps_routing": 7,
+        "test_wps_rtf_geometry": 5,
+        "test_wps_rtf_layout": 4,
+        "test_wps_rtf_merges": 4,
+        "test_wps_rtf_reading": 9,
+        "test_wps_rtf_recovery": 11,
+        "test_wps_rtf_structure": 7,
+        "test_wps_sample_acceptance": 11,
+        "test_wps_selective": 4,
+        "test_wps_stories": 8,
+        "test_wps_strict_word": 4,
+        "test_wps_table_layout": 4,
+        "test_wps_tables": 17,
+        "test_wps_task": 5,
+        "test_wps_task_paths": 12,
+        "test_wps_text_recovery": 9,
+        "test_wps_word_profile": 5
+      }
+    },
+    "ofd": {
+      "directory": "skills/ofd/scripts",
+      "pattern": "test_*.py",
+      "collected": 143,
+      "run": 143,
+      "passed": 143,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 2.035781375016086,
+      "test_counts_by_module": {
+        "test_ofd": 38,
+        "test_ofd_bundled_fonts": 11,
+        "test_ofd_compat": 16,
+        "test_ofd_generate": 29,
+        "test_ofd_resource_recovery": 11,
+        "test_ofd_structure": 30,
+        "test_ofd_views": 8
+      }
+    },
+    "artifact-lifecycle": {
+      "directory": "skills/artifact-lifecycle/scripts",
+      "pattern": "test_*.py",
+      "collected": 16,
+      "run": 16,
+      "passed": 16,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 0.13970445899758488,
+      "test_counts_by_module": {
+        "test_lifecycle": 16
+      }
+    },
+    "et": {
+      "directory": "skills/et/scripts/test",
+      "pattern": "test_*.py",
+      "collected": 453,
+      "run": 453,
+      "passed": 453,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 5.847487749997526,
+      "test_counts_by_module": {
+        "test_et_cli": 3,
+        "test_et_cli_contract": 3,
+        "test_et_table_analysis": 28,
+        "test_et_table_quality_preview": 20,
+        "test_et_table_row_selection": 13,
+        "test_wps_accounting": 5,
+        "test_wps_biff8": 14,
+        "test_wps_biff8_audit": 15,
+        "test_wps_biff8_builtin_names": 14,
+        "test_wps_biff8_conditional": 12,
+        "test_wps_biff8_drawing_notes": 12,
+        "test_wps_biff8_names": 12,
+        "test_wps_biff8_noncell": 6,
+        "test_wps_biff8_print_titles_memfunc": 8,
+        "test_wps_biff8_salvage": 11,
+        "test_wps_biff8_salvage_hardening": 11,
+        "test_wps_biff_codepage_decl": 7,
+        "test_wps_biff_reading": 9,
+        "test_wps_biff_tablestyles": 7,
+        "test_wps_cfb": 16,
+        "test_wps_continue": 5,
+        "test_wps_data_policy": 15,
+        "test_wps_dxf": 15,
+        "test_wps_dxf_integration": 4,
+        "test_wps_dxf_readability": 4,
+        "test_wps_dxf_semantics": 7,
+        "test_wps_embedded_charts": 5,
+        "test_wps_et_capacity": 11,
+        "test_wps_et_errors": 8,
+        "test_wps_file_access": 13,
+        "test_wps_format_rules": 5,
+        "test_wps_formula_groups": 11,
+        "test_wps_internal_links": 3,
+        "test_wps_iso_date": 6,
+        "test_wps_legacy_compat": 7,
+        "test_wps_numeric": 8,
+        "test_wps_ooxml_sheet": 10,
+        "test_wps_phonetic": 9,
+        "test_wps_pure_tables": 13,
+        "test_wps_read_view": 8,
+        "test_wps_rich_strings": 11,
+        "test_wps_row_column_formats": 3,
+        "test_wps_sheet_comments": 6,
+        "test_wps_spreadsheet_stability": 5,
+        "test_wps_style_inheritance": 5,
+        "test_wps_template_compatibility": 15,
+        "test_wps_template_metadata": 5,
+        "test_wps_visibility": 6,
+        "test_wps_vml_notes": 4
+      }
+    },
+    "pptx": {
+      "directory": "tests/pptx",
+      "pattern": "test_*.py",
+      "collected": 66,
+      "run": 66,
+      "passed": 66,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 5.51003399991896,
+      "test_counts_by_module": {
+        "test_adapter": 3,
+        "test_images": 20,
+        "test_package": 8,
+        "test_svg_limits": 9,
+        "test_validation": 12,
+        "test_workflow": 14
+      }
+    },
+    "repository": {
+      "directory": "tests",
+      "pattern": "test_*.py",
+      "collected": 48,
+      "run": 48,
+      "passed": 47,
+      "failures": [
+        [
+          "test_check_execution.ExecutionTests.test_structure_check_does_not_claim_environment_or_artifact_acceptance",
+          "Traceback (most recent call last):\n  File \"/Users/yangxuezhen/git/PSL-SKILLS/tests/test_check_execution.py\", line 147, in test_structure_check_does_not_claim_environment_or_artifact_acceptance\n    self.assertEqual(report['check_status'], 'passed', report)\nAssertionError: 'failed' != 'passed'\n- failed\n+ passed\n : {'schema_version': 'skill_check_execution_v1', 'invocation_id': '31284099338b4bca9208725d7c8b6e49', 'check_id': 'skill-structure', 'check_kind': 'skill_structure', 'artifact_validation': 'not_run', 'execution_status': 'completed', 'check_status': 'failed', 'argv': ['/Users/yangxuezhen/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12', '-I', '-S', '-B', '/Users/yangxuezhen/git/PSL-SKILLS/skills/skill-development-standards/scripts/check_skill.py', '/Users/yangxuezhen/git/PSL-SKILLS/skills/docx', '--strict'], 'exit_code': 1, 'returncode': 1, 'stdout': 'ERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_delivery.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_layout_delivery.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_delivery_api.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_compact_receipt.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_routing.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_stability.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_task_reliability.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_token_routing.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_cleanup_task.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_controlled_flow.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_archive_collision.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_p1_layout.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_pagination_governance.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_io.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_output_channels.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_archive_deliverables.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_generation.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_official_pagination_defaults.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_terminal_cleanup.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_read_fastpath.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_cli_task_paths.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_runtime_modules.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_run_docx_task.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_p2_layout.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_simple_fastpath.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_editing.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_typography.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_legacy_entry.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_receipt_cleanup.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_reference_loading.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_runtime.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_flat_temporary.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_docx_task_lazy_routing.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_output_location.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\nERROR /Users/yangxuezhen/git/PSL-SKILLS/skills/docx:scripts/test_edit_delivery.py: [test-layout] Skill test scripts must be under scripts/test; production flows must not call tests (review separately).\\n', 'stderr': '', 'stdout_bytes': 7201, 'stderr_bytes': 0, 'stdout_truncated': False, 'stderr_truncated': False, 'stdout_decode_errors': False, 'stderr_decode_errors': False, 'task_dir': '/Users/yangxuezhen/git/PSL-SKILLS/check-execution-l70ym40h'}\n"
+        ]
+      ],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": false,
+      "seconds": 5.724066791008227,
+      "test_counts_by_module": {
+        "test_artifact_lifecycle_parity": 1,
+        "test_check_execution": 12,
+        "test_complex_json_templates": 7,
+        "test_ofd_postfix_review": 6,
+        "test_read_view_budget": 6,
+        "test_self_check_contracts": 9,
+        "test_wps_docx_official_parity": 2,
+        "test_wps_et_pipeline": 3,
+        "test_wps_lifecycle_parity": 1,
+        "test_xlsx_lifecycle_parity": 1
+      }
+    }
+  },
+  "final_source": {
+    "docx": {
+      "directory": "skills/docx/scripts/test",
+      "pattern": "test_*.py",
+      "collected": 399,
+      "run": 399,
+      "passed": 399,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 20.490963125019334,
+      "test_counts_by_module": {
+        "test_archive_collision": 11,
+        "test_archive_deliverables": 13,
+        "test_cleanup_task": 18,
+        "test_cli_task_paths": 3,
+        "test_delivery_api": 12,
+        "test_docx_compact_receipt": 4,
+        "test_docx_controlled_flow": 16,
+        "test_docx_delivery": 34,
+        "test_docx_editing": 17,
+        "test_docx_generation": 9,
+        "test_docx_io": 20,
+        "test_docx_layout_delivery": 13,
+        "test_docx_legacy_entry": 2,
+        "test_docx_official_pagination_defaults": 6,
+        "test_docx_output_channels": 3,
+        "test_docx_p1_layout": 12,
+        "test_docx_p2_layout": 15,
+        "test_docx_pagination_governance": 14,
+        "test_docx_read_fastpath": 19,
+        "test_docx_receipt_cleanup": 7,
+        "test_docx_reference_loading": 9,
+        "test_docx_routing": 5,
+        "test_docx_runtime": 6,
+        "test_docx_simple_fastpath": 3,
+        "test_docx_stability": 12,
+        "test_docx_task_lazy_routing": 4,
+        "test_docx_task_reliability": 15,
+        "test_docx_token_routing": 5,
+        "test_docx_typography": 12,
+        "test_edit_delivery": 9,
+        "test_flat_temporary": 7,
+        "test_output_location": 25,
+        "test_run_docx_task": 26,
+        "test_runtime_modules": 7,
+        "test_terminal_cleanup": 6
+      }
+    },
+    "wps": {
+      "directory": "skills/wps/scripts/test",
+      "pattern": "test_*.py",
+      "collected": 435,
+      "run": 435,
+      "passed": 435,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 6.918026458006352,
+      "test_counts_by_module": {
+        "test_wps": 22,
+        "test_wps_binary_comments": 7,
+        "test_wps_binary_headers": 8,
+        "test_wps_binary_ownership": 2,
+        "test_wps_binary_refs": 9,
+        "test_wps_binary_shapes": 5,
+        "test_wps_binary_tables": 12,
+        "test_wps_cfb": 16,
+        "test_wps_cfb_padding": 7,
+        "test_wps_charprops": 7,
+        "test_wps_content_validation": 4,
+        "test_wps_delivery": 16,
+        "test_wps_diagnostics": 14,
+        "test_wps_doc_extensions": 11,
+        "test_wps_doc_versions": 7,
+        "test_wps_edit": 4,
+        "test_wps_export": 16,
+        "test_wps_failure_diagnostics": 3,
+        "test_wps_hidden": 14,
+        "test_wps_huge_papx": 8,
+        "test_wps_lazy_render": 4,
+        "test_wps_next_iteration": 16,
+        "test_wps_official_defaults": 8,
+        "test_wps_ooxml": 10,
+        "test_wps_ooxml_related": 11,
+        "test_wps_output_contract": 34,
+        "test_wps_paragraph_evidence": 8,
+        "test_wps_paragraph_sources": 11,
+        "test_wps_partial_reflow": 3,
+        "test_wps_publication": 9,
+        "test_wps_publish_failure": 3,
+        "test_wps_routing": 7,
+        "test_wps_rtf_geometry": 5,
+        "test_wps_rtf_layout": 4,
+        "test_wps_rtf_merges": 4,
+        "test_wps_rtf_reading": 9,
+        "test_wps_rtf_recovery": 11,
+        "test_wps_rtf_structure": 7,
+        "test_wps_sample_acceptance": 11,
+        "test_wps_selective": 4,
+        "test_wps_stories": 8,
+        "test_wps_strict_word": 4,
+        "test_wps_table_layout": 4,
+        "test_wps_tables": 17,
+        "test_wps_task": 5,
+        "test_wps_task_paths": 12,
+        "test_wps_text_recovery": 9,
+        "test_wps_word_profile": 5
+      }
+    },
+    "ofd": {
+      "directory": "skills/ofd/scripts/test",
+      "pattern": "test_*.py",
+      "collected": 149,
+      "run": 149,
+      "passed": 149,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 2.139105291920714,
+      "test_counts_by_module": {
+        "test_ofd": 38,
+        "test_ofd_bundled_fonts": 11,
+        "test_ofd_compat": 16,
+        "test_ofd_generate": 29,
+        "test_ofd_postfix_review": 6,
+        "test_ofd_resource_recovery": 11,
+        "test_ofd_structure": 30,
+        "test_ofd_views": 8
+      }
+    },
+    "artifact-lifecycle": {
+      "directory": "skills/artifact-lifecycle/scripts/test",
+      "pattern": "test_*.py",
+      "collected": 16,
+      "run": 16,
+      "passed": 16,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 0.1340188339818269,
+      "test_counts_by_module": {
+        "test_lifecycle": 16
+      }
+    },
+    "et": {
+      "directory": "skills/et/scripts/test",
+      "pattern": "test_*.py",
+      "collected": 453,
+      "run": 453,
+      "passed": 453,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 6.103195667034015,
+      "test_counts_by_module": {
+        "test_et_cli": 3,
+        "test_et_cli_contract": 3,
+        "test_et_table_analysis": 28,
+        "test_et_table_quality_preview": 20,
+        "test_et_table_row_selection": 13,
+        "test_wps_accounting": 5,
+        "test_wps_biff8": 14,
+        "test_wps_biff8_audit": 15,
+        "test_wps_biff8_builtin_names": 14,
+        "test_wps_biff8_conditional": 12,
+        "test_wps_biff8_drawing_notes": 12,
+        "test_wps_biff8_names": 12,
+        "test_wps_biff8_noncell": 6,
+        "test_wps_biff8_print_titles_memfunc": 8,
+        "test_wps_biff8_salvage": 11,
+        "test_wps_biff8_salvage_hardening": 11,
+        "test_wps_biff_codepage_decl": 7,
+        "test_wps_biff_reading": 9,
+        "test_wps_biff_tablestyles": 7,
+        "test_wps_cfb": 16,
+        "test_wps_continue": 5,
+        "test_wps_data_policy": 15,
+        "test_wps_dxf": 15,
+        "test_wps_dxf_integration": 4,
+        "test_wps_dxf_readability": 4,
+        "test_wps_dxf_semantics": 7,
+        "test_wps_embedded_charts": 5,
+        "test_wps_et_capacity": 11,
+        "test_wps_et_errors": 8,
+        "test_wps_file_access": 13,
+        "test_wps_format_rules": 5,
+        "test_wps_formula_groups": 11,
+        "test_wps_internal_links": 3,
+        "test_wps_iso_date": 6,
+        "test_wps_legacy_compat": 7,
+        "test_wps_numeric": 8,
+        "test_wps_ooxml_sheet": 10,
+        "test_wps_phonetic": 9,
+        "test_wps_pure_tables": 13,
+        "test_wps_read_view": 8,
+        "test_wps_rich_strings": 11,
+        "test_wps_row_column_formats": 3,
+        "test_wps_sheet_comments": 6,
+        "test_wps_spreadsheet_stability": 5,
+        "test_wps_style_inheritance": 5,
+        "test_wps_template_compatibility": 15,
+        "test_wps_template_metadata": 5,
+        "test_wps_visibility": 6,
+        "test_wps_vml_notes": 4
+      }
+    },
+    "pptx": {
+      "directory": "skills/pptx/scripts/test",
+      "pattern": "test_*.py",
+      "collected": 63,
+      "run": 63,
+      "passed": 63,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 5.433025415986776,
+      "test_counts_by_module": {
+        "test_images": 20,
+        "test_package": 8,
+        "test_svg_limits": 9,
+        "test_validation": 12,
+        "test_workflow": 14
+      }
+    },
+    "repository": {
+      "directory": "tests",
+      "pattern": "test_*.py",
+      "collected": 47,
+      "run": 47,
+      "passed": 47,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 6.039152708952315,
+      "test_counts_by_module": {
+        "test_artifact_lifecycle_parity": 1,
+        "test_check_execution": 12,
+        "test_complex_json_templates": 7,
+        "test_read_view_budget": 6,
+        "test_self_check_contracts": 9,
+        "test_skill_test_runner": 5,
+        "test_wps_docx_official_parity": 2,
+        "test_wps_et_pipeline": 3,
+        "test_wps_lifecycle_parity": 1,
+        "test_xlsx_lifecycle_parity": 1
+      }
+    },
+    "pptx_adapter": {
+      "directory": "tests/pptx",
+      "pattern": "test_*.py",
+      "collected": 3,
+      "run": 3,
+      "passed": 3,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "expected_failures": [],
+      "unexpected_successes": [],
+      "loader_errors": [],
+      "successful": true,
+      "seconds": 0.48328212508931756,
+      "test_counts_by_module": {
+        "test_adapter": 3
+      }
+    }
+  },
+  "test_identity_comparison": {
+    "before_total": 1560,
+    "after_total": 1565,
+    "removed": [],
+    "added": [
+      "test_skill_test_runner.TestRunnerTests.test_empty_discovery_is_not_success",
+      "test_skill_test_runner.TestRunnerTests.test_failures_keep_nonzero_exit_and_diagnostics",
+      "test_skill_test_runner.TestRunnerTests.test_import_error_cannot_be_reported_as_a_passing_suite",
+      "test_skill_test_runner.TestRunnerTests.test_nonmatching_pattern_cannot_be_reported_as_a_passing_suite",
+      "test_skill_test_runner.TestRunnerTests.test_real_tests_are_counted_and_run"
+    ]
+  },
+  "recursive_discovery": {
+    "docx": {
+      "exit_code": 0,
+      "result": {
+        "count": 399,
+        "errors": []
+      },
+      "stderr": ""
+    },
+    "wps": {
+      "exit_code": 0,
+      "result": {
+        "count": 435,
+        "errors": []
+      },
+      "stderr": ""
+    },
+    "ofd": {
+      "exit_code": 0,
+      "result": {
+        "count": 149,
+        "errors": []
+      },
+      "stderr": ""
+    },
+    "artifact-lifecycle": {
+      "exit_code": 0,
+      "result": {
+        "count": 16,
+        "errors": []
+      },
+      "stderr": ""
+    },
+    "et": {
+      "exit_code": 0,
+      "result": {
+        "count": 453,
+        "errors": []
+      },
+      "stderr": ""
+    },
+    "pptx": {
+      "exit_code": 0,
+      "result": {
+        "count": 63,
+        "errors": []
+      },
+      "stderr": ""
+    }
+  },
+  "package_verification": {
+    "temporary_cleanup_complete": true,
+    "readonly_installations": true,
+    "source_members_crc_and_bytes": "all matched",
+    "production_without_tests": {
+      "checks": 11,
+      "all_exit_zero": true,
+      "external_PATH": "empty",
+      "success_markers": "observed",
+      "source_unchanged": true
+    },
+    "suites": {
+      "docx": {
+        "collected": 399,
+        "run": 399,
+        "passed": 399,
+        "failed": 0,
+        "skipped": [],
+        "strict_exit": 0,
+        "members": 120,
+        "ids_sha256": "97233e7e02b4e514ff4b45034d65e2665ba77bd2194a783a924d6173087db112"
+      },
+      "wps": {
+        "collected": 435,
+        "run": 435,
+        "passed": 432,
+        "failed": 0,
+        "skipped": [
+          [
+            "test_wps_export.TestWpsExport.test_convert_docx_complex_table_sample",
+            "Sample table docx not found"
+          ],
+          [
+            "test_wps_export.TestWpsExport.test_convert_docx_rtf_backend_real_sample",
+            "Sample docx not found"
+          ],
+          [
+            "test_wps_output_contract.OutputContractTests.test_legacy_converter_reports_complex_table_partial",
+            "Repository complex-table fixture unavailable in standalone package"
+          ]
+        ],
+        "strict_exit": 0,
+        "members": 133,
+        "ids_sha256": "f9d9266428cc15b39eac6a47a25324cf20c8024e47f797b967e2437ece7a22db"
+      },
+      "ofd": {
+        "collected": 149,
+        "run": 149,
+        "passed": 149,
+        "failed": 0,
+        "skipped": [],
+        "strict_exit": 0,
+        "members": 32,
+        "ids_sha256": "145662803d66a59513f6ae9b7c2fc00ccf84e05d18b8c6c983f6acf752702110"
+      },
+      "artifact-lifecycle": {
+        "collected": 16,
+        "run": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": [],
+        "strict_exit": 0,
+        "members": 14,
+        "ids_sha256": "46707481f4d938d36c3a7b151b7cb6221d488bf0e171ab25f4ed203f2991b4fc"
+      },
+      "et": {
+        "collected": 453,
+        "run": 453,
+        "passed": 453,
+        "failed": 0,
+        "skipped": [],
+        "strict_exit": 0,
+        "members": 146,
+        "ids_sha256": "87f82060235176c330aed01f40abcf4ec747ce6e74cbfa1be27982e973303e04"
+      },
+      "pptx": {
+        "collected": 63,
+        "run": 63,
+        "passed": 63,
+        "failed": 0,
+        "skipped": [],
+        "strict_exit": 0,
+        "members": 88,
+        "ids_sha256": "531be1790c7de3757b02e1c54bfce686bc2ffc519ef47833d6ce395739895063"
+      }
+    }
+  },
+  "cli_and_checker_checks": {
+    "strict": {
+      "command": [
+        "/Users/yangxuezhen/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/artifact-lifecycle",
+        "skills/bank-writing",
+        "skills/docx",
+        "skills/et",
+        "skills/ofd",
+        "skills/pptx",
+        "skills/skill-development-standards",
+        "skills/table-workflow",
+        "skills/wps",
+        "skills/xlsx",
+        "--strict"
+      ],
+      "exit_code": 1,
+      "stdout": "OK skills/artifact-lifecycle\nOK skills/bank-writing\nOK skills/docx\nWARNING skills/et:scripts/__pycache__: [suspicious-entry] Empty/cache/log/tmp/README directories are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_names.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_result.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_numeric.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf_semantics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_noncell.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_et_cli.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_builtin_names.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_legacy_compat.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf_integration.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_format_rules.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_visibility.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_phonetic.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_data_policy.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_ooxml_sheet.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_vml_notes.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_accounting.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/verify_et_samples.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_ooxml.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_continue.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_read_view.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_iso_date.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_dxf.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_audit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_cfb.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_print_titles_memfunc.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_style_inheritance.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_et_errors.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_internal_links.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_rich_strings.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_visibility.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_file_access.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_template_metadata.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_audit_sources.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_salvage.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_ooxml_sheet.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_sheet_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_tablestyles.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_row_column_formats.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff_codepage_decl.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff_tablestyles.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff_reading.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_merges.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_audit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_read_view.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_sheet_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf_readability.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_format_rules.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/read_wps.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_access.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_vml_notes.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_cfb.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_names.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_biff8_salvage_hardening.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_diagnostics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_style_formats.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_headers.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_pure_tables.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_et_capacity.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_spreadsheet_stability.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/read_et.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_numeric.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_iso_date.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_embedded_charts.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_noncell.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_formula_groups.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/test_wps_dxf.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/et:scripts/__pycache__/wps_biff8_charts.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nOK skills/ofd\nOK skills/pptx\nOK skills/skill-development-standards\nOK skills/table-workflow\nWARNING skills/wps:scripts/__pycache__: [suspicious-entry] Empty/cache/log/tmp/README directories are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_refs.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_rtf_reading.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_diagnostics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_shapes.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_result.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_routing.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/run_wps_task.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_tables.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_ooxml_tables.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_tables.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_rtf_read.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_selective.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_ooxml.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_ooxml_related.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_paragraph_sources.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_cfb.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_doc_versions.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_task.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_hidden.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_paragraph_sources.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_word_profile.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_text_recovery.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_paragraph_evidence.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_failure_diagnostics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_word_visibility.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_edit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_tables.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_headers.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_export.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/docx_to_wps_rtf.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_paragraph_evidence.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_selective.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/read_wps.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_access.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_headers.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_msdoc_charprops.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_cfb.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_refs.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_sample_acceptance.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_binary_shapes.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_doc_extensions.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_ownership.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_diagnostics.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_binary_comments.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/wps_rtf_builder.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_ooxml.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/verify_wps_sample.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_lazy_render.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_strict_word.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_charprops.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/run_wps_edit.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/test_wps_stories.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nWARNING skills/wps:scripts/__pycache__/export_wps.cpython-312.pyc: [suspicious-entry] README/cache/log/tmp files are discouraged.\nOK skills/xlsx\n",
+      "stderr": ""
+    },
+    "biff8_ci": {
+      "command": [
+        "/Users/yangxuezhen/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/et/scripts/test",
+        "-p",
+        "test_wps_biff8_audit.py"
+      ],
+      "exit_code": 0,
+      "stdout": "Collected 15 tests from skills/et/scripts/test (test_wps_biff8_audit.py)\n",
+      "stderr": "test_calc_mode_recalc_save_and_engine_are_source_flags_only (test_wps_biff8_audit.Biff8AuditTests.test_calc_mode_recalc_save_and_engine_are_source_flags_only) ... ok\ntest_cli_fail_preserves_source_status_without_word_routing (test_wps_biff8_audit.Biff8AuditTests.test_cli_fail_preserves_source_status_without_word_routing) ... ok\ntest_cli_synthetic_cfb_readonly_preserves_exit_contract (test_wps_biff8_audit.Biff8AuditTests.test_cli_synthetic_cfb_readonly_preserves_exit_contract) ... ok\ntest_default_reader_output_not_modified (test_wps_biff8_audit.Biff8AuditTests.test_default_reader_output_not_modified) ... ok\ntest_formula_cache_summary_preserves_stale_missing_error (test_wps_biff8_audit.Biff8AuditTests.test_formula_cache_summary_preserves_stale_missing_error) ... ok\ntest_invalid_calculation_record_is_uninterpreted_not_executed (test_wps_biff8_audit.Biff8AuditTests.test_invalid_calculation_record_is_uninterpreted_not_executed) ... ok\ntest_observed_xf_parent_only_never_applied (test_wps_biff8_audit.Biff8AuditTests.test_observed_xf_parent_only_never_applied) ... ok\ntest_reject_word_or_ooxml_json_and_oversize_without_rewrite (test_wps_biff8_audit.Biff8AuditTests.test_reject_word_or_ooxml_json_and_oversize_without_rewrite) ... ok\ntest_rich_font_links_observe_font_index_four_gap (test_wps_biff8_audit.Biff8AuditTests.test_rich_font_links_observe_font_index_four_gap) ... ok\ntest_rich_utf16_segments_with_supplementary_character (test_wps_biff8_audit.Biff8AuditTests.test_rich_utf16_segments_with_supplementary_character) ... ok\ntest_split_surrogate_run_is_never_exposed_as_styled (test_wps_biff8_audit.Biff8AuditTests.test_split_surrogate_run_is_never_exposed_as_styled) ... ok\ntest_unattributed_prefix_and_terminal_sentinel (test_wps_biff8_audit.Biff8AuditTests.test_unattributed_prefix_and_terminal_sentinel) ... ok\ntest_unreadable_font_does_not_invent_attributes (test_wps_biff8_audit.Biff8AuditTests.test_unreadable_font_does_not_invent_attributes) ... ok\ntest_unreferenced_sst_has_no_invented_text_witness (test_wps_biff8_audit.Biff8AuditTests.test_unreferenced_sst_has_no_invented_text_witness) ... ok\ntest_xf_metadata_is_raw_never_effective_formatting (test_wps_biff8_audit.Biff8AuditTests.test_xf_metadata_is_raw_never_effective_formatting) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.048s\n\nOK\n"
+    },
+    "checker": {
+      "command": [
+        "/Users/yangxuezhen/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "skills/skill-development-standards/scripts/test",
+        "-p",
+        "test_check_skill.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "test_chinese_reference_toc_and_nested_fence_examples (test_check_skill.CheckSkillTests.test_chinese_reference_toc_and_nested_fence_examples) ... ok\ntest_clean_skill_and_python_dependency_metadata (test_check_skill.CheckSkillTests.test_clean_skill_and_python_dependency_metadata) ... ok\ntest_current_directory_and_discovery_symlink_resolve_to_same_skill (test_check_skill.CheckSkillTests.test_current_directory_and_discovery_symlink_resolve_to_same_skill) ... ok\ntest_detects_invalid_layout_links_and_python_without_executing (test_check_skill.CheckSkillTests.test_detects_invalid_layout_links_and_python_without_executing) ... ok\ntest_empty_body_files_nested_names_and_reference_links_and_anchors (test_check_skill.CheckSkillTests.test_empty_body_files_nested_names_and_reference_links_and_anchors) ... ok\ntest_empty_manifest_wrong_resource_type_and_exact_delimiters (test_check_skill.CheckSkillTests.test_empty_manifest_wrong_resource_type_and_exact_delimiters) ... ok\ntest_file_name_errors_in_all_resource_directories_are_readonly (test_check_skill.CheckSkillTests.test_file_name_errors_in_all_resource_directories_are_readonly) ... ok\ntest_hyphen_boundaries_empty_nested_folders_and_temporary_files (test_check_skill.CheckSkillTests.test_hyphen_boundaries_empty_nested_folders_and_temporary_files) ... ok\ntest_invalid_and_encoded_link_paths (test_check_skill.CheckSkillTests.test_invalid_and_encoded_link_paths) ... ok\ntest_invalid_timestamp_versions_fail_both_modes (test_check_skill.CheckSkillTests.test_invalid_timestamp_versions_fail_both_modes) ... ok\ntest_links_with_spaces_angles_valid_anchors_and_fences (test_check_skill.CheckSkillTests.test_links_with_spaces_angles_valid_anchors_and_fences) ... ok\ntest_manual_review_warning_for_complex_yaml (test_check_skill.CheckSkillTests.test_manual_review_warning_for_complex_yaml) ... ok\ntest_misplaced_test_scripts_fail_both_modes_without_execution (test_check_skill.CheckSkillTests.test_misplaced_test_scripts_fail_both_modes_without_execution) ... ok\ntest_read_errors_and_symlinks_are_reported_without_following (test_check_skill.CheckSkillTests.test_read_errors_and_symlinks_are_reported_without_following) ... ok\ntest_repository_configuration_outside_skill_is_not_checked (test_check_skill.CheckSkillTests.test_repository_configuration_outside_skill_is_not_checked) ... ok\ntest_required_scalar_types_duplicates_and_bad_quotes_fail (test_check_skill.CheckSkillTests.test_required_scalar_types_duplicates_and_bad_quotes_fail) ... ok\ntest_scalar_comments_escaping_and_dependency_duplicates (test_check_skill.CheckSkillTests.test_scalar_comments_escaping_and_dependency_duplicates) ... ok\ntest_source_aliases_and_standard_archive_names_are_allowed (test_check_skill.CheckSkillTests.test_source_aliases_and_standard_archive_names_are_allowed) ... ok\ntest_test_name_classifier_does_not_classify_data_or_checks (test_check_skill.CheckSkillTests.test_test_name_classifier_does_not_classify_data_or_checks) ... ok\ntest_test_subdirectory_and_runtime_checks_are_valid (test_check_skill.CheckSkillTests.test_test_subdirectory_and_runtime_checks_are_valid) ... ok\ntest_unreadable_skill_file_is_reported (test_check_skill.CheckSkillTests.test_unreadable_skill_file_is_reported) ... ok\ntest_valid_python_is_parsed_but_never_executed_and_requires_file (test_check_skill.CheckSkillTests.test_valid_python_is_parsed_but_never_executed_and_requires_file) ... ok\ntest_valid_timestamp_versions_and_decoded_values (test_check_skill.CheckSkillTests.test_valid_timestamp_versions_and_decoded_values) ... ok\ntest_version_required_type_length_and_characters (test_check_skill.CheckSkillTests.test_version_required_type_length_and_characters) ... ok\ntest_warnings_and_strict_cli_exit_codes_and_readonly (test_check_skill.CheckSkillTests.test_warnings_and_strict_cli_exit_codes_and_readonly) ... ok\ntest_each_required_notice_clause_is_checked_in_every_markdown (test_check_skill.RootResourceTests.test_each_required_notice_clause_is_checked_in_every_markdown) ... ok\ntest_literal_paths_spaces_unicode_anchors_and_command_escaping (test_check_skill.RootResourceTests.test_literal_paths_spaces_unicode_anchors_and_command_escaping) ... ok\ntest_missing_resources_anchors_and_unsafe_paths_fail_both_modes (test_check_skill.RootResourceTests.test_missing_resources_anchors_and_unsafe_paths_fail_both_modes) ... ok\ntest_old_styles_and_notice_are_rejected_task_paths_are_not (test_check_skill.RootResourceTests.test_old_styles_and_notice_are_rejected_task_paths_are_not) ... ok\ntest_reference_notice_required_and_symlink_not_followed (test_check_skill.RootResourceTests.test_reference_notice_required_and_symlink_not_followed) ... ok\ntest_reference_style_links_and_escaped_command_targets (test_check_skill.RootResourceTests.test_reference_style_links_and_escaped_command_targets) ... ok\n\n----------------------------------------------------------------------\nRan 31 tests in 0.119s\n\nOK\n"
+    }
+  },
+  "structure_summary": {
+    "artifact-lifecycle": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    },
+    "bank-writing": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    },
+    "docx": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    },
+    "et": {
+      "errors": 0,
+      "warnings": 70,
+      "rules": [
+        "suspicious-entry"
+      ]
+    },
+    "ofd": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    },
+    "pptx": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    },
+    "skill-development-standards": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    },
+    "table-workflow": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    },
+    "wps": {
+      "errors": 0,
+      "warnings": 56,
+      "rules": [
+        "suspicious-entry"
+      ]
+    },
+    "xlsx": {
+      "errors": 0,
+      "warnings": 0,
+      "rules": []
+    }
+  },
+  "regression_diagnosis": {
+    "baseline_failure": "仓库基线48项中test_check_execution的结构检查断言因新test-layout规则失败，迁移后未修改其断言即恢复通过。",
+    "fixed_after_first_run": [
+      "OFD动态脚本路径需括号保留name + '.py'后再与Path拼接；修复后恢复完整149项收集。",
+      "WPS样本验收CLI应定位同目录test/verify_wps_sample.py，不再从scripts根查找。",
+      "PPTX运行时代码依赖扫描只审查正式运行时，不将新迁入测试及测试间导入当作生产依赖。"
+    ],
+    "zero_discovery_fixed": "原CI命令0项/退出5；新BIFF8命令实际15项通过，且跨Python版本由维护runner显式拒绝0项。",
+    "test_identity": "原1560个测试ID全数保留，新增5项维护runner回归；移动造成的套件数量变化已逐项归属。"
+  },
+  "static_review": {
+    "production_test_import_or_literal_subprocess_targets": [],
+    "production_script_bytes_changed": [],
+    "existing_caches_changed": [],
+    "git_backed_literal_review": [
+      {
+        "file": "skills/docx/scripts/test/test_docx_generation.py",
+        "state": "preexisting_modified_source_preserved",
+        "old_sha256": "fa67eb48bcd123dd82e2dff97e28dddc8734df77b20f2b4f4a709d15937968d3"
+      },
+      {
+        "file": "skills/wps/scripts/test/test_wps_next_iteration.py",
+        "state": "preexisting_modified_source_preserved",
+        "old_sha256": "417961a7ead710ee1b030ac73e39cb6fa3d6436cba8dbe6ce566e26ef26d95a3"
+      },
+      {
+        "file": "skills/wps/scripts/test/test_wps_official_defaults.py",
+        "state": "preexisting_modified_source_preserved",
+        "old_sha256": "0e1b26c9a198ee361c2f8acf03e5ccbde8ddf6477c33b08a3824d0b3dc9e14f3"
+      },
+      {
+        "file": "skills/pptx/scripts/test/test_svg_limits.py",
+        "removed": [
+          "scripts",
+          "pptx",
+          "skills"
+        ],
+        "added": []
+      },
+      {
+        "file": "skills/pptx/scripts/test/test_workflow.py",
+        "removed": [
+          "pptx",
+          "skills"
+        ],
+        "added": [
+          "test",
+          "test"
+        ]
+      },
+      {
+        "file": "skills/pptx/scripts/test/test_images.py",
+        "removed": [
+          "scripts",
+          "pptx",
+          "skills"
+        ],
+        "added": []
+      },
+      {
+        "file": "skills/pptx/scripts/test/test_package.py",
+        "removed": [
+          "scripts",
+          "pptx",
+          "skills"
+        ],
+        "added": []
+      },
+      {
+        "file": "skills/pptx/scripts/test/test_validation.py",
+        "removed": [
+          "scripts",
+          "pptx",
+          "skills"
+        ],
+        "added": []
+      },
+      {
+        "file": "skills/ofd/scripts/test/test_ofd_postfix_review.py",
+        "removed": [
+          "skills/ofd/scripts/read_ofd.py"
+        ],
+        "added": [
+          "read_ofd.py"
+        ]
+      }
+    ],
+    "pylint": "当前解释器未安装，未运行/未安装；AST语法与定点路径行长检查不代表全量Pylint。",
+    "existing_style_exception": "skills/et/scripts/test/test_wps_biff8.py:160 既有超过200字符行，非本轮移动或修改；保留。没有新增超过200字符的路径改动行。",
+    "pytest": "当前项目相关套件均用unittest；未发现pytest配置，未安装或执行pytest。"
+  },
+  "limitations": [
+    "本轮在macOS执行；未运行GitHub Actions、云端Linux或Windows，CI配置修正不等于远程CI已通过。",
+    "独立WPS包432项通过、3项按原样本缺失条件跳过；仓库435项全通过。跳过不能当成独立包真实样本验收。",
+    "固定外部ET/WPS原件的额外样本验收CLI未下载新素材重跑，已验证迁移后的导入/相关合成回归；没有新增真实格式或视觉验收声明。",
+    "原源码树strict保留70条ET及56条WPS缓存警告，故这两项strict仍非零；清洁独立安装包六项strict通过。",
+    "历史扫描报告中的CLI参考资料位置与编码器来源记录等非测试迁移问题未在本轮改写。"
+  ],
+  "working_tree_preservation": "以本轮开始时磁盘内容为基线，不恢复HEAD；迁移源文件旧哈希与目标新哈希记录。生产代码、既有缓存、发布ZIP和未知OFD验收目录未修改。"
+}

@@ -14,12 +14,8 @@ Run the entrypoint self-check (`<skill-root>/SKILL.md#执行环境约束与首�
 Resolve `<skill-root>` from the actual SKILL.md path; replace it in commands and use
 relative task data paths. Python 3.9+, standard library only; no upload or application use.
 
-```console
-(
-set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" source.xlsx --sheet Sales --query rows.json > selected.json
-python3 -I -S -B "<skill-root>/scripts/xlsx_result_export.py" selected.json readable.xlsx
-)
+```python
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" source.xlsx --sheet Sales --query rows.json > selected.json\npython3 -I -S -B \"<skill-root>/scripts/xlsx_result_export.py\" selected.json readable.xlsx\n)")
 ```
 
 The accepted native statuses are selected, summarized, described and management_wide

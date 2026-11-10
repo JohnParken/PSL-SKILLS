@@ -4,8 +4,8 @@
 
 旧CLI/API默认仍输出完整读取结果。文字只需大小时先概况，局部任务可分页读取主正文。ET/ETT 使用 et Skill 的实际入口，不使用本入口。以下均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不写结果文件、不自动归档、不执行公式、宏或外链。
 
-```console
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --page-size 2000 --max-output-chars 12000
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 2000 --max-output-chars 12000")
 ```
 
 新输出使用 `schema_version=wps_read_view_v1`，原schema另存于 `source_schema_version`。保留原status/partial、issues、diagnostics、reading_assessment及已有coverage字段；源partial仍退出3，源ok退出0，失败退出1，参数错误退出2。视图省略的元数据逐项列于 `metadata_omitted`；未返回不表示不存在。样式、批注、附加区域等完整证据仍需旧完整读取。需要全文分析时保留原完整提取JSON。

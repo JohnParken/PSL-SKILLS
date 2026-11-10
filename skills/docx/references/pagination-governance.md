@@ -34,11 +34,11 @@
 
 ## 只读分页风险审计
 
-```bash
-python -I -S -B "<skill-root>/scripts/validate_layout.py" 文件.docx
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx")
 # 仅在 CI/实机验收门禁中按需使用：有分页警告退出 2（结构错误退出 1）
-python -I -S -B "<skill-root>/scripts/validate_layout.py" 文件.docx --strict-pagination
-python -I -S -B "<skill-root>/scripts/validate_layout.py" 文件.docx -o 分页诊断.json
+execute(command="python -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx --strict-pagination")
+execute(command="python -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx -o 分页诊断.json")
 ```
 
 结果为 JSON：`structure_valid` 仅代表当前已覆盖的 OPC 与静态布局规则，无论是否含分页警告均不因此变为 false；`issues` 数组显示 `{level:"warning", code, location, message}`。`location` 中 `body[N]` 表示文档 `w:body` 下的 **0 基序号**，不等于原始 `blocks[N]`（某些 block 可以生成多段落）。默认 CLI 退出码 0 表示结构检查成功，**不会把分页警告当成生成失败**。指定 `--strict-pagination` 后，只要出现分页风险或标题孤立风险就退出 2；结构错误仍退出 1。审计完全只读，不改变源 DOCX。

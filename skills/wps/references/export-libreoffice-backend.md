@@ -6,8 +6,8 @@
 
 可选后端调用系统已有的 LibreOffice `MS Word 97` 过滤器，要求输出真正的 MS-DOC/CFB 字节。不是金山原生 WPS 生成器，也不保证任意文档转换保真。任务输入输出位于宿主确认的任务工作目录；建议使用带候选校验的公开入口：
 
-```console
-python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --output "output.doc" --backend libreoffice --verify-read
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/export_wps.py\" convert \"./input.docx\" --output \"output.doc\" --backend libreoffice --verify-read")
 ```
 
 脚本使用 `--headless --convert-to "doc:MS Word 97"`，为每次调用创建独立输出目录及 UserInstallation 配置目录；取得 `.doc` 候选后通过现有有界 CFB/MS-DOC 读取器核验，再原子发布到 `.doc` 或兼容 `.wps`。仅换后缀、检查 CFB 魔数或发现旧目标文件均不能证明转换成功。

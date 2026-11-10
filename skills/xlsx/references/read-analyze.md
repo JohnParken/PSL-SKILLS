@@ -10,7 +10,7 @@ before using this reference; internal resources and task data have different pat
 Route `.wps` to the `wps` skill and `.et`/`.ett` to the `et` skill. Native spreadsheet commands
 refuse `.wps`, `.et`, `.ett` and CFB data; no automatic conversion is performed.
 
-Use `python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx` as described in
+Use `execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read ./input.xlsx")` as described in
 the main entry. Read-only inspection does not require the write/formula contract. The JSON lists sheets and coordinate-keyed
 cells containing type, raw value, style index, formula, formula attributes and cache status.
 Decimal values serialize as strings in the report to avoid binary-float precision loss.

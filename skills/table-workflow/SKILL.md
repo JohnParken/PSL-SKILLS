@@ -1,6 +1,6 @@
 ---
 name: table-workflow
-version: "20261110.0051.1813"
+version: "20261110.1706.5284"
 description: 用于根据目标表头，从多份 XLSX、ET/ETT 原始表确认来源和口径，支持受控维表补列、按键汇总与业务勾稽，再填入既有 XLSX 模板副本并提供溯源。适合跨表统计、期间比较与模板填报；简单建表或单表读取使用原技能，不做多对多关联或 ET 写回。
 ---
 
@@ -8,17 +8,21 @@ description: 用于根据目标表头，从多份 XLSX、ET/ETT 原始表确认�
 
 ## 执行环境约束与首步自检
 
+脚本由宿主 `execute(command=完整非空命令字符串)` 执行，按实际 schema 提交；包含 stdin 时在同一命令完整提供。替换路径并安全引用参数，不把 `execute(...)` 嵌入命令。执行工具或路径映射不可用时停止并报告；独立调用逐项核对结果，状态未知不盲目重试。
+
+**用户文件定位：** 优先附件映射和用户指定文件名。上传文件和待查交付物只定位任务 `./` 顶层，不递归或到子目录查找；无映射仅列顶层候选，歧义询问，无候选或指定位置不在顶层时报告。内部归档、Skill 资源与程序输入安全契约不变。
+
 路径占位符说明：`<skill-root>` 是 table-workflow Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 table-workflow Skill 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 宿主路径与执行器：读取工具中的 `file_path` 属于该工具的路径空间；先用它定位和读取 Skill 内部资料。执行脚本前另确认该位置与执行器实际可访问路径的映射，并用执行器路径替换命令中的 `<skill-root>`；只有宿主确认两者一致时才可直接复用。确认执行器的当前目录就是宿主指定的任务目录，且任务输入在该执行器可见；不能确认映射或工作目录时停止并报告，不猜测或切换目录。
 
-1. `./` 为宿主确认的任务工作目录；在该目录运行并保持不变。优先使用本轮附件映射，不要求用户重复文件名；多个来源一起接收，仅角色或业务含义不明时询问。输入使用任务目录及子目录的相对路径。交付输出只传裸文件名（例如 `报告.xlsx`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。 XLSX 与审计 JSON 分别指定不同裸文件名；禁止父目录、绝对数据路径或符号链接，不扫描其他目录。若当前目录是 Skill 源码目录，先由 harness 确认任务目录，不为执行命令切到安装目录。
+1. `./` 为宿主确认的任务工作目录；在该目录运行并保持不变。优先使用本轮附件映射，不要求用户重复文件名；多个来源一起接收，仅角色或业务含义不明时询问。程序输入沿用任务目录内相对路径安全契约；用户文件定位遵循上面的顶层规则。交付输出只传裸文件名（例如 `报告.xlsx`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。 XLSX 与审计 JSON 分别指定不同裸文件名；禁止父目录、绝对数据路径或符号链接，不扫描其他目录。若当前目录是 Skill 源码目录，先由 harness 确认任务目录，不为执行命令切到安装目录。
 2. 由本主入口真实 `file_path` 确定 `<skill-root>`。另从宿主提供的技能目录读取 XLSX 的真实主入口，ET/ETT 来源才读取 ET 主入口，并分别记录真实根目录。命令中 `XLSX_ROOT_CONFIRMED`、`ET_ROOT_CONFIRMED` 是待替换的依赖根参数示意，不是自动发现机制或环境变量；不得猜相邻安装位置。缺依赖或兼容CLI能力即报告停止，不回退其他软件。
 3. 使用宿主确认的 Python >=3.12（维护基线 3.12.11），仅标准库，保留 `-I -S -B`。ET 的 OOXML 分支需 Expat >=2.6；本编排器的 ET 自检要求该分支可用。安全文件能力不可用时停止，不降低边界。依赖见 `<skill-root>/requirements.txt`。
 4. 首次操作前运行下述自检：要求退出 0、JSON `status=environment-ok`；依赖检查各有真实 stdout/stderr/退出码，XLSX 为 ready，ET 为 environment-ok 且 OOXML available。写文件时加 `--write`，要求 `task_writable=true`；它独占创建、写入、读回并删除本次探针。只读 stdout 不建写探针。还须确认用户指定输入可读。
 
-```console
-python -I -S -B "<skill-root>/scripts/table_workflow.py" check --xlsx-root "XLSX_ROOT_CONFIRMED"
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/table_workflow.py\" check --xlsx-root \"XLSX_ROOT_CONFIRMED\"")
 ```
 
 有 ET/ETT 来源时追加 `--et-root "ET_ROOT_CONFIRMED"`；下方所有调用同样传入已确认的必要依赖根。传参前替换并正确引用完整路径。脚本每次调用亦检查依赖，不使用过期的跨任务自检结论。
@@ -33,8 +37,8 @@ python -I -S -B "<skill-root>/scripts/table_workflow.py" check --xlsx-root "XLSX
 
 1. **识别**：读取本轮附件并根据用户要求判断来源/目标；只向 `inspect` 提交文件列表，stdout 是有界结构摘要。默认每表前 4 行、8 列，每文件最多 8 表；超过 8 表时先用 `names` 命令发现名称（单文件 stdin：`{"path":"./来源.xlsx","limit":32}`）；名称发现仍完整校验输入，但不先跨进程传输整表单元格；按返回 `next_offset` 以 `offset` 和同一 `sha256` 续读，直到 null。再用同一入口的 `sheet`/`range` 定位更下方表头，不逐页搬运全量数据。用打印的 SHA-256 绑定计划。
 
-```console
-python -I -S -B "<skill-root>/scripts/table_workflow.py" inspect --xlsx-root "XLSX_ROOT_CONFIRMED"
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/table_workflow.py\" inspect --xlsx-root \"XLSX_ROOT_CONFIRMED\" <<'JSON'\n{\"files\":[{\"path\":\"./当期.xlsx\"},{\"path\":\"./上期.xlsx\"},{\"path\":\"./目标.xlsx\"}]}\nJSON\n")
 ```
 
 stdin 示例：`{"files":[{"path":"./当期.xlsx"},{"path":"./上期.xlsx"},{"path":"./目标.xlsx"}]}`。预览截断有明确数量；这是结构视图，不能拿来统计或作为完整源 JSON。超出 stdout 24000 字符时缩减预览并保留截断说明；必要时只返回核心状态和文件身份，再检查单文件/单表。任一 ET 来源为 partial 时，inspect 同样返回 partial/退出3，不能当成完整读取成功。

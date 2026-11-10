@@ -27,13 +27,8 @@ right observations (`<skill-root>/assets/fictional_customer_right.json`) as righ
 configuration (`<skill-root>/assets/fictional_customer_config.json`) as customers.json into the task
 directory. These examples contain fictional identifiers and are not bank customer data.
 
-```console
-(
-set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create left.json left.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create right.json right.xlsx
-python3 -I -S -B "<skill-root>/scripts/xlsx_customers.py" left.xlsx right.xlsx --query customers.json --xlsx customers.xlsx > customer-result.json
-)
+```python
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create left.json left.xlsx\npython3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create right.json right.xlsx\npython3 -I -S -B \"<skill-root>/scripts/xlsx_customers.py\" left.xlsx right.xlsx --query customers.json --xlsx customers.xlsx > customer-result.json\n)")
 ```
 
 Use --plain to disable the readable appearance preset. All outputs must be new files.

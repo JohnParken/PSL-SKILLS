@@ -27,12 +27,8 @@ explicit config (`<skill-root>/assets/fictional_maturity_config.json`) to maturi
 directory. These contain no real customer records. Example horizons 7/30/90 days are
 user-configurable management examples, not bank policy or regulatory defaults.
 
-```console
-(
-set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create contracts.json contracts.xlsx
-python3 -I -S -B "<skill-root>/scripts/xlsx_maturity.py" contracts.xlsx --query maturity.json --xlsx maturity.xlsx > maturity-result.json
-)
+```python
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create contracts.json contracts.xlsx\npython3 -I -S -B \"<skill-root>/scripts/xlsx_maturity.py\" contracts.xlsx --query maturity.json --xlsx maturity.xlsx > maturity-result.json\n)")
 ```
 
 --plain disables appearance. Outputs must not exist; original source is unchanged.

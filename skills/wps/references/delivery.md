@@ -30,16 +30,14 @@ partial结果可归档其已明确验收的可用子集，但原partial、源诊
 
 先自检，要求退出0、JSON status=environment-ok、task_writable=true；探针实际写入、读回并仅清理本次探针：
 
-```console
-python -I -S -B "<skill-root>/scripts/run_wps_job.py" --check
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_job.py\" --check")
 ```
 
 示例：由job在创建前登记自己的配置文件，子进程结束且取得归档结果后清理配置及清单：
 
-```console
-python -I -S -B "<skill-root>/scripts/run_wps_job.py" <<'JSON'
-{"script":"run_wps_task.py","arguments":["create","工作汇报.wps","--spec","@spec"],"output":"工作汇报.wps","configs":{"spec":{"blocks":[{"type":"paragraph","text":"已确认的正文。"}]}}}
-JSON
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_job.py\" <<'JSON'\n{\"script\":\"run_wps_task.py\",\"arguments\":[\"create\",\"工作汇报.wps\",\"--spec\",\"@spec\"],\"output\":\"工作汇报.wps\",\"configs\":{\"spec\":{\"blocks\":[{\"type\":\"paragraph\",\"text\":\"已确认的正文。\"}]}}}\nJSON\n")
 ```
 
 编辑可使用script=run_wps_edit.py及batch参数，将--spec对应值设为@ops，configs.ops给出操作列表；源文件自动保护。导出script=export_wps.py只接受convert并要求单独且唯一的--output参数，纯标准库任务使用--backend rtf；导出不需要配置时直接用CLI即可，不为归档套job。inputs可补充需保护的任务文件。output与子命令实际输出必须为完全一致的裸文件名，不带 `./` 或任何目录；输入路径仍相对任务目录；configs只允许最多8个命名JSON，@引用须与configs完全一致。

@@ -40,12 +40,12 @@
 
 以上参数在输入路径之后使用，例如：
 
-```sh
-python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --summary
-python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --heading-only
-python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --paragraph-range 1:20 --max-output-chars 4000
-python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --section '总体情况'
-python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --compact-json --tables rows --max-output-chars 4000 --start-block 0
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --summary")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --heading-only")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --paragraph-range 1:20 --max-output-chars 4000")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --section '总体情况'")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-chars 4000 --start-block 0")
 ```
 
 - 章节标题要求**完整精确匹配**正文标题文本。重复标题不猜测：通过 `--section-occurrence 2` 选择第二处；不存在或越界时报错。标题层级从显式 `outlineLvl`、样式及有限的 `basedOn` 关系判断，不保证识别所有自定义标题。自动编号不计算；匹配文本不包含 Word 自动编号前缀。
@@ -60,9 +60,9 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --compact-json 
 
 旧默认及 `--max-output-chars` / `--start-block` 不变：字符不等于 UTF-8 字节，旧数字索引不校验源文件或选项。需要可靠续读时显式使用新模式：
 
-```sh
-python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --compact-json --tables rows --max-output-bytes 4000
-python -I -S -B "<skill-root>/scripts/read_docx.py" ./input.docx --compact-json --tables rows --max-output-bytes 6000 --cursor '上次返回的next_cursor原值'
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-bytes 4000")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-bytes 6000 --cursor '上次返回的next_cursor原值'")
 ```
 
 - `--max-output-bytes` 为 128～2,000,000，计**实际 UTF-8 JSON、全部元数据与末尾换行**。按完整块分页，不截断 Unicode 或诊断；元数据/单块放不下就失败，stdout 为空、完整错误在 stderr，需增大预算或缩小选择范围。预算不限制错误诊断，也不保证宿主不截断回传。

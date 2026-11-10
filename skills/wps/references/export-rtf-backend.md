@@ -50,7 +50,7 @@ RTF 构建器写入字体名称和排版控制，不安装、嵌入或检查字�
 
 创建、重排和RTF转换回执新增format_validation：只验证写入后可回读的页面尺寸/边距、主段落对齐/间距/缩进/keep/outline原始控制，不验证字体字形、表格样式、附属内容样式或客户端分页。content_validation与format_validation分别报告，不以某项通过抵消partial。Microsoft样式toggle说明：`https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.bold`；直接格式优先级：`https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.runproperties`。
 
-仅需RTF时先执行 `python -I -S -B "<skill-root>/scripts/export_wps.py" check --backend rtf`，不会探测外部转换程序。成功路径不预读LibreOffice参考。候选暂存由创建函数负责清理；CLI未自动接入公共归档，最终文件仍按主入口交给宿主定位的artifact-lifecycle处理，不重复登记内部候选，不将用户输入纳入清理。
+仅需RTF时先执行 `execute(command="python -I -S -B \"<skill-root>/scripts/export_wps.py\" check --backend rtf")`，不会探测外部转换程序。成功路径不预读LibreOffice参考。候选暂存由创建函数负责清理；CLI未自动接入公共归档，最终文件仍按主入口交给宿主定位的artifact-lifecycle处理，不重复登记内部候选，不将用户输入纳入清理。
 
 纯 Python 路径仅依赖标准库，不需要LibreOffice或第三方Python包。性能取决于输入和宿主，未给出普遍时间保证。字体缺失、阅读器兼容及分页仍须独立验收；原始输入受保护，转换成功、正文回读和视觉验收是不同结果。
 

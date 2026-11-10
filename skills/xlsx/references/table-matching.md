@@ -25,8 +25,8 @@ Task-local `match.json`:
 }
 ```
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_match.py" sales.xlsx targets.xlsx --query match.json
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_match.py\" sales.xlsx targets.xlsx --query match.json")
 ```
 
 Two sheets in one workbook can be matched by supplying the same file twice. Each side

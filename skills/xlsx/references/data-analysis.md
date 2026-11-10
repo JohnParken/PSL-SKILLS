@@ -25,9 +25,9 @@ stdout and never modify inputs. Redirect stdout only to a new task report if nee
 
 ## Profile a sheet or region
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile input.xlsx --sheet Sales
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile input.xlsx --sheet Sales --range B3:F100 --no-header
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile input.xlsx --sheet Sales")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile input.xlsx --sheet Sales --range B3:F100 --no-header")
 ```
 
 By default the first selected row supplies headers and is excluded from statistics.
@@ -63,8 +63,8 @@ Create task-local `query.json`:
  "filters":[{"column":"C","op":"ge","value":10}]}
 ```
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize input.xlsx --sheet Sales --query query.json
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize input.xlsx --sheet Sales --query query.json")
 ```
 
 `group_by` is a list of unique column selectors inside the selected range; omit it for
@@ -106,8 +106,8 @@ formula results remain empty text, not missing caches or numeric zero. Other ana
 CLI entrypoints retain their existing reject/cached options; this new CLI option is
 exposed by profile/summarize here. WPS extraction JSON cannot be recalculated.
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize ./input.xlsx --sheet Sales --range A1:C100 --query ./query.json --formulas calculate
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize ./input.xlsx --sheet Sales --range A1:C100 --query ./query.json --formulas calculate")
 ```
 
 Read `<skill-root>/references/formula-calculation.md` before using this mode. It does
@@ -159,9 +159,9 @@ input schema and diagnostics. Failed extraction and Word-text results are reject
 This validates schema/budgets and restores explicitly tagged numeric values as Decimal;
 text remains text, date serials remain numbers, and no XLSX file is created.
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile result.json --sheet Data
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize result.json --sheet Data --query query.json
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile result.json --sheet Data")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize result.json --sheet Data --query query.json")
 ```
 
 Extraction diagnostics are included as `source_issues` and `source_status`. When supplied,

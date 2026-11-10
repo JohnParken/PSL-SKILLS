@@ -20,8 +20,8 @@ Create task-local `stats.json`:
  "quantiles":[0,0.25,0.5,0.75,1],"precision":34}
 ```
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_advanced.py" describe report.xlsx --sheet Sales --header-rows 3:5 --query stats.json
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_advanced.py\" describe report.xlsx --sheet Sales --header-rows 3:5 --query stats.json")
 ```
 
 Columns accept letters, col: IDs or exact typed paths; selectors must resolve uniquely.

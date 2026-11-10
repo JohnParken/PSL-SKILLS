@@ -4,9 +4,9 @@
 
 默认 `read` 的完整输出保持不变。只需了解结构时先用概况；逐格核对才按表、区域分页。新选项仅支持原生 XLSX/XLSM，CSV/TSV 保持原完整读取接口。不计算公式、不写文件、不归档；仍完整解析输入，不承诺降低底层内存或解析时间。
 
-```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx --summary
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx --sheet "Data" --range A1:D1000 --page-size 100 --max-output-chars 12000
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read ./input.xlsx --summary")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read ./input.xlsx --sheet \"Data\" --range A1:D1000 --page-size 100 --max-output-chars 12000")
 ```
 
 输出为独立 `schema_version=xlsx_read_view_v1`，不是旧完整读取 schema。概况不含值，`coverage=overview_only_no_cell_values`；单元格模式返回 `items[].sheet/cell/data`，data 保留原 type/value、公式、格式索引及缓存字段。数字字符串不转 float、文本编号不转数字，缓存仍是未验证保存值。日期系统单独保留；不推断空白单元格或可见格式。
@@ -34,8 +34,8 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx --sheet
 
 只需全表/区域质量或汇总时，直接使用分析接口及明确范围，不先把完整数据逐页交给模型。例如：
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile ./input.xlsx --sheet "Data" --range A1:D1000
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile ./input.xlsx --sheet \"Data\" --range A1:D1000")
 ```
 
 分组/过滤及公式缓存政策按分析说明（`<skill-root>/references/data-analysis.md`）选择，不猜业务口径或为省输出省略失败/未计算信息。分析也可能完整读取输入；摘要不是逐格结果的替代。

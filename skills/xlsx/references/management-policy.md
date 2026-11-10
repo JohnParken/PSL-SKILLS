@@ -20,11 +20,8 @@ explicit fictional policy (`<skill-root>/assets/fictional_management_policy_conf
 the task directory as policy.json. Supply a source wide.json containing the selected
 January–March institution observations. The sample plan values are explicitly non-linear.
 
-```console
-(
-set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill-root>/scripts/xlsx_management_policy.py" wide.json --query policy.json --xlsx progress.xlsx > progress.json
-)
+```python
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_management_policy.py\" wide.json --query policy.json --xlsx progress.xlsx > progress.json\n)")
 ```
 
 `scope` declares reporting level, currency, source version, definition version, unit,

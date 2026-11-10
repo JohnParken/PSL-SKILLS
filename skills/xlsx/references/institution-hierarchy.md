@@ -69,9 +69,9 @@ confirmed task directory as new files `./hierarchy.json` and `./hierarchy-facts.
 respectively. Use exclusive creation for these copies; do not overwrite existing task
 files. Create the workbook and then run the rollup:
 
-```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create ./hierarchy-facts.json fictional_hierarchy.xlsx
-python3 -I -S -B "<skill-root>/scripts/xlsx_management.py" fictional_hierarchy.xlsx --sheet Facts --query hierarchy.json --xlsx hierarchy_report.xlsx
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create ./hierarchy-facts.json fictional_hierarchy.xlsx")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_management.py\" fictional_hierarchy.xlsx --sheet Facts --query hierarchy.json --xlsx hierarchy_report.xlsx")
 ```
 
 The generated XLSX reuses Wide/Definitions/Validation/Lineage and readable appearance.

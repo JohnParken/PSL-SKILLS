@@ -1,4 +1,5 @@
 """Exercise entry examples from a read-only standalone copy without test resources."""
+import ast
 import hashlib
 import json
 import os
@@ -49,7 +50,12 @@ class EntryWorkflowsTests(unittest.TestCase):
         self.environment = dict(os.environ)
         self.environment.pop("ROUTER_CONFIG_VARIABLES", None)
         entry = (self.skill / "SKILL.md").read_text(encoding="utf-8")
-        self.spec = json.loads(re.search(r"<<'JSON'\n(.*?)\nJSON", entry, re.S).group(1))
+        calls = re.findall(r'(?m)^\s*(execute\(command=.*\))\s*$', entry)
+        commands = [ast.literal_eval(ast.parse(call, mode='eval').body.keywords[0].value) for call in calls]
+        command = next((item for item in commands if 'run_wps_task.py' in item and "<<'JSON'" in item), '')
+        match = re.search(r"<<'JSON'\n(.*?)\nJSON", command, re.S)
+        self.assertIsNotNone(match, 'The entry must contain the runnable stdin example')
+        self.spec = json.loads(match.group(1))
 
     def cli(self, script, *args, spec=None):
         return subprocess.run(

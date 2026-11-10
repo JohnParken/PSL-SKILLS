@@ -12,30 +12,30 @@
 
 快速抓取文档中的各级标题，掌握文档结构与目录骨架：
 
-```console
+```python
 # 输出结构化 JSON
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./长篇汇报.wps --heading-only
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --heading-only")
 
 # 输出精简纯文本大纲
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./长篇汇报.wps --heading-only --format text
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --heading-only --format text")
 ```
 
 ### 2. 按段落范围切片（`--paragraph-range START:END`）
 
 按 1-based 包含两端的段落序号进行范围截取，便于分批审阅长文档：
 
-```console
+```python
 # 仅读取正文第 1 到第 30 段
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./长篇汇报.wps --paragraph-range 1:30 --format text
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --paragraph-range 1:30 --format text")
 ```
 
 ### 3. 按章节标题定向提取（`--section EXACT_HEADING`）
 
 从匹配的章节标题开始读取，直至遇到同级或更高级别的标题为止，返回该章节的完整上下文：
 
-```console
+```python
 # 定向读取“总体要求”章节
-python -I -S -B "<skill-root>/scripts/read_wps.py" ./通知.wps --section "总体要求" --format text
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./通知.wps --section \"总体要求\" --format text")
 ```
 
 ## 适用场景与建议

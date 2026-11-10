@@ -1,6 +1,6 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期：2026-11-09；源码基线：[9e262bc](https://github.com/JohnParken/PSL-SKILLS/tree/9e262bc587c44788b8de49a8498de14ceb9102ce)；Skill 版本：`20261110.0051.1813`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收。
+> 文档核对日期：2026-11-09；源码基线：[9e262bc](https://github.com/JohnParken/PSL-SKILLS/tree/9e262bc587c44788b8de49a8498de14ceb9102ce)；Skill 版本：`20261110.1706.5284`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -226,3 +226,5 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --
 ## 归档结果与用户提示
 
 完整回执应核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived`，保留 `archive_message` 并展示 `archive_user_notice`。`--compact-receipt` 仅在创建、归档和清理达到成功条件后输出投影，包含 `archive_status` 与 `archive_user_notice`，不包含 `files` 和 `archive_message`；需要逐项证据时使用非精简回执，不因缺少投影字段重复生成。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+
+执行调用维护：业务脚本示例使用宿主的 `execute(command=...)`，执行前核对完整命令、stdin、路径及结果；这不改变 CLI 或协议，不代表真实宿主链路已经验收。

@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261110.0051.1813"
+version: "20261110.2000.2124"
 description: 用于读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，支持公式子集计算和显式口径的数据统计。保留并提示未计算公式与读取限制；不支持任意行列或工作表结构编辑、宏执行、图表透视缓存刷新及 XLS/XLSB、WPS 专有格式直接处理。
 license: MIT
 ---
@@ -9,16 +9,20 @@ license: MIT
 
 ## 执行环境约束与首步自检
 
+脚本由宿主 `execute(command=完整非空命令字符串)` 执行，按实际 schema 提交；包含 stdin 时在同一命令完整提供。替换路径并安全引用参数，不把 `execute(...)` 嵌入命令。执行工具或路径映射不可用时停止并报告；独立调用逐项核对结果，状态未知不盲目重试。
+
+**用户文件定位：** 优先附件映射和用户指定文件名。上传文件和待查交付物只定位任务 `./` 顶层，不递归或到子目录查找；无映射仅列顶层候选，歧义询问，无候选或指定位置不在顶层时报告。内部归档、Skill 资源与程序输入安全契约不变。
+
 路径占位符说明：`<skill-root>` 指本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path` 去掉文件名所得目录；相对路径先按本次已确认的读取基准解析。它不是 Shell 变量，也不是当前参考文档目录。使用前整体替换为真实根目录，并将替换后的完整路径作为一个参数正确引用；无法定位时停止，不猜工作目录、环境变量、其他会话路径或宿主掩码。脚本、参考、模板及依赖清单均从该根目录定位。
 
 宿主路径与执行器：读取工具中的 `file_path` 属于该工具的路径空间；先用它定位和读取 Skill 内部资料。执行脚本前另确认该位置与执行器实际可访问路径的映射，并用执行器路径替换命令中的 `<skill-root>`；只有宿主确认两者一致时才可直接复用。确认执行器的当前目录就是宿主指定的任务目录，且任务输入在该执行器可见；不能确认映射或工作目录时停止并报告，不猜测或切换目录。
 
-1. `./` 为宿主确认的任务工作目录；在该目录执行并保持不变。输入、配置和受控临时文件沿用任务目录内相对路径规则。交付输出只传裸文件名（例如 `报告.xlsx`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。按附件映射或用户明确路径定位，不添加猜测的子目录、不搜索历史归档；输入缺失时报告。当前目录若是 Skill 源码，先由宿主确认任务目录。
+1. `./` 为宿主确认的任务工作目录；在该目录执行并保持不变。输入、配置和受控临时文件沿用任务目录内相对路径规则。交付输出只传裸文件名（例如 `报告.xlsx`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。用户文件按上述顶层规则定位，不搜索历史归档；输入缺失时报告。当前目录若是 Skill 源码，先由宿主确认任务目录。
 2. 按上方规则定位并替换 `<skill-root>`；脚本可用已确认的绝对路径，任务数据不可。不得切到安装目录运行示例或向安装目录写业务文件。使用宿主确认的 Python 3.9+，保留 `-I -S -B`；仅标准库，依赖见 `<skill-root>/requirements.txt`。禁止安装包、联网或用 Office/LibreOffice、legacy 工具回退。
 3. 首次操作运行以下命令，须退出 0 且 JSON `status=ready`。它检查运行时、模板和计算基础，不证明输入、权限、业务结果或 Excel 兼容性。
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run check
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run check")
 ```
 
 4. 确认输入可读；写文件前在任务根目录独占创建探针，实际写入、读回、仅清理本次探针，配置和重定向报告也适用。仅读 stdout 不需探针。不覆盖已有文件，不在系统临时目录做业务探针。
@@ -32,16 +36,14 @@ python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run check
 
 把下面短 JSON 作为 stdin 交给标准 runner；裸文件名在 `arguments` 与 `output` 中完全一致，不加额外临时脚本或配置。`@spec` 引用 `configs.spec`，不是已有文件。每格恰有 `value`，可为字符串、数值、布尔或 null；前导零编号必须字符串，开头 `=` 的字符串仍是文字。可选 `style:4` 为新表表头，其余不填；工作表名/地址须有效且唯一，不传未知字段。
 
-```console
-python3 -I -S -B "<skill-root>/scripts/run_xlsx_task.py" <<'JSON'
-{"script":"stdlib_xlsx.py","arguments":["create","@spec","清单.xlsx"],"output":"清单.xlsx","configs":{"spec":{"sheets":[{"name":"清单","cells":{"A1":{"value":"编号","style":4},"B1":{"value":"数量","style":4},"A2":{"value":"001"},"B2":{"value":12}}}]}}}
-JSON
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/run_xlsx_task.py\" <<'JSON'\n{\"script\":\"stdlib_xlsx.py\",\"arguments\":[\"create\",\"@spec\",\"清单.xlsx\"],\"output\":\"清单.xlsx\",\"configs\":{\"spec\":{\"sheets\":[{\"name\":\"清单\",\"cells\":{\"A1\":{\"value\":\"编号\",\"style\":4},\"B1\":{\"value\":\"数量\",\"style\":4},\"A2\":{\"value\":\"001\"},\"B2\":{\"value\":12}}}]}}}\nJSON\n")
 ```
 
 本例预期 `status=calculated_subset`、`formula_count=0`、`issues=[]`、`output_written=true`，退出 0；并按末节独立核对归档/清理。它是静态表，不会自动更新。使用回执实际 `output` 回读（示例仅在它仍为 `清单.xlsx` 时成立），核对表名、单元格类型和值与上面的独立预期一致；完整小表读取比逐页遍历更直接：
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./清单.xlsx
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read ./清单.xlsx")
 ```
 
 ## 按需加载与任务路由
@@ -74,7 +76,7 @@ python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./清单.xlsx
 
 ## 读取与输出选择
 
-首次普通读取：`python3 -I -S -B "<skill-root>/scripts/xlsx_cli.py" run read ./input.xlsx`。大表只选结构时可直接用 `python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx --summary`；概况没有单元格值，不能替代数据验收。有界读取的覆盖、truncated、next_cursor 及诊断必须保留；需要局部值或续读时才加载有界参考。全量统计直接用 profile/summarize 的明确区域，不先逐页搬整表；必要全量数据仍读取完整结果，不为省输出丢弃内容。
+首次普通读取：`execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read ./input.xlsx")`。大表只选结构时可直接用 `execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read ./input.xlsx --summary")`；概况没有单元格值，不能替代数据验收。有界读取的覆盖、truncated、next_cursor 及诊断必须保留；需要局部值或续读时才加载有界参考。全量统计直接用 profile/summarize 的明确区域，不先逐页搬整表；必要全量数据仍读取完整结果，不为省输出丢弃内容。
 
 工具调用前核对真实 schema、完整非空命令与 JSON。复杂规格用 Python dict/list 和 JSON 序列化（走 stdin），不手拼长 JSON。每次执行后按三层判读：
 

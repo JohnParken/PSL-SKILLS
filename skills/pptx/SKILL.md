@@ -1,12 +1,16 @@
 ---
 name: pptx
-version: "20261110.0655.4106"
+version: "20261110.1706.5284"
 description: 用于将已有内容与受限 SVG 页面制作成可编辑的 PPTX 演示文稿，适合需要文本、形状、图片、表格、图表及基础公式的汇报材料；也可读取支持范围内的 PPTX 文本与备注并检查包结构。不提供任意现有演示文稿的编辑、完整格式导入或桌面显示效果验证。
 ---
 
 # PPTX 创建与结构读取
 
 ## 执行环境约束与首步自检
+
+脚本由宿主 `execute(command=完整非空命令字符串)` 执行，按实际 schema 提交；包含 stdin 时在同一命令完整提供。替换路径并安全引用参数，不把 `execute(...)` 嵌入命令。执行工具或路径映射不可用时停止并报告；独立调用逐项核对结果，状态未知不盲目重试。
+
+**用户文件定位：** 优先附件映射和用户指定文件名。上传文件和待查交付物只定位任务 `./` 顶层，不递归或到子目录查找；无映射仅列顶层候选，歧义询问，无候选或指定位置不在顶层时报告。内部归档、Skill 资源与程序输入安全契约不变。
 
 路径占位符说明：`<skill-root>` 是占位符；从本次主入口 `SKILL.md` 的真实 `file_path` 定位，相对路径先按宿主确认的读取基准解析，再去掉文件名。使用前整体替换为真实目录，将完整路径作为一个参数正确引用；无法定位时停止。
 
@@ -24,8 +28,8 @@ description: 用于将已有内容与受限 SVG 页面制作成可编辑的 PPTX
 3. 首次操作前运行下述自检。必须取得实际退出码 0，且完整 JSON 包含 `ok: true`、`status: "environment-ok"`、`in_memory_export: "passed"`。
    同时核对 `check_kind: "environment"`、`artifact_validation: "not_run"`。`self_test` 仅记录内存样例验证，不代表用户产物已验收，也不产生演示文稿文件。
 
-```console
-python -I -S -B "<skill-root>/scripts/pptx.py" check
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" check")
 ```
 
 4. 确认实际输入可读。创建文件前确认任务根目录可写；需要验证任务目录写权限时运行 `check --write-probe`，要求 `write_probe: "passed"`。
@@ -54,20 +58,19 @@ python -I -S -B "<skill-root>/scripts/pptx.py" check
 3. 选择尚不存在的 `.pptx` 裸文件名，主文件固定写在任务根目录。脚本不覆盖、不自动改名、不创建父目录；遇到同名文件使用另一个明确的文件名，不删除已有产物。
 4. 调用创建命令。将 JSON 作为实际进程 stdin 传入 `-`，不要把执行器参数和演示文稿 JSON 混在一起；文件输入示例如下。
 
-```console
-python -I -S -B "<skill-root>/scripts/pptx.py" create presentation.json report.pptx
-python -I -S -B "<skill-root>/scripts/pptx.py" create - report.pptx
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" create presentation.json report.pptx")
 ```
 
-以上是两种互斥的调用方式；按实际任务选择一种。示例文件名可按主题替换，执行工作目录始终保持为已确认的任务目录。
+文件方式如上；选择 stdin 方式时，使用 `create - report.pptx` 并在同一 command 内通过 quoted here-document 提供完整 JSON。两种方式互斥。示例文件名可按主题替换，执行工作目录始终保持为已确认的任务目录。
 创建在内存完成组包和结构验证后独占写出最终文件；正常创建不生成中间文件，也不写入安装目录。
 
 5. 要求退出码 0、`ok: true`、`structural_validation: "passed"`，核对返回的 `output`、`bytes`、`sha256`、`slide_count`。
    再读取最终文件，核对页数、文字、备注及对象计数是否符合输入；按需核对图表数据与表格内容，不把对象数量视为内容完全正确。
 
-```console
-python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx
-python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" inspect report.pptx")
+execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" validate report.pptx")
 ```
 
 `inspect` 已执行结构验证并默认返回全量受支持内容；仅需结构复核时选 `validate`，无需为同一结论重复运行两条命令。

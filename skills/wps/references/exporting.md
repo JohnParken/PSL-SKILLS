@@ -6,20 +6,20 @@
 
 先遵循主入口的任务目录、保护和交付边界，输入相对已确认的任务目录，输出仅传裸文件名并固定写入任务根目录。仅本次导出才加载本参考，不预读所有后端。首次转换前运行所选后端自检，要求退出0、JSON `status=environment-ok` 并核对可用后端；全部OOXML输入另需Expat >=2.6。
 
-```console
-python -I -S -B "<skill-root>/scripts/export_wps.py" check --backend rtf
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/export_wps.py\" check --backend rtf")
 # 仅需要预装 LibreOffice 二进制能力时
-python -I -S -B "<skill-root>/scripts/export_wps.py" check --backend libreoffice
+execute(command="python -I -S -B \"<skill-root>/scripts/export_wps.py\" check --backend libreoffice")
 ```
 
 将已排版的 `.docx` 转换为 WPS 兼容的 `.wps` 文档：
 
-```console
+```python
 # 零依赖纯 Python RTF 后端（受支持内容映射，不承诺原版式保真）
-python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --output "output.wps" --backend rtf
+execute(command="python -I -S -B \"<skill-root>/scripts/export_wps.py\" convert \"./input.docx\" --output \"output.wps\" --backend rtf")
 
 # 自适应 .wps：优先 LibreOffice；失败可回退 RTF，回执标记 partial 与 fallback
-python -I -S -B "<skill-root>/scripts/export_wps.py" convert "./input.docx" --output "output.wps" --backend auto
+execute(command="python -I -S -B \"<skill-root>/scripts/export_wps.py\" convert \"./input.docx\" --output \"output.wps\" --backend auto")
 ```
 
 显式要求二进制 DOC 时将输出设为 `output.doc`；`auto` 与 `libreoffice` 均不向该后缀回退 RTF。输出 `.rtf` 的 `auto` 直接使用 RTF 后端。候选先在独占临时目录中转换并经现有读取器核验，再发布；转换或结构失败保留已有目标。来源和候选的 `partial`、遗漏诊断均保留，不能把主文字回读成功当作版式或全格式验收。

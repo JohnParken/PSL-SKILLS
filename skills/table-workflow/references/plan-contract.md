@@ -76,10 +76,8 @@
 
 同一计划从 stdin 依次交给 `plan` 与 `apply`，每次都核对 SHA，不复用过期计算结果。plan 无落盘；apply 只生成两个最终文件，先验证内存候选，再独占保存，回读所有 ZIP 部件比对，并复核所有输入哈希。已有输出拒绝，由用户任务语义选择新的文件名，不覆盖历史交付物。候选目标值与逐格写入清单独立比较，非目标新增单元格/包部件拒绝。审计另含 source_regions 的完整元数据、lookup 行对及其事实守恒、business checks 的逐项结果。审计 plan 的 JSON 数值字面量保留为数字（含高精度小数），不会转为字符串；读取审计后将其中 plan 经本入口重新执行时，筛选类型保持不变。其余统计值沿用 Decimal 字符串约定。
 
-```console
-python -I -S -B "<skill-root>/scripts/table_workflow.py" plan --xlsx-root "XLSX_ROOT_CONFIRMED" --et-root "ET_ROOT_CONFIRMED"
-python -I -S -B "<skill-root>/scripts/table_workflow.py" apply --xlsx-root "XLSX_ROOT_CONFIRMED" --et-root "ET_ROOT_CONFIRMED" --output 填报.xlsx --audit 核验.json
-```
+按主入口的 `execute(command=...)` 调用；分别将 `plan` 或 `apply --output 填报.xlsx --audit 核验.json` 和所需依赖根参数组成命令，并在同一个 command 中以 quoted here-document 提供本任务完整、已核实的计划 JSON。先执行 plan 并核对结果，再单独执行 apply；不能提交不含 stdin 的命令。
+
 
 依赖根参数须根据各自实际主入口读取结果替换；无 ET 来源可省略 et-root。模型不必打印完整计划给用户反复审批；口径已明确时执行，有歧义才询问，审计中保留全部最终计划。
 

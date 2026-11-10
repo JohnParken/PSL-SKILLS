@@ -22,12 +22,8 @@ Task-local `ranking.json`:
  "denominator":"group_numeric_sum","precision":34}
 ```
 
-```console
-(
-set -eC  # stop on failure; refuse to overwrite existing report files
-python3 -I -S -B "<skill-root>/scripts/xlsx_rank_share.py" source.xlsx --sheet Sales --query ranking.json > ranked.json
-python3 -I -S -B "<skill-root>/scripts/xlsx_result_export.py" ranked.json ranked.xlsx
-)
+```python
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_rank_share.py\" source.xlsx --sheet Sales --query ranking.json > ranked.json\npython3 -I -S -B \"<skill-root>/scripts/xlsx_result_export.py\" ranked.json ranked.xlsx\n)")
 ```
 
 group_by and measure accept letters, col: IDs or exact multi-level paths. Pass explicit

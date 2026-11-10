@@ -21,14 +21,14 @@
 
 ## Commands
 
-```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read input.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read input.csv --encoding utf-8-sig
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create report.json report.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create report.json static.xlsx --values-only
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit original.xlsx patch.json edited.xlsx
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" calculate original.xlsx calculated.xlsx
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" check")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read input.xlsx")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read input.csv --encoding utf-8-sig")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create report.json report.xlsx")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create report.json static.xlsx --values-only")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" edit original.xlsx patch.json edited.xlsx")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" calculate original.xlsx calculated.xlsx")
 ```
 
 Output arguments must be bare filenames (no `./`, directories, absolute or parent paths). Files are written directly into the confirmed task working directory and must not exist; original inputs are never overwritten. Preserve the

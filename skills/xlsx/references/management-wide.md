@@ -24,9 +24,9 @@ configuration (`<skill-root>/assets/fictional_management_config.json`) into new 
 Read each linked asset and write its task copy with exclusive creation; preserve any
 existing file and choose a distinct task filename instead of overwriting it:
 
-```console
-python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" create facts.json fictional_facts.xlsx
-python3 -I -S -B "<skill-root>/scripts/xlsx_management.py" fictional_facts.xlsx --sheet Facts --query management.json --xlsx fictional_management.xlsx
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create facts.json fictional_facts.xlsx")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_management.py\" fictional_facts.xlsx --sheet Facts --query management.json --xlsx fictional_management.xlsx")
 ```
 
 Without --xlsx the command emits native management_wide_v1 JSON only. That saved JSON

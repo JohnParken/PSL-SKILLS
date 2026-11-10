@@ -32,10 +32,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/office/validate.py\" ./�
 
 例如原件的第一个直属段落只有一个普通 run，原文为“现有正文”，仅更改中文字体：
 
-```sh
-python -I -S -B "<skill-root>/scripts/run_docx_edit.py" structure ./原文档.docx 字体修订版.docx <<'JSON'
-{"operations":[{"type":"format_run","paragraph_index":0,"expected_text":"现有正文","run_index":0,"expected_run_text":"现有正文","format":{"font_east_asia":"黑体"}}]}
-JSON
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" structure ./原文档.docx 字体修订版.docx <<'JSON'\n{\"operations\":[{\"type\":\"format_run\",\"paragraph_index\":0,\"expected_text\":\"现有正文\",\"run_index\":0,\"expected_run_text\":\"现有正文\",\"format\":{\"font_east_asia\":\"黑体\"}}]}\nJSON\n")
 ```
 
 仅改中文字体不附带西文字体、字号、颜色、加粗或段落属性；仅改字号只传 `size_pt`。每个目标 run 单独声明操作，所有索引基于原件；读取视图的 1-based 段落序号不能直接当作编辑器的 0-based 索引。全篇请求先核对覆盖范围，不把支持的正文子集声称为全篇完成。

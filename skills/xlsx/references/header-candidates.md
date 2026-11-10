@@ -12,9 +12,9 @@ and `status: ready`, and confirm task directory/input readability. Resolve `<ski
 from the actual SKILL.md path, replace it in commands and use task-relative input paths.
 Python 3.9+, standard library only. Inputs are not changed; JSON is written to stdout.
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_header_candidates.py" report.xlsx --sheet Sales
-python3 -I -S -B "<skill-root>/scripts/xlsx_header_candidates.py" report.xlsx --sheet Sales --scan-rows 64 --scan-columns 32 --max-depth 4
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_header_candidates.py\" report.xlsx --sheet Sales")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_header_candidates.py\" report.xlsx --sheet Sales --scan-rows 64 --scan-columns 32 --max-depth 4")
 ```
 
 The default scan is A1 through at most row 32/column 32. Allowed bounds are 2..64 rows,

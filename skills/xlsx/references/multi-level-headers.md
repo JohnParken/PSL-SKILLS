@@ -21,9 +21,9 @@ The commands read workbook contents and emit JSON; they do not write or alter th
 
 ## Declare the header rows
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_headers.py" report.xlsx --sheet 经营表 --header-rows 3:5
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" profile report.xlsx --sheet 经营表 --header-rows 3:5
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_headers.py\" report.xlsx --sheet 经营表 --header-rows 3:5")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile report.xlsx --sheet 经营表 --header-rows 3:5")
 ```
 
 `--header-rows 3:5` is an inclusive worksheet row range, not a count. It must lie fully
@@ -79,9 +79,9 @@ Example task-local `groups.json`:
  "filters":[{"column":{"path":["2024年","销售","金额"]},"op":"ge","value":10}]}
 ```
 
-```console
-python3 -I -S -B "<skill-root>/scripts/xlsx_analysis.py" summarize report.xlsx --sheet 经营表 --header-rows 3:5 --query groups.json
-python3 -I -S -B "<skill-root>/scripts/xlsx_rows.py" report.xlsx --sheet 经营表 --header-rows 3:5 --query rows.json
+```python
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize report.xlsx --sheet 经营表 --header-rows 3:5 --query groups.json")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" report.xlsx --sheet 经营表 --header-rows 3:5 --query rows.json")
 ```
 
 For `rows.json`, use e.g. `{"deduplicate":{"columns":[{"path":["部门"]}]},
