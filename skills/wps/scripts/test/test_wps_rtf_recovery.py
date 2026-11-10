@@ -52,8 +52,9 @@ class RecoveryTests(unittest.TestCase):
     def test_related_destinations_not_silently_complete(self):
         for destination in ('header', 'footer', 'headerf', 'object', 'pict'):
             result = read_bytes(('{\\rtf1{\\' + destination + ' hidden}Body\\par}').encode())
-            self.assertEqual(result['text'], 'Body')
-            self.assertIn('rtf_destination_skipped', self.codes(result))
+            is_object = destination in ('object', 'pict')
+            self.assertEqual(result['text'], ('\ufffc' if is_object else '') + 'Body')
+            self.assertIn('rtf_object_not_decoded' if is_object else 'rtf_destination_skipped', self.codes(result))
             self.assertEqual(result['status'], 'partial')
 
     def test_field_cache_preserved_without_instruction_execution(self):
@@ -63,7 +64,7 @@ class RecoveryTests(unittest.TestCase):
 
     def test_binary_braces_not_interpreted_as_text_or_groups(self):
         result = read_bytes(b'{\\rtf1 Before{\\pict\\bin3 }{} }After\\par}')
-        self.assertEqual(result['text'], 'BeforeAfter')
+        self.assertEqual(result['text'], 'Before\ufffcAfter')
         self.assertNotIn('rtf_unclosed_groups', self.codes(result))
 
     def test_all_prefix_cuts_preserve_available_text_without_exception(self):

@@ -55,7 +55,7 @@ csw14、cslw22、Windows envr0，nFibBack允许BF/C1。由cswNew决定使用base
 
 CLX取fc/lcb索引33，按标志选0Table/1Table；Prc有界跳过，复杂Prm检查零基索引后不应用格式。唯一末尾Pcdt必须长度/边界正确。压缩片段按FcCompressed映射，UTF16按逻辑片段拼接，严格代理对解码。默认仅读CP0,ccpText)，其他故事仅边界检查。显式include-related按公开FIB顺序输出六区及CP半开范围；最后额外CP不输出；每区独立代理对/字段闭合，不能借下一故事修复。有界脚注尾注引用表见 CP映射 (`<skill-root>/references/binary-note-references.md`)，批注见作者/引用 (`<skill-root>/references/binary-comments.md`)，节与页眉存储槽见分节 (`<skill-root>/references/binary-headers.md`)，其他引用未知partial，见存储故事 (`<skill-root>/references/ms-doc-stories.md`)。
 
-CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。统一read/read_bytes/CLI的data模式默认对MS-DOC使用text_policy=recover：未指定的field_policy取cached_result、object_policy取placeholder；显式reject仍生效。strict/legacy兼容模式、底层parse_streams默认保持strict文字策略；显式text_policy=strict可在data模式保留原拒绝行为。--text-policy仅适用于MS-DOC，其他格式显式传入会拒绝；不改变其默认行为。
+CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属性支持的一级行/单元格证据，不恢复完整网格或页面布局；见二进制表格 (`<skill-root>/references/binary-tables.md`)。合法空片段表成功空正文。统一read/read_bytes/CLI的data模式默认对MS-DOC使用text_policy=recover：未指定的field_policy取cached_result、object_policy取placeholder；显式reject仍生效。strict/legacy兼容模式、底层parse_streams默认保持strict文字策略；显式text_policy=strict可在data模式保留原拒绝行为。RTF 显式 recover 与默认恢复相同；RTF strict 及 OOXML 的该选项不适用并拒绝。
 
 cached_result只按13/14/15分隔符和有界嵌套保留保存结果；隐藏指令不输出，缓存新鲜度和sprmCFSpec/Plcfld未验证，始终partial。不带结果的闭合域省略并报告；缺损、重复分隔、跨故事未闭合域仍corrupt，不用后续文字猜边界。显式field_policy=reject仍拒绝域。
 
@@ -111,6 +111,8 @@ reading_assessment (`<skill-root>/references/reading-assessment.md`)是统一入
 
 ## RTF部分恢复与发布边界
 
-RTF读取在未闭合组、行或单元格、Unicode/十六进制截断时保留可证实的文字和物理单元格，返回partial及rtf_*诊断；不能确认的字符不猜测。未配对Unicode代理项以替代字符显示并诊断。页眉页脚、图片及对象省略明确标记；域只保留存储结果，不执行、不证明新鲜度。未知可选destination保守跳过并诊断；字体/颜色等已知元数据不因未呈现而自动标记正文缺失。二进制长度确定时按字节跳过，不将其字节误作正文或组边界。
+RTF 的直接字节与十六进制字节按文档代码页解码；未声明代码页的高位字节沿用 CP936 假设并标 partial，解码替换及无法可靠应用的字体级代码页也有诊断。双字节与结构定界符无法消歧时拒绝，不猜测或把潜在控制符当作正文。正文段落和表格输出有上限，超限保留有界内容并标 partial/遗漏；嵌套或结构资源预算耗尽则拒绝，不能以 partial 绕过安全限制。全文 `--format text` 按 `blocks` 顺序输出段落与表格，行内单元格用制表符；为兼容既有接口，JSON 的 `text` 仍仅含段落，表格及次序取 `tables/blocks`。RTF 的隐藏排除/注释及 accepted/original/all 文本视图仅支持可验证的直接标记和组作用域；样式级联、历史属性、字段或结构边界使筛选无法保证时拒绝。默认保留存储文字，遇隐藏或修订标记标 partial。显式 field-policy=reject 在已解析主内容遇域时拒绝，cached_result 保留存储结果且 partial。页眉、页脚、脚注与批注不并入主文；附加区域提取和二进制段落来源目前不支持。默认对已识别的图片/对象保留 U+FFFC 占位与源字节位置并标 partial，不执行或解码对象；显式 object-policy=reject 遇到已解析对象拒绝。显式文本 recover 使用相同有界恢复；strict 以及不适用的兼容/图表策略请求仍拒绝。
+
+RTF读取在未闭合组、行或单元格、Unicode/十六进制截断时保留可证实的文字和物理单元格，返回partial及rtf_*诊断；不能确认的字符不猜测。未配对Unicode代理项以替代字符显示并诊断。页眉页脚和相关区域省略明确标记；图片及对象默认保留占位并报告内容未解码。域只保留存储结果，不执行、不证明新鲜度。未知可选destination保守跳过并诊断；字体/颜色等已知元数据不因未呈现而自动标记正文缺失。二进制长度确定时按字节跳过，不将其字节误作正文或组边界。
 
 生成/重排编辑在发布前拒绝带结构或文字恢复诊断的候选，保留原目标；仅附加内容省略、域缓存未验证可带partial回执发布，不意味着版式和所有内容已验收。普通编辑仍拒绝partial输入，用户明确授权--allow-lossy-reflow时才生成标注损失的新副本。读取变为partial可能使原来静默省略页眉/对象的RTF不再进入默认重排编辑，这是缺口显式化；不是取消读取能力。

@@ -21,7 +21,7 @@
 | Python `read_bytes(data, **options)` | 返回结果字典；成功、部分结果及已由格式分支转成字典的失败都会附加 `reading_assessment`。 | 不捕获统一预检或二进制解析抛出的 `ParseError`；未知容器即会抛出，异常有 `status`、`location`。不能假定所有失败都是字典，需捕获异常并检查已返回字典的 `status`。 |
 | Python `read(path, **options)` | 读取普通文件后调用 `read_bytes`，返回结果字典。 | 捕获 `ParseError`、`OSError`，返回失败字典及 `reading_assessment`；不保证捕获编程错误或所有 Python 异常。 |
 | CLI 默认 JSON | stdout 为一个完整 JSON；ok 退出 0、partial 退出 3。 | 读取失败输出失败 JSON，退出 1；包括分支不适用的策略。未知参数、无效枚举、缺输入及 `--include-related --format text` 等参数解析错误退出 2，stderr 为用法/错误文本，无结果 JSON。 |
-| CLI `--format text` | stdout 仅正文；partial 退出 3，stderr 另给 status/issues 摘要。 | 读取失败的 JSON 写 stderr，stdout 无正文，退出 1。电子表格不能输出 text。 |
+| CLI `--format text` | stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔；partial 退出 3，stderr 另给 status/issues 摘要。 | 读取失败的 JSON 写 stderr，stdout 无正文，退出 1。电子表格不能输出 text。 |
 
 读取失败的 `status` 包括 `unsupported`、`encrypted`、`corrupt`、`resource_limit`、`io_error`、`invalid_or_unsupported`。失败正文为 `text=null`、`partial=false`，不交付部分单元格或文字；`invalid_or_unsupported` 不应被调用方擅自归类为必然损坏。参数解析错误不是上述失败字典。
 

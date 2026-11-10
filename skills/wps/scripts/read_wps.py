@@ -613,11 +613,27 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                              'Spreadsheets (.et/.ett) use the et skill; locate its actual SKILL.md and resolve scripts from that skill root.')
         return read_ooxml_bytes(data, revisions=revisions or 'accepted', include_related=include_related, hidden_text=hidden_text)
     if data.lstrip().startswith(b'{\\rtf'):
+        require(hidden_text in ('include', 'exclude', 'annotate'), {'stage': 'options'},
+                'Unknown RTF hidden-text policy', 'unsupported')
+        require(not include_related and not binary_paragraph_sources and text_policy in (None, 'recover'),
+                {'stage': 'options'}, 'Requested option does not apply to RTF', 'unsupported')
+        require(compatibility == 'data' and requested_chart_policy is None,
+                {'stage': 'options'}, 'Requested compatibility or chart policy does not apply to RTF', 'unsupported')
+        require(requested_object_policy in (None, 'reject', 'placeholder'), {'stage': 'options'},
+                'Unknown RTF object policy', 'unsupported')
+        require(requested_field_policy in (None, 'reject', 'cached_result'), {'stage': 'options'},
+                'Unknown RTF field policy', 'unsupported')
         from wps_rtf_read import parse_rtf_bytes
         try:
-            return parse_rtf_bytes(data)
-        except Exception as exc:
+            result = parse_rtf_bytes(data, hidden_text=hidden_text, revisions=revisions,
+                                     object_policy=requested_object_policy or 'placeholder')
+        except ParseError:
+            raise
+        except ValueError as exc:
             raise ParseError('corrupt', {'stage': 'RTF stream'}, str(exc)) from exc
+        require(requested_field_policy != 'reject' or not result.get('field_count'), {'stage': 'RTF stream'},
+                'RTF fields found; field-policy reject does not permit cached results', 'unsupported')
+        return result
     require(data.startswith(SIGNATURE), {'stage': 'container'},
             'Unknown container; native private WPS/Works/ET formats unsupported', 'unsupported')
     require(hidden_text in ('include', 'annotate'), {'stage': 'options'}, 'Binary visibility is unknown; exclude unsupported', 'unsupported')
@@ -676,6 +692,20 @@ def encode_result(result):
     # Retain the public limit and function used by existing callers/tests.
     from wps_result import encode_result as encode
     return encode(result, limit=MAX_JSON_OUTPUT_BYTES)
+
+
+def text_output(result):
+    """Render RTF's stored block order; keep the legacy JSON text field intact."""
+    if result.get('format') != 'rtf' or not isinstance(result.get('blocks'), list):
+        return result['text']
+    chunks = []
+    for block in result['blocks']:
+        if block['type'] == 'paragraph':
+            chunks.append(result['paragraphs'][block['index']]['text'])
+        elif block['type'] == 'table':
+            table = result['tables'][block['index']]
+            chunks.extend('\t'.join(cell['text'] for cell in row) for row in table['rows'])
+    return '\n'.join(chunks)
 
 
 def check_environment():
@@ -783,7 +813,7 @@ def main():
     if args.format == 'text' and result['status'] in ('ok', 'partial') and 'text' not in result:
         result = failure('unsupported', {'stage': 'output'}, 'Spreadsheet extraction requires JSON output')
     if args.format == 'text' and result['status'] in ('ok', 'partial'):
-        print(result['text'], end='')
+        print(text_output(result), end='')
         if result['status'] == 'partial':
             print(json.dumps({'status': 'partial', 'issues': result.get('issues', result.get('diagnostics', []))}, ensure_ascii=False), file=sys.stderr)
     else:

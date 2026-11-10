@@ -460,6 +460,10 @@ def _paragraph_text(p: Element, revisions: str) -> str:
         if name in ("br", "cr"):
             out.append("\n")
             return
+        if name in ("noBreakHyphen", "softHyphen"):
+            # Preserve the stored Unicode character, without page/line layout.
+            out.append("\u2011" if name == "noBreakHyphen" else "\u00ad")
+            return
         for child in node:
             # Nested paragraphs belong to separate blocks and are handled by block traversal.
             if child.tag == _tag("p"):
@@ -494,11 +498,16 @@ def _table(tbl: Element, revisions: str) -> list[str]:
     return rows
 
 
-def _paragraph_metadata(node, revisions, styles):
+def _paragraph_metadata(node, revisions, styles, style_definitions_unreliable=False):
     result = []
     for child in node:
         if child.tag == _tag('p'):
-            properties = styles.properties(child)
+            issue_count = len(styles.issues)
+            properties = child.find(_tag('pPr')) if style_definitions_unreliable else styles.properties(child)
+            if len(styles.issues) > issue_count:
+                # A partial inheritance chain cannot prove a stored heading.
+                # Direct paragraph evidence remains usable without that chain.
+                properties = child.find(_tag('pPr'))
             outline = None if properties is None else properties.find(_tag('outlineLvl'))
             value = None if outline is None else outline.get(_tag('val'))
             result.append({'outline_level': int(value) if value is not None and value.isdigit() and 0 <= int(value) <= 9 else None})
@@ -506,7 +515,7 @@ def _paragraph_metadata(node, revisions, styles):
             result.extend({'outline_level': 9} for _ in child.findall(_tag('tr')))
         elif child.tag.startswith('{' + W + '}') and child.tag.rsplit('}', 1)[-1] in _BLOCK_WRAPPERS:
             if child.tag.rsplit('}', 1)[-1] not in _REVISION_TAGS[revisions]:
-                result.extend(_paragraph_metadata(child, revisions, styles))
+                result.extend(_paragraph_metadata(child, revisions, styles, style_definitions_unreliable))
     return result
 
 
@@ -734,7 +743,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
 
     def record_omissions(root, name):
         unsupported = {"txbxContent", "drawing", "object", "pict", "altChunk", "instrText", "fldSimple", "fldChar", "sym",
-                       "noBreakHyphen", "softHyphen", "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange"}
+                       "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange"}
         found = sorted({node.tag.rsplit("}", 1)[-1] for node in root.iter()
                         if node.tag.startswith("{" + W + "}")
                         and node.tag.rsplit("}", 1)[-1] in unsupported})
@@ -769,6 +778,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
                 raise ValueError("invalid w:document or missing w:body")
             from wps_word_visibility import Visibility
             styles = None
+            style_part = None
             relationship_part = 'word/_rels/document.xml.rels'
             if relationship_part in package.namelist():
                 relationships = _word_part(package, relationship_part, budget)
@@ -797,13 +807,17 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
                     if declarations != ['application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml']:
                         raise ValueError('Invalid styles content type')
 
-            visibility = Visibility(hidden_text, styles, revisions)
+            visibility = Visibility(hidden_text, styles, revisions, style_part=style_part)
             visibility.apply(document, part, "/document")
             record_omissions(document, part)
             pieces = _blocks(document.find(_tag("body")), revisions)
             from wps_word_styles import WordStyles
             style_resolver = WordStyles(styles)
-            result['paragraph_metadata'] = _paragraph_metadata(document.find(_tag('body')), revisions, style_resolver)
+            result['paragraph_metadata'] = _paragraph_metadata(
+                document.find(_tag('body')), revisions, style_resolver, visibility.style_metadata_unknown)
+            if visibility.style_metadata_unknown:
+                style_resolver.issues.append({'code': 'word_heading_inheritance_unresolved',
+                                             'message': 'Ambiguous style definitions; only direct paragraph outline levels retained'})
             result['heading_diagnostics'] = style_resolver.issues
             from wps_ooxml_tables import TableCollector
             table_collector = TableCollector(revisions, _paragraph_text)

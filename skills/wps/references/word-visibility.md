@@ -9,3 +9,5 @@
 已有 accepted/original/all 继续处理 insert/delete/move；属性变更只诊断 partial，不应用历史属性。字段指令不执行，存储结果也不能证明显示结果新鲜。二进制默认include不解析额外结构；annotate可读有界BTE/CHPX原始属性证据 (`<skill-root>/references/ms-doc-charprops.md`)，但样式/PAPX/PRM未应用，有效状态仍unknown，不过滤文字；exclude仍拒绝。
 
 当前验证主要为合成测试，无真实隐藏文字独立显示对照。边界以代码和验证报告为准。
+
+RTF 对直接 \v、\deleted、\revised 标记和组作用域支持 include/exclude/annotate、accepted/original/all 文本视图；不恢复完整样式继承或页面显示。未知控制、样式级联、历史属性、字段与结构标记使筛选无法可靠保证时拒绝。注释包含来源范围和数量，不复制排除全文；不可把它当作隐私或授权控制。默认读取保留存储文字，相关标记返回 partial。脚注和批注不并入主文，未读取时报告遗漏。

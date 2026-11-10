@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261110.2006.4129"
+version: "20261110.2029.1297"
 description: 用于读取 .wps、.rtf 与旧 DOC 兼容文字，创建 RTF 内容的 .wps/.rtf 文档或受控重排。不生成金山原生格式、不承诺无损；原生 DOCX 常规任务优先 docx，.et/.ett 交给 et，原生 XLSX/XLSM 交给 xlsx。
 ---
 
@@ -51,7 +51,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wp
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --paragraph-range 1:20")
 ```
 
-概况不含正文，不用它回答全文问题。段落范围为1-based闭区间，只投影主段落；核对 `selection_status`、`source_status`、`projection_scope`，不把源 `reading_assessment` 当投影覆盖全文。保留本次可见输出、真实退出状态及 partial/遗漏诊断，按末节判读；宿主截断结果不是完整 JSON。纯文本 `--format text` 只在确实不需结构/诊断时用，partial 诊断仍在 stderr；合并流时不能把诊断混作正文，不替代结果契约。
+概况不含正文，不用它回答全文问题。段落范围为1-based闭区间，只投影主段落；核对 `selection_status`、`source_status`、`projection_scope`，不把源 `reading_assessment` 当投影覆盖全文。保留本次可见输出、真实退出状态及 partial/遗漏诊断，按末节判读；宿主截断结果不是完整 JSON。纯文本 `--format text` 只在确实不需结构/诊断时用，partial 诊断仍在 stderr；合并流时不能把诊断混作正文，不替代结果契约。RTF 全文纯文本按块顺序输出正文和表格，单元格以制表符分隔；JSON 的 `text` 仍仅为段落，表格与顺序见 `tables/blocks`。RTF 的隐藏排除/注释和修订视图只支持可验证的直接标记与组作用域；未知样式、历史属性或结构边界影响筛选时拒绝。默认保留存储文字，遇隐藏或修订标记标 partial。图片及对象默认以 U+FFFC 标示位置并标 partial，不解码或执行；域默认仅保留存储结果且 partial，不执行；显式 `--field-policy reject` 在已解析主内容遇域时拒绝。
 
 ### 创建：标题、正文、基础表格
 

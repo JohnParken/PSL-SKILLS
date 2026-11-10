@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；当前 Skill 版本：`20261110.2006.4129`。本文是仓库级说明，不替代 [SKILL.md](../../skills/wps/SKILL.md) 的运行约束，也不表示本次已执行转换或客户端验收。
+> 核对日期：2026-11-10；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；当前 Skill 版本：`20261110.2029.1297`。本文是仓库级说明，不替代 [SKILL.md](../../skills/wps/SKILL.md) 的运行约束，也不表示本次已执行转换或客户端验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -119,7 +119,7 @@ JSON
 
 默认读取 JSON 返回 `format/text/paragraphs` 及适用的 `tables/blocks/issues/diagnostics/omitted_regions`。`reading_assessment` 是范围摘要：`ok` 仅表示 `within_declared_scope`，`full_format_verified` 始终为 false。未知覆盖不表示该内容不存在。
 
-`--format text` 成功时 stdout 仅正文；partial 的状态和 issues 摘要在 stderr。失败 JSON 写 stderr，不用空正文伪装成功。默认 JSON 模式的读取失败写 stdout；参数解析错误只有用法/错误文本。JSON 输出有 16 MiB 预算，超限失败，不输出被截断的合法性未知结果。
+`--format text` 成功时 stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔，JSON 的 `text` 保持段落口径。partial 的状态和 issues 摘要在 stderr。RTF 对可证实的直接隐藏和修订标记支持筛选或注释；样式、历史属性、字段或结构边界使筛选不能保证时拒绝。默认保留存储文字并在遇相关控制时标 partial；图片和对象默认标 U+FFFC 及源位置，内容不执行或解码，显式 reject 遇对象拒绝。显式字段 reject 在已解析主内容遇域时拒绝，缓存结果不执行且标 partial。脚注和批注不混入主文，附加区域提取尚不支持。OOXML 默认 include 在可见性元数据损坏但正文可安全读取时保留正文并标 partial；标准 noBreakHyphen/softHyphen 保留为对应 Unicode 字符。失败 JSON 写 stderr，不用空正文伪装成功。默认 JSON 模式的读取失败写 stdout；参数解析错误只有用法/错误文本。JSON 输出有 16 MiB 预算，超限失败，不输出被截断的合法性未知结果。
 
 `read_bytes()` 可能抛 `ParseError`，也可能返回格式分支生成的失败字典；调用方既要捕获异常，也要检查 `status`。`read(path)` 捕获 `ParseError/OSError` 并返回失败结果，但不保证捕获所有编程异常。
 

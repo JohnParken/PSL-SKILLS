@@ -63,12 +63,12 @@ class OoxmlTests(unittest.TestCase):
             self.assertNotIn('页眉', result['text'])
         self.assertEqual(reader.read_bytes(data, include_related=True)['related_stories'], [])
 
-    def test_unrendered_symbol_and_hyphen_content_is_partial(self):
-        for marker in ('<w:noBreakHyphen/>', '<w:softHyphen/>', '<w:sym w:font="Symbol" w:char="F061"/>'):
-            result = reader.read_bytes(package('<w:p><w:r><w:t>A</w:t>'+marker+'<w:t>B</w:t></w:r></w:p>'))
-            self.assertEqual(result['status'], 'partial')
-            self.assertEqual(result['text'], 'AB')
-            self.assertEqual(result['diagnostics'][0]['code'], 'uninterpreted_content')
+    def test_unrendered_font_dependent_symbol_is_partial(self):
+        marker = '<w:sym w:font="Symbol" w:char="F061"/>'
+        result = reader.read_bytes(package('<w:p><w:r><w:t>A</w:t>' + marker + '<w:t>B</w:t></w:r></w:p>'))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['text'], 'AB')
+        self.assertEqual(result['diagnostics'][0]['code'], 'uninterpreted_content')
 
     def test_empty_and_bad_xml(self):
         self.assertEqual(reader.read_bytes(package())['text'], '')

@@ -64,6 +64,7 @@
     "scripts/wps_rtf_builder.py",
     "scripts/wps_rtf_geometry.py",
     "scripts/wps_rtf_read.py",
+    "scripts/wps_rtf_visibility.py",
     "scripts/wps_selective.py",
     "scripts/wps_task_paths.py",
     "scripts/wps_word_styles.py",
