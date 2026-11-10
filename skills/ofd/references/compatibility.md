@@ -18,9 +18,9 @@
 
 在宿主确认的任务目录执行：
 
-```console
-python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
-python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd --version-policy compatible
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --version-policy compatible")
 ```
 
 compatible 是用户理解缺口后显式选择的未知小版本存储结构试读，不是完整支持未知版本。不在失败后自动切换策略、伪造版本属性或尝试替换 XML 命名空间。更高版本的安全、结构或资源校验失败仍拒绝，不输出积累中的正文。

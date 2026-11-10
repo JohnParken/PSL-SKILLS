@@ -21,7 +21,7 @@
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261110.0051.1813 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261110.0051.1813 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261110.0051.1813 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值与公式缓存；支持表头区域预览、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261110.0051.1813 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261110.0722.1712 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；仅在明确要求 OFD 新建时生成基础 OFD 1.0 多页文件，含固定文字、线框、受限图片与显式网格表格；可选随包朱雀仿宋预览示例或明确自备字体，缺字拒绝；不编辑第三方文件，不做 OCR、验签、转换或渲染 |
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261110.0655.4106 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261110.0051.1813 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261110.0051.1813 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
@@ -203,14 +203,14 @@ python3 -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据
 
 ### OFD
 
-独立入口见 [ofd](skills/ofd/SKILL.md)。先运行自检，再在任务目录读取相对输入路径；结果分别返回 XML 结构、存储文字与页面出现记录及其诊断，不恢复页面或语义阅读顺序：
+独立入口见 [ofd](skills/ofd/SKILL.md)。宿主以 `execute(command=...)` 提交完整命令；生成可通过 `--spec-stdin` 接收完整 JSON，原文件参数仍兼容。先运行自检，再在任务目录读取相对输入路径；结果分别返回 XML 结构、存储文字与页面出现记录及其诊断，不恢复页面或语义阅读顺序：
 
-```console
-python3 -I -S -B "<skill-root>/scripts/read_ofd.py" --check
-python3 -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
 ```
 
-仅在用户明确指定 OFD 并要求新建时，按 [基础生成说明](skills/ofd/references/generation.md) 提供显式 JSON 模型；支持 OFD 1.0 固定位置横排文字、线框、受限 PNG/JPEG 和简单网格表格，不自动排版、转换或编辑第三方文件。生成前另运行 `python3 -I -S -B "<skill-root>/scripts/generate_ofd.py" --check`；在已确认任务目录生成到尚不存在的 `.ofd` 文件名，失败不覆盖原件或已有目标。
+仅在用户明确指定 OFD 并要求新建时，按 [基础生成说明](skills/ofd/references/generation.md) 提供显式 JSON 模型；支持 OFD 1.0 固定位置横排文字、线框、受限 PNG/JPEG 和简单网格表格，不自动排版、转换或编辑第三方文件。生成前另运行 `execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" --check")`；在已确认任务目录生成到尚不存在的 `.ofd` 文件名，失败不覆盖原件或已有目标。
 
 可显式选择随包 [朱雀仿宋预览示例](skills/ofd/references/bundled-fonts.md)，或提供明确的自备字体路径／安装内私有字体引用；不扫描系统、不自动回退，缺字或不满足技术嵌入限制时停止。私有字体目录受 Git 忽略规则和专用打包器排除；字体权利状态不因提供文件而自动获得确认。当前结构与回读测试不代表 OFD 客户端视觉验收，Linux、Windows 和实机打开仍按各验证记录标为未验证。
 

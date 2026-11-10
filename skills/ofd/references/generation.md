@@ -8,15 +8,28 @@
 
 ## 环境、定位和自检
 
-在harness确认的任务工作目录执行；任务JSON、自备字体、许可证与图片均为该目录内明确指定的相对输入；显式bundled字体只读取本Skill固定且校验哈希的内部资源，拒绝任何层级符号链接、父目录与绝对数据路径。不扫描系统字体，不自动下载、安装或转换资源。使用Python >=3.12.11、自带zlib和Expat >=2.6.0；零第三方Python包与外部软件运行依赖，保留 `-I -S -B`。安全发布需dir_fd、O_NOFOLLOW、O_DIRECTORY及描述符相对、不跟随链接的link/unlink/stat，缺失时停止。
+在harness确认的任务工作目录执行；任务JSON文件（如使用）、自备字体、许可证与图片均为该目录内明确指定的相对输入；显式bundled字体只读取本Skill固定且校验哈希的内部资源，拒绝任何层级符号链接、父目录与绝对数据路径。不扫描系统字体，不自动下载、安装或转换资源。使用Python >=3.12.11、自带zlib和Expat >=2.6.0；零第三方Python包与外部软件运行依赖，保留 `-I -S -B`。安全发布需dir_fd、O_NOFOLLOW、O_DIRECTORY及描述符相对、不跟随链接的link/unlink/stat，缺失时停止。
 
-```console
-python -I -S -B "<skill-root>/scripts/generate_ofd.py" --check
-python -I -S -B "<skill-root>/scripts/generate_ofd.py" ./layout.json new-document.ofd
-python -I -S -B "<skill-root>/scripts/check_generated_ofd.py" ./new-document.ofd
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" --spec-stdin 'new-document.ofd' <<'OFD_SPEC'\n{\"schema_version\":\"ofd-generate-1\",\"pages\":[{\"width\":210,\"height\":297,\"items\":[{\"kind\":\"rectangle\",\"x\":20,\"y\":20,\"width\":60,\"height\":30}]}]}\nOFD_SPEC\n")
 ```
 
+以上分别为自检和一次生成，须先确认自检成功。将占位符及输出名替换为已确认的实际值并按 Shell 和工具字符串两层正确编码；quoted heredoc 不展开正文中的 `$()`、反引号和变量，结束标记须独占一行且不与正文整行冲突。简单 JSON 完整闭合、不能截断；复杂规格先用 Python 字典/列表和 `json.dumps(ensure_ascii=False, allow_nan=False)` 序列化，再通过 `subprocess.run([sys.executable, "-I", "-S", "-B", script, "--spec-stdin", output], input=payload, check=False)` 传入 UTF-8 字节，透传 stdout/stderr 和真实退出码，不使用 `shell=True` 或把用户文本当代码。若由动态值构造外层 Shell 命令，逐参数使用 `shlex.quote`，不可直接插值。不能提交完整非空 command 或可靠 stdin 时停止并报告，不猜工具字段。读取或生成不会因工具返回 success 自动成功，按实际退出、截断和 JSON 回执判断。
+
+已有规格文件的旧调用继续可用：`execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" './layout.json' 'new-document.ofd'")`。`--spec-stdin` 后仅接一个输出裸文件名，stdin 最多 256 KiB UTF-8，超限、无效 UTF-8、空值、重复键或无效 JSON 在发布前失败，不生成临时 JSON 文件。`-` 不单独表示 stdin，保留原文件路径语义。独立检查仅在需要时执行：`execute(command="python -I -S -B \"<skill-root>/scripts/check_generated_ofd.py\" './new-document.ofd'")`。
+
 先核对自检退出0、JSON status=environment-ok、artifact_validation=not_run；write_probe=not_run明确没有证明目录可写。生成过程实际独占创建并登记一个任务根目录私有候选，写入、fsync、读回比较与结构验证成功后，才使用硬链接原子建立全新的输出名；失败不覆盖已有名字，也不退回replace/rename覆盖方案。候选写入是本次实际写入能力检查。输出只接收新的 `.ofd` 裸文件名；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝，不截取 basename 改写参数；不会创建输出子目录。调用前确认不是技能源码目录。
+
+## 复杂规格的完整调用示例
+
+以下是替代上方生成命令的一次调用，不要两次执行。示例数据仅展示结构；用完整、可信的 Python 数据对象承载实际值，不能将用户文本未经安全编码拼进 Python 源码或 Shell。脚本路径和输出名经 Shell 参数引用，包含特殊字符的动态参数须用 `shlex.quote`；不能仅替换双引号中的原文。模型/宿主需按工具 schema 序列化外层字符串，核对结束行与完整命令；此调用不创建临时脚本或规格文件。
+
+```python
+execute(command="python -I -S -B - \"<skill-root>\" \"复杂示例.ofd\" <<'PY_SPEC'\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\n\nroot = Path(sys.argv[1])\noutput = sys.argv[2]\nspec = {\n    \"schema_version\": \"ofd-generate-1\",\n    \"title\": '中文 \"引号\" 和字面文本 $(echo 未执行)',\n    \"pages\": [{\"width\": 210, \"height\": 297, \"items\": [\n        {\"kind\": \"rectangle\", \"x\": 20, \"y\": 20, \"width\": 60, \"height\": 30}\n    ]}]\n}\ntry:\n    payload = json.dumps(spec, ensure_ascii=False, allow_nan=False).encode(\"utf-8\")\nexcept (TypeError, ValueError, OverflowError):\n    print(\"spec_serialization_failed\", file=sys.stderr)\n    raise SystemExit(2)\ncommand = [sys.executable, \"-I\", \"-S\", \"-B\", str(root / \"scripts/generate_ofd.py\"), \"--spec-stdin\", output]\ntry:\n    result = subprocess.run(command, input=payload, check=False)\nexcept OSError:\n    print(\"generator_not_started\", file=sys.stderr)\n    raise SystemExit(1)\nraise SystemExit(result.returncode)\nPY_SPEC\n")
+```
+
+子进程不捕获或合并输出，返回的进程退出码直接传给外层；工具仍可能合流、截断或隐藏状态，必须依据实际回传判断，不能认为 `print` 或此模板保证回传完整。仅在明确未启动时修正参数；状态不明或目标可能已发布时先核实，勿盲目重跑。
 
 ## 输入模型
 

@@ -577,8 +577,13 @@ def main(argv=None):
     parser.add_argument('spec', nargs='?')
     parser.add_argument('output', nargs='?', help='new bare .ofd filename in the task root')
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--spec-stdin', action='store_true', help='read UTF-8 JSON from stdin; supply only the output filename')
     args = parser.parse_args(argv)
-    if (args.check and (args.spec or args.output)) or (not args.check and not (args.spec and args.output)):
+    if args.spec_stdin:
+        if args.check or not args.spec or args.output is not None:
+            parser.error('use --spec-stdin with exactly one new output filename')
+        args.output, args.spec = args.spec, None
+    elif (args.check and (args.spec or args.output)) or (not args.check and not (args.spec and args.output)):
         parser.error('use --check, or supply a JSON spec and new output filename')
     stage = 'environment'
     try:
@@ -588,7 +593,11 @@ def main(argv=None):
                                   python=sys.version.split()[0], profile='fixed-layout-1', write_probe='not_run; checked during publication')))
             return 0
         stage = 'input'
-        raw = read_asset(args.spec, 256 * 1024)
+        if args.spec_stdin:
+            raw = sys.stdin.buffer.read(256 * 1024 + 1)
+            require(len(raw) <= 256 * 1024, 'asset size limit')
+        else:
+            raw = read_asset(args.spec, 256 * 1024)
         spec = json.loads(raw.decode('utf-8'), object_pairs_hook=unique_pairs,
                           parse_constant=lambda value: (_ for _ in ()).throw(GenerationError('nonfinite JSON number')))
         stage = 'build'

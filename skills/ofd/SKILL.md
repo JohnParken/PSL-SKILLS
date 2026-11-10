@@ -1,6 +1,6 @@
 ---
 name: ofd
-version: "20261110.0051.1813"
+version: "20261110.0722.1712"
 description: 读取 OFD 1.0、1.1、1.2 的结构与文字；仅在明确指定 OFD 时生成基础 OFD 1.0 多页文件，含固定文字、线框、图片及简单表格。可离线用随包朱雀仿宋预览示例或自备字体，缺字明确拒绝。不编辑第三方文件，不做 OCR、签章、复杂排版或格式转换。
 ---
 
@@ -18,15 +18,15 @@ description: 读取 OFD 1.0、1.1、1.2 的结构与文字；仅在明确指定 
 2. 由实际读取本文件的 `file_path` 去掉文件名确定 `<skill-root>`，相对读取路径按当次已确认基准解析；无法确认则停止。脚本及内部资源以它为基准，Markdown 内部引用统一使用以 `<skill-root>` 为根目录的完整路径。先替换命令占位符，完整引用路径，不使用路径掩码或猜测其他会话位置，也不为调用脚本切换到安装目录。
 3. 使用已确认可用的 Python >=3.10、Expat >=2.6.0，使用该 Python 自带的 zlib 与 XML/Expat 能力；缺失或版本不满足时诊断并停止，不安装任何额外组件或系统软件。见 依赖声明 (`<skill-root>/requirements.txt`)。禁止安装依赖、联网读取输入或调用外部程序。保留 `-I -S -B`，首次读取前运行：
 
-```console
-python -I -S -B "<skill-root>/scripts/read_ofd.py" --check
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" --check")
 ```
 
 4. 自检实际检查 zlib 压缩解压往返，以及 CLI 所需的 `dir_fd`、`O_NOFOLLOW`、`O_DIRECTORY` 标准库平台能力；缺失时返回 unsupported，不安装组件或降级为路径检查。要求退出 0 且输出 `environment-ok Python>=3.10 Expat>=2.6.0 stdlib-only`。缺少标记、失败或结果无法确认时停止依赖操作；仅在环境修复后重新自检，不跳过或降低门槛。
 5. 确认输入为任务目录内可读普通文件。仅读取并写 stdout 无需写探针；需保存 JSON 时，先在目标任务目录用独占新探针实际写入、读回并清理，避免覆盖已有文件。CLI 拒绝输入路径所有层级的符号链接，并以目录相对描述符读取；Python API 的显式边界选项见 契约 (`<skill-root>/references/contract.md`)。
 6. 自检不证明内容正确或宿主具备下载功能。交付前核对实际 JSON、状态、来源和宿主支持的交付方式，不构造下载链接。压缩后若指令缺失，重读真实 `SKILL.md`，保留已确认的任务目录和文件名。
 
-生成另需 Python >=3.12.11，保留 `-I -S -B`，先运行 `python -I -S -B "<skill-root>/scripts/generate_ofd.py" --check`，要求退出0且JSON status=environment-ok、artifact_validation=not_run。此自检检查解释器及描述符相对link/unlink/stat能力，不创建产物或证明目录可写；实际生成先独占写入私有候选、读回验证，再原子链接到任务根目录内的新文件名，绝不覆盖已有文件。首轮实写即为候选的写入能力核对，失败不继续发布。缺字体、字符映射、可用度量或安全文件能力时停止，不自动安装、找替代字体、截断或缩字。详细范围、临时清理与失败重试规则只在生成任务时加载生成参考（`<skill-root>/references/generation.md`）。
+生成另需 Python >=3.12.11，保留 `-I -S -B`，先运行 `execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" --check")`，要求退出0且JSON status=environment-ok、artifact_validation=not_run。此自检检查解释器及描述符相对link/unlink/stat能力，不创建产物或证明目录可写；实际生成先独占写入私有候选、读回验证，再原子链接到任务根目录内的新文件名，绝不覆盖已有文件。首轮实写即为候选的写入能力核对，失败不继续发布。缺字体、字符映射、可用度量或安全文件能力时停止，不自动安装、找替代字体、截断或缩字。详细范围、临时清理与失败重试规则只在生成任务时加载生成参考（`<skill-root>/references/generation.md`）。
 
 **自检结果与回传：**`--check` 成功 stdout 保留原 `environment-ok` 行，另输出 `check_kind=environment artifact_validation=not_run`。受控失败仍按原 JSON stdout、status/diagnostics及退出1/4返回，并在JSON中增加同名范围字段；不混入普通文字。参数错误仍退出2并写usage到stderr。此结果只说明环境，不读取、生成或验收OFD产物。
 
@@ -63,9 +63,11 @@ python -I -S -B "<skill-root>/scripts/read_ofd.py" --check
 | 程序消费、批处理或解释失败 | 先读 CLI 与 JSON 契约 (`<skill-root>/references/contract.md`)，按退出码区分完整子集、部分、不支持与失败。 |
 | 判断兼容程度或审查证据 | 阅读 来源与验证记录 (`<skill-root>/references/validation.md`)，区分正式规范身份、合成行为验证和真实样本验收。 |
 
-```console
-python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
 ```
+
+工具由宿主提供，按实际 schema 提交一个完整非空 `command` 字符串，不把 `execute(...)` 再嵌入命令，也不猜测额外参数。上例执行前替换已确认的脚本路径和输入；动态路径、文件名必须作为独立 Shell 参数安全引用（例如 `shlex.quote`），不能把未转义内容插入命令。仅在确认尚未启动时修正空参数或 schema 错误一次；启动状态未知先核实，勿重复写入。复杂生成规格通过 stdin 传 JSON，见 `<skill-root>/references/generation.md`。
 
 用宿主提供的文件写入能力将读取 stdout 保存为尚不存在的任务根目录结果文件（仅指定裸文件名）；勿直接用 Shell 重定向覆盖已有文件。读取脚本不写任何输出或临时文件；仅 stdout 的读取运行无需建立归档清单。若后续需保存并交付 JSON，由宿主明确文件交付流程；新建OFD使用独立生成入口。取得提供方完整归档结果后，归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
 

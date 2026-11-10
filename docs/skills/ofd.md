@@ -1,6 +1,6 @@
 # OFD：结构读取与受限固定版式生成
 
-文档核对日期：2026-11-09。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.0051.1813`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
+文档核对日期：2026-11-09。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.0722.1712`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -84,11 +84,11 @@ flowchart TD
 
 命令中的 `<skill-root>` 必须从本次实际读取 OFD `SKILL.md` 的真实路径确定，相对路径先按确认的读取基准解析，再去掉文件名并整体替换。数据路径相对宿主任务目录，不相对参考文件目录；无法定位时停止。
 
-```console
-python -I -S -B "<skill-root>/scripts/read_ofd.py" --check
-python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd
-python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd --view summary
-python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd --view page-text --document 1 --page 1
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view summary")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view page-text --document 1 --page 1")
 ```
 
 读取结果写入 stdout，不产生磁盘结果或解包文件；参数错误等诊断仍按入口契约使用 stderr。输入必须是任务目录内普通文件，拒绝绝对路径、父目录段和所有层级符号链接，通过目录描述符逐级读取并核对变化。Python API 默认允许调用方已授权的绝对路径；显式 `task_root` 才启用同类边界，不能利用默认 API 绕过宿主限制。
@@ -133,9 +133,9 @@ python -I -S -B "<skill-root>/scripts/read_ofd.py" ./input.ofd --view page-text 
 
 [生成契约](../../skills/ofd/references/generation.md) 接受 `schema_version=ofd-generate-1`，顶层为 `title`、`fonts`、`images`、`pages`。未知字段、重复 JSON 键、非有限数值和越界均失败。坐标单位为毫米，支持 `text`、`line`、`rectangle`、`image`、`table`；不自动换行、分页、缩字、截断或修复重叠。
 
-```console
-python -I -S -B "<skill-root>/scripts/generate_ofd.py" --check
-python -I -S -B "<skill-root>/scripts/generate_ofd.py" ./layout.json new-document.ofd
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" --check")
+execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" './layout.json' 'new-document.ofd'")
 ```
 
 输出必须是任务根目录内尚不存在的单个 `.ofd` 文件名，不接受输出子目录。生成路径为：内存构建与模型验证 → 独占私有候选 → 写入、fsync、读回及验证 → 硬链接建立新输出名 → 重新打开最终文件核对身份、长度、字节及变化 → 清理本次候选。不会覆盖原件，也不以替换式 rename 降级。
@@ -176,3 +176,8 @@ python -I -S -B "<skill-root>/scripts/generate_ofd.py" ./layout.json new-documen
 ## 归档结果与用户提示
 
 核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+
+
+本次调用适配：宿主按 `execute(command=完整非空命令)` 执行，生成器新增 `--spec-stdin` 接收受限 UTF-8 JSON，原规格文件调用仍可使用。遵循 [生成参考](../../skills/ofd/references/generation.md) 的安全引用、完整性和结果判定；不修改宿主加载器。
+
+验证记录（2026-11-10）：以远端主干 293a8ac 为基线，在 Linux/Python 3.12.14/Expat 2.8.3 和 macOS/Python 3.12.12/Expat 2.6.3 分别运行 OFD 严格结构检查、160 项 OFD 回归与 11 项独立包回归，均通过；示例使用已确认的 Python 路径执行，原生 Shell 环境未提供可用的 `python` 命令。覆盖旧文件参数、stdin 边界与错误、复杂中文引号和 Shell 字符、partial 以及截断模拟。不代表真实宿主或模型已验证参数与结果回传，也不代表客户端视觉验收。Pylint 在两台环境均未安装，本次未执行。
