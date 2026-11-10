@@ -2,6 +2,8 @@
 
 这些文件以仓库根为基准，不随任何单独 Skill 分发，不修改 LangChain Deep Agents 或其加载机制。`benchmark_skill_loading.py` 比较固定提交 `4b5a61f51d12d2a9d293898c2f862cbf7271dc8d` 的参考读取计划与工作区；不执行模型，也不声称计划已经被宿主遵守。
 
+2026-11-10 优先项 4/5/1 后，当前计划为 58 项、人工选择期望为 41 项；前一版 57/31 项逐字保存在 `runtime_loading_profiles_before_review_451_20261110.json` 和 `skill_selection_current_cases_before_review_451_20261110.json`。新增 `xlsx-basic-region-analysis` 测量原生区域 profile/summarize；ET JSON 两条既有场景的 after 改为同时读取 et-result-analysis 与 data-analysis，不能省略来源诊断。历史名称 `xlsx-wps-analysis` 只代表 ET JSON，不代表 WPS 文字。PPTX 各读取路径均从主入口获得数学结构缺口提示。此处仍与固定老提交比较，本次改动相对 `65bff45` 的单独字符量比较见 [本轮维护记录](../docs/maintenance/skill-review/optimization-451-20261110.md)，不混用两种基线。
+
 ## 重现
 
 使用已确认的 Python 3.10+，在仓库根执行：

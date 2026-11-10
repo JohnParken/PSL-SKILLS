@@ -7,7 +7,7 @@
 ## 阅读基线
 
 - 仓库：[JohnParken/PSL-SKILLS](https://github.com/JohnParken/PSL-SKILLS)。
-- 当前源码基线：[9e262bc](https://github.com/JohnParken/PSL-SKILLS/commit/9e262bc587c44788b8de49a8498de14ceb9102ce)，核对日期 2026-11-09 UTC。历史裸文件名迁移验证见 [当时记录](output-filenames-validation.json)，不代表当前版本的全量重测。
+- 当前源码基线：[65bff45](https://github.com/JohnParken/PSL-SKILLS/commit/65bff45ffb9375949d6fe547c4e4837c96213bd7) 加本轮工作区变更，核对日期 2026-11-10 UTC。历史裸文件名迁移验证见 [当时记录](output-filenames-validation.json)，不代表当前版本的全量重测。
 - 此前对全部 10 个 Skill 进行运行包与维护材料分离；当时验收基于 `e86522e` 加当时变更，记录于分批提交前。当前源码版本以表中为准，历史包与验收以各自记录和 Git 历史为准；详情见 [项目结构和运行包](packaging.md)。
 - DOCX 字体编辑路由、独立差异保护与相关历史回归见 [DOCX 说明](skills/docx.md#已有文档字体修改与格式保留)；历史记录的基线、平台和范围不能自动推广到当前版本。
 - 覆盖依据：当前工作树中所有 `skills/*/SKILL.md`，不将历史分发 ZIP、测试夹具或参考文件当作额外 Skill。
@@ -20,14 +20,14 @@
 
 | Skill | 基线版本 | 文档内容与核心边界 |
 | --- | --- | --- |
-| [bank-writing](skills/bank-writing.md) | 20261110.1256.4387 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
+| [bank-writing](skills/bank-writing.md) | 20261110.2126.1082 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
 | [docx](skills/docx.md) | 20261110.1706.5284 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
-| [xlsx](skills/xlsx.md) | 20261110.2000.2124 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261110.2029.1297 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
-| [et](skills/et.md) | 20261110.1748.2190 | ET/ETT 的 BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、表头预览与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261110.1258.0657 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建；execute 命令可从 stdin 接收生成规格，不渲染或验签。 |
-| [pptx](skills/pptx.md) | 20261110.1706.5284 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证；不任意编辑现有演示文稿。 |
-| [table-workflow](skills/table-workflow.md) | 20261110.1706.5284 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
+| [xlsx](skills/xlsx.md) | 20261110.2126.1082 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [wps](skills/wps.md) | 20261110.2126.1082 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
+| [et](skills/et.md) | 20261110.2126.1082 | ET/ETT 的 BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、表头预览与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261110.2126.1082 | OFD 1.0/1.1/1.2 结构与存储文字读取；明确请求时基础 OFD 1.0 创建；execute 命令可从 stdin 接收生成规格，不渲染或验签。 |
+| [pptx](skills/pptx.md) | 20261110.2126.1082 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
+| [table-workflow](skills/table-workflow.md) | 20261110.2126.1082 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
 | [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261110.1706.5284 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
 | [skill-development-standards](skills/skill-development-standards.md) | 20261109.1939.2825 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
@@ -102,6 +102,7 @@ flowchart TD
 
 ## 已有资料及本次核验
 
+- [2026-11-10 描述与读取路径优化](maintenance/skill-review/optimization-451-20261110.md)：ET/XLSX 按需加载、七项描述、PPTX 数学结构缺口诊断；本机回归与未验证范围单独记录，不代表真实宿主选路或 token 节省。
 - [自检与宿主回传契约](check-execution.md)：保留原有记录，注意其中日期和历史版本。
 - [Linux 发布验收清单](linux-release-acceptance.md)：既有待执行方案，不因新增本组文档而自动变成通过报告。
 - [2026-11-07 文档核验记录](skill-docs-validation-20261107.json)：当时的基线、版本、链接、图表核验、相关回归和未验证范围；不冒充当前全部业务重测。

@@ -1,6 +1,6 @@
 # OFD：结构读取与受限固定版式生成
 
-文档核对日期：2026-11-09。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.1258.0657`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
+文档核对日期：2026-11-09。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.2126.1082`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文解释两条独立业务路径及其验收边界。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -181,3 +181,10 @@ execute(command="python -I -S -B \"<skill-root>/scripts/generate_ofd.py\" './lay
 本次调用适配：宿主按 `execute(command=完整非空命令)` 执行，生成器新增 `--spec-stdin` 接收受限 UTF-8 JSON，原规格文件调用仍可使用。遵循 [生成参考](../../skills/ofd/references/generation.md) 的安全引用、完整性和结果判定；不修改宿主加载器。
 
 验证记录（2026-11-10）：以远端主干 293a8ac 为基线，在 Linux/Python 3.12.14/Expat 2.8.3 和 macOS/Python 3.12.12/Expat 2.6.3 分别运行 OFD 严格结构检查、160 项 OFD 回归与 11 项独立包回归，均通过；示例使用已确认的 Python 路径执行，原生 Shell 环境未提供可用的 `python` 命令。覆盖旧文件参数、stdin 边界与错误、复杂中文引号和 Shell 字符、partial 以及截断模拟。不代表真实宿主或模型已验证参数与结果回传，也不代表客户端视觉验收。Pylint 在两台环境均未安装，本次未执行。
+
+
+## 2026-11-10 描述与读取路径优化
+
+本轮 description 将随包字体用于基础制作与页面预览分开：可生成基础 OFD，但没有页面渲染或预览能力。仅提到“正式文档”不触发 OFD 生成，必须明确指定 OFD。
+
+当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。

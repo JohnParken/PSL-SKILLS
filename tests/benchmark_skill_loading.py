@@ -29,8 +29,10 @@ PROFILES = {
                           ['xlsx/SKILL.md', 'xlsx/references/tool-execution.md', 'xlsx/references/environment-results.md']),
     'xlsx-et-analysis': (['xlsx/SKILL.md', 'xlsx/references/data-analysis.md',
                           'et/SKILL.md', 'et/references/spreadsheet-consumption.md'],
-                         ['xlsx/SKILL.md', 'xlsx/references/data-analysis.md',
+                         ['xlsx/SKILL.md', 'xlsx/references/et-result-analysis.md', 'xlsx/references/data-analysis.md',
                           'et/SKILL.md', 'et/references/spreadsheet-consumption.md']),
+    'xlsx-basic-region-analysis': (['xlsx/SKILL.md', 'xlsx/references/data-analysis.md'],
+                                   ['xlsx/SKILL.md', 'xlsx/references/data-analysis.md']),
     # Historical profile names retained for comparisons; ET never routes to WPS text.
     'wps-default-et': (['et/SKILL.md'], ['et/SKILL.md']),
     'wps-selected-cells': (['et/SKILL.md', 'et/references/bounded-reading.md'],
@@ -60,11 +62,16 @@ for _name, _paths in {
 }.items():
     PROFILES[_name] = (_paths, _paths)
 
+PROFILES['xlsx-wps-analysis'] = (PROFILES['xlsx-wps-analysis'][0],
+                                  ['xlsx/SKILL.md', 'xlsx/references/et-result-analysis.md', 'xlsx/references/data-analysis.md'])
+
 SCENARIOS = {
     'xlsx-static-create': 'One static table, no formulas or custom appearance; verify values and delivery/cleanup.',
     'xlsx-formula-partial': 'Complex create with unsupported formula; retain incomplete/exit 2 and issues, never claim full calculation.',
     'xlsx-tool-failure': 'Missing or truncated tool result; stop dependent actions and inspect required diagnostics.',
     'xlsx-et-analysis': 'Consume full ET extraction JSON with original partial and cache diagnostics, not a projected view.',
+    'xlsx-basic-region-analysis': 'Profile or summarize a declared native XLSX region using existing input/query; retain complete-region, formula and quality rules.',
+    'xlsx-wps-analysis': 'Historical name: analyze existing full ET extraction JSON with region statistics; read both source and statistics contracts, not WPS text.',
     'wps-static-create': 'Basic title, paragraph and table from stdin; BOTH versions are entry-only, with no advanced layout or saved temporary specification.',
     'wps-complex-create': 'Advanced layout, merged cells or non-default page settings; inspect generation reference.',
     'mixed-format-read': 'Read native XLSX summary, ET selected cells and WPS text independently; union only required references.',

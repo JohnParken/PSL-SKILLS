@@ -1,7 +1,7 @@
 ---
 name: wps
-version: "20261110.2029.1297"
-description: 用于读取 .wps、.rtf 与旧 DOC 兼容文字，创建 RTF 内容的 .wps/.rtf 文档或受控重排。不生成金山原生格式、不承诺无损；原生 DOCX 常规任务优先 docx，.et/.ett 交给 et，原生 XLSX/XLSM 交给 xlsx。
+version: "20261110.2126.1082"
+description: 读取 .wps、.rtf 和旧版 .doc 的受支持文字与表格，按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。适合 WPS 兼容文字处理；不生成金山原生格式，不承诺保留原版式及对象。原生 DOCX（含 WPS 保存）优先使用 docx。
 ---
 
 # WPS 文字读取、RTF 创建与受控重排

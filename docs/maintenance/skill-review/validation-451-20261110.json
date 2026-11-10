@@ -1,0 +1,279 @@
+{
+  "baseline": "65bff45ffb9375949d6fe547c4e4837c96213bd7 plus working tree",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.12 (main, Feb  4 2026, 01:57:59) [Clang 21.1.4 ]",
+  "expat": "expat_2.6.3",
+  "results": [
+    {
+      "name": "et-selfcheck",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "skills/et/scripts/et_cli.py",
+        "run",
+        "--check"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.064,
+      "stdout": {
+        "tail": "check_kind=environment artifact_validation=not_run\nooxml-sheet=available\nenvironment-ok\n",
+        "characters": 88,
+        "omitted_characters": 0,
+        "sha256": "b2bc81ed4abba0b90443fbc20eb5d80085fd284343c0a4cf67501bf57e3c56e7"
+      },
+      "stderr": {
+        "tail": "",
+        "characters": 0,
+        "omitted_characters": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "tests_run": null
+    },
+    {
+      "name": "et-source",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/et/scripts/test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 7.734,
+      "stdout": {
+        "tail": "Collected 520 tests from skills/et/scripts/test (test_*.py)\ncheck_kind=environment artifact_validation=not_run\nooxml-sheet=available\nenvironment-ok\n",
+        "characters": 148,
+        "omitted_characters": 0,
+        "sha256": "798df95387298800d233b520b71b19cd2593a567d3216bcab8db65172c3e345d"
+      },
+      "stderr": {
+        "tail": "k\ntest_biff_integration_and_record_budget (test_wps_visibility.VisibilityTests.test_biff_integration_and_record_budget) ... ok\ntest_corruption_and_conflicts (test_wps_visibility.VisibilityTests.test_corruption_and_conflicts) ... ok\ntest_default_column_sentinel_and_filter_zero (test_wps_visibility.VisibilityTests.test_default_column_sentinel_and_filter_zero) ... ok\ntest_filter_retained_not_executed (test_wps_visibility.VisibilityTests.test_filter_retained_not_executed) ... ok\ntest_saved_hidden_and_unknown_cause (test_wps_visibility.VisibilityTests.test_saved_hidden_and_unknown_cause) ... ok\ntest_selection_keeps_unknown_and_default_all (test_wps_visibility.VisibilityTests.test_selection_keeps_unknown_and_default_all) ... ok\ntest_active_content_text_and_external_relations_refused (test_wps_vml_notes.NoteAnchors.test_active_content_text_and_external_relations_refused) ... ok\ntest_relationship_id_type_missing_and_duplicate (test_wps_vml_notes.NoteAnchors.test_relationship_id_type_missing_and_duplicate) ... ok\ntest_source_and_cell_anchor_independent_rectangle (test_wps_vml_notes.NoteAnchors.test_source_and_cell_anchor_independent_rectangle) ... ok\ntest_unbound_duplicate_missing_or_reversed_anchor (test_wps_vml_notes.NoteAnchors.test_unbound_duplicate_missing_or_reversed_anchor) ... ok\n\n----------------------------------------------------------------------\nRan 520 tests in 7.548s\n\nOK\n",
+        "characters": 82649,
+        "omitted_characters": 81249,
+        "sha256": "f04a797d983894f0949f6cefdc41660c589106a16f61c78ec877c7d4befb24e5"
+      },
+      "tests_run": 520
+    },
+    {
+      "name": "pptx-selfcheck",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "skills/pptx/scripts/pptx.py",
+        "check"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.264,
+      "stdout": {
+        "tail": "{\"schema\": \"psl.pptx.result.v1\", \"ok\": true, \"command\": \"check\", \"status\": \"environment-ok\", \"check_kind\": \"environment\", \"artifact_validation\": \"not_run\", \"python\": \"3.12.12\", \"platform\": \"Darwin\", \"expat\": \"expat_2.6.3\", \"isolated\": true, \"site_packages\": false, \"bytecode_writes\": false, \"descriptor_relative_io\": true, \"third_party_python_dependencies\": [], \"external_programs\": [], \"in_memory_export\": \"passed\", \"write_probe\": \"not_run\", \"self_test\": {\"slide_count\": 1, \"parts\": 14, \"slide_size\": {\"width_emu\": 12192000, \"height_emu\": 6858000}, \"structural_validation\": \"passed\", \"visual_validation\": \"not_run\"}}\n",
+        "characters": 618,
+        "omitted_characters": 0,
+        "sha256": "32c7b505ca3712a471c1a98de068b091986d9b838f534ca54ecd13c0fb26ea07"
+      },
+      "stderr": {
+        "tail": "",
+        "characters": 0,
+        "omitted_characters": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "tests_run": null
+    },
+    {
+      "name": "pptx-source",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/pptx/scripts/test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 15.333,
+      "stdout": {
+        "tail": "Collected 119 tests from skills/pptx/scripts/test (test_*.py)\n",
+        "characters": 62,
+        "omitted_characters": 0,
+        "sha256": "a5ee110ada3d39f8dff96fe01b9ad000cd116da536a3e70ff09978e832882bc9"
+      },
+      "stderr": {
+        "tail": "uses_task_cwd_and_preserves_original_bytes) ... ok\ntest_inspect_nonstandard_png_requires_opt_in_and_reports_partial (test_workflow.WorkflowTests.test_inspect_nonstandard_png_requires_opt_in_and_reports_partial) ... ok\ntest_json_errors_and_missing_arguments_keep_json_and_exit_code (test_workflow.WorkflowTests.test_json_errors_and_missing_arguments_keep_json_and_exit_code) ... ok\ntest_native_data_ambiguity_and_expansion_are_rejected_before_conversion (test_workflow.WorkflowTests.test_native_data_ambiguity_and_expansion_are_rejected_before_conversion) ... ok\ntest_output_requires_raw_bare_filename_for_cli_and_api (test_workflow.WorkflowTests.test_output_requires_raw_bare_filename_for_cli_and_api) ... ok\ntest_path_escape_absolute_and_symlinks_are_refused (test_workflow.WorkflowTests.test_path_escape_absolute_and_symlinks_are_refused) ... ok\ntest_readonly_installation_and_environment_shadowing (test_workflow.WorkflowTests.test_readonly_installation_and_environment_shadowing) ... ok\ntest_runtime_source_imports_only_stdlib_or_distributed_modules (test_workflow.WorkflowTests.test_runtime_source_imports_only_stdlib_or_distributed_modules) ... ok\ntest_unsupported_input_fails_without_partial_artifact (test_workflow.WorkflowTests.test_unsupported_input_fails_without_partial_artifact) ... ok\n\n----------------------------------------------------------------------\nRan 119 tests in 15.121s\n\nOK\n",
+        "characters": 17920,
+        "omitted_characters": 16520,
+        "sha256": "906f356f7f3521cecf3011b44443aff85b2b82aa9f284a85e4750d0964f1b2d4"
+      },
+      "tests_run": 119
+    },
+    {
+      "name": "test_runtime_packager.py",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_runtime_packager.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.062,
+      "stdout": {
+        "tail": "Collected 11 tests from tests (test_runtime_packager.py)\n",
+        "characters": 57,
+        "omitted_characters": 0,
+        "sha256": "143e4ee6e7982d851966b0306dc85c43e8c9c5dea0b87b3cffac229c77881df5"
+      },
+      "stderr": {
+        "tail": "st_cannot_include_private_font (test_runtime_packager.RuntimePackagerTests.test_manifest_cannot_include_private_font) ... ok\ntest_missing_required_file_refuses_publication (test_runtime_packager.RuntimePackagerTests.test_missing_required_file_refuses_publication) ... ok\ntest_new_unknown_runtime_file_is_not_silently_dropped (test_runtime_packager.RuntimePackagerTests.test_new_unknown_runtime_file_is_not_silently_dropped) ... ok\ntest_output_inside_source_is_rejected (test_runtime_packager.RuntimePackagerTests.test_output_inside_source_is_rejected) ... ok\ntest_private_font_bytes_and_symlinks_are_never_read (test_runtime_packager.RuntimePackagerTests.test_private_font_bytes_and_symlinks_are_never_read) ... ok\ntest_symlink_source_and_runtime_file_are_rejected (test_runtime_packager.RuntimePackagerTests.test_symlink_source_and_runtime_file_are_rejected) ... ok\ntest_test_and_cache_files_are_excluded (test_runtime_packager.RuntimePackagerTests.test_test_and_cache_files_are_excluded) ... ok\ntest_unknown_manifest_schema_is_rejected (test_runtime_packager.RuntimePackagerTests.test_unknown_manifest_schema_is_rejected) ... ok\ntest_unsafe_duplicate_and_conflicting_members_are_rejected (test_runtime_packager.RuntimePackagerTests.test_unsafe_duplicate_and_conflicting_members_are_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 0.021s\n\nOK\n",
+        "characters": 1703,
+        "omitted_characters": 303,
+        "sha256": "3cd8febfeace937cec49d85fce77f78a5541a7720fd2c707a3bbbc65356a58d4"
+      },
+      "tests_run": 11
+    },
+    {
+      "name": "test_skill_loading_benchmark.py",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_loading_benchmark.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.552,
+      "stdout": {
+        "tail": "Collected 25 tests from tests (test_skill_loading_benchmark.py)\n",
+        "characters": 64,
+        "omitted_characters": 0,
+        "sha256": "fd3133b1fa088892cd8059e93a521ce17f7f0018f49fc3ba75f1483f84885146"
+      },
+      "stderr": {
+        "tail": "reshnessTests.test_committed_current_and_history_cli) ... ok\ntest_counts_order_repetition_and_capability_notes (test_skill_loading_benchmark.SnapshotFreshnessTests.test_counts_order_repetition_and_capability_notes) ... ok\ntest_every_after_hash_is_checked (test_skill_loading_benchmark.SnapshotFreshnessTests.test_every_after_hash_is_checked) ... ok\ntest_fresh_report (test_skill_loading_benchmark.SnapshotFreshnessTests.test_fresh_report) ... ok\ntest_history_is_preserved_byte_for_byte (test_skill_loading_benchmark.SnapshotFreshnessTests.test_history_is_preserved_byte_for_byte) ... ok\ntest_invalid_snapshot_cli_is_structured_nonzero (test_skill_loading_benchmark.SnapshotFreshnessTests.test_invalid_snapshot_cli_is_structured_nonzero) ... ok\ntest_missing_and_added_profiles (test_skill_loading_benchmark.SnapshotFreshnessTests.test_missing_and_added_profiles) ... ok\ntest_old_schema_and_benchmark_change (test_skill_loading_benchmark.SnapshotFreshnessTests.test_old_schema_and_benchmark_change) ... ok\ntest_real_file_change_and_missing_resource (test_skill_loading_benchmark.SnapshotFreshnessTests.test_real_file_change_and_missing_resource) ... ok\ntest_specialized_routes_keep_required_union (test_skill_loading_benchmark.SnapshotFreshnessTests.test_specialized_routes_keep_required_union) ... ok\n\n----------------------------------------------------------------------\nRan 25 tests in 31.496s\n\nOK\n",
+        "characters": 3802,
+        "omitted_characters": 2402,
+        "sha256": "a4067266777ad8a451ca814f3986308a3f75639b564398ac1df45c9064b3e1f7"
+      },
+      "tests_run": 25
+    },
+    {
+      "name": "test_skill_runtime_packages.py",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_runtime_packages.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 6.579,
+      "stdout": {
+        "tail": "Collected 12 tests from tests (test_skill_runtime_packages.py)\n{\"platform\": \"macOS-27.2-arm64-arm-64bit\", \"python\": \"3.12.12\", \"expat\": \"expat_2.6.3\", \"fixtures\": \"synthetic only\", \"not_verified\": [\"other operating systems\", \"Office/WPS rendering\", \"real native ET\", \"OS-level network/read sandbox\", \"host/model result delivery\"]}\n",
+        "characters": 331,
+        "omitted_characters": 0,
+        "sha256": "f4f4e710ae0cddced389be051dfb0397a48336e686e303dcda5433c107bda432"
+      },
+      "stderr": {
+        "tail": "writing_complete_reference_closure) ... ok\ntest_docx_create_read_edit (test_skill_runtime_packages.SkillRuntimePackages.test_docx_create_read_edit) ... ok\ntest_et_synthetic_biff8_compatibility_in_readonly_package (test_skill_runtime_packages.SkillRuntimePackages.test_et_synthetic_biff8_compatibility_in_readonly_package) ... ok\ntest_et_synthetic_ooxml_read_and_analysis (test_skill_runtime_packages.SkillRuntimePackages.test_et_synthetic_ooxml_read_and_analysis) ... ok\ntest_ofd_bundled_font_generation_readback (test_skill_runtime_packages.SkillRuntimePackages.test_ofd_bundled_font_generation_readback) ... ok\ntest_pptx_svg_generation_readback (test_skill_runtime_packages.SkillRuntimePackages.test_pptx_svg_generation_readback) ... ok\ntest_standards_checks_all_independent_packages (test_skill_runtime_packages.SkillRuntimePackages.test_standards_checks_all_independent_packages) ... ok\ntest_workflow_explicit_independent_providers_and_missing_refusal (test_skill_runtime_packages.SkillRuntimePackages.test_workflow_explicit_independent_providers_and_missing_refusal) ... ok\ntest_wps_create_read_edit (test_skill_runtime_packages.SkillRuntimePackages.test_wps_create_read_edit) ... ok\ntest_xlsx_create_read_edit (test_skill_runtime_packages.SkillRuntimePackages.test_xlsx_create_read_edit) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 6.517s\n\nOK\n",
+        "characters": 1813,
+        "omitted_characters": 413,
+        "sha256": "834a79426285d9fcb1eae2910d2e7b8d3bafd757719968bc9ffbb10c9cd46831"
+      },
+      "tests_run": 12
+    },
+    {
+      "name": "test_skill_selection_current.py",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_selection_current.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.039,
+      "stdout": {
+        "tail": "Collected 6 tests from tests (test_skill_selection_current.py)\n",
+        "characters": 63,
+        "omitted_characters": 0,
+        "sha256": "8775211e3725c2cb0ebc1bb9657979daed590fde4fa515da3584ada4d7f4d117"
+      },
+      "stderr": {
+        "tail": "test_brand_format_and_runner_boundaries_present (test_skill_selection_current.CurrentSelectionCasesTests.test_brand_format_and_runner_boundaries_present) ... ok\ntest_current_catalog_hashes_and_coverage (test_skill_selection_current.CurrentSelectionCasesTests.test_current_catalog_hashes_and_coverage) ... ok\ntest_every_entry_change_requires_manual_review (test_skill_selection_current.CurrentSelectionCasesTests.test_every_entry_change_requires_manual_review) ... ok\ntest_missing_positive_negative_and_mixed_cases (test_skill_selection_current.CurrentSelectionCasesTests.test_missing_positive_negative_and_mixed_cases) ... ok\ntest_new_and_removed_skills_require_review (test_skill_selection_current.CurrentSelectionCasesTests.test_new_and_removed_skills_require_review) ... ok\ntest_unknown_contradictory_and_duplicate_cases_fail (test_skill_selection_current.CurrentSelectionCasesTests.test_unknown_contradictory_and_duplicate_cases_fail) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.005s\n\nOK\n",
+        "characters": 1044,
+        "omitted_characters": 0,
+        "sha256": "930a08d7eef5603b0b2b18d711ef31efe50d90af8a22a3535def262e45b817f2"
+      },
+      "tests_run": 6
+    },
+    {
+      "name": "xlsx-selfcheck",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "skills/xlsx/scripts/xlsx_cli.py",
+        "run",
+        "check"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.069,
+      "stdout": {
+        "tail": "{\n  \"status\": \"ready\",\n  \"python\": \"3.12.12\",\n  \"dependencies\": \"standard_library_only\",\n  \"check_kind\": \"environment\",\n  \"artifact_validation\": \"not_run\"\n}\n",
+        "characters": 157,
+        "omitted_characters": 0,
+        "sha256": "5d53881e71789f01dc9ca24e60809a0a6feb6084bc4a17d4aa5edc1070fe5a1b"
+      },
+      "stderr": {
+        "tail": "",
+        "characters": 0,
+        "omitted_characters": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "tests_run": null
+    },
+    {
+      "name": "xlsx-source",
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "skills/xlsx/scripts/test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 19.993,
+      "stdout": {
+        "tail": "Collected 408 tests from skills/xlsx/scripts/test (test_*.py)\n",
+        "characters": 62,
+        "omitted_characters": 0,
+        "sha256": "53a02fc40b3286da3b22b52789296e1ddc448d1116c4e20aa00c74a73b027138"
+      },
+      "stderr": {
+        "tail": "s_source_scope (test_xlsx_wps_result.ResultTests.test_missing_cache_elsewhere_is_preserved_as_source_scope) ... ok\ntest_nonfinite_json_constants_are_refused (test_xlsx_wps_result.ResultTests.test_nonfinite_json_constants_are_refused) ... ok\ntest_old_result_without_optional_coverage_still_analyzes (test_xlsx_wps_result.ResultTests.test_old_result_without_optional_coverage_still_analyzes) ... ok\ntest_ooxml_schema_same_analysis_and_explicit_bounds (test_xlsx_wps_result.ResultTests.test_ooxml_schema_same_analysis_and_explicit_bounds) ... ok\ntest_oversize_preflight_and_changed_metadata (test_xlsx_wps_result.ResultTests.test_oversize_preflight_and_changed_metadata) ... ok\ntest_source_assessment_does_not_bypass_json_depth_budget (test_xlsx_wps_result.ResultTests.test_source_assessment_does_not_bypass_json_depth_budget) ... ok\ntest_source_coverage_and_original_assessment_survive_analysis_cli (test_xlsx_wps_result.ResultTests.test_source_coverage_and_original_assessment_survive_analysis_cli) ... ok\ntest_types_dates_diagnostics_and_formula_policy (test_xlsx_wps_result.ResultTests.test_types_dates_diagnostics_and_formula_policy) ... ok\ntest_uncertain_coverage_preserved_and_conflicts_rejected (test_xlsx_wps_result.ResultTests.test_uncertain_coverage_preserved_and_conflicts_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 408 tests in 19.783s\n\nOK\n",
+        "characters": 60002,
+        "omitted_characters": 58602,
+        "sha256": "32ba683a92056e9306e3586d822f067bc06f165b52d62a125a0794968458a070"
+      },
+      "tests_run": 408
+    }
+  ],
+  "note": "Local subprocess captures, with explicitly bounded tails. Not real host/model trace, Linux acceptance or Pylint."
+}

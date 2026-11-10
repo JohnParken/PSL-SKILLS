@@ -1,0 +1,162 @@
+[
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/artifact-lifecycle",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/artifact-lifecycle\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/bank-writing",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/bank-writing\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/docx",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/docx\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/et",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/et\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/ofd",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/ofd\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/pptx",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/pptx\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/skill-development-standards",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/skill-development-standards\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/table-workflow",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/table-workflow\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/wps",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/wps\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-S",
+      "-B",
+      "skills/skill-development-standards/scripts/check_skill.py",
+      "skills/xlsx",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "stdout": "OK skills/xlsx\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3.12",
+      "-I",
+      "-B",
+      "-m",
+      "pylint",
+      "--max-line-length=200",
+      "skills/pptx/scripts/pptx_core/validation.py",
+      "skills/pptx/scripts/pptx_core/inspection.py",
+      "skills/pptx/scripts/test/test_math_inspection.py",
+      "tests/benchmark_skill_loading.py",
+      "tests/test_skill_loading_benchmark.py",
+      "tests/test_skill_runtime_packages.py"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "python3.12: No module named pylint\n",
+    "status": "not_executed_tool_unavailable"
+  }
+]

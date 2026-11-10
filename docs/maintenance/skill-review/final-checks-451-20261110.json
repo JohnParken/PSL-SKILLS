@@ -1,0 +1,188 @@
+{
+  "results": [
+    {
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_selection_current.py"
+      ],
+      "exit_code": 0,
+      "stdout": "Collected 6 tests from tests (test_skill_selection_current.py)\n",
+      "stderr": "test_brand_format_and_runner_boundaries_present (test_skill_selection_current.CurrentSelectionCasesTests.test_brand_format_and_runner_boundaries_present) ... ok\ntest_current_catalog_hashes_and_coverage (test_skill_selection_current.CurrentSelectionCasesTests.test_current_catalog_hashes_and_coverage) ... ok\ntest_every_entry_change_requires_manual_review (test_skill_selection_current.CurrentSelectionCasesTests.test_every_entry_change_requires_manual_review) ... ok\ntest_missing_positive_negative_and_mixed_cases (test_skill_selection_current.CurrentSelectionCasesTests.test_missing_positive_negative_and_mixed_cases) ... ok\ntest_new_and_removed_skills_require_review (test_skill_selection_current.CurrentSelectionCasesTests.test_new_and_removed_skills_require_review) ... ok\ntest_unknown_contradictory_and_duplicate_cases_fail (test_skill_selection_current.CurrentSelectionCasesTests.test_unknown_contradictory_and_duplicate_cases_fail) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.007s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/table-workflow",
+        "--strict"
+      ],
+      "exit_code": 0,
+      "stdout": "OK skills/table-workflow\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/check_project_docs.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS\nStructural checks only; no semantic claims, Mermaid rendering, external links or complete CommonMark validation.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_project_docs.py"
+      ],
+      "exit_code": 0,
+      "stdout": "Collected 15 tests from tests (test_project_docs.py)\n",
+      "stderr": "test_coverage_omission (test_project_docs.DocumentationChecks.test_coverage_omission) ... ok\ntest_duplicate_heading (test_project_docs.DocumentationChecks.test_duplicate_heading) ... ok\ntest_duplicate_intro_versions (test_project_docs.DocumentationChecks.test_duplicate_intro_versions) ... ok\ntest_duplicate_table_rows (test_project_docs.DocumentationChecks.test_duplicate_table_rows) ... ok\ntest_duplicate_versions (test_project_docs.DocumentationChecks.test_duplicate_versions) ... ok\ntest_escape (test_project_docs.DocumentationChecks.test_escape) ... ok\ntest_fenced_examples_ignored (test_project_docs.DocumentationChecks.test_fenced_examples_ignored) ... ok\ntest_malformed_frontmatter (test_project_docs.DocumentationChecks.test_malformed_frontmatter) ... ok\ntest_missing_link_and_anchor (test_project_docs.DocumentationChecks.test_missing_link_and_anchor) ... ok\ntest_nested_maintenance_links_are_checked (test_project_docs.DocumentationChecks.test_nested_maintenance_links_are_checked) ... ok\ntest_plain_intro_and_later_history (test_project_docs.DocumentationChecks.test_plain_intro_and_later_history) ... ok\ntest_reference_and_unicode_anchor (test_project_docs.DocumentationChecks.test_reference_and_unicode_anchor) ... ok\ntest_valid (test_project_docs.DocumentationChecks.test_valid) ... ok\ntest_version_drift (test_project_docs.DocumentationChecks.test_version_drift) ... ok\ntest_current_delivery_examples_use_bare_filenames (test_project_docs.RepositoryDeliveryExamples.test_current_delivery_examples_use_bare_filenames) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.034s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "skills/skill-development-standards/scripts/check_skill.py",
+        "skills/pptx",
+        "--strict"
+      ],
+      "exit_code": 0,
+      "stdout": "OK skills/pptx\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tests/benchmark_skill_loading.py",
+        "--check-snapshot",
+        "tests/runtime_loading_profiles.json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"status\": \"fresh\",\n  \"issues\": [],\n  \"scope\": \"Current planned read sets, benchmark implementation and both-side file evidence; not observed host behavior.\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3.12",
+        "-I",
+        "-S",
+        "-B",
+        "tools/run_skill_tests.py",
+        "tests",
+        "-p",
+        "test_skill_runtime_packages.py"
+      ],
+      "exit_code": 0,
+      "stdout": "Collected 12 tests from tests (test_skill_runtime_packages.py)\n{\"platform\": \"macOS-27.2-arm64-arm-64bit\", \"python\": \"3.12.12\", \"expat\": \"expat_2.6.3\", \"fixtures\": \"synthetic only\", \"not_verified\": [\"other operating systems\", \"Office/WPS rendering\", \"real native ET\", \"OS-level network/read sandbox\", \"host/model result delivery\"]}\n",
+      "stderr": "test_all_packages_exact_untransformed_and_readonly (test_skill_runtime_packages.SkillRuntimePackages.test_all_packages_exact_untransformed_and_readonly) ... ok\ntest_artifact_archive_and_registered_cleanup (test_skill_runtime_packages.SkillRuntimePackages.test_artifact_archive_and_registered_cleanup) ... ok\ntest_bank_writing_complete_reference_closure (test_skill_runtime_packages.SkillRuntimePackages.test_bank_writing_complete_reference_closure) ... ok\ntest_docx_create_read_edit (test_skill_runtime_packages.SkillRuntimePackages.test_docx_create_read_edit) ... ok\ntest_et_synthetic_biff8_compatibility_in_readonly_package (test_skill_runtime_packages.SkillRuntimePackages.test_et_synthetic_biff8_compatibility_in_readonly_package) ... ok\ntest_et_synthetic_ooxml_read_and_analysis (test_skill_runtime_packages.SkillRuntimePackages.test_et_synthetic_ooxml_read_and_analysis) ... ok\ntest_ofd_bundled_font_generation_readback (test_skill_runtime_packages.SkillRuntimePackages.test_ofd_bundled_font_generation_readback) ... ok\ntest_pptx_svg_generation_readback (test_skill_runtime_packages.SkillRuntimePackages.test_pptx_svg_generation_readback) ... ok\ntest_standards_checks_all_independent_packages (test_skill_runtime_packages.SkillRuntimePackages.test_standards_checks_all_independent_packages) ... ok\ntest_workflow_explicit_independent_providers_and_missing_refusal (test_skill_runtime_packages.SkillRuntimePackages.test_workflow_explicit_independent_providers_and_missing_refusal) ... ok\ntest_wps_create_read_edit (test_skill_runtime_packages.SkillRuntimePackages.test_wps_create_read_edit) ... ok\ntest_xlsx_create_read_edit (test_skill_runtime_packages.SkillRuntimePackages.test_xlsx_create_read_edit) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 5.507s\n\nOK\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "python_ast_and_line_scan": {
+    "skills/pptx/scripts/pptx_core/validation.py": {
+      "physical_lines": 751,
+      "max_line_characters": 141,
+      "sha256": "600a366203c4acd1386428f7f50368a35509bbbb4cb16093d6f1fa81426ffce8"
+    },
+    "skills/pptx/scripts/pptx_core/inspection.py": {
+      "physical_lines": 102,
+      "max_line_characters": 153,
+      "sha256": "d4012dc59eb3e93c1959bdee31f96077e87dfd710bd2a619c9fb463c8ff30294"
+    },
+    "skills/pptx/scripts/test/test_math_inspection.py": {
+      "physical_lines": 152,
+      "max_line_characters": 124,
+      "sha256": "723be5e262d4d35c4442ef454df750734fe55888e3817c8d5bc891b1413e9a19"
+    },
+    "tests/benchmark_skill_loading.py": {
+      "physical_lines": 341,
+      "max_line_characters": 166,
+      "sha256": "289c938bbec03c0e867f3c51df41408917f00e8c63497954903405c1ee00d156"
+    },
+    "tests/test_skill_loading_benchmark.py": {
+      "physical_lines": 256,
+      "max_line_characters": 130,
+      "sha256": "d4d1fefb76a6b8fc68f61dd68e830039339719c949a319ca896bd0459642cc65"
+    },
+    "tests/test_skill_runtime_packages.py": {
+      "physical_lines": 360,
+      "max_line_characters": 154,
+      "sha256": "eddc16c67f55d3633b77d95d154ec4e70b142eb4387a1849bddfd3bf9e6a56a1"
+    }
+  },
+  "entry_metadata": {
+    "artifact-lifecycle": {
+      "description_characters": 116,
+      "sha256": "140f832c839d1c0791437d98693ac01eca187069a377270d4adb4f9f16d861f9"
+    },
+    "bank-writing": {
+      "description_characters": 114,
+      "sha256": "c1a9224261dea3b184558eae82dd23b364a352339c28e787dec14935203c9c31"
+    },
+    "docx": {
+      "description_characters": 113,
+      "sha256": "09e1a5766040e2a2dc2161050d8270d4b099960a40d87a82cfa277dd774610dc"
+    },
+    "et": {
+      "description_characters": 118,
+      "sha256": "efc48709e159f20fd8a57c2b6f0502c43f0c6b3ae06229f64bb5a9f7323b7403"
+    },
+    "ofd": {
+      "description_characters": 127,
+      "sha256": "7bb3344740e8e41fa76c937438f24c314a49a978ff37e452e4174e604bf3429b"
+    },
+    "pptx": {
+      "description_characters": 116,
+      "sha256": "fd0e3c50de765488b979c6443fe8699372e395e30f6f4de7093eaaa783a85717"
+    },
+    "skill-development-standards": {
+      "description_characters": 120,
+      "sha256": "f911d79be86ce4bd7cbf4fdf41bc99000366fd4c4b1346263360371fb9d47081"
+    },
+    "table-workflow": {
+      "description_characters": 118,
+      "sha256": "689b2a7f954cadeda861803d66880f57df06a6e6665e82f3f95aeda17384f9fd"
+    },
+    "wps": {
+      "description_characters": 129,
+      "sha256": "ccbeb1295c9c9e4d7e4608792821c8048fe28cdda63041606dfb7bf4aa514e41"
+    },
+    "xlsx": {
+      "description_characters": 136,
+      "sha256": "d407c3458b039c2043d708e16e740c082b521a1effa25c64b189ba9daae790e0"
+    }
+  },
+  "limits": "AST and line counts are not Pylint. Description counts and human cases do not measure model routing."
+}

@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
-  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。 2026-11-09 环境说明调整：人工复核31例选择期望及57个计划读取路径，业务描述、触发边界与按需参考不变；将任务目录、自检前移并保留各技能真实依赖，更新入口哈希。此为人工预期与静态测量，不代表模型选路或宿主 usage 实测。 2026-11-09 已逐项复核31条人工期望：本轮澄清路径映射、清理及输入输出边界，不改变技能选择范围；保留全部期望。刷新仅表示源码绑定，不代表真实模型选路或宿主使用量测量。 2026-11-09 逐项复核31例：仅移除 DOCX 不可执行的路径映射确认要求并更新版本，description及选择边界未变；原期望保留。本次为人工期望检查，不是模型选路实测。 本轮人工复核31项期望及计划读取范围：调整结果判读与大结果续读，不改变业务description或技能选择边界；原期望保留，未测真实模型选路与宿主usage。 2026-11-10 复核31例：本轮用户文件顶层查找及 execute 示例调整不改变业务 description 和技能选择边界，保留原有人工期望；更新指纹不是模型选路或宿主 usage 实测。 2026-11-10 WPS 交付提示调整：description 与适用边界不变，人工期望保留；指纹与静态加载记录更新不代表模型选路或宿主 usage 实测。 2026-11-10 WPS RTF/OOXML 读取恢复和可见性调整：description 与现有正负选路边界不变，人工期望保留；指纹及静态加载快照更新不是模型选路或宿主 usage 实测。",
+  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。 2026-11-09 环境说明调整：人工复核31例选择期望及57个计划读取路径，业务描述、触发边界与按需参考不变；将任务目录、自检前移并保留各技能真实依赖，更新入口哈希。此为人工预期与静态测量，不代表模型选路或宿主 usage 实测。 2026-11-09 已逐项复核31条人工期望：本轮澄清路径映射、清理及输入输出边界，不改变技能选择范围；保留全部期望。刷新仅表示源码绑定，不代表真实模型选路或宿主使用量测量。 2026-11-09 逐项复核31例：仅移除 DOCX 不可执行的路径映射确认要求并更新版本，description及选择边界未变；原期望保留。本次为人工期望检查，不是模型选路实测。 本轮人工复核31项期望及计划读取范围：调整结果判读与大结果续读，不改变业务description或技能选择边界；原期望保留，未测真实模型选路与宿主usage。 2026-11-10 复核31例：本轮用户文件顶层查找及 execute 示例调整不改变业务 description 和技能选择边界，保留原有人工期望；更新指纹不是模型选路或宿主 usage 实测。 2026-11-10 WPS 交付提示调整：description 与适用边界不变，人工期望保留；指纹与静态加载记录更新不代表模型选路或宿主 usage 实测。 2026-11-10 WPS RTF/OOXML 读取恢复和可见性调整：description 与现有正负选路边界不变，人工期望保留；指纹及静态加载快照更新不是模型选路或宿主 usage 实测。 2026-11-10 优先项4/5/1：逐项复核既有31例并新增10例自然任务及易混淆边界；7项description遵循实际能力，ET/XLSX按需分流，PPTX公式读取保留限制。原快照逐字保存在*_before_review_451_20261110.json；41项均为人工期望，不是模型/宿主选路实测。",
   "entry_sha256": {
     "artifact-lifecycle": "140f832c839d1c0791437d98693ac01eca187069a377270d4adb4f9f16d861f9",
-    "bank-writing": "6e85794e9934daee1ee34dc698ed13a3d9fe6598c4f933fa44dd3c3e3b5a8b02",
+    "bank-writing": "c1a9224261dea3b184558eae82dd23b364a352339c28e787dec14935203c9c31",
     "docx": "09e1a5766040e2a2dc2161050d8270d4b099960a40d87a82cfa277dd774610dc",
-    "et": "a96ca02e70182c37708d7c4ca490a326ead24e51f204bf261308d6e415fe3d79",
-    "ofd": "15845ea2673aefa0e13943d3a62441f132d3101d06e38c88d4e18c6145f91c1f",
-    "pptx": "c73cea66e0e7cfb421afa2dc2a5453ae289df2fb3a77310cc67b86cc2ed74083",
+    "et": "efc48709e159f20fd8a57c2b6f0502c43f0c6b3ae06229f64bb5a9f7323b7403",
+    "ofd": "7bb3344740e8e41fa76c937438f24c314a49a978ff37e452e4174e604bf3429b",
+    "pptx": "fd0e3c50de765488b979c6443fe8699372e395e30f6f4de7093eaaa783a85717",
     "skill-development-standards": "f911d79be86ce4bd7cbf4fdf41bc99000366fd4c4b1346263360371fb9d47081",
-    "table-workflow": "ec638e690a68738d3e71906f5a6a46d1458eab641f57a14723b0246115549344",
-    "wps": "61dbd9e94a98add8928ad817eb6b162e8c5e202b0ddd53a2a8cb5f4847771e25",
-    "xlsx": "5acdd81079639a660e2122ad5ece0755712753da736f507c70a3a81d1ae7a3f3"
+    "table-workflow": "689b2a7f954cadeda861803d66880f57df06a6e6665e82f3f95aeda17384f9fd",
+    "wps": "ccbeb1295c9c9e4d7e4608792821c8048fe28cdda63041606dfb7bf4aa514e41",
+    "xlsx": "d407c3458b039c2043d708e16e740c082b521a1effa25c64b189ba9daae790e0"
   },
   "cases": [
     {
@@ -355,6 +355,121 @@
         "artifact-lifecycle"
       ],
       "rationale": "人工能力边界期望，非模型实测。混合读取只选必要入口，不隐含生成归档。"
+    },
+    {
+      "id": "pptx-prose-create",
+      "kind": "boundary",
+      "prompt": "把这段已确认的工作总结做成可编辑的PPTX汇报",
+      "expected_include": [
+        "pptx"
+      ],
+      "expected_exclude": [],
+      "rationale": "已有文字材料即可启动创建；受限SVG是内部实现输入，不要求用户先提供。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "pptx-math-read-limit",
+      "kind": "boundary",
+      "prompt": "提取这份PPTX的文字和备注，公式无法准确读取的地方请指出",
+      "expected_include": [
+        "pptx"
+      ],
+      "expected_exclude": [],
+      "rationale": "可读取存储文字，但必须保留数学结构未保留诊断，不把拼接文字当准确公式。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "ofd-page-preview",
+      "kind": "boundary",
+      "prompt": "请将已有OFD每一页渲染成图片供我预览",
+      "expected_include": [],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "当前没有页面渲染或预览能力，不能把基础文件生成解释为预览。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "ofd-no-format-request",
+      "kind": "boundary",
+      "prompt": "请根据这些材料生成一份正式文档",
+      "expected_include": [],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "未明确指定OFD，不自动选择该格式；其他文档格式需按任务确认。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "table-no-template-reconciliation",
+      "kind": "boundary",
+      "prompt": "核对两张XLSX表中同一客户编号的余额差异，直接回复，不填模板",
+      "expected_include": [
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "xlsx表间核对任务；workflow的plan/apply必须已有目标模板。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "table-period-new-result",
+      "kind": "boundary",
+      "prompt": "比较两个期间的XLSX数据并新建一张结果表，我没有模板",
+      "expected_include": [
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "期间比较和新建结果属于xlsx对应能力，不强行构造workflow目标模板。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "wps-app-native-docx",
+      "kind": "boundary",
+      "prompt": "读取WPS软件保存的.docx文件中的正文和表格",
+      "expected_include": [
+        "docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "按实际原生格式选择，不能只凭WPS产品名选择wps技能。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "bank-style-text",
+      "kind": "boundary",
+      "prompt": "先概括这份银行讲话稿，再仿照它的风格改写我的材料，只给文字",
+      "expected_include": [
+        "bank-writing"
+      ],
+      "expected_exclude": [
+        "docx",
+        "wps",
+        "artifact-lifecycle"
+      ],
+      "rationale": "摘要和仿写已在参考中支持，纯文本任务不扩大到文件生成或归档。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "xlsx-native-basic-profile",
+      "kind": "boundary",
+      "prompt": "检查这张XLSX表指定区域的空值、重复值和金额合计",
+      "expected_include": [
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "et",
+        "table-workflow"
+      ],
+      "rationale": "原生基础区域分析只读所需统计契约，不预读ET交接或模板填报。 人工期望，不是模型选路实测。"
+    },
+    {
+      "id": "xlsx-existing-et-json",
+      "kind": "boundary",
+      "prompt": "对已有ET原始提取JSON按明确范围汇总，保留来源的partial与缓存提示",
+      "expected_include": [
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "消费现成受支持原始JSON需同时读ET来源契约和区域统计；不将投影当工作簿。 人工期望，不是模型选路实测。"
     }
   ]
 }

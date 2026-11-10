@@ -43,10 +43,20 @@ class LoadingBenchmarkTests(unittest.TestCase):
     def test_changed_read_sets_follow_documented_routes(self):
         allowed = {'xlsx-static-create', 'repeated-create-cold',
                    'repeated-create-retained', 'repeated-create-compacted', 'pptx-notes-pagination',
-                   'et-header-preview', 'et-direct-statistics', 'mixed-pptx-et-read', 'xlsx-summary', 'mixed-format-read'}
+                   'et-header-preview', 'et-direct-statistics', 'mixed-pptx-et-read', 'xlsx-summary', 'mixed-format-read',
+                   'xlsx-et-analysis', 'xlsx-wps-analysis'}
         for name, (before, after) in BENCH.PROFILES.items():
             if name not in allowed and not name.startswith('xlsx-specialized-'):
                 self.assertEqual(before, after, name)
+
+    def test_native_region_and_et_source_routes_preserve_required_union(self):
+        native = BENCH.PROFILES['xlsx-basic-region-analysis'][1]
+        self.assertEqual(native, ['xlsx/SKILL.md', 'xlsx/references/data-analysis.md'])
+        for name in ('xlsx-et-analysis', 'xlsx-wps-analysis'):
+            paths = BENCH.PROFILES[name][1]
+            self.assertIn('xlsx/references/et-result-analysis.md', paths)
+            self.assertIn('xlsx/references/data-analysis.md', paths)
+            self.assertFalse(any(path.startswith('wps/') for path in paths))
 
     def test_all_planned_resources_exist_on_both_sides(self):
         for before, after in BENCH.PROFILES.values():
