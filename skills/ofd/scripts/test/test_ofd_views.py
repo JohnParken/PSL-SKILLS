@@ -30,7 +30,7 @@ class OfdViewTests(unittest.TestCase):
 
     def cli(self, *args):
         return subprocess.run([sys.executable, '-I', '-S', '-B', str((Path(__file__).parents[1] / 'read_ofd.py')), *args],
-                              cwd=self.root, capture_output=True, text=True, encoding='utf-8')
+                              cwd=self.root, capture_output=True, text=True, encoding='utf-8', check=False)
 
     def test_full_default_and_api_identity_unchanged(self):
         self.assertIs(READER.project_output(self.source, 'full'), self.source)

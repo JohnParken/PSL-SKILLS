@@ -437,10 +437,10 @@ class GenerationTests(unittest.TestCase):
             (self.root / name).write_bytes(data)
         (self.root / 'spec.json').write_text(json.dumps(spec_fixture()), encoding='utf-8')
         command = [sys.executable, '-I', '-S', '-B', str(Path(WRITER.__file__)), './spec.json', 'new.ofd']
-        result = subprocess.run(command, cwd=self.root, capture_output=True, text=True, encoding='utf-8', env={**os.environ, 'PATH': ''})
+        result = subprocess.run(command, cwd=self.root, capture_output=True, text=True, encoding='utf-8', env={**os.environ, 'PATH': ''}, check=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(json.loads(result.stdout)['status'], 'generated')
-        again = subprocess.run(command, cwd=self.root, capture_output=True, text=True, encoding='utf-8')
+        again = subprocess.run(command, cwd=self.root, capture_output=True, text=True, encoding='utf-8', check=False)
         self.assertEqual(again.returncode, 1)
         self.assertEqual(json.loads(again.stdout)['publication_outcome'], 'not_published_existing_name')
         for name, data in self.assets.items():
@@ -465,11 +465,11 @@ class GenerationTests(unittest.TestCase):
             try:
                 for name in ('./bad.ofd', 'inputs/bad.ofd', '../bad.ofd', str(task / 'bad.ofd'), 'C:bad.ofd', 'inputs\\bad.ofd'):
                     with self.subTest(name=name):
-                        rejected = subprocess.run(command + [name], cwd=task, capture_output=True, text=True, encoding='utf-8')
+                        rejected = subprocess.run(command + [name], cwd=task, capture_output=True, text=True, encoding='utf-8', check=False)
                         self.assertEqual(rejected.returncode, 1, rejected.stdout + rejected.stderr)
                         self.assertEqual(json.loads(rejected.stdout)['publication_outcome'], 'not_attempted')
                 success = subprocess.run(command + ['中文报告.ofd'], cwd=task, capture_output=True, text=True, encoding='utf-8',
-                                         env={**os.environ, 'PATH': ''})
+                                         env={**os.environ, 'PATH': ''}, check=False)
                 self.assertEqual(success.returncode, 0, success.stdout + success.stderr)
                 self.assertEqual(json.loads(success.stdout)['output'], '中文报告.ofd')
                 self.assertTrue((task / '中文报告.ofd').is_file())
@@ -486,7 +486,7 @@ class GenerationTests(unittest.TestCase):
         for text in ('{"schema_version":1,"schema_version":2}', '{"schema_version":NaN}'):
             (self.root / 'spec.json').write_text(text, encoding='utf-8')
             result = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(WRITER.__file__)), 'spec.json', 'new.ofd'],
-                                    cwd=self.root, capture_output=True, text=True, encoding='utf-8')
+                                    cwd=self.root, capture_output=True, text=True, encoding='utf-8', check=False)
             self.assertEqual(result.returncode, 1)
             self.assertEqual(json.loads(result.stdout)['stage'], 'input')
 

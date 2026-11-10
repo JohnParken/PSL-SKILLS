@@ -464,8 +464,8 @@ class ReaderTests(unittest.TestCase):
             READER.read_ofd(self.path)
 
     def test_cli_usage_error(self):
-        target=(Path(__file__).parents[1] / 'read_ofd.py')
-        completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'--unknown'],cwd=self.root,capture_output=True,text=True)
+        target = Path(__file__).parents[1] / 'read_ofd.py'
+        completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'--unknown'],cwd=self.root,capture_output=True,text=True, check=False)
         self.assertEqual(completed.returncode,2)
         self.assertIn('usage:',completed.stderr)
         self.assertEqual(completed.stdout,'')
@@ -480,7 +480,7 @@ class ReaderTests(unittest.TestCase):
         with self.assertRaisesRegex(READER.ReadError,'duplicate'):
             READER.read_ofd(self.path)
         info=zipfile.ZipInfo('link')
-        info.external_attr=(0o120777 << 16)
+        info.external_attr = 0o120777 << 16
         with zipfile.ZipFile(self.path,'w') as archive:
             archive.writestr(info,b'target')
         with self.assertRaisesRegex(READER.ReadError,'special'):
@@ -557,10 +557,10 @@ class ReaderTests(unittest.TestCase):
             READER.read_ofd(self.path)
 
     def test_cli_failure_partial_and_unsupported(self):
-        target=(Path(__file__).parents[1] / 'read_ofd.py')
+        target = Path(__file__).parents[1] / 'read_ofd.py'
         for files,status,code in [(fixture(text=''),'partial',3),({'OFD.xml':b'<wrong/>'},'unsupported',4),({'OFD.xml':b'<broken>'},'failed',1)]:
             write_package(self.path,files)
-            completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'sample.ofd'],cwd=self.root,capture_output=True,text=True)
+            completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'sample.ofd'],cwd=self.root,capture_output=True,text=True, check=False)
             self.assertEqual(completed.returncode,code,completed.stdout+completed.stderr)
             result=json.loads(completed.stdout)
             self.assertEqual(result['status'],status)
@@ -621,14 +621,14 @@ class ReaderTests(unittest.TestCase):
             'raise RuntimeError("task-local code must never execute")\n', encoding='utf-8')
         result = subprocess.run(
             [sys.executable, '-I', '-S', '-B', str(Path(READER.__file__).resolve()), 'sample.ofd'],
-            cwd=self.root, env={'PATH': ''}, capture_output=True, text=True)
+            cwd=self.root, env={'PATH': ''}, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(json.loads(result.stdout)['status'], 'complete')
 
     def test_cli_and_readonly_isolation(self):
         installation=self.root/'install'
         installation.mkdir()
-        source=(Path(__file__).parents[1] / 'read_ofd.py')
+        source = Path(__file__).parents[1] / 'read_ofd.py'
         target=installation/'read_ofd.py'
         for name in ('read_ofd.py', 'ofd_common.py', 'ofd_package.py', 'ofd_structure.py'):
             destination = installation / name
@@ -639,12 +639,12 @@ class ReaderTests(unittest.TestCase):
         before={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in installation.iterdir()}
         try:
             for _ in range(2):
-                completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'sample.ofd'],cwd=self.root,env={'PATH':''},capture_output=True,text=True)
+                completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'sample.ofd'],cwd=self.root,env={'PATH':''},capture_output=True,text=True, check=False)
                 self.assertEqual(completed.returncode,0,completed.stderr+completed.stdout)
                 self.assertEqual(json.loads(completed.stdout)['status'],'complete')
                 self.assertEqual(json.loads(completed.stdout)['schema_version'],'ofd-read-3')
             for argument in ('../escape.ofd',str(self.path)):
-                completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),argument],cwd=self.root,capture_output=True,text=True)
+                completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),argument],cwd=self.root,capture_output=True,text=True, check=False)
                 self.assertEqual(completed.returncode,1)
             after={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in installation.iterdir()}
             self.assertEqual(before,after)

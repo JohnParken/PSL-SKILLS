@@ -13,7 +13,6 @@ from pathlib import Path
 import posixpath
 import re
 import stat
-import sys
 import zipfile
 from xml.etree import ElementTree as ET
 from xml.parsers import expat

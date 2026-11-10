@@ -3,17 +3,20 @@ import os
 import posixpath
 import re
 import stat
-try:
-    import zlib
-except ImportError:
-    zlib = None
 import sys
 import zipfile
 from xml.parsers import expat
 
+try:
+    import zlib
+    from zlib import error as ZLIB_ERROR
+except ImportError:
+    from builtins import RuntimeError as ZLIB_ERROR
+
+    zlib = None
+
 NS = 'http://www.ofdspec.org/2016'
 KNOWN_VERSIONS = ('1.0', '1.1', '1.2')
-ZLIB_ERROR = getattr(zlib, 'error', RuntimeError)
 LIMITS = dict(input_bytes=64*1024*1024, entries=4096, member_bytes=16*1024*1024,
               total_bytes=128*1024*1024, xml_bytes=2*1024*1024, xml_total=32*1024*1024,
               nodes=100000, depth=64, text_chars=8*1024*1024, pages=2000,

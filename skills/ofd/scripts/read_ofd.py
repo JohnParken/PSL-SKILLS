@@ -186,7 +186,7 @@ def read_ofd(path, *, task_root=None, version_policy="known"):
                             package.xml(custom_path, require_ofd=False)
                 for node in ofd_nodes(package.xml(meta_path)):
                     if node.tag in (q('FileLoc'), q('File')) and text_of(node):
-                        target = package.reference(meta_path, text_of(node))
+                        package.reference(meta_path, text_of(node))
                         if kind == 'Annotations':
                             annot_path, annot_nodes = package.metadata(meta_path, text_of(node), 'PageAnnot')
                             append_to(doc['metadata'], dict(kind='PageAnnotations', source=annot_path, nodes=annot_nodes))

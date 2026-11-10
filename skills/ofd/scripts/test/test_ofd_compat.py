@@ -155,14 +155,14 @@ class CompatibilityTests(unittest.TestCase):
             self.read(files)
 
     def test_cli_version_policy_contract(self):
-        target = (Path(__file__).parents[1] / 'read_ofd.py')
+        target = Path(__file__).parents[1] / 'read_ofd.py'
         for version, options, expected in (
                 ('1.1', [], 0), ('1.2', [], 0), ('1.7', [], 4),
                 ('1.7', ['--version-policy', 'compatible'], 3)):
             BASE.write_package(self.path, self.files(version))
             completed = subprocess.run(
                 [sys.executable, '-I', '-S', '-B', str(target), 'input.ofd'] + options,
-                cwd=self.path.parent, capture_output=True, text=True)
+                cwd=self.path.parent, capture_output=True, text=True, check=False)
             self.assertEqual(completed.returncode, expected, completed.stderr)
             result = json.loads(completed.stdout)
             self.assertEqual(result['status'], {0: 'complete', 3: 'partial', 4: 'unsupported'}[expected])

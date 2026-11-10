@@ -103,9 +103,9 @@ class BundledFontTests(unittest.TestCase):
     def test_tampered_or_missing_assets_fail_without_fallback(self):
         original = WRITER.READER.read_input
         for filename in WRITER.ZHUQUE_FILES:
-            def altered(path, **options):
+            def altered(path, *, tampered_name=filename, **options):
                 data = original(path, **options)
-                return data + b'x' if Path(path).name == filename else data
+                return data + b'x' if Path(path).name == tampered_name else data
             with self.subTest(filename=filename), patch.object(WRITER.READER, 'read_input', side_effect=altered):
                 with self.assertRaisesRegex(WRITER.GenerationError, 'integrity check failed'):
                     WRITER.bundled_font(WRITER.ZHUQUE_REFERENCE)
@@ -137,7 +137,7 @@ class BundledFontTests(unittest.TestCase):
         (self.directory / 'layout.json').write_text(json.dumps(self.example(), ensure_ascii=False), encoding='utf-8')
         command = [sys.executable, '-I', '-S', '-B', str(ROOT / 'scripts/generate_ofd.py'), 'layout.json', 'result.ofd']
         run = subprocess.run(command, cwd=self.directory, capture_output=True, text=True,
-                             encoding='utf-8', env={**os.environ, 'PATH': ''})
+                             encoding='utf-8', env={**os.environ, 'PATH': ''}, check=False)
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         result = json.loads(run.stdout)
         self.assertEqual(result['fonts'][0]['source']['reference'], WRITER.ZHUQUE_REFERENCE)

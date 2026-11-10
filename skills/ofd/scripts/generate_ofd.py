@@ -128,6 +128,12 @@ def table_alignment(item, columns):
 
 
 class Builder:
+    # Page-local state is assigned by build() before laying out that page.
+    width: float
+    height: float
+    margins: list[float]
+    layer: ET.Element
+
     def __init__(self, spec, loader=read_asset):
         fields(spec, ('schema_version', 'title', 'fonts', 'images', 'pages'), ('schema_version', 'pages'))
         require(spec['schema_version'] == 'ofd-generate-1', 'unsupported generation schema')

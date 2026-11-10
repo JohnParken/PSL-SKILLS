@@ -4,6 +4,21 @@
 
 测试脚本路径已按当前布局更新至 `skills/ofd/scripts/test/`；下文历史测试数量、平台及结论仍为当时记录，不代表本次重跑。测试只用于维护，生产不得调用。
 
+## 2026-11-09 Pylint 合规维护
+
+从仓库根使用 Pylint 4.1.3、Astroid 4.3.4 和 Python 3.12.12 扫描 `skills/ofd` 下全部 17 个 Python 文件，含运行脚本、结构验收工具及测试。命令为 `python -B -m pylint --max-line-length=200 --output-format=json2 --reports=n`，追加 `rg --files --hidden --no-ignore skills/ofd -g '*.py'` 的文件列表。检查环境可导入 `skills/ofd/scripts` 和 `skills/ofd/scripts/test`，Pylint 仅用于临时维护，运行依赖仍是标准库。
+
+| 诊断 | 初扫 | 复扫 |
+|---|---:|---:|
+| Error / Fatal | 0 / 0 | 0 / 0 |
+| Convention | 342 | 336 |
+| Warning | 45 | 25 |
+| Refactor | 133 | 133 |
+
+修正压缩异常别名的命名诊断并保留实际异常类型，声明生成器只在处理页面时赋值的状态，移除未使用的验收工具导入和读取器赋值，保留引用校验调用。测试显式设置 `subprocess.run(check=False)` 以继续断言退出码，并去掉冗余括号、绑定字体损坏测试的当轮文件名。全量复扫退出 28，剩余 Warning 为 19 条读取器同步闭包捕获和 6 条兼容导出。保留严格整数判断，以维持拒绝布尔值及整数子类的契约。定点复扫 `--disable=all --enable=E,F,C0103,C0301,C0321,C0325,W1510,W1514 --reports=n --score=n` 退出 0。
+
+macOS arm64 / Expat 2.6.3，Python 3.12.12 与 3.13.12 均通过读写自检，并各自通过 `-I -S -B -m unittest discover -s skills/ofd/scripts/test -p 'test_*.py'` 的 160 项回归。验证了正常及模拟缺失 zlib 时的异常别名和自检行为。OFD 严格结构检查、独立运行包 11 项验收（含随包字体生成及回读）、项目文档、选路证据、加载快照和 `git diff --check` 均通过。人工复核 description 与读写能力相符。Linux、Windows、真实样本和客户端视觉未复验，发布包未更新。
+
 ## 规范身份与实现依据
 
 本参考主要记录读取器历史验收。当前基础生成入口、字体许可/度量限制、独立维护工具交叉检查与尚未完成的客户端/视觉验收见 `skills/ofd/references/generation.md`；生成器不继承读取器的版本覆盖或完整性结论。
