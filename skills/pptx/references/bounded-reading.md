@@ -10,10 +10,10 @@ execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" inspect report
 execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" inspect report.pptx --slides 1-3,5 --notes omit --max-output-bytes 12000")
 ```
 
-- 无新参数时保留原完整结果及字段。新参数只控制返回内容，不改变安全检查或支持格式。
+- 无新参数时保留原完整结果及字段；检测到数学标记的页另附加下述 text_assessment。新参数只控制返回内容，不改变安全检查或支持格式。
 - `--slides` 为 1 起算、包含端点、升序无重叠的页号或范围列表；越界、倒序、重复与空选择拒绝。
 - `--notes include|omit` 默认 include。备注按对象和段落顺序包含受支持的文本形状及原生表格文字，空段落保留；omit 删除逐页 notes 字段，不把遗漏备注写为空数组。
-- `--summary` 返回每页 number、objects、text_paragraphs、notes_paragraphs，保留文档标题和包摘要，不返回正文与备注原文。summary 优先于 notes，notes 只影响游标参数绑定。
+- `--summary` 返回每页 number、objects、text_paragraphs、notes_paragraphs，以及存在时的 text_assessment，保留文档标题和包摘要，不返回正文与备注原文。summary 优先于 notes，notes 只影响游标参数绑定。
 - `coverage.validation=all_package_parts` 表示全包安全检查；`coverage.selected_slides` 是请求页号，`coverage.content` 区分概况和内容，`coverage.notes` 表示备注返回方式。未返回不代表不存在。
 - 全包验证仍检查未选页、所有关系、媒体、嵌入工作簿和 MCE 分支。筛选不减弱拒绝条件，也不是流式输入或降低解析内存的承诺。
 
@@ -31,6 +31,9 @@ execute(command="python -I -S -B \"<skill-root>/scripts/pptx.py\" inspect report
 合法预算同样限制错误 JSON；过长错误消息明确标记 message_truncated，并在 stderr 保留诊断。小于 512 或超上限的预算本身无效，拒绝时错误 JSON 不承诺满足该无效预算。参数解析尚未完成时同样不能建立预算契约。
 
 ## 结果状态
+
+含数学标记的页返回 `text_assessment`：`status=math_structure_not_preserved`、`diagnostics=["math_text_flattened"]`，`math_paragraphs.text/notes` 分别计数含数学标记的正文/备注段落（空数学段落也计入，同段多个数学对象只计一次）。`scope=slide_text_and_notes_before_projection` 表示计数基于所选 MCE 语义分支与排除页眉页脚等占位符后的正文/备注；不是全包、公式对象或可见页面计数。`--notes omit`、summary、选页和分页均保留返回页的这项诊断，omit 不会将原备注计数清零；未返回页的诊断不能从当前页推断。诊断计入字节预算，不为缩小结果而丢弃。
+OMML 文字仅拼接，分数 `12/15` 可能返回 `1215`，上下标也会丢失结构。消费方须报告公式读取限制，不将其作为准确公式或用于计算；缺少该字段不证明其他数学表达形式已准确读取。该诊断不改变 ok、结构状态和退出码，不能以退出 0 掩盖语义缺口。
 
 分页不是读取错误，结构通过退出 0。显式允许有限 PNG 零填充时仍保留 `structural_validation=partial`、完整逐文件 diagnostics 和退出码 3；预算不足则拒绝本次输出，不丢弃诊断来凑预算。
 `visual_validation=not_run` 始终保留。不将所选范围、概况、分页完成或结构检查当成完整格式支持、桌面显示验证或所有内容均已返回。

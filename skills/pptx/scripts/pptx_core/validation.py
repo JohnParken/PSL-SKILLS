@@ -535,21 +535,26 @@ def _typed_root(package: _Package, name: str, tag: str, type_suffix: str) -> ET.
     return root
 
 
-def _paragraph_text(root: ET.Element, understood_choices: set[ET.Element], *, keep_empty: bool) -> list[str]:
+def _paragraph_text(root: ET.Element, understood_choices: set[ET.Element], *, keep_empty: bool) -> tuple[list[str], int]:
+    """Return stored text and the number of paragraphs losing math structure."""
     paragraphs = []
+    math_paragraphs = 0
     for paragraph in _semantic_elements(root, understood_choices):
         if paragraph.tag != "{" + A_NS + "}p":
             continue
         pieces = []
+        contains_math = False
         for item in _semantic_elements(paragraph, understood_choices):
+            contains_math |= item.tag.startswith("{" + MATH_NS + "}")
             if item.tag in ("{" + A_NS + "}t", "{" + MATH_NS + "}t"):
                 pieces.append(item.text or "")
             elif item.tag == "{" + A_NS + "}br":
                 pieces.append("\n")
         text = "".join(pieces)
+        math_paragraphs += int(contains_math)
         if text or keep_empty:
             paragraphs.append(text)
-    return paragraphs
+    return paragraphs, math_paragraphs
 
 
 def _semantic_child(root: ET.Element, tag: str, understood_choices: set[ET.Element]) -> ET.Element | None:
@@ -567,8 +572,9 @@ def _semantic_child(root: ET.Element, tag: str, understood_choices: set[ET.Eleme
     return None
 
 
-def _notes_text(root: ET.Element, understood_choices: set[ET.Element]) -> list[str]:
+def _notes_text(root: ET.Element, understood_choices: set[ET.Element]) -> tuple[list[str], int]:
     paragraphs = []
+    math_paragraphs = 0
     for shape in _semantic_elements(root, understood_choices):
         if shape.tag == "{" + P_NS + "}sp":
             nonvisual = _semantic_child(shape, "{" + P_NS + "}nvSpPr", understood_choices)
@@ -576,12 +582,16 @@ def _notes_text(root: ET.Element, understood_choices: set[ET.Element]) -> list[s
             placeholder = _semantic_child(properties, "{" + P_NS + "}ph", understood_choices) if properties is not None else None
             if placeholder is not None and placeholder.get("type") in ("sldImg", "sldNum", "dt", "ftr", "hdr"):
                 continue
-            paragraphs.extend(_paragraph_text(shape, understood_choices, keep_empty=True))
+            text, count = _paragraph_text(shape, understood_choices, keep_empty=True)
+            paragraphs.extend(text)
+            math_paragraphs += count
         elif shape.tag == "{" + P_NS + "}graphicFrame":
             for element in _semantic_elements(shape, understood_choices):
                 if element.tag == "{" + A_NS + "}tbl":
-                    paragraphs.extend(_paragraph_text(element, understood_choices, keep_empty=True))
-    return paragraphs
+                    text, count = _paragraph_text(element, understood_choices, keep_empty=True)
+                    paragraphs.extend(text)
+                    math_paragraphs += count
+    return paragraphs, math_paragraphs
 
 
 def _master_roster(package: _Package, main_name: str) -> tuple[set[str], set[str]]:
@@ -666,6 +676,7 @@ def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
         _typed_root(package, master.target, "sldMaster", "presentationml.slideMaster+xml")
         note_relation = _find_relationship(package, relation.target, REL_BASE + "notesSlide", required=False)
         notes = []
+        notes_math = 0
         if note_relation is not None:
             note_root = _typed_root(package, note_relation.target, "notes", "presentationml.notesSlide+xml")
             note_slide = _find_relationship(package, note_relation.target, REL_BASE + "slide")
@@ -675,7 +686,7 @@ def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
             if note_master.target not in note_master_targets:
                 raise ValidationError("PPTX: notes use an unlisted notes master")
             _typed_root(package, note_master.target, "notesMaster", "presentationml.notesMaster+xml")
-            notes = _notes_text(note_root, package.understood_choices)
+            notes, notes_math = _notes_text(note_root, package.understood_choices)
         counts = {"shapes": 0, "images": 0, "tables": 0, "charts": 0}
         for element in _semantic_elements(root, package.understood_choices):
             if element.tag in ("{" + P_NS + "}sp", "{" + P_NS + "}cxnSp"):
@@ -686,12 +697,21 @@ def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
                 counts["tables"] += 1
             elif element.tag in ("{" + CHART_NS + "}chart", "{" + CHARTEX_NS + "}chart"):
                 counts["charts"] += 1
-        inspected_slides.append({
+        text, text_math = _paragraph_text(root, package.understood_choices, keep_empty=False)
+        slide = {
             "number": number,
-            "text": _paragraph_text(root, package.understood_choices, keep_empty=False),
+            "text": text,
             "notes": notes,
             "objects": counts,
-        })
+        }
+        if text_math or notes_math:
+            slide["text_assessment"] = {
+                "status": "math_structure_not_preserved",
+                "scope": "slide_text_and_notes_before_projection",
+                "math_paragraphs": {"text": text_math, "notes": notes_math},
+                "diagnostics": ["math_text_flattened"],
+            }
+        inspected_slides.append(slide)
     title = ""
     core = _find_relationship(package, "", CORE_REL, required=False)
     if core is not None:

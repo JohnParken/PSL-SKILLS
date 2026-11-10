@@ -75,7 +75,8 @@ SVG 文件中的图片 `images/photo.png` 也相对任务目录，不相对 SVG 
 ZIP 最大 128 MiB，成员最大 64 MiB；外层与内嵌包共用最多 256 MiB 展开预算及 5000 个成员；单个 XML 最大 16 MiB、深度 128、节点 100000。
 `inspect` 返回 `title`、`slides`，逐页包含 `number`、文本段落数组 `text`、备注段落数组 `notes` 和 `objects` 中的形状、图片、表格、图表计数。
 公开结果不包含图表数值、表格行列维度或数学树。公式仅按文字拼接，分式 `12/15` 可能读为 `1215`；不要用该文本摘要证明分式、上下标等结构或数学等价，也不要用对象计数代替数据核对。
+检测到数学标记的页附加 `text_assessment`，其中 `status=math_structure_not_preserved`、`diagnostics=["math_text_flattened"]`，`math_paragraphs.text/notes` 为含数学标记的正文/备注段落数。`scope=slide_text_and_notes_before_projection` 表明计数先于概况、选页、备注省略与分页投影；各模式均保留返回页的诊断。无此字段不代表其他数学表达形式语义完整；结构通过/退出 0 与公式准确性无关。精确转录或计算需要原始公式或另行授权的适用能力，不能猜测恢复数学结构。
 读取 MCE `AlternateContent` 时按声明位置解析 `Requires` 前缀，选择第一个支持的 `Choice`，否则选 `Fallback`；没有可读分支时明确失败。
 当前选择覆盖实现已识别的 PresentationML、DrawingML、Office Math、a14 数学扩展与图表命名空间，不是完整 MCE 处理器。文本、备注和计数只读所选分支，关系与结构安全检查继续覆盖所有分支。
-两种读取命令均返回 `slide_count`、`parts`、`slide_size`、`sha256`、`structural_validation: "passed"` 与 `visual_validation: "not_run"`；后者不因结构通过而改变。
+默认严格校验通过时，两种读取命令返回 `slide_count`、`parts`、`slide_size`、`sha256`、`structural_validation: "passed"` 与 `visual_validation: "not_run"`；后者不因结构通过而改变。inspect 显式容忍 PNG 零填充时仍返回 partial/退出 3，详见 `<skill-root>/references/bounded-reading.md#结果状态`。
 结构检查覆盖实现约定的 XML、ZIP、内容类型与关系，不是完整 OOXML schema 认证，也不证明 PowerPoint/WPS 的实际显示效果。验证实际最终文件后再交付。

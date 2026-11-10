@@ -40,8 +40,11 @@ def bounded_result(value: dict, source: bytes, *, summary: bool = False, slides:
     for number in selected:
         slide = dict(value["slides"][number - 1])
         if summary:
-            slide = {"number": number, "objects": slide["objects"], "text_paragraphs": len(slide["text"]),
-                     "notes_paragraphs": len(slide["notes"])}
+            summary_slide = {"number": number, "objects": slide["objects"], "text_paragraphs": len(slide["text"]),
+                             "notes_paragraphs": len(slide["notes"])}
+            if "text_assessment" in slide:
+                summary_slide["text_assessment"] = slide["text_assessment"]
+            slide = summary_slide
         elif notes == "omit":
             slide.pop("notes")
         chosen.append(slide)

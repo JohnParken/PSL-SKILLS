@@ -281,6 +281,25 @@ class SkillRuntimePackages(unittest.TestCase):
         result = json.loads(self.invoke('pptx', 'pptx.py', 'inspect', 'notes-table.pptx', '--max-output-bytes', '1500').stdout)
         self.assertEqual(result['slides'][0]['notes'], ['验收备注', '独立备注表格'])
         self.assertTrue(result['pagination']['complete'])
+        # Literal third-party-style OMML, independent of the SVG converter.
+        fraction = (
+            '<m:oMath xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">'
+            '<m:f><m:num><m:r><m:t>12</m:t></m:r></m:num>'
+            '<m:den><m:r><m:t>15</m:t></m:r></m:den></m:f></m:oMath>'
+        )
+        members[name] = members[name].replace('<a:r><a:t>独立备注表格</a:t></a:r>'.encode('utf-8'), fraction.encode('utf-8'))
+        with zipfile.ZipFile(self.work / 'notes-math.pptx', 'w', zipfile.ZIP_DEFLATED) as package:
+            for member, data in members.items():
+                package.writestr(member, data)
+        full = json.loads(self.invoke('pptx', 'pptx.py', 'inspect', 'notes-math.pptx').stdout)
+        self.assertEqual(full['slides'][0]['notes'], ['验收备注', '1215'])
+        for options in (('--summary',), ('--notes', 'omit', '--max-output-bytes', '1500')):
+            result = json.loads(self.invoke('pptx', 'pptx.py', 'inspect', 'notes-math.pptx', *options).stdout)
+            self.assertEqual(result['structural_validation'], 'passed')
+            assessment = result['slides'][0]['text_assessment']
+            self.assertEqual(assessment, full['slides'][0]['text_assessment'])
+            self.assertEqual(assessment['status'], 'math_structure_not_preserved')
+            self.assertEqual(assessment['math_paragraphs'], {'text': 0, 'notes': 1})
 
     def test_artifact_archive_and_registered_cleanup(self):
         self.invoke('artifact-lifecycle', 'lifecycle.py', 'check')
