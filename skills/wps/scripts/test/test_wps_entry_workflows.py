@@ -78,6 +78,9 @@ class EntryWorkflowsTests(unittest.TestCase):
         self.assertEqual(receipt["publication_outcome"], "published_verified")
         self.assertTrue(receipt["cleanup_complete"])
         self.assertFalse(receipt["partial"])
+        self.assertEqual(receipt["output_format"], "rtf")
+        self.assertFalse(receipt["native_wps"])
+        self.assertFalse(receipt["binary_doc"])
         self.assertEqual(receipt["delivery"]["archive_status"], "skipped")
         self.assertNotIn("preview_text", receipt)
         for args in ((), ("--summary",), ("--paragraph-range", "1:20")):

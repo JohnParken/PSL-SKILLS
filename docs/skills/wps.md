@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；当前 Skill 版本：`20261110.2000.2124`。本文是仓库级说明，不替代 [SKILL.md](../../skills/wps/SKILL.md) 的运行约束，也不表示本次已执行转换或客户端验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；当前 Skill 版本：`20261110.2006.4129`。本文是仓库级说明，不替代 [SKILL.md](../../skills/wps/SKILL.md) 的运行约束，也不表示本次已执行转换或客户端验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -167,6 +167,8 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 创建、编辑和导出 CLI 自动调用 `wps_delivery`；裸读取、`inspect/check` 和底层 API 不自动归档。只有发布核验及内部清理通过后才归档，归档前后再次核对主文件哈希。`delivery.archive_status` 单独表示 copied、skipped 或 failed；缺少有效宿主配置时 skipped，不能据业务退出 `0` 声称云空间成功。
 
 归档复制成功即按 archive_user_notice 提示去云空间查看，无需等待宿主映射确认；这不宣称已验证上传完成或展示时效。失败保留主文件，不重跑生成或删除历史文件解决冲突。默认 stdin 不产生额外配置；确需落盘 JSON 时使用受控 job，创建前登记，仅清理自己的已确认文件，保护用户原配置。详见 [交付契约](../../skills/wps/references/delivery.md) 与 [公共副本来源记录](../../skills/wps/references/lifecycle-upstream.json)。
+
+普通成功交付保持简洁，内部格式与验收字段仍供结果判断；用户询问、明确要求特定格式或格式限制影响使用时准确说明，遗漏和异常按实际影响报告。
 
 ## 依赖与验证限制
 
