@@ -1,0 +1,235 @@
+{
+  "environment": {
+    "working_directory": "<repository-root>",
+    "host_platform": "not independently verified",
+    "execution": "text-only; read the case fixture and bank-writing skill references; no web, private-data search, financial calculation script, other skill, attachment tool, or business-file generation"
+  },
+  "shared_context": true,
+  "cases": [
+    {
+      "id": "M01",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": true,
+          "reused_from_case": null
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": true,
+          "reused_from_case": null
+        },
+        {
+          "path": "skills/bank-writing/references/business-analysis.md",
+          "fresh_read": true,
+          "reused_from_case": null
+        }
+      ],
+      "response": "截至10月末，全行存款余额由9月末的1,200万元增至1,320万元，净增120万元、环比增幅10%。A产品增加180万元，是主要亮点；B产品减少60万元，是拖累，按净增量计算两者贡献率分别为150%和−50%。目前仅有两期余额，尚不能判断增减原因或增长持续性。",
+      "execution_limitations": "只依据提供的两期存款余额；没有成因或增长持续性证据。"
+    },
+    {
+      "id": "M02",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/business-analysis.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        }
+      ],
+      "response": "下月优先验证的机会是：从1,000名合资格代发客户中，了解尚未使用结算服务的800人是否存在真实需求；这只是可触达空间，不代表需求或转化已成立。依据是目前已有200人使用，未使用者的需求、转化成本和客均资金均未知；可建议先做小范围需求核实并设定观察口径，是否开展需另行决定。本月期末存款增加100万元（1,000→1,100，+10%），日均仅增加2万元（1,000→1,002，+0.2%），且期末净增全部来自同一客户；同口径年化付息率上升0.2个百分点（20个基点）至2.2%。因此不能把期末净增当作可复制增长，也不能据此估算收益；验证时应补看客户需求、结算活跃、日均与期后留存，以及服务成本和资金成本变化。",
+      "execution_limitations": "未假定客户需求、已批准行动或收益目标；没有期后数据、转化成本和客均资金资料。"
+    },
+    {
+      "id": "M03",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/summary-reading.md",
+          "fresh_read": true,
+          "reused_from_case": null
+        }
+      ],
+      "response": "截至10月末，存款余额为1100万元。本月完成一次培训，拟于下月开展客户回访，相关安排是否获批仍待核实。",
+      "execution_limitations": "仅压缩给定原文，未增加分析、计算或建议。"
+    },
+    {
+      "id": "M04",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/business-analysis.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/comprehensive-writing.md",
+          "fresh_read": true,
+          "reused_from_case": null
+        }
+      ],
+      "response": "10月手续费净收入为20万元（1—10月累计110万元减去1—9月累计90万元），较10月目标25万元少5万元，完成率80%；截至10月末累计手续费净收入110万元，较去年同期100万元增加10万元、同比增长10%。现有数据不能计算去年10月单月同比或今年单月环比，也未提供差额原因和具体工作举措，因此本段仅据实概述经营结果，不补写原因或举措。",
+      "execution_limitations": "缺少去年10月单月和今年8月累计数，不能计算相应单月比较；没有原因或举措素材。"
+    },
+    {
+      "id": "M05",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/business-analysis.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        }
+      ],
+      "response": "指标X由0增至8万元，变动额为+8万元；基期为零，增幅不适用。利润由亏损100万元收窄至亏损40万元，亏损减少60万元，负基数不按机械百分比评价。余额总量由100万元变为100万元，净增量为0；A增加20万元、B减少20万元，因净增量为零，A、B的净增量贡献率均不适用（分母为0）。",
+      "execution_limitations": "只按给定同口径数值计算；未推断变化原因。"
+    },
+    {
+      "id": "M06",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/business-analysis.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/source-access.md",
+          "fresh_read": true,
+          "reused_from_case": null
+        }
+      ],
+      "response": "当前预览仅覆盖20家网点中的甲、乙两家，且数值来自未核验的公式缓存。按该预览暂算，甲由100增至120万元、增加20万元，乙由50增至60万元、增加10万元；两家合计由150增至180万元、增加30万元（20%），但这只是未核实的局部线索，不能据此概括全行总量或找出全行主要增长点。因当前没有可用补读工具，需先取得并核实全部网点数据后才能作全行判断。",
+      "execution_limitations": "仅有2/20家网点的截断预览；公式缓存未核验，且无可用补读工具。"
+    },
+    {
+      "id": "M07",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        }
+      ],
+      "response": "本月存款较上月增加10万元，拟于下月安排回访，审批尚未确认。",
+      "execution_limitations": "只做定向润色，保留原事实、计划状态和审批未确认的结论。"
+    },
+    {
+      "id": "M08",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/business-analysis.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        }
+      ],
+      "response": "现有数据不足以判断哪项业务“最值得推广”，因为余额增幅和净增额不包含成本、风险、日均、客群及期后持续性。仅按本月余额净增额，乙增加100万元（1,000→1,100，+10%），高于甲增加2万元（1→3，+200%）；甲的高增幅来自较小基数，不能单独说明更有推广价值。若要确定推广优先项，还需比较两项的日均与留存、客群可触达空间、成本和风险；现阶段可把乙列为绝对增量较大的待核方向，但这不是推广结论。",
+      "execution_limitations": "没有成本、风险、日均、客群或期后数据；不据低基数增幅单独判断推广价值。"
+    },
+    {
+      "id": "M09",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/business-analysis.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        }
+      ],
+      "response": "全行总量由100增至120万元，净增20万元。产品分项A增加20万元、B增加10万元，合计增加30万元；其期末合计130万元，与所报总量120万元相差10万元，虽称互斥且完整，现有数字仍无法勾稽，因此不能据此给出可信的产品净增量贡献率。甲、乙网点增量合计20万元，数值上与总净增量相同；但未说明两家是否覆盖全行，不能当作全行机构分解。产品与网点是交叉维度，不能把两组增量相加；应先核对产品明细差额及网点覆盖范围。",
+      "execution_limitations": "产品分项与总量不一致10万元；两家网点未确认覆盖全行。"
+    },
+    {
+      "id": "M10",
+      "read_paths": [
+        {
+          "path": "docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/SKILL.md",
+          "fresh_read": false,
+          "reused_from_case": "M01"
+        },
+        {
+          "path": "skills/bank-writing/references/source-access.md",
+          "fresh_read": false,
+          "reused_from_case": "M06"
+        }
+      ],
+      "response": "目前无法读取附件 monthly.xlsx 的单元格内容，因而不能计算月报增减、判断增长贡献或提出有据可依的增长机会。本次仅能指出读取能力缺失；如需继续，可提供可读的表格结果，包括指标定义、期间、单位、比较值及所需分组，我再基于这些内容作文本分析；本次不生成或修改文件。",
+      "execution_limitations": "附件单元格不可见；当前没有可用表格读取工具，也未定位到 xlsx 技能。"
+    }
+  ]
+}
