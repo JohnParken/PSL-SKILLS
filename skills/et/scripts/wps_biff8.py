@@ -395,7 +395,7 @@ class Reader:
                     self.salvage_data_uncertain=True
                     self.issue({"code":"unknown_officeart_atoms", "scope":"globals", "record_offset":offset,
                                 "records":unknown, "cell_value_impact":"unknown",
-                                "message":"Unknown drawing atoms retained raw; object semantics and value impact are unverified."})
+                                "message":"Unknown OfficeArt records retained raw; object semantics and value impact are unverified."})
                 self.drawing_group_seen=True
                 self.metadata_record(record,{kind:'MsoDrawingGroupOpaque'},'globals')
             elif kind in self.global_metadata:
@@ -611,9 +611,11 @@ class Reader:
                             self.metadata[-1]['structure'] = details[component[0]]
                     object_ids.update(identities)
                     self.note_drawings.append({**report, 'sheet': bound['name']})
+                    if report.get('unknown_officeart_records'):
+                        self.salvage_data_uncertain = True
                     self.issue({'sheet': bound['name'], 'code': 'note_drawing_retained_opaque',
                                 'record_offset': offset, 'object_count': report['object_count'],
-                                'message': 'Framed note objects retained raw; comment text, author and display are omitted from cell values. No formulas or external content executed.'})
+                                'message': 'Framed note objects retained raw; unknown OfficeArt records, when present, are listed in note_drawings. Comment text, author and display are omitted from cell values. No formulas or external content executed.'})
                     index = stop
                     continue
                 unknown = drawing_frame(payload,0xF002, allow_unknown_atoms=self.compatibility == "data")
@@ -621,7 +623,7 @@ class Reader:
                     self.salvage_data_uncertain=True
                     self.issue({"code":"unknown_officeart_atoms", "sheet":bound['name'], "record_offset":offset,
                                 "records":unknown, "cell_value_impact":"unknown",
-                                "message":"Unknown drawing atoms retained raw; object semantics and value impact are unverified."})
+                                "message":"Unknown OfficeArt records retained raw; object semantics and value impact are unverified."})
                 self.metadata_record(record,{kind:'MsoDrawingOpaque'},bound['name'])
                 drawing_pending=True
                 continue

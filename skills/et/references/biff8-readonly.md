@@ -320,7 +320,9 @@ DVParsedFormula (`https://learn.microsoft.com/en-us/openspecs/office_file_format
 
 Data with opaque drawing policy also retains a narrow, linked note-object chain:
 MsoDrawing fragments split exactly at actual Escher client markers, fixed note Obj,
-TxO/text/run continuations and linked Note records. See the precise scope and
+TxO/text/run continuations and linked Note records. Data mode also retains unknown
+OfficeArt atoms and recursively framed containers in this chain with uncertain cell
+coverage; linked record and split validation still applies. See the precise scope and
 omissions in `<skill-root>/references/embedded-charts.md#fragmented-note-drawings-data-only`.
 
 Zero-entry page-break lists are allowed. These additions share the existing

@@ -21,7 +21,7 @@ def _need(condition, message, record):
         raise error
 
 
-def _escher_markers(data, record):
+def _escher_markers(data, record, unknown=None):
     """Validate nested frame ends and locate real client marker leaves."""
     markers = []
     count = 0
@@ -39,8 +39,12 @@ def _escher_markers(data, record):
             if kind in DRAWING_CONTAINERS:
                 _need(flags & 15 == 15, 'OfficeArt container version must be 15', record)
                 walk(start + 8, stop, depth + 1, kind)
+            elif kind not in DRAWING_ATOMS and kind != 0xF00D:
+                _need(unknown is not None, 'Unsupported OfficeArt note record', record)
+                unknown.append({'record_type': hex(kind), 'offset': start, 'length': size})
+                if flags & 15 == 15:
+                    walk(start + 8, stop, depth + 1, kind)
             else:
-                _need(kind in DRAWING_ATOMS or kind == 0xF00D, 'Unsupported OfficeArt note record', record)
                 _need(flags & 15 != 15, 'Atom cannot be an OfficeArt container', record)
                 if kind in (0xF011, 0xF00D):
                     _need(parent == 0xF004 and flags == 0 and size == 0,
@@ -150,7 +154,8 @@ def note_drawing_group(records, index, *, byte_budget, record_budget, existing_i
             pending_object = None
     _need(pending_object is None, 'Incomplete final note object', first)
     combined = b''.join(fragments)
-    _need(_escher_markers(combined, first) == endpoints,
+    unknown = []
+    _need(_escher_markers(combined, first, unknown) == endpoints,
           'MsoDrawing boundaries do not match real Escher client markers', first)
     linked = set()
     cells = set()
@@ -180,5 +185,7 @@ def note_drawing_group(records, index, *, byte_budget, record_budget, existing_i
               'drawing_fragments': len(fragments), 'object_count': len(objects),
               'record_count': index - start, 'text_decoded_for_output': False,
               'rendered': False, 'semantics_validated': False}
+    if unknown:
+        report['unknown_officeart_records'] = unknown
     details[first[0]] = report
     return index, details, objects, report

@@ -106,7 +106,7 @@ class NoteDrawingTests(unittest.TestCase):
         records[8:9] = [(0x3C, bytes(5)), (0x3C, bytes(11))]
         self.assertEqual(self.read(records)['note_drawings'][0]['object_count'], 1)
 
-    def test_root_and_nested_truncation_overflow_unknown_atom_and_fake_marker_refused(self):
+    def test_root_and_nested_truncation_overflow_and_fake_marker_refused(self):
         source = note_records()
         first = source[0][1]
         bad = []
@@ -114,9 +114,6 @@ class NoteDrawingTests(unittest.TestCase):
             changed = bytearray(first)
             struct.pack_into('<I', changed, offset, value)
             bad.append(bytes(changed))
-        unknown = bytearray(first)
-        struct.pack_into('<H', unknown, 26, 0xF123)
-        bad.append(bytes(unknown))
         # A marker-looking byte sequence inside an opaque atom is not a real leaf.
         fake = bytearray(first)
         struct.pack_into('<I', fake, 28, 16)

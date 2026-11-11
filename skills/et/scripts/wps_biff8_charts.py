@@ -40,9 +40,11 @@ def drawing_frame(data, expected_root, *, allow_unknown_atoms=False):
                     raise ValueError('OfficeArt container version must be 15')
                 walk(start + 8, stop, depth + 1)
             elif kind not in DRAWING_ATOMS or flags & 15 == 15:
-                if not allow_unknown_atoms or flags & 15 == 15:
+                if not allow_unknown_atoms or kind in DRAWING_ATOMS:
                     raise ValueError('Unsupported OfficeArt record ' + hex(kind))
                 unknown.append({'record_type': hex(kind), 'offset': start, 'length': size})
+                if flags & 15 == 15:
+                    walk(start + 8, stop, depth + 1)
             start = stop
 
     if len(data) < 8:

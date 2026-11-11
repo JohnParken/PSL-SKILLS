@@ -57,7 +57,7 @@ as following sheet cells.
 This is framing validation and raw preservation, not full MS-XLS/MS-ODRAW grammar,
 chart interpretation, chart-cache correctness, rendering or effective layout
 validation. Chart formula tokens and drawing properties are not evaluated or
-followed. Macros and unknown records remain refused. No office application,
+followed. Macro substreams and unsupported chart members remain refused. No office application,
 third-party package, external executable or network request is used.
 
 ## Limits and evidence
@@ -67,7 +67,7 @@ Begin/End nesting is capped at 32. Each drawing frame has at most 4096 OfficeArt
 records and nesting at most 16. All opaque payloads share the existing 1 MiB /
 4096-record metadata budget; stream, record and JSON limits still apply.
 
-Unknown or structurally unsupported records/types, truncated drawings, unsupported
+Structurally unsupported records/types, truncated drawings, unsupported
 drawing splits, missing Obj/EOF, nested macro/workbook substreams, external chart
 supporting-link records and unsupported chart member layouts fail without a partial
 cell report. Only malformed `Units` payloads and `Chart` rectangle payload lengths
@@ -76,7 +76,10 @@ chart metadata.
 Standalone chart sheets,
 arbitrary drawing objects, unattached Continue records and full chart decoding remain outside
 the subset. An allowed opaque payload may contain uninterpreted properties or tokens;
-acceptance never certifies their semantics.
+acceptance never certifies their semantics. In data mode, unknown OfficeArt atoms and
+containers whose recursive child framing is valid are retained raw; their types and
+offsets are reported as unknown, cell-value coverage is uncertain, and the result is
+partial. A container with malformed child framing is rejected, not blindly skipped.
 
 The original Schedule.ett now yields 343 worksheet cells, one merge and 12
 unverified formula caches. Its 125 chart records (1530 bytes) are retained exactly;
@@ -104,6 +107,10 @@ Other author trailing bytes, missing links and out-of-grid coordinates fail.
 
 All source payloads remain in `uninterpreted_metadata`. `note_drawings` reports the
 joined drawing SHA-256, fragment/object/record counts and `semantics_validated=false`.
+Unknown OfficeArt atoms or recursively framed containers in this verified chain are
+listed in `unknown_officeart_records`; their meaning and effect on cell values are
+unknown, so coverage is unverified and status remains partial. The linked records,
+marker positions, bounds and budgets must still pass their existing checks.
 `note_drawing_retained_opaque` explicitly marks omission of comment text, authors
 and display from the cell values. Text is checked for framing/Unicode validity but
 not exposed as decoded comments; runs, shape properties and layout are not interpreted.

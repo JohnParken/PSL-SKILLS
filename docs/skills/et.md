@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-10。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.2126.1082`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-10。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261111.1428.1770`。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -147,7 +147,7 @@ BIFF8 数字格式在父样式引用有效且保存 ID 一致时会返回继承�
 | 读取或分析失败 / 1 | 停止依赖操作，不将失败当作空表；失败状态可能细分原因 |
 | 参数错误 / 2 | 常规 usage 与 stderr，不能假定有业务 JSON |
 
-文件 API、读取 CLI 及程序协议共用代码里的默认 `data`，显式参数在解析前生效，失败后不切换策略。该模式可保留有明确结构边界的非单元格元数据并报告 partial，例如部分条件格式、批注绘图分片和数据验证记录；这些内容不应用到保存值，也不表示完整规则语义、打印布局或批注正文均已理解。有严格帧边界的未知 OfficeArt atom 或 FtCmo/FtEnd 对象在 data 策略下可保留原始证据，但其值影响未知，标记 `unverified_due_to_best_effort_salvage`、`omissions_affect_cell_values=true` 和源 partial；strict 仍拒绝。这不表示自动启用独立 salvage 入口。默认读取还保留边界完整的未知全局/表内记录，按相同覆盖不确定契约返回 partial。核心数据、已识别记录组、加密、结构和资源错误仍拒绝。显式 salvage 进一步容忍部分未知或缺失的声明。
+文件 API、读取 CLI 及程序协议共用代码里的默认 `data`，显式参数在解析前生效，失败后不切换策略。该模式可保留有明确结构边界的非单元格元数据并报告 partial，例如部分条件格式、批注绘图分片和数据验证记录；这些内容不应用到保存值，也不表示完整规则语义、打印布局或批注正文均已理解。有严格帧边界的未知 OfficeArt atom、嵌套边界均通过验证的未知容器或 FtCmo/FtEnd 对象在 data 策略下可保留原始证据；受支持批注分片链中的未知 OfficeArt 记录也受此限定，但其值影响未知，标记 `unverified_due_to_best_effort_salvage`、`omissions_affect_cell_values=true` 和源 partial；strict 仍拒绝。截断、不可确认的关联和资源越界仍拒绝；这不是完整解析，也不表示自动启用独立 salvage 入口。默认读取还保留边界完整的未知全局/表内记录，按相同覆盖不确定契约返回 partial。核心数据、已识别记录组、加密、结构和资源错误仍拒绝。显式 salvage 进一步容忍部分未知或缺失的声明。
 
 默认 `data` 模式遇到 CFB 文件头 FAT 数量为 0 时，可从 DIFAT 明确列出的 FAT 扇区推导数量。通过既有扇区、分配链、目录和 BIFF8 校验后返回 `partial`（退出 3），并附 `cfb_zero_fat_count_recovered`。索引缺失、链损坏或严格模式下仍失败。默认模式可在完整扇区前缀通过目录、分配链和声明长度校验后忽略不足一扇区的全零尾缀，并返回 `cfb_zero_trailing_padding_ignored`。
 

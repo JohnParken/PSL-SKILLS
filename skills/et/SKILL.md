@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261110.2126.1082"
+version: "20261111.1428.1770"
 description: 读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，适合查看表头、筛选排序、去重及按指定范围统计汇总。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
@@ -71,7 +71,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.
 
 查询保存行高/列宽、冻结窗格和当前单元格时读 `<skill-root>/references/saved-visibility.md`；解释数字显示时读 `<skill-root>/references/numeric-interpretation.md`。需要富文本、简单公式文字或相关字段概况时读 `<skill-root>/references/advanced-spreadsheet-routing.md#显示与保存视图`；统计始终使用保存值。
 
-默认 data 优先提取已校验的保存值。对边界完整的未知全局或工作表记录，以及无法解释的部分名称和调色板，保留原始记录并返回 partial。未知记录可能携带未识别的值，标记 `omissions_affect_cell_values=true`，交付时说明覆盖不确定。核心单元格记录、已识别记录组、加密、结构及资源错误仍校验。独立 salvage 选项另可容忍部分缺失或未知的声明。
+默认 data 优先提取已校验的保存值。对边界完整的未知全局或工作表记录，以及无法解释的部分名称和调色板，保留原始记录并返回 partial。未知记录可能携带未识别的值，标记 `omissions_affect_cell_values=true`，交付时说明覆盖不确定。默认 data 对已完整定界的未知 OfficeArt 容器也验证嵌套边界并保留原始证据；受支持的批注分片链中同样适用。内容未解码，覆盖不确定，返回 partial，不能称为完整解析。核心单元格记录、已识别记录组、加密、结构及资源错误仍校验；关联不明或截断时停止。独立 salvage 选项另可容忍部分缺失或未知的声明。
 
 ## 统计与结果表处理
 
