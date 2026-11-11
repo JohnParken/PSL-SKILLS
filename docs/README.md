@@ -7,7 +7,7 @@
 ## 阅读基线
 
 - 仓库：[JohnParken/PSL-SKILLS](https://github.com/JohnParken/PSL-SKILLS)。
-- 当前源码基线：[65bff45](https://github.com/JohnParken/PSL-SKILLS/commit/65bff45ffb9375949d6fe547c4e4837c96213bd7) 加本轮工作区变更，核对日期 2026-11-10 UTC。历史裸文件名迁移验证见 [当时记录](output-filenames-validation.json)，不代表当前版本的全量重测。
+- 当前源码基线：`e4005a810e71278fc3705f6fd080d2d6ad31a280` 加本轮工作区变更，核对日期 2026-11-10（America/Los_Angeles）；本轮更新 bank-writing 月报分析。历史裸文件名迁移验证见 [当时记录](output-filenames-validation.json)，不代表当前版本的全量重测。
 - 此前对全部 10 个 Skill 进行运行包与维护材料分离；当时验收基于 `e86522e` 加当时变更，记录于分批提交前。当前源码版本以表中为准，历史包与验收以各自记录和 Git 历史为准；详情见 [项目结构和运行包](packaging.md)。
 - DOCX 字体编辑路由、独立差异保护与相关历史回归见 [DOCX 说明](skills/docx.md#已有文档字体修改与格式保留)；历史记录的基线、平台和范围不能自动推广到当前版本。
 - 覆盖依据：当前工作树中所有 `skills/*/SKILL.md`，不将历史分发 ZIP、测试夹具或参考文件当作额外 Skill。
@@ -20,11 +20,11 @@
 
 | Skill | 基线版本 | 文档内容与核心边界 |
 | --- | --- | --- |
-| [bank-writing](skills/bank-writing.md) | 20261110.2126.1082 | 银行材料起草、改写、整合、摘要、仿写与审校；仅交付文本，明确需要 DOCX 时交接。 |
+| [bank-writing](skills/bank-writing.md) | 20261111.1413.4615 | 银行材料写作与月报解读；贡献、质量、机会分析，纯摘要与新增判断分流；仅交付文本，表格计算按需交接。 |
 | [docx](skills/docx.md) | 20261110.1706.5284 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
 | [xlsx](skills/xlsx.md) | 20261110.2126.1082 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
 | [wps](skills/wps.md) | 20261110.2126.1082 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
-| [et](skills/et.md) | 20261110.2126.1082 | ET/ETT 的 BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、表头预览与统计；不重算公式、不写回办公文件。 |
+| [et](skills/et.md) | 20261111.1428.1770 | ET/ETT 的 BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、表头预览与统计；不重算公式、不写回办公文件。 |
 | [ofd](skills/ofd.md) | 20261110.2338.4038 | OFD 1.0/1.1/1.2 结构与存储文字读取；创建、生成和编辑服务暂不提供，不渲染或验签。 |
 | [pptx](skills/pptx.md) | 20261110.2126.1082 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
 | [table-workflow](skills/table-workflow.md) | 20261110.2126.1082 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
@@ -36,7 +36,7 @@
 ```mermaid
 flowchart TB
     U["用户任务与已授权输入"] --> H["宿主与模型：确认任务、素材和实际 Skill 路径"]
-    H --> B["bank-writing：纯文本写作"]
+    H --> B["bank-writing：经营解读与纯文本写作"]
     H --> D["docx：DOCX 创建、读取与受控编辑"]
     H --> W["wps：文字读取、RTF 重排、DOCX 转 RTF/MS-DOC"]
     H --> X["xlsx：读写、公式子集与分析"]
@@ -45,6 +45,8 @@ flowchart TB
     H --> P["pptx：受限 SVG 创建与整包验证、有界读页"]
     H --> T["table-workflow：有界发现、批量公开 CLI 与模板填报"]
     B -.->|"已授权 DOCX 交接"| D
+    B -.->|"批量读取计算按需交接，保留来源和部分结果"| X
+    B -.->|"ET 来源按需交接，遵守提供方能力范围"| E
     T -->|"显式根目录及版本化 CLI"| X
     T -->|"有 ET 来源时，版本化 CLI"| E
     E -.->|"需要时交接受支持 JSON，保留诊断"| X
@@ -58,6 +60,7 @@ flowchart TB
 
 - 实线表示当前调用、能力组合或入口选择；虚线表示条件性交接或维护约束。连线不是无条件自动执行，也不扩张用户授权。
 - `table-workflow` 当前默认通过公开 CLI 能力调用提供方；不能把保留的兼容接口或参考中的函数名误读为默认跨包私有导入。
+- bank-writing 的表格连线表示宿主按实际能力组织的可选交接，纯文本分析无需安装提供方；没有新增自动调用接口、私有导入或表格写入授权。
 - DOCX、XLSX、WPS 的自带生命周期模块与公共技能有受控复用关系；安装包自包含，不等于运行时必须安装公共技能并重复收尾。具体来源和差异见各篇。
 - OFD 自身为独立标准库实现；图中没有给它虚构业务运行时依赖。若需要额外文件交付/归档，由宿主按明确契约组织。
 
@@ -102,6 +105,7 @@ flowchart TD
 
 ## 已有资料及本次核验
 
+- [月报分析路由与增长分析增强](maintenance/bank-writing/monthly-analysis-20261110/validation.md)：当前 bank-writing 的判断分流、贡献/质量/机会流程与独立虚构请求执行，实际验证与宿主自动选择、真实月报等未验证项分开记录。
 - [2026-11-10 描述与读取路径优化](maintenance/skill-review/optimization-451-20261110.md)：ET/XLSX 按需加载、七项描述、PPTX 数学结构缺口诊断；本机回归与未验证范围单独记录，不代表真实宿主选路或 token 节省。
 - [自检与宿主回传契约](check-execution.md)：保留原有记录，注意其中日期和历史版本。
 - [Linux 发布验收清单](linux-release-acceptance.md)：既有待执行方案，不因新增本组文档而自动变成通过报告。
