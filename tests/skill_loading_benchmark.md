@@ -71,11 +71,17 @@ OFD新建场景的历史 before 读取生成契约；当前 after 只读取入�
 
 XLSX纯概况after使用入口完整命令，不预读bounded-reading；baseline无该完整命令仍读该参考，混合读取按同一条件取并集。ET表头预览before读取table-analysis，after读取table-preview；基础列统计after读取basic-statistics，复杂query仍读取table-analysis。PPTX+ET基础统计混合任务取对应并集。baseline已支持ET预览和统计，但没有本轮新分页预算，不能称为完整功能对等对比。17项XLSX专项before经data-analysis再读专项，after读analysis-contract与专项；机构层级两侧保留management-wide依赖，结果导出两侧保留task-delivery。场景使用已有输入/配置，不包含额外公式重算、创建配置或可选导出；真正任务有这些条件时必须另取所需参考，不能机械套本计划。
 
-`skill_selection_current_cases.json` 是人工编写的当前能力边界期望，不是模型选路观测。当前10个入口逐个绑定entry_sha256，包含各技能正反、软件品牌与真实格式、旧DOC/原生DOCX、银行短句、已有runner回执、简单单表与跨表、混合读取及 OFD 写入暂停边界等43例。测试核对真实catalog、入口哈希、正反/混合覆盖、重复或矛盾期望；任一入口变动即失败提醒，须先人工复核含义再更新哈希，不能自动刷新以掩盖未复核。该测试不计算或宣称准确率、召回率或宿主token节省。
+`skill_selection_current_cases.json` 是人工编写的当前能力边界期望，不是模型选路观测。当前11个入口逐个绑定entry_sha256，共64例，包含各技能正反、软件品牌与真实格式、旧DOC/原生DOCX、银行短句、已有runner回执、简单单表与跨表、混合读取、OFD 写入暂停，以及文档导航的通用处理意图、未知格式、已知格式、缺映射、歧义候选、已有预览和重复加载等边界。测试核对真实catalog、入口哈希、正反/混合覆盖、重复或矛盾期望；任一入口变动即失败提醒，须先人工复核含义再更新哈希，不能自动刷新以掩盖未复核。该测试不计算或宣称准确率、召回率或宿主token节省。
+
+2026-11-12 导航初版保留新增前45例的完整快照，见 [初版记录](../docs/maintenance/document-navigation/validation-20261112.md)。其后按用户建议改为文档处理意图即可匹配，保留前版55例快照，人工复核并加入无格式自然请求及关键词反例，见 [触发范围更新](../docs/maintenance/document-navigation/intent-trigger-20261112.md)。两轮均仅刷新导航入口指纹，原有 ET 入口及加载快照的 stale 单独报告。原格式操作静态读取计划仍只测提供方，不包含导航加载开销，不能据此声称新组合流程的总开销或节省。
 
 ## 归档提示维护后的当前快照（2026-11-07）
 
 归档提示与入口版本更新后，人工复核31个选择案例和57个读取计划，任务/格式边界及计划路径不变，仅刷新当前入口哈希与加载快照。更新前的当前快照逐字保存在 `runtime_loading_profiles_before_archive_notice_20261107.json`；它与原 `runtime_loading_profiles_history_20261107.json` 均为历史证据，预期检查为 stale，不为通过而改写。新快照仍只测计划读取字节/字符，不代表宿主 token、选路或云端上传验证。
+
+## 分批提交前的当前快照（2026-11-12）
+
+人工复核64项选择期望与58项提供方读取计划，保留提示、预期、理由、计划路径及比较基线；同步归档展示说明和当前ET入口的文件指纹、字符数与字节数。刷新前的两个当前文件逐字保存在 `skill_selection_current_cases_before_batch_commit_20261112.json` 和 `runtime_loading_profiles_before_batch_commit_20261112.json`，旧日期证据均不覆盖。验证范围见 [分批提交记录](../docs/maintenance/commit-preparation/validation-20261112.md)；仍未执行真实模型选路、宿主 usage 或导航组合加载量测量。
 
 ## 环境与首步自检前移（2026-11-09）
 

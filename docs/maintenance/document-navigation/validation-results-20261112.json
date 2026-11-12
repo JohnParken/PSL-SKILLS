@@ -1,0 +1,138 @@
+{
+  "evidence_kind": "repository_maintenance_checks_not_deepagents_host_or_model_measurement",
+  "date": "2026-11-12",
+  "baseline_head": "fb6cdff0161a137ebb0e64ebc64d09d11534d6d2",
+  "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12",
+  "expat": "expat_2.6.3",
+  "skill_version": "20261112.1736.5174",
+  "clock_new_york": "2026-11-12T05:36:51.741888-05:00",
+  "version_method": "local calendar +12 hours; truncate fractional seconds to hundredths",
+  "package": {
+    "path": "dist/runtime/document-navigation-runtime-20261112.1736.5174.zip",
+    "members": [
+      "document-navigation/SKILL.md"
+    ],
+    "bytes": 4615,
+    "sha256": "8505afe9a3a359b4e88323ba504ad8b5fb455a4596a028159268bc037c790e81",
+    "source_byte_parity": true
+  },
+  "checks": [
+    {
+      "command": "python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/document-navigation --strict",
+      "exit_code": 0,
+      "status": "passed"
+    },
+    {
+      "command": "python -I -S -B tools/run_skill_tests.py tests -p test_runtime_packager.py",
+      "exit_code": 0,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python -I -S -B tools/run_skill_tests.py tests -p test_skill_runtime_packages.py",
+      "exit_code": 0,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python -I -S -B tools/run_skill_tests.py tests -p test_project_docs.py",
+      "exit_code": 0,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python -I -S -B tools/run_skill_tests.py tests -p test_skill_selection_current.py",
+      "exit_code": 1,
+      "passed": 5,
+      "failed": 1,
+      "skipped": 0
+    },
+    {
+      "command": "python -I -S -B tools/check_project_docs.py",
+      "exit_code": 0,
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "status": "passed"
+    }
+  ],
+  "selection": {
+    "total_human_authored_cases": 55,
+    "prior_cases_preserved": true,
+    "prior_entry_fingerprints_preserved": true,
+    "stale_entries": [
+      "et"
+    ],
+    "navigation_fingerprint_current": true
+  },
+  "loading_snapshot": {
+    "command": [
+      "python",
+      "-I",
+      "-S",
+      "-B",
+      "tests/benchmark_skill_loading.py",
+      "--check-snapshot",
+      "tests/runtime_loading_profiles.json"
+    ],
+    "exit_code": 1,
+    "status": "stale",
+    "issue_count": 99,
+    "stale_files": {
+      "skills/et/SKILL.md": {
+        "snapshot": "d48bc7d90d2ea6879975a18cd186f43072e06ff5051d3aa8ccc6eb87791ad0a3",
+        "actual": "470aeb0114d0f8567daea0f5cf7b56396391baf61f5cd31b3741b94ba512a92c"
+      },
+      "skills/et/references/spreadsheet-consumption.md": {
+        "snapshot": "3d74b546cb64e792cd296b3466cb7801d13ab328e6d8988040ff9109a1a72de3",
+        "actual": "8f7b227719b48032e8e40ef3e25696f1828f43682b8e82ccfe0ea2a433ca9f43"
+      },
+      "skills/et/references/reading-assessment.md": {
+        "snapshot": "afae9573e4ee1112d37c226e1f7dbac60ec76f06cc0c84175b500897db4cb5eb",
+        "actual": "ffbe066579a5cd8b7a95f42dd9192c662a27b12d97c477034c3b6c8ea086925a"
+      },
+      "skills/et/references/table-analysis.md": {
+        "snapshot": "f5c728e5a98c18daea8d904268d9e4a224e2b4195d6405a2a6adc359902a416c",
+        "actual": "fb8015e493286452d5207b66b8ca03db025b1b4a85c909cb7240037858446ccb"
+      }
+    },
+    "snapshot_unmodified": true
+  },
+  "preexisting_skill_entries_unchanged": true,
+  "static_python_review": {
+    "scope": "tests/test_skill_runtime_packages.py",
+    "ast_parse": "passed",
+    "physical_lines": 376,
+    "lines_over_200": 0,
+    "pylint": "not_run",
+    "reason": "not installed in confirmed Python interpreters; earlier recorded temporary pylint environment is absent; no dependencies installed"
+  },
+  "tool_visibility": {
+    "this_session": "tool returned exit code and combined output, read by model",
+    "deepagents_stdout_stderr_exit_contract": "not_verified"
+  },
+  "manual_control_flow_scenarios": 20,
+  "not_verified": [
+    "DeepAgents deployed version and skill discovery",
+    "actual model skill selection or read trace",
+    "attachment mapping and executor task directory in target host",
+    "host stdout/stderr and complete result transport",
+    "Linux target container",
+    "Windows",
+    "Mermaid parser/rendering",
+    "Pylint",
+    "real uploaded documents and Office/WPS visual fidelity",
+    "host token usage and savings",
+    "cloud upload/download behavior"
+  ],
+  "git_actions": {
+    "commit": false,
+    "push": false
+  }
+}

@@ -7,7 +7,7 @@
 - `skills/<name>/`：唯一业务源码、运行参考、模板和许可；测试依规范保留 `scripts/test/`。
 - `docs/maintenance/<name>/`：历史样本证据、维护审计与测试报告。运行说明保留必要的当前能力/限制，维护文件不变成必需运行依赖。
 - `tests/fixtures/docx/`：跨 Skill 使用的七个既有 DOCX 样本，原字节不变。ET 来源清单和固定预期移至 `docs/maintenance/et/`，维护脚本及 CI 同步定位。
-- `packaging/runtime-manifests/`：10份审阅后的显式发布文件清单；不自动吸入新文件。
+- `packaging/runtime-manifests/`：11份审阅后的显式发布文件清单；不自动吸入新文件。
 - `tools/`：统一构建、自检和回归工具。DOCX、OFD旧打包命令是兼容入口，复用同一构建实现。
 - `dist/runtime/`：本地已生成的 ZIP 与发布清单；`dist/archive/`：保留历史 ZIP，不覆盖原字节。整个 `dist/` 不纳入 Git；包文件名中的版本须与当前 `SKILL.md` 分别核对，已有包不必然对应当前源码。
 - `docs/validation/`：重组基线、历史包指纹和当前验收记录。旧证据保留原日期/版本结论，不伪装为本轮重跑。
@@ -15,6 +15,8 @@
 ## 保留与排除
 
 运行包包含入口、声明依赖、当前启用的正式脚本、任务参考和必需静态资源。业务 Python 不压缩改写、不删兼容接口、不把运行时移到仓库共享目录。运行时不依赖仓库测试、维护资料或相邻 Skill 的私有模块。
+
+纯指导的 `document-navigation` 仅分发 `SKILL.md`，不创建空脚本目录或依赖清单。导航可独立加载和报告缺口，实际文档操作需宿主另外提供所选格式 Skill；格式包不依赖导航。其维护场景和证据位于仓库 `docs/maintenance/document-navigation/`，不随包分发。
 
 业务包排除源码 `scripts/test/`、缓存和已移出的历史材料。两个有意保留的例外：
 
@@ -32,6 +34,7 @@ OFD 写入服务暂停：新运行包排除生成器、生成参考、字体和�
 ```console
 python -I -S -B tools/package_skills.py
 python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/review
+python -I -S -B tools/package_skills.py document-navigation
 python -I -S -B tools/package_docx_runtime.py --output dist/runtime/docx-review.zip
 python -I -S -B tools/package_ofd.py dist/runtime/ofd-review.zip
 ```

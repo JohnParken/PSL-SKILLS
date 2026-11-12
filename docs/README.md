@@ -1,13 +1,17 @@
 # PSL-SKILLS 架构与功能文档
 
-本文档集逐一说明仓库中的 10 个 Skill：功能范围、实际模块、执行流程、输入输出、依赖、失败与部分结果边界。架构图描述当前实现与任务交接，不表示存在统一的自动路由服务。
+本文档集逐一说明仓库中的 11 个 Skill：功能范围、实际模块、执行流程、输入输出、依赖、失败与部分结果边界。架构图描述当前实现与任务交接，不表示存在统一的自动路由服务。
 
 当前输出契约：业务交付只接收裸文件名，固定写任务根目录 `./`，不接受 `./文件名` 或任何输出目录。输入、内部归档和受控临时工作区不变；详见各技能当前入口与 [输出契约和迁移](output-filenames.md)。裸文件名迁移曾发布至 `9fcf9fc`；旧日期验收记录不代表当前测试。
 
+宿主返回的 `/large_tool_results/` 仅由宿主 `read_file` 按实际 schema 读取；不可用或不完整时报告缺口并停止依赖，不把结果引用交给执行器或猜路径。普通业务文件仍遵循各自约定。
+
 ## 阅读基线
 
+- 2026-11-12 新增纯指导 `document-navigation`，保留其他 Skill 独立入口；[本轮记录](maintenance/document-navigation/validation-20261112.md) 单列实际测试与真实 DeepAgents 宿主尚未验证的条件，不改写以下历史基线。
+- 同日按用户建议将导航选择条件扩为通用文档处理意图，无需格式或位置已知；[更新验证](maintenance/document-navigation/intent-trigger-20261112.md) 保留前版记录。
 - 仓库：[JohnParken/PSL-SKILLS](https://github.com/JohnParken/PSL-SKILLS)。
-- 当前源码基线：`e4005a810e71278fc3705f6fd080d2d6ad31a280` 加本轮工作区变更，核对日期 2026-11-10（America/Los_Angeles）；本轮更新 bank-writing 月报分析。历史裸文件名迁移验证见 [当时记录](output-filenames-validation.json)，不代表当前版本的全量重测。
+- 当前源码基线：`fb6cdff0161a137ebb0e64ebc64d09d11534d6d2` 加本轮工作区变更，核对日期 2026-11-12（UTC）；本轮整理 ET 容错读取、文档导航与归档展示契约，实际核验见 [分批提交记录](maintenance/commit-preparation/validation-20261112.md)。历史裸文件名迁移验证见 [当时记录](output-filenames-validation.json)，不代表当前版本的全量重测。
 - 此前对全部 10 个 Skill 进行运行包与维护材料分离；当时验收基于 `e86522e` 加当时变更，记录于分批提交前。当前源码版本以表中为准，历史包与验收以各自记录和 Git 历史为准；详情见 [项目结构和运行包](packaging.md)。
 - DOCX 字体编辑路由、独立差异保护与相关历史回归见 [DOCX 说明](skills/docx.md#已有文档字体修改与格式保留)；历史记录的基线、平台和范围不能自动推广到当前版本。
 - 覆盖依据：当前工作树中所有 `skills/*/SKILL.md`，不将历史分发 ZIP、测试夹具或参考文件当作额外 Skill。
@@ -20,22 +24,25 @@
 
 | Skill | 基线版本 | 文档内容与核心边界 |
 | --- | --- | --- |
-| [bank-writing](skills/bank-writing.md) | 20261111.1413.4615 | 银行材料写作与月报解读；贡献、质量、机会分析，纯摘要与新增判断分流；仅交付文本，表格计算按需交接。 |
-| [docx](skills/docx.md) | 20261110.1706.5284 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
-| [xlsx](skills/xlsx.md) | 20261110.2126.1082 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261110.2126.1082 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
-| [et](skills/et.md) | 20261111.1428.1770 | ET/ETT 的 BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、表头预览与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261112.0721.3845 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
-| [pptx](skills/pptx.md) | 20261110.2126.1082 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
-| [table-workflow](skills/table-workflow.md) | 20261110.2126.1082 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
-| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261110.1706.5284 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
-| [skill-development-standards](skills/skill-development-standards.md) | 20261109.1939.2825 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
+| [document-navigation](skills/document-navigation.md) | 20261112.1921.3400 | 通用文档处理意图即可匹配，无需先说明格式；确认附件和目录，再选择工具技能。无脚本，不能保证先加载或创造宿主映射。 |
+| [bank-writing](skills/bank-writing.md) | 20261112.1921.3400 | 银行材料写作与月报解读；贡献、质量、机会分析，纯摘要与新增判断分流；仅交付文本，表格计算按需交接。 |
+| [docx](skills/docx.md) | 20261112.1921.3400 | DOCX 创建、DOCX/DOTX 读取与受控编辑；自动命名、静态核验与收尾，不生成 DOTX。 |
+| [xlsx](skills/xlsx.md) | 20261112.1921.3400 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [wps](skills/wps.md) | 20261112.1921.3400 | 受支持文字读取、RTF 创建与内容重排、从 DOCX 导出 RTF/MS-DOC；默认 `.wps` 后缀不是金山原生格式。 |
+| [et](skills/et.md) | 20261112.1921.3400 | ET/ETT 的 BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261112.1921.3400 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
+| [pptx](skills/pptx.md) | 20261112.1921.3400 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
+| [table-workflow](skills/table-workflow.md) | 20261112.1921.3400 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
+| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261112.1921.3400 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
+| [skill-development-standards](skills/skill-development-standards.md) | 20261111.1531.2742 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
 ## 整体架构图
 
 ```mermaid
 flowchart TB
     U["用户任务与已授权输入"] --> H["宿主与模型：确认任务、素材和实际 Skill 路径"]
+    U -.->|"文档处理意图即可选择；不要求已知格式"| N["document-navigation：核实上下文与候选入口"]
+    N -.->|"交接已核实上下文，仍有缺口则停止依赖操作"| H
     H --> B["bank-writing：经营解读与纯文本写作"]
     H --> D["docx：DOCX 创建、读取与受控编辑"]
     H --> W["wps：文字读取、RTF 重排、DOCX 转 RTF/MS-DOC"]
@@ -59,6 +66,7 @@ flowchart TB
 ```
 
 - 实线表示当前调用、能力组合或入口选择；虚线表示条件性交接或维护约束。连线不是无条件自动执行，也不扩张用户授权。
+- 导航是可选的指导步骤；图中的交接由宿主与模型完成，没有新增调度程序。具体选择见 [导航说明](skills/document-navigation.md)，格式 Skill 保留原有自检和独立执行能力。
 - `table-workflow` 当前默认通过公开 CLI 能力调用提供方；不能把保留的兼容接口或参考中的函数名误读为默认跨包私有导入。
 - bank-writing 的表格连线表示宿主按实际能力组织的可选交接，纯文本分析无需安装提供方；没有新增自动调用接口、私有导入或表格写入授权。
 - DOCX、XLSX、WPS 的自带生命周期模块与公共技能有受控复用关系；安装包自包含，不等于运行时必须安装公共技能并重复收尾。具体来源和差异见各篇。
@@ -124,3 +132,5 @@ flowchart TD
 在 macOS 27.2 arm64、Python 3.13.12、Expat 2.6.3 上，`tools/run_all_tests.py` 运行 2444 项，0 失败、0 跳过；仓库级测试 327 项通过，含 11 个独立只读包与跨技能测试。在同机 Python 3.12.12 上，真实生成 XLSX 和 RTF 的测试在修复前复现带 configs 的 `./` 输入错误，修复后各自的 delivery 测试分别为 30/30 和 21/21；核对了输入不变、临时文件清理、无 configs 成功及危险路径拒绝。
 
 未运行 Linux、Windows 或真实 DeepAgents 验证；Pylint 未安装，未执行。ET 和 WPS 源码目录的严格检查因先前已有缓存警告未通过；独立包严格检查通过。本机测试及静态检查不证明未测平台或真实宿主行为。
+
+归档回复展示边界已统一：内部回执用于核验，最终回复及下载链接不得带出归档地址；实际主文件引用仍可交付。范围、检查证据与未验证项见 [归档展示复核](maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。

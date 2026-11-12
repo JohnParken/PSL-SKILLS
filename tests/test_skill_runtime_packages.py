@@ -1,4 +1,4 @@
-"""Repository-only acceptance of ten independently built runtime packages.
+"""Repository-only acceptance of independently built runtime packages.
 
 Run with Python >=3.12.11 / Expat >=2.6, -I -S -B, as a non-root user.
 Every runtime is extracted separately, chmod read-only, and invoked from a fresh
@@ -25,7 +25,7 @@ import xml.parsers.expat as expat
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-NAMES = ('artifact-lifecycle', 'bank-writing', 'docx', 'et', 'ofd', 'pptx',
+NAMES = ('artifact-lifecycle', 'bank-writing', 'document-navigation', 'docx', 'et', 'ofd', 'pptx',
          'skill-development-standards', 'table-workflow', 'wps', 'xlsx')
 
 
@@ -338,6 +338,16 @@ class SkillRuntimePackages(unittest.TestCase):
         for path in skill.rglob('*.md'):
             for relative in re.findall(r'<skill-root>/([A-Za-z_][A-Za-z0-9_./-]*)', path.read_text(encoding='utf-8')):
                 self.assertTrue((skill / relative.rstrip('.')).exists(), f'{path.name}: missing {relative}')
+
+    def test_document_navigation_single_file_repeated_read(self):
+        """The complete guidance package is readable without a runtime or peers."""
+        skill = self.installs['document-navigation']
+        self.assertEqual(set(self.before['document-navigation']), {'SKILL.md'})
+        initial_work = fingerprints(self.work)
+        entry = skill / 'SKILL.md'
+        for _ in range(2):
+            self.assertEqual(digest(entry.read_bytes()), self.before['document-navigation']['SKILL.md'])
+        self.assertEqual(fingerprints(self.work), initial_work)
 
     def test_workflow_explicit_independent_providers_and_missing_refusal(self):
         workflow = 'table_workflow.py'
