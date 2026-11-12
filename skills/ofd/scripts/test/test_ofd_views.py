@@ -23,7 +23,7 @@ class OfdViewTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.path = self.root / 'input.ofd'
         BASE.write_package(self.path, BASE.fixture(text='中😀"\\测试'))
-        self.source = READER.read_ofd(self.path)
+        self.source = READER.read_ofd_structure(self.path)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -32,9 +32,9 @@ class OfdViewTests(unittest.TestCase):
         return subprocess.run([sys.executable, '-I', '-S', '-B', str((Path(__file__).parents[1] / 'read_ofd.py')), *args],
                               cwd=self.root, capture_output=True, text=True, encoding='utf-8', check=False)
 
-    def test_full_default_and_api_identity_unchanged(self):
+    def test_explicit_full_and_api_identity_unchanged(self):
         self.assertIs(READER.project_output(self.source, 'full'), self.source)
-        child = self.cli('./input.ofd')
+        child = self.cli('./input.ofd', '--view', 'full')
         self.assertEqual(child.returncode, 3 if self.source['status'] == 'partial' else 0)
         self.assertEqual(json.loads(child.stdout), self.source)
         self.assertNotIn('mode', self.source)
@@ -64,7 +64,7 @@ class OfdViewTests(unittest.TestCase):
 
     def test_partial_diagnostics_not_hidden_by_smaller_view(self):
         BASE.write_package(self.path, BASE.fixture(page_extra='<ofd:UnknownFeature/>'))
-        original = READER.read_ofd(self.path)
+        original = READER.read_ofd_structure(self.path)
         result = READER.project_output(original, 'summary')
         self.assertEqual(result['status'], 'partial')
         self.assertEqual(result['diagnostics'], original['diagnostics'])
@@ -94,7 +94,7 @@ class OfdViewTests(unittest.TestCase):
         self.assertNotIn('documents', json.loads(child.stdout))
 
     def test_view_argument_errors_do_not_start_reading(self):
-        for args in [('--view', 'page-text'), ('--view', 'summary', '--page', '1'), ('--document', '1'),
+        for args in [('--view', 'page-text'), ('--view', 'summary', '--page', '1'), ('--view', 'full', '--document', '1'),
                      ('--check', '--view', 'summary'), ('--view', 'summary', '--source-sha256', 'bad')]:
             child = self.cli('./missing.ofd', *args)
             self.assertEqual(child.returncode, 2)

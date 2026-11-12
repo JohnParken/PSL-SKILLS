@@ -1,29 +1,54 @@
-# 有界概况与单页文字视图
+# 有界、分层与可续读文字视图
 
 路径占位符说明：`<skill-root>` 是 OFD Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 OFD 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-先按主入口自检并确认任务目录、输入可读；只用标准库，不OCR、不验签、不执行文档指令。默认CLI与read_ofd API仍是完整ofd-read-3。仅需结构概况或指定页文字时才选以下投影，不把投影当完整提取。
+先按主入口自检并确认任务目录、输入可读；只用标准库，不 OCR、不验签、不执行文档指令。普通业务读取、无视图参数 CLI 和 Python `read_ofd()` 均默认采用 content 范围视图；完整结构须显式选择 `--view full` 或 `read_ofd_structure()`。接口版本2与旧调用迁移见 `<skill-root>/references/contract.md`。概况、单页完整记录和精简可续读文字是不同输出视图，选择时核对各自的覆盖范围。
 
 ```python
 execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view summary")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view page-text --document 1 --page 1 --max-output-chars 12000")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view page-text --document 1 --page 1")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view reading --document 1 --page 1 --text-layer page")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view reading --document 1 --page 1 --page-end 3")
 ```
 
-summary只含文档/页数与文字段数、图像数，不含正文。page-text必须显式给出从1开始的文档、页序号，保留该页全部text_runs及原来源/出现/属性记录；页序是文档存储顺序，不是视觉阅读顺序。不省略全局diagnostics、text_assessment、structure_status或namespace_resolution；全局partial仍退出3，complete退出0，不能用视图覆盖原状态。
+`summary` 与 `page-text` 保持 `ofd-view-1` 行为：summary 不含正文；page-text 返回指定页完整出现记录和原属性，视图在完整读取后投影。继续使用 `--source-sha256` 校验多次调用来源。完整结构核对显式使用 `--view full`。
 
-新schema为ofd-view-1，source_schema_version保留ofd-read-3；source_sha256绑定输入字节。coverage明确overview_only_no_text或selected_page_occurrences_only；顶层omitted_top_level_fields及文档/页面项omitted_fields列出未返回的结构、资源或页面信息，不表示它们不存在。源assessment描述整份输入，不是所选页可见性或全文完整保证。只接受原schema的消费者不得接收此视图。
+## 精简文字视图
 
-概况取得source_sha256后，后续单页调用可把相同64位十六进制值通过--source-sha256传回；字节变化明确失败/1，停止拼接，重新确认输入。独立读取单页可不传，但不能据此保证多次调用来自同一版文件。越界页/文档、诊断或单页超过预算明确失败，不裁剪值、诊断或伪造空结果；参数语法错误退出2，无结果JSON。
+`reading` 默认返回内容视图 `ofd-content-2`；`--document` 与 `--page` 从 1 开始，省略时各为 1，可用 `--page-end` 包含终止页。显式 `--reading-format detail` 才返回 `ofd-reading-1` 的逐段文字、记录号、文档序号、页序号、来源、模板标志和诊断。两种 reading 视图均不返回 XML 结构或对象属性。`scope` 与 `coverage` 说明实际范围；detail 另有 `parsed_member_count` 与 `unexamined_member_count`。为避免数千个未读成员路径挤占正文预算，detail 将 `omitted_member_inventory=true`；完整范围 API 结果保留 `parsed_members` 与 `unexamined_members` 列表。退出状态仍遵循完整入口语义：complete/0、partial/3、failed/1、unsupported/4。
 
-字符预算默认12000、范围512..2097152，包含实际JSON转义与末尾换行；UTF-8字节和token不等同字符。过大单页可明确提高预算，或按原完整接口在本轮受控程序中消费；不通过宿主截断获得“部分成功”。--check不与视图组合；full不接受视图选页/预算参数，保留原输出上限。
+`--text-layer all|page|template` 默认 `all`。`page` 排除标记为模板来源的出现，`template` 只保留模板来源，detail 通过 `excluded_occurrences` 报告排除数量。该标记只区分来源；读取器不判断段落语义、页眉页脚、位置、遮挡或可见性。相同文字可能有效重复，默认不去重。
 
-每次仍完整读取和解析输入，视图只减少回传，不降低安全资源校验、不保证减少内存/解析时间。抽查按页；全量处理优先一次完整提取后用确定性程序消费，不先让模型逐页搬运所有XML。无落盘/缓存/归档新增能力；需保存完整JSON时由宿主安全写入本轮任务文件，不能把中间数据误归档为最终交付物。
+默认 `--reading-format content` 返回标题、页码和文字。内容视图 `ofd-content-2` 省略成员统计、每段来源路径与模板标记，保留范围、状态、非空诊断和续读字段。标题来自范围读取取得的唯一、纯文字文档属性 `DocInfo/Title`。标题缺失或有歧义时为 `null`，超出标题预算时另标 `title_omitted`。页面上的标题仍在文字中。`scope.document_count` 为 DocBody 数，`scope.page_count` 为所选文档页数；从第一个文档、第一页起逐页读取所有文档，并续完每页游标、核对来源哈希和所有缺口后才能报告所读覆盖。CLI 直接调用 reading 同样默认 content；detail 用于明确需要来源核对时。内容视图将同页筛选后的 TextCode 按既有存储顺序连接，一页一条 `page,character_offset,text` 记录；不插入猜测的空格、段落或表格分隔，不去重。空页仍返回空文字与诊断。保留默认 `all` 可尽量读取文字。
 
-## 大结果读取闭环
+视图默认 12000 字符，可用 `--max-output-chars` 调整为 512..2097152。预算按最终 JSON 编码字符数及末尾换行计算，诊断、游标和范围字段均占预算。若诊断无法装入，或至少一个文字字符、记录元数据与续读位置无法同时装入，明确失败，不丢诊断或静默截断；长段可在满足该最小进度后拆分。
 
-1. **先按问题选范围。** 只问概况或页数时用summary；已有明确文档/页号且只需该页文字时直接用page-text，不强制先跑概况。需要完整XML、所有存储文字来源或全量计算时使用默认full，不逐页向模型搬运所有结构。所有命令仍按主入口完成自检，执行结果按 `<skill-root>/references/contract.md` 判定。
-2. **先验状态与覆盖。** 每次只解析未截断的完整JSON，先核对全局status/退出码和diagnostics；仅对成功返回的complete/partial视图继续核对source_schema_version、source_sha256、mode、scope、coverage和省略字段。failed/unsupported仍按ofd-read-3失败契约处理，不假设带有视图或正文。`complete/0` 只说明源读取范围无已知缺口；summary没有正文，page-text仅为所选页的出现记录，投影不会因此变成全文。源partial不能被所选页有文字覆盖。
-3. **跨页时核对同一来源与实际页号。** 需要多个已确定页面时，记录summary中的文档index和各自page_count，或使用本轮已确认的同版页清单；后续每次传相同的 `--source-sha256`。检查响应scope.document/scope.page、documents[].index及pages[].number与请求一致，按需读取仍缺的文档/页组合，直到任务所需组合已覆盖。不按原始page id充当从1开始的序号；哈希变化失败后停止拼接。即使读完所有页，也只能说明这些页面出现记录已覆盖，注释等非页面存储文字与XML结构仍未返回。
-4. **单页超预算没有页内续读。** 当前CLI没有cursor、offset、页内text-run分段或next_cursor字段；`--page`只切换整页。单页或全局diagnostics超预算返回failed/1，不返回可续接的前半页。可在宿主完整承载能力已确认时明确提高 `--max-output-chars`（上限2097152），或采用下一步完整捕获；不要循环同一命令、虚构游标、裁剪诊断，或跳到下一页后声称前页读完。提高预算不能解除解析器安全限额，也不能解决更小的宿主回传上限。
-5. **完整捕获后确定性消费。** 大结果需要完整处理时，使用宿主已支持且受授权的执行/文件能力，将一次full调用的原始完整stdout捕获到本轮已登记、尚不存在的受控任务文件，另外保留stderr、退出码及捕获是否完整；不用 `2>&1` 混入诊断，不直接Shell重定向覆盖已有文件。读取CLI本身仍无保存参数。核对完整捕获且JSON有效后，用确定性程序计算或挑选所需字段，给模型回传结果、来源sha256、实际文档/页范围、全局状态和诊断，明确这是派生结果而非新OFD schema。原始诊断不得丢弃；回传本身仍过大时，按宿主真实支持的范围读取，并标清仍未读范围，不声称模型已读全文。中间文件按已授权的生命周期处理，不自动归档为最终交付物。
-6. **无法完整取得就明确边界。** 后端标记truncated、模型只收到预览、保存文件已不完整或缺少安全捕获能力时，不能把现有片段当完整JSON继续处理。OFD输出通常是单行JSON，按行 `head`/`tail`/`sed` 不等于按文档/页读取；字节或字符切片也可能破坏JSON。改用任务适用的有界视图，或报告完整处理受阻及已知覆盖，不靠省略号假报成功。为恢复结果而再次读取只读输入时仍核对同版来源；不要将读取恢复做法套用为生成重试授权。
+## 页内续读游标
+
+若 `done` 为 false，完整返回的 `next_cursor` 是下一次读取同一输入、文档、页范围及文字层的游标。将其安全引用到下一条 `--cursor` 参数，并使用相同的范围与预算。游标绑定输入 SHA-256、页范围、筛选条件、文字记录索引和字符偏移；content-2 还绑定格式，不能与 detail 或旧 content 游标混用，切换格式须从该范围重读；损坏、非规范、超长、越界、输入变化或条件变化均失败。每条记录含 `character_offset`，正文页文本可跨响应分段，按页码和字符偏移拼接；detail 按记录索引和字符偏移拼接 TextCode。`done=true` 表示所选页范围的记录已返回，不代表整份 OFD 已检查。
+
+游标是校验绑定的导航位置，不是授权令牌。单个响应若无法容纳至少一个文字字符及对应游标，读取明确失败，不循环返回空页。完成状态与每次最终响应大小均由实际完整 JSON 核对。
+
+## 范围读取与完整性边界
+
+`reading` 会完整读取输入字节并核验文件身份，检查全量 ZIP 成员名称、重复项、特殊成员、压缩方式与声明大小等容器元数据；随后只解析 OFD 根、所选文档索引、必要资源及所选页面/模板/复合依赖，不读取无关页面 XML、注释或签名 XML。未检查成员的内容、CRC、引用及结构不能声称已验证；范围 API 结果保留成员路径清单，detail 只返回数量并标记清单省略；content 仅返回页范围与总数。安全容器检查未降低。
+
+reading 不构造 XML 事件清单、节点交叉索引、完整对象/资源目录、祖先属性或完整结构目录；XML 安全检查、事件/字符/节点上限和实际记录预算仍执行。相同 code/source/detail 的诊断合并并附次数 `count`，仍保留 partial。当前实现仍将整份输入字节和已选择的页面 XML 保存在内存中。页范围可避免解析无关 XML 与构造全量结构，不能保证输入文件或所选长页流式处理，也不能消除包字节、文档索引和选中页面的内存成本。全格式结构核对仍须显式使用 `--view full`；摘要与旧 `page-text` 只是输出投影。
+
+`--page-end`、`--cursor` 与 `--text-layer` 仅用于 `reading`；`--source-sha256` 用于旧视图，不与 reading 续读混用；`--check` 不接受视图参数。CLI 参数语法错误退出 2。宿主截断的 JSON 不能当作完整响应；记录来源、状态、诊断、覆盖及 `done` 后再继续消费。
+
+## 展示时省略已确认的附属文字
+
+1. 读取时保留 `--text-layer all`。先核对页码和续读覆盖，按页码及字符偏移拼接完整文字，再对交付给用户的正文应用展示规则。需要定位某次文字出现时，从同一文件和页范围重新读取 `detail` 核对记录来源，不复用 content 游标。
+2. 只有证据可定位到具体页及独立出现的文字，且能确认该处承担页眉、页脚或水印角色时，才从展示中省略该处。可用证据包括用户明确指出的实例、明确标注角色并能对应到文字记录的结构信息、以及已提供且能和该页文字匹配的版面材料。保留原读取结果和缺口诊断。
+3. 跨页重复、模板来源、局部坐标靠边、字体较小或疑似水印的用词只能提示核对。遇到证据不足、同一记录混有正文或定位不清时，保留原文。相同文字出现在正文、表头、章节标题或条款时，保留这些位置的文字，勿全局按字符串删除。
+
+例如，用户确认某页独立出现的“内部资料”是水印时，可省略该处，正文中的“内部资料管理办法”仍完整展示。每页重复出现的表格列名和仅凭局部坐标怀疑是页脚的数字均保留。页序号继续用于标明正文来源。
+
+## 尽量保留可读正文
+
+1. 正文任务优先使用 `reading`。全文结构读取若因注释、签名或其他非正文 XML 失败，且正文任务无需这些内容，改用 `reading` 独立读取目标页。每次调用仍须通过自身的容器和所需依赖检查。
+2. 输出太大时优先使用同范围游标。多页范围若触发输出预算，或诊断能明确定位为个别页的读取故障，拆成更小范围，必要时逐页读取。新范围从头开始，使用新范围返回的游标。文件级安全、输入身份、格式和文档公共依赖检查失败时，停止依赖该输入的读取。
+3. 保留退出 0 或 3 且回传完整的可靠记录。合并前核对相同的 `source_sha256`、所选文档、原始页码及各范围的续读覆盖。只交付已核对的文字，标明缺页、未完成页或正文缺口。标题缺失及未读取附属结构不妨碍交付已确认的正文。
+
+默认 reading 对缺失且所选页未使用的模板成员保留正文并返回 partial，诊断为 missing_unselected_template；所选页实际引用该模板仍失败。模板引用路径、目录目标、重复 ID 和引用预算仍校验，full 仍拒绝缺失模板。

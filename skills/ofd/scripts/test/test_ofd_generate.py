@@ -132,7 +132,7 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual(report['pages'][0]['items'][3]['boundary'], [80, 50, 40, 20])
         output = self.root / 'new.ofd'
         output.write_bytes(data)
-        result = WRITER.READER.read_ofd(output)
+        result = WRITER.READER.read_ofd_structure(output)
         self.assertEqual(result['status'], 'partial')
         self.assertEqual([run['text'] for run in result['documents'][0]['pages'][0]['text_runs']], ['A中 B\\', 'A', '中', 'B'])
 

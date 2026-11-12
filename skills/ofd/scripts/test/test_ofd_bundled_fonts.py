@@ -70,7 +70,7 @@ class BundledFontTests(unittest.TestCase):
             self.assertIn(b'FontNotice:1', archive.read('OFD.xml'))
         path = self.directory / 'result.ofd'
         path.write_bytes(data)
-        readback = WRITER.READER.read_ofd(path)
+        readback = WRITER.READER.read_ofd_structure(path)
         self.assertEqual([run['text'] for doc in readback['documents'] for page in doc['pages'] for run in page['text_runs']], expected)
         self.assertEqual(readback['status'], 'partial')
 

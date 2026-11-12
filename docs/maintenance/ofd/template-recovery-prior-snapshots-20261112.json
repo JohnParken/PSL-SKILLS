@@ -1,0 +1,183 @@
+{
+  "ofd_entry_sha256": "89c2b5ef042268a2b8d2455821a14553be583521c9f086012513b6b85d5045df",
+  "profiles": {
+    "ofd-summary": {
+      "scenario": "Planned whole-file reads for the named operation.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 5809,
+            "bytes": 12689,
+            "sha256": "adb633b289d03d834bec62a58f72be3e8ede79ca2c2f9883946b153c9312c1b7",
+            "tokens": null
+          },
+          {
+            "path": "ofd/references/output-views.md",
+            "chars": 1602,
+            "bytes": 3388,
+            "sha256": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+            "tokens": null
+          }
+        ],
+        "read_events": 2,
+        "unique_files": 2,
+        "chars": 7411,
+        "bytes": 16077,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 7467,
+            "bytes": 16402,
+            "sha256": "89c2b5ef042268a2b8d2455821a14553be583521c9f086012513b6b85d5045df",
+            "tokens": null
+          },
+          {
+            "path": "ofd/references/output-views.md",
+            "chars": 4545,
+            "bytes": 9539,
+            "sha256": "46d617531fbf98d75f60276c784a08667625e58f359a2875b22fa3f510bfd2d8",
+            "tokens": null
+          }
+        ],
+        "read_events": 2,
+        "unique_files": 2,
+        "chars": 12012,
+        "bytes": 25941,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": 4601,
+        "bytes": 9864,
+        "tokens": null,
+        "read_events": 0
+      }
+    },
+    "ofd-basic-create": {
+      "scenario": "OFD writing is temporarily unavailable; explain the boundary without loading or invoking generation.",
+      "baseline_capability_note": "Historical baseline had a limited generator; current writing service is unavailable.",
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 5809,
+            "bytes": 12689,
+            "sha256": "adb633b289d03d834bec62a58f72be3e8ede79ca2c2f9883946b153c9312c1b7",
+            "tokens": null
+          },
+          {
+            "path": "ofd/references/generation.md",
+            "chars": 8014,
+            "bytes": 16111,
+            "sha256": "f4dfb595e4e2f55a3896a4b0920afa31d90d41807f90045c228e023d5f0469dd",
+            "tokens": null
+          }
+        ],
+        "read_events": 2,
+        "unique_files": 2,
+        "chars": 13823,
+        "bytes": 28800,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 7467,
+            "bytes": 16402,
+            "sha256": "89c2b5ef042268a2b8d2455821a14553be583521c9f086012513b6b85d5045df",
+            "tokens": null
+          }
+        ],
+        "read_events": 1,
+        "unique_files": 1,
+        "chars": 7467,
+        "bytes": 16402,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": -6356,
+        "bytes": -12398,
+        "tokens": null,
+        "read_events": -1
+      }
+    },
+    "ofd-partial-page-read": {
+      "scenario": "Select a bounded page/text view without hiding source partial, unreturned regions or lack of visual validation.",
+      "baseline_capability_note": null,
+      "behavior_validation": "not_measured_by_loading_benchmark",
+      "before": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 5809,
+            "bytes": 12689,
+            "sha256": "adb633b289d03d834bec62a58f72be3e8ede79ca2c2f9883946b153c9312c1b7",
+            "tokens": null
+          },
+          {
+            "path": "ofd/references/output-views.md",
+            "chars": 1602,
+            "bytes": 3388,
+            "sha256": "7f76619527d2b78d0b00d8a2990b4bbcecc86b373cb66707b4290127373ed05b",
+            "tokens": null
+          },
+          {
+            "path": "ofd/references/boundaries.md",
+            "chars": 3185,
+            "bytes": 6810,
+            "sha256": "1fc3f4d203459344d2559663c611801775fe7db1ea6822c3a25b5bda8fc06c02",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 10596,
+        "bytes": 22887,
+        "tokens": null
+      },
+      "after": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 7467,
+            "bytes": 16402,
+            "sha256": "89c2b5ef042268a2b8d2455821a14553be583521c9f086012513b6b85d5045df",
+            "tokens": null
+          },
+          {
+            "path": "ofd/references/output-views.md",
+            "chars": 4545,
+            "bytes": 9539,
+            "sha256": "46d617531fbf98d75f60276c784a08667625e58f359a2875b22fa3f510bfd2d8",
+            "tokens": null
+          },
+          {
+            "path": "ofd/references/boundaries.md",
+            "chars": 3579,
+            "bytes": 7850,
+            "sha256": "9eba87b64b98b023945949b3c5fd494ac0b51204a13abc97f331611f4b3466d6",
+            "tokens": null
+          }
+        ],
+        "read_events": 3,
+        "unique_files": 3,
+        "chars": 15591,
+        "bytes": 33791,
+        "tokens": null
+      },
+      "delta_after_minus_before": {
+        "chars": 4995,
+        "bytes": 10904,
+        "tokens": null,
+        "read_events": 0
+      }
+    }
+  }
+}

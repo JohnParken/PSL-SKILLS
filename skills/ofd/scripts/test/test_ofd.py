@@ -58,7 +58,7 @@ class ReaderTests(unittest.TestCase):
 
     def read(self, files=None):
         write_package(self.path, fixture() if files is None else files)
-        return READER.read_ofd(self.path)
+        return READER.read_ofd_structure(self.path)
 
     def test_glyph_mapping_nodes_link_to_stored_xml_without_claiming_interpretation(self):
         files = fixture()
@@ -111,7 +111,7 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual(run['object_attributes']['Boundary'], '1 2 30 4')
         self.assertEqual(run['code_attributes'], {'X': '0', 'Y': '3'})
         self.assertEqual(run['source'], 'Doc/Pages/P.xml')
-        self.assertEqual(result, READER.read_ofd(self.path))
+        self.assertEqual(result, READER.read_ofd_structure(self.path))
         self.assertEqual(before, hashlib.sha256(self.path.read_bytes()).hexdigest())
 
     def test_duplicate_single_value_containers_cannot_silently_omit_content(self):
@@ -157,7 +157,7 @@ class ReaderTests(unittest.TestCase):
         os.chdir(task)
         try:
             with mock.patch.object(Path, 'open', replace_before_open), contextlib.redirect_stdout(io.StringIO()) as output:
-                code = READER.main(['input.ofd'])
+                code = READER.main(['input.ofd', '--view', 'full'])
             result = json.loads(output.getvalue())
             if code == 0:
                 self.assertEqual([run['text'] for doc in result['documents']
@@ -184,8 +184,8 @@ class ReaderTests(unittest.TestCase):
                 code, result = self.cli_result([name])
                 self.assertEqual((code, result['status']), (1, 'failed'))
                 self.assertNotIn('documents', result)
-        self.assertEqual(READER.read_ofd(directory / 'input.ofd')['status'], 'complete')
-        self.assertEqual(READER.read_ofd('sub/input.ofd', task_root=self.root)['status'], 'complete')
+        self.assertEqual(READER.read_ofd_structure(directory / 'input.ofd')['status'], 'complete')
+        self.assertEqual(READER.read_ofd_structure('sub/input.ofd', task_root=self.root)['status'], 'complete')
 
     @unittest.skipUnless(hasattr(os, 'O_NOFOLLOW') and os.open in os.supports_dir_fd,
                          'requires descriptor-relative nofollow opens')
@@ -260,7 +260,7 @@ class ReaderTests(unittest.TestCase):
             with mock.patch.object(READER.os, 'supports_dir_fd', {opened}):
                 code, result = self.cli_result(['sub/input.ofd'], task)
         self.assertEqual((code, result['status']), (0, 'complete'))
-        self.assertEqual(result['documents'][0]['pages'][0]['text_runs'][0]['text'], 'INSIDE')
+        self.assertEqual(result['records'][0]['text'], 'INSIDE')
 
     def test_confined_mode_has_no_insecure_platform_fallback(self):
         write_package(self.path, fixture())
@@ -273,7 +273,7 @@ class ReaderTests(unittest.TestCase):
 
     def test_nonregular_input_and_detected_changes_fail_without_content(self):
         with self.assertRaisesRegex(READER.ReadError, 'regular file'):
-            READER.read_ofd(self.root)
+            READER.read_ofd_structure(self.root)
         write_package(self.path, fixture())
         original_fstat = os.fstat
         state = {'calls': 0}
@@ -286,7 +286,7 @@ class ReaderTests(unittest.TestCase):
 
         with mock.patch.object(READER.os, 'fstat', side_effect=changed_stat):
             with self.assertRaisesRegex(READER.ReadError, 'changed during read'):
-                READER.read_ofd(self.path)
+                READER.read_ofd_structure(self.path)
 
     def test_storage_order_not_coordinates(self):
         files = fixture()
@@ -402,7 +402,7 @@ class ReaderTests(unittest.TestCase):
 
     def test_deflated_xml_preserves_text_and_structure(self):
         write_package(self.path, fixture(), zipfile.ZIP_DEFLATED)
-        result = READER.read_ofd(self.path)
+        result = READER.read_ofd_structure(self.path)
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(result['documents'][0]['pages'][0]['text_runs'][0]['text'], '甲乙')
         self.assertEqual(len(result['structure']['xml_parts']), 3)
@@ -421,7 +421,7 @@ class ReaderTests(unittest.TestCase):
         struct.pack_into('<I',data,central+24,len(prefix))
         self.path.write_bytes(data)
         with self.assertRaisesRegex(READER.ReadError,'inconsistent DEFLATE'):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
 
     def test_foreign_namespace_in_common_and_resources(self):
         files=fixture(common_extra='<x:Unexpected xmlns:x="urn:foreign"/>')
@@ -461,7 +461,7 @@ class ReaderTests(unittest.TestCase):
         struct.pack_into('<I',data,central+24,len(prefix))
         self.path.write_bytes(data)
         with self.assertRaisesRegex(READER.ReadError,'inconsistent stored'):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
 
     def test_cli_usage_error(self):
         target = Path(__file__).parents[1] / 'read_ofd.py'
@@ -478,13 +478,13 @@ class ReaderTests(unittest.TestCase):
                 archive.writestr('OFD.xml', b'a')
                 archive.writestr('OFD.xml', b'b')
         with self.assertRaisesRegex(READER.ReadError,'duplicate'):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
         info=zipfile.ZipInfo('link')
         info.external_attr = 0o120777 << 16
         with zipfile.ZipFile(self.path,'w') as archive:
             archive.writestr(info,b'target')
         with self.assertRaisesRegex(READER.ReadError,'special'):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
 
     def test_entities_encodings_malformed(self):
         for payload in (b'<!DOCTYPE x [<!ENTITY x "abc">]><x>&x;</x>', '<!DOCTYPE x [<!ENTITY x SYSTEM "file:///etc/passwd">]><x>&x;</x>'.encode('utf-16'), b'<broken>'):
@@ -505,7 +505,7 @@ class ReaderTests(unittest.TestCase):
                     READER.LIMITS[key]=original
         write_package(self.path,{'bomb': b'0'*100000},zipfile.ZIP_DEFLATED)
         with self.assertRaisesRegex(READER.ReadError,'expansion'):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
 
     def test_missing_namespace_and_version(self):
         for data in (b'<OFD/>', xml('OFD','', 'Version="2.0"')):
@@ -544,17 +544,17 @@ class ReaderTests(unittest.TestCase):
         data[central+8] |= 1
         self.path.write_bytes(data)
         with self.assertRaisesRegex(READER.ReadError,'unsupported: encrypted ZIP'):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
 
     def test_crc_and_unsupported_compression(self):
         write_package(self.path,fixture())
         data=self.path.read_bytes().replace('甲乙'.encode(),'丙丁'.encode(),1)
         self.path.write_bytes(data)
         with self.assertRaises(zipfile.BadZipFile):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
         write_package(self.path,fixture(),zipfile.ZIP_BZIP2)
         with self.assertRaisesRegex(READER.ReadError,'unsupported: ZIP compression'):
-            READER.read_ofd(self.path)
+            READER.read_ofd_structure(self.path)
 
     def test_cli_failure_partial_and_unsupported(self):
         target = Path(__file__).parents[1] / 'read_ofd.py'
@@ -564,7 +564,7 @@ class ReaderTests(unittest.TestCase):
             self.assertEqual(completed.returncode,code,completed.stdout+completed.stderr)
             result=json.loads(completed.stdout)
             self.assertEqual(result['status'],status)
-            self.assertEqual(result['schema_version'],'ofd-read-3')
+            self.assertEqual(result['schema_version'], 'ofd-content-2' if status == 'partial' else 'ofd-read-3')
             if code==1:
                 self.assertNotIn('documents',result)
 
@@ -642,7 +642,7 @@ class ReaderTests(unittest.TestCase):
                 completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),'sample.ofd'],cwd=self.root,env={'PATH':''},capture_output=True,text=True, check=False)
                 self.assertEqual(completed.returncode,0,completed.stderr+completed.stdout)
                 self.assertEqual(json.loads(completed.stdout)['status'],'complete')
-                self.assertEqual(json.loads(completed.stdout)['schema_version'],'ofd-read-3')
+                self.assertEqual(json.loads(completed.stdout)['schema_version'], 'ofd-content-2')
             for argument in ('../escape.ofd',str(self.path)):
                 completed=subprocess.run([sys.executable,'-I','-S','-B',str(target),argument],cwd=self.root,capture_output=True,text=True, check=False)
                 self.assertEqual(completed.returncode,1)

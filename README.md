@@ -22,7 +22,7 @@
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261110.2126.1082 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261110.2126.1082 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261111.1428.1770 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值、公式缓存、行列尺寸、冻结窗格与当前单元格；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261110.2338.4038 | 读取 OFD 1.0/1.1/1.2 的 XML 结构与存储文字；创建、生成与编辑服务暂不提供，不做 OCR、验签、转换或渲染 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261112.0721.3845 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261110.2126.1082 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；数学结构丢失按页诊断；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261110.2126.1082 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261110.1706.5284 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
@@ -210,11 +210,13 @@ python3 -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据
 
 ### OFD
 
-独立入口见 [ofd](skills/ofd/SKILL.md)。宿主以 `execute(command=...)` 提交完整命令。先运行自检，再在任务目录读取相对输入路径；结果分别返回 XML 结构、存储文字与页面出现记录及其诊断，不恢复页面或语义阅读顺序：
+独立入口见 [ofd](skills/ofd/SKILL.md)。 CLI 与 Python `read_ofd()` 默认返回按页连接的文本（`ofd-content-2`），省略文档/页参数时从第1文档第1页开始；按页总数和游标继续。旧结构调用迁移到 `--view full` 或 `read_ofd_structure()`；`--capabilities` 返回接口版本2。宿主以 `execute(command=...)` 提交完整命令。先运行自检，再在任务目录按页读取标题、文字和页码；用户明确要求结构时才使用 full。正文和显式结构模式都保留诊断，不恢复页面或语义阅读顺序：
 
 ```python
 execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" --check")
 execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
+# 仅明确要求结构时：
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view full")
 ```
 
 OFD 创建、生成、编辑等写入服务暂不提供。已有文件的读取与分析保留；源码中的生成实现、字体和历史证据仅供后续恢复，不属于运行包。旧 ZIP 不会自动改变，部署时应更换为按当前清单新建的只读运行包。
@@ -393,7 +395,7 @@ OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不�
 
 宿主可能分别回传 stdout/stderr，也可能合并或添加状态文字；不要假定通道、字段或包装格式。先核对工具执行状态、可见退出码和截断，再按对应入口的契约判断业务状态、partial 与覆盖；工具调用成功不等于进程或业务成功。仅在能可靠分离且确认完整时解析 JSON，无法判断就停止依赖操作并报告。不要为了补日志盲目重跑写操作。宿主提供的虚拟结果路径只能通过其指定的读取工具访问，不能当成本机 Shell 路径。`print` 不保证宿主或模型收到输出，也不改变现有机器可读接口。
 
-大结果先选对应入口实际提供的有界视图，逐段保留来源身份、游标、覆盖、遗漏及 partial；仅在支持续读且来源未变时继续。投影、预览和截断不是全文；OFD 没有页内游标，单页内容过大时不能靠换页补齐。
+大结果先选对应入口实际提供的有界视图，逐段保留来源身份、游标、覆盖、遗漏及 partial；仅在支持续读且来源未变时继续。投影、预览和截断不是全文。OFD `reading` 支持按文档/页范围和模板来源筛选，以绑定输入哈希、范围及筛选条件的游标续读长文本；选中页仍在内存，未选XML内容不在该视图的检查范围。
 
 仓库维护与接入可用 [run_skill_check.py](tools/run_skill_check.py) 执行固定自检入口并输出独立回传 JSON；[入口清单、用法及边界](docs/check-execution.md)列出全部 Skill 和未验证范围。该适配器不随独立 Skill 发布，不安装或修改项目专属 execute 工具；原 Skill 命令仍可直接执行，宿主按原生接口回传。
 

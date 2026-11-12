@@ -33,7 +33,7 @@ class ResourceRecoveryTests(unittest.TestCase):
 
     def read(self, files):
         BASE.write_package(self.path, files)
-        return READER.read_ofd(self.path)
+        return READER.read_ofd_structure(self.path)
 
     def files(self, kind='PublicRes', value='Missing.xml'):
         if kind == 'PageRes':

@@ -14,8 +14,9 @@ from ofd_common import (
 
 
 class Package:
-    def __init__(self, data):
+    def __init__(self, data, *, retain_structure=True):
         import io
+        self.retain_structure = retain_structure
         self.data = data
         self.archive = zipfile.ZipFile(io.BytesIO(data))
         infos = self.archive.infolist()
@@ -75,9 +76,10 @@ class Package:
             raise ReadError('missing package reference: ' + target)
         if self.members[target].is_dir():
             raise ReadError('missing package reference: ' + target)
-        record = dict(source=source, value=value, target=target)
-        self.account(record)
-        self.evidence.append(record)
+        if self.retain_structure:
+            record = dict(source=source, value=value, target=target)
+            self.account(record)
+            self.evidence.append(record)
         return target
 
     def xml(self, name, expected=None, *, require_ofd=True):
@@ -120,7 +122,8 @@ class Package:
                 self.event_count += 1
                 if self.event_count > LIMITS['xml_events']:
                     raise ReadError('limit: XML events')
-                events.append(dict(kind=kind, **values))
+                if self.retain_structure:
+                    events.append(dict(kind=kind, **values))
 
             def reject(*_args):
                 raise ReadError('DTD/entity forbidden')
@@ -142,8 +145,9 @@ class Package:
                 if self.name_chars > LIMITS['xml_name_chars']:
                     raise ReadError('limit: expanded XML names and attributes')
                 node = ET.Element(tag, attrs)
-                indexes[node] = len(indexes)
-                event('start', node=indexes[node])
+                if self.retain_structure:
+                    indexes[node] = len(indexes)
+                event('start', node=indexes.get(node))
                 if stack:
                     stack[-1].append(node)
                 else:
@@ -156,27 +160,27 @@ class Package:
                     raise ReadError('limit: XML characters')
                 if stack:
                     node = stack[-1]
-                    event('text', parent=indexes[node], value=value)
+                    event('text', parent=indexes.get(node), value=value)
                     if len(node):
                         node[-1].tail = (node[-1].tail or '') + value
                     else:
                         node.text = (node.text or '') + value
 
             def end(_tag):
-                event('end', node=indexes[stack[-1]])
+                event('end', node=indexes.get(stack[-1]))
                 stack.pop()
 
             def comment(value):
                 self.chars += len(value)
                 if self.chars > LIMITS['text_chars']:
                     raise ReadError('limit: XML characters')
-                event('comment', parent=indexes[stack[-1]] if stack else None, value=value)
+                event('comment', parent=indexes.get(stack[-1]) if stack else None, value=value)
 
             def instruction(target, value):
                 self.chars += len(target) + len(value)
                 if self.chars > LIMITS['text_chars']:
                     raise ReadError('limit: XML characters')
-                event('processing_instruction', parent=indexes[stack[-1]] if stack else None,
+                event('processing_instruction', parent=indexes.get(stack[-1]) if stack else None,
                       target=target, value=value)
 
             def namespace_start(prefix, uri):
@@ -233,10 +237,11 @@ class Package:
                     key = (name, node.tag)
                     self.namespace_issues[key] = self.namespace_issues.get(key, 0) + 1
             self.cache[name] = root
-            self.xml_events[name] = events
-            self.xml_digests[name] = hashlib.sha256(data).hexdigest()
-            self.node_indexes[name] = indexes
-            self.xml_modes[name] = namespace_mode
+            if self.retain_structure:
+                self.xml_events[name] = events
+                self.xml_digests[name] = hashlib.sha256(data).hexdigest()
+                self.node_indexes[name] = indexes
+                self.xml_modes[name] = namespace_mode
         if require_ofd and not is_ofd(root.tag):
             raise ReadError('unsupported: OFD namespace')
         if expected and root.tag != q(expected):
@@ -258,10 +263,12 @@ class Package:
             count += 1
             chars += len(node.tag) + len(node.text or "") + len(node.tail or "")
             chars += sum(len(key) + len(value) for key, value in node.attrib.items())
-        # Conservative allowance for repeated attributes, IDs, source paths and JSON escaping.
-        self.output_cost += count * 8192 + chars * 8
-        if self.output_cost > LIMITS["output_chars"]:
-            raise ReadError("limit: expanded output")
+        # Structural exports duplicate attributes and ancestry. Text reading does
+        # not construct those records; account() bounds its actual retained data.
+        if self.retain_structure:
+            self.output_cost += count * 8192 + chars * 8
+            if self.output_cost > LIMITS["output_chars"]:
+                raise ReadError("limit: expanded output")
         self.expanded_nodes += count
         if self.expanded_nodes > LIMITS["nodes"]:
             raise ReadError("limit: expanded nodes")

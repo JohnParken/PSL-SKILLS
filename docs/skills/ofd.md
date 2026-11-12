@@ -1,16 +1,20 @@
-# OFD：结构与文字读取
+# OFD：默认文本读取
 
-文档核对日期：2026-11-09。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261110.2338.4038`。业务执行以 [SKILL.md](../../skills/ofd/SKILL.md) 及本轮所需参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
+文档核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261112.0721.3845`。业务执行以本轮所需 Skill 及参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
 
 读取脚本只向 stdout 返回结果，不创建 OFD 或磁盘结果。若需要保存 JSON，由宿主在已确认任务根目录安全创建新文件，不覆盖已有文件。输入路径、内部归档与受控临时工作区按原规则处理。
 
 Python 模块拆分及文件行数规则见 [行数规范与重构记录](../python-file-limit.md)；该记录保留其验收时的历史基线，不等同于当前版本重测。运行能力和安全边界不因拆分扩大。
 
+使用宿主 `read_file` 读取 OFD Skill 时优先从 `.skill` 目录定位；具体位置和相对基准以宿主提示或已确认信息为准，无法定位或读取时报告并停止依赖操作。
+
+宿主返回的 `/large_tool_results/` 是结果引用，仅使用宿主 `read_file` 和实际 schema 补读并核对覆盖；不交给 execute、cat、Shell 或 Python，不猜映射或使用路径掩码。读取工具缺失或结果不完整时报告缺口并停止依赖。普通业务文件和 Skill 资源仍遵循各自路径规则。
+
 ## 功能与适用范围
 
 OFD Skill 当前仅提供只读提取。创建、生成与编辑服务暂不对外提供。
 
-- **读取**：读取 OFD 1.0、1.1、1.2 的 XML 逻辑结构、存储文字来源和页面文字出现记录，并保留页面、模板、资源、注释、签名等相关结构证据。
+- **读取**：默认按页读取 OFD 1.0、1.1、1.2 的标题、正文和页码；明确要求时读取 XML 逻辑结构、存储文字来源和页面文字出现记录。支持页面/模板来源筛选及长段续读。默认响应仅保留标题、页文本及覆盖/续读/诊断；detail 可核对来源，范围读取不能替代完整结构检查。
 
 不提供第三方 OFD 编辑、OCR、密码解密、验签、PDF 转换或页面渲染。读取器的逻辑表格解析尚未实现，`tables` 固定为空。
 
@@ -22,15 +26,18 @@ flowchart TD
     B --> BC["ofd_common.py：安全输入、环境与共享预算"]
     B --> BP["ofd_package.py：ZIP/XML 容器与资源角色"]
     BP --> BC
-    B --> C["类型化引用：文档、页面、模板、资源"]
+    B -->|"显式 full 或结构投影"| C["类型化引用：文档、页面、模板、资源"]
     C --> D["ofd_structure.py：structure 与 text_sources"]
     C --> E["text_runs 与 objects：页面出现及存储节点交叉索引"]
     D --> F["ofd-read-3：状态、覆盖与诊断"]
     E --> F
-    F --> G["可选 ofd-view-1：概况或指定页"]
+    F --> G["ofd-view-1：完整读取后的概况/单页投影"]
+    B -->|"默认 reading"| R["轻量范围解析：选中文档、页、模板和复合依赖"]
+    R --> RR["ofd-content-2：按页连接文本与续读游标"]
+    R --> RD["显式 detail：逐条文字及来源"]
 ```
 
-`read_ofd.py` 保留原 CLI/API 和兼容导出，`read_ofd()` 构建业务结果。共享限制、异常和安全文件读取位于 `ofd_common.py`；`ofd_package.py` 的 `Package` 管理 ZIP 成员、引用解析、XML 缓存、资源角色和累计预算；`ofd_structure.py` 的 `catalogue_structure()` 将 XML 存储与页面出现拆开，避免把同一复合对象的多次出现误当重复数据而删除。四个文件随同一包发布，必须一起安装；仍使用标准库和隔离启动，不将任务目录加入模块搜索路径。
+`read_ofd.py` 的 CLI 和 `read_ofd()` 默认读取文本；`read_ofd_structure()` 和 `--view full` 保留原结构契约。`--capabilities` / `capabilities()` 返回接口版本2及默认行为，旧调用须按下文迁移。共享限制、异常和安全文件读取位于 `ofd_common.py`；`ofd_package.py` 的 `Package` 管理 ZIP 成员、引用解析、XML 缓存、资源角色和累计预算；`ofd_structure.py` 的 `catalogue_structure()` 将 XML 存储与页面出现拆开，避免把同一复合对象的多次出现误当重复数据而删除。四个文件随同一包发布，必须一起安装；仍使用标准库和隔离启动，不将任务目录加入模块搜索路径。
 
 运行包只包含读取器及必要资源，独立安装不依赖相邻 Skill。生成代码及资源保留在源码，暂不进入运行包。
 
@@ -38,7 +45,7 @@ flowchart TD
 
 | 源码 | 职责 |
 |---|---|
-| [read_ofd.py](../../skills/ofd/scripts/read_ofd.py) | 稳定只读 CLI/API、版本策略、页面与文字编排、输出投影和兼容导出 |
+| [read_ofd.py](../../skills/ofd/scripts/read_ofd.py) | 只读 CLI/API、显式结构兼容入口、版本策略、页面与文字编排、输出投影和兼容导出 |
 | [ofd_common.py](../../skills/ofd/scripts/ofd_common.py) | 共享限制与异常、环境自检、受限文件读取、包路径及 XML/文字原语 |
 | [ofd_package.py](../../skills/ofd/scripts/ofd_package.py) | ZIP/XML 安全解析、预算、引用与不透明载荷角色 |
 | [ofd_structure.py](../../skills/ofd/scripts/ofd_structure.py) | XML 存储目录、文字来源与页面出现交叉索引 |
@@ -49,9 +56,9 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["确认输入、任务目录与真实 Skill 位置"] --> C["读取自检"]
-    C --> D["读取结构及存储文字"]
+    C --> D["默认按页读取内容；明确要求时读取结构"]
     D --> E{"读取结果"}
-    E -->|"complete 或 partial"| F["按全局状态交付"]
+    E -->|"complete 或 partial"| F["按读取范围与状态交付"]
     E -->|"unsupported 或 failed"| G["报告原因，不交付累积正文"]
 ```
 
@@ -66,13 +73,16 @@ flowchart TD
 ```python
 execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" --check")
 execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view summary")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view page-text --document 1 --page 1")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --page 2")
+# 仅明确要求结构时
+execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view full")
 ```
 
 读取结果写入 stdout，不产生磁盘结果或解包文件；参数错误等诊断仍按入口契约使用 stderr。输入必须是任务目录内普通文件，拒绝绝对路径、父目录段和所有层级符号链接，通过目录描述符逐级读取并核对变化。Python API 默认允许调用方已授权的绝对路径；显式 `task_root` 才启用同类边界，不能利用默认 API 绕过宿主限制。
 
-[读取契约](../../skills/ofd/references/contract.md) 使用 `schema_version=ofd-read-3`：
+默认返回 `ofd-content-2`：可用文档标题、按页连接的文字，以及范围、来源指纹、状态、诊断和必要续读字段。`scope` 中含文档与页总数，`done` 仅指当前范围完成；调用方逐文档逐页核对覆盖。
+
+显式完整结构的[读取契约](../../skills/ofd/references/contract.md) 保留 `schema_version=ofd-read-3`：
 
 - `structure`、`text_sources`：已读取 XML 逻辑结构及存储的 TextCode 来源；结构覆盖、命名空间解析和文字解释分别报告。
 - `documents[].pages[].text_runs`：页面出现记录，保留来源、对象 ID、原始 TextCode、属性、模板标记、祖先及复合引用链。
@@ -94,17 +104,27 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.o
 | `failed` | 1 | 安全、结构、资源、路径、环境或 I/O 失败；丢弃累积正文 |
 | 参数错误 | 2 | argparse usage / stderr，不保证业务 JSON |
 
-只有 `PublicRes`、`DocumentRes`、`PageRes` 索引成员确实缺失才可恢复：记录 `resource_gaps` 并返回 partial，保留独立可读的 XML/文字。现存但损坏的索引、缺失资源载荷、非法路径、必需文档/页面/模板引用失败仍拒绝，不能搜索替代文件。空文本永不判为完整，扫描图像仅提示 OCR 需求，不自动执行 OCR。
+默认 reading 对缺失且所选页未使用的模板成员保留正文并返回 partial，诊断为 missing_unselected_template；所选页实际引用该模板仍失败。模板引用路径、目录目标、重复 ID 和引用预算仍校验，full 仍拒绝缺失模板。
+
+资源索引方面，只有 `PublicRes`、`DocumentRes`、`PageRes` 索引成员确实缺失才可恢复：记录 `resource_gaps` 并返回 partial，保留独立可读的 XML/文字。现存但损坏的索引、缺失资源载荷、非法路径、必需文档/页面/模板引用失败仍拒绝，不能搜索替代文件。空文本永不判为完整，扫描图像仅提示 OCR 需求，不自动执行 OCR。
 
 默认 `version-policy=known` 接受 1.0/1.1/1.2；显式 `compatible` 可尝试规定范围内未知 1.x 共同子集，但必须 partial。OFD-A 的存储读取不等于归档规范认证，详见 [兼容策略](../../skills/ofd/references/compatibility.md)。
 
-[输出视图](../../skills/ofd/references/output-views.md) 使用 `ofd-view-1`，保留全局状态和诊断。概况不含正文，`page-text` 只含指定文档/页出现记录；可用 `--source-sha256` 校验来源未变，并按文档index、page_count及响应scope核对所需页覆盖。顶层 `omitted_top_level_fields` 与文档/页 `omitted_fields` 表示未返回，不表示内容不存在。视图超预算明确failed/1，不裁剪文字或诊断后假报完整；它不是完整结构模型。
+[输出视图](../../skills/ofd/references/output-views.md) 说明默认 reading 的范围契约：直接传文件先读第 1 文档第 1 页，按文档和页范围解析必要 XML。content-2 将同页文字连接，一条记录只含 `page,character_offset,text`；不猜段落、空格或表格。需要来源时显式使用 `--reading-format detail`，保留 `ofd-reading-1` 的逐条记录。默认预算12000字符，含最终JSON末尾换行；长页使用游标续读。同来源、同代码、同详情的重复诊断合并并附次数，仍保持 partial。`page` 文字层仅排除模板来源，不证明正文语义或可见性。
+
+无视图参数 CLI 和 Python API 的默认值已经改变。结构消费方需使用 `--view full`、`read_ofd_structure()` 或 `read_ofd(..., view="full")`；显式结构 schema/字段未改变。旧 content-1 已升级到 content-2，页内偏移改为连接后页文本的偏移，旧 content 游标须从当前页重新开始；content/detail 之间也不混用游标。`summary`、`page-text` 和底层 `project_reading()` 的 detail 默认契约仍保留，前两者仍先做完整读取。
+
+reading 不创建 XML 事件清单、节点交叉索引、祖先属性及完整对象/资源目录，不读取无关页、注释和签名 XML。全量 ZIP 安全检查及所选 XML 的事件、节点、字符、展开限制仍执行；实际文字记录预算替代只适用于结构导出的保守展开估算。没有文档属性标题时返回 null，页面上的标题仍保留在文字中。
 
 ### 执行回传与大结果消费
 
 执行前置条件不变。取得结果后，先判断实际执行状态、退出码或未知状态、截断，再解析业务JSON；工具调用成功不等于业务成功。宿主若只有合并输出，不假设独立stdout/stderr字段。已核对的DeepAgents接口使用 `ExecuteResponse.output`、可为None的 `exit_code` 与 `truncated`；middleware可在模型文本追加状态/截断说明，工具 `status=success` 也可对应非零命令退出。包装文本不属于OFD JSON，须由宿主明确完整stdout边界后解析；回传边界不足时报告无法确认，不猜拆日志。
 
-按任务选summary、整页page-text或full。OFD没有页内游标或分段参数，单页/诊断超预算时只能在宿主可完整承载的前提下显式提高预算，或安全捕获一次完整full结果后由确定性程序消费，不能切到下一页就声称前页已读完。即使所有页文字均取得，非页面存储文字与XML仍未因此覆盖。后端截断、模型预览及文件捕获不完整分别核对；单行JSON不能用head/tail假装分页。保留原始JSON、来源、退出码和partial诊断，不为显示长度改写接口或省略错误。
+按任务选summary、整页page-text、精简reading或full。reading 支持页内游标；每次按原始SHA-256、文档/页范围及文字层校验，content 按页文本字符偏移续接，detail 按 TextCode 记录偏移续接；游标不能跨格式复用。仅当响应 `done=true` 才表示选中页范围文字已读完，不能据此声明全文件XML、安全内容、注释或签名已检查。reading 仍将整份输入字节与选中XML置于内存，不是全文件或单页流式读取。后端截断、模型预览及文件捕获不完整分别核对；单行JSON不能用head/tail假装分页。保留原始状态、来源、退出码和partial诊断，不省略错误。
+
+展示时可省略已确认的独立页眉、页脚和水印。保留原读取记录，以用户确认、明确的结构角色或已提供的版面材料定位具体出现位置。重复文字、模板来源或局部坐标仅供核对，无法确认时继续展示。
+
+正文任务遇到附属 XML 故障时，可改用 `reading` 独立读取目标页。遇到多页输出预算或可定位到个别页的故障，缩小范围重读，按来源指纹及页码核对后交付可靠文字，并标明缺页。文件级检查和所需公共依赖失败仍按读取契约处理。
 
 这些说明不新增落盘、缓存或执行器能力。需要结果文件时，由宿主独占写入本轮受控任务文件，保留独立诊断与完整捕获证据；没有该能力时如实报告范围和阻塞。源码审阅、本地CLI捕获和真实宿主/模型回传是不同验证层，不相互替代。
 
@@ -120,7 +140,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.o
 
 读取自检须返回退出 0 与 `environment-ok Python>=3.10 Expat>=2.6.0 stdlib-only`。这只是环境检查，`artifact_validation=not_run`。
 
-读取器当前上限包括原文件 64 MiB、4096 成员、单成员 16 MiB、总展开 128 MiB、单 XML 2 MiB、XML 总量 32 MiB，以及页数、节点、深度、引用和输出预算。触发安全/资源上限不得以部分成功规避，详见 [边界说明](../../skills/ofd/references/boundaries.md) 与 `LIMITS`。
+读取器当前上限包括原文件 64 MiB、4096 成员、单成员 16 MiB、总展开 128 MiB、单 XML 2 MiB、XML 总量 32 MiB，以及页数、节点、深度、引用和输出预算。reading 依然完整读取输入字节并检查所有ZIP成员元数据，然后只解析所选文档、页及必要依赖；未读 XML 的内容、CRC和引用不属于验收范围。范围输入和选中页仍在内存，不是流式文件读取。触发安全/资源上限不得以部分成功规避，详见 [边界说明](../../skills/ofd/references/boundaries.md) 与 `LIMITS`。
 
 维护分发使用仓库 `tools/package_skills.py`（或兼容入口 `tools/package_ofd.py`）。历史生成记录不代表当前服务可用。
 
@@ -141,6 +161,10 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.o
 
 验证记录（2026-11-10）：以远端主干 293a8ac 为基线，在 Linux/Python 3.12.14/Expat 2.8.3 和 macOS/Python 3.12.12/Expat 2.6.3 分别运行 OFD 严格结构检查、160 项 OFD 回归与 11 项独立包回归，均通过；示例使用已确认的 Python 路径执行，原生 Shell 环境未提供可用的 `python` 命令。覆盖旧文件参数、stdin 边界与错误、复杂中文引号和 Shell 字符、partial 以及截断模拟。不代表真实宿主或模型已验证参数与结果回传，也不代表客户端视觉验收。Pylint 在两台环境均未安装，本次未执行。
 
+
+### 2026-11-11 默认文本重构
+
+本轮接口迁移、合成回归、已有验收样本文字核对及未验证范围见 [默认文本重构记录](../maintenance/ofd/default-content-refactor-20261111.md)。旧历史记录保留原测试基线。
 
 ### 历史：2026-11-10 描述与读取路径优化
 

@@ -27,7 +27,7 @@ class CompatibilityTests(unittest.TestCase):
 
     def read(self, files, **options):
         BASE.write_package(self.path, files)
-        return READER.read_ofd(self.path, **options)
+        return READER.read_ofd_structure(self.path, **options)
 
     def files(self, version='1.0', doc_type='OFD'):
         files = BASE.fixture()
@@ -161,7 +161,7 @@ class CompatibilityTests(unittest.TestCase):
                 ('1.7', ['--version-policy', 'compatible'], 3)):
             BASE.write_package(self.path, self.files(version))
             completed = subprocess.run(
-                [sys.executable, '-I', '-S', '-B', str(target), 'input.ofd'] + options,
+                [sys.executable, '-I', '-S', '-B', str(target), 'input.ofd', '--view', 'full'] + options,
                 cwd=self.path.parent, capture_output=True, text=True, check=False)
             self.assertEqual(completed.returncode, expected, completed.stderr)
             result = json.loads(completed.stdout)

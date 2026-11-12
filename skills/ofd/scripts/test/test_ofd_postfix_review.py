@@ -64,7 +64,7 @@ class OfdIndependentPostfixTests(unittest.TestCase):
         files['D/payload.xml'] = b'opaque attachment bytes, deliberately not XML'
         for order in itertools.permutations(('D/A.xml', 'D/payload.xml', 'D/P.xml')):
             with self.subTest(order=order), package(files, order) as (path, opened):
-                result = READER.read_ofd(path)
+                result = READER.read_ofd_structure(path)
                 self.assertNotIn('D/payload.xml', opened)
                 self.assertNotIn('D/payload.xml', result['parsed_xml'])
                 self.assertIn({'source': 'D/payload.xml', 'role': 'attachment', 'bytes': len(files['D/payload.xml'])},
@@ -77,7 +77,7 @@ class OfdIndependentPostfixTests(unittest.TestCase):
         files['Supplement.xml'] = text_page('附加存储文字')
         for order in itertools.permutations(('Extra.xml', 'Supplement.xml')):
             with self.subTest(order=order), package(files, order) as (path, opened):
-                result = READER.read_ofd(path)
+                result = READER.read_ofd_structure(path)
                 self.assertIn('Supplement.xml', opened)
                 self.assertEqual(result['structure']['opaque_payloads'], [])
                 self.assertTrue(any(item['source'] == 'Supplement.xml' and item['raw_text'] == '附加存储文字'
@@ -90,7 +90,7 @@ class OfdIndependentPostfixTests(unittest.TestCase):
         for order in itertools.permutations(('D/A.xml', 'D/P.xml')):
             with self.subTest(order=order), package(files, order) as (path, opened):
                 with self.assertRaisesRegex(READER.ReadError, 'conflicting XML part'):
-                    READER.read_ofd(path)
+                    READER.read_ofd_structure(path)
                 self.assertNotIn('D/P.xml', opened)
 
     def test_unknown_signed_value_does_not_hide_another_xml_member(self):
@@ -99,7 +99,7 @@ class OfdIndependentPostfixTests(unittest.TestCase):
         files['Supplement.xml'] = text_page('独立登记')
         for order in itertools.permutations(('Extra.xml', 'Supplement.xml')):
             with self.subTest(order=order), package(files, order) as (path, opened):
-                result = READER.read_ofd(path)
+                result = READER.read_ofd_structure(path)
                 self.assertIn('Supplement.xml', opened)
                 self.assertEqual(result['structure']['opaque_payloads'], [])
                 self.assertTrue(any(item['text'] == '独立登记' for item in result['text_sources']))
@@ -109,7 +109,7 @@ class OfdIndependentPostfixTests(unittest.TestCase):
         files['Extra.xml'] = xml('Signature', '<o:SignedValue>Supplement.xml</o:SignedValue>')
         files['Supplement.xml'] = text_page('存储文字')
         with package(files) as (path, opened):
-            result = READER.read_ofd(path)
+            result = READER.read_ofd_structure(path)
         self.assertIn('Supplement.xml', opened)
         self.assertEqual(result['structure']['opaque_payloads'], [])
 
@@ -122,7 +122,7 @@ class OfdIndependentPostfixTests(unittest.TestCase):
             files['D/R.xml'] = xml('Res', inner)
             files['D/font.xml'] = text_page('保留') if not valid else b'opaque font'
             with self.subTest(valid=valid), package(files) as (path, opened):
-                result = READER.read_ofd(path)
+                result = READER.read_ofd_structure(path)
                 self.assertEqual('D/font.xml' not in opened, valid)
                 self.assertEqual(any(item['source'] == 'D/font.xml' for item in result['structure']['opaque_payloads']), valid)
 

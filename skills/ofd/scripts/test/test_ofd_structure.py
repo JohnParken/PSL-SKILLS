@@ -34,7 +34,7 @@ class StructureTests(unittest.TestCase):
 
     def read(self, files=None):
         BASE.write_package(self.path, BASE.fixture() if files is None else files)
-        return READER.read_ofd(self.path)
+        return READER.read_ofd_structure(self.path)
 
     def part(self, result, source):
         return next(part for part in result['structure']['xml_parts'] if part['source'] == source)
@@ -118,7 +118,7 @@ class StructureTests(unittest.TestCase):
             return original(archive, name, *args, **kwargs)
 
         with mock.patch.object(READER.zipfile.ZipFile, 'open', new=track):
-            result = READER.read_ofd(self.path)
+            result = READER.read_ofd_structure(self.path)
         self.assertNotIn('Doc/payload.xml', opened)
         self.assertNotIn('Doc/payload.xml', result['parsed_xml'])
         self.assertIn({'source': 'Doc/payload.xml', 'role': 'attachment', 'bytes': len(files['Doc/payload.xml'])},
@@ -206,7 +206,7 @@ class StructureTests(unittest.TestCase):
 
         with mock.patch.object(READER.zipfile.ZipFile, 'open', new=track):
             with self.assertRaisesRegex(READER.ReadError, 'conflicting XML part'):
-                READER.read_ofd(self.path)
+                READER.read_ofd_structure(self.path)
         self.assertNotIn('Doc/Pages/P.xml', opened)
 
     def test_revision_only_storage_is_not_rejected_for_absent_active_docroot(self):

@@ -5,7 +5,7 @@
   "baseline_commit": "4b5a61f51d12d2a9d293898c2f862cbf7271dc8d",
   "after_source": "working tree; per-file SHA256 recorded",
   "platform": "Darwin",
-  "python": "3.12.12",
+  "python": "mixed: existing profiles 3.12.12; OFD profiles 3.14.10",
   "tokenizer": {
     "status": "not_measured",
     "reason": "No tokenizer requested; characters and bytes are not tokens."
@@ -1311,28 +1311,28 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 5933,
-            "bytes": 13314,
-            "sha256": "9d6e5e86873f2760b06c8772d8959084e7e01806c77c4723c66818b352996428",
+            "chars": 7511,
+            "bytes": 16490,
+            "sha256": "ebbd1aae6e44177867318d92f700a6abf136957490995334fa3924a223bb8138",
             "tokens": null
           },
           {
             "path": "ofd/references/output-views.md",
-            "chars": 3248,
-            "bytes": 7026,
-            "sha256": "4803c72124d1a2f674c132ddf29350ad110b78eb561a4aa7cb37321dab17035f",
+            "chars": 4675,
+            "bytes": 9817,
+            "sha256": "696242c7936a0adae45ed7debab735ada90170da0079e34ec594a33fb3db065e",
             "tokens": null
           }
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 9181,
-        "bytes": 20340,
+        "chars": 12186,
+        "bytes": 26307,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1770,
-        "bytes": 4263,
+        "chars": 4775,
+        "bytes": 10230,
         "tokens": null,
         "read_events": 0
       }
@@ -2330,21 +2330,21 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 5933,
-            "bytes": 13314,
-            "sha256": "9d6e5e86873f2760b06c8772d8959084e7e01806c77c4723c66818b352996428",
+            "chars": 7511,
+            "bytes": 16490,
+            "sha256": "ebbd1aae6e44177867318d92f700a6abf136957490995334fa3924a223bb8138",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 5933,
-        "bytes": 13314,
+        "chars": 7511,
+        "bytes": 16490,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -7890,
-        "bytes": -15486,
+        "chars": -6312,
+        "bytes": -12310,
         "tokens": null,
         "read_events": -1
       }
@@ -2387,35 +2387,35 @@
         "files": [
           {
             "path": "ofd/SKILL.md",
-            "chars": 5933,
-            "bytes": 13314,
-            "sha256": "9d6e5e86873f2760b06c8772d8959084e7e01806c77c4723c66818b352996428",
+            "chars": 7511,
+            "bytes": 16490,
+            "sha256": "ebbd1aae6e44177867318d92f700a6abf136957490995334fa3924a223bb8138",
             "tokens": null
           },
           {
             "path": "ofd/references/output-views.md",
-            "chars": 3248,
-            "bytes": 7026,
-            "sha256": "4803c72124d1a2f674c132ddf29350ad110b78eb561a4aa7cb37321dab17035f",
+            "chars": 4675,
+            "bytes": 9817,
+            "sha256": "696242c7936a0adae45ed7debab735ada90170da0079e34ec594a33fb3db065e",
             "tokens": null
           },
           {
             "path": "ofd/references/boundaries.md",
-            "chars": 3092,
-            "bytes": 6647,
-            "sha256": "b2fa8cf34a3378b4595c675b7c43d6060d672bc90a80413049b8d311794fb876",
+            "chars": 3709,
+            "bytes": 8128,
+            "sha256": "fbcb2c3e088801a3aca58793db2ef2082c122522d1f9f42e8d1d6831a39dc842",
             "tokens": null
           }
         ],
         "read_events": 3,
         "unique_files": 3,
-        "chars": 12273,
-        "bytes": 26987,
+        "chars": 15895,
+        "bytes": 34435,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1677,
-        "bytes": 4100,
+        "chars": 5299,
+        "bytes": 11548,
         "tokens": null,
         "read_events": 0
       }
