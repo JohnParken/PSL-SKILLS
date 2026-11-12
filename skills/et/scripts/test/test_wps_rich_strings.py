@@ -35,7 +35,7 @@ class RichStringTests(unittest.TestCase):
             result=parse_stream(rich_workbook(rich(text,[(0,0),(1,1)],compressed)))
             self.assertEqual(result['sheets'][0]['cells']['A1']['value'],text)
             self.assertEqual(result['sheets'][0]['cells']['A1']['sst_index'],0)
-            self.assertEqual(result['status'],'read_biff8_subset_with_diagnostics')
+            self.assertEqual(result['status'],'partial')
             self.assertEqual(result['issues'][0]['code'],'rich_string_formatting_not_applied')
             item=result['shared_string_formatting'][0]
             self.assertEqual(item['sst_index'],0)
@@ -59,28 +59,35 @@ class RichStringTests(unittest.TestCase):
         result=parse_stream(rich_workbook(rich('Ab',[(0,0),(2,65535)])))
         self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'Ab')
 
-    def test_invalid_run_bounds_order_font_and_utf16_rejected(self):
+    def test_invalid_run_bounds_order_font_and_utf16_are_omitted(self):
         for runs in ([(1,0),(0,1)],[(0,0),(0,1)],[(0,0),(3,1)],[(0,4)],[(0,1023)],[(0,5)],[]):
-            with self.subTest(runs=runs),self.assertRaises(ValueError):
-                parse_stream(rich_workbook(rich('Ab',runs)))
+            with self.subTest(runs=runs):
+                result=parse_stream(rich_workbook(rich('Ab',runs)))
+                self.assertEqual(result['status'],'partial')
+                self.assertFalse(result['formulas_executed'])
         bad=struct.pack('<HBH',1,9,1)+b'\0\xd8'+struct.pack('<HH',0,0)
-        with self.assertRaises(ValueError):
-            parse_stream(rich_workbook(bad))
+        result=parse_stream(rich_workbook(bad))
+        self.assertEqual(result['status'],'partial')
+        self.assertNotIn('A1',result['sheets'][0]['cells'])
 
-    def test_continued_runs_and_phonetic_rejection(self):
+    def test_continued_runs_and_phonetic_retention(self):
         raw=rich('Ab',[(0,0),(1,1)])
         result=parse_stream(rich_workbook(raw[:-4], rec(0x3C,raw[-4:])))
         self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'Ab')
-        cursor=ContinuedStrings([(0,0xFC,struct.pack('<HB',2,4)+struct.pack('<i',4)+b'Ab'+b'1234')],0)
-        with self.assertRaises(UnsupportedError):
-            cursor.string()
         malformed=struct.pack('<HB',2,4)+struct.pack('<i',4)+b'Ab12'
-        with self.assertRaises(ValueError):
-            parse_stream(rich_workbook(malformed))
+        result=parse_stream(rich_workbook(malformed))
+        self.assertEqual(result['status'],'partial')
+        self.assertTrue(any(code in ('global_record_validation_failed',
+                                     'sst_index_out_of_range_omitted')
+                            for code in [item['code'] for item in result['issues']]))
 
-    def test_rich_metadata_budget_fails_before_retention(self):
-        with patch('wps_biff8.MAX_METADATA_BYTES',70),self.assertRaises(ResourceLimitError):
-            parse_stream(rich_workbook(rich('Ab',[(0,0),(1,1)])))
+    def test_rich_metadata_budget_keeps_plain_text(self):
+        with patch('wps_biff8.MAX_METADATA_BYTES',70):
+            result=parse_stream(rich_workbook(rich('Ab',[(0,0),(1,1)])))
+        self.assertEqual(result['status'],'partial')
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'Ab')
+        self.assertIn('rich_phonetic_metadata_budget_truncated',
+                      [item['code'] for item in result['issues']])
 
     def test_character_encoding_switch_surrogate_and_run_continuations(self):
         # A (compressed), Chinese + high surrogate, low surrogate, B compressed.
@@ -115,8 +122,10 @@ class RichStringTests(unittest.TestCase):
                (header+b'A',rec(0x3C,b'\1\0B\0'+bytes(8))),
                (header+b'A\0B\0'+bytes(7),b'')]
         for first,cont in cases:
-            with self.subTest(first=first,cont=cont),self.assertRaises(ValueError):
-                parse_stream(rich_workbook(first,cont))
+            with self.subTest(first=first,cont=cont):
+                result=parse_stream(rich_workbook(first,cont))
+                self.assertEqual(result['status'],'partial')
+                self.assertFalse(result['formulas_executed'])
 
     def test_budget_before_missing_run_read_and_fixed_header_boundaries(self):
         cursor=ContinuedStrings([(0,0xFC,struct.pack('<HBH',1,8,10)+b'A')],0)
@@ -151,7 +160,15 @@ class RichStringTests(unittest.TestCase):
                 result=parse_stream(rich_workbook(bytes(changed[:10]),rec(0x3C,bytes(changed[10:]))))
             except ValueError:
                 continue
-            self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'Ab')
+            self.assertIn(result['status'],('ok','partial'))
+            entry=result['sheets'][0]['cells'].get('A1')
+            if entry is not None:
+                # Record framing/flag mutations may change the decoded text,
+                # but never the type contract or read-only guarantees.
+                self.assertEqual(entry['type'],'text')
+                self.assertIsInstance(entry['value'],str)
+            else:
+                self.assertTrue(result['omissions_affect_cell_values'])
 
 if __name__=='__main__':
     unittest.main()

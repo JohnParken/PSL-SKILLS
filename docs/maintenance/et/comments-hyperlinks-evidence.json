@@ -1,0 +1,33 @@
+{
+  "sources": [
+    {
+      "name": "MS-XLS HLink",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/f0b9de34-b147-4f96-a1a3-ac21f6fd48fa"
+    },
+    {
+      "name": "MS-XLS HLinkTooltip",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/e85d171a-9138-44bb-8e53-9cef48abbc0e"
+    },
+    {
+      "name": "MS-OSHARED Hyperlink Object",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-oshared/c0437222-4868-4660-81f8-6b7ee236d3f8"
+    },
+    {
+      "name": "MS-OSHARED HyperlinkString",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-oshared/1a9f6231-df63-4a95-b998-5c2b95b82965"
+    },
+    {
+      "name": "MS-XLS Ref8U",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/809af298-1e4f-499f-9bca-3cd1021f4934"
+    },
+    {
+      "name": "MS-XLS FrtRefHeaderNoGrbit",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/837c2085-a74b-497d-bfb3-7e85a611fcf0"
+    },
+    {
+      "name": "MS-XLS record type table",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/7d9326d6-691a-4fa1-8dce-42082f38e943"
+    }
+  ],
+  "scope": "Bounded saved BIFF8 Note comments and HLink/HLinkTooltip metadata only; targets never resolved, followed or fetched; synthetic regression only, no real WPS sample."
+}

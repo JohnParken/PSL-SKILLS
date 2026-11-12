@@ -2,15 +2,17 @@
   "component": "wps_read_view.py",
   "source_repository_path": "skills/wps/scripts/wps_read_view.py",
   "source_version": "20261107.1827.5323",
-  "runtime_revision": "utf8-output-budget-v1",
+  "runtime_revision": "utf8-output-budget-v1-et64",
   "projection_revision": 2,
-  "sha256": "7fe372eed98ed89c9b430552e2c73efd5a292bbd94465ffc3ae06482175deab1",
+  "sha256": "2190b3cd203c5ff5927fd5a501afb57ec548d0a58468cce44f98af3530e0defa",
   "copies": [
     "skills/wps/scripts/wps_read_view.py",
     "skills/et/scripts/wps_read_view.py"
   ],
-  "intentional_differences": [],
+  "intentional_differences": [
+    "ET accepts max-output-bytes up to 64 MiB; WPS remains 16 MiB. Validation text matches each limit."
+  ],
   "dependencies": "local wps_access.ParseError; Python standard library; no sibling-skill import",
   "license": "Repository-authored runtime; no separate license declaration found for this component; no new license grant.",
-  "maintenance": "Update both copies together; run repository tests/test_read_view_copy.py and tests/test_read_view_budget.py."
+  "maintenance": "Keep shared logic identical except the documented ET byte ceiling and validation text; run tests/test_read_view_copy.py and tests/test_read_view_budget.py. ET overview fallback is composed separately in et_read_view.py."
 }

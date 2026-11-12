@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Synthetic MS-XLS record fixtures, never real Excel/WPS acceptance samples."""
+"""Synthetic MS-XLS record fixtures, never real Excel/WPS acceptance samples.
+
+The reader has one tolerant policy: stored cell values are returned whenever
+they can be framed, while non-value problems become bounded ``issues`` and a
+``partial`` status. These tests pin that contract, including the retained
+security refusals (encryption, bounded framing, no execution).
+"""
 from decimal import Decimal
 import json
 from pathlib import Path
@@ -69,6 +75,10 @@ def workbook(sheet_records=None,strings=None,date_system=0,extra_global=b'',name
     return globals_part+b''.join(bounds)+rec(0x000A)+b''.join(sheets)
 
 
+def issue_codes(result):
+    return [item.get('code') for item in result.get('issues', ())]
+
+
 class BiffTests(unittest.TestCase):
     def test_formula_text_transcribes_standalone_tokens_without_touching_cache(self):
         from et_table_preview import preview
@@ -92,6 +102,32 @@ class BiffTests(unittest.TestCase):
         self.assertEqual(projected['A']['formula_text'], '=(A1+$B$2)')
         self.assertNotIn('formula_text', projected['D'])
 
+    def test_formula_text_string_literals_are_quoted_and_escaped(self):
+        from et_table_preview import preview
+        from read_et import read_bytes
+
+        def ptgstr(text, high=False):
+            raw = text.encode('utf-16le') if high else bytes(ord(c) for c in text)
+            return b'\x17' + bytes([len(text), 1 if high else 0]) + raw
+
+        literal = ptgstr('A"B') + ptgstr('CD') + b'\x03'
+        wide = ptgstr('中文"引号', high=True)
+        truncated = b'\x17\x05\x00AB'
+        records = b''.join(formula(0, col, struct.pack('<d', 0), tokens=tokens)
+                           for col, tokens in enumerate((literal, wide, truncated)))
+        result = read_bytes(synthetic_cfb({'Workbook': workbook(sheet_records=[records])}))
+        cells = result['sheets'][0]['cells']
+        self.assertEqual(cells['A1']['formula']['formula_text'],
+                         '=("A""B"+"CD")')
+        self.assertEqual(cells['B1']['formula']['formula_text'], '="中文""引号"')
+        self.assertNotIn('formula_text', cells['C1']['formula'])
+        self.assertTrue(all(item['value'] == Decimal(0)
+                            for item in (cells['A1'], cells['B1'], cells['C1'])))
+        self.assertFalse(result['formulas_executed'])
+        projected = preview(result, {'sheet': '中文表1', 'range': 'A1:C1'})['rows'][0]['cells']
+        self.assertEqual(projected['A']['formula_text'], '=("A""B"+"CD")')
+        self.assertNotIn('formula_text', projected['C'])
+
     def test_typed_cells_chinese_exact_binary_and_long_text_id(self):
         result=parse_stream(workbook())
         cells=result['sheets'][0]['cells']
@@ -108,6 +144,7 @@ class BiffTests(unittest.TestCase):
         self.assertEqual(result['sheets'][1]['cells'],{})
         self.assertTrue(result['biff_parsed'])
         self.assertFalse(result['native_et_ett_parsed'])
+        self.assertEqual(result['status'],'ok')
 
     def test_date_system_raw_serial_and_format_preserved_no_fake_1900_date(self):
         for system in (0,1):
@@ -133,92 +170,123 @@ class BiffTests(unittest.TestCase):
         self.assertEqual(cells['E4']['cache_status'],'unverified_empty_string')
         self.assertEqual(cells['F4']['value'],True)
         self.assertFalse(result['formulas_executed'])
-        self.assertTrue(all(cells[address]['formula']['cache_may_be_stale'] for address in ('B4','C4','D4','E4','F4')))
+        self.assertTrue(all(cells[address]['formula']['cache_may_be_stale'] for address in ('B4','C4','E4','F4')))
 
-    def test_missing_string_cache_is_explicit_not_zero_or_empty(self):
+    def test_missing_string_cache_is_explicit_partial_not_zero_or_empty(self):
         result=parse_stream(workbook([formula(0,0,special(0))],strings=[]))
         value=result['sheets'][0]['cells']['A1']
         self.assertEqual(value['cache_status'],'missing')
         self.assertIsNone(value['value'])
-        self.assertEqual(result['status'],'read_biff8_subset_with_diagnostics')
-        self.assertEqual(result['issues'][0]['code'],'missing_formula_string_cache')
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('missing_formula_string_cache', issue_codes(result))
+        self.assertEqual(result['cell_value_coverage'],'missing_formula_caches')
 
-    def test_merge_bounds_and_no_expansion_or_data_erasure(self):
+    def test_merge_overlap_is_reported_without_erasing_cells(self):
         payload=rec(0x0203,cell(0,0)+struct.pack('<d',1))+rec(0x0203,cell(0,1)+struct.pack('<d',2))+rec(0x00E5,struct.pack('<5H',1,0,0,0,1))
         sheet=parse_stream(workbook([payload],strings=[]))['sheets'][0]
         self.assertEqual(sheet['merges'][0]['range'],'A1:B1')
         self.assertEqual(sheet['cells']['B1']['value'],2)
         bad=rec(0x00E5,struct.pack('<9H',2,0,1,0,1,1,2,1,2))
-        with self.assertRaisesRegex(ValueError,'Overlapping'):
-            parse_stream(workbook([bad],strings=[]))
+        from wps_biff8 import parse_stream as parse
+        result=parse(workbook([bad],strings=[]))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('merge_overlap_detected', issue_codes(result))
+        self.assertEqual(len(result['sheets'][0]['merges']),2)
 
-    def test_rk_float_integer_scaled_and_nonfinite(self):
+    def test_rk_float_integer_scaled_and_nonfinite_cell_is_omitted(self):
         self.assertEqual(rk_value(struct.pack('<I',0x3FF00000)),1)
         self.assertEqual(rk_value(struct.pack('<I',0x3FF00001)),Decimal('.01'))
         with self.assertRaises(ValueError):
             rk_value(struct.pack('<I',0x7FF00000))
         bad=rec(0x0203,cell(0,0)+struct.pack('<d',float('nan')))
-        with self.assertRaisesRegex(ValueError,'Nonfinite'):
-            parse_stream(workbook([bad],strings=[]))
+        good=rec(0x0203,cell(0,1)+struct.pack('<d',2.5))
+        result=parse_stream(workbook([bad+good],strings=[]))
+        self.assertEqual(result['status'],'partial')
+        self.assertEqual(result['sheets'][0]['cells']['B1']['value'],2.5)
+        self.assertNotIn('A1',result['sheets'][0]['cells'])
+        self.assertIn('nonfinite_number_omitted',issue_codes(result))
+        self.assertTrue(result['omissions_affect_cell_values'])
+        self.assertEqual(result['omitted_cell_records'],1)
 
-    def test_unknown_encrypted_continued_shared_and_external_records_fail(self):
-        for kind in (0x7777,0x003C,0x002F,0x01AE,0x0017,0x04BC,0x0221):
-            with self.assertRaises(ValueError):
-                parse_stream(workbook([rec(kind)],strings=[]))
-        with self.assertRaisesRegex(ValueError,'Shared'):
-            parse_stream(workbook([formula(0,0,struct.pack('<d',1),8)],strings=[]))
-        with self.assertRaises(ValueError):
-            parse_stream(workbook([rec(0x0207,string('orphan'))],strings=[]))
+    def test_unknown_continued_shared_and_external_records_degrade_to_partial(self):
+        for kind,payload in ((0x7777,b'opaque'),(0x01AE,b'\x01\x00\x01\x04'),
+                             (0x0017,b'\x01\x00\x00\x00\x00\x00\x00\x00')):
+            with self.subTest(kind=hex(kind)):
+                result=parse_stream(workbook([rec(kind,payload)],strings=[]))
+                self.assertEqual(result['status'],'partial')
+                self.assertFalse(result['formulas_executed'])
+                self.assertFalse(result['external_links_followed'])
+        result=parse_stream(workbook([rec(0x0207,string('orphan'))],strings=[]))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('unknown_biff_record_salvaged',issue_codes(result))
 
-    def test_signature_version_offsets_names_dialog_and_truncation_fail(self):
+    def test_signature_version_hard_framing_and_tolerated_name_dialog_cases(self):
         original=workbook()
         with self.assertRaises(ValueError):
             parse_stream(b'not BIFF')
-        for data in (original[:-1],original[:3],original+rec(0x000A)):
-            with self.assertRaises(ValueError):
-                parse_stream(data)
+        with self.assertRaises(ValueError):
+            parse_stream(original[:3])
         data=bytearray(original)
         struct.pack_into('<H',data,4,0x0500)
         with self.assertRaisesRegex(ValueError,'version'):
             parse_stream(bytes(data))
+        # A BoundSheet8 offset that no longer matches a record boundary is a
+        # tolerant diagnostic: the sheet is represented without cells.
         data=bytearray(original)
-        # Locate by records rather than relying on a particular Unicode name length.
         position=0
         while struct.unpack_from('<H',data,position)[0]!=0x0085:
             position+=4+struct.unpack_from('<H',data,position+2)[0]
         struct.pack_into('<I',data,position+4,1)
-        with self.assertRaisesRegex(ValueError,'offset'):
-            parse_stream(bytes(data))
-        with self.assertRaisesRegex(ValueError,'name'):
-            parse_stream(workbook(names=['same','same']))
-        with self.assertRaises(ValueError):
-            parse_stream(workbook(names=['bad/name','okay']))
-        with self.assertRaises(ValueError):
-            parse_stream(workbook([rec(0x0081,struct.pack('<H',16))],strings=[]))
+        result=parse_stream(bytes(data))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('worksheet_offset_unmatched',issue_codes(result))
+        result=parse_stream(workbook(names=['same','same']))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('worksheet_name_duplicate',issue_codes(result))
+        result=parse_stream(workbook(names=['bad/name','okay']))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('worksheet_name_invalid',issue_codes(result))
+        result=parse_stream(workbook([rec(0x0081,struct.pack('<H',16))],strings=[]))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('wsbool_duplicate',issue_codes(result))
 
-    def test_sst_compressed_unicode_bad_index_rich_and_style_refs(self):
+    def test_sst_compressed_unicode_bad_index_rich_and_style_refs_tolerated(self):
         result=parse_stream(workbook([rec(0x00FD,cell(0,0)+struct.pack('<I',0))],strings=['é😀中文']))
         self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'é😀中文')
-        for payload in [rec(0x00FD,cell(0,0)+struct.pack('<I',999)),rec(0x0201,cell(0,0,999)),rec(0x0203,cell(0,256)+struct.pack('<d',1))]:
-            with self.assertRaises(ValueError):
-                parse_stream(workbook([payload]))
-        with self.assertRaisesRegex(ValueError,'Unsupported global'):
-            parse_stream(workbook(extra_global=rec(0x7777)))
+        for payload,code in [(rec(0x00FD,cell(0,0)+struct.pack('<I',999)),'sst_index_out_of_range_omitted'),
+                             (rec(0x0201,cell(0,0,999)),'xf_index_out_of_range_fallback'),
+                             (rec(0x0203,cell(0,256)+struct.pack('<d',1)),'cell_coordinate_out_of_range')]:
+            with self.subTest(code=code):
+                out=parse_stream(workbook([payload]))
+                self.assertEqual(out['status'],'partial')
+                self.assertIn(code,issue_codes(out))
+                self.assertTrue(out['omissions_affect_cell_values'])
+        result=parse_stream(workbook(extra_global=rec(0x7777,b'x')))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('unknown_biff_record_salvaged',issue_codes(result))
         from wps_biff8 import unicode_string
         self.assertEqual(unicode_string(string('é',compressed=True))[0],'é')
         with self.assertRaisesRegex(ValueError,'Rich'):
             unicode_string(struct.pack('<HB',1,9)+b'x')
 
-    def test_duplicate_cells_limits_and_known_metadata_retention(self):
+    def test_duplicate_cells_skipped_limits_and_known_metadata_retention(self):
         payload=rec(0x0201,cell(0,0))*2
-        with self.assertRaisesRegex(ValueError,'Duplicate cell'):
-            parse_stream(workbook([payload],strings=[]))
-        for limit,value in [('MAX_RECORDS',2),('MAX_CELLS',1),('MAX_MERGES',0),('MAX_METADATA_BYTES',0)]:
-            with patch('wps_biff8.'+limit,value):
-                with self.assertRaises(ValueError):
-                    parse_stream(workbook(extra_global=rec(0x0031,b'raw metadata')))
+        result=parse_stream(workbook([payload],strings=[]))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('duplicate_cell_omitted',issue_codes(result))
+        self.assertEqual(result['cell_count'],1)
+        with patch('wps_biff8.MAX_RECORDS',2),self.assertRaises(ValueError):
+            parse_stream(workbook(extra_global=rec(0x0031,b'raw metadata')))
+        with patch('wps_biff8.MAX_CELLS',1),self.assertRaises(ValueError):
+            parse_stream(workbook())
+        with patch('wps_biff8.MAX_METADATA_BYTES',0):
+            result=parse_stream(workbook(extra_global=rec(0x0031,b'raw metadata')))
+            self.assertEqual(result['status'],'partial')
+            self.assertIn('metadata_budget_truncated',issue_codes(result))
+            self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'部门')
         result=parse_stream(workbook(extra_global=rec(0x0031,b'raw metadata')))
-        self.assertEqual(result['uninterpreted_metadata'][0]['payload_hex'],b'raw metadata'.hex())
+        entry=next(item for item in result['uninterpreted_metadata'] if item['record_id']=='0x31')
+        self.assertEqual(entry['payload_hex'],b'raw metadata'.hex())
 
     def test_cfb_cli_synthetic_only_and_no_write_or_external_tools(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -238,8 +306,9 @@ class BiffTests(unittest.TestCase):
             self.assertEqual(header_run.returncode,0,header_run.stdout+header_run.stderr)
             self.assertEqual(len(json.loads(header_run.stdout)['header_schema']['columns']),3)
             path.write_bytes(synthetic_cfb({'Workbook':workbook(),'Book':workbook()}))
-            with self.assertRaisesRegex(ValueError,'exactly one'):
-                read_file(path)
+            multi=read_file(path)
+            self.assertEqual(multi['status'],'partial')
+            self.assertIn('multiple_workbook_streams',issue_codes(multi))
             path.write_bytes(synthetic_cfb({'EncryptionInfo':b'encrypted','Workbook':workbook()}))
             with self.assertRaisesRegex(ValueError,'Encrypted'):
                 read_file(path)
@@ -265,7 +334,77 @@ class BiffTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'Missing/error'):
             reconstruct_headers(result,'中文表1','A1:B2','1','cached')
 
-    def test_seeded_mutations_fail_closed_or_retain_unverified_flags(self):
+    def test_chart_macro_and_dialog_sheet_substreams_are_skipped_but_readable(self):
+        # Mutate the first BoundSheet8 dt byte: 1=macro, 2=chart, 6=VBA.
+        for sheet_type, code in ((1, 'macro_substream_skipped'),
+                                 (2, 'chart_substream_skipped'),
+                                 (6, 'vba_substream_skipped')):
+            with self.subTest(sheet_type=sheet_type):
+                data = bytearray(workbook())
+                position = 20
+                while struct.unpack_from('<H', data, position)[0] != 0x0085:
+                    position += 4 + struct.unpack_from('<H', data, position + 2)[0]
+                data[position + 4 + 5] = sheet_type
+                result = parse_stream(bytes(data))
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn(code, issue_codes(result))
+                self.assertEqual(result['skipped_substreams'][0]['type'],
+                                 {1: 'macro', 2: 'chart', 6: 'vba'}[sheet_type])
+                self.assertEqual(result['sheets'][1]['cells'], {})
+                self.assertFalse(result['formulas_executed'])
+                self.assertFalse(result['external_links_followed'])
+        # Dialog sheets are identified by the WsBool fDialog bit.
+        base = workbook(sheet_records=[rec(0x0203, cell(0, 0) + struct.pack('<d', 3))],
+                        strings=[])
+        marker = rec(0x0081, bytes(2))
+        at = base.index(marker)
+        dialog = bytearray(base)
+        dialog[at + 4:at + 6] = b'\x10\x00'
+        result = parse_stream(bytes(dialog))
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('dialog_sheet_substream', issue_codes(result))
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], 3)
+
+
+    def test_option_compatibility_is_reported_but_tolerant_reader_used(self):
+        result=parse_stream(workbook(),compatibility='strict')
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('compatibility_option_ignored',issue_codes(result))
+        self.assertEqual(len(result['sheets'][0]['cells']),18)
+        self.assertEqual(result['compatibility_mode'],'strict')
+        self.assertEqual(result['reading_policy'],'tolerant')
+        result=parse_stream(workbook(),salvage_unknown_metadata=True)
+        self.assertIn('salvage_option_ignored',issue_codes(result))
+        self.assertTrue(result['salvage_requested'])
+
+    def test_zero_and_nonzero_unbound_tails_are_retained_with_diagnostics(self):
+        base=workbook()
+        zero=parse_stream(base+bytes(16))
+        self.assertEqual(zero['status'],'partial')
+        self.assertIn('zero_trailing_bytes_ignored',issue_codes(zero))
+        self.assertEqual(len(zero['sheets'][0]['cells']),18)
+        nonzero=parse_stream(base+rec(0x7777,b'tail'))
+        self.assertEqual(nonzero['status'],'partial')
+        self.assertIn('unbound_trailing_records_retained',issue_codes(nonzero))
+        tail=[item for item in nonzero['uninterpreted_metadata'] if item['scope']=='trailing']
+        self.assertEqual(bytes.fromhex(tail[0]['payload_hex']),b'tail')
+        unframed=parse_stream(base+b'\x77\x77\x99')
+        self.assertEqual(unframed['status'],'partial')
+        self.assertIn('biff_unframed_tail_retained',issue_codes(unframed))
+        self.assertEqual(bytes.fromhex(next(item for item in unframed['uninterpreted_metadata']
+                                            if item['name']=='UnboundTailOpaque')['payload_hex']),
+                         b'\x77\x77\x99')
+
+    def test_unknown_record_absorbs_immediate_continue_chain(self):
+        raw=workbook(extra_global=rec(0x7777,b'ab')+rec(0x003C,b'cd'))
+        result=parse_stream(raw)
+        self.assertEqual(result['status'],'partial')
+        self.assertEqual(result['salvage_continue_record_count'],1)
+        entry=next(item for item in result['uninterpreted_metadata']
+                   if item['name']=='UnknownBIFFSalvaged')
+        self.assertEqual(bytes.fromhex(entry['payload_hex']),b'abcd')
+
+    def test_seeded_mutations_never_crash_and_never_claim_execution(self):
         original=workbook()
         randomizer=random.Random(254)
         for _ in range(100):
@@ -278,6 +417,7 @@ class BiffTests(unittest.TestCase):
                 continue
             self.assertFalse(result['native_et_ett_parsed'])
             self.assertFalse(result['formulas_executed'])
+            self.assertIn(result['status'],('ok','partial'))
 
 
 if __name__=='__main__':

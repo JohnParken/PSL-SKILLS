@@ -32,6 +32,29 @@ def _cell(row, column):
             + ('' if column & 0x8000 else '$') + str(row + 1))
 
 
+def _string_literal(tokens, index):
+    """Decode one PtgStr ShortXLUnicodeString operand and quote it safely.
+
+    Formula text uses Excel string-literal syntax: surrounding double quotes and
+    inner quotes doubled. No evaluation or formula injection is introduced.
+    """
+    if index + 2 > len(tokens):
+        raise ValueError('Truncated PtgStr header')
+    count = tokens[index]
+    flags = tokens[index + 1]
+    index += 2
+    high_byte = bool(flags & 1)
+    byte_count = count * (2 if high_byte else 1)
+    if index + byte_count > len(tokens):
+        raise ValueError('Truncated PtgStr characters')
+    raw = tokens[index:index + byte_count]
+    if high_byte:
+        text = raw.decode('utf-16le')
+    else:
+        text = ''.join(chr(value) for value in raw)
+    return '"' + text.replace('"', '""') + '"', index + byte_count
+
+
 def _call(stack, name, count):
     if count > len(stack):
         raise ValueError('Not enough formula operands')
@@ -55,6 +78,8 @@ def _expression(tokens):
         elif code in (0x12, 0x13, 0x14, 0x15):
             item = stack.pop()
             value = {0x12: f'(+{item})', 0x13: f'(-{item})', 0x14: f'({item}%)', 0x15: f'({item})'}[code]
+        elif code == 0x17:
+            value, index = _string_literal(tokens, index)
         elif code == 0x19 and tokens[index:index + 1] == b'\x10' and index + 3 <= len(tokens):
             value = _call(stack, 'SUM', 1)
             index += 3

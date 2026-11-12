@@ -28,42 +28,68 @@ def template_globals(marker=True, link=b'\x01\x00\x01\x04',
 class TemplateMetadataTests(unittest.TestCase):
     def test_template_internal_print_area_retained_without_execution(self):
         data = workbook(sheet_records=[b''], names=['Sheet1'], extra_global=template_globals())
-        result = parse_stream(data, compatibility=MODE)
-        self.assertEqual([x['name'] for x in result['uninterpreted_metadata']],
-                         ['Template', 'SupBookSelf', 'ExternSheetInternal', 'PrintAreaStatic'])
-        self.assertFalse(result['formulas_executed'])
-        self.assertFalse(result['external_links_followed'])
-        self.assertFalse(result['native_et_ett_parsed'])
-        with self.assertRaises(ValueError):
-            parse_stream(data)
+        for mode in (None, MODE):
+            with self.subTest(mode=mode):
+                result = parse_stream(data, compatibility=mode)
+                names = [x['name'] for x in result['uninterpreted_metadata']]
+                for expected in ('Template', 'SupBookSelf',
+                                 'ExternSheetInternal', 'PrintAreaStatic'):
+                    self.assertIn(expected, names)
+                self.assertFalse(result['formulas_executed'])
+                self.assertFalse(result['external_links_followed'])
+                self.assertFalse(result['native_et_ett_parsed'])
+                self.assertEqual(result['status'], 'partial')
 
-    def test_external_addin_and_malformed_internal_links_rejected(self):
+    def test_external_addin_and_malformed_internal_links_degrade(self):
         for link in (b'\x01\x00\x01\x3a', b'\x01\x00\x03\x00abc', b''):
-            with self.subTest(link=link), self.assertRaises(ValueError):
-                parse_stream(workbook(extra_global=template_globals(link=link)), compatibility=MODE)
+            with self.subTest(link=link):
+                result = parse_stream(workbook(extra_global=template_globals(link=link)),
+                                      compatibility=MODE)
+                self.assertEqual(result['status'], 'partial')
+                self.assertFalse(result['external_links_followed'])
+                self.assertTrue([item for item in result['issues']
+                                 if item['code'] in ('link_metadata_invalid',
+                                                     'defined_name_retained_opaque')])
         for refs in (b'\x01\x00' + struct.pack('<Hhh', 1, 0, 0),
                      b'\x01\x00' + struct.pack('<Hhh', 0, -1, -1),
                      b'\x01\x00' + struct.pack('<Hhh', 0, 0, 5), b'\x02\x00' + bytes(6)):
-            with self.subTest(refs=refs), self.assertRaises(ValueError):
-                parse_stream(workbook(extra_global=template_globals(refs=refs)), compatibility=MODE)
+            with self.subTest(refs=refs):
+                result = parse_stream(workbook(extra_global=template_globals(refs=refs)),
+                                      compatibility=MODE)
+                self.assertEqual(result['status'], 'partial')
 
-    def test_macro_names_relative_areas_bad_scope_and_duplicates_rejected(self):
+    def test_macro_names_and_duplicate_markers_are_retained_with_diagnostics(self):
         base = (b'\x20\x00\x00\x01\x0b\x00\x00\x00' +
                 b'\x01\x00' + bytes(5) + b'\x06\x3b' +
                 struct.pack('<5H', 0, 0, 10, 0, 2))
         for offset, value in ((0, 0x28), (15, 1), (8, 0), (17, 1), (26, 0xC0)):
             area = bytearray(base)
             area[offset] = value
-            with self.subTest(offset=offset), self.assertRaises(ValueError):
-                parse_stream(workbook(extra_global=template_globals(area=bytes(area))), compatibility=MODE)
-        for extra in (rec(0x60), rec(0x60, b'x'), rec(0x1AE, b'\x01\x00\x01\x04'),
-                      rec(0x17, b'\x01\x00' + bytes(6)), rec(0x18, base)):
-            with self.subTest(extra=extra), self.assertRaises(ValueError):
-                parse_stream(workbook(extra_global=template_globals() + extra), compatibility=MODE)
+            with self.subTest(offset=offset):
+                result = parse_stream(workbook(extra_global=template_globals(area=bytes(area))),
+                                      compatibility=MODE)
+                self.assertEqual(result['status'], 'partial')
+                self.assertTrue([item for item in result['issues']
+                                 if item['code'] in ('defined_name_retained_opaque',
+                                                     'print_area_invalid',
+                                                     'name_scope_out_of_range')])
+        for extra, expected in ((rec(0x60), 'template_record_invalid'),
+                                (rec(0x60, b'x'), 'template_record_invalid'),
+                                (rec(0x1AE, b'\x01\x00\x01\x04'), 'link_metadata_invalid'),
+                                (rec(0x17, b'\x01\x00' + bytes(6)), 'link_metadata_invalid'),
+                                (rec(0x18, base), 'defined_name_duplicate')):
+            with self.subTest(extra=extra[:4]):
+                result = parse_stream(workbook(extra_global=template_globals() + extra),
+                                      compatibility=MODE)
+                self.assertEqual(result['status'], 'partial')
+                self.assertFalse(result['external_links_followed'])
 
-    def test_embedded_chart_records_still_rejected(self):
-        with self.assertRaisesRegex(ValueError, 'Unsupported global record 0xeb'):
-            parse_stream(workbook(extra_global=rec(0xEB, b'chart')), compatibility=MODE)
+    def test_invalid_drawing_group_is_retained_with_diagnostic(self):
+        result = parse_stream(workbook(extra_global=rec(0xEB, b'chart')), compatibility=MODE)
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('drawing_group_invalid',
+                      [item['code'] for item in result['issues']])
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
 
     def test_offline_verifier_rejects_missing_or_changed_originals(self):
         from verify_et_samples import verify

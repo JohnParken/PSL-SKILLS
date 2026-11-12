@@ -7,28 +7,33 @@ before using this reference; internal resources and task data have different pat
 
 ## Contents
 
-- Default data-policy acceptance (`docs/maintenance/et/et-real-validation.md#default-data-policy-acceptance`)
+- [Edge 新增八份政府公开 ET 原件审计（2026-11-12）](edge-real-samples-20261112.md)：独立核对 599 个非空值和 83 个缓存，发现 cUse=0 共享公式兼容性缺口；该缺口后续由 [ShrFmla cUse=0 兼容修复](shared-formula-zero-use-20261112.md) 处理，原始审计数字保留。以下四份固定集记录保留历史范围。
+- Default tolerance acceptance (`docs/maintenance/et/et-real-validation.md#default-tolerance-acceptance`)
 - Sources and scope (`docs/maintenance/et/et-real-validation.md#sources-and-scope`)
-- Historical explicit-legacy results (`docs/maintenance/et/et-real-validation.md#historical-explicit-legacy-results`)
+- Historical explicit-legacy results (superseded; retained for provenance) (`docs/maintenance/et/et-real-validation.md#historical-explicit-legacy-results`)
 - Reproduce offline (`docs/maintenance/et/et-real-validation.md#reproduce-offline`)
 - Remaining limits (`docs/maintenance/et/et-real-validation.md#remaining-limits`)
 - Independent source-value observations (`docs/maintenance/et/et-real-validation.md#independent-source-value-observations`)
 - Template compatibility iteration (`docs/maintenance/et/et-real-validation.md#template-compatibility-iteration-2026-11-03`)
 
-## Default data-policy acceptance
+## Default tolerance acceptance
 
-The four pinned originals also pass default file/API reading with partial/3, without
-explicit compatibility or chart flags. All 198 independently frozen stored values,
-including 33 unverified formula caches, match. Explicit strict still rejects all four.
-The original legacy-policy verifier remains available and still expects Schedule to
-be refused when its explicit legacy chart policy is reject. To verify default data:
+Current Skill version `20261111.1759.5400` reads the four pinned originals through the
+unified content-first tolerant policy with partial/3, without any compatibility or chart
+flags (those flags are deprecated no-ops). All 198 independently frozen stored values,
+including 33 unverified formula caches, match. The tolerant reader keeps Schedule.ett's
+retained chart bytes and returns partial with 343 cells, 12 formula caches and 1 chart;
+no rejection is expected any more, and no strict mode remains.
+
+To verify the tolerant reading path:
 
 ```console
-python -I -S -B "skills/et/scripts/test/verify_et_samples.py" ./samples --compatibility data
+python -I -S -B "skills/et/scripts/test/verify_et_samples.py" ./samples
 ```
 
 No original is rewritten or bundled; this is the same four-file provenance set and
-not a broader producer/version acceptance claim.
+not a broader producer/version acceptance claim. Cloud Linux and real WPS-native OOXML
+`.et` samples remain unverified.
 
 ## Sources and scope
 
@@ -47,16 +52,19 @@ included in this skill; runtime does not download files or use third-party softw
 
 ## Historical explicit-legacy results
 
-The historical comparison below uses explicit `--compatibility legacy_excel_clsid`. Schedule additionally
-requires `--chart-policy opaque` for successful worksheet extraction. Explicit strict
-mode still rejects these files at metadata records outside its smaller subset.
+The historical comparison below used explicit `--compatibility legacy_excel_clsid`.
+Schedule additionally required `--chart-policy opaque` for successful worksheet
+extraction, and explicit strict mode rejected these files at metadata records outside
+its smaller subset. The tolerant refactor supersedes this policy: both flags are now
+ignored no-ops and records are covered by default. The table is retained only to
+preserve the historical evidence and its provenance.
 
 | Original | Result | Evidence and limits |
 |---|---|---|
 | newfile.et | Extracted | Three empty sheets, zero cells; basic container/workbook coverage only |
 | Telephone List.ett | Extracted after fix | One sheet, 3,976 cells: 10 text and 3,966 blank; no formulas or merges |
 | Balance Sheet.ett | Extracted after fix | One sheet, 717 cells: 51 text, 71 numeric (including 21 formula caches), 595 blank; two merges |
-| Schedule.ett | Extracted with explicit opaque chart policy | 343 cells (277 blank, 18 text, 48 numeric including 12 caches), one merge; one chart retained as 125 records / 1530 bytes; explicit legacy policy with omitted chart option refuses |
+| Schedule.ett | Extracted (historical explicit policy) | 343 cells (277 blank, 18 text, 48 numeric including 12 caches), one merge; one chart retained as 125 records / 1530 bytes. Current tolerant default returns the same partial result without any flag |
 
 Before the fix, Template (0x0060) or SupBook (0x01AE) blocked the two now-readable
 ETT files. The reader now validates a narrow internal-reference/static-print-area
@@ -74,9 +82,10 @@ The blank ET provides no evidence for populated ET values, dates or formulas.
 
 ## Reproduce offline
 
-For current default data-policy acceptance use the command above. The following
-commands reproduce the historical explicit-legacy comparison, including its chart
-rejection; they are maintenance validation, not the normal user reading workflow.
+For current tolerant acceptance use the command above. The following commands are the
+historical explicit-legacy reproduction; the compatibility and chart flags are now
+deprecated no-ops and the historical chart rejection is no longer expected. They are
+maintenance validation, not the normal user reading workflow.
 
 Separately obtain the exact original files listed in the manifest, under its local
 filenames, in a task-relative directory such as `./samples`. Confirm inputs are
@@ -89,16 +98,19 @@ python3 -I -S -B "skills/et/scripts/test/verify_et_samples.py" ./samples --chart
 python3 -I -S -B "skills/et/scripts/read_et.py" ./samples/Balance_Sheet.ett --compatibility legacy_excel_clsid
 ```
 
-The verifier checks original hashes before parsing, expected extraction/rejection,
+The historical verifier checks original hashes before parsing, expected extraction/rejection,
 sheet/cell/merge/formula counts, title spot checks and input hashes after parsing.
 It also compares frozen typed values (`docs/maintenance/et/real-value-expectations.json`): 122 in Balance,
 66 in Schedule and 10 in Telephone List (79 text values and 119 numbers including
 33 formula caches). The empty ET has no stored-value observations. A wrong value,
 type, missing address or lost formula-cache provenance fails independently of counts.
-It is read-only and emits JSON to stdout. Exit 0 and `status: passed` mean the fixed
-sample expectations matched, including the expected Schedule rejection under the explicit legacy default chart policy; they do
-not mean every sample was readable. Missing or changed originals return exit 1. The opaque policy checks all four files
-for successful extraction and verifies the retained Schedule chart hash. See
+It is read-only and emits JSON to stdout. Exit 0 and `status: passed` mean the frozen
+sample expectations matched. Under the current tolerant policy the four files are
+expected to be partial rather than refused, so the old explicit-legacy rejection check
+no longer describes normal behavior; the historical verifier still records the earlier
+expected rejection for provenance. Missing or changed originals return exit 1. The
+tolerant default checks all four files for successful extraction and verifies the
+retained Schedule chart hash. See
 embedded chart scope (`skills/et/references/embedded-charts.md`) for its limits.
 
 ## Remaining limits

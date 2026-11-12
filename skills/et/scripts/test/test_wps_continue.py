@@ -60,15 +60,22 @@ class ContinueTests(unittest.TestCase):
         self.assertEqual(reader.output_text_units, 3)
         self.assertEqual(reader.cell_count, 2)  # pending cache cell; no text assigned
 
-    def test_malformed_continuations_fail_without_partial_result(self):
+    def test_malformed_continuations_are_retained_with_diagnostics(self):
         head=struct.pack('<IIHB',1,1,2,1)
         for parts in ([head+b'\x2d',b'\1\x4e\x2d\x4e'],[head+b'\x2d\x4e',b'\2xx'],[head+b'\x2d\x4e',b''],[head+b'\x2d\x4e',b'\1'],
                       [head+b'\x3d\xd8',b'\0A'],[head+b'\x2d\x4e'],[struct.pack('<II',1,1)+b'\2',b'\0\0AB']):
-            with self.subTest(parts=parts), self.assertRaises(ValueError):
-                parse_stream(build(parts))
-        # Orphan Continue after complete SST is not silently ignored.
-        with self.assertRaises(ValueError):
-            parse_stream(build([struct.pack('<IIHB',1,1,0,0),b'\0']))
+            with self.subTest(parts=parts):
+                result=parse_stream(build(parts))
+                self.assertEqual(result['status'],'partial')
+                self.assertTrue(any(code in ('global_record_validation_failed',
+                                             'sst_trailing_bytes_retained',
+                                             'unknown_biff_record_salvaged')
+                                    for code in [item['code'] for item in result['issues']]))
+        # Orphan Continue after a complete SST is retained raw, not ignored.
+        result=parse_stream(build([struct.pack('<IIHB',1,1,0,0),b'\0']))
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('sst_extra_continue_retained',
+                      [item['code'] for item in result['issues']])
 
 if __name__=='__main__':
     unittest.main()

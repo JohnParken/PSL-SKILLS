@@ -1,4 +1,9 @@
-"""Stored-value recovery only; synthetic inputs, not native WPS conformance."""
+"""Stored-value recovery only; synthetic inputs, not native WPS conformance.
+
+One tolerant policy: known/unknown metadata is retained raw, cell values and
+cache status are preserved, and hard refusals are limited to encryption, unsafe
+framing/allocation and resource budgets that protect output size.
+"""
 from decimal import Decimal
 import hashlib
 import json
@@ -14,12 +19,16 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from read_wps import read_bytes, read, ParseError
+from read_wps import read_bytes, read
 from wps_biff8 import parse_stream, read_file
 from test_wps_biff8 import workbook, rec, cell, formula, special
 from test_wps_cfb import synthetic_cfb
 from test_wps_legacy_compat import legacy_container
 from test_wps_embedded_charts import chart_workbook, CHART, DRAWING
+
+
+def issue_codes(result):
+    return [item.get('code') for item in result.get('issues', ())]
 
 
 class DataPolicyTests(unittest.TestCase):
@@ -50,26 +59,31 @@ class DataPolicyTests(unittest.TestCase):
         self.assertEqual(result['status'], 'partial')
         self.assertEqual([sheet['cells']['A1']['value'] for sheet in result['sheets']], [42, 42])
 
-    def test_explicit_strict_keeps_old_metadata_rejection(self):
+    def test_explicit_strict_is_tolerated_with_notice(self):
         data = synthetic_cfb({'Workbook': workbook(extra_global=rec(0xE1, b'x'))})
-        with self.assertRaises(ParseError):
-            read_bytes(data, compatibility='strict')
-        with self.assertRaises(ValueError):
-            parse_stream(workbook(extra_global=rec(0xE1, b'x')))
+        result = read_bytes(data, compatibility='strict')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('compatibility_option_ignored', issue_codes(result))
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+        result = parse_stream(workbook(extra_global=rec(0xE1, b'x')))
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('non_cell_metadata_not_decoded', issue_codes(result))
 
-    def test_only_evidenced_legacy_excel_guid_is_recognized(self):
+    def test_legacy_excel_guid_is_a_diagnostic_not_a_strict_mode(self):
         data = legacy_container({'Workbook': workbook()})
         result = read_bytes(data)
         self.assertEqual(result['status'], 'partial')
-        self.assertEqual(result['source']['container_compatibility'], 'legacy_excel_clsid')
-        with self.assertRaises(ParseError):
-            read_bytes(data, compatibility='strict')
+        self.assertEqual(result['source']['container_compatibility'], 'data')
+        strict = read_bytes(data, compatibility='strict')
+        self.assertEqual(strict['status'], 'partial')
+        self.assertIn('compatibility_option_ignored', issue_codes(strict))
         unknown = bytearray(data)
         unknown[8:24] = b'?' * 16
-        with self.assertRaises(ParseError):
-            read_bytes(bytes(unknown))
-        with self.assertRaises(ParseError):
-            read_bytes(legacy_container({'Workbook': workbook()}, major=4))
+        result = read_bytes(bytes(unknown))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+        result = read_bytes(legacy_container({'Workbook': workbook()}, major=4))
+        self.assertEqual(result['status'], 'partial')
 
     def test_default_chart_keeps_following_cells_and_uninterpreted_bytes(self):
         result = read_bytes(synthetic_cfb({'Workbook': chart_workbook()}))
@@ -78,8 +92,10 @@ class DataPolicyTests(unittest.TestCase):
         self.assertEqual(result['cell_count'], 1)
         self.assertEqual(result['embedded_charts'][0]['sha256'], hashlib.sha256(CHART).hexdigest())
         self.assertFalse(result['charts_decoded'])
-        with self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': chart_workbook()}), chart_policy='reject')
+        rejected = parse_stream(chart_workbook(), chart_policy='reject')
+        self.assertEqual(rejected['status'], 'partial')
+        self.assertIn('chart_policy_option_ignored', issue_codes(rejected))
+        self.assertEqual(len(rejected['embedded_charts']), 1)
 
     def test_unknown_records_preserve_values_and_uncertain_coverage(self):
         known_cell = rec(0x0203, cell(0, 0) + struct.pack('<d', 42))
@@ -97,36 +113,58 @@ class DataPolicyTests(unittest.TestCase):
                 self.assertTrue(result['omissions_affect_cell_values'])
                 issue = next(item for item in result['issues'] if item['code'] == 'unknown_biff_record_salvaged')
                 self.assertEqual((issue['scope'], issue['offset']), (scope, stream.index(unknown)))
-                with self.assertRaises(ParseError):
-                    read_bytes(raw, compatibility='strict')
         malformed_chart = chart_workbook(chart=CHART.replace(rec(0x1001, bytes(2)), unknown))
-        with self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': malformed_chart}))
+        result = read_bytes(synthetic_cfb({'Workbook': malformed_chart}))
+        self.assertEqual(result['sheets'][0]['cells']['A2']['value'], 42)
+        self.assertTrue(any(code.startswith('embedded_chart') for code in issue_codes(result)))
 
-    def test_encryption_truncation_and_bad_cell_remain_failures(self):
-        for stream in [workbook(extra_global=rec(0x2F, b'x')),
-                       workbook() + b'x', workbook([rec(0x203, cell(0, 0) + bytes(7))]),
-                       workbook([rec(0x203, cell(0, 0) + struct.pack('<d', float('nan')))])]:
-            with self.subTest(length=len(stream)), self.assertRaises(ParseError):
-                read_bytes(synthetic_cfb({'Workbook': stream}))
+    def test_encryption_is_hard_while_value_problems_degrade(self):
+        with self.assertRaises(ValueError):
+            read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x2F, b'x'))}))
+        result = read_bytes(synthetic_cfb({'Workbook': workbook() + b'x'}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+        result = read_bytes(synthetic_cfb({'Workbook': workbook([rec(0x203, cell(0, 0) + bytes(7))])}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue(result['omissions_affect_cell_values'])
+        result = read_bytes(synthetic_cfb({'Workbook': workbook([
+            rec(0x203, cell(0, 0) + struct.pack('<d', float('nan')))
+            + rec(0x203, cell(0, 1) + struct.pack('<d', 3))])}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['sheets'][0]['cells']['B1']['value'], 3)
+        self.assertIn('nonfinite_number_omitted', issue_codes(result))
 
-    def test_bad_chart_framing_is_not_swallowed(self):
-        with self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': chart_workbook(drawing=DRAWING[:-1])}))
+    def test_bad_chart_framing_keeps_later_cells(self):
+        result = read_bytes(synthetic_cfb({'Workbook': chart_workbook(drawing=DRAWING[:-1])}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['sheets'][0]['cells']['A2']['value'], 42)
+        self.assertIn('drawing_fragments_incomplete', issue_codes(result))
 
-    def test_external_link_and_macro_storage_still_fail(self):
-        for streams in [{'Workbook': workbook(extra_global=rec(0x1AE, b'external'))},
-                        {'Workbook': workbook(), 'VBA': b'not executed'}]:
-            with self.assertRaises(ParseError):
-                read_bytes(synthetic_cfb(streams))
+    def test_external_link_and_macro_storage_are_reported_not_followed(self):
+        for streams, expected in (({'Workbook': workbook(extra_global=rec(0x1AE, b'external'))},
+                                   'link_metadata_invalid'),
+                                  ({'Workbook': workbook(), 'VBA': b'not executed'},
+                                   'macro_storage_present_unloaded')):
+            with self.subTest(expected=expected):
+                result = read_bytes(synthetic_cfb(streams))
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn(expected, issue_codes(result))
+                self.assertFalse(result['external_links_followed'])
+                self.assertFalse(result['formulas_executed'])
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
 
-    def test_duplicate_cells_and_resource_budget_still_fail(self):
+    def test_duplicate_cells_degrade_and_resource_budgets_still_raise(self):
         duplicate = rec(0x203, cell(0, 0) + struct.pack('<d', 2)) * 2
-        with self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': workbook([duplicate], strings=[])}))
-        with patch('wps_biff8.MAX_METADATA_BYTES', 1), self.assertRaises(ParseError) as caught:
+        result = read_bytes(synthetic_cfb({'Workbook': workbook([duplicate], strings=[])}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('duplicate_cell_omitted', issue_codes(result))
+        with patch('wps_biff8.MAX_RECORDS', 2), self.assertRaises(ValueError):
             read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0xE1, b'xx'))}))
-        self.assertEqual(caught.exception.status, 'resource_limit')
+        with patch('wps_biff8.MAX_METADATA_BYTES', 1):
+            result = read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0xE1, b'xx'))}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('metadata_budget_truncated', issue_codes(result))
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
 
     def test_low_and_unified_file_apis_and_cli_agree_on_partial(self):
         data = legacy_container({'Workbook': workbook(extra_global=rec(0xE1, b'x'))})
@@ -142,8 +180,11 @@ class DataPolicyTests(unittest.TestCase):
                 self.assertEqual(process.returncode, 3, process.stderr)
                 self.assertEqual(json.loads(process.stdout)['status'], 'partial')
                 process = subprocess.run(command + ['--compatibility', 'strict'], capture_output=True, text=True, encoding='utf8')
-                self.assertEqual(process.returncode, 1)
-                self.assertNotIn('sheets', json.loads(process.stdout))
+                self.assertEqual(process.returncode, 3, process.stderr)
+                strict = json.loads(process.stdout)
+                self.assertEqual(strict['status'], 'partial')
+                self.assertIn('compatibility_option_ignored', issue_codes(strict))
+                self.assertEqual(strict['sheets'][0]['cells']['A1']['value'], '部门')
             self.assertEqual(path.read_bytes(), data)
 
     def test_missing_formula_cache_never_claims_complete_values(self):
@@ -158,6 +199,7 @@ class DataPolicyTests(unittest.TestCase):
         result = read_bytes(synthetic_cfb({'Workbook': workbook([b''], strings=[]), 'ETExtra': b'private'}))
         self.assertEqual(result['status'], 'partial')
         self.assertEqual(result['other_container_streams_not_decoded'][0]['path'], ['ETExtra'])
+        self.assertIn('other_container_streams_not_decoded', issue_codes(result))
         self.assertFalse(result['native_et_ett_parsed'])
 
     def test_basic_workbook_without_omissions_is_ok(self):

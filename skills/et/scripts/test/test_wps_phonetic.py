@@ -170,9 +170,11 @@ class PhoneticStringTests(unittest.TestCase):
 
         formula_string = struct.pack('<HB', 2, 4) + struct.pack('<i', 0) + b'AB'
         sheet = formula(0, 0, special(0)) + rec(0x0207, formula_string)
-        with self.assertRaises(UnsupportedError):
-            parse_stream(workbook(b'', total=0, unique=0,
-                                  sheet_records=sheet))
+        result = parse_stream(workbook(b'', total=0, unique=0,
+                                       sheet_records=sheet))
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('missing_formula_string_cache',
+                      [item['code'] for item in result['issues']])
 
         cursor = ContinuedStrings([
             (100, 0xFC, struct.pack('<HB', 2, 0) + b'A'),
@@ -212,9 +214,12 @@ class PhoneticStringTests(unittest.TestCase):
         self.assertEqual(len(result['shared_string_phonetics']), 2048)
 
         rejected = parts(2049)
-        with self.assertRaises(ResourceLimitError):
-            parse_stream(workbook(rejected[0], rejected[1:],
-                total=2049, unique=2049, sheet_records=b''))
+        result = parse_stream(workbook(rejected[0], rejected[1:],
+            total=2049, unique=2049, sheet_records=b''))
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('rich_phonetic_metadata_budget_truncated',
+                      [item['code'] for item in result['issues']])
+        self.assertLess(len(result['shared_string_formatting']), 2049)
 
 
 if __name__ == '__main__':

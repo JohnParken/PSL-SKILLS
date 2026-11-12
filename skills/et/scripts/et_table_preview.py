@@ -39,7 +39,9 @@ def preview(result, query):
     total = len(table['rows'])
     more = offset + len(rows) < total
     page_coordinates = {cell['coordinate'] for row in rows for cell in row['cells'].values()}
-    return {'schema_version': 'et_table_preview_v1', 'status': result['status'], 'partial': result['status'] == 'partial',
+    partial = result['status'] == 'partial' or bool(table['merge_issues'])
+    return {'schema_version': 'et_table_preview_v1', 'status': 'partial' if partial else 'ok', 'partial': partial,
+            'preview_issues': table['merge_issues'],
             'source': source_context(result), 'query': deepcopy(query), 'columns': table['columns'], 'rows': rows,
             'merges': [{**merge, 'anchor_in_page': merge['anchor'] in page_coordinates} for merge in table['merges']],
             'scope': {'sheet': query['sheet'], 'range': query['range'], 'merges_scope': 'entire selected rectangle',

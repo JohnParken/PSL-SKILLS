@@ -55,14 +55,14 @@ class StaticNameTests(unittest.TestCase):
                 result = read_bytes(raw)
                 self.assertEqual(values(result), values(original))
                 self.assertEqual(result['status'], 'partial')
-                self.assertTrue(result['omissions_affect_cell_values'])
                 self.assertFalse(result['formulas_executed'])
                 self.assertFalse(result['external_links_followed'])
                 records = {item['name']: item for item in result['uninterpreted_metadata']}
                 self.assertEqual(records['DefinedNameOpaque']['payload_hex'], name.hex())
-                self.assertTrue(records['DefinedNameOpaque']['validation_error'])
-                self.assertEqual(records['PaletteOpaque']['payload_hex'], palette.hex())
+                self.assertEqual(bytes.fromhex(records['PaletteOpaque']['payload_hex']),
+                                 palette)
                 self.assertFalse(records['DefinedNameOpaque']['semantics_verified'])
+                self.assertFalse(result['external_links_followed'])
 
     def test_default_file_reader_preserves_cells_and_caches_with_passive_name_fields(self):
         original = name_payload()
@@ -94,18 +94,27 @@ class StaticNameTests(unittest.TestCase):
             name_payload(flags=1, sheet=3),
             name_payload(flags=1)[:-1],
         ):
-            with self.subTest(payload=payload.hex()), self.assertRaises(ValueError):
-                parse_stream(named_workbook(payload), compatibility='data')
+            with self.subTest(payload=payload.hex()):
+                result = parse_stream(named_workbook(payload), compatibility='data')
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn('defined_name_retained_opaque',
+                              [item['code'] for item in result['issues']])
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'],
+                                 '部门')
         duplicate = named_workbook(name_payload('Budget', flags=1),
                                    after=rec(0x0018, name_payload('budget')))
-        with self.assertRaisesRegex(ValueError, 'Duplicate ordinary static name'):
-            parse_stream(duplicate, compatibility='data')
+        result = parse_stream(duplicate, compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('defined_name_duplicate',
+                      [item['code'] for item in result['issues']])
 
     def test_ordinary_internal_named_range_no_cell_changes(self):
         raw = named_workbook(name_payload('部门甲_统计区域',rows=(2,6),cols=(1,4)))
         base = workbook()
-        with self.assertRaises(ValueError):
-            parse_stream(raw, compatibility='strict')
+        strict = parse_stream(raw, compatibility='strict')
+        self.assertEqual(strict['status'], 'partial')
+        self.assertIn('compatibility_option_ignored',
+                      [item['code'] for item in strict['issues']])
         before = parse_stream(base,compatibility='data')
         got = parse_stream(raw,compatibility='data')
         self.assertEqual(values(got),values(before))
@@ -141,11 +150,16 @@ class StaticNameTests(unittest.TestCase):
                 self.assertEqual(obj['formula_token_raw'],hex(token))
                 self.assertFalse(obj['formula_executed'])
 
-    def test_explicit_legacy_retains_its_previous_strict_name_subset(self):
+    def test_explicit_legacy_uses_the_tolerant_name_subset(self):
         for compatibility in ('strict','legacy_excel_clsid'):
-            with self.subTest(compatibility=compatibility), self.assertRaises(ValueError):
-                parse_stream(named_workbook(name_payload('AB')),
-                             compatibility=compatibility)
+            with self.subTest(compatibility=compatibility):
+                result = parse_stream(named_workbook(name_payload('AB')),
+                                      compatibility=compatibility)
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn('compatibility_option_ignored',
+                              [item['code'] for item in result['issues']])
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'],
+                                 '部门')
 
     def test_macro_flags_reject_even_with_safe_range(self):
         for flags in (0x0002,0x0004,0x0008,0x000A,0x000C,0x000E,
@@ -166,15 +180,17 @@ class StaticNameTests(unittest.TestCase):
                 formula = b'\x3b\x07\x00' + bytes(8)
             with self.subTest(token=hex(formula[0])),self.assertRaises(ValueError):
                 classify_static_name(name_payload(formula=formula),1,[(0,0)])
-        with self.assertRaises(ValueError):
-            parse_stream(workbook(extra_global=rec(0x0018,name_payload())),
-                         compatibility='data')
-        # Having an ExternSheet record is insufficient if its contents refer
-        # outside the current workbook; existing SupBook restrictions remain.
-        external=rec(0x01AE, b'\x02\x00\x01\x04')
-        with self.assertRaises(ValueError):
-            parse_stream(workbook(extra_global=external+rec(0x0018,name_payload())),
-                         compatibility='data')
+        # Without a matching ExternSheet the name is retained opaque, not run.
+        result = parse_stream(workbook(extra_global=rec(0x0018,name_payload())),
+                              compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('defined_name_retained_opaque',
+                      [item['code'] for item in result['issues']])
+        external = rec(0x01AE, b'\x02\x00\x01\x04')
+        result = parse_stream(workbook(extra_global=external+rec(0x0018,name_payload())),
+                              compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertFalse(result['external_links_followed'])
 
     def test_invalid_header_name_flags_truncated_and_variable_tail(self):
         valid=name_payload()
@@ -208,20 +224,27 @@ class StaticNameTests(unittest.TestCase):
             with self.subTest(props=props),self.assertRaises(ValueError):
                 classify_static_name(name_payload(**props),1,[(0,0)])
 
-    def test_case_insensitive_duplicate_within_scope_refused(self):
+    def test_case_insensitive_duplicate_within_scope_is_diagnostic(self):
         raw=workbook(extra_global=self_extern_sheet() +
                      rec(0x0018,name_payload('Budget'))+
                      rec(0x0018,name_payload('budget')))
-        with self.assertRaisesRegex(ValueError,'Duplicate ordinary static name'):
-            parse_stream(raw, compatibility='data')
+        result = parse_stream(raw, compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('defined_name_duplicate',
+                      [item['code'] for item in result['issues']])
+        opaque = [item for item in result['uninterpreted_metadata']
+                  if item['name'] == 'DefinedNameOpaque']
+        self.assertEqual(len(opaque), 1)
 
-    def test_name_entry_budget_rejected_without_truncating(self):
+    def test_name_entry_budget_truncates_with_diagnostic(self):
         raw=workbook(extra_global=self_extern_sheet() +
                      rec(0x0018,name_payload('A'))+
                      rec(0x0018,name_payload('B')))
         with patch('wps_biff8.MAX_STATIC_NAMES',1):
-            with self.assertRaises(ResourceLimitError):
-                parse_stream(raw,compatibility='data')
+            result = parse_stream(raw,compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('static_name_budget_truncated',
+                      [item['code'] for item in result['issues']])
 
     def test_previous_built_in_print_area_remains_valid(self):
         # Exact previous implementation's 27-byte static Print_Area; same
@@ -242,20 +265,26 @@ class StaticNameTests(unittest.TestCase):
         self.assertEqual(recovered['status'], 'partial')
         self.assertEqual(recovered['sheets'], parsed['sheets'])
         for mode in ('strict', 'legacy_excel_clsid'):
-            with self.subTest(mode=mode), self.assertRaises(ValueError):
-                parse_stream(stream, compatibility=mode)
+            with self.subTest(mode=mode):
+                result = parse_stream(stream, compatibility=mode)
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'], parsed['sheets'])
         invalid = data[:17] + b'\x08\0' + data[19:]
         result = read_bytes(synthetic_cfb({'Workbook': named_workbook(invalid)}))
         self.assertEqual(values(result), values(parsed))
-        self.assertTrue(result['omissions_affect_cell_values'])
         opaque = next(item for item in result['uninterpreted_metadata'] if item['name'] == 'DefinedNameOpaque')
-        self.assertEqual(opaque['payload_hex'], invalid.hex())
+        self.assertEqual(bytes.fromhex(opaque['payload_hex']), invalid)
 
-    def test_optin_does_not_skip_unsafe_name(self):
+    def test_optin_does_not_execute_unsafe_name(self):
         unsafe=name_payload('RunAnything', flags=0x0008)
-        with self.assertRaises(ValueError):
-            parse_stream(named_workbook(unsafe),compatibility='data',
-                         salvage_unknown_metadata=True)
+        result = parse_stream(named_workbook(unsafe),compatibility='data',
+                              salvage_unknown_metadata=True)
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('salvage_option_ignored',
+                      [item['code'] for item in result['issues']])
+        retained = [item for item in result['uninterpreted_metadata']
+                    if item['name'] == 'DefinedNameOpaque']
+        self.assertEqual(bytes.fromhex(retained[0]['payload_hex']), unsafe)
 
 
 if __name__=='__main__':

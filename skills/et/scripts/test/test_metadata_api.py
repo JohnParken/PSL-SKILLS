@@ -58,11 +58,16 @@ class MetadataTests(unittest.TestCase):
         self.assertTrue(original['reading_assessment'])
 
     def test_invalid_container_nonselected_sheet_and_parameters_fail(self):
-        for raw in (b'unknown', synthetic_cfb({'Workbook': workbook([b'', rec(0x0203)])})):
-            child, response = self.invoke(raw)
-            self.assertEqual(child.returncode, 1)
-            self.assertFalse(response['ok'])
-            self.assertNotIn('result', response)
+        child, response = self.invoke(b'unknown')
+        self.assertEqual(child.returncode, 1)
+        self.assertFalse(response['ok'])
+        self.assertNotIn('result', response)
+        # A malformed cell record is now a tolerated cell-level omission: metadata
+        # is still available and the result is partial.
+        child, response = self.invoke(synthetic_cfb({'Workbook': workbook([b'', rec(0x0203)])}))
+        self.assertEqual(child.returncode, 3)
+        self.assertTrue(response['ok'])
+        self.assertEqual(response['result']['metadata']['source_status'], 'partial')
         for params in ({}, {'raw': b'', 'source': 1}, {'raw': '', 'source': 'x'},
                        {'raw': b'', 'source': 'x', 'sheet': 'first'}, []):
             child, response = self.invoke(b'', params=params)
@@ -92,20 +97,21 @@ class MetadataTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertFalse(loads(stdout.buffer.getvalue().strip())['ok'])
 
-    def test_metadata_keeps_original_output_budget_gate(self):
+    def test_metadata_does_not_serialize_the_full_extraction(self):
         raw = synthetic_cfb({'Workbook': workbook([b''])})
         request = dumps({'protocol': PROTOCOL, 'id': 1, 'operation': 'metadata',
                          'parameters': {'raw': raw, 'source': 'source.et'}})
         stdin = type('Input', (), {'buffer': io.BytesIO(request)})()
         stdout = type('Output', (), {'buffer': io.BytesIO()})()
         with patch.object(sys, 'argv', ['et_cli.py', 'metadata']), patch.object(sys, 'stdin', stdin), patch.object(sys, 'stdout', stdout):
-            with patch.object(et_cli, 'encode_result', side_effect=ParseError('resource_limit', {'stage': 'output'}, 'budget')) as encode:
+            with patch('wps_result.encode_result',
+                       side_effect=ParseError('resource_limit', {'stage': 'output'}, 'budget')) as encode:
                 code = et_cli.main()
-        self.assertEqual(code, 1)
-        self.assertEqual(encode.call_count, 1)
+        self.assertIn(code, (0, 3))
+        self.assertEqual(encode.call_count, 0)
         response = loads(stdout.buffer.getvalue().strip())
-        self.assertFalse(response['ok'])
-        self.assertEqual(response['error']['status'], 'resource_limit')
+        self.assertTrue(response['ok'])
+        self.assertEqual(response['result']['metadata']['schema_version'], 'workbook_metadata_v1')
 
 
 if __name__ == '__main__':

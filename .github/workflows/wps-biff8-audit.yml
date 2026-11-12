@@ -4,7 +4,13 @@ on:
     paths:
       - 'skills/et/**'
       - 'skills/skill-development-standards/**'
+      - 'packaging/runtime-manifests/et.json'
+      - 'docs/maintenance/et/**'
+      - 'tests/wps_biff8_audit_real_samples.py'
+      - 'tests/test_runtime_packager.py'
+      - 'tests/test_skill_runtime_packages.py'
       - 'tools/run_skill_tests.py'
+      - 'tools/check_project_docs.py'
       - '.github/workflows/wps-biff8-audit.yml'
   workflow_dispatch:
 permissions:
@@ -12,6 +18,7 @@ permissions:
 jobs:
   biff8-audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -33,3 +40,13 @@ jobs:
       - name: Strict Skill structure
         run: |
           python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict
+      - name: Project documentation structure
+        run: |
+          python -I -S -B tools/check_project_docs.py
+      - name: Runtime manifest and independent package acceptance
+        run: |
+          python -I -S -B -m unittest discover -s tests -p 'test_runtime_packager.py'
+          python -I -S -B -m unittest discover -s tests -p 'test_skill_runtime_packages.py'
+      - name: Pinned ET ETT real-source audit
+        run: |
+          python -I -S -B tests/wps_biff8_audit_real_samples.py

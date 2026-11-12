@@ -21,8 +21,9 @@ from xml.parsers import expat
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from analyze_et import load_query, main
 from et_table_analysis import analyze
+from et_table_preview import preview
 from read_et import read_bytes
-from test_wps_biff8 import workbook, rec, cell, formula
+from test_wps_biff8 import workbook, rec, cell, formula, special
 from test_wps_biff8_salvage import values
 from test_wps_cfb import synthetic_cfb
 from test_wps_ooxml_sheet import package, T
@@ -88,6 +89,15 @@ class TableAnalysisTests(unittest.TestCase):
         self.assertFalse(result['formulas_executed'])
         self.assertFalse(result['external_links_followed'])
 
+    def test_empty_string_cache_status_rejects_nonempty_text(self):
+        source = fixture()
+        source['sheets'][0]['cells']['B2'] = {
+            'type': 'text', 'value': 'not empty',
+            'formula': {'text': 'not evaluated'},
+            'cache_status': 'unverified_empty_string'}
+        with self.assertRaisesRegex(ParseError, 'Empty-string cache status'):
+            analyze(source, {**BASE_QUERY, 'formula_policy': 'cached'})
+
     def test_cached_opt_in_uses_saved_999_without_recalculating_and_keeps_gaps(self):
         result = self.run_query(formula_policy='cached')
         self.assertEqual(result['profiles']['B']['sum'], Decimal('1039.1'))
@@ -95,6 +105,21 @@ class TableAnalysisTests(unittest.TestCase):
         self.assertEqual(result['profiles']['B']['formula_caches_used'], 1)
         self.assertEqual(result['profiles']['B']['analysis_states']['missing_cache'], 1)
         self.assertIn('formula_cache_used', [issue['code'] for issue in result['analysis_issues']])
+
+    def test_empty_string_saved_formula_cache_is_usable_when_cached_is_selected(self):
+        records = (rec(0x00FD, cell(0, 0) + struct.pack('<I', 0))
+                   + formula(1, 0, special(3)))
+        source = read_bytes(synthetic_cfb({
+            'Workbook': workbook(sheet_records=[records], strings=['Header'])}))
+        result = analyze(source, {'sheet': '中文表1', 'range': 'A1:A2',
+                                  'header_rows': '1', 'formula_policy': 'cached'})
+        selected = result['rows'][0]['cells']['A']
+        self.assertEqual(selected['value'], '')
+        self.assertEqual(selected['analysis_state'], 'usable')
+        self.assertEqual(selected['cache_status'], 'unverified_empty_string')
+        self.assertTrue(selected['formula'])
+        projected = preview(source, {'sheet': '中文表1', 'range': 'A1:A2'})
+        self.assertIn('rows', projected)
 
     def test_group_sums_counts_and_numeric_coverage(self):
         result = self.run_query(group_by=['A'], aggregates=[{'op': 'sum', 'column': 'B', 'as': 'amount'}, {'op': 'rows', 'as': 'records'}])

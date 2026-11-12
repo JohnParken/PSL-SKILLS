@@ -76,14 +76,21 @@ class CapacityIntegrationTests(unittest.TestCase):
         self.assertEqual(sheet['cells']['A1']['value'], 10)
         self.assertEqual(sheet['cells']['B1']['value'], 20)
 
-    def test_overlap_across_separate_records_is_rejected(self):
+    def test_overlap_across_separate_records_is_diagnostic(self):
         payload = merge_records([(0, 2, 0, 2)]) + merge_records([(2, 3, 2, 4)])
-        with self.assertRaisesRegex(ValueError, 'Overlapping'):
-            parse_stream(workbook([payload], strings=[]))
+        result = parse_stream(workbook([payload], strings=[]))
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('merge_overlap_detected',
+                      [item['code'] for item in result['issues']])
+        self.assertEqual(len(result['sheets'][0]['merges']), 2)
 
-    def test_merge_budget_has_resource_limit_status(self):
-        with patch('wps_biff8.MAX_MERGES', 1), self.assertRaises(ResourceLimitError):
-            parse_stream(workbook([merge_records([(0, 0, 0, 1), (1, 1, 0, 1)])], strings=[]))
+    def test_merge_budget_truncates_with_diagnostic(self):
+        with patch('wps_biff8.MAX_MERGES', 1):
+            result = parse_stream(workbook([merge_records([(0, 0, 0, 1), (1, 1, 0, 1)])], strings=[]))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(len(result['sheets'][0]['merges']), 1)
+        self.assertIn('merge_budget_truncated',
+                      [item['code'] for item in result['issues']])
 
     def test_full_two_hundred_thousand_distinct_shared_strings(self):
         strings = ['编号' + str(index) for index in range(200000)]
@@ -113,8 +120,11 @@ class CapacityIntegrationTests(unittest.TestCase):
         from read_wps import encode_result
         self.assertIsInstance(encode_result(result), str)
         ranges.append((512, 512, 0, 1))
-        with self.assertRaises(ResourceLimitError):
-            parse_stream(workbook([merge_records(ranges)], strings=[]))
+        truncated = parse_stream(workbook([merge_records(ranges)], strings=[]))
+        self.assertEqual(truncated['status'], 'partial')
+        self.assertEqual(len(truncated['sheets'][0]['merges']), 65536)
+        self.assertIn('merge_budget_truncated',
+                      [item['code'] for item in truncated['issues']])
 
     def test_oversized_sst_count_fails_before_string_allocation(self):
         from wps_biff8 import records

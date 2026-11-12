@@ -57,23 +57,37 @@ class DxfReadabilityTests(unittest.TestCase):
                     self.assertTrue(item['structure']['formatting_issues'])
                     self.assertEqual(item['structure']['effective_formatting'], 'unknown')
                     self.assertTrue(any(issue['code'] == 'dxf_formatting_issues_retained' for issue in result['issues']))
-            with self.assertRaises(ParseError):
-                read_bytes(data, compatibility='strict')
+            strict = read_bytes(data, compatibility='strict')
+            self.assertEqual(strict['status'], 'partial')
+            self.assertIn('compatibility_option_ignored',
+                          [item['code'] for item in strict['issues']])
             # A direct strict validator remains available; default readers no longer use it.
             with self.assertRaises(ValueError):
                 validate_dxf(payload)
 
-    def test_framing_damage_resource_limits_and_orphan_continuation_still_refused(self):
+    def test_framing_damage_resource_limits_and_orphan_continuation_degrade(self):
         valid = dxf([(0x14, b'\x01')])
         overrun = bytearray(valid)
         overrun[20:22] = b'\xff\xff'
         for payload in (valid[:-1], bytes(overrun), valid + b'\x00'):
-            with self.subTest(payload=payload.hex()), self.assertRaises(ParseError):
-                read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x088D, payload))}))
-        with patch('wps_biff8.MAX_METADATA_BYTES', 0), self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x088D, CASES['invalid_wrap_enum']))}))
-        with self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x003C, b'orphan continuation'))}))
+            with self.subTest(payload=payload.hex()):
+                result = read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x088D, payload))}))
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+                self.assertTrue([item for item in result['issues']
+                                 if item['code'] in ('dxf_validation_failed',
+                                                     'global_record_validation_failed',
+                                                     'metadata_budget_truncated')])
+        with patch('wps_biff8.MAX_METADATA_BYTES', 0):
+            result = read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x088D, CASES['invalid_wrap_enum']))}))
+            self.assertEqual(result['status'], 'partial')
+            self.assertIn('metadata_budget_truncated',
+                          [item['code'] for item in result['issues']])
+        result = read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x003C, b'orphan continuation'))}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue([item for item in result['issues']
+                         if item['code'] in ('unexpected_continue_record',
+                                             'sst_extra_continue_retained')])
 
     def test_unsupported_scope_flags_do_not_invent_property_interpretation(self):
         payload = bytearray(dxf([(0x14, b'\x01')]))

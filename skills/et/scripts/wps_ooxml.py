@@ -2,6 +2,7 @@
 Read guards ported from docx office/archiveio.py and xmlio.py.
 """
 from __future__ import annotations
+import posixpath
 import re
 import stat
 import struct
@@ -191,16 +192,112 @@ def _preflight(stream, file_size):
 
 MAX_XML_BYTES = 16 * 1024 * 1024
 MAX_XML_DEPTH = 128
-MAX_XML_ELEMENTS = 200_000
+# Bounds sized for one 200000-cell workbook plus its shared strings and style
+# tables. They still bound allocation but no longer reject a legal large sheet.
+MAX_XML_ELEMENTS = 2_000_000
 # Bound allocations not represented by the element count or input byte size.
 # Namespace URIs in normal OOXML are short; this ceiling is checked in a
 # namespace-unaware pass before Expat can multiply a URI into expanded names.
 MAX_XML_NAMESPACE_URI_CHARS = 2048
-MAX_XML_EXPANDED_NAME_CHARS = 32 * 1024 * 1024
+# Sized for 200000 value cells plus richly formatted shared strings: the expanded
+# (URI+local-name) counter is a cumulative allocation policy, not DOM storage.
+MAX_XML_EXPANDED_NAME_CHARS = 128 * 1024 * 1024
 MAX_XML_ATTRIBUTES_PER_ELEMENT = 1024
-MAX_XML_ATTRIBUTES = 200_000
-MAX_XML_NODES = 400_000
+MAX_XML_ATTRIBUTES = 2_000_000
+MAX_XML_NODES = 8_000_000
 ParseError = ValueError
+
+# Diagnostics stay aggregated and bounded. Unknown extension metadata is normal
+# in real OOXML packages, so an issue cap must never fail a readable package.
+MAX_ISSUE_CODES = 256
+MAX_ISSUE_SAMPLES = 8
+MAX_ISSUE_VALUE_CHARS = 200
+RESERVED_ISSUE_KEYS = frozenset(('code', 'count', 'evaluated', 'samples', 'message'))
+
+
+def split_tag(tag):
+    """Split an ElementTree Clark tag into (namespace, local name)."""
+    if not isinstance(tag, str) or not tag.startswith('{'):
+        return '', tag if isinstance(tag, str) else ''
+    end = tag.find('}')
+    if end < 0:
+        return '', tag
+    return tag[1:end], tag[end + 1:]
+
+
+def _bounded_issue_value(value):
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    text = value if isinstance(value, str) else str(value)
+    return text[:MAX_ISSUE_VALUE_CHARS]
+
+
+class IssueLog:
+    """Aggregate non-fatal reading degradations by stable code; never raises.
+
+    Each code keeps one entry with a total ``count``, the first occurrence's
+    scalar position fields at the entry top level (existing consumers read
+    ``issue['cell']`` etc.) and up to ``MAX_ISSUE_SAMPLES`` detail samples.
+    """
+
+    def __init__(self):
+        self._entries = {}
+        self._order = []
+        self.truncated = False
+        self.suppressed = 0
+        # Coverage-relevant state is recorded independently of the bounded
+        # diagnostic entries so code-cap/truncation cannot change coverage.
+        self.flags = set()
+
+    def mark(self, flag):
+        """Record coverage state that must survive diagnostic truncation."""
+        self.flags.add(flag)
+
+    def marked(self, flag):
+        return flag in self.flags
+
+    def add(self, code, message=None, **detail):
+        entry = self._entries.get(code)
+        if entry is None:
+            if len(self._entries) >= MAX_ISSUE_CODES:
+                self.truncated = True
+                self.suppressed += 1
+                return None
+            entry = {'code': code, 'count': 0, 'evaluated': False, 'samples': []}
+            if isinstance(message, str) and message:
+                entry['message'] = message[:MAX_ISSUE_VALUE_CHARS]
+            for key, value in detail.items():
+                if key not in RESERVED_ISSUE_KEYS:
+                    entry[key] = _bounded_issue_value(value)
+            self._entries[code] = entry
+            self._order.append(code)
+        entry['count'] += 1
+        if detail and len(entry['samples']) < MAX_ISSUE_SAMPLES:
+            entry['samples'].append({key: _bounded_issue_value(value)
+                                     for key, value in detail.items()
+                                     if key not in RESERVED_ISSUE_KEYS})
+        return entry
+
+    def count(self, code):
+        entry = self._entries.get(code)
+        return entry['count'] if entry else 0
+
+    def has(self, code):
+        return code in self._entries
+
+    def issues(self):
+        result = []
+        for code in self._order:
+            entry = dict(self._entries[code])
+            entry['samples'] = [dict(sample) for sample in entry['samples']]
+            result.append(entry)
+        return result
+
+    def __bool__(self):
+        return bool(self._order)
+
+    def __len__(self):
+        return len(self._order)
 
 
 class XmlBudget:
@@ -347,3 +444,226 @@ def fromstring(data, *, budget=None):
         return ET.fromstring(_checked(data, budget=budget))
     except ET.ParseError as exc:
         raise ValueError(f"Invalid XML: {exc}") from exc
+
+
+# --- Tolerant OPC (content types and relationships) helpers -----------------
+TRANSITIONAL_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/'
+STRICT_REL = 'http://purl.oclc.org/ooxml/officeDocument/relationships/'
+REL_BASES = ((TRANSITIONAL_REL, 'transitional'), (STRICT_REL, 'strict'))
+MAX_FOREIGN_WRAPPER_DEPTH = 8
+MAX_FORMATS = 4096
+
+
+def is_security_error(exc):
+    """True when the error is a hard XML/parser safety boundary, not data variance."""
+    message = str(exc)
+    return ('DTD and entity' in message or 'requires Python with Expat' in message)
+
+
+def iter_main_children(parent, namespaces, max_depth=MAX_FOREIGN_WRAPPER_DEPTH):
+    """Yield value-bearing children in ``namespaces``, through foreign wrappers."""
+    for child in parent:
+        namespace, _local = split_tag(child.tag)
+        if namespace in namespaces:
+            yield child
+        elif max_depth > 0 and len(child):
+            yield from iter_main_children(child, namespaces, max_depth - 1)
+
+
+def relationship_kind(type_uri):
+    """Return (kind, conformance) for a known officeDocument relationship URI."""
+    if not isinstance(type_uri, str):
+        return None, None
+    for base, conformance in REL_BASES:
+        if type_uri.startswith(base):
+            kind = type_uri[len(base):].strip('/')
+            return (kind or None), conformance
+    return None, None
+
+
+def rels_path(base):
+    if not base:
+        return '_rels/.rels'
+    return posixpath.join(posixpath.dirname(base), '_rels', posixpath.basename(base) + '.rels')
+
+
+def _decode_target(base, target):
+    """Return (package_path, repaired) or (None, False) for an unusable target."""
+    if not isinstance(target, str) or not target:
+        return None, False
+    raw = target.strip()
+    if not raw or any(character in raw for character in ('\\', '\x00', ':', '?', '#')):
+        return None, False
+    from urllib.parse import unquote
+    decoded = unquote(raw)
+    repaired = decoded != raw
+    if not decoded or any(character in decoded for character in ('\\', '\x00', ':', '?', '#')):
+        return None, False
+    joined = decoded[1:] if decoded.startswith('/') else posixpath.join(
+        posixpath.dirname(base), decoded)
+    path = posixpath.normpath(joined)
+    if path in ('', '.', '..') or path.startswith('../') or path.startswith('/'):
+        return None, False
+    return path, repaired
+
+
+class ContentTypes:
+    """Best-effort saved OPC content types, with default-extension lookup."""
+
+    def __init__(self):
+        self.overrides = {}
+        self.defaults = {}
+
+    def get(self, part):
+        if part in self.overrides:
+            return self.overrides[part]
+        extension = part.rsplit('.', 1)[-1].lower() if '.' in part else ''
+        return self.defaults.get(extension)
+
+    def __bool__(self):
+        return bool(self.overrides or self.defaults)
+
+
+def _refuse_macro_content_type(content_type):
+    lowered = (content_type or '').lower()
+    if 'macroenabled' in lowered or '/vba' in lowered or lowered.endswith('vba'):
+        raise ValueError('Macro content type unsupported; workbook values cannot be read safely')
+
+
+def content_types(package, budget, report=None, reader=None):
+    """Read [Content_Types].xml tolerantly; macro content types stay a hard reject."""
+    report = IssueLog() if report is None else report
+    reader = read_part if reader is None else reader
+    result = ContentTypes()
+    names = package.namelist()
+    if '[Content_Types].xml' not in names:
+        report.add('content_types_part_missing',
+                   'Package content types are unavailable; body parts are read by structure')
+        return result
+    try:
+        root = fromstring(reader(package, '[Content_Types].xml'), budget=budget)
+    except ValueError as exc:
+        if is_security_error(exc):
+            raise
+        report.add('content_types_part_not_interpreted',
+                   'Content types were ignored after a bounded read failure',
+                   part='[Content_Types].xml', reason=str(exc)[:120])
+        return result
+    if root.tag != '{' + CONTENT_TYPES + '}Types':
+        report.add('content_types_root_not_interpreted', element=str(root.tag)[:120])
+        return result
+    for item in root:
+        namespace, local = split_tag(item.tag)
+        if namespace != CONTENT_TYPES or local not in ('Override', 'Default'):
+            report.add('content_types_element_not_interpreted',
+                       element=str(item.tag)[:120], part='[Content_Types].xml')
+            continue
+        content_type = item.get('ContentType')
+        if local == 'Override':
+            part_name = item.get('PartName')
+            if not isinstance(part_name, str) or not part_name:
+                report.add('content_type_override_not_interpreted', reason='missing PartName')
+                continue
+            _refuse_macro_content_type(content_type)
+            if not isinstance(content_type, str) or not content_type:
+                report.add('content_type_override_not_interpreted', part=part_name[:120],
+                           reason='missing ContentType')
+                continue
+            normalized = part_name[1:] if part_name.startswith('/') else part_name
+            if not part_name.startswith('/'):
+                report.add('content_type_part_name_repaired', part=part_name[:120])
+            if normalized in result.overrides:
+                report.add('duplicate_content_type_override_ignored', part=normalized[:120])
+                continue
+            result.overrides[normalized] = content_type
+        else:
+            extension = item.get('Extension')
+            if not isinstance(extension, str) or not extension:
+                report.add('content_type_default_not_interpreted', reason='missing Extension')
+                continue
+            _refuse_macro_content_type(content_type)
+            if not isinstance(content_type, str) or not content_type:
+                report.add('content_type_default_not_interpreted', extension=extension[:32])
+                continue
+            result.defaults.setdefault(extension.lower(), content_type)
+    return result
+
+
+def relationships(package, base, budget, report=None, scope='part', sheet=None, reader=None):
+    """Read one .rels part tolerantly and classify known officeDocument relations."""
+    report = IssueLog() if report is None else report
+    reader = read_part if reader is None else reader
+    path = rels_path(base)
+    if path not in package.namelist():
+        return {}
+    try:
+        root = fromstring(reader(package, path), budget=budget)
+    except ValueError as exc:
+        if is_security_error(exc):
+            raise
+        report.add('relationships_part_not_interpreted',
+                   'Relationships were ignored after a bounded read failure',
+                   part=path, sheet=sheet, reason=str(exc)[:120])
+        return {}
+    if root.tag != '{' + RELATIONSHIPS + '}Relationships':
+        report.add('relationships_root_not_interpreted', part=path, sheet=sheet,
+                   element=str(root.tag)[:120])
+        return {}
+    result = {}
+    for index, item in enumerate(root):
+        namespace, local = split_tag(item.tag)
+        if namespace != RELATIONSHIPS or local != 'Relationship':
+            report.add('relationship_element_not_interpreted', part=path, sheet=sheet,
+                       element=str(item.tag)[:120])
+            continue
+        relationship_id = item.get('Id')
+        if not isinstance(relationship_id, str) or not relationship_id:
+            report.add('relationship_id_missing', part=path, sheet=sheet, index=index)
+            relationship_id = '#%d' % index
+        if relationship_id in result:
+            report.add('duplicate_relationship_id_ignored', part=path, sheet=sheet,
+                       relationship_id=relationship_id[:120])
+            continue
+        type_uri = item.get('Type')
+        kind, conformance = relationship_kind(type_uri)
+        if kind is None:
+            report.add('unknown_relationship_type_ignored', part=path, sheet=sheet,
+                       relationship_id=relationship_id[:120],
+                       relationship_type=(type_uri or '')[:160])
+        target_mode = item.get('TargetMode', 'Internal')
+        resolved = target_mode == 'Internal'
+        external = not resolved
+        target_path = None
+        target_raw = None
+        if external:
+            raw_target = item.get('Target')
+            if isinstance(raw_target, str):
+                target_raw = raw_target[:32767]
+            if target_mode != 'External':
+                report.add('relationship_target_mode_not_interpreted', part=path, sheet=sheet,
+                           relationship_id=relationship_id[:120], target_mode=str(target_mode)[:60])
+            report.add('external_relationship_not_followed',
+                       'External relationship target is recorded only as unresolved and not '
+                       'followed', part=path, sheet=sheet, relationship_id=relationship_id[:120],
+                       relationship_type=(kind or type_uri or '')[:160], target_mode='External',
+                       target_resolved=False, followed=False)
+        else:
+            target_path, repaired = _decode_target(base, item.get('Target'))
+            if target_path is None:
+                resolved = False
+                report.add('relationship_target_unresolved',
+                           'Relationship target is empty or escapes the package',
+                           part=path, sheet=sheet, relationship_id=relationship_id[:120],
+                           relationship_type=(kind or type_uri or '')[:160])
+            elif repaired:
+                report.add('relationship_target_repaired', part=path, sheet=sheet,
+                           relationship_id=relationship_id[:120], target=target_path[:160])
+        entry = {
+            'id': relationship_id, 'type': type_uri, 'kind': kind,
+            'conformance': conformance, 'path': target_path, 'target_mode': target_mode,
+            'resolved': resolved, 'external': external,
+        }
+        if target_raw is not None:
+            entry['target_raw'] = target_raw
+        result[relationship_id] = entry
+    return result

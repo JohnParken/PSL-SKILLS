@@ -147,9 +147,12 @@ class StaticBuiltInNameTests(unittest.TestCase):
                 classify_static_builtin_name(
                     built_in_name(formula=formula),1,[(0,0)])
         external=rec(0x01AE,b'\x01\x00\xff\xff')
-        with self.assertRaises(ValueError):
-            parse_stream(built_in_workbook(
-                built_in_name(),preamble=external),compatibility='data')
+        result=parse_stream(built_in_workbook(
+            built_in_name(),preamble=external),compatibility='data')
+        self.assertEqual(result['status'],'partial')
+        self.assertTrue([item for item in result['issues']
+                         if item['code'] in ('link_metadata_invalid',
+                                             'defined_name_retained_opaque')])
 
     def test_print_title_requires_full_row_or_column_not_arbitrary_area(self):
         invalid=[
@@ -189,12 +192,13 @@ class StaticBuiltInNameTests(unittest.TestCase):
             classify_static_builtin_name(built_in_name(),
                                          1,[(1,1)])
 
-    def test_duplicate_built_in_by_local_sheet_type_rejected(self):
+    def test_duplicate_built_in_by_local_sheet_type_is_diagnostic(self):
         payload=built_in_name()
-        with self.assertRaisesRegex(ValueError,
-                                    'Duplicate built-in static Name'):
-            parse_stream(built_in_workbook(payload,payload),
-                         compatibility='data')
+        result=parse_stream(built_in_workbook(payload,payload),
+                            compatibility='data')
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('defined_name_duplicate',
+                      [item['code'] for item in result['issues']])
         # Different types are distinct and may co-exist in the same sheet.
         ok=parse_stream(built_in_workbook(
             payload,built_in_name(0x0d,formula=area((0,30),(0,3)))),
@@ -212,20 +216,31 @@ class StaticBuiltInNameTests(unittest.TestCase):
                      extra_global=sup+extra+rec(0x0018,
                          built_in_name(sheet=2,formula=area(
                              (0,4),(0,255)))))
-        with self.assertRaises(ValueError):
-            parse_stream(raw,compatibility='data')
+        result=parse_stream(raw,compatibility='data')
+        self.assertEqual(result['status'],'partial')
+        self.assertTrue([item for item in result['issues']
+                         if item['code'] in ('name_scope_out_of_range',
+                                             'defined_name_retained_opaque',
+                                             'internal_reference_out_of_range')])
 
-    def test_explicit_legacy_only_old_print_area_and_no_skip(self):
+    def test_explicit_legacy_and_unsafe_names_are_retained_with_diagnostics(self):
         for compatibility in ('strict','legacy_excel_clsid'):
-            with self.subTest(compatibility=compatibility),self.assertRaises(ValueError):
-                parse_stream(built_in_workbook(built_in_name()),
-                             compatibility=compatibility)
+            with self.subTest(compatibility=compatibility):
+                result=parse_stream(built_in_workbook(built_in_name()),
+                                    compatibility=compatibility)
+                self.assertEqual(result['status'],'partial')
+                self.assertIn('compatibility_option_ignored',
+                              [item['code'] for item in result['issues']])
         for builtin in (0x07,0x0d):
             unsafe=built_in_name(builtin,flags_extra=0x08)
-            with self.subTest(builtin=builtin),self.assertRaises(ValueError):
-                parse_stream(built_in_workbook(unsafe),
-                             compatibility='data',
-                             salvage_unknown_metadata=True)
+            with self.subTest(builtin=builtin):
+                result=parse_stream(built_in_workbook(unsafe),
+                                    compatibility='data',
+                                    salvage_unknown_metadata=True)
+                self.assertEqual(result['status'],'partial')
+                self.assertIn('defined_name_retained_opaque',
+                              [item['code'] for item in result['issues']])
+                self.assertFalse(result['external_links_followed'])
 
     def test_ordinary_union_rejects_non_union_op_and_extra_data(self):
         left=area((0,1),(0,2))
@@ -248,8 +263,10 @@ class StaticBuiltInNameTests(unittest.TestCase):
             built_in_name(0x0d,formula=area((0,20),(0,2))),
         )
         with patch('wps_biff8.MAX_STATIC_NAMES',1):
-            with self.assertRaises(ResourceLimitError):
-                parse_stream(data,compatibility='data')
+            result=parse_stream(data,compatibility='data')
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('static_name_budget_truncated',
+                      [item['code'] for item in result['issues']])
 
 
 if __name__=='__main__':

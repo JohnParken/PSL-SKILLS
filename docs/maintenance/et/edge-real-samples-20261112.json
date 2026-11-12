@@ -1,0 +1,1680 @@
+{
+  "verification_commands": {
+    "value_and_analysis": "/opt/homebrew/bin/python3.14 -I -S -B - <<'PY'\nfrom pathlib import Path\nfrom decimal import Decimal, getcontext\ngetcontext().prec=2000\nimport sys, struct, json, hashlib, collections, platform, subprocess, re\nsys.path.insert(0,'tests')\nimport wps_source_oracle as oracle\ntask=Path('/private/tmp/et-edge-audit-20261112')\noriginal_records=oracle.records\nobserved_rich={}\ndef rich_records(stream,start):\n    for kind,payload,offset in original_records(stream,start):\n        if kind==0xfc:\n            total,unique=struct.unpack_from('<II',payload)\n            cursor=8\n            plain=bytearray(payload[:8])\n            for index in range(unique):\n                length,flags=struct.unpack_from('<HB',payload,cursor)\n                cursor+=3\n                assert flags & ~0x0d == 0\n                runs=struct.unpack_from('<H',payload,cursor)[0] if flags & 8 else 0\n                cursor+=2 if flags & 8 else 0\n                ext=struct.unpack_from('<I',payload,cursor)[0] if flags & 4 else 0\n                cursor+=4 if flags & 4 else 0\n                end=cursor+length*(2 if flags & 1 else 1)\n                assert end+4*runs+ext <= len(payload), 'Same-record oracle cannot decode continuation'\n                raw=payload[cursor:end]\n                plain.extend(struct.pack('<HB',length,flags & 1))\n                plain.extend(raw)\n                if flags & 8:\n                    observed_rich[index]={'text':raw.decode('utf-16le' if flags & 1 else 'latin1'),\n                                          'run_count':runs,'runs_raw_hex':payload[end:end+4*runs].hex()}\n                cursor=end+4*runs+ext\n            assert cursor==len(payload)\n            payload=bytes(plain)\n        yield kind,payload,offset\noracle.records=rich_records\nsource=[\n('2632463 (1).et','中山运输车租赁报价表','https://jt.zs.gov.cn/xxml/zwgk/czxx/zbggxx/content/post_2632463.html','https://jt.zs.gov.cn/attachment/0/572/572379/2632463.et'),\n('P020260710609033494234.et','安溪县医院价格表','https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/t20260710_3308356.htm','https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/P020260710609033494234.et'),\n('P020260710609034005811.et','安溪县中医院价格表','https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/t20260710_3308356.htm','https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/P020260710609034005811.et'),\n('P020260623703179665375.et','张掖普通高中招生计划','https://www.zhangye.gov.cn/jyj/dzdd/tzgg/202606/t20260623_1556532.html','https://www.zhangye.gov.cn/jyj/dzdd/tzgg/202606/P020260623703179665375.et'),\n('P020251205645964993287.et','宁夏乡村振兴资金分配表','https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/t20251205_5101628.html','https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/P020251205645964993287.et'),\n('P020251205645965061468.et','宁夏乡村振兴绩效目标表','https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/t20251205_5101628.html','https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/P020251205645965061468.et'),\n('12753063 (1).et','深圳服务需求明细表','https://hrss.sz.gov.cn/xxgk/qtxx/zdjsxm/content/post_12753063.html','https://hrss.sz.gov.cn/attachment/1/1708/1708102/12753063.et'),\n('12753063 (2).et','深圳服务报价表','https://hrss.sz.gov.cn/xxgk/qtxx/zdjsxm/content/post_12753063.html','https://hrss.sz.gov.cn/attachment/1/1708/1708105/12753063.et')]\nreports=[]\ndef digest(value):\n    return hashlib.sha256(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()\nfor filename,title,page,url in source:\n    data=(task/filename).read_bytes()\n    r=json.loads((task/(filename+'.json')).read_text())\n    observed_rich.clear()\n    o=oracle.oracle(data)\n    checks=[]\n    for name,cells in o['expected'].items():\n        actual=next(s for s in r['sheets'] if s['name']==name)['cells']\n        expected_projection={}\n        actual_projection={}\n        for address,e in cells.items():\n            a=actual.get(address,{})\n            ev=e['value']\n            av=a.get('value')\n            if e['type']=='number':\n                assert av is not None and Decimal(ev)==Decimal(av), (filename,name,address,ev,av)\n                ev=str(Decimal(ev).normalize())\n                av=str(Decimal(av).normalize()) if av is not None else None\n            expected_projection[address]={'type':e['type'],'value':ev}\n            actual_projection[address]={'type':a.get('type'),'value':av}\n        mismatch=[a for a in expected_projection if expected_projection[a]!=actual_projection[a]]\n        assert not mismatch,(filename,name,mismatch)\n        checks.append({'sheet':name,'values_checked':len(cells),'numeric_formula_caches_checked':sum(bool(v.get('formula')) for v in cells.values()),\n                       'mismatches':mismatch,'normalized_value_digest':digest(expected_projection)})\n    rich_actual={x['sst_index']:x for x in r['shared_string_formatting']}\n    assert set(rich_actual)==set(observed_rich)\n    for index,e in observed_rich.items():\n        a=rich_actual[index]\n        assert a['runs_raw_hex']==e['runs_raw_hex'] and a['run_count']==e['run_count']\n        assert ''.join(v['text'] for v in a['segments'])==e['text']\n    stream=oracle.workbook_stream(data)\n    raw_counts=collections.Counter(k for k,p,o in original_records(stream,0))\n    definitions=[]\n    for k,p,off in original_records(stream,0):\n        if k==0x4bc:\n            definitions.append({'offset':off,'payload_hex':p.hex(),'bounds_zero_based':list(struct.unpack_from('<HHBB',p)),\n                                'reserved':p[6],'cUse':p[7],'token_bytes':struct.unpack_from('<H',p,8)[0]})\n    report={'filename':filename,'title':title,'source_page':page,'download_url':url,'download_method':'Microsoft Edge native UI; completed entry observed',\n            'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'original_extension':'.et','producer_version':'unknown; public .et attachment is not proof of creating application',\n            'redistribution':'not established; originals retained locally, not bundled','container':'CFB/BIFF8',\n            'cli_exit':3,'cli_stderr':'','status':r['status'],'cell_count_including_blank':r['cell_count'],'declared_sheets':[s['name'] for s in r['sheets']],\n            'cell_value_coverage':r['cell_value_coverage'],'omissions_affect_cell_values':r['omissions_affect_cell_values'],\n            'issue_counts':dict(collections.Counter(i['code'] for i in r['issues'])),'oracle':checks,\n            'formula_records':raw_counts[6],'rich_strings_checked':len(observed_rich),'rich_runs_checked':sum(v['run_count'] for v in observed_rich.values()),\n            'rich_expected_digest':digest(observed_rich),'shared_formula_definitions':definitions,\n            'original_unchanged':hashlib.sha256((Path('/Users/yangxuezhen/Downloads')/filename).read_bytes()).hexdigest()==hashlib.sha256(data).hexdigest()}\n    analysis_checks=[]\n    first_name=next(iter(o['expected']))\n    expected_cells=o['expected'][first_name]\n    positions=[re.fullmatch(r'([A-Z]+)([0-9]+)',a).groups() for a in expected_cells]\n    last_row=max(int(row) for col,row in positions)\n    def col_index(col):\n        value=0\n        for char in col:\n            value=value*26+ord(char)-64\n        return value\n    last_col=max((col for col,row in positions),key=col_index)\n    region='A1:'+last_col+str(last_row)\n    query_path=task/'audit_cached_query.json'\n    if not query_path.exists():\n        with query_path.open('x',encoding='utf-8') as f:\n            json.dump({'formula_policy':'cached','limit':0},f)\n    for mode in ('exclude','cached'):\n        args=['/opt/homebrew/bin/python3.14','-I','-S','-B',str(Path('skills/et/scripts/analyze_et.py').resolve()),\n              './'+filename,'--sheet',first_name,'--range',region]\n        if mode=='cached':\n            args.extend(['--query','./audit_cached_query.json'])\n        process=subprocess.run(args,cwd=task,capture_output=True,text=True)\n        ar=json.loads(process.stdout)\n        assert process.returncode==3 and ar['status']=='partial',(filename,mode,ar)\n        assert ar['source']['cell_value_coverage']==r['cell_value_coverage']\n        assert ar['source']['omissions_affect_cell_values']==r['omissions_affect_cell_values']\n        assert ar['source']['issues']==r['issues']\n        expected_sums={}\n        for col,profile in ar['profiles'].items():\n            selected=[cell for addr,cell in expected_cells.items()\n                      if re.fullmatch(r'([A-Z]+)([0-9]+)',addr)[1]==col and cell['type']=='number'\n                      and (mode=='cached' or not cell.get('formula'))]\n            numbers=[Decimal(cell['value']) for cell in selected]\n            total=sum(numbers,Decimal(0)) if numbers else None\n            assert profile['numeric_count']==len(numbers),(filename,mode,col,profile)\n            assert (Decimal(profile['sum']) if profile['sum'] is not None else None)==total,(filename,mode,col,total,profile)\n            expected_sums[col]={'count':len(numbers),'sum':str(total) if total is not None else None}\n        analysis_checks.append({'formula_policy':mode,'range':region,'sheet':first_name,'exit':process.returncode,'stderr':process.stderr,\n                                'column_expectations':expected_sums,'source_diagnostics_preserved':True,'command':args})\n    report['analysis_checks']=analysis_checks\n    reports.append(report)\n    print(title,report['cell_count_including_blank'],'values',sum(c['values_checked'] for c in checks),'caches',sum(c['numeric_formula_caches_checked'] for c in checks),'rich',len(observed_rich))\nresult={'date':'2026-11-12','skill_version':'20261112.1447.4600','platform':platform.platform(),'python':sys.version,\n        'scope':'Eight newly downloaded public ET originals, five government publishers; all CFB/BIFF8. No OOXML ET, application rendering, recalculation or Linux acceptance.',\n        'oracle_method':'tests/wps_source_oracle.py independent of skill parser; same-record SST adapter strips rich/phonetic fields using MS-XLS lengths before old value oracle; original bytes unchanged. Compare raw rich runs and concatenated segment text separately.',\n        'normalization':'Numeric Decimal equality and normalized numeric digest; no formula execution. Plain text compared exactly.',\n        'oracle_sha256':hashlib.sha256(Path('tests/wps_source_oracle.py').read_bytes()).hexdigest(),\n        'runtime_sha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(Path('skills/et/scripts').glob('*.py'))},\n        'samples':reports}\nout=Path('docs/maintenance/et/edge-real-samples-20261112.json')\nwith out.open('w',encoding='utf-8') as f:\n    json.dump(result,f,ensure_ascii=False,indent=2)\n    f.write('\\n')\nprint('TOTAL',sum(r['cell_count_including_blank'] for r in reports),sum(c['values_checked'] for r in reports for c in r['oracle']),\n      sum(c['numeric_formula_caches_checked'] for r in reports for c in r['oracle']),sum(r['rich_strings_checked'] for r in reports),sum(r['rich_runs_checked'] for r in reports))\nPY",
+    "structure_and_summary": "/opt/homebrew/bin/python3.14 -I -S -B - <<'PY'\nfrom pathlib import Path\nimport json,sys,struct,subprocess,hashlib\nsys.path.insert(0,'tests')\nfrom wps_source_oracle import workbook_stream,records,coordinate\nroot=Path.cwd(); task=Path('/private/tmp/et-edge-audit-20261112')\nevidence_path=Path('docs/maintenance/et/edge-real-samples-20261112.json')\ne=json.loads(evidence_path.read_text())\nfor item in e['samples']:\n    name=item['filename']; data=(task/name).read_bytes(); r=json.loads((task/(name+'.json')).read_text())\n    stream=workbook_stream(data)\n    sheet_starts=[]\n    for kind,p,offset in records(stream,0):\n        if kind==0x85:\n            length,flags=p[6:8]\n            sheet_starts.append((p[8:8+length*(2 if flags & 1 else 1)].decode('utf-16le' if flags & 1 else 'latin1'),struct.unpack_from('<I',p)[0]))\n        if kind==10: break\n    blank_checks=0; merged_checks=0\n    for sheet_name,start in sheet_starts:\n        actual=next(s for s in r['sheets'] if s['name']==sheet_name)\n        expected_positions=set(); merges=[]\n        for kind,p,offset in records(stream,start):\n            if kind==10: break\n            if kind in (0x201,0xfd,0x203,6,0x27e,0x205):\n                row,col=struct.unpack_from('<HH',p)\n                address=coordinate(row,col); expected_positions.add(address)\n                if kind==0x201:\n                    assert actual['cells'][address]['type']=='blank'\n                    blank_checks+=1\n            elif kind in (0xbe,0xbd):\n                row,first=struct.unpack_from('<HH',p); last=struct.unpack_from('<H',p,len(p)-2)[0]\n                for col in range(first,last+1):\n                    address=coordinate(row,col); expected_positions.add(address)\n                    if kind==0xbe:\n                        assert actual['cells'][address]['type']=='blank'\n                        blank_checks+=1\n            elif kind==0xe5:\n                count=struct.unpack_from('<H',p)[0]\n                assert len(p)==2+count*8\n                for i in range(count):\n                    a,b,c,d=struct.unpack_from('<HHHH',p,2+i*8)\n                    merges.append(coordinate(a,c)+':'+coordinate(b,d))\n        assert set(actual['cells'])==expected_positions,(name,sheet_name,'cell address set mismatch')\n        assert [v['range'] for v in actual['merges']]==merges,(name,actual['merges'],merges)\n        merged_checks+=len(merges)\n    item['independent_blank_cells_checked']=blank_checks\n    item['independent_merge_ranges_checked']=merged_checks\n    item['all_cell_address_sets_match']=True\n    args=['/opt/homebrew/bin/python3.14','-I','-S','-B',str(root/'skills/et/scripts/read_et.py'),'./'+name,'--summary']\n    p=subprocess.run(args,cwd=task,capture_output=True,text=True); summary=json.loads(p.stdout)\n    assert p.returncode==3 and summary['status']=='partial'\n    item['summary_check']={'exit':p.returncode,'stderr':p.stderr,'json_valid':True,'schema_version':summary['schema_version'],'command':args}\n    assert hashlib.sha256((task/name).read_bytes()).hexdigest()==item['sha256']\nwith evidence_path.open('w',encoding='utf-8') as f:\n    json.dump(e,f,ensure_ascii=False,indent=2); f.write('\\n')\nprint('blank_cells',sum(s['independent_blank_cells_checked'] for s in e['samples']),'merge_ranges',sum(s['independent_merge_ranges_checked'] for s in e['samples']),'summary passed',len(e['samples']))\nPY"
+  },
+  "date": "2026-11-12",
+  "skill_version": "20261112.1447.4600",
+  "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O",
+  "python": "3.14.10 (main, Oct 25 2026, 17:12:00) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "scope": "Eight newly downloaded public ET originals, five government publishers; all CFB/BIFF8. No OOXML ET, application rendering, recalculation or Linux acceptance.",
+  "oracle_method": "tests/wps_source_oracle.py independent of skill parser; same-record SST adapter strips rich/phonetic fields using MS-XLS lengths before old value oracle; original bytes unchanged. Compare raw rich runs and concatenated segment text separately.",
+  "normalization": "Numeric Decimal equality and normalized numeric digest; no formula execution. Plain text compared exactly.",
+  "oracle_sha256": "7a401046591df0fbb85cabe2afdf0f1180970a0caf5f8aeb4edb7ccec035acd8",
+  "runtime_sha256": {
+    "skills/et/scripts/analyze_et.py": "30a436bda19b44921966b76cd61c775ed9972378ff6686ffc7eb7e8b6e65f5f2",
+    "skills/et/scripts/et_cli.py": "8a9d60c66a1e0b36ead3de9fc09ae5aef1ac72bbc09e90802acb79a806831102",
+    "skills/et/scripts/et_cli_protocol.py": "ee9f37bd19418df5f9a494c8a672e80b59742baf9ab9519036928a7c9ef63037",
+    "skills/et/scripts/et_output_page.py": "d6913e820a3d7e634063b5b825aa193925ca42ca449ddaa4b2dd59c85b53e662",
+    "skills/et/scripts/et_read_view.py": "b745303a0735286394773db718b7a0fd547e3dec7a4b84dfe27f9c3623d695f1",
+    "skills/et/scripts/et_table_analysis.py": "778d094bc88399ef8985232201427252727ac860d8edd569cb3dce14f2c40f73",
+    "skills/et/scripts/et_table_data.py": "dd36b5d6e2dcf382cc537fdd38aadc874923ce3fd02d5c625fd53a254075147c",
+    "skills/et/scripts/et_table_preview.py": "ba1003166440b29fc3ef344b6896af051ec509bee49cb2feec8fc72a4825c80f",
+    "skills/et/scripts/et_table_quality.py": "75e6839e6ebc6b64cfe5f5ac26eb676ccd561ca8302f2cf22abd494a1fdc6937",
+    "skills/et/scripts/read_et.py": "ea6e142194d64c65204ba7223e728af157b942f4c96b35c16a4284e1ab2f6df1",
+    "skills/et/scripts/read_wps.py": "a86e44b1dbcf9b49872824e4fdc744cdcfd257855ca6c2406d1f8574f4801806",
+    "skills/et/scripts/wps_access.py": "9b6072fd5cbe3d011f18191f0de04a70ef38cbd7e3f06d3fa79754decbb578ce",
+    "skills/et/scripts/wps_biff8.py": "0ae0c1ed3d217fa588cf82836eab234bf852a9edbbe8049de846c1e21c14b005",
+    "skills/et/scripts/wps_biff8_audit.py": "64588200970a71fcdef0c5ebccda4196487e02ec63ddbbf1a37bf4771f4478e4",
+    "skills/et/scripts/wps_biff8_audit_sources.py": "1e060107b043a2a5e3dc27218e6c85111a92219a4ca0daac00775861c50fd3eb",
+    "skills/et/scripts/wps_biff8_cells.py": "4e3e84ed66fb2194fcaa77b78c757984436bfa0247e4f33a1fd38c8f45ebdf6f",
+    "skills/et/scripts/wps_biff8_charts.py": "c907439caca6241210beba8307c6adb448d56666b60b60cba8d7536d863dd8d2",
+    "skills/et/scripts/wps_biff8_conditional.py": "d6a0098943353cc33a2e921c92174129b3bbad4b979209fbcb1b8d79104e0ce8",
+    "skills/et/scripts/wps_biff8_drawing.py": "6d55bcc5cecdd265bee660e4b791f07b34322802fdf6c9ca45a3510ce0b08108",
+    "skills/et/scripts/wps_biff8_drawing_notes.py": "9366189dc5b20a93d3a8e4e561b75bee489faf8b7df7c81c91a85e03cec7a928",
+    "skills/et/scripts/wps_biff8_errors.py": "0caada54c32a5560834c561590c49e9b39068e7dee4d7b9ef634adeb100c8333",
+    "skills/et/scripts/wps_biff8_formula_text.py": "080e14cb92417a8da01fd9b521c927f4369cdaa835916fab066c933c7d3bc129",
+    "skills/et/scripts/wps_biff8_globals.py": "42f552dd58fedec791839cf5c981fefac7aee774d2212f49231e134fd25b7210",
+    "skills/et/scripts/wps_biff8_headers.py": "e6f609279691212be5be6f6826b6a3cf3fd4293f6d2f36b562356f9e1f742054",
+    "skills/et/scripts/wps_biff8_hyperlinks.py": "1f98e9ea7cbb873248e2e5a0b7d572f81ab8db65602a31e74e5e859b5792dfa6",
+    "skills/et/scripts/wps_biff8_links.py": "779e2e90a367567da1655e9a17df9a2c675aa864049ef7ad2fd028c42b1dc916",
+    "skills/et/scripts/wps_biff8_merges.py": "26f65831bbb47232d60d71fbf0e83bb450b412a3563a75bd9705503c105fb5d1",
+    "skills/et/scripts/wps_biff8_names.py": "c6d4599e28016c147dafcb6cf0438ff3c8e15c89217098d6d912f18dc7e7fa51",
+    "skills/et/scripts/wps_biff8_noncell.py": "f7b1085da56e831b2838eff4a269cb22c9b9519a4ab106135e7569057620bafb",
+    "skills/et/scripts/wps_biff8_records.py": "c5d70a13a853bbdaf2890f7b9cf773df8bfd17ce0fd8fe8c1533b102aab0f18a",
+    "skills/et/scripts/wps_biff8_result.py": "5477e42e9be007d2beed9a68b6844fbef8ff298802ad40d6a13166280e56a987",
+    "skills/et/scripts/wps_biff8_retain.py": "d8f151e513b820543eaec10fd30fdd0f694ae34f67d39944ffadfd0f94fa2ec3",
+    "skills/et/scripts/wps_biff8_sheet.py": "a6ce3871b2488eda9821a9062230df76d456bb350c3b3a9097d3db1b9248c043",
+    "skills/et/scripts/wps_biff8_tablestyles.py": "a0d6959cb827b6c2af6c9c423b5114e806c7824de655b5f9b2fd5341ea6afcc9",
+    "skills/et/scripts/wps_biff8_values.py": "414fce78e13a68343f01d1272b3757b3ed511823280d856c349c7a2a3714746b",
+    "skills/et/scripts/wps_cfb.py": "6c45f2338648d8809b6f85923eaa45eef94f27f53f092f46340d12e5eb029976",
+    "skills/et/scripts/wps_diagnostics.py": "0efb772c1653da5de8287828c73da565f72f4741eb5bb5743818da28f4170377",
+    "skills/et/scripts/wps_dxf.py": "9cbf86f4c9377ee23f8def40844d2e825e06ecb1373cd9714f181beb963e8228",
+    "skills/et/scripts/wps_format_rules.py": "f5c0cfae0f8eb6b4d565046be1187ba17c402458d01dfe97e58fe668a37681c8",
+    "skills/et/scripts/wps_iso_date.py": "8fac19844118b66529bf6726436c891dbf9852b9ba1625db3a3122eb570d3f46",
+    "skills/et/scripts/wps_numeric.py": "4aee008f8f5ac374a3f3c99cb3c7825ac7090ff551da7730014849a77c018b64",
+    "skills/et/scripts/wps_ooxml.py": "9c5033deee4ff6e39ce63f221e75e105de8a41d0b6646d761589bc8db29ceae2",
+    "skills/et/scripts/wps_ooxml_escape.py": "d3bca0c3c11c49380778cb01db4c245f36b049c2df51fe6be618dbe2d15f00e6",
+    "skills/et/scripts/wps_ooxml_sheet.py": "fbad87a69b726d8fe3e205dd420c70137c4142422fad3fbcb05e54d3117e4070",
+    "skills/et/scripts/wps_ooxml_text.py": "feec77ca992249ac9b594fff8023fefc90f83c49bbd0034790f5da25098b058b",
+    "skills/et/scripts/wps_ooxml_worksheet.py": "fbbbe17afcdb0a8359ede8e1026efd7851bb3b56dcb30ea8f7e812651bb38260",
+    "skills/et/scripts/wps_read_view.py": "2190b3cd203c5ff5927fd5a501afb57ec548d0a58468cce44f98af3530e0defa",
+    "skills/et/scripts/wps_result.py": "3ce89d81f9be8519aa6d0dbdaddaed050f07d29e4977ff8b4d68776cb2244f10",
+    "skills/et/scripts/wps_rich_text.py": "3a27baf3b22795136a3a559c285f1ced1a8d7731b9a987a93025454c04e6933c",
+    "skills/et/scripts/wps_sheet_comments.py": "efcdd29c60b5785af938badf5075870dbe78ad73d37d6bfc3fd7326c2eaeec76",
+    "skills/et/scripts/wps_sheet_views.py": "c53821bbebf493c03e0f836686727488e2f2bc54af5238f822715dcd52b1ae66",
+    "skills/et/scripts/wps_style_formats.py": "a3740587893523f47d382c920efd682710dcde76e3295bbc32944ee203c0198d",
+    "skills/et/scripts/wps_visibility.py": "fa4f62747fe375fc44e987f1d4bea2db954b9aeee73321c33a8957aa1a3c940e",
+    "skills/et/scripts/wps_vml_notes.py": "85784c6c13181e9cbf1bfe5cfa83f698cd4e6ac0c423175748eb3ef7f4a3271b"
+  },
+  "samples": [
+    {
+      "filename": "2632463 (1).et",
+      "title": "中山运输车租赁报价表",
+      "source_page": "https://jt.zs.gov.cn/xxml/zwgk/czxx/zbggxx/content/post_2632463.html",
+      "download_url": "https://jt.zs.gov.cn/attachment/0/572/572379/2632463.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 16896,
+      "sha256": "fec59f9e22694cba7403bd96505225a45075f7f5c1a9801472e20ac8e39e280a",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 32,
+      "declared_sheets": [
+        "报价表"
+      ],
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 54,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "报价表",
+          "values_checked": 18,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "4674073823df34b4921b6bce612fbfd71d1bcfddc11a1bdfd64b262aafa1ebe6"
+        }
+      ],
+      "formula_records": 0,
+      "rich_strings_checked": 0,
+      "rich_runs_checked": 0,
+      "rich_expected_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "shared_formula_definitions": [],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:G8",
+          "sheet": "报价表",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 1,
+              "sum": "1800"
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./2632463 (1).et",
+            "--sheet",
+            "报价表",
+            "--range",
+            "A1:G8"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:G8",
+          "sheet": "报价表",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 1,
+              "sum": "1800"
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./2632463 (1).et",
+            "--sheet",
+            "报价表",
+            "--range",
+            "A1:G8",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 14,
+      "independent_merge_ranges_checked": 3,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./2632463 (1).et",
+          "--summary"
+        ]
+      }
+    },
+    {
+      "filename": "P020260710609033494234.et",
+      "title": "安溪县医院价格表",
+      "source_page": "https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/t20260710_3308356.htm",
+      "download_url": "https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/P020260710609033494234.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 22528,
+      "sha256": "f975758969f5872a9810ecd721f0d56f2fcf45a073395a155e92696af87fe45c",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 80,
+      "declared_sheets": [
+        "自主定价 (2)"
+      ],
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 58,
+        "defined_name_retained_opaque": 2,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "自主定价 (2)",
+          "values_checked": 58,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "573e2d20e9d94280d0073992754339a9c5f88c5236a20432b2407bc59d687f70"
+        }
+      ],
+      "formula_records": 0,
+      "rich_strings_checked": 0,
+      "rich_runs_checked": 0,
+      "rich_expected_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "shared_formula_definitions": [],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:K8",
+          "sheet": "自主定价 (2)",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 3,
+              "sum": "6"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 0,
+              "sum": null
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            },
+            "H": {
+              "count": 0,
+              "sum": null
+            },
+            "I": {
+              "count": 0,
+              "sum": null
+            },
+            "J": {
+              "count": 4,
+              "sum": "3940"
+            },
+            "K": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020260710609033494234.et",
+            "--sheet",
+            "自主定价 (2)",
+            "--range",
+            "A1:K8"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:K8",
+          "sheet": "自主定价 (2)",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 3,
+              "sum": "6"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 0,
+              "sum": null
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            },
+            "H": {
+              "count": 0,
+              "sum": null
+            },
+            "I": {
+              "count": 0,
+              "sum": null
+            },
+            "J": {
+              "count": 4,
+              "sum": "3940"
+            },
+            "K": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020260710609033494234.et",
+            "--sheet",
+            "自主定价 (2)",
+            "--range",
+            "A1:K8",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 22,
+      "independent_merge_ranges_checked": 2,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./P020260710609033494234.et",
+          "--summary"
+        ]
+      }
+    },
+    {
+      "filename": "P020260710609034005811.et",
+      "title": "安溪县中医院价格表",
+      "source_page": "https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/t20260710_3308356.htm",
+      "download_url": "https://qzybj.quanzhou.gov.cn/zwgk/zfxxgk/fdzdgknr/qtyzdgkzfxx/202607/P020260710609034005811.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 22016,
+      "sha256": "951997744c4307906ba6af78ba121a12e29724fecc43c4cc26d36e4896a4bd80",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 62,
+      "declared_sheets": [
+        "自主定价 (2)"
+      ],
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 58,
+        "defined_name_retained_opaque": 2,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "自主定价 (2)",
+          "values_checked": 43,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "779b83728a901639c70ab7fe3b13c78e99d892d3b801d18dacc7ba712eff82ca"
+        }
+      ],
+      "formula_records": 0,
+      "rich_strings_checked": 0,
+      "rich_runs_checked": 0,
+      "rich_expected_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "shared_formula_definitions": [],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:J7",
+          "sheet": "自主定价 (2)",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 2,
+              "sum": "3"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 0,
+              "sum": null
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            },
+            "H": {
+              "count": 0,
+              "sum": null
+            },
+            "I": {
+              "count": 3,
+              "sum": "1590"
+            },
+            "J": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020260710609034005811.et",
+            "--sheet",
+            "自主定价 (2)",
+            "--range",
+            "A1:J7"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:J7",
+          "sheet": "自主定价 (2)",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 2,
+              "sum": "3"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 0,
+              "sum": null
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            },
+            "H": {
+              "count": 0,
+              "sum": null
+            },
+            "I": {
+              "count": 3,
+              "sum": "1590"
+            },
+            "J": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020260710609034005811.et",
+            "--sheet",
+            "自主定价 (2)",
+            "--range",
+            "A1:J7",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 19,
+      "independent_merge_ranges_checked": 2,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./P020260710609034005811.et",
+          "--summary"
+        ]
+      }
+    },
+    {
+      "filename": "P020260623703179665375.et",
+      "title": "张掖普通高中招生计划",
+      "source_page": "https://www.zhangye.gov.cn/jyj/dzdd/tzgg/202606/t20260623_1556532.html",
+      "download_url": "https://www.zhangye.gov.cn/jyj/dzdd/tzgg/202606/P020260623703179665375.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 19456,
+      "sha256": "36d6ed0a350a454d28738567e07d22e64ee1744b7764c503863ebca82b848841",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 337,
+      "declared_sheets": [
+        "1"
+      ],
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 54,
+        "rich_string_formatting_not_applied": 1,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "1",
+          "values_checked": 86,
+          "numeric_formula_caches_checked": 4,
+          "mismatches": [],
+          "normalized_value_digest": "2f9a03df52c1241309c215d54444c19c52bdf9f0944a4fce3bff4cb3985270fe"
+        }
+      ],
+      "formula_records": 4,
+      "rich_strings_checked": 1,
+      "rich_runs_checked": 1,
+      "rich_expected_digest": "24f2c7191eb44d4fc43696a360b7ec6d950e326abd5016ed4e72fb9ee23f082b",
+      "shared_formula_definitions": [],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:O20",
+          "sheet": "1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 6,
+              "sum": "10987"
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 12,
+              "sum": "10363"
+            },
+            "E": {
+              "count": 3,
+              "sum": "110"
+            },
+            "F": {
+              "count": 1,
+              "sum": "10"
+            },
+            "G": {
+              "count": 1,
+              "sum": "10"
+            },
+            "H": {
+              "count": 1,
+              "sum": "19"
+            },
+            "I": {
+              "count": 2,
+              "sum": "50"
+            },
+            "J": {
+              "count": 2,
+              "sum": "20"
+            },
+            "K": {
+              "count": 2,
+              "sum": "4"
+            },
+            "L": {
+              "count": 2,
+              "sum": "4"
+            },
+            "M": {
+              "count": 2,
+              "sum": "22"
+            },
+            "N": {
+              "count": 2,
+              "sum": "24"
+            },
+            "O": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020260623703179665375.et",
+            "--sheet",
+            "1",
+            "--range",
+            "A1:O20"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:O20",
+          "sheet": "1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 7,
+              "sum": "21974"
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 14,
+              "sum": "21974"
+            },
+            "E": {
+              "count": 4,
+              "sum": "220"
+            },
+            "F": {
+              "count": 1,
+              "sum": "10"
+            },
+            "G": {
+              "count": 1,
+              "sum": "10"
+            },
+            "H": {
+              "count": 1,
+              "sum": "19"
+            },
+            "I": {
+              "count": 2,
+              "sum": "50"
+            },
+            "J": {
+              "count": 2,
+              "sum": "20"
+            },
+            "K": {
+              "count": 2,
+              "sum": "4"
+            },
+            "L": {
+              "count": 2,
+              "sum": "4"
+            },
+            "M": {
+              "count": 2,
+              "sum": "22"
+            },
+            "N": {
+              "count": 2,
+              "sum": "24"
+            },
+            "O": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020260623703179665375.et",
+            "--sheet",
+            "1",
+            "--range",
+            "A1:O20",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 251,
+      "independent_merge_ranges_checked": 20,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./P020260623703179665375.et",
+          "--summary"
+        ]
+      }
+    },
+    {
+      "filename": "P020251205645964993287.et",
+      "title": "宁夏乡村振兴资金分配表",
+      "source_page": "https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/t20251205_5101628.html",
+      "download_url": "https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/P020251205645964993287.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 26112,
+      "sha256": "738c9cdf844424e97328e8bc5957ee41c827c38fb1fb3153c0f635e17d8db1ff",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 447,
+      "declared_sheets": [
+        "Sheet1",
+        "Sheet2",
+        "Sheet3"
+      ],
+      "cell_value_coverage": "unverified_due_to_best_effort_salvage",
+      "omissions_affect_cell_values": true,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 55,
+        "rich_string_formatting_not_applied": 1,
+        "formula_group_definition_invalid": 3,
+        "formula_group_member_mismatch": 38,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "Sheet1",
+          "values_checked": 211,
+          "numeric_formula_caches_checked": 79,
+          "mismatches": [],
+          "normalized_value_digest": "276ef7e566ce177163787b9cde23d05fe1d06f8fd56f1baf13e1dbb344f91ee4"
+        },
+        {
+          "sheet": "Sheet2",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "sheet": "Sheet3",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "formula_records": 79,
+      "rich_strings_checked": 6,
+      "rich_runs_checked": 11,
+      "rich_expected_digest": "d7b5496edbecaccff7b9005443d89dac022ae792b65da704cd6ecb34bdc9bc9d",
+      "shared_formula_definitions": [
+        {
+          "offset": 14254,
+          "payload_hex": "050005000409000013002c010000c02c0e0000c02c200000c042030400",
+          "bounds_zero_based": [
+            5,
+            5,
+            4,
+            9
+          ],
+          "reserved": 0,
+          "cUse": 0,
+          "token_bytes": 19
+        },
+        {
+          "offset": 14511,
+          "payload_hex": "06002600030300001d002c000001c02c000003c02c000004c02c000005c02c000006c042050400",
+          "bounds_zero_based": [
+            6,
+            38,
+            3,
+            3
+          ],
+          "reserved": 0,
+          "cUse": 0,
+          "token_bytes": 29
+        }
+      ],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:J38",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 22,
+              "sum": "168259"
+            },
+            "F": {
+              "count": 15,
+              "sum": "7280"
+            },
+            "G": {
+              "count": 22,
+              "sum": "11311"
+            },
+            "H": {
+              "count": 17,
+              "sum": "11317"
+            },
+            "I": {
+              "count": 1,
+              "sum": "848"
+            },
+            "J": {
+              "count": 5,
+              "sum": "1112"
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020251205645964993287.et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:J38"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:J38",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 33,
+              "sum": "767504"
+            },
+            "E": {
+              "count": 32,
+              "sum": "670381"
+            },
+            "F": {
+              "count": 24,
+              "sum": "27930"
+            },
+            "G": {
+              "count": 32,
+              "sum": "45383"
+            },
+            "H": {
+              "count": 27,
+              "sum": "45391"
+            },
+            "I": {
+              "count": 2,
+              "sum": "1696"
+            },
+            "J": {
+              "count": 11,
+              "sum": "4653"
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020251205645964993287.et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:J38",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 236,
+      "independent_merge_ranges_checked": 35,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./P020251205645964993287.et",
+          "--summary"
+        ]
+      }
+    },
+    {
+      "filename": "P020251205645965061468.et",
+      "title": "宁夏乡村振兴绩效目标表",
+      "source_page": "https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/t20251205_5101628.html",
+      "download_url": "https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/P020251205645965061468.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 21504,
+      "sha256": "b205f842955ddb2807a70cb429019f15f3e348ffa3eec6152b43c63e8d0fc08a",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 120,
+      "declared_sheets": [
+        "Sheet1",
+        "Sheet2",
+        "Sheet3"
+      ],
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 54,
+        "rich_string_formatting_not_applied": 1,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "Sheet1",
+          "values_checked": 61,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "a91d44249c45a811d8e17139a97787a28f7ad030cde45d72c09a80ba9d22a163"
+        },
+        {
+          "sheet": "Sheet2",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "sheet": "Sheet3",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "formula_records": 0,
+      "rich_strings_checked": 22,
+      "rich_runs_checked": 97,
+      "rich_expected_digest": "a2e6e8a2c42b8506978039703a0a3392a5a39d24ec691a3d9f5ae7b1b4fcf571",
+      "shared_formula_definitions": [],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:E24",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 2,
+              "sum": "1"
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020251205645965061468.et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:E24"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:E24",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 0,
+              "sum": null
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 0,
+              "sum": null
+            },
+            "E": {
+              "count": 2,
+              "sum": "1"
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./P020251205645965061468.et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:E24",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 59,
+      "independent_merge_ranges_checked": 17,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./P020251205645965061468.et",
+          "--summary"
+        ]
+      }
+    },
+    {
+      "filename": "12753063 (1).et",
+      "title": "深圳服务需求明细表",
+      "source_page": "https://hrss.sz.gov.cn/xxgk/qtxx/zdjsxm/content/post_12753063.html",
+      "download_url": "https://hrss.sz.gov.cn/attachment/1/1708/1708102/12753063.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 17408,
+      "sha256": "4f7e219556345742a6cbba5a32786b0015c079116ffb22a9519fb421578ed315",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 78,
+      "declared_sheets": [
+        "Sheet1",
+        "Sheet2",
+        "Sheet3"
+      ],
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 54,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "Sheet1",
+          "values_checked": 51,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "649cf047c64f156fd93328046f26b9096dffdd3b901cb4ca4ff5f718763be32b"
+        },
+        {
+          "sheet": "Sheet2",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "sheet": "Sheet3",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "formula_records": 0,
+      "rich_strings_checked": 0,
+      "rich_runs_checked": 0,
+      "rich_expected_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "shared_formula_definitions": [],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:F10",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 7,
+              "sum": "28"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 7,
+              "sum": "21"
+            },
+            "E": {
+              "count": 7,
+              "sum": "3387"
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./12753063 (1).et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:F10"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:F10",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 7,
+              "sum": "28"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 7,
+              "sum": "21"
+            },
+            "E": {
+              "count": 7,
+              "sum": "3387"
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./12753063 (1).et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:F10",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 27,
+      "independent_merge_ranges_checked": 2,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./12753063 (1).et",
+          "--summary"
+        ]
+      }
+    },
+    {
+      "filename": "12753063 (2).et",
+      "title": "深圳服务报价表",
+      "source_page": "https://hrss.sz.gov.cn/xxgk/qtxx/zdjsxm/content/post_12753063.html",
+      "download_url": "https://hrss.sz.gov.cn/attachment/1/1708/1708105/12753063.et",
+      "download_method": "Microsoft Edge native UI; completed entry observed",
+      "bytes": 18944,
+      "sha256": "d4cf9c4ee56aa0dfb45d70b7a41bacbf8b898f0678bb7caf7ae545336c16bc65",
+      "original_extension": ".et",
+      "producer_version": "unknown; public .et attachment is not proof of creating application",
+      "redistribution": "not established; originals retained locally, not bundled",
+      "container": "CFB/BIFF8",
+      "cli_exit": 3,
+      "cli_stderr": "",
+      "status": "partial",
+      "cell_count_including_blank": 155,
+      "declared_sheets": [
+        "Sheet1",
+        "Sheet2",
+        "Sheet3"
+      ],
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "issue_counts": {
+        "non_cell_metadata_not_decoded": 54,
+        "rich_string_formatting_not_applied": 1,
+        "nonstandard_header_clsid": 1,
+        "other_container_streams_not_decoded": 1
+      },
+      "oracle": [
+        {
+          "sheet": "Sheet1",
+          "values_checked": 71,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "d03d0188fdce7e084f2aacabc7cd6ae09fed74754aaef73a3ff2b731fb425a84"
+        },
+        {
+          "sheet": "Sheet2",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "sheet": "Sheet3",
+          "values_checked": 0,
+          "numeric_formula_caches_checked": 0,
+          "mismatches": [],
+          "normalized_value_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "formula_records": 0,
+      "rich_strings_checked": 2,
+      "rich_runs_checked": 3,
+      "rich_expected_digest": "79ba8fe3959d489e54d938bd1cc76e1646e821268b41b40a1b05a1b92273da05",
+      "shared_formula_definitions": [],
+      "original_unchanged": true,
+      "analysis_checks": [
+        {
+          "formula_policy": "exclude",
+          "range": "A1:G23",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 7,
+              "sum": "28"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 7,
+              "sum": "21"
+            },
+            "E": {
+              "count": 7,
+              "sum": "3387"
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./12753063 (2).et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:G23"
+          ]
+        },
+        {
+          "formula_policy": "cached",
+          "range": "A1:G23",
+          "sheet": "Sheet1",
+          "exit": 3,
+          "stderr": "",
+          "column_expectations": {
+            "A": {
+              "count": 7,
+              "sum": "28"
+            },
+            "B": {
+              "count": 0,
+              "sum": null
+            },
+            "C": {
+              "count": 0,
+              "sum": null
+            },
+            "D": {
+              "count": 7,
+              "sum": "21"
+            },
+            "E": {
+              "count": 7,
+              "sum": "3387"
+            },
+            "F": {
+              "count": 0,
+              "sum": null
+            },
+            "G": {
+              "count": 0,
+              "sum": null
+            }
+          },
+          "source_diagnostics_preserved": true,
+          "command": [
+            "/opt/homebrew/bin/python3.14",
+            "-I",
+            "-S",
+            "-B",
+            "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/analyze_et.py",
+            "./12753063 (2).et",
+            "--sheet",
+            "Sheet1",
+            "--range",
+            "A1:G23",
+            "--query",
+            "./audit_cached_query.json"
+          ]
+        }
+      ],
+      "independent_blank_cells_checked": 84,
+      "independent_merge_ranges_checked": 21,
+      "all_cell_address_sets_match": true,
+      "summary_check": {
+        "exit": 3,
+        "stderr": "",
+        "json_valid": true,
+        "schema_version": "wps_read_view_v1",
+        "command": [
+          "/opt/homebrew/bin/python3.14",
+          "-I",
+          "-S",
+          "-B",
+          "/Users/yangxuezhen/git/PSL-SKILLS/skills/et/scripts/read_et.py",
+          "./12753063 (2).et",
+          "--summary"
+        ]
+      }
+    }
+  ],
+  "expat": "expat_2.7.4",
+  "baseline_four_samples_rerun": false,
+  "all_eight_sha256_unique_and_not_in_baseline": true,
+  "runtime_unchanged_during_audit": true,
+  "originals_local_directory": "/Users/yangxuezhen/Downloads",
+  "audit_working_directory": "/private/tmp/et-edge-audit-20261112",
+  "final_checks": [
+    {
+      "cwd": "repository_root",
+      "command": "/opt/homebrew/bin/python3.14 -I -S -B -m unittest discover -s skills/et/scripts/test -p test_*.py -q",
+      "exit": 0,
+      "tests": 621,
+      "seconds": 11.338,
+      "result": "OK"
+    },
+    {
+      "cwd": "repository_root",
+      "command": "/opt/homebrew/bin/python3.14 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict",
+      "exit": 0,
+      "stdout": "OK skills/et"
+    },
+    {
+      "cwd": "repository_root",
+      "command": "/opt/homebrew/bin/python3.14 -I -S -B tools/check_project_docs.py",
+      "exit": 0,
+      "stdout": "PASS; structural checks only"
+    },
+    {
+      "cwd": "repository_root",
+      "command": "git diff --check",
+      "exit": 0,
+      "stdout": ""
+    }
+  ],
+  "test_adapter_failures": [
+    "Initial probe incorrectly assumed cells is a list; corrected to coordinate mapping.",
+    "Initial merge probe compared objects to ranges; corrected to extract range fields.",
+    "Initial analysis used --header-rows 0, rejected as documented; omitted for no header.",
+    "Old plain-SST oracle rejected rich SST; bounded same-record adapter used without importing production parser."
+  ],
+  "unverified": [
+    "WPS producer and version",
+    "OOXML ET",
+    "recalculation and cache freshness",
+    "visual rendering",
+    "Linux",
+    "Windows",
+    "standalone package installation",
+    "new real comments/hyperlinks/charts",
+    "production host stdout/stderr transport"
+  ],
+  "subagent_execution_record": [],
+  "follow_up": {
+    "record": "shared-formula-zero-use-20261112.md",
+    "machine_evidence": "shared-formula-zero-use-20261112.json",
+    "skill_version": "20261112.1543.5400",
+    "scope": "Ningxia cUse=0 shared formula definitions only; original audit fields above remain the pre-fix baseline.",
+    "current_result": {
+      "status": "partial",
+      "cell_value_coverage": "complete_within_declared_sheets",
+      "omissions_affect_cell_values": false,
+      "formula_groups": 2,
+      "formula_group_use_count_unspecified": 2,
+      "formula_group_member_mismatch": 0,
+      "cell_count": 447,
+      "nonempty_values": 211,
+      "numeric_formula_caches": 79
+    },
+    "eight_edge_samples_reread": {
+      "count": 8,
+      "cell_counts_match": true,
+      "all_value_coverage_complete": true
+    },
+    "limitations": [
+      "group expression/use-count semantics unverified; no other WPS producer cUse=0 sample"
+    ]
+  }
+}

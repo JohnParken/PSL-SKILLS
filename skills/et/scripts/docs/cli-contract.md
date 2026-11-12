@@ -14,19 +14,19 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check"
 execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./明细.et")
 ```
 
-capabilities为普通JSON：skill=et、interface_version=1、operations=[read,metadata]；不代表OOXML环境或文件验收。run原样调用旧主入口并保留参数、JSON、分页、stderr和退出码。read仅供程序编排，从stdin读取一个完整协议请求，不是Shell路径参数或分页接口。
+capabilities为普通JSON：skill=et、interface_version=1、operations=[read,metadata]；不代表OOXML环境或文件验收。run原样调用 read_et.py 主入口并保留其参数、JSON、分页、stderr和退出码；除原有查看参数外，完整读取支持 `--max-json-bytes`（1–256 MiB）、`--compact` 与 `--output <裸文件名>`。read仅供程序编排，从stdin读取一个完整协议请求，不是Shell路径参数或分页接口。
 
 ## read 输入输出
 
-逻辑请求：protocol、id、operation=read、parameters={raw:bytes,source:str,compatibility?:data|strict|legacy_excel_clsid}。raw最多64MiB；source是来源标签，不会据此扫描或读取其他路径。省略 compatibility 时与 run 和文件 API 共用代码默认值 data。显式 strict 在解析前生效，拒绝后不自动重试。安全、加密及资源检查仍由原解析器执行；不执行公式、宏或外链，不写入ET。
+逻辑请求：protocol、id、operation=read、parameters={raw:bytes,source:str,compatibility?:数据兼容占位}。raw最多64MiB（传输上限；读取器输入预算仍为32MiB）；source是来源标签，不会据此扫描或读取其他路径。读取一律使用内容优先的容错策略；`compatibility` 仅为兼容旧调用而接受，任意已知值都不改变行为，并在结果中附 `compatibility_option_ignored`。安全、加密及资源检查仍由原解析器执行；不执行公式、宏或外链，不写入ET。
 
-成功执行返回result={extraction:bytes,exit_code:int}，extraction是原生产者encode_result的完整UTF-8 JSON，维持原16MiB预算与schema。读取ok退出0，partial退出3，失败退出1；参数usage退出2。部分结果保留可靠单元格、原值与格式解释/缓存/coverage/issues的区别。partial不能按ok处理，消费方不能擅自制造覆盖断言或使用缺失缓存。
+成功执行返回result={extraction:bytes,exit_code:int}，extraction是原生产者encode_result的完整UTF-8 JSON，受协议帧预算（128MiB）与schema约束，绝不输出截断JSON。读取ok退出0，partial退出3，失败退出1；参数usage退出2。部分结果保留可靠单元格、原值与格式解释/缓存/coverage/issues的区别。partial不能按ok处理，消费方不能擅自制造覆盖断言或使用缺失缓存。
 
 解析抛出的错误返回ok=false及error，保留原status/location和错误信息；退出1。不要只因报文传输成功就消费数据。跨表只接受完整原始提取schema；概况、分页及et_table_analysis_v1不能替代完整原结果。输入路径与快照所有权由调用方核验。
 
 ## metadata 输入输出
 
-metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compatibility。仍完整执行 read_bytes 和 encode_result 的解析、安全、结构及16MiB结果预算校验，随后只投影受支持的 biff8_readonly_v1 或 ooxml_spreadsheet_readonly_v1；未知提取schema或未解析标记拒绝，不猜表名。
+metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compatibility。它执行完整的 read_bytes 解析与安全/结构校验，但**不再序列化完整提取结果**；随后只投影受支持的 biff8_readonly_v1 或 ooxml_spreadsheet_readonly_v1。投影要求成功schema、已解析标记和 1–128 个合法唯一表名；未知提取schema或未解析标记拒绝，不猜表名。完整读取的 JSON 预算不影响 metadata 投影。
 
 返回 result={metadata:{schema_version:workbook_metadata_v1,sheet_names,native:false,source_status,source_issues,source_coverage,input_schema},exit_code}。保留原表序、issues及可用的cell_value_coverage/omissions_affect_cell_values/reading_assessment，不传输单元格；ok/partial仍分别退出0/3，投影或校验失败退出1。名称元数据不能供统计或代替完整提取。旧read/run结果不变，消费方必须先确认metadata能力。该路径减少进程间数据，不承诺跳过底层解析或降低内存上限。
 
@@ -36,9 +36,20 @@ metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compat
 
 同一协议的标准库编码器为 `<skill-root>/scripts/et_cli_protocol.py`；三个独立 Skill 各含受控同内容副本，跨表测试逐字节检查一致性。它仅负责传输，不能替代业务 schema、授权或来源完整性校验；禁止 pickle、动态类恢复或执行对象。
 
+## 完整读取的输出预算与文件输出
+
+完整读取的 run 入口默认 JSON 上限 64 MiB；超预算时先自动精简一次（去重原始字节证据，保存值、类型、缓存、合并、诊断保留）并附 `output_auto_compacted`、转 partial，绝不输出截断 JSON。read 协议保持完整原始 schema，不自动精简；依据128 MiB帧预算扣除报文封装后，再按 Base64 的4:3及补齐开销计算原 JSON 预算（略低于96 MiB）。超过预算返回结构化 resource_limit 和退出1，不输出部分报文。metadata 也在完整报文预算内校验；若错误诊断本身不能编码或超限，返回明确标记 diagnostics_omitted 的小型错误，不伪装成成功。仅当请求ID本身无法安全放入错误帧时返回 id=null。
+
+- `--max-json-bytes <字节>`：1048576..268435456，显式调整完整 JSON 预算。
+- `--compact`：主动精简输出。
+- `--output <裸文件名>`：只有 run（read_et.py）提供；独占创建任务根目录新文件，禁止目录、绝对路径、父目录和已存在文件，stdout 只返回 `et_output_manifest_v1`（status、partial、source_schema_version、cell_value_coverage、omissions_affect_cell_values、compacted、output.{file,bytes,sha256}、note），不返回完整 JSON。与有界视图参数不能同时使用。
+- 超预算且未使用 `--output` 时返回明确的 `resource_limit` 失败，不静默截断。
+
+有界视图另见 `bounded-reading.md`：默认字符预算 65536、`--max-output-bytes` 512..64 MiB、游标绑定来源与选项。
+
 ## 报文编码
 
-UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型上下文后再抄录。每帧最多 128 MiB，超过则明确失败，不截断 JSON；JSON 嵌套最多64层，拒绝重复键、浮点字面量和非有限数。上层来源文件64 MiB、组合快照128 MiB，以及解析器既有预算仍有效；base64和JSON有额外内存成本，不声称减少底层内存。
+UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型上下文后再抄录。每帧最多 128 MiB，超过则明确失败，不截断 JSON；JSON 嵌套最多64层，拒绝重复键、浮点字面量和非有限数。传输 raw 最多64 MiB，读取器实际输入预算 32 MiB；组合快照128 MiB，以及解析器既有预算仍有效；base64和JSON有额外内存成本，不声称减少底层内存。
 
 无损值编码：普通字符串、整数、布尔、null、list保持 JSON 类型；Decimal编码为 `{"$decimal":"0.10000000000000000001"}`；bytes为严格base64的 `{"$bytes":"AP8="}`；tuple为 `{"$tuple":[...]}`；dict为 `{"$map":[[键,值],...]}`，嵌套值递归编码。所有dict都编码为$map，避免用户原值与标签冲突；解码后类型化复合键仍可作为dict键，文本编号不转数值。
 
@@ -51,5 +62,7 @@ UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型�
 成功响应逻辑结构为 `{"protocol":"psl_capabilities_v1","id":1,"ok":true,"result":...}`；失败为同协议及id、`ok=false`、`error={code,message,diagnostics?,calculation?,status?,location?}`。必须校验协议、关联id、ok及结果状态；未知/损坏/截断响应停止，不当作空数据或完整成功。stdout只含报文；诊断与进程stderr、真实退出码另行保留。超时、强杀、未启动或发布中断为未知/未执行等实际状态，不自动重跑有副作用操作。模型收到工具结果仍属于宿主集成验收，print或本地捕获不证明已收到。
 
 ## 维护验证
+
+`run --summary` 的完整诊断超过视图预算时，ET 专属 `<skill-root>/scripts/et_read_view.py` 组合公共分页实现，返回显式 `diagnostic_summary`；不修改公共运行时副本、不影响逐格分页或 read/metadata 协议。原风险字段保留，诊断样本及省略计数不能代替原始诊断。精简结果新增 `output_projection`，文件清单 SHA-256 和字节数包含末尾换行，文件上限仍为256 MiB。
 
 从已确认仓库根目录运行对应 `skills/et/scripts/test/` 的 unittest discover；测试目录以仓库根目录为基准，不存在于精简运行包。测试不属于普通业务必读材料，不预读全部测试或本文件。独立复制Skill目录后验证只读安装、无相邻模块及空外部程序PATH；跨表仍显式依赖已确认的XLSX/ET能力入口，不承诺单独复制跨表目录即可获得依赖。真实样本、合成测试、平台和宿主验收分别报告。

@@ -26,10 +26,12 @@ class ContinuedStrings:
         require(bool(self.records[self.index][2]), 'Empty Continue record')
 
     def string(self, allow_rich=False, metadata_budget=None, allow_phonetic=False,
-               metadata_entries_remaining=None, ignore_reserved_flags=False):
+               metadata_entries_remaining=None, ignore_reserved_flags=False,
+               retain_metadata=True):
         try:
             return self._string(allow_rich, metadata_budget, allow_phonetic,
-                                metadata_entries_remaining, ignore_reserved_flags)
+                                metadata_entries_remaining, ignore_reserved_flags,
+                                retain_metadata)
         except ValueError as exc:
             # Add physical context without changing the expected failure class.
             # Programming errors (IndexError, TypeError, etc.) are not swallowed.
@@ -42,8 +44,20 @@ class ContinuedStrings:
                                 'record_id': hex(kind)}
             raise wrapped from exc
 
+    def _skip_bytes(self, needed):
+        """Advance over retained-metadata bytes without decoding them."""
+        while needed:
+            payload = self.records[self.index][2]
+            if self.position == len(payload):
+                self.advance()
+                payload = self.records[self.index][2]
+            take = min(needed, len(payload)-self.position)
+            self.position += take
+            needed -= take
+
     def _string(self, allow_rich=False, metadata_budget=None, allow_phonetic=False,
-                metadata_entries_remaining=None, ignore_reserved_flags=False):
+                metadata_entries_remaining=None, ignore_reserved_flags=False,
+                retain_metadata=True):
         self.last_rich = None
         self.last_phonetic = None
         payload = self.records[self.index][2]
@@ -82,12 +96,12 @@ class ContinuedStrings:
             self.position += 4
             require(ext_length >= 0, 'Negative phonetic string cbExtRst')
         metadata_entries = int(bool(flag & 8)) + int(bool(flag & 4))
-        if (metadata_entries_remaining is not None
+        if (retain_metadata and metadata_entries_remaining is not None
                 and metadata_entries > metadata_entries_remaining):
             raise ResourceLimitError('Rich/phonetic string metadata entry limit exceeded before read')
         metadata_size = run_count * 4 + ext_length
         budget = self.metadata_limit if metadata_budget is None else metadata_budget
-        if metadata_size > min(self.metadata_limit, budget):
+        if retain_metadata and metadata_size > min(self.metadata_limit, budget):
             raise ResourceLimitError('Rich/phonetic string metadata budget exceeded before read')
         character_flag = flag & 1
         remaining = count
@@ -119,7 +133,9 @@ class ContinuedStrings:
             value = units.decode('utf-16le')
         except UnicodeDecodeError as exc:
             raise ValueError('Malformed UTF-16 string across Continue records') from exc
-        if run_count:
+        if run_count and not retain_metadata:
+            self._skip_bytes(run_count * 4)
+        elif run_count:
             # Unlike a continuation of characters, raw FormatRun bytes carry no
             # encoding flag. Never interpret a run byte as a character option.
             needed = run_count * 4
@@ -143,7 +159,9 @@ class ContinuedStrings:
             self.last_rich = {'record_offset': record_offset,
                               'payload_offset': start, 'utf16_units': count,
                               'run_count': run_count, 'runs_bytes': bytes(runs)}
-        if flag & 4:
+        if flag & 4 and not retain_metadata:
+            self._skip_bytes(ext_length)
+        elif flag & 4:
             # ExtRst is opaque metadata. Continue records here do not carry the
             # character-encoding byte used while string characters remain.
             needed = ext_length

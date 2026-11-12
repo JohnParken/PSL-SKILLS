@@ -46,7 +46,7 @@ def diagnostic_context(status, location):
         context['reason_code'] = 'cfb_clsid_policy_not_supported' if location['offset'] == 8 else 'cfb_minor_policy_not_supported'
     if location.get('record_id') == '0x88d':
         context.update(record_name='DXF', record_id='0x088D',
-                       policy_scope='data/legacy_excel_clsid retain validated DXF metadata; strict refuses; formatting not applied')
+                       policy_scope='content-first tolerant DXF metadata reading; compatibility options do not change policy; formatting not applied')
     if location.get('compatibility_mode') is not None:
         context['compatibility_mode'] = location['compatibility_mode']
     return context
@@ -72,38 +72,16 @@ def read_input(path):
 
 
 def container_mode(data, compatibility):
-    """Select one evidenced header profile, without parser retries."""
-    if compatibility == 'data':
-        return {LEGACY_EXCEL_CLSID: 'legacy_excel_clsid',
-                LEGACY_WORD_CLSID: 'legacy_word_clsid'}.get(data[8:24], 'strict')
-    return compatibility
+    """Compatibility hook retained for callers; all modes use the tolerant profile."""
+    return 'data'
 
 
-def load_compound(data, compatibility):
-    if compatibility not in ('strict', 'data', 'legacy_excel_clsid', 'legacy_word_clsid'):
-        raise ParseError('unsupported', {'stage': 'options'}, 'Unknown compatibility mode')
+def load_compound(data, compatibility='data'):
     if not data.startswith(SIGNATURE):
         raise ParseError('unsupported', {'stage': 'container'}, 'Require CFB container')
-    if len(data) < 26:
-        raise ParseError('corrupt', {'stream': 'CFB header', 'offset': 24}, 'Structure outside stream/region')
-    minor_version = struct.unpack_from('<H', data, 24)[0]
-    # MS-CFB 2.2 recommends 3E (SHOULD, not MUST). Accept the observed
-    # legacy 3B only in compatibility modes; sector/allocation rules are identical.
-    legacy_minor = minor_version == 0x003B and compatibility != 'strict'
-    if minor_version != 0x003E and not legacy_minor:
-        raise ParseError('unsupported', {'stream': 'CFB header', 'offset': 24}, 'Unsupported CFB minor version')
-    clsid = data[8:24]
-    allowed = bytes(16)
-    profile = container_mode(data, compatibility)
-    expected = {'legacy_excel_clsid': bytes.fromhex('2008020000000000c000000000000046'),
-                'legacy_word_clsid': bytes.fromhex('0609020000000000c000000000000046')}.get(profile)
-    if clsid != allowed and not (clsid == expected and len(data) >= 28 and struct.unpack_from('<H', data, 26)[0] == 3):
-        raise ParseError('unsupported', {'stream': 'CFB header', 'offset': 8},
-                         'Nonzero CFB header CLSID outside the explicitly supported profile')
     try:
-        compound = CompoundFile(data, compatibility=profile,
-                                recover_zero_fat_count=compatibility == 'data',
-                                allow_zero_trailing_padding=compatibility == 'data')
+        compound = CompoundFile(data, compatibility='data', recover_zero_fat_count=True,
+                                allow_zero_trailing_padding=True, allow_trailing_remainder=True)
     except ValueError as exc:
         message = str(exc)
         location = {'stage': 'CFB'}
@@ -116,18 +94,15 @@ def load_compound(data, compatibility):
         if 'reason_code' not in location:
             if any(token in message for token in ('cycle', 'cross-link', 'duplicate allocation')):
                 location['reason_code'] = 'cfb_allocation_conflict'
-            elif 'Unreferenced' in message:
-                location['reason_code'] = 'cfb_unreferenced_allocation'
             elif any(token in message for token in ('exceeds', 'limit')):
                 location['reason_code'] = 'cfb_resource_or_subset_limit'
             else:
                 location['reason_code'] = 'cfb_validation_or_subset_rejection'
         raise ParseError('invalid_or_unsupported', location, message) from exc
-    if legacy_minor:
-        compound.issues.append({'code': 'legacy_cfb_minor_version',
-                                'stream': 'CFB header', 'offset': 24,
-                                'minor_version': minor_version,
-                                'message': 'Legacy minor version 0x003B accepted with unchanged major-version, sector and allocation validation; not full format certification.'})
+    if compatibility != 'data':
+        compound.issues.append({'code': 'compatibility_option_ignored',
+                                'requested': str(compatibility),
+                                'message': 'Compatibility policies are deprecated; the tolerant content-first reader was used.'})
     encrypted = [path for path in compound.streams
                  if path[-1].casefold() in ('encryptedpackage', 'encryptioninfo', 'encryptedsummary', 'drmcontent')]
     if encrypted:
@@ -135,11 +110,15 @@ def load_compound(data, compatibility):
     word = ('WordDocument',) in compound.streams
     workbooks = [path for path in compound.streams if len(path) == 1 and path[0].casefold() in ('workbook', 'book')]
     if word and workbooks:
-        raise ParseError('unsupported', {'stage': 'routing'}, 'Ambiguous document and workbook payloads; no branch chosen')
+        compound.issues.append({'code': 'ambiguous_document_and_workbook_payloads',
+                                'workbook_streams': [list(path) for path in workbooks],
+                                'message': 'Both a WordDocument and a Workbook payload are present; the workbook payload is used and the Word payload is not decoded.'})
     return compound
 
 
-def resolve_chart_policy(chart_policy, compatibility):
+def resolve_chart_policy(chart_policy, compatibility=None):
     if chart_policy not in (None, 'reject', 'opaque'):
         raise ParseError('unsupported', {'stage': 'options'}, 'Unknown chart policy')
-    return ('opaque' if compatibility == 'data' else 'reject') if chart_policy is None else chart_policy
+    # Charts are always retained as bounded opaque evidence; no chart bytes are
+    # decoded, evaluated or rendered, and no strict policy is selected anymore.
+    return 'opaque'

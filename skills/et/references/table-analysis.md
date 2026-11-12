@@ -28,7 +28,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check"
 execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.ett --sheet \"数据\" --range A1:D100 --header-rows 1")
 ```
 
-自检要求退出 0 且输出 `environment-ok`；OOXML 还要求 `ooxml-sheet=available`。自检失败停止依赖操作。完成后读取输入的默认 data 结果，不改读取策略，不自动尝试 salvage。后缀不证明内部格式；未知格式和原读取器的结构/安全/资源拒绝仍生效。
+自检要求退出 0 且输出 `environment-ok`；OOXML 还要求 `ooxml-sheet=available`。自检失败停止依赖操作。完成后读取输入的默认容错结果，不改读取策略，不需要也不再有 salvage 开关。后缀不证明内部格式；未知格式和原读取器的结构/安全/资源拒绝仍生效。
 
 工作表和矩形范围必须明确。表头可选；不指定时第一行也是数据。`--header-rows 1:2` 使用已有表头重建规则，但列 ID 始终为物理字母 `A`、`B` 等，重复标题不会覆盖列。不要让标题、说明、小计、总计或无关表格落入统计范围后宣称得到业务总额；执行器不推断这些角色。连续区域内穿插这些行时，可用 `exclude_rows` 列出经任务确认的原始物理行号。
 
@@ -76,7 +76,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 - 数字按 Decimal 处理，JSON 中以字符串输出，文本 `"001"` 与数字 `1` 不合并；布尔不会当成 0/1。
 - `blank` 是已保存空白，`missing` 是矩形内无保存单元格；空文本 `""` 是文本。三者分开统计；缺失公式缓存不是普通空白。
 - `formula_policy=exclude` 为默认：保留行里的保存值与缓存状态，但 `analysis_state=formula_excluded` 的值不用于比较、计数或数值汇总，报告 partial。
-- `formula_policy=cached` 为明确缓存选择：使用非错误的已保存缓存，并报告 `formula_cache_used`。不计算表达式、不验证新鲜度；`missing_cache`、`error_cache` 和普通 `error` 保留原值与位置但不参加有效值计算。
+- `formula_policy=cached` 为明确缓存选择：使用非错误的已保存缓存，并报告 `formula_cache_used`。可消费的完整缓存状态包括 `unverified` 和保存的空文本缓存 `unverified_empty_string`；空文本是存在的已保存值，不按缺失缓存处理，也不变成零或普通空白。`missing_cache`、`error_cache` 和普通 `error` 保留原值与位置但不参加有效值计算；未知缓存编码仍不应静默消费。不计算表达式、不验证新鲜度。
 - `profiles` 同时给出类型数、状态数、公式位置数、已用缓存数、有效值数及数值数，不能只取 sum 而隐去这些分母和缺口。状态计数不会把排除项当零。
 - `source` 保留源 status/partial、issues、diagnostics、reading_assessment 和已有覆盖字段；源 partial 不因筛选或统计而升级为完整成功。
 
@@ -89,6 +89,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 表头仅在已声明行内按实际合并锚点构造层级，不向普通空白猜填标题；跨表头边界或被截断的表头合并仍拒绝。不可用缓存形成 `unavailable` 标签，不把它伪装为空字符串；所有操作使用物理列 ID。
 
 数据默认 `merge_policy=preserve`：按原保存位置处理，不复制合并锚点；被区域裁切的合并在 `merges` 中标记。非锚点若本来保存了内容，默认仍保留该内容，不宣称视觉显示等价。
+
+所选合并范围重叠时，普通统计保留全部物理值，返回 `overlapping_merge_mapping_not_applied` 与 partial；保留范围但不附歧义 `merge_anchor`，范围上标记 `anchor_mapping=not_applied_due_to_overlap`。`fill_text` 仍拒绝重叠选区；表头重建只在实际涉及的表头合并有歧义时停止。范围外的重叠不阻断本选区。
 
 显式 `fill_text` 只把所选范围内普通、非公式的文本锚点复制到同一合并区域内缺失/blank 的数据位置。每个填充项记录 `propagated_from`、`original_type` 和 `original_value`。数字、公式标签、范围外锚点及被 `exclude_rows` 排除的锚点不填充；被排除的目标行也不填充。其余非锚点已有内容（包括空文本）时拒绝覆盖。此操作只影响本次派生结果，不改工作簿。
 
@@ -140,13 +142,13 @@ sum 和 median 在有界 Decimal 精度下精确计算，不经过 float；mean 
 | 统计质量位置样本 | 每列每类默认 5，最多 20；可设 0，计数仍完整 |
 | 独立矩形预览 | 默认 10 行，最多 50 行/10000 位置；不计算统计 |
 | 数值分析 | 系数最多 1100 位、指数绝对值最多 2200、adjusted 指数绝对值最多 1100；覆盖本次验证的读值范围，不扩展源读取器 |
-| 输出 JSON | 16 MiB；超出时输出失败，收窄预览/选择范围后重做，不能截取输出继续分析 |
+| 输出 JSON | 完整读取与分析结果默认 64 MiB（`--max-json-bytes` 1–256 MiB，完整读取可用 `--output` 写文件）；超出时输出失败，收窄预览/选择范围或改用文件输出后重做，不能截取输出继续分析 |
 
 原容器、单元格、文字及元数据预算不变。此入口不计算新公式、不联表、不重建透视表、不推断小计，不编辑、导出或写回办公文件；需要这些能力时另行明确交接及验证。
 
 ## 可选字节预算与续读
 
-在原命令添加 `--max-output-bytes 24000`，可对 `--preview` 或分析结果按 UTF-8 字节预算分页；512..16777216，包含真实紧凑 JSON 的全部字段、转义与末尾换行。不传此参数和 `--cursor` 时默认 CLI/API、原字段及16MiB序列化上限不变。仅传游标时预算默认12000；预算不是token数。
+在原命令添加 `--max-output-bytes 24000`，可对 `--preview` 或分析结果按 UTF-8 字节预算分页；512..67108864，包含真实紧凑 JSON 的全部字段、转义与末尾换行。仅传游标时分析分页预算默认12000；完整读取视图默认字符预算65536，完整 JSON 默认64MiB（`--max-json-bytes` 1–256 MiB）。预算不是token数。
 
 新模式保留原 schema、partial、源诊断、统计质量报告和分母，另加 `output_page_revision=1`、`has_more`、`coverage` 与 `next_cursor`。`row_page`/`group_page` 另加 `has_more`、`next_offset`；旧 total/offset/returned/truncated 含义保留。`coverage` 对每条结果流声明是否请求、初始 offset 和覆盖范围；偏移之前的行不属于本次输出覆盖，不能据末页声称已经返回整个结果表。`limit=0` 或 `group_limit=0` 表示不请求对应结果流，仍完整计算统计，不产生该流的续读；独立预览仍要求limit为1..50。
 

@@ -40,19 +40,20 @@ class SavedVisibility:
             if payload or self.filter_mode:
                 raise ValueError('Malformed/duplicate FilterMode at '+str(offset))
             self.filter_mode = True
-        elif kind == 0x9D:
+        elif kind == 0x9E:
             if len(payload) < 24 or len(self.filter_records) >= 256:
                 raise ValueError('Malformed/oversized AutoFilter at '+str(offset))
             column = struct.unpack_from('<H', payload)[0]
             if column >= 256 or any(x['column_relative'] == column for x in self.filter_records):
                 raise ValueError('Invalid/duplicate AutoFilter at '+str(offset))
             self.filter_records.append({'column_relative': column, 'record_offset': offset, 'payload_hex': payload.hex(), 'conditions_decoded': False})
-        elif kind == 0x9E:
+        elif kind == 0x9D:
             if len(payload) != 2 or self.filter_count is not None:
                 raise ValueError('Malformed/duplicate AutoFilterInfo at '+str(offset))
-            self.filter_count = struct.unpack('<H', payload)[0]
-            if not 1 <= self.filter_count <= 256:
+            count = struct.unpack('<H', payload)[0]
+            if not 1 <= count <= 256:
                 raise ValueError('Invalid AutoFilterInfo at '+str(offset))
+            self.filter_count = count
         else:
             return False
         return True

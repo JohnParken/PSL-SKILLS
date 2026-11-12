@@ -6,51 +6,68 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import sys
 import unittest
 from xml.parsers import expat
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from wps_iso_date import parse_iso_date
-from test_wps_ooxml_sheet import package, result
+from test_wps_ooxml_sheet import package, result, codes, issue
+
 
 class IsoDateTests(unittest.TestCase):
     def test_exact_lexical_and_timezone(self):
-        for raw, kind, offset in [('2024-02-29','date',None),('1976-11-22T08:30Z','datetime',0),('2024-02-29T23:59:59.123456789+14:00','datetime',840),('0001-01-01T00:00-00:30','datetime',-30)]:
-            item=parse_iso_date(raw)
-            self.assertEqual((item['lexical'],item['kind'],item['offset_minutes']),(raw,kind,offset))
+        for raw, kind, offset in [('2024-02-29', 'date', None),
+                                  ('1976-11-22T08:30Z', 'datetime', 0),
+                                  ('2024-02-29T23:59:59.123456789+14:00', 'datetime', 840),
+                                  ('0001-01-01T00:00-00:30', 'datetime', -30)]:
+            item = parse_iso_date(raw)
+            self.assertEqual((item['lexical'], item['kind'], item['offset_minutes']),
+                             (raw, kind, offset))
             self.assertFalse(item['serial_conversion_performed'])
+
     def test_bad_calendar_clock_and_zone(self):
-        for raw in ('1900-02-29','2023-02-29','0000-01-01','2024-13-01','2024-02-30','2024-01-01T24:00Z','2024-01-01T23:59:60Z','2024-01-01T12:60Z','2024-01-01T12:00+14:01','2024-01-01T12:00+00:60'):
+        for raw in ('1900-02-29', '2023-02-29', '0000-01-01', '2024-13-01',
+                    '2024-02-30', '2024-01-01T24:00Z', '2024-01-01T23:59:60Z',
+                    '2024-01-01T12:60Z', '2024-01-01T12:00+14:01',
+                    '2024-01-01T12:00+00:60'):
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 parse_iso_date(raw)
+
     def test_bounded_lexical_subset(self):
-        for raw in (' 2024-01-01','20240101','-0001-01-01','10000-01-01','2024-W01-1','2024-001','2024-01-01T01:01:01.'+'1'*100000,'2024-01-01T12:00+1400'):
-            with self.assertRaisesRegex(ValueError,'Unsupported'):
+        for raw in (' 2024-01-01', '20240101', '-0001-01-01', '10000-01-01',
+                    '2024-W01-1', '2024-001', '2024-01-01T01:01:01.' + '1' * 100000,
+                    '2024-01-01T12:00+1400'):
+            with self.assertRaisesRegex(ValueError, 'Unsupported'):
                 parse_iso_date(raw)
 
-@unittest.skipUnless(expat.version_info >= (2,6,0),'requires Expat >=2.6')
+
+@unittest.skipUnless(expat.version_info >= (2, 6, 0), 'requires Expat >=2.6')
 class IsoDatePackageTests(unittest.TestCase):
     def test_strict_transitional_keep_date_as_typed_text(self):
-        raw='1976-11-22T08:30Z'
-        for strict in (False,True):
-            value=result(package('<c r="A1" t="d"><v>'+raw+'</v></c>',strict))
-            self.assertEqual(value['status'],'partial',value)  # fixture's shared rich text is intentionally partial
-            cell=value['sheets'][0]['cells']['A1']
-            self.assertEqual((cell['type'],cell['value'],cell['source_cell_type']),('text',raw,'d'))
-            self.assertEqual(cell['iso_date']['offset_minutes'],0)
-            self.assertNotIn('numeric_interpretation',cell)
+        raw = '1976-11-22T08:30Z'
+        for strict in (False, True):
+            value = result(package('<c r="A1" t="d"><v>' + raw + '</v></c>', strict))
+            self.assertEqual(value['status'], 'partial', value)
+            cell = value['sheets'][0]['cells']['A1']
+            self.assertEqual((cell['type'], cell['value'], cell['source_cell_type']),
+                             ('text', raw, 'd'))
+            self.assertEqual(cell['iso_date']['offset_minutes'], 0)
+            self.assertNotIn('numeric_interpretation', cell)
+
     def test_formula_cache_and_missing_are_distinct(self):
-        value=result(package('<c r="A1" t="d"><f>TODAY()</f><v>2024-02-29</v></c><c r="B1" t="d"><f>TODAY()</f></c>'))
-        self.assertEqual(value['status'],'partial')
-        cells=value['sheets'][0]['cells']
-        self.assertEqual(cells['A1']['cache_status'],'unverified')
-        self.assertEqual(cells['A1']['value'],'2024-02-29')
-        self.assertEqual(cells['B1']['cache_status'],'missing')
-        self.assertNotIn('iso_date',cells['B1'])
+        value = result(package(
+            '<c r="A1" t="d"><f>TODAY()</f><v>2024-02-29</v></c>'
+            '<c r="B1" t="d"><f>TODAY()</f></c>'))
+        self.assertEqual(value['status'], 'partial')
+        cells = value['sheets'][0]['cells']
+        self.assertEqual(cells['A1']['cache_status'], 'unverified')
+        self.assertEqual(cells['A1']['value'], '2024-02-29')
+        self.assertEqual(cells['B1']['cache_status'], 'missing')
+        self.assertNotIn('iso_date', cells['B1'])
+
     def test_missing_and_plain_cells_do_not_reuse_previous_date_metadata(self):
         value = result(package(
             '<c r="A1" t="d"><f>TODAY()</f></c>'
             '<c r="B1" t="d"><v>2024-02-29</v></c>'
             '<c r="C1" t="n"><v>42</v></c>'
-            '<c r="D1" t="d"><f>TODAY()</f></c>'
-        ))
+            '<c r="D1" t="d"><f>TODAY()</f></c>'))
         self.assertEqual(value['status'], 'partial')
         cells = value['sheets'][0]['cells']
         self.assertEqual(cells['B1']['iso_date']['lexical'], '2024-02-29')
@@ -60,12 +77,29 @@ class IsoDatePackageTests(unittest.TestCase):
         for address in ('A1', 'D1'):
             self.assertEqual(cells[address]['cache_status'], 'missing')
 
-    def test_invalid_dates_never_become_empty_success(self):
-        for raw in ('','1900-02-29','2024-01-01T24:00Z'):
-            value=result(package('<c r="A1" t="d"><v>'+raw+'</v></c>'))
-            self.assertEqual(value['status'],'corrupt',value)
-        value=result(package('<c r="A1" t="d"><v>-0001-01-01</v></c>'))
-        self.assertEqual(value['status'],'unsupported')
+    def test_invalid_dates_are_preserved_as_text_with_issues(self):
+        for raw in ('1900-02-29', '2024-01-01T24:00Z', '-0001-01-01', ''):
+            with self.subTest(raw=raw):
+                value = result(package('<c r="A1" t="d"><v>' + raw + '</v></c>'))
+                self.assertEqual(value['status'], 'partial')
+                cell = value['sheets'][0]['cells']['A1']
+                self.assertEqual((cell['type'], cell['value']),
+                                 ('text', raw))
+                self.assertEqual(cell['source_cell_type'], 'd')
+                self.assertNotIn('iso_date', cell)
+                self.assertIn('iso_date_value_not_interpreted', codes(value))
+                self.assertEqual(value['cell_value_coverage'],
+                                 'complete_within_declared_sheets')
+                self.assertFalse(value['omissions_affect_cell_values'])
+                self.assertFalse(issue(value, 'iso_date_value_not_interpreted')
+                                 ['evaluated'])
 
-if __name__=='__main__':
+    def test_missing_typed_date_value_is_reported_without_losing_the_cell(self):
+        value = result(package('<c r="A1" t="d"/>'))
+        self.assertEqual(value['status'], 'partial')
+        self.assertEqual(value['sheets'][0]['cells']['A1']['type'], 'blank')
+        self.assertIn('cell_value_missing', codes(value))
+
+
+if __name__ == '__main__':
     unittest.main()

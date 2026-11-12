@@ -1,6 +1,9 @@
-"""Aggressive opt-in BIFF8 salvage: data provenance, mandatory safety and refusals.
+"""Tolerant BIFF8 raw-retention contract: provenance, mandatory safety, values.
 
-Synthetic MS-XLS only, never WPS Office producer evidence.
+The reader has a single tolerant policy, so unknown records, missing Date1904,
+missing WsBool and unknown CodePage declarations degrade to ``partial`` with
+bounded diagnostics instead of aborting. Synthetic MS-XLS only; never WPS Office
+producer evidence.
 """
 import json
 from pathlib import Path
@@ -12,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from test_wps_biff8 import workbook, rec, cell
@@ -25,6 +29,10 @@ def values(result):
                    if key not in ('record_offset', 'cache_record_offset', 'numeric_interpretation')}
              for pos,item in sheet['cells'].items()}
             for sheet in result['sheets']]
+
+
+def issue_codes(result):
+    return [item.get('code') for item in result.get('issues', ())]
 
 
 def remove_global_date_marker(data):
@@ -61,120 +69,117 @@ def remove_worksheet_wsbool(data):
     raise AssertionError('Missing BoundSheet8')
 
 
-class Biff8SalvageTests(unittest.TestCase):
-    def test_optin_global_unknown_and_original_cells(self):
-        original = parse_stream(workbook(), compatibility='data')
+class Biff8ToleranceTests(unittest.TestCase):
+    def test_unknown_global_and_original_cells_are_all_retained(self):
+        original = parse_stream(workbook())
         with_extra = workbook(extra_global=rec(0x7777, b'metadata-not-cell'))
-        with self.assertRaises(UnsupportedError):
-            parse_stream(with_extra, compatibility='data')
-        got = parse_stream(with_extra, compatibility='data', salvage_unknown_metadata=True)
+        got = parse_stream(with_extra)
         self.assertEqual(values(got), values(original))
         self.assertEqual(got['status'], 'partial')
-        self.assertEqual(got['cell_value_coverage'], 'unverified_due_to_best_effort_salvage')
+        self.assertEqual(got['cell_value_coverage'],
+                         'unverified_due_to_best_effort_salvage')
         self.assertTrue(got['omissions_affect_cell_values'])
-        self.assertFalse(got['saved_value_completeness_certified'])
         self.assertEqual(got['salvage_unknown_record_count'], 1)
-        self.assertEqual(got['issues'][0]['code'], 'unknown_biff_record_salvaged')
+        self.assertIn('unknown_biff_record_salvaged', issue_codes(got))
         record = next(x for x in got['uninterpreted_metadata'] if x['record_id']=='0x7777')
         self.assertEqual(record['payload_hex'], b'metadata-not-cell'.hex())
         self.assertTrue(record['may_affect_cell_values'])
 
-    def test_default_json_excludes_salvage_fields(self):
-        original = parse_stream(workbook(), compatibility='data')
-        for name in ('salvage_requested', 'salvage_unknown_record_count',
-                     'saved_value_completeness_certified'):
-            self.assertNotIn(name, original)
+    def test_tolerant_result_fields_and_requested_salvage_flag(self):
+        original = parse_stream(workbook())
+        self.assertEqual(original['status'], 'ok')
         self.assertEqual(original['cell_value_coverage'],
                          'complete_within_declared_sheets')
-        self.assertIn('Fail closed', original['policies']['unknown_records'])
-        optin = parse_stream(workbook(), compatibility='data',
-                             salvage_unknown_metadata=True)
+        self.assertNotIn('salvage_requested', original)
+        optin = parse_stream(workbook(), salvage_unknown_metadata=True)
         self.assertTrue(optin['salvage_requested'])
         self.assertFalse(optin['saved_value_completeness_certified'])
+        self.assertIn('salvage_option_ignored', issue_codes(optin))
         self.assertEqual(optin['salvage_unknown_record_count'], 0)
 
-    def test_optin_sheet_unknown_and_original_cells(self):
+    def test_unknown_sheet_record_retained_and_later_cells_read(self):
         sheet=rec(0x7777, b'opaque')+rec(0x0203, cell(2,3)+struct.pack('<d', 2.5))
         raw=workbook(sheet_records=[sheet], strings=[])
-        with self.assertRaises(UnsupportedError):
-            parse_stream(raw, compatibility='data')
-        got=parse_stream(raw, compatibility='data', salvage_unknown_metadata=True)
+        got=parse_stream(raw)
         self.assertEqual(got['sheets'][0]['cells']['D3']['value'], 2.5)
         self.assertTrue(got['omissions_affect_cell_values'])
         self.assertEqual(got['status'], 'partial')
+        self.assertIn('unknown_biff_record_salvaged', issue_codes(got))
 
     def test_same_unknown_record_grouped_and_bounded(self):
         raw=workbook(extra_global=rec(0x7777,b'1')+rec(0x7777,b'2'))
-        result=parse_stream(raw,compatibility='data',salvage_unknown_metadata=True)
+        result=parse_stream(raw)
         self.assertEqual(result['salvage_unknown_record_count'],2)
         event=[x for x in result['issues'] if x['code']=='unknown_biff_record_salvaged']
         self.assertEqual(len(event),1)
         self.assertEqual(event[0]['count'],2)
 
-    def test_unknown_codepage_declaration_salvaged_without_recoding_text(self):
-        # The CodePage is only raw metadata in BIFF8: no legacy decoder.
+    def test_unknown_codepage_kept_raw_without_recoding_text(self):
         codepage = 65001
         incoming = workbook(extra_global=rec(0x0042, struct.pack('<H', codepage)))
-        with self.assertRaises(ValueError):
-            parse_stream(incoming, compatibility='data')
-        got = parse_stream(incoming, compatibility='data',
-                           salvage_unknown_metadata=True)
-        before = parse_stream(workbook(), compatibility='data')
+        got = parse_stream(incoming)
+        before = parse_stream(workbook())
         self.assertEqual(values(got), values(before))
         self.assertEqual(got['code_page_raw'], codepage)
-        self.assertEqual(got['cell_value_coverage'],
-                         'unverified_due_to_best_effort_salvage')
-        self.assertTrue(any(x['code']=='unknown_codepage_decl_salvaged'
-                            for x in got['issues']))
+        self.assertEqual(got['status'], 'partial')
+        self.assertIn('unknown_codepage_declaration', issue_codes(got))
+        # Unicode text is decoded from each string's own flags, not the code page.
+        self.assertEqual(got['sheets'][0]['cells']['A1']['value'], '部门')
 
-    def test_missing_mandatory_date_only_optin_and_no_fake_date(self):
+    def test_missing_date1904_keeps_numbers_with_unknown_date_system(self):
         normal=workbook()
         without=remove_global_date_marker(normal)
-        with self.assertRaises(ValueError):
-            parse_stream(without, compatibility='data')
-        got=parse_stream(without,compatibility='data',salvage_unknown_metadata=True)
+        got=parse_stream(without)
         self.assertEqual(got['date_system'],'unknown')
-        self.assertTrue(got['omissions_affect_cell_values'])
-        self.assertEqual(values(got),values(parse_stream(normal,compatibility='data')))
+        self.assertEqual(values(got),values(parse_stream(normal)))
         self.assertNotIn('numeric_interpretation', got['sheets'][0]['cells']['C2'])
-        self.assertTrue(any(x['code']=='date_system_missing_salvage' for x in got['issues']))
+        self.assertIn('date_system_missing', issue_codes(got))
 
-    def test_missing_wsbool_only_optin(self):
+    def test_missing_wsbool_keeps_cells_and_reports_partial(self):
         original=workbook(sheet_records=[rec(0x0203, cell(0,0)+struct.pack('<d', 6))],strings=[])
         without=remove_worksheet_wsbool(original)
-        with self.assertRaises(ValueError):
-            parse_stream(without,compatibility='data')
-        got=parse_stream(without,compatibility='data',salvage_unknown_metadata=True)
+        got=parse_stream(without)
         self.assertEqual(got['sheets'][0]['cells']['A1']['value'],6)
-        self.assertTrue(any(x['code']=='wsbool_missing_salvage' for x in got['issues']))
+        self.assertIn('wsbool_missing', issue_codes(got))
         self.assertEqual(got['status'],'partial')
 
-    def test_core_security_and_framing_still_rejected(self):
-        for kind,payload in [(0x002f,b'\0\0'),(0x003c,b'\0'),(0x0809,b'\0\0'),
-                             (0x04bc,b'\0'),(0x0203,b'\0'),(0x0207,b'A')]:
-            with self.subTest(kind=hex(kind)),self.assertRaises(ValueError):
-                parse_stream(workbook(extra_global=rec(kind,payload)),compatibility='data',salvage_unknown_metadata=True)
-        raw=workbook(extra_global=rec(0x7777,b'A'))
+    def test_hard_safety_and_bounded_framing_still_rejected(self):
+        # A stream that does not start with a BIFF8 BOF and an oversized
+        # declared payload remain hard framing refusals.
         with self.assertRaises(ValueError):
-            parse_stream(raw[:-1],compatibility='data',salvage_unknown_metadata=True)
+            parse_stream(b'not BIFF')
         with self.assertRaises(ValueError):
-            parse_stream(raw,compatibility='strict',salvage_unknown_metadata=True)
+            parse_stream(workbook(extra_global=struct.pack('<HH',0x7777,9000)+bytes(10)))
+        # FILEPASS remains encryption, never decrypted.
+        with self.assertRaises(EncryptedError):
+            parse_stream(workbook(extra_global=rec(0x002F,b'\0\0')))
+        # A structurally misplaced BOF is retained raw with a diagnostic.
+        nested = parse_stream(workbook(extra_global=rec(0x0809,b'\0')))
+        self.assertEqual(nested['status'],'partial')
+        self.assertIn('unknown_biff_record_salvaged',issue_codes(nested))
+        self.assertEqual(nested['sheets'][0]['cells']['A1']['value'],'部门')
 
-    def test_source_metadata_budget_not_bypassed(self):
-        import unittest.mock
+    def test_metadata_budget_truncates_instead_of_aborting(self):
         raw=workbook(extra_global=rec(0x7777, bytes(50)))
-        with unittest.mock.patch('wps_biff8.MAX_METADATA_BYTES', 30):
-            with self.assertRaises(ResourceLimitError):
-                parse_stream(raw,compatibility='data',salvage_unknown_metadata=True)
+        with patch('wps_biff8.MAX_METADATA_BYTES', 30):
+            result=parse_stream(raw)
+        self.assertEqual(result['status'],'partial')
+        self.assertIn('metadata_budget_truncated', issue_codes(result))
+        self.assertGreater(result['metadata_truncated_count'],0)
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'],'部门')
+        with patch('wps_biff8.MAX_RECORDS', 10), self.assertRaises(ResourceLimitError):
+            parse_stream(raw)
 
-    def test_macro_storage_still_rejected_by_salvage_cli(self):
+    def test_macro_storage_is_reported_but_not_loaded(self):
         raw = synthetic_cfb({'Workbook': workbook(), 'VBA': b'not-executed'})
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'malicious.et'
             path.write_bytes(raw)
-            with self.assertRaisesRegex(ValueError, 'Macro'):
-                read_file(path, compatibility='data',
-                          salvage_unknown_metadata=True)
+            result = read_file(path)
+            self.assertEqual(result['status'], 'partial')
+            self.assertIn('macro_storage_present_unloaded', issue_codes(result))
+            self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+            self.assertFalse(result['formulas_executed'])
             self.assertEqual(path.read_bytes(), raw)
 
     def test_standalone_cli_default_partial_and_original_bytes_unchanged(self):
@@ -195,6 +200,7 @@ class Biff8SalvageTests(unittest.TestCase):
             self.assertEqual(default['sheets'], obj['sheets'])
             self.assertTrue(default['omissions_affect_cell_values'])
             self.assertNotIn('salvage_requested', default)
+            self.assertIn('salvage_option_ignored', [x['code'] for x in obj['issues']])
             entry = Path(__file__).resolve().parents[1] / 'et_cli.py'
             unified = subprocess.run([sys.executable, '-I', '-S', '-B', str(entry), 'run', str(p)],
                                      text=True, capture_output=True, timeout=20)

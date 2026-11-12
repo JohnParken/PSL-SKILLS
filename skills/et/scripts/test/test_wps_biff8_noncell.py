@@ -89,8 +89,10 @@ class NonCellRecordsTests(unittest.TestCase):
 
     def test_first_writeprotect_retained_without_changing_saved_values(self):
         incoming = prepend_global_record(self.original, rec(0x0086))
-        with self.assertRaises(UnsupportedError):
-            parse_stream(incoming, compatibility='strict')
+        strict = parse_stream(incoming, compatibility='strict')
+        self.assertEqual(strict['status'], 'partial')
+        self.assertIn('compatibility_option_ignored',
+                      [item['code'] for item in strict['issues']])
         before = parse_stream(self.original, compatibility='data')
         after = parse_stream(incoming, compatibility='data')
         self.assertEqual(cell_semantics(before), cell_semantics(after))
@@ -108,13 +110,21 @@ class NonCellRecordsTests(unittest.TestCase):
         self.assertEqual(saved[0]['payload_hex'], '')
         self.assertTrue(any(x['code'] == 'non_cell_metadata_not_decoded' for x in after['issues']))
 
-    def test_writeprotect_wrong_length_late_or_duplicate_rejected(self):
-        for item in (prepend_global_record(self.original, rec(0x0086, b'\0')),
-                     insert_after_date1904(self.original, rec(0x0086)),
-                     prepend_global_record(self.original, rec(0x0086) + rec(0x0086))):
+    def test_writeprotect_wrong_length_late_or_duplicate_are_diagnostics(self):
+        for item, expected in (
+                (prepend_global_record(self.original, rec(0x0086, b'\0')),
+                 'writeprotect_metadata_invalid'),
+                (insert_after_date1904(self.original, rec(0x0086)),
+                 'writeprotect_metadata_order'),
+                (prepend_global_record(self.original, rec(0x0086) + rec(0x0086)),
+                 'writeprotect_metadata_order')):
             with self.subTest(length=len(item)):
-                with self.assertRaises(ValueError):
-                    parse_stream(item, compatibility='data')
+                result = parse_stream(item, compatibility='data')
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn(expected,
+                              [issue['code'] for issue in result['issues']])
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'],
+                                 '部门')
 
     def test_uncalced_readable_without_recomputing_formula(self):
         incoming = prepend_sheet_record(self.single, rec(0x005e, b'\0\0'))
@@ -136,37 +146,46 @@ class NonCellRecordsTests(unittest.TestCase):
         self.assertEqual(value['cache_status'], 'unverified')
         self.assertEqual(value['value'], 42)
 
-    def test_uncalced_invalid_reserved_length_order_or_duplicate_rejected(self):
+    def test_uncalced_invalid_variants_are_retained_with_diagnostics(self):
         base = self.single
         valid = rec(0x005e, b'\0\0')
         malformed = [rec(0x005e), rec(0x005e, b'\x01\0'),
                      rec(0x005e, b'\0\0\0'), valid + valid]
         for item in malformed:
             with self.subTest(payload=item):
-                with self.assertRaises(ValueError):
-                    parse_stream(prepend_sheet_record(base, item), compatibility='data')
-        # After worksheet WsBool is not valid for the first-position Uncalced.
+                result = parse_stream(prepend_sheet_record(base, item),
+                                      compatibility='data')
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['B4']['value'], 42)
+                self.assertFalse(result['formulas_executed'])
+        # A late Uncalced keeps its position diagnostic and the saved cache.
         sheet_begin = base.find(rec(0x0081, b'\0\0'))
         self.assertGreaterEqual(sheet_begin, 0)
         late = base[:sheet_begin+6] + valid + base[sheet_begin+6:]
-        with self.assertRaises(ValueError):
-            parse_stream(late, compatibility='data')
-        with self.assertRaises(UnsupportedError):
-            parse_stream(prepend_sheet_record(base, valid), compatibility='strict')
+        result = parse_stream(late, compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('uncalced_metadata_order',
+                      [issue['code'] for issue in result['issues']])
+        strict = parse_stream(prepend_sheet_record(base, valid), compatibility='strict')
+        self.assertEqual(strict['status'], 'partial')
 
-    def test_unknown_and_safety_records_still_fail_closed(self):
+    def test_unknown_records_are_retained_and_encryption_still_refused(self):
         for kind in (0x7777, 0x01ae, 0x003c):
             with self.subTest(record=hex(kind)):
-                with self.assertRaises(ValueError):
-                    parse_stream(prepend_global_record(self.original, rec(kind)),
-                                 compatibility='data')
+                result = parse_stream(prepend_global_record(self.original, rec(kind)),
+                                      compatibility='data')
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'],
+                                 '部门')
         # Encrypted workbook must never become readable via a non-cell rule.
         with self.assertRaises(ValueError):
             parse_stream(prepend_global_record(self.original, rec(0x002f, b'\0\0')),
                          compatibility='data')
-        with self.assertRaises(ValueError):
-            parse_stream(prepend_sheet_record(self.original, rec(0x0203, b'\0\0')),
-                         compatibility='data')
+        # A malformed cell record skips only itself and is marked as omission.
+        result = parse_stream(prepend_sheet_record(self.original, rec(0x0203, b'\0\0')),
+                              compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue(result['omissions_affect_cell_values'])
 
     def test_noncell_policy_rejects_wrong_scope_and_all_unknown_ids(self):
         for scope, kind in (('globals', 0x005e), ('worksheet', 0x0086),

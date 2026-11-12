@@ -386,6 +386,10 @@ class WorkflowTests(unittest.TestCase):
             result = original(*args, **kwargs)
             result.update(status='partial', issues=[{'code': 'unknown_cell_loss'}])
             result.pop('reading_assessment', None)
+            # Both schemas now declare coverage at the top level as well.
+            # Remove all assertions to exercise genuinely missing coverage.
+            result.pop('cell_value_coverage', None)
+            result.pop('omissions_affect_cell_values', None)
             return result
         with patch.object(self.api.et, 'read_bytes', side_effect=incomplete), self.assertRaisesRegex(WorkflowError, 'Partial ET'):
             self.prepare()

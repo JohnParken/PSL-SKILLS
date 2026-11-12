@@ -13,6 +13,19 @@ import wps_biff8_values
 
 
 class ValueModuleBoundaries(unittest.TestCase):
+    def test_global_mixin_counters_are_initialized_per_reader(self):
+        """Declared counters belong to each reader, not the mixin class."""
+        mixin = wps_biff8.GlobalSubstreamMixin
+        stream = struct.pack('<HH', 0x0809, 0)
+        first = wps_biff8.Reader(stream)
+        second = wps_biff8.Reader(stream)
+        for name in ('metadata_bytes', 'dxf_property_count', 'dxf_record_count'):
+            self.assertNotIn(name, mixin.__dict__)
+            self.assertEqual(first.__dict__[name], 0)
+            self.assertEqual(second.__dict__[name], 0)
+            setattr(first, name, 7)
+            self.assertEqual(getattr(second, name), 0)
+
     def test_error_and_numeric_exports_preserve_identity(self):
         for symbol in ('EncryptedError', 'ResourceLimitError', 'UnsupportedError', 'require'):
             self.assertIs(getattr(wps_biff8, symbol), getattr(wps_biff8_errors, symbol))

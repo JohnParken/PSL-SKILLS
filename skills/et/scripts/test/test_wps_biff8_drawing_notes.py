@@ -1,4 +1,10 @@
-"""Independent synthetic note fragments and hostile group boundaries."""
+"""Independent synthetic note-drawing fragments and tolerant group behavior.
+
+Valid note drawings are retained as bounded opaque evidence. Interrupted,
+malformed or oversized groups degrade to diagnostics and worksheet cells before
+and after the drawing are preserved. Nothing is interpreted as a cell value,
+executed or rendered.
+"""
 import hashlib
 import json
 from pathlib import Path
@@ -18,6 +24,7 @@ from test_wps_biff8_salvage import values
 from test_wps_cfb import synthetic_cfb
 from test_wps_embedded_charts import art, GROUP
 from test_wps_template_compatibility import template_workbook
+from read_et import read_bytes
 from wps_biff8 import parse_stream
 from wps_biff8_drawing_notes import note_drawing_group, DrawingResourceLimit, _escher_markers
 
@@ -66,15 +73,19 @@ def note_workbook(records, after=b'', with_group=True):
     return template_workbook(extra_sheet=body, extra_global=rec(0xEB, GROUP) if with_group else b'')
 
 
+def issue_codes(result):
+    return [item.get('code') for item in result.get('issues', ())]
+
+
 class NoteDrawingTests(unittest.TestCase):
     def read(self, records, **options):
-        return parse_stream(note_workbook(records, **options), compatibility='data', chart_policy='opaque')
+        return parse_stream(note_workbook(records, **options))
 
     def test_multiple_notes_preserve_all_bytes_and_cells_before_and_after(self):
         records = note_records(2)
         after = rec(0x203, cell(4, 0) + struct.pack('<d', 42.5))
         result = self.read(records, after=after)
-        base = parse_stream(template_workbook(extra_sheet=after), compatibility='data')
+        base = parse_stream(template_workbook(extra_sheet=after))
         self.assertEqual(values(result), values(base))
         self.assertEqual(result['status'], 'partial')
         self.assertEqual(result['cell_value_coverage'], 'complete_within_declared_sheets')
@@ -89,8 +100,26 @@ class NoteDrawingTests(unittest.TestCase):
         self.assertEqual(report['drawing_sha256'], hashlib.sha256(drawing).hexdigest())
         self.assertEqual(report['object_count'], 2)
         self.assertFalse(report['semantics_validated'])
-        self.assertFalse(report['text_decoded_for_output'])
+        self.assertTrue(report['text_decoded_for_output'])
+        self.assertEqual(report['comment_count'], 2)
+        comments = result['sheets'][0]['comments']
+        self.assertEqual([(item['cell'], item['text'], item['author'])
+                          for item in comments],
+                         [('A1', '备注', '作'), ('A2', '备注', '作')])
+        self.assertFalse(comments[0]['display_applied'])
+        self.assertFalse(comments[0]['target_followed'])
+        self.assertNotIn('备注', [cell.get('value')
+                                  for cell in result['sheets'][0]['cells'].values()])
         self.assertEqual(result['embedded_charts'], [])
+
+    def test_full_reader_returns_comments_end_to_end(self):
+        data = synthetic_cfb({'Workbook': note_workbook(note_records(2))})
+        result = read_bytes(data)
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual([(item['cell'], item['text'], item['author'])
+                          for item in result['sheets'][0]['comments']],
+                         [('A1', '备注', '作'), ('A2', '备注', '作')])
+        self.assertFalse(result['sheets'][0]['comments'][0]['display_applied'])
 
     def test_empty_text_and_note_unused_terminal_byte_variants(self):
         for text in ('', '备注', 'A😀B'):
@@ -99,14 +128,18 @@ class NoteDrawingTests(unittest.TestCase):
                     result = self.read(note_records(text=text, terminal=terminal))
                     source = next(item for item in result['uninterpreted_metadata'] if item['name'] == 'NoteLinkOpaque')
                     self.assertEqual(source['structure']['unused_terminal_byte_present'], terminal)
+                    self.assertEqual(result['sheets'][0]['comments'][0]['text'], text)
 
     def test_text_can_continue_with_encoding_changes_and_surrogate_pair(self):
         records = note_records(text='A😀B')
         records[4:5] = [(0x3C, b'\0A'), (0x3C, b'\1\x3d\xd8'), (0x3C, b'\1\0\xde'), (0x3C, b'\0B')]
         records[8:9] = [(0x3C, bytes(5)), (0x3C, bytes(11))]
-        self.assertEqual(self.read(records)['note_drawings'][0]['object_count'], 1)
+        result = self.read(records)
+        self.assertEqual(result['note_drawings'][0]['object_count'], 1)
+        self.assertEqual(result['sheets'][0]['comments'][0]['text'],
+                         'A😀B')
 
-    def test_root_and_nested_truncation_overflow_and_fake_marker_refused(self):
+    def test_root_truncation_overflow_and_fake_markers_degrade_without_cell_loss(self):
         source = note_records()
         first = source[0][1]
         bad = []
@@ -114,57 +147,61 @@ class NoteDrawingTests(unittest.TestCase):
             changed = bytearray(first)
             struct.pack_into('<I', changed, offset, value)
             bad.append(bytes(changed))
-        # A marker-looking byte sequence inside an opaque atom is not a real leaf.
         fake = bytearray(first)
         struct.pack_into('<I', fake, 28, 16)
         bad.append(bytes(fake))
         bad.extend((first[:-1], first + b'x'))
+        after = rec(0x203, cell(9, 0) + struct.pack('<d', 9))
         for payload in bad:
-            with self.subTest(payload=payload.hex()), self.assertRaises(ValueError):
-                self.read(replace_payload(source, 0, payload))
+            with self.subTest(payload=payload.hex()):
+                result = self.read(replace_payload(source, 0, payload), after=after)
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A10']['value'], 9)
+                self.assertTrue(any(code in ('note_drawing_validation_failed',
+                                             'note_drawing_metadata_budget',
+                                             'drawing_frame_invalid')
+                                    for code in issue_codes(result)))
 
-    def test_interrupted_missing_and_orphan_chains_do_not_swallow_cells(self):
+    def test_interrupted_chains_keep_later_cells_and_bounded_raw_records(self):
         source = note_records()
         extra = (0x203, cell(9, 0) + struct.pack('<d', 9))
         for index in range(len(source)):
-            with self.subTest(index=index), self.assertRaises(ValueError):
-                self.read(source[:index] + [extra] + source[index + 1:])
-            with self.subTest(truncated=index), self.assertRaises(ValueError):
-                self.read(source[:index])
-        with self.assertRaises(ValueError):
-            self.read(source + [(0x3C, b'unknown')])
-        with self.assertRaises(ValueError):
-            self.read(source, with_group=False)
+            with self.subTest(index=index):
+                result = self.read(source[:index] + [extra] + source[index + 1:])
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A10']['value'], 9)
+                self.assertTrue(result['uninterpreted_metadata'])
+        result = self.read(source + [(0x3C, b'unknown')])
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('unexpected_continue_record', issue_codes(result))
+        result = self.read(source, with_group=False)
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('drawing_without_group', issue_codes(result))
 
-    def test_object_macro_link_type_and_id_mismatch_refused(self):
+    def test_object_and_note_link_mismatches_degrade(self):
         source = note_records()
         obj = source[1][1]
         wrong_type = obj[:4] + struct.pack('<H', 5) + obj[6:]
+        after = rec(0x203, cell(9, 0) + struct.pack('<d', 9))
         for payload in (obj[:-1], obj + struct.pack('<2H', 4, 0), wrong_type,
                         obj[:6] + bytes(2) + obj[8:], obj[:22] + struct.pack('<2H', 9, 22) + obj[26:]):
-            with self.subTest(payload=payload.hex()), self.assertRaises(ValueError):
-                self.read(replace_payload(source, 1, payload))
-        duplicated = note_records(2)
-        duplicated[7] = (0x5D, obj)
-        with self.assertRaisesRegex(ValueError, 'Duplicate'):
-            self.read(duplicated)
+            with self.subTest(payload=payload.hex()):
+                result = self.read(replace_payload(source, 1, payload), after=after)
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A10']['value'], 9)
 
-    def test_text_run_unicode_and_link_formula_lengths_refused(self):
+    def test_text_run_and_note_cell_variants_degrade(self):
         source = note_records()
-        for payload in (source[3][1][:-1], source[3][1][:-2] + b'\1\0',
-                        bytes(10) + struct.pack('<2H', 2, 8) + bytes(4),
-                        bytes(10) + struct.pack('<2H', 0, 16) + bytes(4)):
-            with self.subTest(txo=payload.hex()), self.assertRaises(ValueError):
-                self.read(replace_payload(source, 3, payload))
+        after = rec(0x203, cell(9, 0) + struct.pack('<d', 9))
+        txo_variants = (source[3][1][:-1], source[3][1][:-2] + b'\1\0', bytes(10) + struct.pack('<2H', 2, 8) + bytes(4))
+        for payload in txo_variants:
+            with self.subTest(txo=payload.hex()):
+                result = self.read(replace_payload(source, 3, payload), after=after)
+                self.assertEqual(result['sheets'][0]['cells']['A10']['value'], 9)
         for payload in (b'\2xx', b'\1x', b'\1\0\xd8\0\xd8', b'\0abc', b'\0'):
-            with self.subTest(text=payload.hex()), self.assertRaises(ValueError):
-                self.read(replace_payload(source, 4, payload))
-        for payload in (b'', bytes(15), bytes(17)):
-            with self.subTest(runs=len(payload)), self.assertRaises(ValueError):
-                self.read(replace_payload(source, 5, payload))
-
-    def test_note_cell_author_and_object_links_refused(self):
-        source = note_records()
+            with self.subTest(text=payload.hex()):
+                result = self.read(replace_payload(source, 4, payload), after=after)
+                self.assertEqual(result['sheets'][0]['cells']['A10']['value'], 9)
         note = source[-1][1]
         invalid = [note[:-1], note + bytes(2), note[:10] + b'\2' + note[11:]]
         for offset, value in ((2, 256), (6, 2), (8, 0), (8, 55)):
@@ -172,14 +209,11 @@ class NoteDrawingTests(unittest.TestCase):
             struct.pack_into('<H', payload, offset, value)
             invalid.append(bytes(payload))
         for payload in invalid:
-            with self.subTest(note=payload.hex()), self.assertRaises(ValueError):
-                self.read(replace_payload(source, len(source) - 1, payload))
-        duplicated = note_records(2)
-        duplicated[-1] = duplicated[-2]
-        with self.assertRaises(ValueError):
-            self.read(duplicated)
+            with self.subTest(note=payload.hex()):
+                result = self.read(replace_payload(source, len(source) - 1, payload), after=after)
+                self.assertEqual(result['sheets'][0]['cells']['A10']['value'], 9)
 
-    def test_metadata_limits_and_existing_id_collisions(self):
+    def test_metadata_limits_and_existing_id_collisions_are_bounded(self):
         records = framed(note_records())
         size = sum(len(item[2]) for item in records)
         for byte_budget, record_budget in ((size - 1, len(records)), (size, len(records) - 1), (7, len(records))):
@@ -187,10 +221,16 @@ class NoteDrawingTests(unittest.TestCase):
                 note_drawing_group(records, 0, byte_budget=byte_budget, record_budget=record_budget, existing_ids=set())
         with self.assertRaisesRegex(ValueError, 'Duplicate'):
             note_drawing_group(records, 0, byte_budget=size, record_budget=len(records), existing_ids={1})
-        with patch('wps_biff8.MAX_METADATA_BYTES', 100), self.assertRaises(ValueError):
-            self.read(note_records())
+        with patch('wps_biff8.MAX_METADATA_BYTES', 100):
+            result = self.parse_raw(self.read(note_records())) if False else \
+                parse_stream(note_workbook(note_records()))
+            self.assertEqual(result['status'], 'partial')
+            self.assertIn('metadata_budget_truncated', issue_codes(result))
 
-    def test_nested_frame_limits_and_marker_parent_order_remain_refused(self):
+    def parse_raw(self, stream):
+        return parse_stream(stream)
+
+    def test_nested_frame_limits_and_marker_parent_order_remain_helper_refusals(self):
         nested = art(0xF004, b'')
         for _ in range(17):
             nested = art(0xF003, nested)
@@ -200,18 +240,15 @@ class NoteDrawingTests(unittest.TestCase):
         for raw in malformed:
             with self.subTest(size=len(raw)), self.assertRaises(ValueError):
                 _escher_markers(raw, (0, 0xEC, raw))
-        with self.assertRaisesRegex(ValueError, 'excessive'):
-            self.read(note_records(129))
-
-    def test_strict_legacy_and_reject_modes_keep_their_previous_subset(self):
-        raw = note_workbook(note_records())
-        for mode, policy in (('strict', 'reject'), ('legacy_excel_clsid', 'opaque'), ('data', 'reject')):
-            with self.subTest(mode=mode, policy=policy), self.assertRaises(ValueError):
-                parse_stream(raw, compatibility=mode, chart_policy=policy)
+        result = self.read(note_records(129))
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue(any(code in ('note_drawing_validation_failed',
+                                     'note_drawing_metadata_budget')
+                            for code in issue_codes(result)))
 
     def test_default_cli_partial_json_and_readonly_input(self):
         data = synthetic_cfb({'Workbook': note_workbook(note_records())})
-        with tempfile.TemporaryDirectory(prefix='et-notes-', dir='.') as directory:
+        with tempfile.TemporaryDirectory(prefix='et-notes-') as directory:
             source = Path(directory) / 'synthetic.ett'
             with source.open('xb') as handle:
                 handle.write(data)

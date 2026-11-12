@@ -1,0 +1,117 @@
+{
+  "date": "2026-11-12",
+  "skill_version_before": "20261112.1447.4600",
+  "skill_version_after": "20261112.1543.5400",
+  "scope": "One real public WPS BIFF8 ET with two ShrFmla cUse=0 definitions; no other producer or version claimed.",
+  "sample": {
+    "filename": "P020251205645964993287.et",
+    "title": "宁夏乡村振兴资金分配表",
+    "source_page": "https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/t20251205_5101628.html",
+    "download_url": "https://czt.nx.gov.cn/zwgk/zfxxgkml/snzjxxgk/snbt/202512/P020251205645964993287.et",
+    "bytes": 26112,
+    "sha256": "738c9cdf844424e97328e8bc5957ee41c827c38fb1fb3153c0f635e17d8db1ff",
+    "container": "CFB/BIFF8",
+    "producer_verified": false,
+    "redistribution": "not established; original retained locally and not bundled"
+  },
+  "definition_offsets": [
+    {
+      "workbook_offset": 14254,
+      "bounds": "E6:J6",
+      "cUse": 0,
+      "observed_members": 6,
+      "token_bytes": 19,
+      "payload_sha256": "4ff96e6a099d96b0e5ff661733e1282fdca83871ee1586424f939dfae66e1017"
+    },
+    {
+      "workbook_offset": 14511,
+      "bounds": "D7:D39",
+      "cUse": 0,
+      "observed_members": 32,
+      "token_bytes": 29,
+      "payload_sha256": "d586a3fd4ce3f5e6e26885e2db24e83502ead026fbd4d9fd6ceea6884b04c0e9"
+    }
+  ],
+  "before": {
+    "status": "partial",
+    "cell_value_coverage": "unverified_due_to_best_effort_salvage",
+    "omissions_affect_cell_values": true,
+    "formula_groups": 0,
+    "issue_counts": {
+      "formula_group_definition_invalid": 3,
+      "formula_group_member_mismatch": 38,
+      "formula_group_expression_not_decoded": 0,
+      "formula_group_use_count_unspecified": 0
+    }
+  },
+  "after": {
+    "status": "partial",
+    "cell_value_coverage": "complete_within_declared_sheets",
+    "omissions_affect_cell_values": false,
+    "formula_groups": 2,
+    "issue_counts": {
+      "formula_group_definition_invalid": 0,
+      "formula_group_member_mismatch": 0,
+      "formula_group_expression_not_decoded": 2,
+      "formula_group_use_count_unspecified": 2
+    },
+    "cell_count": 447,
+    "nonempty_values": 211,
+    "formula_cells": 79,
+    "cache_statuses": {
+      "unverified": 79
+    },
+    "groups": [
+      {
+        "anchor": "E6",
+        "bounds": "E6:J6",
+        "expected_members": 0,
+        "observed_members": 6,
+        "use_count_unspecified": true
+      },
+      {
+        "anchor": "D7",
+        "bounds": "D7:D39",
+        "expected_members": 0,
+        "observed_members": 32,
+        "use_count_unspecified": true
+      }
+    ]
+  },
+  "saved_values_unchanged": {
+    "cell_count": 447,
+    "nonempty_values": 211,
+    "numeric_formula_caches": 79,
+    "independent_oracle_checked_before": true
+  },
+  "interpretation": {
+    "cUse_zero": "retained as unspecified only when all other structural checks pass; not interpreted as a normal count",
+    "member_association": "range plus fShrFmla flag plus anchor; member count not compared to zero",
+    "coverage": "complete refers saved cell values/addresses; group expression, use-count semantics, cache freshness and MS-XLS compliance remain unverified"
+  },
+  "tests": {
+    "command": "/opt/homebrew/bin/python3.14 -I -S -B -m unittest discover -s skills/et/scripts/test -p 'test_*.py'",
+    "tests": 624,
+    "result": "OK",
+    "result_seconds": 10.705,
+    "new_or_updated": [
+      "test_wps_formula_groups.py"
+    ],
+    "fixed_real_audit": {
+      "samples": 4,
+      "values": 198,
+      "caches": 33,
+      "status": "passed"
+    },
+    "edge_samples_reread": 8
+  },
+  "limitations": [
+    "only one real WPS cUse=0 sample",
+    "no WPS producer/version confirmation",
+    "no formula recalculation/cache freshness",
+    "no WPS-native OOXML ET",
+    "no Linux/Windows/client rendering",
+    "Pylint not executed"
+  ],
+  "runtime_changed": true
+}

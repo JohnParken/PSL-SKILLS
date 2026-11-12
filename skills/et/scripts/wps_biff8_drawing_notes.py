@@ -1,12 +1,15 @@
 """Read-only framing of Escher note drawings split by BIFF Obj/TxO records.
 
-Only note objects without macro/link formulas are admitted. Text and author
-bytes remain opaque metadata, never worksheet values or executed content.
+Only note objects without macro/link formulas are admitted. Comment text and
+author are decoded into bounded read-only ``sheets[].comments`` entries; they
+are never applied to worksheet cell values, executed or rendered. The original
+records remain available as bounded opaque metadata.
 """
 import hashlib
 import struct
 
 from wps_biff8_charts import DRAWING_ATOMS, DRAWING_CONTAINERS
+from wps_biff8_headers import column_name
 
 
 class DrawingResourceLimit(ValueError):
@@ -82,6 +85,8 @@ def note_drawing_group(records, index, *, byte_budget, record_budget, existing_i
     objects = []
     pending_object = None
     details = {}
+    comments = []
+    object_texts = {}
 
     def take(expected):
         nonlocal index, used_bytes
@@ -140,7 +145,7 @@ def note_drawing_group(records, index, *, byte_budget, record_budget, existing_i
                 unicode_bytes.extend(payload[1:] if width == 2 else b''.join(bytes((value, 0)) for value in payload[1:]))
                 remaining -= units
             try:
-                unicode_bytes.decode('utf-16le')
+                text_value = unicode_bytes.decode('utf-16le')
             except UnicodeDecodeError as error:
                 _need(False, 'Invalid TxO Unicode text: ' + error.reason, text)
             remaining = run_bytes
@@ -148,8 +153,12 @@ def note_drawing_group(records, index, *, byte_budget, record_budget, existing_i
                 part = take(0x3C)
                 _need(0 < len(part[2]) <= remaining, 'TxO formatting runs exceed declared boundary', part)
                 remaining -= len(part[2])
+            object_texts[pending_object] = {'text': text_value,
+                                            'record_offset': text[0]}
             details[text[0]] = {'object_id': pending_object, 'text_utf16_units': text_units,
-                               'formatting_run_bytes': run_bytes, 'text_exposed_as_cell_value': False,
+                               'formatting_run_bytes': run_bytes, 'text': text_value,
+                               'text_record_offset': text[0],
+                               'text_exposed_as_cell_value': False,
                                'formatting_runs_validated': False, 'formula_executed': False}
             pending_object = None
     _need(pending_object is None, 'Incomplete final note object', first)
@@ -173,17 +182,30 @@ def note_drawing_group(records, index, *, byte_budget, record_budget, existing_i
         # fact instead of discarding the otherwise exactly bounded author.
         _need(len(payload) in (end, end + 1), 'Note author length crosses record boundary', note)
         try:
-            payload[11:end].decode('utf-16le' if option else 'latin1')
+            author = payload[11:end].decode('utf-16le' if option else 'latin1')
         except UnicodeDecodeError:
             _need(False, 'Invalid Note author Unicode', note)
         linked.add(identity)
         cells.add((row, column))
+        address = column_name(column + 1) + str(row + 1)
+        text_info = object_texts.get(identity, {})
+        comments.append({
+            'cell': address, 'author': author, 'text': text_info.get('text', ''),
+            'object_id': identity,
+            'kind': 'biff8_note',
+            'source': {'note_record_offset': note[0],
+                       'text_record_offset': text_info.get('record_offset'),
+                       'row_zero_based': row, 'column_zero_based': column},
+            'layout_decoded': False, 'display_applied': False,
+            'target_followed': False})
         details[note[0]] = {'object_id': identity, 'row_zero_based': row, 'column_zero_based': column,
                            'flags_raw': note_flags, 'author_utf16_units': author_units,
+                           'author': author, 'cell': address,
                            'unused_terminal_byte_present': len(payload) == end + 1, 'display_applied': False}
     report = {'drawing_bytes': len(combined), 'drawing_sha256': hashlib.sha256(combined).hexdigest(),
               'drawing_fragments': len(fragments), 'object_count': len(objects),
-              'record_count': index - start, 'text_decoded_for_output': False,
+              'record_count': index - start, 'text_decoded_for_output': True,
+              'comment_count': len(comments), 'comments': comments,
               'rendered': False, 'semantics_validated': False}
     if unknown:
         report['unknown_officeart_records'] = unknown

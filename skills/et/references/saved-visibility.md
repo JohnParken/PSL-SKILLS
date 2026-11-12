@@ -8,7 +8,7 @@ BIFF Row 与 ColInfo 保留保存的隐藏位和尺寸。`hidden_cause` 为 `unk
 
 完整读取的 `sheets[].visibility.rows` 和 `columns` 分别附带行高 `height_pt`（点）和列宽 `width_chars`（保存的字符宽度单位），数值用字符串表示。BIFF8 保留 `height_twips_raw` 与 `width_256th_char_raw`。OOXML 读取行 `ht` 和列 `width` 的已保存值。字段缺失时不补默认值，无法解释的字段用对应的 `height_pt_status` 或 `width_chars_status` 标为 `uninterpreted`，单元格覆盖按原契约判断。隐藏记录仍可保留其保存尺寸，实际屏幕尺寸取决于字体和渲染环境。
 
-FilterMode、AutoFilterInfo和AutoFilter保留范围内的原始记录，条件未解释、不重新执行筛选，明确partial。AutoFilterInfo必须1至256列。保存行状态不证明筛选条件仍与数据一致。
+BIFF8 的 AutoFilterInfo 记录号为 `0x009D`，AutoFilter 为 `0x009E`。FilterMode、AutoFilterInfo和AutoFilter保留范围内的原始记录，条件未解释、不重新执行筛选，明确partial。AutoFilterInfo必须1至256列。保存行状态不证明筛选条件仍与数据一致。
 
 默认输出所有单元格。若显式选择保存可见行，在已确认的任务目录使用包内模块（仅Python标准库）：
 

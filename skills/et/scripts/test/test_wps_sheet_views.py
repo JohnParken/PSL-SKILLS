@@ -85,13 +85,20 @@ class BiffViewTests(unittest.TestCase):
         missing_pane, = biff(window(0x08) + selection(3, 1, 1))['sheets'][0]['views']
         self.assertEqual((missing_pane['freeze_row'], missing_pane['freeze_col'], missing_pane['selected_cell']), (None, None, None))
 
-    def test_malformed_pane_or_core_cell_is_rejected(self):
-        with self.assertRaisesRegex(ParseError, 'Pane payload') as raised:
-            biff(window(0x08) + rec(0x0041, b'\0'))
-        self.assertEqual(raised.exception.location['record_id'], '0x41')
-        with self.assertRaises(ParseError) as raised:
-            biff(window() + selection(3, 0, 0), trailing=rec(0x0203, cell(0, 0)))
-        self.assertEqual(raised.exception.location['record_id'], '0x203')
+    def test_malformed_pane_or_core_cell_degrades_with_location(self):
+        result = biff(window(0x08) + rec(0x0041, b'\0'))
+        self.assertEqual(result['status'], 'partial')
+        view, = result['sheets'][0]['views']
+        self.assertIn('invalid_pane_record', view['issues'])
+        self.assertIn('saved_sheet_view_partially_read',
+                      [item['code'] for item in result['issues']])
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'],
+                         Decimal('19.25'))
+        result = biff(window() + selection(3, 0, 0), trailing=rec(0x0203, cell(0, 0)))
+        self.assertEqual(result['status'], 'partial')
+        omission = next(item for item in result['issues']
+                        if item['code'] == 'cell_value_record_omitted')
+        self.assertEqual(omission['record_id'], '0x203')
 
 
 @unittest.skipUnless(expat.version_info >= (2, 6, 0), 'requires Expat >=2.6')

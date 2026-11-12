@@ -15,6 +15,10 @@
     {
       "name": "AutoFilterInfo",
       "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/48d72277-d805-4ea0-8a51-8a36bc6e32d1"
+    },
+    {
+      "name": "MS-XLS record type numbers",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/7d9326d6-691a-4fa1-8dce-42082f38e943"
     }
   ],
   "scope": "saved flags only; filters retained uninterpreted"

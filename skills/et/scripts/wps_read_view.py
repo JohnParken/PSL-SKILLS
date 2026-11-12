@@ -20,8 +20,8 @@ def fail(message):
 
 
 def validate_bytes(max_bytes):
-    if max_bytes is not None and (type(max_bytes) is not int or not 512 <= max_bytes <= 16 * 1024 * 1024):
-        fail('max-output-bytes must be 512..16777216')
+    if max_bytes is not None and (type(max_bytes) is not int or not 512 <= max_bytes <= 64 * 1024 * 1024):
+        fail('max-output-bytes must be 512..67108864')
 
 
 def stdout_bytes(value):

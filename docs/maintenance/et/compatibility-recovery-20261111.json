@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-11",
+  "skill_version": "20261112.0626.4896",
+  "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O",
+  "python": "3.14.10",
+  "expat": "2.7.4",
+  "xlrd_version": "2.0.2",
+  "xlrd_source": "https://codeload.github.com/python-excel/xlrd/zip/refs/tags/2.0.2",
+  "xlrd_source_zip_sha256": "476da00efde77eb80226bb7a3d8c6dcf26424a0d921676fcd2f0267049aa8154",
+  "comparison": "All nonblank address sets and typed stored scalar values; dates compared numerically, no rendering or cache freshness claim.",
+  "fixed_expectations": {
+    "nonblank_values": 198,
+    "formula_caches": 33,
+    "samples_passed": 4
+  },
+  "samples": [
+    {
+      "filename": "Balance_Sheet.ett",
+      "sha256": "1124b720ad792c52cf5a5e39cd99bbebd512b200523070dd3fd035ea37af427b",
+      "nonblank_compared": 122,
+      "mismatches": [],
+      "status": "partial",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "filename": "Schedule.ett",
+      "sha256": "23d27b4e72eb4c83dd888593df2552d9d4134749762918baeffa57b97799a9eb",
+      "nonblank_compared": 66,
+      "mismatches": [],
+      "status": "partial",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "filename": "Telephone_List.ett",
+      "sha256": "34c0dd4473cca5b16bd4719e7d7d05e5c88a7ed346d5e593964ae8217b7d1b07",
+      "nonblank_compared": 10,
+      "mismatches": [],
+      "status": "partial",
+      "omissions_affect_cell_values": false
+    },
+    {
+      "filename": "newfile.et",
+      "sha256": "5f34a68ab8061be391836530be7a9b13436b404acd90aa3d8320aa7cca4e3ac6",
+      "nonblank_compared": 0,
+      "mismatches": [],
+      "status": "partial",
+      "omissions_affect_cell_values": false
+    }
+  ],
+  "not_verified": [
+    "Linux container",
+    "Windows",
+    "native WPS OOXML ET",
+    "user failing originals",
+    "Office/WPS rendering",
+    "Pylint",
+    "host large-result handoff"
+  ],
+  "changed_files_this_round": [
+    "README.md",
+    "docs/README.md",
+    "docs/maintenance/et/compatibility-recovery-20261111.json",
+    "docs/maintenance/et/compatibility-recovery-20261111.md",
+    "docs/skills/et.md",
+    "packaging/runtime-manifests/et.json",
+    "skills/et/SKILL.md",
+    "skills/et/references/bounded-reading.md",
+    "skills/et/references/embedded-charts.md",
+    "skills/et/references/ooxml-spreadsheet.md",
+    "skills/et/references/read-view-runtime.json",
+    "skills/et/references/table-analysis.md",
+    "skills/et/references/table-preview.md",
+    "skills/et/scripts/docs/cli-contract.md",
+    "skills/et/scripts/et_read_view.py",
+    "skills/et/scripts/et_table_analysis.py",
+    "skills/et/scripts/et_table_data.py",
+    "skills/et/scripts/et_table_preview.py",
+    "skills/et/scripts/read_et.py",
+    "skills/et/scripts/test/test_et_compatibility_recovery.py",
+    "skills/et/scripts/test/test_wps_ooxml_tolerant.py",
+    "skills/et/scripts/wps_biff8.py",
+    "skills/et/scripts/wps_biff8_charts.py",
+    "skills/et/scripts/wps_biff8_drawing.py",
+    "skills/et/scripts/wps_biff8_sheet.py",
+    "skills/et/scripts/wps_ooxml_worksheet.py",
+    "skills/et/scripts/wps_read_view.py",
+    "skills/et/scripts/wps_result.py",
+    "skills/et/scripts/wps_visibility.py",
+    "tests/test_read_view_budget.py",
+    "tests/test_read_view_copy.py",
+    "tests/test_table_workflow.py"
+  ],
+  "checks": {
+    "et_regression": {
+      "passed": 584,
+      "failed": 0
+    },
+    "new_targeted_regression": {
+      "passed": 14,
+      "failed": 0
+    },
+    "packager_safety": {
+      "passed": 11,
+      "failed": 0
+    },
+    "independent_runtime_packages": {
+      "passed": 12,
+      "failed": 0
+    },
+    "workflow": {
+      "passed": 177,
+      "failed": 0
+    },
+    "xlsx_handoff": {
+      "passed": 13,
+      "failed": 0
+    },
+    "shared_runtime_parity": {
+      "passed": 2,
+      "failed": 0
+    },
+    "shared_budget_oracles": {
+      "et_passed": 7,
+      "wps_passed": 7
+    },
+    "skill_strict": "passed",
+    "project_docs": "passed",
+    "git_diff_check": "passed",
+    "pylint": "not_run_module_missing"
+  }
+}

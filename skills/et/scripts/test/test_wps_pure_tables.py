@@ -47,16 +47,26 @@ class PureTableTests(unittest.TestCase):
                 self.assertEqual(cells['A3']['value'], Decimal.from_float(.1))
                 self.assertIn('codepage_metadata_not_applied', [i['code'] for i in result['issues']])
 
-    def test_explicit_strict_still_refuses_non_unicode_codepage(self):
+    def test_explicit_strict_is_tolerated_with_notice(self):
         for codepage in [932, 936, 1252]:
-            with self.assertRaises(ParseError):
-                read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x42, struct.pack('<H', codepage)))}), compatibility='strict')
+            with self.subTest(codepage=codepage):
+                result = read_bytes(synthetic_cfb({'Workbook': workbook(extra_global=rec(0x42, struct.pack('<H', codepage)))}), compatibility='strict')
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn('compatibility_option_ignored',
+                              [item['code'] for item in result['issues']])
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
 
-    def test_invalid_lengths_unknown_or_conflicting_codepages_fail(self):
+    def test_invalid_lengths_unknown_or_conflicting_codepages_degrade(self):
         for extra in [rec(0x42, b'x'), rec(0x42, bytes(3)), rec(0x42, b'\xff\xff'),
                       rec(0x42, struct.pack('<H', 936)) + rec(0x42, struct.pack('<H', 1252))]:
-            with self.assertRaises(ParseError):
-                self.data(extra=extra)
+            with self.subTest(extra=extra.hex()):
+                result = self.data(extra=extra)
+                self.assertEqual(result['status'], 'partial')
+                self.assertTrue([item for item in result['issues']
+                                 if item['code'] in ('codepage_record_invalid',
+                                                     'unknown_codepage_declaration',
+                                                     'conflicting_codepage_declaration',
+                                                     'codepage_metadata_not_applied')])
 
     def test_plain_label_reserved_bits_preserve_text_raw_flags_and_location(self):
         for flags, text in [(0x80, 'é'), (0x81, '中文'), (0xFF, '长编号000123')]:
@@ -98,26 +108,35 @@ class PureTableTests(unittest.TestCase):
         self.assertEqual(result['sheets'][0]['cells']['A1']['value'], Decimal('123.5'))
         self.assertEqual(result['status'], 'partial')
 
-    def test_strict_rejects_reserved_headers_in_plain_fields(self):
+    def test_reserved_headers_in_plain_fields_are_retained_with_flags(self):
         for body, extra in [(label('中', 0x81), b''),
                             (formula(0, 0, special(0)) + rec(0x207, plain('中', 0x81)), b''),
                             (b'', rec(0x41E, struct.pack('<H', 165) + plain('0.00', 0x80)))]:
-            with self.assertRaises(ValueError):
-                parse_stream(workbook([body], strings=[], extra_global=extra))
+            result = parse_stream(workbook([body], strings=[], extra_global=extra))
+            self.assertEqual(result['status'], 'partial')
+            self.assertFalse(result['formulas_executed'])
 
     def test_plain_reserved_flag_does_not_create_or_consume_rich_metadata(self):
         # XLUnicodeString's bit3 is reserved, not SST's fRichSt.
         result = self.data(label('中', 9))
         self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '中')
+        self.assertEqual(result['shared_string_formatting'], [])
         extra_tail = rec(0x204, cell(0, 0) + plain('中', 9) + bytes(4))
-        with self.assertRaises(ParseError):
-            self.data(extra_tail)
+        result = self.data(extra_tail)
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue([item for item in result['issues']
+                         if item['code'] in ('plain_string_reserved_flags_ignored',
+                                             'cell_value_record_omitted',
+                                             'worksheet_record_validation_failed')])
         bad_sst = bytearray(workbook([rec(0xFD, cell(0, 0) + bytes(4))], strings=['中']))
         marker = struct.pack('<ii', 1, 1)
         position = bad_sst.index(marker) + 8 + 2
         bad_sst[position] = 0x81
-        with self.assertRaises(ParseError):
-            read_bytes(synthetic_cfb({'Workbook': bytes(bad_sst)}))
+        result = read_bytes(synthetic_cfb({'Workbook': bytes(bad_sst)}))
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue([item for item in result['issues']
+                         if item['code'] in ('global_record_validation_failed',
+                                             'sst_index_out_of_range_omitted')])
 
     def test_continued_plain_label_and_cache_use_independent_character_flags(self):
         prefix = struct.pack('<HB', 3, 0x81) + '中'.encode('utf-16le')
@@ -125,16 +144,18 @@ class PureTableTests(unittest.TestCase):
         cache_records = formula(1, 0, special(0)) + rec(0x207, prefix) + rec(0x3C, b'\0AB')
         result = self.data(text_records + cache_records)
         self.assertEqual([result['sheets'][0]['cells'][a]['value'] for a in ['A1', 'A2']], ['中AB', '中AB'])
-        with self.assertRaises(ParseError):
-            self.data(rec(0x204, cell(0, 0) + prefix) + rec(0x3C, b'\x80AB'))
+        result = self.data(rec(0x204, cell(0, 0) + prefix) + rec(0x3C, b'\x80AB'))
+        self.assertEqual(result['status'], 'partial')
 
-    def test_malformed_utf16_and_tail_or_orphan_continuation_still_fail(self):
+    def test_malformed_utf16_and_tail_or_orphan_continuation_degrade(self):
         for body in [rec(0x204, cell(0, 0) + b'\1\0\x81\0\xd8'),
                      rec(0x204, cell(0, 0) + b'\2\0\x81A\0'),
                      label('中', 0x81) + rec(0x003C),
                      rec(0x204, cell(0, 0) + plain('中', 0x81) + b'x')]:
-            with self.assertRaises(ParseError):
-                self.data(body)
+            with self.subTest(body=body.hex()):
+                result = self.data(body)
+                self.assertEqual(result['status'], 'partial')
+                self.assertFalse(result['formulas_executed'])
 
     def test_sparse_last_cell_long_identifier_and_budget_not_expanded(self):
         value = '000123456789012345678901234567890'
@@ -160,8 +181,10 @@ class PureTableTests(unittest.TestCase):
             self.assertEqual(result.returncode, 3, result.stderr)
             self.assertEqual(json.loads(result.stdout)['sheets'][0]['cells']['A1']['value'], '中文')
             result = subprocess.run(command + ['--compatibility', 'strict'], capture_output=True, text=True, encoding='utf8')
-            self.assertEqual(result.returncode, 1)
-            self.assertNotIn('sheets', json.loads(result.stdout))
+            self.assertEqual(result.returncode, 3)
+            strict = json.loads(result.stdout)
+            self.assertEqual(strict['status'], 'partial')
+            self.assertEqual(strict['sheets'][0]['cells']['A1']['value'], '中文')
             self.assertEqual(path.read_bytes(), data)
 
 

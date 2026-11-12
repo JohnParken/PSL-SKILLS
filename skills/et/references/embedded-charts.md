@@ -22,64 +22,50 @@ directory of the actual SKILL.md read by the harness.
 ## Explicit policy
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" ./Schedule.ett --compatibility legacy_excel_clsid --chart-policy opaque")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_biff8.py\" ./Schedule.ett --compatibility legacy_excel_clsid --chart-policy opaque")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" ./Schedule.ett")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_biff8.py\" ./Schedule.ett")
 ```
 
-`data` is the default only for BIFF8 file-reading APIs and CLIs, where it selects
-opaque chart retention. Explicit strict/legacy modes still default to reject;
-`--chart-policy reject` always overrides data. Direct byte-parser defaults retain
-their prior behavior; opaque retention requires an explicit supported policy on that
-path. Opaque is available for BIFF8 reads, not writing, conversion or recalculation.
-Python `read_file` and `parse_stream` accept `chart_policy="opaque"` with
-`compatibility="legacy_excel_clsid"` when explicitly requested.
+The tolerant reader always retains supported chart bytes as bounded opaque evidence;
+there is no chart policy switch any more. `--chart-policy` and `--compatibility` are
+accepted as deprecated no-ops and recorded as issues. `--chart-policy reject` no longer
+discards charts, and strict/legacy modes no longer exist. Retention applies to BIFF8
+reads, never to writing, conversion or recalculation, and no chart bytes are decoded,
+rendered or executed. Nothing is retried with a different policy after a failure.
 
 ## What is retained and checked
 
-The reader recognizes a bounded subset of OfficeArt drawing frames, a chart-type
-Obj with FtCmo/FtEnd, and one embedded BIFF8 chart substream per object. Before any
-chart payload is retained, the complete linked Drawing/Obj/chart sequence must pass
-exact frame lengths, explicit member checks, BOF type/version, balanced Begin/End and
-chart EOF, unique nonzero object IDs, nesting limits and existing workbook/resource
-limits. Structural ambiguity, a missing member or truncation rejects the chart group.
+The reader recognizes bounded OfficeArt frames, Obj records and embedded BIFF8 chart
+substreams. Failed optional drawing/member/ID/Begin-End validation produces issues
+and retains bounded opaque bytes; it does not discard already read worksheet values.
+The outer BIFF record framing, encryption and container safety limits still apply.
 
-All accepted drawing, Obj and chart record payloads are retained in
-`uninterpreted_metadata`, with offsets and IDs. `embedded_charts` reports the sheet,
-object ID, offset, record count and SHA-256 of the full framed chart bytes.
-`embedded_chart_retained_opaque` issues and `charts_decoded: false` disclose the
-scope. Chart values are not decoded. The narrow semantic-fault exception covers a
-malformed `Units` payload or `Chart` rectangle payload length; either may be retained
-as raw evidence with partial status only after the whole chart group passes its
-framing, member, nesting and EOF checks. Worksheet extraction resumes only after the
-validated chart EOF; chart records are never reported as worksheet cells or consumed
-as following sheet cells.
+`uninterpreted_metadata` retains accepted raw payloads with offsets and IDs within its
+budget. `embedded_charts` describes framed chart spans, hashes and validation issues;
+`charts_decoded=false` means no chart semantics, rendering or caches were evaluated.
 
-This is framing validation and raw preservation, not full MS-XLS/MS-ODRAW grammar,
-chart interpretation, chart-cache correctness, rendering or effective layout
-validation. Chart formula tokens and drawing properties are not evaluated or
-followed. Macro substreams and unsupported chart members remain refused. No office application,
-third-party package, external executable or network request is used.
+Chart SERIESDATA may legally contain Number, BoolErr, Blank and Label after SIIndex
+(MS-XLS 2.1.7.20.1). Those records stay inside the chart, never becoming worksheet
+values. Worksheet-only records (including RK/MulRK/MulBlank), or value records outside
+a recognized SERIESDATA sequence, are bounded recovery points even with unbalanced
+Begin/End. A malformed chart EOF is consumed as the chart terminator so later worksheet
+cells remain readable. Ambiguous/missing chart or worksheet boundaries mark
+`omissions_affect_cell_values=true`; a missing EOF after chart series data may still
+leave worksheet-looking values opaque because their ownership cannot be established.
+This is recovery with explicit uncertainty, not a guarantee to reconstruct damaged files.
+
+Macro/link records remain opaque and are never executed or followed. Standalone chart
+sheets, arbitrary drawing semantics and full chart decoding remain outside the subset.
+No office application, third-party package or network access is needed at runtime.
 
 ## Limits and evidence
 
-At most 128 embedded charts are accepted. Each chart has at most 4096 records;
-Begin/End nesting is capped at 32. Each drawing frame has at most 4096 OfficeArt
-records and nesting at most 16. All opaque payloads share the existing 1 MiB /
-4096-record metadata budget; stream, record and JSON limits still apply.
-
-Structurally unsupported records/types, truncated drawings, unsupported
-drawing splits, missing Obj/EOF, nested macro/workbook substreams, external chart
-supporting-link records and unsupported chart member layouts fail without a partial
-cell report. Only malformed `Units` payloads and `Chart` rectangle payload lengths
-may use the semantic-fault retention rule above; it does not accept arbitrary damaged
-chart metadata.
-Standalone chart sheets,
-arbitrary drawing objects, unattached Continue records and full chart decoding remain outside
-the subset. An allowed opaque payload may contain uninterpreted properties or tokens;
-acceptance never certifies their semantics. In data mode, unknown OfficeArt atoms and
-containers whose recursive child framing is valid are retained raw; their types and
-offsets are reported as unknown, cell-value coverage is uncertain, and the result is
-partial. A container with malformed child framing is rejected, not blindly skipped.
+At most 128 chart reports are kept. Each chart scan is bounded by 4096 records;
+Begin/End validation is bounded at depth 32. Drawing validation uses 4096 records and
+depth 16; malformed/oversized optional structures are opaque with issues. Raw payloads
+share the BIFF metadata limits (8 MiB / 65536 entries), and omitted evidence is reported.
+Input, stream, record and JSON hard limits remain unchanged. Unknown object semantics
+remain unverified; retention does not certify their effect on cell values.
 
 The original Schedule.ett now yields 343 worksheet cells, one merge and 12
 unverified formula caches. Its 125 chart records (1530 bytes) are retained exactly;
@@ -103,7 +89,7 @@ a linked formula, exact declared Unicode text units and formatting-run byte coun
 The group must then have one adjacent Note per unique object ID and cell location.
 Author lengths are bounded; an omitted unused terminal byte, observed in the real
 template, is recorded as `unused_terminal_byte_present=false` rather than invented.
-Other author trailing bytes, missing links and out-of-grid coordinates fail.
+Other author trailing bytes, missing links and out-of-grid coordinates fail the specialized note-chain check; the reader then retains bounded opaque records with issues.
 
 All source payloads remain in `uninterpreted_metadata`. `note_drawings` reports the
 joined drawing SHA-256, fragment/object/record counts and `semantics_validated=false`.
@@ -111,15 +97,17 @@ Unknown OfficeArt atoms or recursively framed containers in this verified chain 
 listed in `unknown_officeart_records`; their meaning and effect on cell values are
 unknown, so coverage is unverified and status remains partial. The linked records,
 marker positions, bounds and budgets must still pass their existing checks.
-`note_drawing_retained_opaque` explicitly marks omission of comment text, authors
-and display from the cell values. Text is checked for framing/Unicode validity but
-not exposed as decoded comments; runs, shape properties and layout are not interpreted.
+`note_drawing_retained_opaque` records that note drawings stay as bounded raw evidence;
+decoded comment text and author are returned separately in `sheets[].comments` and are
+never applied to cell values. Runs, shape properties and layout are still not interpreted
+or rendered.
 No formula, macro, link, property or external content is executed or followed.
 
 Each group has at most 128 notes, 4096 Escher records and depth 16, sharing the
-existing 1 MiB/4096-record raw metadata budget. General mixed chart/note drawings,
-arbitrary fragment positions, continued drawing bytes and other object types remain
-unsupported. Explicit strict/legacy behavior and `--chart-policy reject` are unchanged.
+bounded raw metadata budget. General mixed chart/note drawings,
+arbitrary fragment positions, continued drawing bytes and other object types are
+retained as bounded opaque evidence with issues; they are never executed. The
+tolerant policy applies to every public entry.
 
 In Start-up Expenses, the first 194-byte fragment at offset 15324 declares a
 1056-byte DgContainer. Its 16 fragments join exactly; eight note chains account for

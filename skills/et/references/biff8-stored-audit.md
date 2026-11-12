@@ -39,7 +39,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" --check")
 execute(command="python -I -S -B \"<skill-root>/scripts/wps_biff8_audit.py\" ./input.et")
 ```
 
-入口输出单份独立 JSON，`schema_version=biff8_stored_evidence_audit_v1`，只包含证据索引、CP 区间、公式状态计数和原始 XF 元数据，**不回传工作表文本或公式计算结果**。若上游 `read_wps.read` 返回 `ok` 则退出 0、`partial` 则退出 3；上游不支持、校验失败或输入不是 BIFF8 子集则退出 1，按 `source_status` 说明，不重试兼容策略。输入原件不会被修改。
+入口输出单份独立 JSON，`schema_version=biff8_stored_evidence_audit_v1`，只包含证据索引、CP 区间、公式状态计数和原始 XF 元数据，**不回传工作表文本或公式计算结果**。若上游 `read_wps.read` 返回 `ok` 则退出 0、`partial` 则退出 3；上游不支持、校验失败或输入不是 BIFF8 子集则退出 1，按 `source_status` 说明，不改变或重试读取策略；上游 partial 结果可被审计。输入原件不会被修改。
 
 ## 结果字段与拒绝边界
 

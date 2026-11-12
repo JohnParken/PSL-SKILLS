@@ -16,26 +16,25 @@ from read_et import read_bytes, encode_result
 
 
 class EtContractTests(unittest.TestCase):
-    def test_omitted_compatibility_uses_data_and_strict_refusal_is_not_retried(self):
+    def test_legacy_compatibility_option_is_accepted_and_tolerated(self):
         stream = workbook(extra_global=rec(0x7777, b'opaque'))
         raw = synthetic_cfb({'Workbook': stream})
         gateway = [sys.executable, '-I', '-S', '-B', str(SCRIPTS / 'et_cli.py')]
         for operation in ('read', 'metadata'):
-            with self.subTest(operation=operation):
-                request = {'protocol': PROTOCOL, 'id': 8, 'operation': operation,
-                           'parameters': {'raw': raw, 'source': 'source.et'}}
-                result = subprocess.run([*gateway, operation], input=dumps(request), capture_output=True, timeout=20)
-                response = loads(result.stdout.strip())
-                self.assertEqual(result.returncode, 3, result.stderr)
-                self.assertTrue(response['ok'])
-                self.assertEqual(response['result']['exit_code'], 3)
-                request['parameters']['compatibility'] = 'strict'
-                result = subprocess.run([*gateway, operation], input=dumps(request), capture_output=True, timeout=20)
-                response = loads(result.stdout.strip())
-                self.assertEqual(result.returncode, 1, result.stderr)
-                self.assertFalse(response['ok'])
-                self.assertEqual(response['error']['location']['record_id'], '0x7777')
-                self.assertEqual(response['error']['location']['compatibility_mode'], 'strict')
+            for compatibility in (None, 'strict', 'legacy_excel_clsid'):
+                with self.subTest(operation=operation, compatibility=compatibility):
+                    parameters = {'raw': raw, 'source': 'source.et'}
+                    if compatibility is not None:
+                        parameters['compatibility'] = compatibility
+                    request = {'protocol': PROTOCOL, 'id': 8, 'operation': operation,
+                               'parameters': parameters}
+                    result = subprocess.run([*gateway, operation], input=dumps(request),
+                                            capture_output=True, timeout=20)
+                    response = loads(result.stdout.strip())
+                    self.assertEqual(result.returncode, 3, result.stderr)
+                    self.assertTrue(response['ok'])
+                    self.assertEqual(response['result']['exit_code'], 3)
+                    self.assertEqual((response.get('error') or {}).get('location'), None)
 
     def test_original_extraction_and_exit_are_preserved(self):
         raw = synthetic_cfb({'Workbook': workbook()})

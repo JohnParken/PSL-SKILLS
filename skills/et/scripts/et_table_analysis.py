@@ -245,6 +245,7 @@ def analyze(result, query):
     matching_states = count_states(cell for row in rows for cell in row['cells'].values())
     issues = [{'code': state, 'positions': count, 'scope': 'selected_rectangle_before_processing',
                'matched_data_positions': matching_states.get(state, 0)} for state, count in table['state_counts'].items() if count]
+    issues.extend(table['merge_issues'])
     if unavailable_groups:
         issues.append({'code': 'group_key_unavailable_rows_excluded', 'rows': unavailable_groups})
     source = source_context(result)

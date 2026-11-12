@@ -52,8 +52,11 @@ class DxfIntegrationTests(unittest.TestCase):
         self.assertEqual(item['structure']['property_count'], 0)
         self.assertTrue(any(issue.get('record_id') == '0x88d'
                             for issue in result['issues']))
-        with self.assertRaisesRegex(ValueError, 'Unsupported global record'):
-            parse_stream(stream, compatibility='strict')
+        strict = parse_stream(stream, compatibility='strict')
+        self.assertEqual(strict['status'], 'partial')
+        self.assertIn('compatibility_option_ignored',
+                      [item['code'] for item in strict['issues']])
+        self.assertEqual(strict['sheets'], expected_sheets)
         legacy = parse_stream(stream, compatibility='legacy_excel_clsid')
         self.assertEqual(legacy['sheets'], expected_sheets)
 
@@ -73,20 +76,27 @@ class DxfIntegrationTests(unittest.TestCase):
                 self.assertEqual(result['sheets'][0]['cells']['C4']['value'], '缓存中文')
             self.assertEqual(path.read_bytes(), data)
 
-    def test_malformed_or_wrong_scope_record_not_swallowed(self):
+    def test_malformed_or_wrong_scope_record_is_retained(self):
         for payload in (EMPTY_DXF[:-1], b'private bytes', EMPTY_DXF + b'\x00'):
             with self.subTest(payload=payload):
-                with self.assertRaises(ParseError) as caught:
-                    read_bytes(synthetic_cfb({'Workbook': workbook(
-                        extra_global=rec(0x088D, payload))}))
-                self.assertNotIn(caught.exception.status, ('ok', 'partial'))
-                self.assertEqual(caught.exception.location['record_id'], '0x88d')
-        with self.assertRaisesRegex(ValueError, 'Unsupported worksheet record'):
-            parse_stream(workbook([rec(0x088D, EMPTY_DXF)]), compatibility='data')
+                result = read_bytes(synthetic_cfb({'Workbook': workbook(
+                    extra_global=rec(0x088D, payload))}))
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
+                self.assertFalse(result['formulas_executed'])
+                entry = next(item for item in result['uninterpreted_metadata']
+                             if item['name'] in ('DXFOpaque', 'UnknownBIFFSalvaged'))
+                self.assertEqual(bytes.fromhex(entry['payload_hex']), payload)
+        result = parse_stream(workbook([rec(0x088D, EMPTY_DXF)]), compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('unknown_biff_record_salvaged',
+                      [item['code'] for item in result['issues']])
         with patch('wps_biff8.MAX_METADATA_BYTES', 1):
-            with self.assertRaises(ResourceLimitError):
-                parse_stream(workbook(extra_global=rec(0x088D, EMPTY_DXF)),
-                             compatibility='data')
+            result = parse_stream(workbook(extra_global=rec(0x088D, EMPTY_DXF)),
+                                  compatibility='data')
+            self.assertEqual(result['status'], 'partial')
+            self.assertIn('metadata_budget_truncated',
+                          [item['code'] for item in result['issues']])
 
     def test_aggregate_property_budget_is_enforced(self):
         # One valid type 0x14 property (wrap flag) after the count=1 header.
@@ -98,8 +108,10 @@ class DxfIntegrationTests(unittest.TestCase):
         self.assertEqual(json.loads(json.dumps(structure)), structure)
         self.assertEqual(structure['properties'][0]['payload_hex'], '01')
         with patch('wps_biff8.MAX_DXF_PROPERTIES', 1):
-            with self.assertRaisesRegex(ResourceLimitError, 'aggregate property'):
-                parse_stream(stream, compatibility='data')
+            result = parse_stream(stream, compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('dxf_budget_truncated',
+                      [item['code'] for item in result['issues']])
 
 
 if __name__ == '__main__':

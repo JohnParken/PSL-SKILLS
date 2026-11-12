@@ -6,7 +6,6 @@ import json
 import os
 from pathlib import Path
 import sys
-import struct
 import subprocess
 import tempfile
 import unittest
@@ -125,8 +124,6 @@ class BudgetOracleTests(unittest.TestCase):
             self.assertEqual(invoke(first['next_cursor'])['start'], 1)
 
     def test_cli_rejects_legacy_cursor_as_read_failure_with_json(self):
-        from test_wps_biff8 import workbook, rec, cell
-        from test_wps_cfb import synthetic_cfb
         with tempfile.TemporaryDirectory(prefix='read-view-cursor-') as directory:
             task = Path(directory)
             previous = Path.cwd()
@@ -135,8 +132,10 @@ class BudgetOracleTests(unittest.TestCase):
                 Workbook.create({'sheets': [{'name': 'Data', 'cells': {'A1': {'value': 1}, 'A2': {'value': 2}}}]}).save('data.xlsx')
             finally:
                 os.chdir(previous)
-            body = b''.join(rec(0x203, cell(i, 0) + struct.pack('<d', i + 1)) for i in range(2))
-            (task / 'data.et').write_bytes(synthetic_cfb({'Workbook': workbook([body])}))
+            # Synthetic OOXML exercises ET's cursor protocol without importing
+            # ET's BIFF modules into the isolated WPS runtime namespace.
+            # A changed suffix is not counted as real WPS/ET format acceptance.
+            (task / 'data.et').write_bytes((task / 'data.xlsx').read_bytes())
             for skill, script, name in [('xlsx', 'stdlib_xlsx.py', 'data.xlsx'), ('et', 'read_et.py', 'data.et')]:
                 command = [sys.executable, '-I', '-S', '-B', str(ROOT / 'skills' / skill / 'scripts' / script)]
                 if skill == 'xlsx':

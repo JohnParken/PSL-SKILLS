@@ -4,7 +4,7 @@
 
 ## 先选择所需结果
 
-先完成主入口共同自检和任务路径确认；仅Python标准库，不安装、转换、重算或执行宏/外链。退出0/3分别要求status为ok/partial且JSON完整；退出1/2停止分析，不把失败当空表。partial保留全部可用数据与issues/reading_assessment，不能当作完整格式兼容或最新缓存。
+先完成主入口共同自检和任务路径确认；仅Python标准库，不安装、转换、重算或执行宏/外链。退出0/3分别要求status为ok/partial且JSON完整；退出1/2停止分析，不把失败当空表。partial保留全部可用数据与issues/reading_assessment，不能当作完整格式兼容或最新缓存，但也不自动等同于停止：`cell_value_coverage=complete_within_declared_sheets` 且 `omissions_affect_cell_values=false` 时，普通读取、筛选排序和统计可继续，只需说明格式/元数据缺口；只有值遗漏、未读声明表或缺缓存才限制完整数据结论。
 
 - 只看结构、逐格查看或主正文分页：有界输出（`<skill-root>/references/bounded-reading.md`）；`wps_read_view_v1`是投影，不能交给只接受原schema的XLSX分析器，也不能把所有页拼成伪造的原完整schema。
 - 程序分析ET/ETT：默认read_et完整提取JSON，接受`biff8_readonly_v1`或`ooxml_spreadsheet_readonly_v1`；下方消费示例保留同一结果。内置只读分析使用 `<skill-root>/scripts/et_table_analysis.py` 的 `analyze(result, query)`，查询和输出见 `<skill-root>/references/table-analysis.md`。XLSX并非本包依赖，另有对应技能时才按其入口交接，不猜相邻目录。
@@ -19,7 +19,11 @@ JSON CLI：ok/0、partial/3；读取失败为失败JSON/1；参数错误usage写
 
 ## 消费电子表格 JSON
 
-默认 data 读取从共同自检开始，不需要先了解 BIFF 记录或 legacy 参数。下例使用标准库调用统一 CLI：先将 `<skill-root>` 替换为已确认的真实 Skill 目录，再在任务目录执行；`./input.et` 可换成允许读取的 `.ett`。它不创建文件，退出 0/3 均接收完整 JSON；退出 3 的数据和原诊断一起交给后续处理。退出 1/2、JSON 无效、状态/退出码不符或 schema 不符均停止，不能把文档或失败字典送入表格分析。
+默认容错读取从共同自检开始，不需要先了解 BIFF 记录或旧兼容参数。下例使用标准库调用统一 CLI：先将 `<skill-root>` 替换为已确认的真实 Skill 目录，再在任务目录执行；`./input.et` 可换成允许读取的 `.ett`。它不创建文件，退出 0/3 均接收完整 JSON；退出 3 的数据和原诊断一起交给后续处理。退出 1/2、JSON 无效、状态/退出码不符或 schema 不符均停止，不能把文档或失败字典送入表格分析。
+
+`sheets[].comments`（OOXML 传统批注或 BIFF8 Note）与 `sheets[].hyperlinks`（OOXML 内部链接或 BIFF8 HLink）是只读附加内容：批注含 `cell`/`author`/`text` 等，链接含 `target`/`location`/`tooltip`/`target_resolved=false`/`followed=false` 等；二者都不并入单元格值，不能把未解析目标当已验证链接，也不能据此推断单元格显示。
+
+OOXML 文本值已按 `_xHHHH_` 规则解码；含转义时单元格 `text_encoding` 和共享字符串 `shared_string_encoding` 保留原始编码证据。超出保留文字预算的单元格带 `text_truncated=true`，`text_budget` 说明单位、上限和实际保留字符数，不能把截断文本当完整原值。BIFF8 结果的 `sheet_coverage`/`read_status` 明确声明未读出的工作表，此时 `cell_value_coverage` 不得为完整。公式缓存消费方必须接受 `unverified` 与 `unverified_empty_string`（空文本），同时仍区分 `missing`、错误缓存和未知编码。
 
 ```python
 execute(command="python -I -S -B - \"<skill-root>\" ./input.et <<'PY'\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\n\nskill_dir = Path(sys.argv[1]).resolve()\nprocess = subprocess.run(\n    [sys.executable, '-I', '-S', '-B',\n     str(skill_dir / 'scripts' / 'read_et.py'), sys.argv[2]],\n    capture_output=True, text=True, encoding='utf-8', check=False,\n)\nif process.returncode not in (0, 3):\n    raise SystemExit(process.stderr or process.stdout or 'Reading failed')\nresult = json.loads(process.stdout)\nexpected_status = 'ok' if process.returncode == 0 else 'partial'\nif result.get('status') != expected_status:\n    raise SystemExit('Unexpected status/exit-code combination')\nif result.get('schema_version') not in (\n    'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1',\n):\n    raise SystemExit('Spreadsheet schema required')\n# Pass this same result to the chosen consumer; do not rebuild a reduced schema.\nprint(json.dumps(result, ensure_ascii=False, allow_nan=False))\nif process.returncode == 3:\n    print('Partial data retained; report the original issues and reading_assessment.',\n          file=sys.stderr)\nPY\n")

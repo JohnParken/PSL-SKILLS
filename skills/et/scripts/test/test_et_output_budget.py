@@ -63,7 +63,7 @@ class OutputBudgetTests(unittest.TestCase):
         for data, options, count in [(b'y', {}, 1), (b'x', {'compatibility': 'strict'}, 1), (b'x', {}, 2)]:
             with self.assertRaises(ParseError):
                 project(source, data, options, page_size=count, max_bytes=4000, cursor=first['next_cursor'])
-        for budget in (0, 511, True, 16777217):
+        for budget in (0, 511, True, 67108865):
             with self.assertRaises(ParseError):
                 project(source, b'x', {}, max_bytes=budget)
 

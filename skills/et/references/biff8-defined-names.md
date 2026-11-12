@@ -6,31 +6,31 @@
 
 ## 目标与允许范围
 
-这是独立 ET Skill 的 **BIFF8 `.et/.ett` 只读 Name 兼容子集**。依据 MS-XLS Lbl、XLUnicodeStringNoCch、NameParsedFormula、PtgArea3d、RgceAreaRel 和 XtiIndex 规范，明确区分非宏的普通静态区域、内置打印区域、宏以及外部引用。新增能力仅在 BIFF8 文件入口默认 `compatibility=data` 下可用，不需要启用临时 `--salvage-unknown-metadata`；显式 strict/legacy 和直接字节解析入口的默认行为保持原状，BIFF8 核心安全校验不变。只消费 Workbook 内部保存的字节，不计算名称/公式、不打开外部链接、不执行宏。
+这是独立 ET Skill 的 **BIFF8 `.et/.ett` 只读 Name 兼容子集**。依据 MS-XLS Lbl、XLUnicodeStringNoCch、NameParsedFormula、PtgArea3d、RgceAreaRel 和 XtiIndex 规范，明确区分非宏的普通静态区域、内置打印区域、宏以及外部引用。该能力在所有公开入口的默认容错策略下可用，不需要也不再有 `--salvage-unknown-metadata` 或 strict/legacy 开关（旧参数为 no-op 并附 issue）；BIFF8 核心安全校验不变。只消费 Workbook 内部保存的字节，不计算名称/公式、不打开外部链接、不执行宏。
 
-区域分支支持 **普通非宏命名区域的单个内部绝对 `PtgArea3d`，或同一内部工作表最多两个绝对 `PtgArea3d` 由唯一 `PtgUnion (0x10)` 连接**：先验证 14 字节 Lbl 头、名称为受限的纯 Unicode 字符串（1–255 字符、合法首字符和安全的字母/数字/下划线/句点后缀）；仅允许 11 字节单个 `PtgArea3d`（`0x3B/0x5B/0x7B`），内部 `ExternSheet` 的 `ixti` 必须指向已被前置检查证实的 self SupBook 之单个工作表，矩形行列与绝对标志合法。默认文件 data 模式允许受支持普通名称的 `fHidden` 变体，并忽略规范定义的保留标志/字段；其他必需名称、作用域、标志及引用检查仍适用。名称实际内容只在内存中校验；输出只给名称哈希、作用域、原始 token 和有限区域信息；原始负载仍按已存在的 `uninterpreted_metadata.payload_hex` 机制保存。
+区域分支支持 **普通非宏命名区域的单个内部绝对 `PtgArea3d`，或同一内部工作表最多两个绝对 `PtgArea3d` 由唯一 `PtgUnion (0x10)` 连接**：先验证 14 字节 Lbl 头、名称为受限的纯 Unicode 字符串（1–255 字符、合法首字符和安全的字母/数字/下划线/句点后缀）；仅允许 11 字节单个 `PtgArea3d`（`0x3B/0x5B/0x7B`），内部 `ExternSheet` 的 `ixti` 必须指向已被前置检查证实的 self SupBook 之单个工作表，矩形行列与绝对标志合法。容错读取允许受支持普通名称的 `fHidden` 变体，并忽略规范定义的保留标志/字段；其他必需名称、作用域、标志及引用检查仍适用。名称实际内容只在内存中校验；输出只给名称哈希、作用域、原始 token 和有限区域信息；原始负载仍按已存在的 `uninterpreted_metadata.payload_hex` 机制保存。
 
 **两阶段交叉校验**：Name 可以在 BoundSheet8 列表之前出现，因此读取记录时只验证名称、公式 token 与已出现的内部 ExternSheet 证据，并将 `itab` /区域所属工作表暂存；Globals EOF 时再与完整 BoundSheet8 数量核对，防止提前拒绝真实文档或接受越界索引。每簿最多 256 个此类名称；相同工作簿/工作表作用域下同名（忽略大小写）拒绝。所有实际记录仍受 BIFF 8204/8224 记录长度、1 MiB 原始元数据和总输出预算约束。
 
-保留旧有 **built-in Print_Area (0x06)** 的确切兼容规则，不把任意 built-in name 视为普通名称。新增有限的 **Print_Titles (0x07)** 和 **_FilterDatabase (0x0D)**（见下节），其余内置名称仍不作静态解释。宏名称、函数名称、`fOB/fProc`、快捷键、未在受控子集中允许的标志、`PtgFunc`、`PtgNameX`、跨多个工作表的 XTI、相对单元格范围、复杂公式/附加字节、未支持的名称字符及非法保留字段均不能进入静态名称结果。正确分帧的 `SupBook/ExternSheet` 元数据在默认文件 data 模式保留其原始顺序和索引；`ExternSheet` 只可使用到达声明 XTI 字节数所需的有界相邻 `Continue`，相邻 `ExternName` 与 `XCT/CRN` 组保持不透明。名称仅在 XTI 已验证为内部工作簿引用时解析。外部工作簿和 add-in 项保持不透明，相关名称可在记录完整分帧后作为 `DefinedNameOpaque` 原样保留并标记覆盖不确定。损坏/截断的链接分帧及无效索引仍拒绝；不打开、下载外部文件或加载 add-in。显式 strict/legacy 和直接字节解析入口保留原行为。
+保留旧有 **built-in Print_Area (0x06)** 的确切兼容规则，不把任意 built-in name 视为普通名称。新增有限的 **Print_Titles (0x07)** 和 **_FilterDatabase (0x0D)**（见下节），其余内置名称仍不作静态解释。宏名称、函数名称、`fOB/fProc`、快捷键、未在受控子集中允许的标志、`PtgFunc`、`PtgNameX`、跨多个工作表的 XTI、相对单元格范围、复杂公式/附加字节、未支持的名称字符及非法保留字段均不能进入静态名称结果。正确分帧的 `SupBook/ExternSheet` 元数据保留其原始顺序和索引；`ExternSheet` 只可使用到达声明 XTI 字节数所需的有界相邻 `Continue`，相邻 `ExternName` 与 `XCT/CRN` 组保持不透明。名称仅在 XTI 已验证为内部工作簿引用时解析。外部工作簿和 add-in 项保持不透明，相关名称可在记录完整分帧后作为 `DefinedNameOpaque` 原样保留并标记覆盖不确定。损坏/截断的链接分帧及无效索引保留原始证据并附 issue，不中止单元格读取；不打开、下载外部文件或加载 add-in。
 
-## 扩展：单个内部绝对单元格（仅 data 模式）
+## 扩展：单个内部绝对单元格（默认容错）
 
 普通名称还允许恰好 7 字节的 `PtgRef3d (0x3A/0x5A/0x7A)`：2 字节 XTI + 2 字节行 + 2 字节列，仅接受绝对坐标和 BIFF8 列 0–255。复用名称头、非宏、已验证的内部 XTI、作用域最终核对、重复名称及预算检查；相对坐标、跨表范围、外部 XTI 解析、多个单元格 token/联合、额外公式字节仍不能形成静态名称结果，内置名称接受范围不扩大。
 
-返回 `classification=ordinary_static_internal_cell_only`、原始 token 与 `[row,row,col,col]` 坐标；原有区域名称结构不改名，不执行名称求值。真实 Amortization ETT 中 8 个单元格名称及 2 组条件格式在默认 data 下可受限保留；260 个已知单元格记录数独立匹配，35 个保存值（含 1 个未重算数值缓存）独立匹配。其余文本缓存/错误缓存、显示样式与公式正确性未获独立验证，不能由 35 项推为全部值验收。完整证据及复现入口见 `docs/maintenance/et/et-real-validation.md#template-compatibility-iteration-2026-11-03`。
+返回 `classification=ordinary_static_internal_cell_only`、原始 token 与 `[row,row,col,col]` 坐标；原有区域名称结构不改名，不执行名称求值。真实 Amortization ETT 中 8 个单元格名称及 2 组条件格式在默认容错下可受限保留；260 个已知单元格记录数独立匹配，35 个保存值（含 1 个未重算数值缓存）独立匹配。其余文本缓存/错误缓存、显示样式与公式正确性未获独立验证，不能由 35 项推为全部值验收。完整证据及复现入口见 `docs/maintenance/et/et-real-validation.md#template-compatibility-iteration-2026-11-03`。
 
 规范依据：MS-XLS PtgRef3d（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/1ca817be-8df3-4b80-8d35-46b5eb753577`）和 NameParsedFormula 中使用的 RgceLocRel（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/2db37ba7-32f3-4395-88fe-6646034a5358`）；运行时不联网。
 
-## 扩展：打印标题、筛选区域与双区域联合（仅 data 模式）
+## 扩展：打印标题、筛选区域与双区域联合（默认容错）
 
 - **Print_Titles（`0x07`）**：只接受 `Lbl.fBuiltin=1`、非宏、局部作用域、`cch=1`，且名称字节恰为内置标识 `0x07`；保留原生 `fHidden`（0 或 1）。`NameParsedFormula` 仅允许一个绝对的自引用 `PtgArea3d`，范围必须是完整行（列 0–255）或完整列（行 0–65535）；或两条同一内部工作表区域引用加一个尾部 `PtgUnion (0x10)`，分别对应完整行、完整列。整张表、两个完整行或两个完整列的组合不在本阶段接受范围。
 - **_FilterDatabase（`0x0D`）**：同样要求非宏 `Lbl`、局部作用域、合法单个内部 `PtgArea3d`，至少跨两行以区分标题行和数据行；不接受任何联合 token、复杂函数或相对区域。只保存原始区域信息，**不执行筛选、隐藏行或覆盖用户的 `cell.value`**。
 - **普通双区域 Name**：仅允许两条同一 `ixti` 和同一内部工作表的完整绝对 `PtgArea3d`，末尾唯一 `PtgUnion`，`cce=23`；不接受第三条区域或其它公式运算符。原有单区域结构字段 `bounds_zero_based` 保持不变；双区域的详细来源在 `regions_zero_based`，并把单矩形字段标成 `null`，防止错误缩并为单个区域。
 - **属性级完整验证**：用于解析名称的 `SupBook/ExternSheet` 必须被核验为自工作簿内部引用；正确分帧的其他 link entries 按原顺序和索引不透明保留。作用域 `itab` 与最终 BoundSheet8 一致，列高 6 位保留字段与相对引用标志合法；名称、区域和公式 token 数量都受资源预算限制。记录字节原样进入现有 `uninterpreted_metadata.payload_hex`。新增结构标明 `print_settings_applied=false`、`filter_applied=false`、`formula_executed=false`、`external_link_followed=false`；**不能据此宣称已恢复打印页面、实际筛选视图或公式计算结果**。公式单元格仅使用 `Formula` 记录中已有的保存缓存，不重算。
-- **不可放宽**：其他内置 ID（如 Auto_Open/Auto_Close）、宏/函数标志、`PtgNameX`、外部 XTI 静态求值、任意多 token 公式、未知可选负载、非法布局/重复内置名称继续拒绝；显式 `strict/legacy` 模式仍按历史 `Print_Area` 规则处理；data 文件读取仅将无法解释的名称记录及外链元数据保留为原始证据，不应用其内容。
+- **不可放宽为已解释名称**：其他内置 ID（如 Auto_Open/Auto_Close）、宏/函数标志、`PtgNameX`、外部 XTI 静态求值、任意多 token 公式、未知可选负载、非法布局/重复内置名称不进入静态名称结果；无法解释的名称记录及外链元数据保留为原始证据并附 issue，不应用其内容。
 
-这三类新行为现阶段主要通过 **14 项合成测试** 验证。现有四份固定 ET/ETT 以及六份可读取的政府 ET 重新审计，均未出现 `Print_Titles`、`_FilterDatabase` 或普通双区域 `PtgUnion` 记录。它们对原有保存值和此前恢复的静态 Name 原件可提供**无回归**证据，但不能作为新增三类名称的真实文件兼容率。新的实际样本应固定原件哈希与独立完整预期，再追加应用级验收。本轮实际 Linux CI 已完成：Python 3.11/3.13 各 **500/500** WPS 回归、严格 Skill 自检通过；四份固定 ET/ETT 的 198 项保存值及 33 个未验证公式缓存保持一致，六份政府原件此前恢复的 126 单元格 Name 个案仍通过。规范子集、具体 CI 编号、零条真实新增 Name 记录的覆盖缺口见机器证据（`docs/maintenance/et/biff8-builtins-union-evidence.json`）。
+以下数字保留历史基线含义：这三类新行为当时主要通过 **14 项合成测试** 验证。现有四份固定 ET/ETT 以及六份可读取的政府 ET 重新审计，均未出现 `Print_Titles`、`_FilterDatabase` 或普通双区域 `PtgUnion` 记录。它们对原有保存值和此前恢复的静态 Name 原件可提供**无回归**证据，但不能作为新增三类名称的真实文件兼容率。新的实际样本应固定原件哈希与独立完整预期，再追加应用级验收。历史 Linux CI 记录：Python 3.11/3.13 各 **500/500** WPS 回归、严格 Skill 自检通过；四份固定 ET/ETT 的 198 项保存值及 33 个未验证公式缓存保持一致，六份政府原件此前恢复的 126 单元格 Name 个案仍通过。规范子集、具体 CI 编号、零条真实新增 Name 记录的覆盖缺口见机器证据（`docs/maintenance/et/biff8-builtins-union-evidence.json`）。
 
 MS-XLS 规范依据（只用于维护研究，运行时不联网）：`Lbl`（见下文链接）、<https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/665bd564-4677-4ea7-bf6b-89f27edb0788>（AutoFilter / _FilterDatabase）和 <https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/90d54742-4776-4271-a08c-39bd73b7b8fc>（PtgUnion）。
 
@@ -48,9 +48,9 @@ MS-XLS 规范依据（只用于维护研究，运行时不联网）：`Lbl`（�
 
 维护专用探测使用中山市发展和改革局官网下载的原始 `.et`（`https://www.zs.gov.cn/zsfgj/attachment/0/572/572365/2632406.et`），固定 SHA-256 `2ccc6cca516b5936a3330d634536ed3fab71cf762616cf018b5b42ff84161cad`、大小 36864 字节。此前版本在 Workbook record `0x18`、偏移 `13817` 拒绝；该记录负载 50 字节，名称 12 字符（UTF-16）、宏标志全 0、局部表序号 1、`ixti=0`、表达式为 11 字节单个 `0x3B PtgArea3d`，其绝对引用标志有效。源记录负载 SHA-256 `40161c6c8cc4728f9ae56568190a83b2420973f02d997371acdb208981927167`。
 
-新方案在**默认 BIFF8 data 模式**下返回 `partial`，提取 2 个工作表、126 个已识别单元格；独立于目标 BIFF 解析器的维护级记录帧计数器，确认 2 张表分别有 66 和 60 个**已识别单元格记录**，合计 126 个。普通与显式 salvage 结果相同，真实新增接受行为并不依赖跳过未知记录。这仍不构成全量未知记录或 WPS Office 应用级格式语义认证，也不证明名称的最终 Excel 显示或任何公式计算。
+新方案在默认容错策略下返回 `partial`，提取 2 个工作表、126 个已识别单元格；独立于目标 BIFF 解析器的维护级记录帧计数器，确认 2 张表分别有 66 和 60 个**已识别单元格记录**，合计 126 个。旧显式 salvage 与默认结果相同，真实新增接受行为并不依赖跳过未知记录。这仍不构成全量未知记录或 WPS Office 应用级格式语义认证，也不证明名称的最终 Excel 显示或任何公式计算。
 
-GitHub Actions Linux Python 3.11 和 3.13 均已完成 **486/486** WPS 全量回归及严格 Skill 检查；固定来源的四份历史 ET/ETT 样本仍与独立冻结的 **198 项**保存值（其中 33 项未验证时效性的公式缓存）一致。该新增 Name 子集由 **12 项**合成单测覆盖，包括宏、外链和非法名称拒绝；真实政府来源的受限接受证据、记录 SHA、独立 126 单元格记录统计及各项 CI 见机器验证报告（`docs/maintenance/et/biff8-defined-names-evidence.json`）。新代码未修改 `.wps/MS-DOC` 文字读取器，仍不执行公式或外链。
+历史记录：GitHub Actions Linux Python 3.11 和 3.13 曾完成 **486/486** WPS 全量回归及严格 Skill 检查；固定来源的四份历史 ET/ETT 样本仍与独立冻结的 **198 项**保存值（其中 33 项未验证时效性的公式缓存）一致。该新增 Name 子集由 **12 项**合成单测覆盖，包括宏、外链和非法名称拒绝；真实政府来源的受限接受证据、记录 SHA、独立 126 单元格记录统计及各项 CI 见机器验证报告（`docs/maintenance/et/biff8-defined-names-evidence.json`）。新代码未修改 `.wps/MS-DOC` 文字读取器，仍不执行公式或外链。
 
 验收入口是仓库根目录下的维护程序 `tests/wps_biff8_salvage_government_probe.py`（真实官方 HTTPS 下载、严格域名白名单、16MiB 上限、固定源哈希；**生产 Skill 运行时不联网**），独立记录数检查 `tests/wps_biff8_name_oracle.py`；单测为 `skills/et/scripts/test/test_wps_biff8_names.py`。维护报告只输出原件哈希、数量、来源、是否安全分类及诊断，**不打印名称正文、表格单元格原值或原始名称公式内容**。
 

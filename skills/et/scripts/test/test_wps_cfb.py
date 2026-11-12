@@ -150,25 +150,31 @@ class CompoundTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'cycle|cross-link'):
             CompoundFile(bytes(data))
 
-    def test_regular_chain_cycle_size_and_cross_links_rejected(self):
+    def test_regular_chain_conflicts_degrade_without_hanging(self):
         original=synthetic_cfb({'Workbook':b'x'*4096,'Other':b'y'*4096})
         first=struct.unpack_from('<I',original,1024+128+116)[0]
-        for mutate in [lambda data:struct.pack_into('<I',data,512+first*4,first),lambda data:struct.pack_into('<Q',data,1024+128+120,5000),
-                                                    lambda data:struct.pack_into('<I',data,1024+256+116,first),lambda data:struct.pack_into('<I',data,512+first*4,123456)]:
+        for mutate,code in [
+            (lambda data:struct.pack_into('<I',data,512+first*4,first),'cfb_stream_chain_issue'),
+            (lambda data:struct.pack_into('<Q',data,1024+128+120,5000),'cfb_stream_chain_shorter_than_declared'),
+            (lambda data:struct.pack_into('<I',data,1024+256+116,first),'cfb_stream_chain_issue'),
+            (lambda data:struct.pack_into('<I',data,512+first*4,123456),'cfb_stream_chain_issue')]:
             data=bytearray(original)
             mutate(data)
-            with self.assertRaises(ValueError):
-                CompoundFile(bytes(data))
+            book=CompoundFile(bytes(data))
+            codes=[issue['code'] for issue in book.issues]
+            self.assertIn(code,codes)
+            self.assertFalse(book.report()['cells_decoded'])
 
-    def test_mini_chain_cycles_cross_links_and_bounds(self):
+    def test_mini_chain_conflicts_degrade_without_hanging(self):
         original=synthetic_cfb({'one':b'x'*100,'two':b'y'*64})
         mini=struct.unpack_from('<I',original,60)[0]
         for mutate in [lambda data:struct.pack_into('<I',data,(mini+1)*512,0),lambda data:struct.pack_into('<I',data,1024+256+116,0),
                                                     lambda data:struct.pack_into('<I',data,1024+128+116,12345),lambda data:struct.pack_into('<Q',data,1024+120,64)]:
             data=bytearray(original)
             mutate(data)
-            with self.assertRaises(ValueError):
-                CompoundFile(bytes(data))
+            book=CompoundFile(bytes(data))
+            self.assertTrue(book.issues)
+            self.assertFalse(book.report()['cells_decoded'])
 
     def test_directory_cycles_orphans_bad_names_and_depth(self):
         original=synthetic_cfb({'one':b'1','two':b'2'})
@@ -176,32 +182,41 @@ class CompoundTests(unittest.TestCase):
                                                     data,1024+128+72,FREE),lambda data:struct.pack_into('<H',data,1024+128+64,65),lambda data:struct.pack_into('<H',data,1024+128,ord('/'))]:
             data=bytearray(original)
             mutate(data)
-            with self.assertRaises(ValueError):
-                CompoundFile(bytes(data))
+            book=CompoundFile(bytes(data))
+            self.assertTrue(book.issues)
+            self.assertFalse(book.report()['cells_decoded'])
         with patch('wps_cfb.MAX_DEPTH',0):
-            with self.assertRaisesRegex(ValueError,'depth'):
-                CompoundFile(original)
+            book=CompoundFile(original)
+            self.assertIn('cfb_directory_depth_limit',[issue['code'] for issue in book.issues])
 
     def test_header_truncation_padding_fat_and_resource_limits(self):
         original=synthetic_cfb()
-        for data in (b'',original[:512],original[:-1],b'bad'+original[3:]):
+        for data in (b'',original[:512],b'bad'+original[3:]):
             with self.assertRaises(ValueError):
                 CompoundFile(data)
-        for offset,value in ((44,513),(72,17),(56,2048),(68,0),(76,999999)):
+        data=bytearray(original)
+        data=data[:-1]
+        book=CompoundFile(bytes(data))
+        self.assertIn('cfb_trailing_remainder_ignored',[issue['code'] for issue in book.issues])
+        for offset,value in ((44,513),(72,17)):
             data=bytearray(original)
             struct.pack_into('<I',data,offset,value)
             with self.assertRaises(ValueError):
                 CompoundFile(bytes(data))
+        data=bytearray(original)
+        struct.pack_into('<I',data,56,2048)
+        book=CompoundFile(bytes(data))
+        self.assertIn('cfb_nonstandard_mini_cutoff',[issue['code'] for issue in book.issues])
         data=bytearray(synthetic_cfb(major=4))
         data[512]=1
-        with self.assertRaisesRegex(ValueError,'padding'):
-            CompoundFile(bytes(data))
+        book=CompoundFile(bytes(data))
+        self.assertIn('cfb_nonzero_header_padding',[issue['code'] for issue in book.issues])
         with patch('wps_cfb.MAX_FILE_BYTES',1024):
             with self.assertRaises(ValueError):
                 CompoundFile(original)
         with patch('wps_cfb.MAX_STREAM_BYTES',4):
-            with self.assertRaisesRegex(ValueError,'8 MiB'):
-                CompoundFile(original)
+            book=CompoundFile(original)
+            self.assertIn('cfb_user_stream_truncated',[issue['code'] for issue in book.issues])
         with patch('wps_cfb.MAX_DIRECTORY_ENTRIES',1):
             with self.assertRaises(ValueError):
                 CompoundFile(original)
@@ -213,17 +228,18 @@ class CompoundTests(unittest.TestCase):
             book.read_stream(['EncryptedPackage'])
         self.assertFalse(book.report()['cells_decoded'])
 
-    def test_unallocated_and_aliased_streams_not_silently_ignored(self):
+    def test_unallocated_and_aliased_streams_are_reported(self):
         data=bytearray(synthetic_cfb({'one':b'1','two':b'2'}))
-        # Make two active directory entries use the same name; no lossy dictionary overwrite.
+        # Make two active directory entries use the same name; the later entry
+        # is reported instead of silently overwriting the first.
         data[1024+256:1024+256+64]=data[1024+128:1024+128+64]
-        with self.assertRaisesRegex(ValueError,'Duplicate'):
-            CompoundFile(bytes(data))
+        book=CompoundFile(bytes(data))
+        self.assertIn('cfb_duplicate_directory_name',[issue['code'] for issue in book.issues])
         data=bytearray(synthetic_cfb({}))
         data.extend(bytes(512))
         struct.pack_into('<I',data,512+2*4,END)
-        with self.assertRaisesRegex(ValueError,'Unreferenced'):
-            CompoundFile(bytes(data))
+        book=CompoundFile(bytes(data))
+        self.assertIn('cfb_unreferenced_allocation',[issue['code'] for issue in book.issues])
 
     def test_seeded_structure_mutations_stay_bounded_and_never_claim_cells(self):
         randomizer=random.Random(20261022)

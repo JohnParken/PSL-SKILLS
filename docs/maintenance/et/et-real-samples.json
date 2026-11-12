@@ -1,7 +1,7 @@
 {
   "checked_on": "2026-10-23",
-  "compatibility": "legacy_excel_clsid",
-  "scope": "Original public downloads; no renamed/generated file counted as genuine ET/ETT. All four extract worksheet BIFF8 subsets with explicit compatibility plus chart_policy opaque; default chart policy still refuses Schedule. Producer versions unknown. Not full native WPS compatibility acceptance.",
+  "compatibility": "data",
+  "scope": "Original public downloads; no renamed/generated file counted as genuine ET/ETT. Under the content-first tolerant reader all four extract worksheet BIFF8 subsets with partial diagnostics and opaque chart retention; Schedule no longer needs a separate rejection path. Producer versions unknown. Not full native WPS compatibility acceptance.",
   "independent_checks": "Standard-library source record framing cross-checked worksheet cell counts, all 33 raw formula-cache byte sequences across Balance Sheet and Schedule, and all 1530 bytes of the retained Schedule chart. Titles spot-checked. No independent application/parser, recalculation, private-stream semantics or visual verification.",
   "samples": [
     {

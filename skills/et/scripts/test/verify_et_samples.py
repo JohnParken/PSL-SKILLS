@@ -37,7 +37,7 @@ def check_fixed_values(result, expectation):
     return {'semantic_values_checked': checked, 'formula_caches_checked': formula_caches}
 
 
-def verify(directory, chart_policy=None, compatibility="legacy_excel_clsid"):
+def verify(directory, chart_policy=None, compatibility="data"):
     if chart_policy is None:
         chart_policy = "opaque" if compatibility == "data" else "reject"
     manifest = Path(__file__).resolve().parents[4] / 'docs/maintenance/et/et-real-samples.json'
@@ -119,7 +119,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path, help='Task-relative directory containing separately obtained original samples')
     parser.add_argument("--chart-policy", choices=("reject", "opaque"), default=None)
-    parser.add_argument("--compatibility", choices=("legacy_excel_clsid", "data"), default="legacy_excel_clsid")
+    parser.add_argument("--compatibility", choices=("legacy_excel_clsid", "data"), default="data")
     args = parser.parse_args()
     reports = verify(args.directory, args.chart_policy, args.compatibility)
     passed = all(report['passed'] for report in reports)

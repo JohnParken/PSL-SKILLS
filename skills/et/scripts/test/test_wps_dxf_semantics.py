@@ -100,17 +100,19 @@ class DxfSemanticTests(unittest.TestCase):
             for script in ('read_wps.py', 'wps_biff8.py'):
                 child = subprocess.run([sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / script)), './input.et',
                                         '--compatibility', 'strict'], cwd=temporary, capture_output=True, text=True)
-                self.assertEqual(child.returncode, 1)
-                context = json.loads(child.stdout)['diagnostic_context']
-                self.assertEqual(context['layer'], 'biff_record')
-                self.assertEqual(context['record_name'], 'DXF')
-                self.assertEqual(context['compatibility_mode'], 'strict')
+                self.assertEqual(child.returncode, 3)
+                result = json.loads(child.stdout)
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn('compatibility_option_ignored',
+                              [item['code'] for item in result['issues']])
+            # Damaged CFB minor version is a container diagnostic; readable
+            # workbook values are still delivered under the tolerant policy.
             damaged = bytearray(path.read_bytes())
             damaged[24:26] = bytes(2)
             path.write_bytes(damaged)
-            self.assertEqual(read(path)['diagnostic_context']['layer'], 'cfb_container')
-            self.assertNotIn('record_name', read(path)['diagnostic_context'])
-            self.assertEqual(read(path)['diagnostic_context']['reason_code'], 'cfb_minor_policy_not_supported')
+            result = read(path)
+            self.assertIn(result['status'], ('ok', 'partial'))
+            self.assertFalse(result.get('producer_verified', True))
 
 
 if __name__ == '__main__':

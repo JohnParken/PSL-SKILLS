@@ -11,7 +11,7 @@
 
 ## 入口与失败行为
 
-先完成 环境自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。下表针对统一入口 `<skill-root>/scripts/read_et.py`，低层流解析器默认仍 strict；文件入口默认 data，区别见 数据读取策略 (`<skill-root>/references/biff8-readonly.md#default-data-policy`)。
+先完成 环境自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。下表针对统一入口 `<skill-root>/scripts/read_et.py`；低层流解析器与文件入口使用同一内容优先容错策略，旧 strict/legacy 参数仅为 no-op，见 默认容错读取策略 (`<skill-root>/references/biff8-readonly.md#default-tolerant-policy`)。
 
 | 入口 | 正常返回 | 读取失败与异常 |
 |---|---|---|
@@ -25,7 +25,7 @@ CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返�
 
 ## 结果字段与范围评估
 
-电子表格的 `schema_version` 分别为 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1`，字段见 BIFF 输出 (`<skill-root>/references/biff8-readonly.md#headers-and-output`) 和 OOXML 保存值 (`<skill-root>/references/ooxml-spreadsheet.md`)。BIFF 统一结果另保留 `reader_status`；data 可为 ok/partial，显式 strict/legacy 保留历史字符串。新增 cell_value_coverage、omissions_affect_cell_values 及 reading_assessment.cell_values 区分元数据缺口与公式缓存缺失。
+电子表格的 `schema_version` 分别为 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1`，字段见 BIFF 输出 (`<skill-root>/references/biff8-readonly.md#headers-and-output`) 和 OOXML 保存值 (`<skill-root>/references/ooxml-spreadsheet.md`)。结果 `status` 为 ok/partial，不提供 strict/legacy 分支；旧参数只产生 `compatibility_option_ignored` 等 issue 并保持 partial。新增 `issues_truncated`、`cell_value_coverage`、`omissions_affect_cell_values` 及 `reading_assessment.cell_values` 区分元数据缺口与公式缓存缺失。BIFF8 另有 `sheet_coverage`/每表 `read_status` 表示声明表是否读出，以及 `output_text_budget` 区分值文字与展示文字预算；OOXML 另有 `text_budget`、单元格 `text_truncated`/`text_encoding` 和 `shared_string_encoding`，保留文字超限或保存文本解码时按这些状态判断覆盖与原始值。partial 且值覆盖完整、omissions=false 时可继续普通分析，只需说明元数据/格式缺口。 已知结构化元数据（合并、公式组、条件格式/验证、HLink、Note 等）损坏只应产生 `partial` 与原始证据，不应单独把 `cell_value_coverage` 降为不确定；未知记录、值承载记录跳过、未读声明表或文字截断才影响值覆盖。
 
 `reading_assessment.schema_version` 为 `wps_reading_assessment_v1`，它是附加摘要，不替换单元格或原始 `issues`、`diagnostics`：
 
@@ -34,7 +34,7 @@ CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返�
 - `events` 汇总原有诊断的 code、来源字段和已记录位置；缺失偏移不推测。
 - `full_format_verified` 始终 false。原始诊断仍是完整依据，摘要不是隐私或安全认证。
 
-默认 data 在完整扇区前缀通过校验后可忽略不足一扇区的全零尾缀，`container_issues` 保留 `cfb_zero_trailing_padding_ignored`、尾缀起点和字节数。拒绝未对齐长度时，失败原因码为 `cfb_unaligned_physical_length`；FAT 宣告分配未具备物理存储扇区时为 `cfb_fat_unbacked_allocation`。严格模式遇到 FAT 数量为 0，或默认 data 模式遇到 FAT 数量为 0 且 DIFAT 未列出 FAT 扇区，失败原因码为 `cfb_zero_fat_count`。上述原因均返回 `invalid_or_unsupported`。默认 data 模式用 DIFAT 核对 FAT 数量并通过全部校验时返回 partial，`container_issues` 保留 `cfb_zero_fat_count_recovered`、文件头原值及推导数量。
+CFB 尾缀不再要求全零：完整扇区前缀通过分配链、目录及声明长度校验后，不足一扇区的尾缀（全零或非零）被忽略并保留 issue，`container_issues` 记录尾缀起点与字节数（`cfb_zero_trailing_padding_ignored` 或等价尾缀诊断）。FAT 宣告分配未具备物理存储扇区时为 `cfb_fat_unbacked_allocation`；流链循环/交叉引用、扇区指针越界或声明长度不符会停止该链并保留可验证前缀和覆盖风险；基础分配表无法安全建立时才返回失败并附原因。FAT 数量为 0 且 DIFAT 未列出可建立分配的扇区时原因码为 `cfb_zero_fat_count`；DIFAT 可核对并通过全部校验时返回 partial 并保留 `cfb_zero_fat_count_recovered`、文件头原值及推导数量。头 CLSID/minor/保留字节等差异记录 issue，不再作为拒绝原因。
 
 ## 消费电子表格 JSON
 

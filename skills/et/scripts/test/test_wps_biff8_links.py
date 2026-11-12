@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from read_et import ParseError, read_bytes
+from read_et import read_bytes
 from test_wps_biff8 import formula, rec, special, workbook
 from test_wps_biff8_names import name_payload
 from test_wps_cfb import synthetic_cfb
@@ -60,8 +60,12 @@ class SupportingLinkTests(unittest.TestCase):
         self.assertIn('ExternalCellCacheOpaque', records)
         self.assertEqual(records['ExternSheetContinuation']['payload_hex'], xti_payload[8:].hex())
         for mode in ('strict', 'legacy_excel_clsid'):
-            with self.subTest(mode=mode), self.assertRaises(ParseError):
-                read_bytes(source, compatibility=mode)
+            with self.subTest(mode=mode):
+                result = read_bytes(source, compatibility=mode)
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn('compatibility_option_ignored',
+                              [item['code'] for item in result['issues']])
+                self.assertEqual(result['sheets'][0]['cells']['A1']['value'], 42)
 
     def test_invalid_link_boundaries_and_indices_fail(self):
         cases = (
@@ -75,8 +79,15 @@ class SupportingLinkTests(unittest.TestCase):
             external_book() + rec(0x005A, bytes(4)),
         )
         for records in cases:
-            with self.subTest(records=records.hex()), self.assertRaises(ParseError):
-                read_bytes(file_bytes(records))
+            with self.subTest(records=records.hex()):
+                result = read_bytes(file_bytes(records))
+                self.assertEqual(result['status'], 'partial')
+                self.assertFalse(result['external_links_followed'])
+                self.assertFalse(result['formulas_executed'])
+                self.assertTrue([item for item in result['issues']
+                                 if item['code'] in ('link_metadata_invalid',
+                                                     'unknown_biff_record_salvaged',
+                                                     'defined_name_retained_opaque')])
 
 
 if __name__ == '__main__':

@@ -17,6 +17,9 @@ MAX_NUMBER_EXPONENT = 2200
 MAX_EXCLUDED_ROWS = 10000
 SCHEMAS = {'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1'}
 CELL_TYPES = {'number', 'text', 'boolean', 'blank', 'error'}
+# Saved formula caches that the reader may expose as usable when explicitly
+# selected. Empty-string caches are a present saved value, not a missing cache.
+CACHED_FORMULA_STATUSES = frozenset({'unverified', 'unverified_empty_string'})
 
 
 def need(condition, message, status='analysis_error'):
@@ -95,8 +98,13 @@ def typed_cell(cell, coordinate, formula_policy):
             state = 'error_cache'
         elif formula_policy == 'exclude':
             state = 'formula_excluded'
+        elif cache == 'unverified_empty_string':
+            need(kind == 'text' and value == '',
+                 'Empty-string cache status requires empty text at ' + coordinate)
+            state = 'usable'
         else:
-            need(cache == 'unverified', 'Unknown formula cache status at ' + coordinate)
+            need(cache in CACHED_FORMULA_STATUSES,
+                 'Unknown formula cache status at ' + coordinate)
     return {'coordinate': coordinate, 'type': kind, 'value': value, 'analysis_state': state,
             'formula': formula, **({'cache_status': cache} if formula else {})}
 
@@ -120,6 +128,23 @@ def excluded_rows(query, data_first_row, last_row):
          'Excluded rows must lie inside the selected data rows, after any declared header')
     need(len(set(rows)) == len(rows), 'exclude_rows contains duplicate rows')
     return set(rows)
+
+
+def selected_merges_overlap(ranges):
+    """Check clipped rectangles without expanding areas; accept OOXML coordinates."""
+    events = []
+    for top, bottom, left, right in ranges:
+        mask = ((1 << (right - left + 1)) - 1) << left
+        events.extend(((top, 1, mask), (bottom + 1, 0, mask)))
+    occupied = 0
+    for _row, add, mask in sorted(events):
+        if add:
+            if occupied & mask:
+                return True
+            occupied |= mask
+        else:
+            occupied ^= mask
+    return False
 
 
 def extract_table(result, query):
@@ -147,7 +172,8 @@ def extract_table(result, query):
             cells[coordinate] = cell
 
     merges = []
-    occupied = set()
+    selected_merge_bounds = []
+    merge_issues = []
     source_merges = sheet.get('merges', [])
     need(isinstance(source_merges, list) and len(source_merges) <= 65536, 'Malformed/excessive merge list')
     for merge in source_merges:
@@ -165,12 +191,19 @@ def extract_table(result, query):
         anchor = column_name(left) + str(top)
         clipped = top < first_row or left < first_col or bottom > last_row or right > last_col
         merges.append({'range': ref, 'anchor': anchor, 'clipped_by_selection': clipped})
-        for row in range(max(top, first_row), min(bottom, last_row) + 1):
-            for col in range(max(left, first_col), min(right, last_col) + 1):
-                coordinate = column_name(col) + str(row)
-                need(coordinate not in occupied, 'Overlapping selected merges')
-                occupied.add(coordinate)
-                cells[coordinate]['merge_anchor'] = anchor
+        selected_merge_bounds.append((max(top, first_row), min(bottom, last_row),
+                                      max(left, first_col), min(right, last_col)))
+    if selected_merges_overlap(selected_merge_bounds):
+        need(merge_policy == 'preserve', 'Overlapping selected merges prevent unambiguous text fill')
+        merge_issues.append({'code': 'overlapping_merge_mapping_not_applied',
+                             'scope': 'selected_rectangle', 'stored_values_unchanged': True})
+        for merge in merges:
+            merge['anchor_mapping'] = 'not_applied_due_to_overlap'
+    else:
+        for merge, (top, bottom, left, right) in zip(merges, selected_merge_bounds):
+            for row in range(top, bottom + 1):
+                for col in range(left, right + 1):
+                    cells[column_name(col) + str(row)]['merge_anchor'] = merge['anchor']
 
     header = None
     data_first_row = first_row
@@ -205,6 +238,7 @@ def extract_table(result, query):
     rows = [{'source_row': row, 'cells': {col: cells[col + str(row)] for col in columns}}
             for row in range(data_first_row, last_row + 1) if row not in excluded]
     return {'columns': columns, 'rows': rows, 'header': header, 'merges': merges,
+            'merge_issues': merge_issues,
             'data_first_row': data_first_row, 'selected_positions': len(cells),
             'input_rows': last_row - data_first_row + 1, 'excluded_source_rows': sorted(excluded),
             'state_counts': count_states(cells.values()), 'filled_text_positions': filled,

@@ -76,10 +76,14 @@ class StaticCellNameTests(unittest.TestCase):
         for refs, index, scope in cases:
             with self.subTest(refs=refs, index=index, scope=scope), self.assertRaises(ValueError):
                 classify_static_name(name_payload(sheet=scope, formula=cell_reference(index=index)), 2, refs)
-        # Final BoundSheet8 reconciliation still rejects a nonexistent sheet.
+        # Final BoundSheet8 reconciliation reports a nonexistent sheet.
         links = rec(0x1AE, b'\x01\0\x01\x04') + rec(0x17, struct.pack('<4H', 1, 0, 2, 2))
-        with self.assertRaises(ValueError):
-            parse_stream(workbook(extra_global=links + rec(0x18, name_payload(sheet=0, formula=cell_reference()))), compatibility='data')
+        result = parse_stream(workbook(extra_global=links + rec(0x18, name_payload(sheet=0, formula=cell_reference()))), compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertTrue([item for item in result['issues']
+                         if item['code'] in ('name_scope_out_of_range',
+                                             'defined_name_retained_opaque',
+                                             'internal_reference_out_of_range')])
 
     def test_macro_hidden_function_builtin_and_unknown_flags_refused(self):
         for flags in (1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100):
@@ -100,15 +104,23 @@ class StaticCellNameTests(unittest.TestCase):
     def test_duplicate_area_and_cell_names_share_budget_and_identity(self):
         first = rec(0x18, name_payload('Input', formula=cell_reference()))
         duplicate = rec(0x18, name_payload('input'))
-        with self.assertRaisesRegex(ValueError, 'Duplicate ordinary static name'):
-            parse_stream(workbook(extra_global=self_extern_sheet() + first + duplicate), compatibility='data')
-        with patch('wps_biff8.MAX_STATIC_NAMES', 0), self.assertRaises(ResourceLimitError):
-            parse_stream(named_workbook(name_payload(formula=cell_reference())), compatibility='data')
+        result = parse_stream(workbook(extra_global=self_extern_sheet() + first + duplicate), compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('defined_name_duplicate',
+                      [item['code'] for item in result['issues']])
+        with patch('wps_biff8.MAX_STATIC_NAMES', 0):
+            result = parse_stream(named_workbook(name_payload(formula=cell_reference())), compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('static_name_budget_truncated',
+                      [item['code'] for item in result['issues']])
 
-    def test_strict_and_legacy_name_subset_is_unchanged(self):
+    def test_strict_and_legacy_name_subset_uses_tolerant_policy(self):
         for mode in ('strict', 'legacy_excel_clsid'):
-            with self.subTest(mode=mode), self.assertRaises(ValueError):
-                parse_stream(named_workbook(name_payload(formula=cell_reference())), compatibility=mode)
+            with self.subTest(mode=mode):
+                result = parse_stream(named_workbook(name_payload(formula=cell_reference())), compatibility=mode)
+                self.assertEqual(result['status'], 'partial')
+                self.assertIn('compatibility_option_ignored',
+                              [item['code'] for item in result['issues']])
 
 
 class PageBreakDataReadingTests(unittest.TestCase):
@@ -139,8 +151,10 @@ class PageBreakDataReadingTests(unittest.TestCase):
                 issue = next(item for item in parsed['issues'] if item['code'] == 'page_break_layout_not_applied')
                 self.assertEqual(issue['record_offset'], source['offset'])
                 for mode in ('strict', 'legacy_excel_clsid'):
-                    with self.assertRaises(ValueError):
-                        parse_stream(raw, compatibility=mode)
+                    strict = parse_stream(raw, compatibility=mode)
+                    self.assertEqual(strict['status'], 'partial')
+                    self.assertIn('compatibility_option_ignored',
+                                  [item['code'] for item in strict['issues']])
 
     def test_order_and_overlap_diagnostics_span_repeated_records(self):
         raw = template_workbook(extra_sheet=rec(0x1B, page_breaks([(2, 0, 10)])) + rec(0x1B, page_breaks([(2, 1, 2), (2, 3, 4)])))
@@ -157,21 +171,36 @@ class PageBreakDataReadingTests(unittest.TestCase):
             self.assertTrue(source['structure']['layout_checks_passed'])
             self.assertFalse(any(item['code'] == 'page_break_layout_not_applied' for item in result['issues']))
 
-    def test_truncated_mismatched_oversized_frames_still_refused(self):
+    def test_truncated_mismatched_oversized_frames_degrade(self):
         for kind, payload in ((0x1B, b'\0'), (0x1B, b'\x01\0'),
                               (0x1B, page_breaks([(2, 0, 2)]) + b'\0'),
                               (0x1B, struct.pack('<H', 1027) + bytes(6 * 1027)),
                               (0x1A, struct.pack('<H', 256) + bytes(6 * 256))):
-            with self.subTest(kind=kind, size=len(payload)), self.assertRaises(ValueError):
-                parse_stream(template_workbook(extra_sheet=rec(kind, payload)), compatibility='data')
+            with self.subTest(kind=kind, size=len(payload)):
+                result = parse_stream(template_workbook(extra_sheet=rec(kind, payload)),
+                                      compatibility='data')
+                self.assertEqual(result['status'], 'partial')
+                self.assertTrue([item for item in result['issues']
+                                 if item['code'] in ('page_break_metadata_invalid',
+                                                     'page_break_layout_not_applied')])
+                self.assertTrue(result['sheets'][0]['cells'])
 
-    def test_metadata_budget_unknown_records_and_cell_damage_still_refused(self):
+    def test_metadata_budget_unknown_records_and_cell_damage_degrade(self):
         bad_layout = rec(0x1B, page_breaks([(0, 65535, 255)]))
-        with patch('wps_biff8.MAX_METADATA_BYTES', 7), self.assertRaises(ResourceLimitError):
-            parse_stream(template_workbook(extra_sheet=bad_layout), compatibility='data')
-        for tail in (rec(0x7777, b'unknown'), rec(0x203, bytes(7)), rec(0x2F, bytes(2))):
-            with self.subTest(tail=tail.hex()), self.assertRaises(ValueError):
-                parse_stream(template_workbook(extra_sheet=bad_layout + tail), compatibility='data')
+        with patch('wps_biff8.MAX_METADATA_BYTES', 7):
+            result = parse_stream(template_workbook(extra_sheet=bad_layout), compatibility='data')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('metadata_budget_truncated',
+                      [item['code'] for item in result['issues']])
+        for tail in (rec(0x7777, b'unknown'), rec(0x203, bytes(7))):
+            with self.subTest(tail=tail.hex()):
+                result = parse_stream(template_workbook(extra_sheet=bad_layout + tail),
+                                      compatibility='data')
+                self.assertEqual(result['status'], 'partial')
+                self.assertTrue(result['sheets'][0]['cells'])
+        with self.assertRaises(ValueError):
+            parse_stream(template_workbook(extra_sheet=bad_layout + rec(0x2F, bytes(2))),
+                         compatibility='data')
 
     def test_many_invalid_layout_entries_have_bounded_diagnostics(self):
         payload = page_breaks([(0, 65535, 255)] * 1026)

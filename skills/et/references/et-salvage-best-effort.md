@@ -1,52 +1,42 @@
-# BIFF8 临时最大兼容：仅保留可确定来源的保存值
+# 默认容错读取与历史 salvage 边界
 
 维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-## 临时范围与警告
+## 默认策略：容错读取，显式 salvage 已废弃
 
-用户明确要求临时放宽 ET/ETT 的 BIFF8 读取拒绝条件。本功能**不是标准 BIFF8 解析，也不证明每个保存值完整**。它是由维护人员/用户明确选择的 best-effort 读取路径，在有界 BIFF 记录已经完整分帧、CFB 容器和强制安全检查通过的前提下，尝试保留能明确解析的单元格保存值。所有跳过的未知记录原样保留于诊断，状态**只能是 `partial`**，并设置 `cell_value_coverage=unverified_due_to_best_effort_salvage` 和 `omissions_affect_cell_values=true`，避免用户把它误当作可用于对账的完整数据。
+统一读取入口（文件 API、`read_et.py`、`et_cli.py run`、BIFF8/OOXML 分支）**默认就是内容优先的容错策略**，无需再开启独立 salvage。旧参数 `--salvage-unknown-metadata` 仍被接受但不改变行为，结果附加 `salvage_option_ignored` 并保持 partial；旧 `--compatibility`、`--chart-policy` 同理，附加 `compatibility_option_ignored`。不要在文档或任务中把显式 salvage 当作更宽松的额外开关。
 
-**不能把宽松结果直接用于财务结算、自动对账、交易决策或任何依赖完整单元格范围的程序。** 只做人工初步阅读；重要值应与独立 WPS/Excel 软件或可信原始台账对比。未知记录可能存储本模块尚不认识的单元格值、计算结果或关系，因此即使未报错也可能遗漏数据。
+默认容错的范围：
 
-## 执行入口
+- 有界未知或未实现的 Global/Worksheet 记录保留原始负载、位置和 Continue 关联，结果标记 `partial` 与覆盖不确定，不中止单元格读取。
+- 未知 CodePage 声明、缺少必需 `Date1904` 或 Worksheet `WsBool` 时保留原始保存值并附加 issue；`date_system=unknown` 时不推断日期解释，缺失声明不视为符合 MS-XLS。
+- 单条值承载记录损坏时跳过该记录/单元格，保留其它单元格，并设置 `omissions_affect_cell_values=true` 与保守的 `cell_value_coverage`。
+- 非单元格元数据（行列表、视图、合并、公式组、DXF、表样式、条件格式、数据验证、图表、绘图、批注、链接、名称）校验失败时保留有界原始证据与 issue，不中止单元格读取。
+- 宏存储只读不加载、不执行；图表/宏/对话框子表跳过并报告；外部链接与对象从不跟随或执行。
+- 诊断条目超限时截断并设置 `issues_truncated`，不因诊断数量中止。
 
-先从实际读取目标 `SKILL.md` 的 `file_path` 确认并替换 `<skill-root>`，从 harness 已确认的任务工作目录读取用户指定输入。完成 Skill 的 `--check` 自检后，**显式选择**仅用于 BIFF8 的独立低层 CLI：
+## 覆盖语义与使用限制
 
-```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" --check")
-execute(command="python -I -S -B \"<skill-root>/scripts/wps_biff8.py\" ./input.et --compatibility data --salvage-unknown-metadata")
-```
-
-普通 `read_et.py ./input.et` 已保留边界完整的未知记录并报告覆盖不确定。这个显式选项另允许未知 CodePage 以及缺少 Date1904 或 WsBool 的部分读取。**此选项对 .wps/MS-DOC 和 OOXML 无效**，不自动切换其他格式，也不在一次失败后悄悄重试。Python 标准库运行，不使用办公软件、外部 API、联网、写文件或第三方组件。只读 `.ett` 也可采用相同显式命令。
-
-## 在宽松模式下会发生什么
-
-- 对未识别、但外层 BIFF 记录长度、偏移和累计配额已经校验成功的 Global/Worksheet Record，保留 `offset`、`scope`、`record_id`、`payload_hex`。按记录种类和子流分组诊断 `unknown_biff_record_salvaged`，记录原始条数。此记录内容**可能**代表未解析的单元格，因此将保存值覆盖范围标成未知，并非安全忽略。
-- **未知 CodePage 声明**：仅在负载恰好 2 字节时保留其原始编码页数值，附 `unknown_codepage_decl_salvaged` 和数据覆盖不确定标记；绝不将其当作实际压缩字符串的解码器。冲突的多个 CodePage 声明、损坏的长度仍继续拒绝。
-- 原本拒绝的**缺少必需 Date1904**：临时允许继续读取保存的原始数值，`date_system=unknown`，禁止 `numeric_interpretation` 日期推断；`date_system_missing_salvage` 会明确保留规范缺口。这不是宣布此缺失符合 MS-XLS。
-- 原本拒绝的**缺少 Worksheet WsBool**：仅在该表 BOF/EOF 和其他记录结构可完整解析时返回 `partial`，附加 `wsbool_missing_salvage`，不保证工作表实际类型与保存视图。
-- 普通 Formula 的数字、布尔、错误和文本缓存按已有有界逻辑原样读取，**不重算、不推断是否最新**；未知记录可能改变其业务语义，不能把缓存当作经过验真的实际计算结果。
-- 所有原生数据结构、SST/Continue 字符边界、重复或越界单元格、公式组索引和资源配额仍然有效；这类失败不能因为“宽松”被忽略。
-- 读到部分数据时退出码 3 和 stdout JSON 保留，退出 1 表示还存在不可恢复的格式/安全/结构拒绝；不把退出 3 作为完整成功处理。
+有可靠单元格结果但覆盖不完整时，状态为 `partial`（退出码 3），`cell_value_coverage` 标记为 `unverified_due_to_best_effort_salvage` 或等价保守值，`omissions_affect_cell_values=true`。**不能把这类结果直接用于财务结算、自动对账、交易决策或任何依赖完整单元格范围的程序。** 只做人工初步阅读；重要值应与独立 WPS/Excel 软件或可信原始台账对比。未知记录可能存储尚不认识的单元格值、计算结果或关系，因此即使未报错也可能遗漏数据。
 
 ## 必须保留的不可恢复边界
 
-CFB 文件头、FAT/MiniFAT 扇区链交叉引用/循环、记录截断和超长、FILEPASS 加密、宏/VBA、超出预算、非法核心记录 BOF/EOF、公式缓存 String 不一致、SST/LabelSst 越界、数字/日期结果溢出、无法确认数据来源的重复单元格和不合法共享/数组公式关系，均不自动放宽。外部链接、可执行对象也不会执行或下载。
+内容优先不等于无边界。以下仍拒绝或不执行：FILEPASS/加密（不解密）、ZIP 逃逸/符号链接/重复或歧义成员/加密 ZIP、DTD 与实体、CFB FAT/MiniFAT 链循环与交叉引用、指针越界、声明长度不符、输入变化 TOCTOU、超过 32 MiB 输入或 32 MiB 单流预算、记录负载大于 8224 字节、宏执行、公式重算、外链跟随与联网。不把失败、截断 JSON 或空表伪装成成功。
 
-如果未知记录被保留而非解析，其实就是选择了**不确定覆盖率的部分读取**，不是“全部文件均能读完整”。不能将 `omissions_affect_cell_values=false`、`status=ok` 或默认数字解释宣称为安全，亦不得使用返回的部分表格汇总去证明总额准确。
-
-## 政府官网真实 ET 附件的新增验证
+## 政府官网真实 ET 附件验证（历史证据）
 
 维护专用流程从中山市农业农村局、汕头市商务局、中山市发展和改革局、深圳市司法局网站公告中取得 **7 个公开 .et 附件直链**，使用 16 MiB 限制、HTTPS 和官方域名白名单下载；**6 份原件实际下载且均为 CFB/OLE**，1 份深圳来源发生 TLS `BAD_ECPOINT` 失败（不等于解析失败）。文件仅在维护 CI 内存中被读取、计算 SHA-256，不保存原文或单元格内容到仓库。
 
-本阶段对 `Name (0x0018)` 做**有限静态内部命名区域解释**后，同样的六份固定 SHA 原件，在普通 `data` 和显式 salvage 模式下均可以返回 `partial`；此前已能读取的五份文件保持一致，单元格计数依次为 109、298、127、251、64。**第六份中山市低空场景供需清单此前在偏移 13817 被拒绝，现在不需要开启 salvage 就能读取 2 张工作表、126 个已知单元格。**独立维护级 BIFF 记录分帧统计确认其已知单元格记录数为 **66+60=126**，但尚无独立全量单元格值、字体格式与 WPS 软件的语义对照。
+历史阶段（显式 salvage 尚存在时）对 `Name (0x0018)` 做有限静态内部命名区域解释后，同样的六份固定 SHA 原件在普通 data 和显式 salvage 模式下均可返回 `partial`；此前已能读取的五份文件保持一致，单元格计数依次为 109、298、127、251、64。第六份中山市低空场景供需清单此前在偏移 13817 被拒绝，增强后不需要开启 salvage 就能读取 2 张工作表、126 个已知单元格。独立维护级 BIFF 记录分帧统计确认其已知单元格记录数为 **66+60=126**，但尚无独立全量单元格值、字体格式与 WPS 软件的语义对照。
 
-该记录 50 字节，原始 SHA 和 Name 负载 SHA 均与此前拒绝样本一致；规范中的 Lbl 头表明非宏、非内置、UTF-16 12 字符、局部表 1、单条 `PtgArea3d (0x3B)`、内部 XTI 索引 0，矩形区域为绝对坐标。新解析器实际核验内部 SupBook/ExternSheet 与 BoundSheet8 的范围及指向，并仍仅保留 Name 的结构证据、不计算其表达式。**宏、外链、复杂公式/额外字节、无效字符串与内置未知名称仍拒绝**。详见只读名称边界（`<skill-root>/references/biff8-defined-names.md`）及真实政府来源机器报告（`docs/maintenance/et/et-salvage-government-evidence.json`）。
+该记录 50 字节，原始 SHA 和 Name 负载 SHA 均与此前拒绝样本一致；规范中的 Lbl 头表明非宏、非内置、UTF-16 12 字符、局部表 1、单条 `PtgArea3d (0x3B)`、内部 XTI 索引 0，矩形区域为绝对坐标。新解析器实际核验内部 SupBook/ExternSheet 与 BoundSheet8 的范围及指向，并仍仅保留 Name 的结构证据、不计算其表达式。宏、外链、复杂公式/额外字节、无效字符串与内置未知名称仍保留为原始证据或不解释。详见只读名称边界（`<skill-root>/references/biff8-defined-names.md`）及真实政府来源机器报告（`docs/maintenance/et/et-salvage-government-evidence.json`）。
 
-此前政府样本“5 份可读、1 份在 Name 拒绝”的记录是兼容增强前的**历史基线**，不得与最新版本的 6 份受限可读混淆。2026-11-01 深圳司法局候选链接 TLS `BAD_ECPOINT` 仍属于下载失败，不计入解析失败。原件尚未随 Skill 分发，维护测试只输出哈希、数量与去标识化记录头，不暴露名称文字或表格正文。
+此前政府样本“5 份可读、1 份在 Name 拒绝”的记录是兼容增强前的历史基线，不得与后来的 6 份受限可读混淆。2026-11-01 深圳司法局候选链接 TLS `BAD_ECPOINT` 仍属于下载失败，不计入解析失败。原件尚未随 Skill 分发，维护测试只输出哈希、数量与去标识化记录头，不暴露名称文字或表格正文。
 
-## 合成验收与真实原件
+## 合成验收与真实原件（历史基线）
 
-新回归代码 `skills/et/scripts/test/test_wps_biff8_salvage.py` 覆盖全局及表内未知记录、同 ID 多次出现、未知 CodePage、缺少 Date1904、缺少 WsBool、错误/加密/核心结构仍拒绝、元数据预算、低层显式 CLI + 原件字节不变，以及**默认读取 JSON 没有新增审计字段**。Linux Python 3.11 和 3.13 在本轮扩展测试后均 **474/474 项 WPS 全量测试通过**（GitHub Actions `41261297990`）；这包含新加入的 **11 项**边界安全测试、**72 组确定性未知记录扰动**，以及实际低层 CLI、宏/加密/非法 SST/重复单元格等硬拒绝。四份真实固定 ET/ETT 在普通与宽松模式下均逐项匹配独立冻结的 **198 个保存值**（含 33 个未重算的公式缓存），CI `41261297993`。新政府附件测试 CI `41261077112`，哈希复验与 Name 头证据 CI `41261297979`；`environment-ok` 与严格 Skill 检查均通过。四份固定来源的真实 ET/ETT 原件按原始 SHA 复验，独立冻结的 **198 个保存值全数一致**，含 33 项未验证新鲜度的公式缓存（维护 CI：`41260410169`、`41260410154`）。机器证据见 (`docs/maintenance/et/et-salvage-evidence.json`)。**宽松模式的新行为目前只有合成测试；四份原件仅证明原有保存值无回归，不能说明它们包含那些被宽松跳过的记录。** 只有取得实际被拒绝的真实 ET/ETT 并提供独立语义预期，才能把相应行为计入真实兼容验收。
+以下数字保留各自历史含义，不代表本轮容错重构重跑：`skills/et/scripts/test/test_wps_biff8_salvage.py` 曾覆盖全局及表内未知记录、同 ID 多次出现、未知 CodePage、缺少 Date1904、缺少 WsBool、错误/加密/核心结构仍拒绝、元数据预算、低层显式 CLI 与原件字节不变；Linux Python 3.11/3.13 下 **474/474** 项 WPS 全量测试通过（GitHub Actions `41261297990`）。四份固定 ET/ETT 在普通与宽松模式下均匹配独立冻结的 **198 个保存值**（含 33 个未重算的公式缓存）。机器证据见 `docs/maintenance/et/et-salvage-evidence.json`。
+
+当前默认容错重构的验证记录见 `docs/maintenance/et/validation.md#内容优先容错重构验证`；真实 WPS OOXML `.et`、云端 Linux 与 Pylint 仍未验证。

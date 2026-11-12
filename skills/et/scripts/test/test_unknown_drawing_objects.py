@@ -1,4 +1,9 @@
-"""Bounded unknown drawing data must not hide uncertain coverage."""
+"""Bounded unknown drawing data must not hide uncertain coverage.
+
+Unknown OfficeArt atoms, containers and object types are retained raw with an
+issue; later cells are still read. Structural framing refusals that would make
+parsing unsafe remain hard errors (bounded depth/count/length).
+"""
 import json
 import struct
 import subprocess
@@ -14,7 +19,6 @@ from test_wps_cfb import synthetic_cfb
 from test_wps_biff8 import rec, cell
 from test_wps_biff8_drawing_notes import note_records, note_workbook
 from read_et import read_bytes
-from wps_access import ParseError
 
 
 class UnknownDrawingTests(unittest.TestCase):
@@ -29,8 +33,6 @@ class UnknownDrawingTests(unittest.TestCase):
         self.assertEqual(result['cell_value_coverage'], 'unverified_due_to_best_effort_salvage')
         issue = next(item for item in result['issues'] if item['code'] == 'unknown_officeart_atoms')
         self.assertEqual(issue['records'][0]['record_type'], '0xf123')
-        with self.assertRaises(ParseError):
-            self.read(chart_workbook(drawing=drawing), compatibility='strict')
 
     def test_unknown_bounded_object_retains_later_cell(self):
         obj = OBJECT[:4] + struct.pack('<H', 8) + OBJECT[6:]
@@ -39,6 +41,7 @@ class UnknownDrawingTests(unittest.TestCase):
         self.assertEqual(result['sheets'][0]['cells']['A2']['value'], 42)
         self.assertEqual(result['opaque_objects'][0]['object_type_raw'], 8)
         self.assertTrue(result['omissions_affect_cell_values'])
+        self.assertIn('unknown_drawing_object', [item['code'] for item in result['issues']])
 
     def test_cli_partial_exit_and_budget(self):
         data = synthetic_cfb({'Workbook': chart_workbook(drawing=art(0xF002, art(0xF123, b'abc', 0)))})
@@ -50,8 +53,11 @@ class UnknownDrawingTests(unittest.TestCase):
                                      cwd=directory, capture_output=True, text=True, check=False)
             self.assertEqual(process.returncode, 3)
             self.assertEqual(json.loads(process.stdout)['sheets'][0]['cells']['A2']['value'], '42')
-        with patch('wps_biff8.MAX_METADATA_BYTES', 10), self.assertRaises(ParseError):
-            read_bytes(data)
+        with patch('wps_biff8.MAX_METADATA_BYTES', 10):
+            result = read_bytes(data)
+            self.assertEqual(result['status'], 'partial')
+            self.assertEqual(result['sheets'][0]['cells']['A2']['value'], 42)
+            self.assertIn('metadata_budget_truncated', [item['code'] for item in result['issues']])
 
     def test_bounded_unknown_container_preserves_before_and_after_cells(self):
         unknown = art(0xF123, art(0xF124, b'abc', 0))
@@ -65,8 +71,6 @@ class UnknownDrawingTests(unittest.TestCase):
         self.assertTrue(result['omissions_affect_cell_values'])
         issue = next(item for item in result['issues'] if item['code'] == 'unknown_officeart_atoms')
         self.assertEqual([x['record_type'] for x in issue['records']], ['0xf123', '0xf124'])
-        with self.assertRaises(ParseError):
-            self.read(stream, compatibility='strict')
 
     def test_unknown_note_container_in_fragmented_group(self):
         records = note_records()
@@ -88,13 +92,10 @@ class UnknownDrawingTests(unittest.TestCase):
                          ['0xf123', '0xf124'])
         retained = [x for x in result['uninterpreted_metadata'] if x['name'] == 'MsoDrawingNoteFragmentOpaque']
         self.assertEqual(bytes.fromhex(retained[0]['payload_hex']), bytes(payload))
-        with patch('wps_biff8.MAX_METADATA_BYTES', 10), self.assertRaises(ParseError):
-            self.read(note_workbook(records, after=after))
-        with self.assertRaises(ParseError):
-            self.read(note_workbook(records, after=after), compatibility='strict')
-        interrupted = records[:1] + [(0x203, cell(9, 0) + struct.pack('<d', 9))] + records[1:]
-        with self.assertRaises(ParseError):
-            self.read(note_workbook(interrupted, after=after))
+        with patch('wps_biff8.MAX_METADATA_BYTES', 10):
+            result = self.read(note_workbook(records, after=after))
+            self.assertEqual(result['status'], 'partial')
+            self.assertEqual(result['sheets'][0]['cells']['A5']['value'], 42.5)
 
     def test_bad_lengths_container_depth_and_known_atom_type_remain_rejected(self):
         nested = art(0xF123, b'')
@@ -102,8 +103,13 @@ class UnknownDrawingTests(unittest.TestCase):
             nested = art(0xF123, nested)
         for drawing in (DRAWING[:-1], art(0xF002, art(0xF123, b'x', 15)),
                         art(0xF002, art(0xF008, b'', 15)), art(0xF002, nested)):
-            with self.subTest(drawing=drawing), self.assertRaises(ParseError):
-                self.read(chart_workbook(drawing=drawing))
+            with self.subTest(drawing=drawing.hex()[:24]):
+                result = self.read(chart_workbook(drawing=drawing))
+                self.assertEqual(result['status'], 'partial')
+                self.assertEqual(result['sheets'][0]['cells']['A2']['value'], 42)
+                self.assertTrue([item for item in result['issues']
+                                 if item['code'] in ('drawing_frame_invalid',
+                                                     'unknown_officeart_atoms')])
 
 
 if __name__ == '__main__':

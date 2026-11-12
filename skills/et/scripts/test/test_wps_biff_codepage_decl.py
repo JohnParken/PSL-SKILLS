@@ -72,34 +72,51 @@ class BiffCodePageTests(unittest.TestCase):
                     parsed['sheets'][0]['cells']['A1']['value'] +
                     parsed['sheets'][0]['cells']['B1']['value'], expected)
 
-    def test_strict_and_legacy_explicit_modes_remain_1200_only(self):
+    def test_explicit_strict_and_legacy_modes_are_tolerated_with_notice(self):
         for mode in ('strict', 'legacy_excel_clsid'):
             for codepage in KNOWN_ADDITIONAL_CODES:
                 with self.subTest(mode=mode, codepage=codepage):
-                    with self.assertRaisesRegex(ValueError, 'Unicode CodePage 1200'):
-                        parse_stream(workbook(
-                            extra_global=rec(0x0042, struct.pack('<H', codepage))),
-                            compatibility=mode)
+                    parsed = parse_stream(workbook(
+                        extra_global=rec(0x0042, struct.pack('<H', codepage))),
+                        compatibility=mode)
+                    self.assertEqual(parsed['status'], 'partial')
+                    self.assertIn('compatibility_option_ignored',
+                                  [item['code'] for item in parsed['issues']])
+                    self.assertEqual(parsed['code_page_raw'], codepage)
+                    self.assertEqual(parsed['sheets'][0]['cells']['A1']['value'],
+                                     '部门')
         self.assertEqual(parse_stream(workbook(
             extra_global=rec(0x0042, struct.pack('<H', 1200))),
             compatibility='strict')['code_page_raw'], 1200)
 
-    def test_unknown_and_bad_payload_still_rejected(self):
+    def test_unknown_and_bad_payload_are_retained_with_diagnostics(self):
         for raw in (b'', b'\x01', b'\x00\x00', b'\xff\xff',
                     struct.pack('<H', 65001), struct.pack('<H', 1201),
                     struct.pack('<H', 1251) + b'\x00'):
             with self.subTest(payload=raw.hex()):
-                with self.assertRaises(ValueError):
-                    parse_stream(workbook(extra_global=rec(0x0042, raw)),
-                                 compatibility='data')
+                parsed = parse_stream(workbook(extra_global=rec(0x0042, raw)))
+                self.assertEqual(parsed['status'], 'partial')
+                if len(raw) != 2:
+                    self.assertIn('codepage_record_invalid',
+                                  [item['code'] for item in parsed['issues']])
+                else:
+                    self.assertTrue(any(code in ('unknown_codepage_declaration',
+                                                 'codepage_metadata_not_applied')
+                                        for code in [item['code']
+                                                     for item in parsed['issues']]))
+                self.assertEqual(parsed['sheets'][0]['cells']['A1']['value'],
+                                 '部门')
 
-    def test_conflicting_declarations_still_rejected(self):
+    def test_conflicting_declarations_keep_first_value(self):
         extra = rec(0x0042, struct.pack('<H', 950))
         extra += rec(0x0042, struct.pack('<H', 1251))
-        with self.assertRaisesRegex(ValueError, 'Conflicting CodePage'):
-            parse_stream(workbook(extra_global=extra), compatibility='data')
+        parsed = parse_stream(workbook(extra_global=extra))
+        self.assertEqual(parsed['status'], 'partial')
+        self.assertEqual(parsed['code_page_raw'], 950)
+        self.assertIn('conflicting_codepage_declaration',
+                      [item['code'] for item in parsed['issues']])
 
-    def test_missing_date1904_is_not_inferred_from_known_codepage(self):
+    def test_missing_date1904_is_unknown_not_inferred_from_codepage(self):
         input_file = workbook(extra_global=rec(0x0042, struct.pack('<H', 950)))
         at = 20
         self.assertEqual(input_file[at:at+2], b'\x22\x00')
@@ -116,19 +133,26 @@ class BiffCodePageTests(unittest.TestCase):
             if kind == 0x000A:
                 break
             i += 4 + size
-        with self.assertRaisesRegex(ValueError, 'Date1904'):
-            parse_stream(bytes(data), compatibility='data')
+        parsed = parse_stream(bytes(data))
+        self.assertEqual(parsed['date_system'], 'unknown')
+        self.assertIn('date_system_missing',
+                      [item['code'] for item in parsed['issues']])
+        self.assertEqual(parsed['sheets'][0]['cells']['C4']['cache_status'],
+                         'unverified')
 
-    def test_wrong_biff_version_and_cell_bounds_not_hidden_by_codepage(self):
+    def test_wrong_biff_version_is_hard_and_bad_cell_bounds_are_omitted(self):
         data = bytearray(workbook(extra_global=rec(0x0042, struct.pack('<H', 950))))
         struct.pack_into('<H', data, 4, 0x0500)
         with self.assertRaisesRegex(ValueError, 'BIFF version'):
-            parse_stream(bytes(data), compatibility='data')
+            parse_stream(bytes(data))
         bad_cell = rec(0x0203, cell(65535, 256) + struct.pack('<d', 1))
-        with self.assertRaises(ValueError):
-            parse_stream(workbook(sheet_records=[bad_cell],
-                                  extra_global=rec(0x0042, struct.pack('<H', 950))),
-                         compatibility='data')
+        good_cell = rec(0x0203, cell(0, 0) + struct.pack('<d', 2))
+        parsed = parse_stream(workbook(sheet_records=[bad_cell + good_cell],
+                                       extra_global=rec(0x0042, struct.pack('<H', 950))))
+        self.assertEqual(parsed['status'], 'partial')
+        self.assertEqual(parsed['sheets'][0]['cells']['A1']['value'], 2)
+        self.assertIn('cell_coordinate_out_of_range',
+                      [item['code'] for item in parsed['issues']])
 
 
 if __name__ == '__main__':

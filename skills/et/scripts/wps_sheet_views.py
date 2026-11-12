@@ -33,7 +33,12 @@ def check_biff_pane(record):
 
 
 def biff_sheet_view(records, start):
-    """Read a WINDOW production without borrowing a custom view's Selection."""
+    """Read a WINDOW production without borrowing a custom view's Selection.
+
+    Malformed optional view records are reduced to issues so the caller keeps
+    the saved current cell/freeze evidence it can still validate. The raw bytes
+    are retained by the caller; nothing is applied to cell values.
+    """
     offset, _, window = records[start]
     index = start + 1
     issues = set()
@@ -46,8 +51,12 @@ def biff_sheet_view(records, start):
     active_pane = 'topLeft'
     split = None
     if index < len(records) and records[index][1] == 0x0041:
-        x_split, y_split, active_pane = check_biff_pane(records[index])
-        split = (y_split, x_split)
+        try:
+            x_split, y_split, active_pane = check_biff_pane(records[index])
+            split = (y_split, x_split)
+        except ValueError:
+            issues.add('invalid_pane_record')
+            active_pane = None
         index += 1
     freeze_row = freeze_col = None
     if len(window) != 18:

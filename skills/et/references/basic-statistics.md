@@ -8,7 +8,7 @@
 execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
 ```
 
-默认 data 解析，不自动 salvage；未知格式、结构、安全和资源错误仍拒绝。仅读 stdout 无需写探针/清单；确需保存查询/输出时先核对写权限，并按主入口的生命周期规则保护输入及收尾。只读取本页即可处理此分支，不预读复杂 query。
+默认容错解析；旧 `--compatibility` / `--salvage-unknown-metadata` 仅为 no-op。非值元数据与可恢复结构降级为 partial 并附 issue，未知容器、加密、记录帧无法继续、ZIP/XML 安全和资源耗尽仍拒绝。仅读 stdout 无需写探针/清单；确需保存查询/输出时先核对写权限，并按主入口的生命周期规则保护输入及收尾。只读取本页即可处理此分支，不预读复杂 query。
 
 锚点不是 read_file 的选段参数；按真实工具 schema 取得完整必要说明。保留 stdout/stderr/真实退出码，宿主截断 JSON 不等于脚本有界分页。/large_tool_results/ 仅用宿主 read_file，缺失或失败就停止依赖，不用 Shell/Python 绕过。真实资源读取路径不自动证明 execute 可见，只用宿主确认的映射。
 
@@ -62,13 +62,13 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 | 统计质量位置样本 | 每列每类默认 5，最多 20；可设 0，计数仍完整 |
 | 独立矩形预览 | 默认 10 行，最多 50 行/10000 位置；不计算统计 |
 | 数值分析 | 系数最多 1100 位、指数绝对值最多 2200、adjusted 指数绝对值最多 1100；覆盖本次验证的读值范围，不扩展源读取器 |
-| 输出 JSON | 16 MiB；超出时输出失败，收窄预览/选择范围后重做，不能截取输出继续分析 |
+| 输出 JSON | 完整读取与分析结果默认 64 MiB（`--max-json-bytes` 1–256 MiB，完整读取可用 `--output` 写文件）；超出时输出失败，收窄预览/选择范围或改用文件输出后重做，不能截取输出继续分析 |
 
 原容器、单元格、文字及元数据预算不变。此入口不计算新公式、不联表、不重建透视表、不推断小计，不编辑、导出或写回办公文件；需要这些能力时另行明确交接及验证。
 
 ## 可选字节预算与续读
 
-在原命令添加 `--max-output-bytes 24000`，可对 `--preview` 或分析结果按 UTF-8 字节预算分页；512..16777216，包含真实紧凑 JSON 的全部字段、转义与末尾换行。不传此参数和 `--cursor` 时默认 CLI/API、原字段及16MiB序列化上限不变。仅传游标时预算默认12000；预算不是token数。
+在原命令添加 `--max-output-bytes 24000`，可对 `--preview` 或分析结果按 UTF-8 字节预算分页；512..67108864，包含真实紧凑 JSON 的全部字段、转义与末尾换行。仅传游标时分析分页预算默认12000；完整读取视图默认字符预算65536，完整 JSON 默认64MiB（`--max-json-bytes` 1–256 MiB）。预算不是token数。
 
 新模式保留原 schema、partial、源诊断、统计质量报告和分母，另加 `output_page_revision=1`、`has_more`、`coverage` 与 `next_cursor`。`row_page`/`group_page` 另加 `has_more`、`next_offset`；旧 total/offset/returned/truncated 含义保留。`coverage` 对每条结果流声明是否请求、初始 offset 和覆盖范围；偏移之前的行不属于本次输出覆盖，不能据末页声称已经返回整个结果表。`limit=0` 或 `group_limit=0` 表示不请求对应结果流，仍完整计算统计，不产生该流的续读；独立预览仍要求limit为1..50。
 
