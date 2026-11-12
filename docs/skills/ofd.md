@@ -1,6 +1,6 @@
 # OFD：默认文本读取
 
-文档核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261112.0721.3845`。业务执行以本轮所需 Skill 及参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
+文档核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261112.1921.3400`。业务执行以本轮所需 Skill 及参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
 
 读取脚本只向 stdout 返回结果，不创建 OFD 或磁盘结果。若需要保存 JSON，由宿主在已确认任务根目录安全创建新文件，不覆盖已有文件。输入路径、内部归档与受控临时工作区按原规则处理。
 
@@ -171,3 +171,5 @@ reading 不创建 XML 事件清单、节点交叉索引、祖先属性及完整�
 本轮 description 将随包字体用于基础制作与页面预览分开：可生成基础 OFD，但没有页面渲染或预览能力。仅提到“正式文档”不触发 OFD 生成，必须明确指定 OFD。
 
 当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。
+
+本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
