@@ -1,14 +1,12 @@
 # bank-writing 月报分析路由与增长分析增强
 
-公开记录隐去本机路径和内部执行标识，保留案例及验证结果。
-
 ## 范围与基线
 
 维护日期按用户时区 America/Los_Angeles 为 2026-11-10。源码基线 `e4005a810e71278fc3705f6fd080d2d6ad31a280` 加本轮工作区变更。只维护 bank-writing 入口、经营分析、摘要和综合写作的交叉路由及对应仓库文档；不新建 Skill、不增加运行脚本、不修改其他业务技能或既有发布 ZIP。
 
 版本由宿主时钟 `2026-11-11T02:13:46.154762-05:00`（America/New_York）采样，将本地日历时间整体加12小时，百分之一秒截断后得到 `20261111.1413.4615`。只有 bank-writing 更新版本。
 
-本目录是仓库维护证据，路径相对于仓库根；不在运行清单内，不是 Skill 所需资源。输入全部虚构，无真实银行或客户数据。[请求集](cases.json)先于执行建立，独立执行者未收到期望答案；复核者单独解释结果并验收。
+本目录是仓库维护证据，路径相对于仓库根；不在运行清单内，不是 Skill 所需资源。输入全部虚构，无真实银行或客户数据。[请求集](cases.json)先于执行建立，独立执行者未收到期望答案；主代理单独解释结果并验收。
 
 ## 改动与边界
 
@@ -37,17 +35,17 @@
 
 没有改变运行文件清单或分发边界，维护材料留在包外；上述临时独立包用于验证，不写入 dist、不发布或覆盖历史 ZIP。没有新建 Skill，也没有 Python 文件变更。
 
-复核者额外以标准库 Decimal 执行18项独立算术核对（退出0）：M01净增120、增幅10%、贡献150%/−50%；M02日均增幅0.2%、付息率上升20bps、未使用服务800人；M04单月20、目标完成80%、缺口5、累计同比10%；M05亏损收窄60、分项净增0；M09总量增20、分项增30、残差10；参考改写例贡献60%/40%。这些是示例与预期核算，不是生产计算程序测试或模型行为证明。
+主代理额外以标准库 Decimal 执行18项独立算术核对（退出0）：M01净增120、增幅10%、贡献150%/−50%；M02日均增幅0.2%、付息率上升20bps、未使用服务800人；M04单月20、目标完成80%、缺口5、累计同比10%；M05亏损收窄60、分项净增0；M09总量增20、分项增30、残差10；参考改写例贡献60%/40%。这些是示例与预期核算，不是生产计算程序测试或模型行为证明。
 
 description 解码后128字符，人工核对了月报分析、纯摘要、定向润色、混合成稿与非目标文件生成的选择边界。客户沟通章节与变更前逐字比较一致。图表已人工检查节点、语法与条件交接关系；宿主已知 Node 依赖目录未发现 Mermaid 解析入口，本轮未执行 Mermaid 解析或渲染。
 
-## 复核者逐例验收
+## 主代理逐例验收
 
 独立预期在查看回答前确定：M01分析而非摘要，净增120、增速10%、A增180/B减60；M02区分时点与日均，机会以小范围需求验证为主，不编造潜力金额；M03仅摘要；M04累计与单月分开，单月20、目标完成80%；M05零基数增幅与零净增贡献率不适用、亏损改善60；M06局部且未验证缓存不能推全行；M07仅润色；M08低基数增速不等于推广价值；M09报告10万元勾稽差额且不能跨产品/机构维度重复加总；M10缺工具停止依赖分析，不生成文件或自写脚本。
 
-实际回答及读取/复用记录见 [responses.json](responses.json)。复核者完整阅读10项回答，并对照原始输入和独立预期逐项检查；没有让执行者给自己打分，也没有用关键词命中代替语义验收。
+实际回答及读取/复用记录见 [responses.json](responses.json)。主代理完整阅读10项回答，并对照原始输入和独立预期逐项检查；没有让执行者给自己打分，也没有用关键词命中代替语义验收。
 
-| 案例 | 实际执行与复核者验收 | 结论 |
+| 案例 | 实际执行与主代理验收 | 结论 |
 |---|---|---|
 | M01 简短总结含分析 | 首次读取经营分析；三句话保留净增120、10%、A增180/B减60、贡献150%/−50%，不补造成因 | 通过 |
 | M02 质量与机会 | 复用经营分析；区分期末增长10%与日均0.2%，指出单客依赖和付息率上升20bps；将800人作为待验证空间，未编造需求、审批或收益 | 通过 |
@@ -62,7 +60,7 @@ description 解码后128字符，人工核对了月报分析、纯摘要、定�
 
 以上是显式提供 bank-writing 入口后的一次共享上下文执行，8个分析/受阻场景和2个不应新增分析的对照场景；不等于10次冷启动、宿主自动选 Skill 或普适路由成功率。表格工具回执、附件缺失均是案例中的虚构条件，不是对真实工具故障的复现。原有客户沟通只检查字节保留，本轮未重测全部写作文种。
 
-复核者最终接受本轮源码变更：要求的分析分流、贡献/质量/机会闭环及文档同步已完成，10项虚构输出与预期一致；没有因测试调整输入或削弱断言。没有新增业务脚本或运行时资源，保留原运行清单与历史包。
+主代理最终接受本轮源码变更：要求的分析分流、贡献/质量/机会闭环及文档同步已完成，10项虚构输出与预期一致；没有因测试调整输入或削弱断言。没有新增业务脚本或运行时资源，保留原运行清单与历史包。
 
 验收的4份技能源码 SHA-256：
 
@@ -77,5 +75,34 @@ references/comprehensive-writing.md   7ee6858b1e43b5cbc82870eeb88912399f128a52e4
 
 - 真实用户月报、真实附件读取到计算再回传的端到端流程、生产宿主自动发现/选择 Skill 与新会话参考加载稳定性。
 - Linux/Windows 目标运行、Office/WPS 展示、DOCX 导出、当前法规有效性、宿主 token 使用量与性能。
-- 独立执行使用共享上下文，逐例事实分开且记录参考复用；不是10个独立新会话，也不是概率性的路由成功率测量。
+- 独立执行使用一个子代理共享上下文，逐例事实分开且记录参考复用；不是10个独立新会话，也不是概率性的路由成功率测量。
 - 没有新增或修改 Python 文件，Pylint 不适用；表格提供方的既有计算能力不因本轮文本增强而宣称新增或全量重测。
+
+## 分工
+
+Main-agent work：需求、行为设计、全部技能和文档修改、独立期望、检查执行、逐例审查与最终验收。
+
+Subagent execution record：`luna__monthly_execution`，`luna_worker` / `gpt-6-luna`（配置为 max）；一次 spawn 执行10个固定虚构请求，唯一写入路径为本目录 responses.json，完成后一次 followup 仅补充真实命令记录；无实现、评审或审计委托。期间通过消息确认进度、保持简洁、确认是否尚有剩余案例；确认全部已完成后没有启动第二执行者或重复业务执行。全部审查与最终接受由主代理完成。
+
+子代理报告：素材与所需参考读取退出0；写入前不存在检查退出0；apply_patch创建成功，无进程退出码；第一次JSON解析使用未提供的 `python` 命令失败（127），改用现有 `python3` 后解析及10项字段核对退出0。该解析只验证维护记录格式，不是业务计算或合格解释器自检，也没有将失败算作通过。子代理未运行项目检查或Pylint，其结果不替代上方主代理执行的检查。
+
+补充回传的实际命令如下，工作目录均为 `/Users/yangxuezhen/git/PSL-SKILLS`，工具为 `functions.exec` 内调用 `tools.exec_command`；这是本轮本机证据，不是技能运行时路径或跨机器命令示例。以下读取命令退出0，不存在检查实际调用两次、均退出0：
+
+```console
+cat skills/bank-writing/SKILL.md
+cat docs/maintenance/bank-writing/monthly-analysis-20261110/cases.json
+test ! -e docs/maintenance/bank-writing/monthly-analysis-20261110/responses.json
+cat skills/bank-writing/references/business-analysis.md
+cat skills/bank-writing/references/summary-reading.md
+cat skills/bank-writing/references/comprehensive-writing.md
+cat skills/bank-writing/references/source-access.md
+```
+
+记录写入使用 `apply_patch`，只创建 responses.json。第一次解析命令退出127，第二次退出0；以下为实际调用原文，未将分号形式的临时解析命令作为新增生产Python文件：
+
+```console
+python -c 'import json; from pathlib import Path; p = Path("docs/maintenance/bank-writing/monthly-analysis-20261110/responses.json"); d = json.loads(p.read_text(encoding="utf-8")); assert len(d["cases"]) == 10; assert {item["id"] for item in d["cases"]} == {f"M{n:02d}" for n in range(1, 11)}; assert all(item["response"] and item["execution_limitations"] and item["read_paths"] for item in d["cases"]); assert all({"path", "fresh_read", "reused_from_case"} <= set(trace) for item in d["cases"] for trace in item["read_paths"]); print("JSON parsed; 10 cases and required record fields present")'
+python3 -c 'import json; from pathlib import Path; p = Path("docs/maintenance/bank-writing/monthly-analysis-20261110/responses.json"); d = json.loads(p.read_text(encoding="utf-8")); assert len(d["cases"]) == 10; assert {item["id"] for item in d["cases"]} == {f"M{n:02d}" for n in range(1, 11)}; assert all(item["response"] and item["execution_limitations"] and item["read_paths"] for item in d["cases"]); assert all({"path", "fresh_read", "reused_from_case"} <= set(trace) for item in d["cases"] for trace in item["read_paths"]); print("JSON parsed; 10 cases and required record fields present")'
+```
+
+主代理最终回读记录并检查10个ID与输入逐项对应、正文非空，退出0；对4份技能文件重新计算指纹，与执行前一致。JSON完整性检查与上方人工语义验收分开。初始工作区已有其他任务的OFD未跟踪目录，结束时又出现ET相关并行修改；均保留，不属于本轮变更或审查范围，共享索引只作目标行的最小补丁。

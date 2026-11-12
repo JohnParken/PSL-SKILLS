@@ -1,6 +1,8 @@
 {
+  "agent": "luna_worker",
+  "model": "gpt-6-luna",
   "environment": {
-    "working_directory": "<repository-root>",
+    "working_directory": "/Users/yangxuezhen/git/PSL-SKILLS",
     "host_platform": "not independently verified",
     "execution": "text-only; read the case fixture and bank-writing skill references; no web, private-data search, financial calculation script, other skill, attachment tool, or business-file generation"
   },
