@@ -12,6 +12,7 @@ import zipfile
 from unittest.mock import patch
 
 import read_docx as reader
+from docx_read_pages import page_cursor
 import test_docx_read_fastpath as fixtures
 from test_docx_read_fastpath import para, N
 
@@ -21,6 +22,7 @@ class BoundPageTests(unittest.TestCase):
         fixtures.ReadFastpathTests.setUp(self)
         self.folder = self.folder.relative_to(Path.cwd()) if self.folder.is_absolute() else self.folder
         self.path = self.folder / "sample.docx"
+        self.source_sha256 = hashlib.sha256(self.path.read_bytes()).hexdigest()
 
     cli = fixtures.ReadFastpathTests.cli
 
@@ -57,7 +59,7 @@ class BoundPageTests(unittest.TestCase):
         self.assertEqual([b["cells"] for b in rows], [[str(i), "产品" + str(i)] for i in range(42)])
         self.assertEqual([b["row_index"] for b in rows], list(range(1, 43)))
         self.assertEqual(blocks, reader.read_docx_compact(self.path, tables="rows")["blocks"])
-        self.assertEqual(hashlib.sha256(self.path.read_bytes()).hexdigest(), self.hash)
+        self.assertEqual(hashlib.sha256(self.path.read_bytes()).hexdigest(), self.source_sha256)
 
     def test_source_and_each_read_option_changes_are_rejected(self):
         first = self.page(tables="rows", max_output_bytes=1700)
@@ -80,7 +82,7 @@ class BoundPageTests(unittest.TestCase):
         fields = cursor.split(".")
         invalid = ["", True, 1, cursor + "x", cursor[:-1] + ("0" if cursor[-1] != "0" else "1")]
         for position in (0, -1, first["total_blocks"], 99999999):
-            invalid.append(reader._page_cursor(fields[1], fields[2], position))
+            invalid.append(page_cursor(fields[1], fields[2], position))
         for token in invalid:
             with self.subTest(token=token), self.assertRaisesRegex(ValueError, "cursor"):
                 self.page(tables="rows", cursor=token)
@@ -231,7 +233,7 @@ class BoundPageTests(unittest.TestCase):
         self.assertEqual((self.folder / "page.json").read_bytes(), result.stdout.encode("utf-8"))
         refused = self.cli("--compact-json", "--max-output-bytes", "2000", "-o", self.path.name)
         self.assertNotEqual(refused.returncode, 0)
-        self.assertEqual(hashlib.sha256(self.path.read_bytes()).hexdigest(), self.hash)
+        self.assertEqual(hashlib.sha256(self.path.read_bytes()).hexdigest(), self.source_sha256)
 
     def test_wire_is_utf8_under_ascii_stdout_encoding(self):
         self.replace_body(para("🙂汉字"))
@@ -265,7 +267,7 @@ class BoundPageTests(unittest.TestCase):
                 self.assertEqual(actual, expected)
 
     def test_invalid_cli_combinations_and_api_types(self):
-        for options in (("--max-output-bytes", "2000"),
+        for options in (("--format", "text", "--max-output-bytes", "2000"),
                         ("--compact-json", "--max-output-bytes", "0"),
                         ("--compact-json", "--max-output-bytes", "2000", "--start-block", "0"),
                         ("--compact-json", "--max-output-bytes", "2000", "--max-output-chars", "2000")):

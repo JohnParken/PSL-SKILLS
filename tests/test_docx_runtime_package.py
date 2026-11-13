@@ -70,7 +70,7 @@ class RuntimePackageBuildTests(unittest.TestCase):
         expected = {n for n in actual if not n.startswith('scripts/test/') and n not in EXCLUDED}
         self.assertEqual(set(files), expected)
         self.assertTrue(EXCLUDED.isdisjoint(files))
-        self.assertEqual(len(files), 83)
+        self.assertEqual(len(files), 88)
         self.assertEqual(json.loads(MANIFEST.read_text(encoding='utf-8'))['exclude_files'], {})
         for name in ('maintenance-validation.md', 'reference-loading.md', 'token-optimization.md'):
             self.assertFalse((SOURCE / 'references' / name).exists())
@@ -82,6 +82,9 @@ class RuntimePackageBuildTests(unittest.TestCase):
         for name in ('scripts/create_docx.py', 'scripts/docx_create_common.py',
                      'scripts/docx_create_validation.py', 'scripts/docx_create_xml.py',
                      'scripts/read_docx.py', 'scripts/run_docx_edit.py',
+                     'scripts/docx_read_charts.py', 'scripts/docx_read_elements.py',
+                     'scripts/docx_read_numbering.py', 'scripts/docx_read_tables.py',
+                     'scripts/docx_read_pages.py',
                      'scripts/manage_comments.py', 'scripts/comment.py', 'scripts/merge_runs.py', 'scripts/format_guard.py',
                      'scripts/controlled_cleanup.py', 'scripts/office/validators/generation.py'):
             self.assertIn(name, files)
@@ -237,7 +240,7 @@ class InstalledRuntimeTests(unittest.TestCase):
 
     def assert_delivery(self, data, status):
         self.assertEqual(data['status'], status, data)
-        self.assertEqual(data['archive_status'], 'copied', data)
+        self.assertEqual(data['archive_status'], 'success', data)
         self.assertEqual(data['task_status'], 'completed', data)
         self.assertTrue(data['cleanup']['cleanup_complete'], data)
         self.assertTrue(data['cleanup']['manifest_removed'], data)
@@ -308,7 +311,7 @@ class InstalledRuntimeTests(unittest.TestCase):
                 self.assert_delivery(json.loads(result.stdout), 'edited')
         self.assertIn('合同 XYZ', self.run_script('read_docx.py', 'edited-text.docx').stdout)
         self.assertIn('补充', self.run_script('read_docx.py', 'edited-structure.docx').stdout)
-        self.assertIn('乙\t20', self.run_script('read_docx.py', 'edited-tables.docx').stdout)
+        self.assertIn('乙\t20', self.run_script('read_docx.py', 'edited-tables.docx', '--format', 'text').stdout)
         with zipfile.ZipFile(self.work / 'edited-image.docx') as package:
             self.assertEqual(package.read(media), before['blue.png'])
         with zipfile.ZipFile(self.work / 'edited-comments.docx') as package:
@@ -591,6 +594,47 @@ print(json.dumps(result))
                                  '--max-output-bytes', '1700', '--cursor', first_cursor, expected=2)
         self.assertIn('source bytes changed', failed.stderr)
 
+    def test_report_reads_merged_cells_from_readonly_installation(self):
+        source = self.create('report.docx', [{
+            'type': 'table', 'header': True,
+            'rows': [['分类', '数量'], [{'text': '问题', 'row_span': 2}, '10'], [None, '20']],
+        }])
+        original = source.read_bytes()
+        data = json.loads(self.run_script('read_docx.py', source.name).stdout)
+        table = next(block for block in data['blocks'] if block['type'] == 'table')
+        rows = [block['cells'] for block in data['blocks'] if block['type'] == 'table_row']
+        self.assertEqual(table['header']['source'], 'repeat_header')
+        self.assertEqual(table['header']['columns'], [{'column': 1, 'labels': ['分类']}, {'column': 2, 'labels': ['数量']}])
+        self.assertEqual(rows[1][0]['row_span'], 2)
+        self.assertEqual(rows[2][0]['merge_anchor'], {'row': 2, 'column': 1, 'label': '问题'})
+        self.assertEqual(rows[2][1]['text'], '20')
+        self.assertFalse(data['has_more'])
+        self.assertEqual(source.read_bytes(), original)
+
+    def test_report_reuses_parsed_pages_in_readonly_installation(self):
+        section = ('--section', '本节')
+        body = [{'type': 'paragraph', 'text': '数据' * 100} for _ in range(12)]
+        source = self.create('report-pages.docx', [
+            {'type': 'paragraph', 'text': '前文'}, {'type': 'heading', 'level': 1, 'text': '本节'},
+            *body, {'type': 'heading', 'level': 1, 'text': '下一节'}, {'type': 'paragraph', 'text': '后文'},
+        ])
+        full = json.loads(self.run_script('read_docx.py', source.name).stdout)
+        expected = json.loads(self.run_script('read_docx.py', source.name, *section).stdout)['blocks']
+        self.assertEqual(expected, full['blocks'][1:-2])
+        data = json.loads(self.run_script('read_docx.py', source.name, *section, '--max-output-bytes', '2200').stdout)
+        self.assertEqual(data['page_cache'], 'stored')
+        blocks = data['blocks']
+        for _ in range(20):
+            if not data['has_more']:
+                break
+            data = json.loads(self.run_script('read_docx.py', source.name, *section, '--max-output-bytes', '2400',
+                                              '--cursor', data['next_cursor']).stdout)
+            self.assertEqual(data['page_cache'], 'reused')
+            blocks.extend(data['blocks'])
+        self.assertFalse(data['has_more'])
+        self.assertEqual(blocks, expected)
+        self.assertFalse(list(self.work.glob('.docx-report-*.cache')))
+
     def test_legacy_comment_merge_and_package_validation(self):
         source = self.create('source.docx', [{'type': 'paragraph', 'text': 'original text'}])
         original = source.read_bytes()
@@ -635,7 +679,7 @@ print(json.dumps(result))
                 self.assertIn('`status=verified`', delivery)
                 self.assertIn('`archive_status`', delivery)
 
-    def test_explicit_archive_conflict_exits_zero_but_reports_failed_and_preserves_files(self):
+    def test_explicit_archive_conflict_exits_nonzero_and_reports_failed_and_preserves_files(self):
         primary = self.create('primary.docx', [{'type': 'paragraph', 'text': '历史归档内容'}])
         historical = self.work / 'output/runtime-acceptance' / primary.name
         history_bytes = historical.read_bytes()
@@ -643,9 +687,8 @@ print(json.dumps(result))
         primary.write_bytes(replacement.read_bytes())
         current_bytes = primary.read_bytes()
         self.assertNotEqual(current_bytes, history_bytes)
-        process = self.run_script('archive_deliverables.py', primary.name, expected=0)
+        process = self.run_script('archive_delivery.py', primary.name, expected=1)
         data = json.loads(process.stdout)
-        self.assertEqual(data['status'], 'completed')
         self.assertEqual(data['archive_status'], 'failed')
         self.assertEqual(len(data['files']), 1)
         self.assertEqual(data['files'][0]['archive_status'], 'failed')

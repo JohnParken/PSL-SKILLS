@@ -8,7 +8,7 @@ import uuid
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, _unique_object
 from run_docx_task import task_environment, _finish_delivery, finish_failed_task, MAX_TASK_BYTES
-from archive_deliverables import validate_output_path, choose_delivery_output
+from archive_delivery import validate_output_path, choose_delivery_output
 from docx_outcome import failure
 
 OPERATIONS = ('text', 'structure', 'tables', 'image', 'comments', 'format-checked')

@@ -246,7 +246,7 @@ def main(argv=None):
     parser.add_argument("input", type=Path, help="Unpacked directory or DOCX/DOTX file")
     parser.add_argument("-o", "--output",
                         help="Required output document for packaged input")
-    from archive_deliverables import validate_delivery_output
+    from archive_delivery import validate_delivery_output
     args = parser.parse_args(argv)
     source = args.input
     try:

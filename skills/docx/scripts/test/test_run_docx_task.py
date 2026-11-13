@@ -277,7 +277,7 @@ class AutomaticTaskTests(unittest.TestCase):
         def run_worker(command, **kwargs):
             return SimpleNamespace(returncode=runner.worker_main(command[-1]), stdout=b'', stderr=b'')
 
-        with patch('archive_deliverables._copy_main_to_archive',
+        with patch('archive_delivery._copy_main_to_archive',
                    side_effect=PermissionError('injected archive copy failure')), \
                 patch.object(runner.subprocess, 'run', side_effect=run_worker):
             result = self.create(workspace='archive-copy-failure')
@@ -361,6 +361,36 @@ class AutomaticTaskTests(unittest.TestCase):
         self.assertTrue(resumed['cleanup']['cleanup_complete'])
         self.assertEqual(Path(result['output']).read_bytes(), final_before)
         self.assertFalse(task_file('cleanup-outage', 'worker.py').exists())
+
+    def test_resume_archives_under_current_question_id(self):
+        for failure_hook in ('seal_cleanup', 'cleanup_task'):
+            with self.subTest(failure_hook=failure_hook):
+                output = failure_hook + '.docx'
+                with patch.object(runner, failure_hook, side_effect=OSError('interrupted')):
+                    result = self.create(output=output, workspace=failure_hook)
+                self.assertEqual(result['archive_status'], 'success')
+                current = failure_hook + '-new-question'
+                config = json.dumps({'commonParam': [{'name': 'questionId', 'value': current}]})
+                with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': config}):
+                    with patch.object(runner.subprocess, 'run', side_effect=AssertionError('no regeneration')):
+                        resumed = runner.resume_task(result['task_manifest'])
+                self.assertEqual(resumed['archive_status'], 'success', resumed)
+                self.assertEqual(resumed['files'][0]['archive_output'], f'output/{current}/{output}')
+                self.assertEqual(Path(output).read_bytes(), Path('output', current, output).read_bytes())
+                self.assertTrue(resumed['cleanup']['cleanup_complete'])
+
+    def test_resume_without_current_question_id_does_not_reuse_old_success(self):
+        with patch.object(runner, 'cleanup_task', side_effect=OSError('interrupted')):
+            result = self.create(output='missing-current.docx', workspace='missing-current')
+        old_archive = Path('output/synthetic-task/missing-current.docx').read_bytes()
+        with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': ''}):
+            resumed = runner.resume_task(result['task_manifest'])
+        self.assertEqual(resumed['status'], 'verified', resumed)
+        self.assertEqual(resumed['archive_status'], 'failed')
+        self.assertIsNone(resumed['archive_output'])
+        self.assertEqual(resumed['reason_code'], 'current_question_id_unavailable')
+        self.assertEqual(Path('output/synthetic-task/missing-current.docx').read_bytes(), old_archive)
+        self.assertTrue(resumed['cleanup']['cleanup_complete'])
 
     def test_controller_process_exit_after_seal_resumes_without_generation(self):
         code = """import json, os, sys

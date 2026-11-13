@@ -87,7 +87,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./docum
 | 配置结果 | 主文件 | 生成成功后的归档副本 |
 |---|---|---|
 | 有效 `questionId` 为 `12345` | `./报告.docx` | `./output/12345/报告.docx` |
-| 配置缺失、JSON/字段结构异常、ID 缺失或无效 | `./报告.docx` | 跳过归档，报告固定原因码 |
+| 配置缺失、JSON/字段结构异常、ID 缺失或无效 | `./报告.docx` | 归档失败，报告固定原因码 |
 
 `ROUTER_CONFIG_VARIABLES` 按宿主实际格式提供外层 JSON 参数列表。先找到唯一 `name="commonParam"` 的项，再取其 `value`；该值通常为 JSON 编码的参数列表字符串，代码再次解析，最后找到唯一 `name="questionId"` 的项并取其 `value`。例如：
 
@@ -102,13 +102,13 @@ execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./docum
 
 外层缺少 `commonParam` 返回 `missing_common_param`，重复返回 `duplicate_common_param`，外层参数项不合法返回 `invalid_router_config_entry`；外层既非列表也非兼容字典返回 `invalid_router_config_shape`。内层 JSON、列表结构和参数项错误分别沿用 `invalid_common_param_json`、`invalid_common_param_shape`、`invalid_common_param_entry`。内层缺少或重复 `questionId` 分别返回 `missing_question_id`、`duplicate_question_id`。两层 JSON 均拒绝重复对象键及非标准常量；所有配置错误仅跳过归档，不阻止主文件生成。
 
-ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受非负整数并转成十进制字符串；字符串参数值在通用取值函数中先调用 `.strip()` 去掉两端空白（含空格、制表符、换行等），保留中间内容及非字符串类型；例如 `"  abc123  "` 作为 `abc123` 校验。裁剪后不接受布尔值、浮点数、空串、内部空白、路径或 Windows 保留设备名，无效返回 `invalid_question_id`。仅识别 `questionId`，不将旧参数 `requestId`、`idRecord` 当作别名；仅提供旧参数时跳过归档。两者同时提供时只使用新参数，重复或无效的新参数不回退到旧参数。配置调试默认关闭，开启时仅输出脱敏状态，见 配置调试（`<skill-root>/references/generation-runtime.md#配置调试`）。
+ID 接受 1–128 个 ASCII 字母、数字、下划线或连字符，也接受非负整数并转成十进制字符串；字符串参数值在通用取值函数中先调用 `.strip()` 去掉两端空白（含空格、制表符、换行等），保留中间内容及非字符串类型；例如 `"  abc123  "` 作为 `abc123` 校验。裁剪后不接受布尔值、浮点数、空串、内部空白、路径或 Windows 保留设备名，无效返回 `invalid_question_id`。仅识别 `questionId`，不将旧参数 `requestId`、`idRecord` 当作别名；仅提供旧参数时归档失败。两者同时提供时只使用新参数，重复或无效的新参数不回退到旧参数。配置调试默认关闭，开启时仅输出脱敏状态，见 配置调试（`<skill-root>/references/generation-runtime.md#配置调试`）。
 
 文件名支持中文和空格，须以 `.docx` 结尾，UTF-8 长度不超过 255 字节；禁止附带目录、路径分隔符、控制字符、Windows 非法字符或保留设备名、尾点及尾空格。主文件和归档路径均拒绝符号链接，包括悬空链接；归档目录不存在时自动创建。拒绝主文件或归档目标与输入 JSON、正文图片或表格内图片同源，包括经符号链接解析的路径及硬链接。图片校验与生成复用同一份已验证输入，不为归档重复读取图片。路径检查依赖宿主隔离同一任务目录中的并发修改，不提供针对恶意并发改写目录的隔离。
 
-先在任务根目录生成临时ZIP，验收成功后发布主文件。归档先在任务根目录./独占创建临时副本，完整复制、flush/fsync及设置权限，再以原子独占硬链接发布，随后删除临时链接；目标已存在或检查后出现时拒绝覆盖。文件系统不支持该能力或跨文件系统时报告归档失败，不回退到覆盖写入、不换暂存目录。只有单独归档调用显式授权更新才原子replace，并保留旧副本权限；新副本继承主文件权限。归档失败保留主文件及旧副本，不重跑生成；暂存删除失败返回temporary_residuals，runner按cleanup_incomplete处理。两份文件顺序发布，不构成跨文件事务。授权更新入口见统一归档（`<skill-root>/references/delivery.md`）。
+先在任务根目录生成临时ZIP，验收成功后发布主文件。归档先在任务根目录./独占创建临时副本，完整复制、flush/fsync及设置权限，再以原子独占硬链接发布，随后删除临时链接；目标已存在或检查后出现时拒绝覆盖。文件系统不支持该能力或跨文件系统时报告归档失败，不回退到覆盖写入、不换暂存目录。不提供覆盖入口；新副本继承主文件权限。归档失败保留主文件及旧副本，不重跑生成；暂存删除失败返回temporary_residuals，runner按cleanup_incomplete处理。两份文件顺序发布，不构成跨文件事务。安全重试入口见统一归档（`<skill-root>/references/delivery.md`）。
 
-每次生成成功后向标准输出返回 JSON：`output` 是主文件名，`output_dir` 固定为 `.`；`archive_output` 是副本相对于任务目录的路径，无有效配置时为 `null`；`archive_status` 为 `copied`、`skipped` 或 `failed`。兼容字段 `used_fallback` 和 `fallback_reason` 现在说明配置是否无法提供归档目录及原因，不代表主文件改变位置。正常完成时，未验证的 `status` 为 `created`，验证通过为 `verified` 并附验证字段。无论归档是否成功，`status` 和 `generation_status` 均保留主文件的 `created` 或 `verified` 状态，主文件成功时退出码为 0。归档失败仅设置 `archive_status=failed`、非空 `warnings`，stderr 输出 `archive-warning`；配置解析的异常也隔离在主文件发布后的归档步骤中。摘要使用标准 JSON 转义。后续读取及交付内部核对本次 `output` 和归档状态，可交付成功主文件的正常链接；用户归档提示根据实际状态及用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）映射，`archive_message` 保留原机器文案；跳过或失败不得误报完成，不展示内部归档路径和原始日志。
+每次生成成功后向标准输出返回 JSON：`output` 是主文件名，`output_dir` 固定为 `.`；`archive_output` 是副本相对于任务目录的路径，无有效配置时为 `null`；`archive_status` 为 `success`、`partial`、`failed` 或 `not_required`。兼容字段 `used_fallback` 和 `fallback_reason` 现在说明配置是否无法提供归档目录及原因，不代表主文件改变位置。正常完成时，未验证的 `status` 为 `created`，验证通过为 `verified` 并附验证字段。无论归档是否成功，`status` 和 `generation_status` 均保留主文件的 `created` 或 `verified` 状态，主文件成功时退出码为 0。归档失败仅设置 `archive_status=failed`、非空 `warnings`，stderr 输出 `archive-warning`；配置解析的异常也隔离在主文件发布后的归档步骤中。摘要使用标准 JSON 转义。后续读取及交付内部核对本次 `output` 和归档状态，可交付成功主文件的正常链接；用户归档提示根据实际状态及用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）映射，`archive_message` 保留原机器文案；跳过或失败不得误报完成，不展示内部归档路径和原始日志。
 
 标准自动入口 `"<skill-root>/scripts/run_docx_task.py" create/retry` 内置必要环境自检，失败时返回environment_failed和具体原因；不需要模型先运行check或判断标记。runner的check只提供相同必要条件的诊断，不读取归档配置。此处旧 `"<skill-root>/scripts/create_docx.py" --check` 仍保留兼容诊断行为：检查主目录和归档目录，探针只在 `./` 创建，归档路径/访问权限检查失败只提示。旧入口的诊断不作为标准runner生成前的附加门禁。`--preflight` 保持只读，不解析输出配置、不创建目录或复制文件。
 

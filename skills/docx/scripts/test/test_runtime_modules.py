@@ -54,7 +54,7 @@ class RuntimeModuleTests(unittest.TestCase):
                 get_common_parameter(raw, 'x')
 
     def test_non_docx_artifact_archive_and_controlled_cleanup(self):
-        from archive_deliverables import archive_outputs
+        from archive_delivery import archive_delivery
         previous = Path.cwd()
         with tempfile.TemporaryDirectory(prefix='module-lifecycle-') as temporary:
             os.chdir(temporary)
@@ -66,7 +66,7 @@ class RuntimeModuleTests(unittest.TestCase):
                 Path('report.txt').write_text('已验收结果', encoding='utf-8')
                 env = {'ROUTER_CONFIG_VARIABLES': json.dumps({'commonParam': [{'name': 'questionId', 'value': 'module'}]}), 'DOCX_DEBUG_ROUTER_CONFIG': '0'}
                 with patch.dict(os.environ, env, clear=True):
-                    archived = archive_outputs([Path('report.txt')], [Path('user.json')])
+                    archived = archive_delivery([Path('report.txt')], [Path('user.json')])
                 self.assertEqual(archived['archive_message'], '归档完成')
                 controlled_cleanup.seal_cleanup('plan.json', outcome='success', verified=True, archive_status=archived['archive_status'])
                 cleaned = controlled_cleanup.cleanup_task('plan.json')
@@ -84,6 +84,6 @@ class RuntimeModuleTests(unittest.TestCase):
             self.assertIs(getattr(cleanup_task, name), getattr(controlled_cleanup, name))
 
     def test_archive_and_cleanup_import_without_docx_generator(self):
-        code = 'import sys; sys.path.insert(0, sys.argv[1]); import router_config, artifact_files, archive_deliverables, controlled_cleanup; assert "create_docx" not in sys.modules; assert "office.xmlio" not in sys.modules'
+        code = 'import sys; sys.path.insert(0, sys.argv[1]); import router_config, artifact_files, archive_delivery, controlled_cleanup; assert "create_docx" not in sys.modules; assert "office.xmlio" not in sys.modules'
         result = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', code, str(Path(__file__).resolve().parents[1])], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)

@@ -50,6 +50,9 @@ class LayoutDeliveryTests(unittest.TestCase):
         self.environment.pop('ROUTER_CONFIG_VARIABLES', None)
 
     def cli(self, script, *arguments, spec=None):
+        if script in ('create_docx.py', 'run_docx_task.py'):
+            self.environment['ROUTER_CONFIG_VARIABLES'] = json.dumps(
+                {'commonParam': [{'name': 'questionId', 'value': 'layout-test'}]})
         return subprocess.run(
             [sys.executable, '-I', '-S', '-B', str(SCRIPTS / script), *arguments],
             cwd=self.work, env=self.environment, capture_output=True, encoding='utf-8',
@@ -181,7 +184,7 @@ class LayoutDeliveryTests(unittest.TestCase):
 
     def test_delivery_preserves_archive_warning_alongside_layout_warning(self):
         with task_directory(self.work), patch.dict(os.environ, {}, clear=True):
-            with patch('archive_deliverables.finalize_delivery', return_value={
+            with patch('archive_delivery.finalize_delivery', return_value={
                     'status': 'verified', 'archive_status': 'failed', 'files': [], 'warnings': ['archive failed']}):
                 result = create_docx.create_document_delivery(self.separated_heading(), 'delivery.docx')
         self.assertEqual(result['archive_status'], 'failed')

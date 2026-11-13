@@ -66,7 +66,7 @@ class CompactReceiptTests(unittest.TestCase):
                     self.assertFalse((Path(work) / 'report.docx').exists())
                 else:
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                    self.assertEqual(payload['archive_status'], 'copied')
+                    self.assertEqual(payload['archive_status'], 'success')
                     self.assertEqual(payload['archive_output'], 'output/explicit-task/report.docx')
                     self.assertEqual((Path(work) / payload['archive_output']).read_bytes(),
                                      (Path(work) / 'report.docx').read_bytes())
@@ -86,8 +86,8 @@ class CompactReceiptTests(unittest.TestCase):
                     capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 receipt = json.loads(result.stdout)
-                self.assertEqual(receipt['archive_status'], 'failed' if failed else 'skipped')
-                self.assertIn('未完成' if failed else '未执行', receipt['archive_user_notice'])
+                self.assertEqual(receipt['archive_status'], 'failed')
+                self.assertIn('未完成', receipt['archive_user_notice'])
                 self.assertNotIn('已经放到', receipt['archive_user_notice'])
 
     def test_error_keeps_full_diagnostics(self):

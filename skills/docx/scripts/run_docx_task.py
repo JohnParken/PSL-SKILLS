@@ -22,7 +22,7 @@ from docx_outcome import failure, spec_identity
 from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, retire_cleanup_manifest, _unique_object
 from controlled_cleanup import finalize_failed_cleanup
 from create_docx import _delivery_output_path
-from archive_deliverables import validate_output_path, choose_delivery_output
+from archive_delivery import archive_delivery, validate_output_path, choose_delivery_output
 from office.runtime import check_runtime
 from docx_task_state import (
     MAX_ATTEMPTS,
@@ -321,7 +321,12 @@ def _finish_locked(manifest, data, *, worker_warning=None):
         if (runner.get('receipt_mode') == RECEIPT_MODE
                 and receipt_fingerprint != runner.get('receipt_fingerprint')):
             raise ValueError('Receipt ownership fingerprint is missing or changed; helpers retained')
-    warnings = list(result['warnings'])
+    # Receipts prove the published file, never the current request's archive destination.
+    current_archive = archive_delivery([result['output']], [item['path'] for item in data['protected']])
+    prior_warnings = list(result.get('warnings', []))
+    result = {**result, **current_archive, 'status': result['status']}
+    result['archive_output'] = current_archive['files'][0]['archive_output'] if current_archive['files'] else None
+    warnings = list(dict.fromkeys(prior_warnings + result['warnings']))
     for warning in runner.get('delivery', {}).get('warnings', []):
         if warning not in warnings:
             warnings.append(warning)
@@ -365,6 +370,13 @@ def resume_task(manifest):
                         receipt = task.optional(helper_path(data['runner'], 'receipt.json'), contents=True)
                         if receipt is not None and receipt != data['runner'].get('receipt_fingerprint'):
                             raise ValueError('Receipt ownership fingerprint changed; no cleanup')
+                current_archive = archive_delivery([result['output']], [item['path'] for item in data['protected']])
+                warnings = list(dict.fromkeys(result.get('warnings', []) + current_archive['warnings']))
+                result = {**result, **current_archive, 'status': result['status'], 'warnings': warnings}
+                result['archive_output'] = current_archive['files'][0]['archive_output'] if current_archive['files'] else None
+                data['runner']['delivery'] = result
+                data['archive_status'] = result['archive_status']
+                _save(manifest, data)
                 return _retire_delivery(manifest, _finish_delivery(manifest, result, expected, lambda: cleanup_task(manifest)))
             with _locked(data):
                 _recover_spec(manifest, data)
@@ -658,7 +670,7 @@ def compact_success_receipt(result):
     cleanup = result.get('cleanup')
     if not isinstance(cleanup, dict) or not cleanup.get('cleanup_complete'):
         return result
-    if result.get('archive_status') != 'copied':
+    if result.get('archive_status') != 'success':
         # Preserve reason codes, per-file failures and recovery evidence.
         return result
     return {

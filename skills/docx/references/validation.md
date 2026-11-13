@@ -41,7 +41,7 @@ print(f"./{output.as_posix()} exists=True size={output.stat().st_size} zip-ok")
 
 ```python
 execute(command="python -I -S -B \"<skill-root>/scripts/office/validate.py\" ./客户服务改进方案.docx --require-no-placeholders")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./客户服务改进方案.docx --include-related -o checked-content.txt")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./客户服务改进方案.docx --format text --include-related -o checked-content.txt")
 ```
 
 1. 核对 ZIP 完整性与必需部件；解包脚本会读取成员并检查 CRC、路径和重复名称。单独使用 `zipfile.testzip()` 时确认返回 `None`。

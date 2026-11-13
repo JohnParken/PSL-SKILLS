@@ -33,7 +33,7 @@ class LegacyEntryTests(unittest.TestCase):
             summary = json.loads(result.stdout)
             self.assertEqual(summary['status'], 'verified')
             self.assertEqual(summary['output'], 'report.docx')
-            self.assertEqual(summary['archive_status'], 'skipped')
+            self.assertEqual(summary['archive_status'], 'failed')
             self.assertEqual(result.stderr.count('generation-deprecated:'), 1)
             read = self.invoke(work, 'read_docx.py', 'report.docx')
             self.assertEqual(read.returncode, 0, read.stderr)

@@ -80,7 +80,7 @@ class EditDeliveryTests(unittest.TestCase):
         if isinstance(payload["result"], str):
             self.assertEqual(payload["result"], output)
         self.assertEqual(payload["status"], "edited")
-        self.assertEqual(payload["archive_status"], "copied")
+        self.assertEqual(payload["archive_status"], "success")
         self.assertEqual(payload["warnings"], [])
         self.assertEqual(len(payload["files"]), 1)
         item = payload["files"][0]
@@ -325,7 +325,7 @@ class EditDeliveryTests(unittest.TestCase):
         payload = json.loads(process.stdout)
         self.assertEqual(payload["status"], "edited")
         self.assertEqual(payload["archive_status"], "failed")
-        self.assertEqual(payload["files"], [])
+        self.assertEqual(payload["files"][0]["reason_code"], "archive_request_invalid")
         self.assertTrue(payload["warnings"])
         self.assertEqual(read_docx(self.work / "edited.docx"), "合同 XYZ")
         self.assertEqual(archive_source.read_bytes(), original_archive_source)
@@ -377,9 +377,9 @@ class EditDeliveryTests(unittest.TestCase):
         self.assertEqual(payload["output"], "edited.docx")
         self.assertEqual(payload["archive_status"], "failed")
         self.assertTrue(payload["warnings"])
-        self.assertIn("injected archive copy failure", "\n".join(payload["warnings"]))
+        self.assertIn("different content", "\n".join(payload["warnings"]))
         self.assertEqual(payload["files"][0]["archive_status"], "failed")
-        self.assertIn("injected archive copy failure", payload["files"][0]["error"])
+        self.assertEqual(payload["files"][0]["reason_code"], "archive_conflict")
         self.assertNotEqual(output.read_bytes(), previous_output)
         self.assertEqual(read_docx(output), "合同 XYZ")
         self.assertEqual(archive.read_bytes(), previous_archive)
@@ -398,16 +398,15 @@ class EditDeliveryTests(unittest.TestCase):
                                record=None)
 
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(process.stderr, "")
+        self.assertIn("archive-warning:", process.stderr)
         payload = json.loads(process.stdout)
         self.assertEqual(payload["status"], "edited")
-        self.assertEqual(payload["archive_status"], "skipped")
+        self.assertEqual(payload["archive_status"], "failed")
         self.assertTrue(payload["used_fallback"])
         self.assertEqual(payload["fallback_reason"], "missing_router_config")
-        self.assertEqual(payload["warnings"], [])
-        self.assertEqual(payload["files"], [{
-            "output": "edited.docx", "archive_output": None, "archive_status": "skipped",
-        }])
+        self.assertTrue(payload["warnings"])
+        self.assertEqual(payload["files"][0]["archive_status"], "failed")
+        self.assertEqual(payload["files"][0]["reason_code"], "current_question_id_unavailable")
         self.assertEqual(read_docx(old_output), "合同 XYZ")
         self.assertFalse((self.work / "output").exists())
 

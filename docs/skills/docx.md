@@ -1,6 +1,6 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期：2026-11-09；源码基线：[9e262bc](https://github.com/JohnParken/PSL-SKILLS/tree/9e262bc587c44788b8de49a8498de14ceb9102ce)；Skill 版本：`20261112.1921.3400`。本文是仓库级说明，不替代 [SKILL.md](../../skills/docx/SKILL.md) 的运行约束，不把说明本身当作业务验收。
+> 文档核对日期为 2026-11-13，源码基线为 `08fe335` 加本轮工作区变更，Skill 版本为 `20261113.2302.5108`。运行约束见 [SKILL.md](../../skills/docx/SKILL.md)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -13,8 +13,7 @@ Python 模块拆分及文件行数规则见 [行数规范与重构记录](../pyt
 现有分发边界只精简维护内容，不削减生成、读取、五类受控编辑、旧兼容入口或正式诊断能力。本轮在既有受控 run 格式范围内增加独立差异检查与候选发布模式，未扩大到任意 OOXML 编辑；标准库、独立运行、自然分页、输入保护、裸文件名输出、归档与清理契约保持。
 
 - 运行包由仓库维护工具 [package_docx_runtime.py](../../tools/package_docx_runtime.py) （兼容入口，复用 [统一打包器](../../tools/package_skills.py)）和 [显式文件清单](../../packaging/runtime-manifests/docx.json) 构建；工具、清单不作为运行依赖。
-- 运行清单保留 83 个文件。源码中的 `scripts/test/` 全部保留，但不随运行包分发。
-- 维护历史与加载审计说明已迁到 `docs/maintenance/docx/`；审计辅助脚本及兼容夹具归入 `skills/docx/scripts/test/`。这些不进入运行包；83个正式运行文件保留完整业务能力。
+- 运行清单包含 88 个文件，包括复杂报告解析及分页模块。源码回归及夹具位于 `scripts/test/`，维护历史位于 `docs/maintenance/docx/`。
 - `audit_package.py`、`validate_layout.py`、ZIP/XML 和结构/内容校验等正式诊断继续分发。四个批注模板、四个样式 profile 和旧 CLI 也保留。
 - 构建拒绝未知源文件、缺失清单项和符号链接；缓存不进入包。新文件必须先人工归类，不能静默漏掉新依赖。文件按固定顺序、时间戳及压缩级别打包，逐成员验证 CRC、成员集合和源码快照字节一致。既有目标拒绝覆盖，旧 ZIP 不改动。
 - 运行包内主入口及参考不再要求读取未分发的维护文件。完整源码的历史记录、测试命令及审计工具继续可用；业务执行不依赖源码仓库或相邻 Skill。
@@ -39,7 +38,7 @@ python -I -S -B tools/check_project_docs.py
 DOCX Skill 用 Python 标准库构建 OOXML 文档包，适合公文、通知、报告、简单表格及声明式排版。它同时提供只读内容提取和严格限定的已有文档修改。
 
 - **创建**：有序 JSON `blocks` 转为 `.docx`。基础块为标题、副标题、1–4 级标题、正文、列表、表格和分页；专项能力包括 PNG/JPEG 图片、富文本、合并表格、编号、目录、分节及交叉引用。复杂需求按主入口直达相应参考，不需预读全部资料。
-- **读取**：原生 `.docx/.dotx`（含 WPS 保存的原生格式）的全文、标题、段落范围、章节、概览、精简结构或显式 OOXML 结构。可选读取页眉、页脚、脚注、尾注和批注；修订视图不修改原文档。
+- **读取** 原生 `.docx/.dotx` 默认一次读取正文、表头列映射和合并行类别、文本框、常见原生图表保存值及缺值范围、图片资源引用和常规附加部件。按完整标题可读取章节及其下级章节的正文和对象。纯文本、标题、段落范围、概览、精简结构和显式 OOXML 按需选择。修订视图只读。
 - **编辑**：普通文字节点替换、受控段落插入及 run 格式、规则表格数据行增删、同格式图片替换、有限批注事务。输出新文件，保留原件。
 - **不提供**：旧二进制 DOC、WPS 专有格式转换、PDF 生成、任意无损编辑、完整修订接受/拒绝或真实视觉分页验证。CFB 内容即使伪装成 `.docx` 也拒绝并指向 WPS 读取能力；电子表格最终由 ET Skill 处理。
 
@@ -50,7 +49,7 @@ DOCX Skill 用 Python 标准库构建 OOXML 文档包，适合公文、通知、
 ```mermaid
 flowchart TD
     A["SKILL.md：最短入口与按需参考"] --> B["run_docx_task.py：创建与恢复编排"]
-    A --> C["read_docx.py：全文与有界读取"]
+    A --> C["read_docx.py：全量或按章节读取支持的要素"]
     A --> D["run_docx_edit.py：五类编辑及候选核验发布"]
     B --> E["create_docx.py：稳定创建 API 与交付编排"]
     E --> ES["docx_create_validation.py：输入规格与图片校验"]
@@ -64,12 +63,14 @@ flowchart TD
     E --> G["office：ZIP/XML 安全与结构、生成验证"]
     F --> G
     C --> G
-    C --> P["只读源快照、UTF-8 预算与源绑定游标"]
+    C --> P["源快照、UTF-8 预算与源绑定游标"]
+    P --> PC["报告分页的任务内解析缓存"]
+    C --> DR["报告元素：表头与合并行、图表缓存与范围、文本框"]
     E --> H["formatting：样式、分节与静态分页审计"]
     G -->|"仅创建/编辑的核验路径"| I["新 DOCX；既有 DOTX 仅受控编辑副本"]
     B --> J["任务清单、锁、回执与归属核验"]
     D --> J
-    I --> K["archive_deliverables：归档副本"]
+    I --> K["archive_delivery：归档副本"]
     J --> L["controlled_cleanup：仅清理本轮登记项"]
 ```
 
@@ -82,14 +83,16 @@ flowchart TD
 | [run_docx_task.py](../../skills/docx/scripts/run_docx_task.py) | 常用入口 `create`，stdin 接收 JSON；内置环境检查、独占任务文件、固定子进程、验证回执、归档及清理。`resume` 核对原任务状态，`retry` 仅用于仍存在且满足条件的原清单，不是盲目重生成。 |
 | [create_docx.py](../../skills/docx/scripts/create_docx.py) | `_validate_spec`、`_package_parts` 构建规范化规格与 ZIP 部件；`create_document_delivery()` 默认验证并归档。低层 `create_document()` 默认 `verify=False`，不能据此假定完成标准交付闭环。 |
 | [docx_create_common.py](../../skills/docx/scripts/docx_create_common.py)、[docx_create_validation.py](../../skills/docx/scripts/docx_create_validation.py)、[docx_create_xml.py](../../skills/docx/scripts/docx_create_xml.py) | 同包内部职责模块：共享格式约束、规格/图片校验和 OOXML 组包；原 `create_docx.py` 的公开/兼容入口继续可用，不依赖相邻 Skill。 |
-| [read_docx.py](../../skills/docx/scripts/read_docx.py) | `read_docx()` 文本、`read_docx_structure()` 显式结构、`read_docx_compact()` 精简视图、`read_docx_page()` 源绑定分页与 `serialize_docx_page()` 精确序列化；CLI 默认文本，`--format json` 与 `--compact-json` 是不同契约。 |
+| [read_docx.py](../../skills/docx/scripts/read_docx.py) | 文件名直接返回完整要素，加 `--section` 按章节返回。文本、显式结构和精简视图按需选用。报告与精简视图共享源绑定分页。 |
+| [docx_read_pages.py](../../skills/docx/scripts/docx_read_pages.py) | 报告按源和选项复用任务内的解析结果。读完末页或显式释放游标后清理缓存。 |
+| [docx_read_elements.py](../../skills/docx/scripts/docx_read_elements.py) | 选择兼容分支，读取存储对象及锚点；调用同包的表格、图表缓存和显式编号解析。 |
 | [run_docx_edit.py](../../skills/docx/scripts/run_docx_edit.py) | `text/structure/tables/image/comments` 五类编辑及 `format-checked` 候选核验发布，stdin 接收操作规格；批注 `list` 使用原只读入口。 |
 | [format_guard.py](../../skills/docx/scripts/format_guard.py) | 核对指定普通正文 run 的受控格式差异；structure 格式阶段及候选发布模式复用，不支持任意 OOXML 修改。 |
 | [edit_docx.py](../../skills/docx/scripts/edit_docx.py)、[edit_structure.py](../../skills/docx/scripts/edit_structure.py) | 文字精确匹配与次数校验；段落索引及 `expected_text` 双重定位；拒绝受保护或复杂锚点。 |
 | [edit_tables.py](../../skills/docx/scripts/edit_tables.py)、[replace_image.py](../../skills/docx/scripts/replace_image.py)、[manage_comments.py](../../skills/docx/scripts/manage_comments.py) | 分别处理规则数据行、已知媒体及关系、经典/现代批注的有限动作。各自保留独立保护与验证范围。 |
 | [office/archiveio.py](../../skills/docx/scripts/office/archiveio.py)、[office/xmlio.py](../../skills/docx/scripts/office/xmlio.py) | 受限 ZIP/XML 访问、解析预算与外来内容安全边界，不执行宏、域或文档内指令。 |
 | [office/validate.py](../../skills/docx/scripts/office/validate.py)、[validate_layout.py](../../skills/docx/scripts/validate_layout.py) | OPC/显式结构检查与静态版式风险审计；不执行 XSD 或阅读器渲染。 |
-| [archive_deliverables.py](../../skills/docx/scripts/archive_deliverables.py)、[controlled_cleanup.py](../../skills/docx/scripts/controlled_cleanup.py)、[docx_task_state.py](../../skills/docx/scripts/docx_task_state.py) | 文件保护、冲突命名、归档状态、身份与内容指纹、清单和回执校验；归档与清理分别报告。 |
+| [archive_delivery.py](../../skills/docx/scripts/archive_delivery.py)、[controlled_cleanup.py](../../skills/docx/scripts/controlled_cleanup.py)、[docx_task_state.py](../../skills/docx/scripts/docx_task_state.py) | 文件保护、冲突命名、归档状态、身份与内容指纹、清单和回执校验；归档与清理分别报告。 |
 
 ## 任务流程图
 
@@ -130,13 +133,13 @@ JSON
 
 标准回执中，创建成功核对 `status=verified`，编辑成功核对 `status=edited`；二者再检查 `task_status`、实际 `output`、非空主文件及返回的 `warnings`。成功创建的检查项包括 ZIP CRC、结构、内容覆盖与静态排版意图；`visual_validation=false`、`xsd_validation=false` 是明确限制。冲突时 runner 可选择带“第 N 版”的新文件名，消费方必须使用返回路径，不能固定猜测请求名称。
 
-`--compact-receipt` 只投影完整成功结果，且要求归档 `copied`、清理完成；错误、归档未完成或清理未完成会保留完整诊断。它不省略实际验证工作。
+`--compact-receipt` 只投影完整成功结果，且要求归档 `success`、清理完成；错误、归档未完成或清理未完成会保留完整诊断。它不省略实际验证工作。
 
 | 入口 | 退出码及结果含义 |
 | --- | --- |
 | 创建/编辑 runner | 创建成功 `status=verified`；编辑成功 `status=edited`。`0`：业务未失败且无 `cleanup_incomplete`；仍须检查归档状态及警告。`1`：`status=failed`。`3`：业务未失败但 `task_status=cleanup_incomplete`。参数解析失败通常为 `2`。 |
 | 显式归档 CLI | `status=completed` 只表示清单处理结束；冲突可退出 `0` 且 `archive_status=failed`、文件项 `error_code=archive_conflict`。核对汇总及完整非空明细，不凭退出码宣称已归档。 |
-| `read_docx.py` | 正常返回 `0`；环境自检或显式 unsupported 失败 `1`；参数及通过 `parser.error` 报告的读取、预算、安全错误 `2`。不采用 WPS 的通用 `partial/3` 契约；有界结果须看截断及覆盖字段。 |
+| `read_docx.py` | 正常返回 `0`，包括报告视图的 `status=partial`。环境自检或显式 unsupported 失败 `1`，参数、读取、预算和安全错误 `2`。有界结果按覆盖、截断和诊断判读。 |
 | `validate_layout.py` | 结构正常默认 `0`，可同时有风险警告；结构失败 `1`；显式 `--strict-pagination` 遇分页风险 `2`。该 `2` 不表示真实出现空白页。 |
 
 错误优先看 `error_code`、`next_action` 与真实退出码。失败后若已成为 `failed_cleaned`、原清单已删除，纠正规格后建立新任务，不再对旧清单 `retry`。超时或发布状态不明时先检查原状态；安全或环境失败不能通过降低检查、切换路径或原样重试规避。
@@ -161,6 +164,9 @@ JSON
 - 旧精简 JSON 默认上限 12,000 字符，`--max-output-chars` 可设 128–2,000,000；按完整块分页，单块超限失败。`next_block/--start-block` 不绑定源身份，仅为兼容入口。纯文本默认不限长，字符截断带显式标记且没有游标；全结构 JSON 超字符预算失败，不交付半截 JSON。
 - `docx-structure` 的 `schema_version=1` 描述显式 XML；未知元素以 opaque 节点保留。样式继承、自动编号、域结果和页面顺序未计算，不能直接作为生成器输入或无损编辑格式。
 - `--revisions accepted/original/all` 只控制读取视图，不能表述为已保存净稿。
+- 文件名直接返回完整的版本 1 `docx-report`。加 `--section '完整标题'` 返回同一格式和章节范围，保留原始对象编号及下级章节。章节中的附加内容引用随正文返回，关联部件正文可用全量视图读取。纯文本调用加 `--format text`。 [复杂报告读取契约](../../skills/docx/references/inspection.md#复杂报告读取)
+
+真实月报的全量、列映射、缺值定位、章节饼图和分页验证按各版记录。 [复杂报告验收](../maintenance/docx/report-reading-20261113.md)
 
 ### UTF-8 有界输出与源绑定续读
 
@@ -169,12 +175,13 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --
 python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --tables rows --max-output-bytes 6000 --cursor '上次next_cursor原值'
 ```
 
-- 新模式只用于 `--compact-json` 或 `--summary`，预算 128–2,000,000 **UTF-8 字节**，包含完整元数据、诊断及末尾换行。仅传 `--cursor` 时默认 12,000 字节；与 `--max-output-chars`、`--start-block`（包括 0）、`--delivery` 互斥。
+- 字节分页适用于默认要素、`--compact-json` 和 `--summary`，预算 128–2,000,000 **UTF-8 字节**，包含元数据、诊断及末尾换行。兼容参数 `--report` 和单独的 `--cursor` 使用 12,000 字节默认页预算。分页与 `--max-output-chars`、`--start-block`（包括 0）、`--delivery` 互斥。
 - 按完整块分页；元数据或单块放不下时 stdout 为空，完整错误在 stderr，不能裁剪诊断凑预算。该预算不约束 stderr，也不保证宿主回传不会截断。
 - 结果增加 `page_version=1`、`source_sha256`、`has_more`、`next_cursor` 和 `coverage`。原样传递游标，保持模式、修订、相关部件、范围、章节及表格选项不变，**字节预算可以调整**。源字节变化、选项变化或损坏游标拒绝，不降级为旧数字索引。
 - 按 `coverage.block_start/block_end_exclusive` 的零起算半开范围收集连续块，核对 `selected_total_blocks`，直到 `has_more=false`、`next_cursor=null`。`selected_view_complete` 仅表示本次响应是否覆盖整个所选视图；末页不等于已收集前页。
 - `coverage.document_complete` 始终 false。保留 `limitations/omissions`：默认表格两行预览、相关部件计数或 200 字符预览不会因分页结束变成全文；完整表格文本需 `--tables rows`，仍非布局或合并保真。
 - API `read_docx_page()` 与 CLI 复用安全快照及分页实现，`serialize_docx_page()` 返回用于预算核对的精确 JSON（含换行）；调用方重新美化可能超预算。`-o` 保存同一预算结果，不自动归档。
+- 报告续读重新核对源 SHA-256，并复用仍有效的任务内缓存。`page_cache=stored` 表示保存成功，`page_cache=reused` 表示续读命中。读完末页自动清理。提前结束时在原任务目录执行 `read_docx.py --release-cursor '上次next_cursor原值'`。缓存不存在时可按源重新解析。
 - 新模式对任务内相对路径逐层安全打开，拒绝绝对/父目录路径、符号链接及非普通文件；源指纹、ZIP/XML 校验与解析使用同一内存快照。游标校验不是签名、访问授权或防恶意伪造机制。
 
 详见 [读取契约](../../skills/docx/references/inspection.md) 与 [读取实现](../../skills/docx/scripts/read_docx.py)。
@@ -227,8 +234,12 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --
 
 ## 归档结果与用户提示
 
-完整回执应核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived`，保留 `archive_message` 并展示 `archive_user_notice`。`--compact-receipt` 仅在创建、归档和清理达到成功条件后输出投影，包含 `archive_status` 与 `archive_user_notice`，不包含 `files` 和 `archive_message`；需要逐项证据时使用非精简回执，不因缺少投影字段重复生成。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+完整回执应核对汇总 `archive_status=success` 且完整、非空 `files` 清单全部为 `copied/already_archived`，保留 `archive_message` 并展示 `archive_user_notice`。`--compact-receipt` 仅在创建、归档和清理达到成功条件后输出投影，包含 `archive_status` 与 `archive_user_notice`，不包含 `files` 和 `archive_message`；需要逐项证据时使用非精简回执，不因缺少投影字段重复生成。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
 
 执行调用维护：业务脚本示例使用宿主的 `execute(command=...)`，执行前核对完整命令、stdin、路径及结果；这不改变 CLI 或协议，不代表真实宿主链路已经验收。
 
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+### 最终交付入口边界
+
+正式创建和编辑 runner/交付 API 自动收尾。明确交付完整读取结果时用 `read_docx.py 文件.docx -o 结果.json --delivery`，纯文本使用 `--format text -o 结果.txt --delivery`。未加 `--delivery` 的读取导出、低层 pack/comment/merge_runs 和 Path 返回 API 仅产生内部文件。格式候选走 `format-checked` 验收。其他已验收最终文件用本包 `archive_delivery.py` 处理显式清单，归档重试使用已验收主文件。

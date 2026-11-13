@@ -503,7 +503,7 @@ def main() -> None:
     p.add_argument("--parent", type=int, help="Parent comment ID (makes this a reply)")
     p.add_argument("-o", "--output",
                    help="Required output .docx path for packaged input")
-    from archive_deliverables import validate_delivery_output
+    from archive_delivery import validate_delivery_output
     args = p.parse_args()
 
     src = Path(args.input)

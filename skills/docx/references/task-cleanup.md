@@ -26,7 +26,7 @@
 
 验收回执采用 `receipt_mode=exclusive_v1`：在原plan已登记的 `.receipt.json` 上以O_EXCL/O_NOFOLLOW独占写入、flush/fsync/关闭，不再调用带暂存硬链接的new-save。写入后核对创建时inode、单链接数及预期内容SHA-256，再把完整 `receipt_fingerprint` 写入原manifest。只有该证明已经提交，回执才可被接纳；写入未完成、证明未提交、预存回执、符号链接或未知硬链接均不接纳，不自动清除来源不明文件。父进程等待worker退出（超时则终止并等待）后重读原清单，不用旧内存快照覆盖worker刚提交的证明。
 
-外层等待worker退出后，核对创建指纹、生产回执、最终文件路径/非空/指纹，再自动seal并clean。 如果worker在回执证明提交后因晚期暂存清理等原因非零退出，父进程只在回执身份、大小、mtime、链接数、SHA及验收字段/原辅助文件锚点全部匹配，且主文件指纹匹配时恢复成功，返回退出0及worker-warning。原始诊断随交付记录保留；不重复生成、不重新采集变化后的回执指纹，也不放宽单链接保护。正常恢复可完成清理，仍有残留则cleanup_incomplete；二者都不能把历史警告说成从未发生。归档failed/skipped仍可收尾；已验收文档在收尾后指纹仍不变时，即使清单保存、seal或clean异常也保持verified、返回退出3和cleanup_incomplete警告，保留材料及真实诊断；用户归档提示按用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）映射。完成清理后删除manifest；输入、当前与历史交付物及归属不明的历史文件仍受保护。不得把归档成功话术当作清理完成证明。
+外层等待worker退出后，核对创建指纹、生产回执、最终文件路径/非空/指纹，再自动seal并clean。 如果worker在回执证明提交后因晚期暂存清理等原因非零退出，父进程只在回执身份、大小、mtime、链接数、SHA及验收字段/原辅助文件锚点全部匹配，且主文件指纹匹配时恢复成功，返回退出0及worker-warning。原始诊断随交付记录保留；不重复生成、不重新采集变化后的回执指纹，也不放宽单链接保护。正常恢复可完成清理，仍有残留则cleanup_incomplete；二者都不能把历史警告说成从未发生。归档failed/partial仍可收尾；已验收文档在收尾后指纹仍不变时，即使清单保存、seal或clean异常也保持verified、返回退出3和cleanup_incomplete警告，保留材料及真实诊断；用户归档提示按用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）映射。完成清理后删除manifest；输入、当前与历史交付物及归属不明的历史文件仍受保护。不得把归档成功话术当作清理完成证明。
 
 | 实际结果 | 处理 |
 |---|---|
@@ -52,7 +52,7 @@ API为 `create_task(spec, output, protected_inputs=(), workspace=None)`、`retry
 
 ## 时机与保护
 
-| 入口 | 归档failed/skipped | 全部成功后的清单 |
+| 入口 | 归档failed/partial | 全部成功后的清单 |
 |---|---|---|
 | 新建run_docx_task | 主文件验收及指纹通过后继续清理登记项；归档另报结果 | 核对后删除本轮清单 |
 | 编辑run_docx_edit | 主文件验收后清理配置及清单；归档另报结果 | 核对后删除本轮清单 |
@@ -61,7 +61,7 @@ API为 `create_task(spec, output, protected_inputs=(), workspace=None)`、`retry
 `cleanup_complete`仅表示本清单登记项的处理结果，返回`cleanup_scope=registered_entries_only`时也不代表整个任务目录无残留。自动入口的简化异常结果可能没有scope字段，仍按登记项解释。内部原子暂存文件由创建它的函数在正常返回或可捕获异常时收尾；强杀残留不在普通清单自动清理保证内，不扫描或事后伪造登记。
 
 
-成功任务的顺序为：最终文档验收完成 → 所有最终交付物的归档步骤返回结果 → seal → clean → 核对清理结果和最终文件。归档 copied、already_archived、skipped、failed 或批量 completed 均可进入收尾；failed 仍须按用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）使用归档失败话术，详细归档警告仅留内部执行记录，不展示归档路径，不为清理重跑生成。`--verified` 是调用方对已完成内容验收的声明，不是工具替代验收或证明归档发生。
+成功任务的顺序为：最终文档验收完成 → 所有最终交付物的归档步骤返回结果 → seal → clean → 核对清理结果和最终文件。归档 success、partial、failed 或 not_required 均可进入收尾；failed 仍须按用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）使用归档失败话术，详细归档警告仅留内部执行记录，不展示归档路径，不为清理重跑生成。`--verified` 是调用方对已完成内容验收的声明，不是工具替代验收或证明归档发生。
 
 任务失败或停止时立即使用 failed/stopped，清理本轮全部中间文件和清单。新任务不以retry或--retain绕过失败清理。用户原件、模板、用户提供的JSON/图片、已有输出、最终文件及其依赖不得列入清理项。
 
@@ -82,7 +82,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" plan c
 **成功完成验收和归档后记录状态：**
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome success --verified --archive-status copied")
+execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome success --verified --archive-status success")
 ```
 
 `--archive-status` 必须使用本轮实际返回结果；有多个交付物时先逐项确认归档步骤完成，任何失败使用 failed，全部完成的批量结果可使用 completed。主文件缺失、为空或不安全时不能 seal success。seal 记录当前文件身份、大小、修改时间和 SHA-256；目录仅记录身份，不读取目录内容。最终文件之后若变化，需重新验收，不得手改指纹以跳过检查。

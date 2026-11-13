@@ -121,7 +121,7 @@ class ControlledTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual(report['status'], 'edited')
         self.assertEqual(report['task_status'], 'completed')
-        self.assertEqual(report['archive_status'], 'copied')
+        self.assertEqual(report['archive_status'], 'success')
         self.assertTrue(report['cleanup']['manifest_removed'])
         self.assertIsNone(report['task_manifest'])
         self.assertFalse(list(Path('.').glob('docx-edit-*.json')))
@@ -129,8 +129,8 @@ class ControlledTests(unittest.TestCase):
 
     def test_archive_failure_or_skip_cleans_all_intermediates(self):
         self.source()
-        for status in ('failed', 'skipped'):
-            with self.subTest(status=status), patch('archive_deliverables.archive_outputs', return_value={
+        for status in ('failed', 'partial', 'not_required'):
+            with self.subTest(status=status), patch('archive_delivery.archive_delivery', return_value={
                     'archive_status': status, 'archive_message': None, 'warnings': []}):
                 result = edit_task('text', 'source.docx', status + '.docx',
                                    {'replacements': [{'old': 'ABC', 'new': 'XYZ'}]})
@@ -209,13 +209,45 @@ class ControlledTests(unittest.TestCase):
     def test_read_delivery_is_explicit_and_legacy_stdout_stays(self):
         self.source()
         with redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(read_main(['source.docx']), 0)
+            self.assertEqual(read_main(['source.docx', '--format', 'text']), 0)
         self.assertEqual(output.getvalue().strip(), '合同 ABC')
         with redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(read_main(['source.docx','-o','read.txt','--delivery']), 0)
+            self.assertEqual(read_main(['source.docx','--format','text','-o','read.txt','--delivery']), 0)
         result=json.loads(output.getvalue())
         self.assertEqual(result['archive_message'],'归档完成')
         self.assertEqual(Path('read.txt').read_text(), '合同 ABC')
+
+    def test_read_export_internal_and_final_missing_id_retry(self):
+        from archive_delivery import archive_delivery
+        self.source()
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(read_main(['source.docx', '--format', 'text', '-o', 'internal.txt']), 0)
+        self.assertFalse(Path('output').exists())
+        with patch.dict(os.environ, {}, clear=False), redirect_stdout(io.StringIO()) as output:
+            os.environ.pop('ROUTER_CONFIG_VARIABLES', None)
+            self.assertEqual(read_main(['source.docx', '--format', 'text', '-o', 'final.txt', '--delivery']), 0)
+        self.assertEqual(json.loads(output.getvalue())['archive_status'], 'failed')
+        before = Path('final.txt').read_bytes()
+        result = archive_delivery(['final.txt'], ['source.docx'])
+        self.assertEqual(result['archive_status'], 'success')
+        self.assertEqual(Path('final.txt').read_bytes(), before)
+        self.assertFalse(Path('output/synthetic-task/internal.txt').exists())
+
+    def test_default_report_exports_the_same_complete_json_and_preserves_partial_status(self):
+        """Archive the full default view and keep its reading diagnostics in the receipt."""
+        self.source([{'type': 'table', 'header': False, 'rows': [['标题'], ['内容']]}])
+        with redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(read_main(['source.docx']), 0)
+        stdout_report = json.loads(output.getvalue())
+        self.assertEqual(stdout_report['status'], 'partial')
+        with redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(read_main(['source.docx', '-o', 'result.json', '--delivery']), 0)
+        receipt = json.loads(output.getvalue())
+        self.assertEqual(receipt['format'], 'docx-report')
+        self.assertEqual(receipt['read_status'], 'partial')
+        self.assertEqual(receipt['issues'], stdout_report['issues'])
+        self.assertEqual(json.loads(Path('result.json').read_text(encoding='utf-8')), stdout_report)
+        self.assertEqual(Path('output/synthetic-task/result.json').read_bytes(), Path('result.json').read_bytes())
 
     def test_comments_list_does_not_create_helpers(self):
         self.source()

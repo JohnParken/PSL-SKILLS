@@ -44,7 +44,7 @@ class CleanupTests(unittest.TestCase):
         Path("spec.json").write_text(json.dumps(spec), encoding="utf-8")
         Path("helper.py").write_text("# temporary")
         Path("intermediate.docx").write_bytes(b"unused intermediate")
-        with patch("archive_deliverables.archive_outputs", side_effect=PermissionError("archive denied")):
+        with patch("archive_delivery.archive_delivery", side_effect=PermissionError("archive denied")):
             result = create_document_delivery(spec, "报告.docx", protected_inputs=["source.txt"])
         self.assertEqual(result["generation_status"], "verified")
         self.assertEqual(result["archive_status"], "failed")
@@ -186,7 +186,7 @@ class CleanupTests(unittest.TestCase):
         self.plan(files=["helper.py"], deliverables=["final.docx"])
         Path("helper.py").write_text("temporary")
         Path("final.docx").write_bytes(b"verified result")
-        self.seal(outcome="success", verified=True, archive_status="copied")
+        self.seal(outcome="success", verified=True, archive_status="success")
         Path("final.docx").write_bytes(b"unexpected change")
         result = cleanup.cleanup_task("cleanup.json")
         self.assertEqual(result["status"], "blocked")
@@ -281,7 +281,7 @@ cleanup_task.cleanup_task('cleanup.json')
         self.plan(files=["helper.py"], deliverables=["final.docx"])
         Path("helper.py").write_text("temporary")
         Path("final.docx").write_bytes(b"verified")
-        self.seal(outcome="success", verified=True, archive_status="skipped")
+        self.seal(outcome="success", verified=True, archive_status="failed")
         original_unlink = os.unlink
 
         def modify_final(path, **options):

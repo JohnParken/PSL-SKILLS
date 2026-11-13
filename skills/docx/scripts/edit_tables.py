@@ -22,7 +22,7 @@ from office.memory_package import package_workspace
 from office.package import pack_document
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import finalize_delivery, validate_delivery_output, validate_input_path
+from archive_delivery import finalize_delivery, validate_delivery_output, validate_input_path
 
 TABLE_PROPERTIES = {
     "tblStyle", "tblpPr", "tblOverlap", "bidiVisual", "tblStyleRowBandSize", "tblStyleColBandSize",

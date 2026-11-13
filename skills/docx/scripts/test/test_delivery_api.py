@@ -22,7 +22,7 @@ if sys.version_info < (3, 10):
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
-import archive_deliverables
+import archive_delivery
 import create_docx
 import edit_docx
 import edit_structure
@@ -65,9 +65,9 @@ class DeliveryApiTests(unittest.TestCase):
 
     def invoke_delivery(self, callback):
         with patch.object(
-            archive_deliverables,
-            "archive_outputs",
-            wraps=archive_deliverables.archive_outputs,
+            archive_delivery,
+            "archive_delivery",
+            wraps=archive_delivery.archive_delivery,
         ) as archive_call:
             result = callback()
         archive_call.assert_called_once()
@@ -75,7 +75,7 @@ class DeliveryApiTests(unittest.TestCase):
 
     def assert_archived(self, summary, output, *, status="edited", question_id="api-record"):
         self.assertEqual(summary["status"], status)
-        self.assertEqual(summary["archive_status"], "copied")
+        self.assertEqual(summary["archive_status"], "success")
         self.assertEqual(summary["output"], output)
         self.assertEqual(summary["warnings"], [])
         self.assertEqual(len(summary["files"]), 1)
@@ -189,7 +189,7 @@ class DeliveryApiTests(unittest.TestCase):
                 source, "missing-config.docx", specification,
             ))
         self.assertEqual(missing["status"], "edited")
-        self.assertEqual(missing["archive_status"], "skipped")
+        self.assertEqual(missing["archive_status"], "failed")
         self.assertEqual(missing["fallback_reason"], "missing_router_config")
         self.assertEqual(read_docx("missing-config.docx"), "合同 XYZ")
         self.assertFalse(Path("output").exists())
@@ -199,7 +199,7 @@ class DeliveryApiTests(unittest.TestCase):
                 source, "invalid-config.docx", specification,
             ))
         self.assertEqual(invalid["status"], "edited")
-        self.assertEqual(invalid["archive_status"], "skipped")
+        self.assertEqual(invalid["archive_status"], "failed")
         self.assertEqual(invalid["fallback_reason"], "invalid_router_config_json")
         self.assertEqual(read_docx("invalid-config.docx"), "合同 XYZ")
         self.assertFalse(Path("output").exists())
@@ -211,8 +211,8 @@ class DeliveryApiTests(unittest.TestCase):
 
         with self.router_environment(self.router_config()):
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
+                archive_delivery,
+                "archive_delivery",
                 side_effect=failure,
             ) as archive_call:
                 created = create_docx.create_document_delivery(
@@ -222,8 +222,8 @@ class DeliveryApiTests(unittest.TestCase):
             archive_call.assert_called_once()
 
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
+                archive_delivery,
+                "archive_delivery",
                 side_effect=failure,
             ) as archive_call:
                 edited = edit_docx.replace_text_delivery(
@@ -255,7 +255,7 @@ class DeliveryApiTests(unittest.TestCase):
             for entry, arguments, status, expected_text in cases:
                 with self.subTest(entry=entry.__module__):
                     stdout, stderr = io.StringIO(), io.StringIO()
-                    with patch.object(archive_deliverables, "archive_outputs",
+                    with patch.object(archive_delivery, "archive_delivery",
                                       side_effect=OSError("injected shared archive failure")) as call:
                         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
                             code = entry(arguments)
@@ -282,9 +282,9 @@ class DeliveryApiTests(unittest.TestCase):
 
         with self.router_environment(self.router_config()):
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
-                wraps=archive_deliverables.archive_outputs,
+                archive_delivery,
+                "archive_delivery",
+                wraps=archive_delivery.archive_delivery,
             ) as archive_call:
                 with self.assertRaises(ValueError):
                     edit_docx.replace_text_delivery(
@@ -315,22 +315,20 @@ class DeliveryApiTests(unittest.TestCase):
     def test_archive_copy_failure_keeps_new_main_document_and_old_archive(self):
         record = "copy-failure"
         output = Path("copy-failure.docx")
-        archive = Path("output") / record / output.name
+        archive = Path("output") / record / "prior.docx"
         archive.parent.mkdir(parents=True)
         archive.write_bytes(b"keep previous archive")
         original_copy = create_docx.shutil.copyfileobj
 
         def fail_archive_copy(source_stream, destination_stream, length=0):
-            if Path(source_stream.name).resolve() == output.resolve():
-                raise OSError("injected archive copy failure")
-            return original_copy(source_stream, destination_stream, length)
+            raise OSError("injected archive copy failure")
 
         specification = {"blocks": [{"type": "paragraph", "text": "created despite archive failure"}]}
         with self.router_environment(self.router_config(record)):
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
-                wraps=archive_deliverables.archive_outputs,
+                archive_delivery,
+                "archive_delivery",
+                wraps=archive_delivery.archive_delivery,
             ) as archive_call:
                 with patch("create_docx.shutil.copyfileobj", side_effect=fail_archive_copy):
                     summary = create_docx.create_document_delivery(
@@ -343,13 +341,13 @@ class DeliveryApiTests(unittest.TestCase):
         self.assertIn("injected archive copy failure", "\n".join(summary["warnings"]))
         self.assertEqual(read_docx(output), "created despite archive failure")
         self.assertEqual(archive.read_bytes(), b"keep previous archive")
-        self.assertEqual([path.name for path in archive.parent.iterdir()], [output.name])
+        self.assertEqual([path.name for path in archive.parent.iterdir()], ["prior.docx"])
 
     def test_archive_mkdir_failure_keeps_edited_main_document_and_old_archive(self):
         record = "mkdir-failure"
         source = self.document("source.docx", [{"type": "paragraph", "text": "合同 ABC"}])
         output = Path("mkdir-failure.docx")
-        archive = Path("output") / record / output.name
+        archive = Path("output") / record / "prior.docx"
         archive.parent.mkdir(parents=True)
         archive.write_bytes(b"keep previous archive")
         real_mkdir = Path.mkdir
@@ -361,9 +359,9 @@ class DeliveryApiTests(unittest.TestCase):
 
         with self.router_environment(self.router_config(record)):
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
-                wraps=archive_deliverables.archive_outputs,
+                archive_delivery,
+                "archive_delivery",
+                wraps=archive_delivery.archive_delivery,
             ) as archive_call:
                 with patch.object(Path, "mkdir", new=fail_archive_directory):
                     summary = edit_docx.replace_text_delivery(
@@ -377,16 +375,16 @@ class DeliveryApiTests(unittest.TestCase):
         self.assertIn("injected archive directory failure", "\n".join(summary["warnings"]))
         self.assertEqual(read_docx(output), "合同 XYZ")
         self.assertEqual(archive.read_bytes(), b"keep previous archive")
-        self.assertEqual([path.name for path in archive.parent.iterdir()], [output.name])
+        self.assertEqual([path.name for path in archive.parent.iterdir()], ["prior.docx"])
 
     def test_primary_failure_does_not_attempt_archiving_or_create_output(self):
         source = self.document("source.docx", [{"type": "paragraph", "text": "合同 ABC"}])
         source_bytes = source.read_bytes()
         with self.router_environment(self.router_config()):
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
-                wraps=archive_deliverables.archive_outputs,
+                archive_delivery,
+                "archive_delivery",
+                wraps=archive_delivery.archive_delivery,
             ) as archive_call:
                 with self.assertRaises(ValueError):
                     edit_docx.replace_text_delivery(
@@ -425,9 +423,9 @@ class DeliveryApiTests(unittest.TestCase):
         with self.router_environment(self.router_config()):
             for invoke in collisions:
                 with patch.object(
-                    archive_deliverables,
-                    "archive_outputs",
-                    wraps=archive_deliverables.archive_outputs,
+                    archive_delivery,
+                    "archive_delivery",
+                    wraps=archive_delivery.archive_delivery,
                 ) as archive_call:
                     with self.assertRaises(ValueError):
                         invoke()
@@ -436,9 +434,9 @@ class DeliveryApiTests(unittest.TestCase):
             protected = Path("protected.docx")
             protected.write_bytes(b"keep protected input")
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
-                wraps=archive_deliverables.archive_outputs,
+                archive_delivery,
+                "archive_delivery",
+                wraps=archive_delivery.archive_delivery,
             ) as archive_call:
                 with self.assertRaises(ValueError):
                     edit_docx.replace_text_delivery(
@@ -465,9 +463,9 @@ class DeliveryApiTests(unittest.TestCase):
 
         with self.router_environment(self.router_config()):
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
-                wraps=archive_deliverables.archive_outputs,
+                archive_delivery,
+                "archive_delivery",
+                wraps=archive_delivery.archive_delivery,
             ) as archive_call:
                 with self.assertRaises(ValueError):
                     create_docx.create_document_delivery(
@@ -494,9 +492,9 @@ class DeliveryApiTests(unittest.TestCase):
 
         with self.router_environment(self.router_config()):
             with patch.object(
-                archive_deliverables,
-                "archive_outputs",
-                wraps=archive_deliverables.archive_outputs,
+                archive_delivery,
+                "archive_delivery",
+                wraps=archive_delivery.archive_delivery,
             ) as archive_call:
                 listed = manage_comments.manage_comments_delivery(source, {"action": "list"})
             archive_call.assert_not_called()

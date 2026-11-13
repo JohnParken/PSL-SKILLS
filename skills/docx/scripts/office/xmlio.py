@@ -170,9 +170,11 @@ def read_xml(path):
     return data
 
 
-def fromstring(data, *, budget=None):
+def fromstring(data, *, budget=None, tree_builder=None):
+    """Parse bounded XML, optionally using a caller-supplied ElementTree target."""
     try:
-        return ET.fromstring(_checked(data, budget=budget))
+        parser = ET.XMLParser(target=tree_builder) if tree_builder is not None else None
+        return ET.fromstring(_checked(data, budget=budget), parser=parser)
     except ET.ParseError as exc:
         raise ValueError(f"Invalid XML: {exc}") from exc
 

@@ -10,7 +10,7 @@ import zipfile
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from archive_deliverables import (
+from archive_delivery import (
     finalize_delivery, validate_delivery_output, validate_input_path,
 )
 from office.helpers import reject_signed_package

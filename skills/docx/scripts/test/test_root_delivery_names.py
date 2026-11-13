@@ -8,7 +8,7 @@ import unittest
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
-from archive_deliverables import validate_delivery_output, validate_input_path, choose_delivery_output, archive_outputs
+from archive_delivery import validate_delivery_output, validate_input_path, choose_delivery_output, archive_delivery
 
 
 class RootDeliveryNames(unittest.TestCase):
@@ -35,7 +35,7 @@ class RootDeliveryNames(unittest.TestCase):
         Path('report.docx').write_bytes(b'existing')
         self.assertEqual(choose_delivery_output('report.docx'), Path('report_第2版.docx'))
         self.assertEqual(Path('report.docx').read_bytes(), b'existing')
-        self.assertEqual(archive_outputs(['inputs/input.docx'], [])['archive_status'], 'failed')
+        self.assertEqual(archive_delivery(['inputs/input.docx'], [])['archive_status'], 'failed')
 
     def test_public_write_apis_reject_paths(self):
         from create_docx import create_document
@@ -83,13 +83,13 @@ class RootDeliveryNames(unittest.TestCase):
             ('comment.py', ['inputs/input.docx', 'comment', '-o']),
             ('merge_runs.py', ['inputs/input.docx', '-o']),
             ('office/package.py', ['pack', 'inputs']),
-            ('archive_deliverables.py', []),
+            ('archive_delivery.py', []),
         ]
         for script, args in entries:
             for name in ('./report.docx', 'sub/report.docx', '../report.docx', '/report.docx', 'C:\\report.docx'):
                 with self.subTest(script=script, name=name):
                     result = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS/script), *args, name], capture_output=True, text=True)
-                    if script != 'archive_deliverables.py':
+                    if script != 'archive_delivery.py':
                         self.assertNotEqual(result.returncode, 0)
                     else:
                         self.assertIn('failed', result.stdout)

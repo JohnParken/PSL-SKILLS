@@ -20,7 +20,7 @@ from office.package import pack_document
 from office.helpers import XML_SPACE, reject_signed_package
 from office.xmlio import parse_dom, read_xml
 from office.validators.structure import StructureValidator, W
-from archive_deliverables import finalize_delivery, validate_delivery_output, validate_input_path
+from archive_delivery import finalize_delivery, validate_delivery_output, validate_input_path
 
 XML_NS = "http://www.w3.org/XML/1998/namespace"
 XMLNS_NS = "http://www.w3.org/2000/xmlns/"

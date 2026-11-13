@@ -112,7 +112,7 @@ def _verify_content(spec: dict, roots: dict) -> None:
 def create_document(spec: dict, output: str | Path, base_dir: str | Path | None = None, *,
                     verify: bool = False, require_no_placeholders: bool = False) -> Path:
     """Create a DOCX at output, resolving relative image paths under base_dir."""
-    from archive_deliverables import validate_delivery_output
+    from archive_delivery import validate_delivery_output
     output_path = validate_delivery_output(output)
     if not isinstance(verify, bool) or not isinstance(require_no_placeholders, bool):
         raise ValueError("verify and require_no_placeholders must be booleans")
@@ -127,7 +127,7 @@ def create_document(spec: dict, output: str | Path, base_dir: str | Path | None 
 def validate_task_resources(spec, base_dir=None):
     """Check public task image paths before validation opens any resource bytes."""
     from artifact_files import _check_delivery_path
-    from archive_deliverables import validate_input_path
+    from archive_delivery import validate_input_path
     root = Path.cwd()
     base = Path(base_dir) if base_dir is not None else root
     if base.is_absolute():
@@ -156,7 +156,7 @@ def create_document_delivery(spec: dict, output: str | Path, base_dir=None, *,
                              verify: bool = True, require_no_placeholders: bool = False,
                              protected_inputs=()) -> dict:
     """Publish a final task-root DOCX and automatically attempt shared archival."""
-    from archive_deliverables import finalize_delivery, validate_output_path
+    from archive_delivery import finalize_delivery, validate_output_path
 
     if not isinstance(verify, bool) or not isinstance(require_no_placeholders, bool):
         raise ValueError("verify and require_no_placeholders must be booleans")
@@ -364,7 +364,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("input is required; output is required unless --check or --preflight is used")
     try:
         task_dir = Path.cwd()
-        from archive_deliverables import validate_input_path
+        from archive_delivery import validate_input_path
         validate_input_path(args.input)
         output_path = None
         if not args.preflight:

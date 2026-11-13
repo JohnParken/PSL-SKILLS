@@ -11,7 +11,7 @@ if __package__ in (None, ''):
 from office.archiveio import open_archive
 from office.validators.structure import StructureValidator
 from office.formatting.audit import audit_roots
-from archive_deliverables import validate_input_path, validate_delivery_output
+from archive_delivery import validate_input_path, validate_delivery_output
 
 
 def validate_layout(path: str | Path, *, profile: str | None = None) -> dict:

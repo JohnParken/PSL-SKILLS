@@ -8,6 +8,7 @@ from fixture_delivery import create_fixture
 
 from contextlib import redirect_stderr, redirect_stdout
 import io
+import json
 import os
 import subprocess
 import tempfile
@@ -40,11 +41,23 @@ class RuntimeTests(unittest.TestCase):
 
     def test_read_check_rejects_input_or_output_options(self):
         for args in (['input.docx'], ['-o', 'output.txt'], ['--include-related'],
-                     ['--revisions', 'all'], ['--format', 'json']):
+                     ['--revisions', 'all'], ['--format', 'json'], ['--format', 'text'],
+                     ['--max-output-bytes', '12000'], ['--report']):
             with self.subTest(args=args), redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit) as raised:
                     read_docx.main(['--check', *args])
                 self.assertEqual(raised.exception.code, 2)
+
+    def test_read_check_reports_missing_safe_snapshot_support(self):
+        """Check the file-open capability required by the default report."""
+        with (
+            patch.object(read_docx.os, 'supports_dir_fd', set()),
+            redirect_stdout(io.StringIO()) as output,
+            redirect_stderr(io.StringIO()) as diagnostics,
+        ):
+            self.assertEqual(read_docx.main(['--check']), 1)
+        self.assertNotIn('read-check-ok', output.getvalue())
+        self.assertIn('requires safe dir_fd/O_NOFOLLOW', diagnostics.getvalue())
 
     def test_old_expat_fails_both_checks_without_write_probe(self):
         with patch.object(runtime.expat, 'EXPAT_VERSION', 'expat_2.2.8'), \
@@ -95,7 +108,10 @@ class RuntimeTests(unittest.TestCase):
                                              capture_output=True, encoding='utf-8')
                     self.assertEqual(process.returncode, 0, process.stderr)
                     self.assertNotIn('private-invalid-config', process.stdout + process.stderr)
-                self.assertEqual(process.stdout, '只读内容 & 中文')
+                result = json.loads(process.stdout)
+                self.assertEqual(result['format'], 'docx-report')
+                self.assertEqual(result['blocks'][0]['text'], '只读内容 & 中文')
+                self.assertFalse(result['has_more'])
                 self.assertEqual([p.name for p in directory.iterdir()], ['input.docx'])
                 self.assertEqual(source.read_bytes(), before)
             finally:

@@ -74,7 +74,7 @@ class ReadFastpathTests(unittest.TestCase):
         self.assertNotIn('产品',r.stdout)
 
     def test_section_respects_heading_levels(self):
-        r=self.cli('--section','第一部分')
+        r=self.cli('--section','第一部分','--format','text')
         self.assertEqual(r.returncode,0,r.stderr)
         self.assertIn('第一段',r.stdout)
         self.assertIn('产品41',r.stdout)  # plain section reads complete table
@@ -86,7 +86,7 @@ class ReadFastpathTests(unittest.TestCase):
         r=self.cli('--section','相同标题')
         self.assertNotEqual(r.returncode,0)
         self.assertIn('ambiguous',r.stderr)
-        r=self.cli('--section','相同标题','--section-occurrence','2')
+        r=self.cli('--section','相同标题','--section-occurrence','2','--format','text')
         self.assertEqual(r.returncode,0,r.stderr)
         self.assertIn('第二段',r.stdout)
         self.assertNotIn('第一段',r.stdout)
@@ -145,7 +145,7 @@ class ReadFastpathTests(unittest.TestCase):
 
     def test_old_text_interface_unchanged(self):
         old=read_docx(self.path)
-        r=self.cli()
+        r=self.cli('--format', 'text')
         self.assertEqual(r.returncode,0,r.stderr)
         self.assertEqual(r.stdout,old)
         self.assertIn('产品41',old)

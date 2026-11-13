@@ -22,7 +22,7 @@ from office.package import pack_document
 from office.helpers import reject_signed_package
 from office.validators.structure import StructureValidator, W
 from office.xmlio import parse_dom, read_xml
-from archive_deliverables import finalize_delivery, validate_delivery_output, validate_input_path
+from archive_delivery import finalize_delivery, validate_delivery_output, validate_input_path
 
 RUN_PROPERTY_ORDER = (
     "rStyle", "rFonts", "b", "bCs", "i", "iCs", "caps", "smallCaps", "strike", "dstrike",

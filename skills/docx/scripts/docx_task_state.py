@@ -128,17 +128,17 @@ def validate_manifest(data, manifest, task):
 def validate_result(result, output):
     if (not isinstance(result, dict) or result.get('status') != 'verified'
             or result.get('output') != output
-            or result.get('archive_status') not in ('copied', 'skipped', 'failed')
+            or result.get('archive_status') not in ('success', 'partial', 'failed', 'not_required')
             or not all(result.get(k) is True for k in ('zip_crc', 'structure', 'content_coverage', 'layout_intent'))
             or not isinstance(result.get('files'), list) or not isinstance(result.get('warnings'), list)
             or any(not isinstance(w, str) for w in result['warnings'])):
         raise ValueError('Invalid verified delivery result')
-    if result['archive_status'] == 'copied' and not result['files']:
+    if result['archive_status'] == 'success' and not result['files']:
         raise ValueError('Copied archive result requires file evidence')
     for item in result['files']:
         if (not isinstance(item, dict) or not {'output', 'archive_output', 'archive_status'}.issubset(item)
                 or not isinstance(item.get('output'), str)
-                or item.get('archive_status') not in ('copied', 'already_archived', 'skipped', 'failed')
+                or item.get('archive_status') not in ('copied', 'already_archived', 'failed')
                 or not (item.get('archive_output') is None or isinstance(item['archive_output'], str))):
             raise ValueError('Invalid archive file result')
     return result

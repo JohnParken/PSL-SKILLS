@@ -14,7 +14,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import archive_deliverables as delivery
+import archive_delivery as delivery
 import artifact_files
 from run_docx_task import create_task
 
@@ -39,7 +39,7 @@ class ArchiveCollisionTests(unittest.TestCase):
         target.parent.mkdir(parents=True)
         target.write_bytes(b'history')
         original = target.stat()
-        result = delivery.archive_outputs([Path('report.txt')], [])
+        result = delivery.archive_delivery([Path('report.txt')], [])
         self.assertEqual(result['archive_status'], 'failed')
         self.assertEqual(result['files'][0]['error_code'], 'archive_conflict')
         self.assertEqual(target.read_bytes(), b'history')
@@ -47,40 +47,19 @@ class ArchiveCollisionTests(unittest.TestCase):
         self.assertEqual(Path('report.txt').read_bytes(), b'new report')
         self.assertEqual({p.name for p in Path('.').iterdir()}, {'report.txt', 'output'})
 
-    def test_docx_archive_cli_requires_explicit_replacement(self):
+    def test_archive_cli_refuses_replacement(self):
         Path('report.txt').write_bytes(b'new report')
         target = Path('output/test/report.txt')
         target.parent.mkdir(parents=True)
         target.write_bytes(b'history')
-        command = [sys.executable, '-I', '-S', '-B', str((Path(__file__).parents[1] / 'archive_deliverables.py')),
-                   'report.txt']
+        command = [sys.executable, '-I', '-S', '-B', str(Path(__file__).parents[1] / 'archive_delivery.py'), 'report.txt']
         refused = subprocess.run(command, text=True, capture_output=True, check=False)
-        # DOCX standalone archival keeps its historical exit contract; inspect JSON.
-        self.assertEqual(refused.returncode, 0)
+        self.assertEqual(refused.returncode, 1)
         self.assertEqual(json.loads(refused.stdout)['files'][0]['error_code'], 'archive_conflict')
-        self.assertIn('archive-warning:', refused.stderr)
+        rejected = subprocess.run(command + ['--replace-existing'], text=True, capture_output=True, check=False)
+        self.assertEqual(rejected.returncode, 2)
         self.assertEqual(target.read_bytes(), b'history')
-        updated = subprocess.run(command + ['--replace-existing'], text=True, capture_output=True, check=False)
-        self.assertEqual(updated.returncode, 0)
-        self.assertEqual(json.loads(updated.stdout)['archive_status'], 'copied')
-        self.assertEqual(updated.stderr, '')
-        self.assertEqual(target.read_bytes(), b'new report')
-
-    def test_explicit_replacement_preserves_permissions_and_input_protection(self):
-        Path('report.txt').write_bytes(b'new report')
-        target = Path('output/test/report.txt')
-        target.parent.mkdir(parents=True)
-        target.write_bytes(b'history')
-        target.chmod(0o640)
-        result = delivery.archive_outputs([Path('report.txt')], [], replace_existing=True)
-        self.assertEqual(result['archive_status'], 'copied')
-        self.assertEqual(target.read_bytes(), b'new report')
-        self.assertEqual(target.stat().st_mode & 0o777, 0o640)
-        result = delivery.archive_outputs([Path('report.txt')], [target], replace_existing=True)
-        self.assertEqual(result['archive_status'], 'failed')
-        for value in ('true', 1, None):
-            self.assertEqual(delivery.archive_outputs([Path('report.txt')], [],
-                replace_existing=value)['archive_status'], 'failed')
+        self.assertRaises(TypeError, delivery.archive_delivery, [Path('report.txt')], [], replace_existing=True)
 
     def test_target_appearing_at_publication_is_not_replaced(self):
         Path('report.txt').write_bytes(b'new report')
@@ -89,7 +68,7 @@ class ArchiveCollisionTests(unittest.TestCase):
             Path(target).write_bytes(b'other task')
             return real_link(source, target, **kwargs)
         with patch.object(artifact_files.os, 'link', side_effect=competing_link):
-            result = delivery.archive_outputs([Path('report.txt')], [])
+            result = delivery.archive_delivery([Path('report.txt')], [])
         self.assertEqual(result['files'][0]['error_code'], 'archive_conflict')
         self.assertEqual(Path('output/test/report.txt').read_bytes(), b'other task')
         self.assertFalse(list(Path('.').glob('.docx-*.tmp')))
@@ -98,9 +77,9 @@ class ArchiveCollisionTests(unittest.TestCase):
         Path('report.txt').write_bytes(b'A' * 4096)
         sources = [Path('report.txt'), Path('report.txt')]
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-            results = list(pool.map(lambda source: delivery.archive_outputs([source], []), sources))
-        self.assertEqual(sorted(r['archive_status'] for r in results), ['copied', 'failed'])
-        winner = next(i for i, r in enumerate(results) if r['archive_status'] == 'copied')
+            results = list(pool.map(lambda source: delivery.archive_delivery([source], []), sources))
+        self.assertEqual(sorted(r['archive_status'] for r in results), ['success', 'success'])
+        winner = next(i for i, r in enumerate(results) if r['archive_status'] == 'success')
         self.assertEqual(Path('output/test/report.txt').read_bytes(), sources[winner].read_bytes())
         self.assertFalse(list(Path('.').glob('.docx-*.tmp')))
 
@@ -108,7 +87,7 @@ class ArchiveCollisionTests(unittest.TestCase):
         Path('report.txt').write_bytes(b'new report')
         with patch.object(artifact_files.os, 'link', side_effect=OSError('hard links unavailable')), \
                 patch.object(artifact_files.os, 'replace', side_effect=AssertionError('unsafe fallback')):
-            result = delivery.archive_outputs([Path('report.txt')], [])
+            result = delivery.archive_delivery([Path('report.txt')], [])
         self.assertEqual(result['archive_status'], 'failed')
         self.assertFalse(Path('output/test/report.txt').exists())
         self.assertFalse(list(Path('.').glob('.docx-*.tmp')))
@@ -116,7 +95,7 @@ class ArchiveCollisionTests(unittest.TestCase):
     def test_successful_publication_with_unlink_failure_reports_residual(self):
         Path('report.txt').write_bytes(b'new report')
         with patch.object(artifact_files.os, 'unlink', side_effect=PermissionError('cleanup denied')):
-            result = delivery.archive_outputs([Path('report.txt')], [])
+            result = delivery.archive_delivery([Path('report.txt')], [])
         self.assertEqual(result['archive_status'], 'failed')
         self.assertEqual(Path('output/test/report.txt').read_bytes(), b'new report')
         self.assertEqual(len(result['temporary_residuals']), 1)
@@ -152,7 +131,7 @@ class ArchiveCollisionTests(unittest.TestCase):
         self.assertEqual(second['output'], '报告_第3版.docx')
         self.assertEqual(Path('output/test/报告.docx').read_bytes(), b'historical archive')
         for result in (first, second):
-            self.assertEqual(result['archive_status'], 'copied')
+            self.assertEqual(result['archive_status'], 'success')
             self.assertTrue(result['cleanup']['manifest_removed'])
             self.assertEqual(Path(result['output']).read_bytes(), Path('output/test', result['output']).read_bytes())
         self.assertEqual({p.name for p in Path('.').iterdir()},
