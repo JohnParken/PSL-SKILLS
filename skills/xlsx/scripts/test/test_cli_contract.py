@@ -27,6 +27,27 @@ class ContractTests(unittest.TestCase):
         for operation in capabilities()['operations']:
             self.assertIn(operation, doc)
 
+    def test_publish_is_pending_until_explicit_delivery_and_missing_id_is_retryable(self):
+        session = Session()
+        created = session.execute('create', {'spec': {'sheets': [
+            {'name': 'Data', 'cells': {'A1': {'value': 'final'}}}]}})
+        with TaskDirectory(), patch.dict(os.environ, {}, clear=False):
+            os.environ.pop('ROUTER_CONFIG_VARIABLES', None)
+            published = session.execute('publish', {'handle': created['handle'], 'output': 'final.xlsx'})
+            self.assertTrue(published['delivery_required'])
+            self.assertFalse(published['archive_attempted'])
+            self.assertFalse(Path('output').exists())
+            before = Path('final.xlsx').read_bytes()
+            failed = session.execute('delivery', {'output': 'final.xlsx', 'protected_inputs': []})
+            self.assertEqual(failed['delivery']['archive_status'], 'failed')
+            for question in ('current', 'current', 'latest'):
+                os.environ['ROUTER_CONFIG_VARIABLES'] = json.dumps({'commonParam': [
+                    {'name': 'questionId', 'value': question}]})
+                delivered = session.execute('delivery', {'output': 'final.xlsx', 'protected_inputs': []})
+                self.assertEqual(delivered['delivery']['archive_status'], 'success')
+            self.assertEqual(Path('final.xlsx').read_bytes(), before)
+            self.assertEqual(Path('output/latest/final.xlsx').read_bytes(), before)
+
     def test_address_many_reuses_scalar_validation_and_order(self):
         session = Session()
         refs = ['B2', 'a1', 'XFD1048576', 'B2']

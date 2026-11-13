@@ -188,6 +188,7 @@ class Session:
             book.save(output)
             require(core.Workbook.load(output).parts == book.parts, 'Written package does not match validated package')
             return {'output_written': True, 'verification': 'written_package_passed',
+                    'output': str(output), 'delivery_required': True, 'archive_attempted': False,
                     'sha256': hashlib.sha256(output.read_bytes()).hexdigest()}
         if operation == 'delivery':
             output = validate_delivery_output(p['output'])

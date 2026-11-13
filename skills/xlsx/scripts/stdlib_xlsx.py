@@ -252,6 +252,9 @@ class Workbook:
         if appearance is not None:
             from xlsx_appearance import apply_appearance
             book.appearance_report = apply_appearance(book, appearance, spec)
+        else:
+            from xlsx_default_layout import apply_default_layout
+            apply_default_layout(book, spec)
         return book
 
     def _index(self):

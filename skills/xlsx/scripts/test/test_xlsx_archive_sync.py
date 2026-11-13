@@ -14,7 +14,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from _artifact_runtime import archive_deliverables as archive
+from _artifact_runtime import archive_delivery as archive
 from xlsx_delivery import finish_delivery
 
 
@@ -34,9 +34,9 @@ class ArchiveSyncTests(unittest.TestCase):
         self.directory.cleanup()
 
     def test_success_preserves_old_fields_and_adds_verified_notice(self):
-        result = archive.archive_outputs([Path('report.csv')], [])
+        result = archive.archive_delivery([Path('report.csv')], [])
         self.assertEqual(result['status'], 'completed')
-        self.assertEqual(result['archive_status'], 'copied')
+        self.assertEqual(result['archive_status'], 'success')
         self.assertEqual(result['archive_message'], '归档完成')
         self.assertTrue(result['files'][0]['archive_verified'])
         self.assertEqual(Path('report.csv').read_bytes(), Path('output/test/report.csv').read_bytes())
@@ -59,7 +59,8 @@ class ArchiveSyncTests(unittest.TestCase):
                 self.assertEqual(result['sentinel'], 42)
                 delivery = result['delivery']
                 self.assertEqual(delivery['archive_status'], 'failed')
-                self.assertEqual(delivery['files'][0]['error_code'], 'archive_copy_or_verification_failed')
+                self.assertEqual(delivery['files'][0]['error_code'],
+                                 'archive_conflict' if kind == 'archive' else 'archive_copy_or_verification_failed')
                 self.assertNotIn('archive_verified', delivery['files'][0])
                 self.assertEqual(Path(name).read_bytes(), b'changed' if kind == 'source' else b'original')
 
@@ -67,14 +68,14 @@ class ArchiveSyncTests(unittest.TestCase):
         for code, expected in [(errno.EXDEV, 'archive_cross_device'), (errno.EACCES, 'archive_permission_denied'),
                                (errno.EPERM, 'archive_permission_denied'), (errno.ENOSPC, 'archive_storage_full')]:
             with self.subTest(code=code), patch.object(archive, '_copy_main_to_archive', side_effect=OSError(code, 'injected')):
-                result = archive.archive_outputs([Path('report.csv')], [])
+                result = archive.archive_delivery([Path('report.csv')], [])
                 self.assertEqual(result['files'][0]['error_code'], expected)
                 self.assertEqual(result['archive_status'], 'failed')
                 self.assertNotIn('archive_verified', result['files'][0])
                 self.assertEqual(Path('report.csv').read_bytes(), b'original')
 
     def test_wrapper_exception_and_skip_keep_business_result_and_notice(self):
-        with patch('xlsx_delivery.archive_outputs', side_effect=RuntimeError('injected')):
+        with patch('xlsx_delivery.archive_delivery', side_effect=RuntimeError('injected')):
             result = finish_delivery({'status': 'success'}, 'report.csv')
         self.assertEqual(result['status'], 'success')
         self.assertEqual(result['delivery']['archive_status'], 'failed')
@@ -82,7 +83,7 @@ class ArchiveSyncTests(unittest.TestCase):
         self.assertIn('archive_user_notice', result['delivery'])
         with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': 'invalid'}):
             result = finish_delivery({'status': 'success'}, 'report.csv')
-        self.assertEqual(result['delivery']['archive_status'], 'skipped')
+        self.assertEqual(result['delivery']['archive_status'], 'failed')
         self.assertNotIn('archive_verified', result['delivery']['files'][0])
 
     def test_readonly_standalone_install_needs_no_neighbor_skill(self):

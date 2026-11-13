@@ -39,8 +39,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" impor
 ```
 
 The appearance file is separate from the unchanged sheet/cell JSON schema. Sheet names
-must match exactly; only listed sheets receive the preset. Without --appearance, existing
-creation behavior remains. `Workbook.create(spec, appearance=config)` is the Python API.
+must match exactly; only listed sheets receive the preset. Without --appearance, creation uses conservative defaults: thin bottom borders on populated cells, a pale-blue first row only when it contains at least two nonempty text values and no formulas, bounded estimated widths and wrapping/estimated heights for long or multiline text. Explicit cell styles remain untouched. Estimates can clip exceptionally long content and depend on viewer fonts. `Workbook.create(spec, appearance=config)` is the Python API.
 Editing/loading existing files never applies presets; the helper rejects loaded workbooks.
 CSV export cannot retain colors and has no appearance option.
 

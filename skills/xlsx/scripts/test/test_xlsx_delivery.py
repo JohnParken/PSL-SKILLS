@@ -48,7 +48,7 @@ class DeliveryTests(unittest.TestCase):
         return run_task({'script': 'stdlib_xlsx.py', 'arguments': ['create', '@spec', filename], 'output': filename, 'configs': {'spec': SPEC if spec is None else spec}})
 
     def assert_archived(self, result, filename):
-        self.assertEqual(result['delivery']['archive_status'], 'copied')
+        self.assertEqual(result['delivery']['archive_status'], 'success')
         self.assertEqual(result['delivery']['archive_message'], '归档完成')
         self.assertTrue(result['delivery']['files'][0]['archive_verified'])
         self.assertIn('云空间', result['delivery']['archive_user_notice'])
@@ -204,12 +204,13 @@ class DeliveryTests(unittest.TestCase):
         self.assertTrue(result['cleanup']['manifest_removed'])
         self.assertEqual(target.read_bytes(), b'previous archive')
         Path('report.xlsx').write_bytes(b'authorized update')
-        code, conflict = self.cli('xlsx_lifecycle.py', 'archive', 'report.xlsx')
+        code, conflict = self.cli('archive_delivery.py', 'report.xlsx')
         self.assertEqual(code, 1)
         self.assertEqual(conflict['files'][0]['error_code'], 'archive_conflict')
-        code, updated = self.cli('xlsx_lifecycle.py', 'archive', 'report.xlsx', '--replace-existing')
-        self.assertEqual((code, updated['archive_status']), (0, 'copied'))
-        self.assertEqual(target.read_bytes(), b'authorized update')
+        rejected = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS/'archive_delivery.py'),
+                                   'report.xlsx', '--replace-existing'], capture_output=True, text=True)
+        self.assertEqual(rejected.returncode, 2)
+        self.assertEqual(target.read_bytes(), b'previous archive')
 
     def test_archive_failure_keeps_primary_and_removes_helpers(self):
         Path('output').write_text('blocked', encoding='utf-8')
@@ -226,7 +227,7 @@ class DeliveryTests(unittest.TestCase):
         os.environ.pop('ROUTER_CONFIG_VARIABLES')
         code, result = self.task()
         self.assertEqual(code, 0)
-        self.assertEqual(result['delivery']['archive_status'], 'skipped')
+        self.assertEqual(result['delivery']['archive_status'], 'failed')
         self.assertTrue(result['cleanup']['cleanup_complete'])
         self.assertIsNone(result['manifest'])
         self.assertFalse(list(Path('.').glob('xlsx-task-*')))

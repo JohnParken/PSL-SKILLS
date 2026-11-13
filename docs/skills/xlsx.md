@@ -1,6 +1,6 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261112.1921.3400`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261113.2302.5108`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -15,7 +15,7 @@ Python 模块拆分及文件行数规则见 [行数规范与重构记录](../pyt
 | 任务 | 当前能力 | 重要边界 |
 | --- | --- | --- |
 | 读取 | XLSX/XLSM 完整读取；概况、选表、选区及分页；CSV/TSV 完整读取 | 分页只限制输出，仍完整解析原生工作簿；保存的公式缓存未经验证 |
-| 新建 | 根据 sheet/cell JSON 与随包最小模板创建 XLSX；可选新表外观；可选 `--values-only` | 静态值模式须全部公式计算成功；不保证 Excel 视觉或计算等价 |
+| 新建 | 根据 sheet/cell JSON 与随包最小模板创建 XLSX；默认底边线、条件淡蓝表头及有限宽高估算；可选显式新表外观；可选 `--values-only` | 静态值模式须全部公式计算成功；不保证 Excel 视觉或计算等价 |
 | 编辑与计算 | 指定单元格的值、公式、已有样式索引；另存新 XLSX/XLSM | 不支持任意行列/工作表结构编辑；输入不覆盖；值编辑也会触发全簿公式计算 |
 | 分析 | 类型/空值/重复检查，过滤、分组、精确求和、均值；明确多级表头及类型键 | 隐藏和过滤行默认仍参与；合计行、单位、期间及业务口径需显式确定 |
 | CSV/TSV 交换 | 导入为新 XLSX，按指定范围导出原始标量 | 导入默认保留文本，数值列需显式选择；导出不应用数字格式或日期显示 |
@@ -63,6 +63,7 @@ flowchart TD
 | [xlsx_read_view.py](../../skills/xlsx/scripts/xlsx_read_view.py) | 有界读取投影、输入指纹与分页游标；不是另一个流式解析器 |
 | [xlsx_wps_result.py](../../skills/xlsx/scripts/xlsx_wps_result.py) | 验证完整提取 JSON 的 schema、预算、类型、覆盖诊断，恢复 Decimal；不接受预览代替源数据 |
 | [xlsx_tabular.py](../../skills/xlsx/scripts/xlsx_tabular.py) | `import/export`；默认文本导入与安全文本导出，显式数值列/缓存政策 |
+| [xlsx_default_layout.py](../../skills/xlsx/scripts/xlsx_default_layout.py) | 新表有内容单元格的保守默认排版；显式样式优先，宽高为估算 |
 | [xlsx_appearance.py](../../skills/xlsx/scripts/xlsx_appearance.py) | 仅新表可选的可读外观及格式，不作为既有文件任意重排能力 |
 | [run_xlsx_task.py](../../skills/xlsx/scripts/run_xlsx_task.py) | 白名单写文件 CLI；stdin 规格、具名配置、冲突版本名、子进程结果与本轮中间文件收尾 |
 | [xlsx_delivery.py](../../skills/xlsx/scripts/xlsx_delivery.py)、[xlsx_lifecycle.py](../../skills/xlsx/scripts/xlsx_lifecycle.py) | 路径检查、追加 `delivery`；显式归档/登记/封存/清理入口 |
@@ -132,7 +133,7 @@ flowchart TD
 | argparse 参数错误 / 退出 `2` | stderr usage，不是 `incomplete` JSON，不能按部分成功交付 |
 | runner `cleanup_incomplete` | 收尾未完成；业务成功时可退出 `3`，原业务非零退出码保留；不能据主文件成功忽略残留 |
 | 协议 `call` 退出 `0/1` | 正常请求按 `ok` 返回；输出编码失败时可能仍退出 `0` 但实际响应为 `ok=false/OutputLimit`，必须核对实际响应；`serve` 正常 EOF 退出 `0` 不代表之前每次请求成功 |
-| `delivery.archive_status` | 汇总为 `copied/skipped/failed`，逐文件 `delivery.files[].archive_status` 还可为 `already_archived`；独立于业务，配置缺失/无效为 skipped，真实复制冲突为 failed |
+| `delivery.archive_status` | 汇总为 `success/partial/failed/not_required`，逐文件 `delivery.files[].archive_status` 还可为 `already_archived`；独立于业务，配置缺失/无效为 failed，真实复制冲突为 failed |
 
 关键拒绝/保护规则：
 
@@ -185,3 +186,7 @@ flowchart TD
 当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。
 
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+### 最终交付入口边界
+
+公开协议的 `publish` 只负责保存与回读，返回 `delivery_required=true`、`archive_attempted=false` 和实际 `output`，不是交付完成；调用方必须在整批最终文件均验收后调用 `delivery` 并逐项核对结果。低层 `Workbook.save()` 同样不归档。多步内部文件不在生成时归档；一旦明确成为用户最终交付，就必须进入显式清单收尾，不得以发布成功、进程退出 0 或协议 ok=true 代替归档成功。归档失败只重试归档，保留主文件。普通用户任务继续优先用自动收尾 runner/正式写入 CLI。

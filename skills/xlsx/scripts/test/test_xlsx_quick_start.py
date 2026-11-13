@@ -92,7 +92,7 @@ class QuickStartTests(unittest.TestCase):
         self.assertEqual(result['issues'], [])
         self.assertTrue(result['output_written'])
         self.assertEqual(result['task_status'], 'completed')
-        self.assertEqual(result['delivery']['archive_status'], 'skipped')
+        self.assertEqual(result['delivery']['archive_status'], 'failed')
         self.assert_clean(result)
         read = self.command('xlsx_cli.py', 'run', 'read', result['output'])
         self.assertEqual(read.returncode, 0, read.stderr)
@@ -116,7 +116,7 @@ class QuickStartTests(unittest.TestCase):
         self.assertIn('_第2版', second['output'])
         self.assertEqual((self.cwd / first['output']).read_bytes(), original)
         for result in (first, second):
-            self.assertEqual(result['delivery']['archive_status'], 'copied')
+            self.assertEqual(result['delivery']['archive_status'], 'success')
             self.assertTrue(result['delivery']['files'][0]['archive_verified'])
             self.assertEqual((self.cwd / 'output' / 'quick' / Path(result['output']).name).read_bytes(), (self.cwd / result['output']).read_bytes())
             self.assert_clean(result)

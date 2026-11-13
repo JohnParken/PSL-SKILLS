@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261112.1921.3400"
+version: "20261113.2302.5108"
 description: 读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，适合区域统计、分组汇总、表间核对与公式子集计算。保留原件并报告缓存和未计算项；不做任意结构编辑或直接处理 XLS/XLSB、ET；多源填入既有模板交给 table-workflow。
 license: MIT
 ---
@@ -39,6 +39,8 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run check
 原生 XLSX/XLSM（包括 WPS 软件保存的文件）及 CSV/TSV 使用本技能；`.wps` 交给 wps，`.et/.ett` 交给 et，原生入口拒绝专有格式和伪装 CFB，不自动转换。多个来源按业务口径填入既有模板时用 table-workflow；简单建表、已知单元格修改或单表分析不增加该流程。每个 Skill 完整目录独立分发，不依赖相邻 Skill。
 
 ## 简单静态创建：仅本入口
+
+新建工作簿默认对有内容且未显式指定样式的单元格添加浅色底边线；首行至少两个非空文本且无公式时视为表头并使用淡蓝色。按文本估算列宽，长文本和多行内容换行并估算行高（均有上限）；极长内容仍可能需要手动调整。显式单元格样式优先，显式外观配置使用其自身规则。已有工作簿编辑不应用默认样式；布局受查看器和字体影响。
 
 仅适用于已知内容的小型静态值表，无公式、计算口径、既有文件编辑或复杂外观。可只读本入口完成，不预读下方参考。先确定表名、单元格和值，不编造数据；编号和日期用明确文本，需精确金额/舍入、公式或外观时改走任务路由。
 
@@ -108,6 +110,8 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read 
 
 业务、归档、清理分别核对：`task_status=completed` 且 `cleanup.cleanup_complete=true`、`manifest=null` 表示 runner 登记项清理完成，不证明目录无其他残留。退出3或 `cleanup_incomplete` 报收尾未完成；业务失败/部分计算清理成功可为 `failed_cleaned`，仍保留原失败/退出2。`child_execution` 未启动/超时/信号或 `output_may_exist` 状态不明时先核对原任务，不能盲目重跑。
 
-归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。核对非空完整清单，汇总 copied 且全部项 copied/already_archived 才是全部成功；保留 archive_message，按实际结果展示 archive_user_notice。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。详细话术见 `<skill-root>/references/delivery-lifecycle.md#归档用户话术`。
+归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。核对非空完整清单，汇总 success 且全部项 copied/already_archived 才是全部成功；保留 archive_message，按实际结果展示 archive_user_notice。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。详细话术见 `<skill-root>/references/delivery-lifecycle.md#归档用户话术`。
 
 全部本轮中间文件（脚本、配置、回读结果、日志、暂存、锁、回执、清单）均须收尾；自建额外文件先读生命周期并在创建前登记，不能补认领历史文件。成功或失败均待生产进程退出即清理本轮可安全删除项，不因重试保留；重新生成从原始输入建立新任务。用户原件、主文件、历史交付物和其他任务文件受保护。归属不明、占用、身份变化、强杀残留或删除失败时保留并报告 cleanup_incomplete，只按原清单恢复，不扫描删除未知文件。不重复调用已由 runner 处理的归档/清理。
+
+公开协议的 `publish` 只负责保存与回读，返回 `delivery_required=true`、`archive_attempted=false` 和实际 `output`，不是交付完成；调用方必须在整批最终文件均验收后调用 `delivery` 并逐项核对结果。低层 `Workbook.save()` 同样不归档。多步内部文件不在生成时归档；一旦明确成为用户最终交付，就必须进入显式清单收尾，不得以发布成功、进程退出 0 或协议 ok=true 代替归档成功。归档失败只重试归档，保留主文件。普通用户任务继续优先用自动收尾 runner/正式写入 CLI。

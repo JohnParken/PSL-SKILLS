@@ -46,7 +46,7 @@ capabilities输出普通JSON（接口版本、skill、operations、限制），�
 | patch | handle,spec | 内存修改并返回新公开快照，不写源文件 |
 | calculate | handle | calculation及view；必须判断calculated_subset、issues和retained_not_refreshed |
 | verify | original,candidate,writes:{(sheet,ref):expected} | 核验目标值、非目标单元格/样式/公式及未改ZIP成员；通过返回true |
-| publish | handle,output | 独占新裸文件名，固定任务根目录；保存后回读ZIP成员一致，返回output_written/verification/sha256 |
+| publish | handle,output | 独占新裸文件名，固定任务根目录；保存后回读ZIP成员一致，返回output_written/verification/sha256、output、delivery_required=true、archive_attempted=false |
 | delivery | output,protected_inputs:list | 对已验收最终文件复用原归档，返回delivery，不重算或删除调用方文件 |
 
 ## 仅元数据与批量类型值
@@ -86,3 +86,5 @@ UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型�
 ## 维护验证
 
 从已确认仓库根目录运行对应 仓库维护路径 `skills/xlsx/scripts/test/` 的 unittest discover；实际命令中将占位符替换为真实根路径。测试不属于普通业务必读材料，不预读全部测试或本文件。独立复制Skill目录后验证只读安装、无相邻模块及空外部程序PATH；跨表仍显式依赖已确认的XLSX/ET能力入口，不承诺单独复制跨表目录即可获得依赖。真实样本、合成测试、平台和宿主验收分别报告。
+
+`delivery_required=true` 表示发布后仍需完成最终交付收尾，不是归档状态。调用方保存明确的最终清单，整批验收后调用 delivery；失败保留文件仅重试 delivery，不重跑 publish。协议 ok=true 仅表示本次能力调用成功。

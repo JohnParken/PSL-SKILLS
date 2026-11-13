@@ -10,7 +10,7 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, finalize_failed_cleanup, _unique_object, _normalize_protected_path
-from _artifact_runtime.archive_deliverables import validate_output_path, validate_delivery_output, choose_delivery_output
+from _artifact_runtime.archive_delivery import validate_output_path, validate_delivery_output, choose_delivery_output
 
 SCRIPTS = {'stdlib_xlsx.py', 'xlsx_tabular.py', 'xlsx_result_export.py', 'xlsx_management.py',
            'xlsx_dashboard.py', 'xlsx_deposits.py', 'xlsx_deposit_structure.py',

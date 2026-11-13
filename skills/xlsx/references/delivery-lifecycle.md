@@ -4,13 +4,21 @@
 
 最终回复先遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检` 中的归档展示边界：完整或精简机器回执均不整段转贴；`archive_output` 和 `files[].archive_output` 不能作为下载地址。正文、链接文字与链接目标均不得带出归档路径、目录或任务 ID；异常仅概括实际影响，主文件链接只使用宿主确认的真实主文件引用。
 
+## 统一归档契约
+
+归档只使用本轮宿主环境提供的最新 questionId；缺失或无效返回 failed 并保留已验收主文件，不猜测、不复用历史回执中的 ID。宿主必须保证配置新鲜，脚本只能校验本次值是否合法，不能证明宿主未传旧值。归档清单仅列已验收的最终交付物，不包含中间文件。禁止覆盖既存归档；同一任务同名且内容、身份核验一致时返回 already_archived，异内容返回 archive_conflict。重试只重试归档，不重新生成主文件。归档目录及子目录禁止临时文件；暂存只在任务根目录。
+
+批次 archive_status 为 success、partial、failed、not_required，单项为 copied、already_archived、failed。success 必须具有非空完整清单且全部条目核验成功；partial 表示部分成功，不能套用全量成功提示。not_required 仅用于明确无交付归档需求，不用于缺失配置或失败。统一归档 CLI 退出码为 0（成功或明确无需）、3（部分）、1（失败）、2（参数错误）；业务入口自身退出码仍按其契约解释。
+
+发布后才进行最终摘要复核；本次不改变发布前校验架构。若复核失败，目标副本可能已存在，必须报告失败，不承诺云端从未观察到该副本。多文件不是整批事务。
+
 ## 目录
 
 - 自动归档覆盖 (`<skill-root>/references/delivery-lifecycle.md#自动归档覆盖`)
 - 归档用户话术 (`<skill-root>/references/delivery-lifecycle.md#归档用户话术`)
 - 受控配置与标准任务 (`<skill-root>/references/delivery-lifecycle.md#受控配置与标准任务`)
 - 状态和恢复 (`<skill-root>/references/delivery-lifecycle.md#状态和恢复`)
-- 单独归档与授权更新 (`<skill-root>/references/delivery-lifecycle.md#单独归档与授权更新`)
+- 单独归档与授权更新 (`<skill-root>/references/delivery-lifecycle.md#单独归档与安全重试`)
 - 自定义中间文件 (`<skill-root>/references/delivery-lifecycle.md#自定义中间文件`)
 - 独立包与平台 (`<skill-root>/references/delivery-lifecycle.md#独立包与平台`)
 - 子进程证据与保留材料 (`<skill-root>/references/delivery-lifecycle.md#子进程证据与保留材料`)
@@ -28,18 +36,18 @@
 
 纯read/check/profile、无--xlsx的分析、stdout结果不自动落盘或建立清单。低层`Workbook.save`和各export函数保持原API，不自动归档；集成方可在最终验收后显式调用 `xlsx_delivery.finish_delivery(result, output, protected_inputs)`。legacy脚本未接入，不作为回退。读取stdout后由宿主另存的JSON报告也未被CLI自动追踪，需用公共技能按显式清单归档。
 
-归档读取ROUTER_CONFIG_VARIABLES的commonParam/questionId，配置缺失/无效则skipped。按实际主文件basename复制，默认原子独占发布；同名文件保留，返回archive_status=failed及files项error_code=archive_conflict。全部输入/配置须保护，CLI自动传入其输入、query、spec、appearance及daily等文件。发布使用任务根目录临时副本和独占硬链接，完成后删除临时链接；能力不可用或跨文件系统时报告失败，不回退覆盖。主文件不移动、不回滚；多文件不保证整批事务。
+归档读取ROUTER_CONFIG_VARIABLES的commonParam/questionId，配置缺失/无效则failed。按实际主文件basename复制，默认原子独占发布；同名文件保留，返回archive_status=failed及files项error_code=archive_conflict。全部输入/配置须保护，CLI自动传入其输入、query、spec、appearance及daily等文件。发布使用任务根目录临时副本和独占硬链接，完成后删除临时链接；能力不可用或跨文件系统时报告失败，不回退覆盖。主文件不移动、不回滚；多文件不保证整批事务。
 
-`delivery.archive_status`、files、warnings和archive_message属于内部机器契约。copied表示复制后已核对源与目标SHA256；新复制成功的files项带archive_verified=true。already_archived表示主路径就是归档路径，不新增复制验证标记。skipped/failed需如实提示，不回滚主产物，不因归档失败重跑生成。用户成功和失败提示统一按下方归档用户话术映射，不转贴机器文案和内部路径。`DOCX_DEBUG_ROUTER_CONFIG` 默认关闭，显式设为1也只输出是否配置及已脱敏标记，不输出原始值；勿回显环境配置猜路径。
+`delivery.archive_status`、files、warnings和archive_message属于内部机器契约。copied表示复制后已核对源与目标SHA256；新复制成功的files项带archive_verified=true。already_archived表示同一归档任务已有同名副本且本轮内容与身份核验通过，同样须有archive_verified=true。partial/failed需如实提示，不回滚主产物，不因归档失败重跑生成。用户成功和失败提示统一按下方归档用户话术映射，不转贴机器文案和内部路径。`DOCX_DEBUG_ROUTER_CONFIG` 默认关闭，显式设为1也只输出是否配置及已脱敏标记，不输出原始值；勿回显环境配置猜路径。
 
 ## 归档用户话术
 
 用户已明确后续宿主上传机制，归档成功即提示去云空间查看，无需等待映射确认；不宣称已验证上传完成或展示时效。保留机器 `archive_message`，用户展示 `archive_user_notice`，按以下完整结果核对：
 
-- 非空完整清单所有项 copied/already_archived 且汇总 copied：“🎉 文件归档成功，请到云空间查看。 ☁️✨”。
-- 汇总 failed 且同时有成功与未成功项：“部分文件归档成功，请到云空间查看已归档文件；其余文件归档未完成。”。failed 但条目全成功可能是复核失效，不称部分成功。
+- 非空完整清单所有项 copied/already_archived 且汇总 success：“🎉 文件归档成功，请到云空间查看。 ☁️✨”。
+- 汇总 partial 且同时有成功与未成功项：“部分文件归档成功，请到云空间查看已归档文件；其余文件归档未完成。”。failed 但条目全成功可能是复核失效，不称部分成功。
 - 归档失败：“🥺 本次归档未完成，请先核对文件结果。 📄”。
-- skipped、未尝试或无有效配置：“本次未执行归档，请先核对文件结果。”，不据此断言外部云状态。
+- not_required（明确无需归档）：“本次未执行归档，请先核对文件结果。”，不据此断言外部云状态。
 - 待交接：“文件待交接归档，归档完成后再提示到云空间查看。”。
 - 未知或缺少可靠结果：“归档结果尚未确认，请先核对文件结果。”。空清单不得成功；入口拒绝或汇总 failed 按失败报告，只有状态无法确认时使用未知提示。
 
@@ -66,11 +74,12 @@ runner创建前plan其专属平铺JSON和清单；写入使用独占、不跟随
 - 业务失败、部分计算、异常及120秒子进程超时均清理配置和清单；保留原退出码和业务状态，清理成功返回failed_cleaned，清理失败返回cleanup_incomplete。已写出的输出保持原状态，不冒称完整成功。
 - manifest是恢复回执，不是最终业务交付物。本轮全部成功后按单链接与精确指纹删除本次清单，manifest返回null且manifest_removed=true；删除失败保留清单并报告cleanup_incomplete。尚保留的封存清单可按原manifest重复clean；planned或retry状态先核实文件和本轮归属，按明确结果seal后再clean，不能盲目重跑任务或认领历史文件。仅原指纹未变才能安全重入；强杀、异常和变化项保守保留。
 
-公共清理是可信单控制者模式，不是恶意并发写者沙箱，也没有DOCX的完整持久重试事务。runner不提供自动retry/resume生成命令；需修正任务时保留证据、选择新主文件名，不在原有主文件上静默重跑。归档failed或skipped时照常清理配置与清单；主文件、归档和清理状态独立。实际清理异常返回cleanup_incomplete；业务成功时退出3，业务失败或部分计算保留原非零退出码。归档报告temporary_residuals时，即使没有临时配置或业务结果不完整，也不得报告清理完成；须处理确切残留后核实收尾。历史清单不自动认领或退休。
+公共清理是可信单控制者模式，不是恶意并发写者沙箱，也没有DOCX的完整持久重试事务。runner不提供自动retry/resume生成命令；需修正任务时保留证据、选择新主文件名，不在原有主文件上静默重跑。归档failed或partial时照常清理配置与清单；主文件、归档和清理状态独立。实际清理异常返回cleanup_incomplete；业务成功时退出3，业务失败或部分计算保留原非零退出码。归档报告temporary_residuals时，即使没有临时配置或业务结果不完整，也不得报告清理完成；须处理确切残留后核实收尾。历史清单不自动认领或退休。
 
-## 单独归档与授权更新
+## 单独归档与安全重试
 
-已验收主文件可用`"<skill-root>/scripts/xlsx_lifecycle.py" archive 报告.xlsx --protect-input 原件.xlsx`单独归档；退出0/3/1分别表示copied/skipped/failed，冲突为failed，不影响主文件。只有用户明确授权覆盖此次列出的归档时才增加`--replace-existing`；API为受追踪模块的`archive_outputs(outputs, protected_inputs, replace_existing=True)`。自动runner不启用该选项，文档正文及环境配置不能授权覆盖。主文件无需重新生成。
+已验收主文件使用 `"<skill-root>/scripts/archive_delivery.py" 报告.xlsx --protect-input 原件.xlsx`，保持任务工作目录不变，核对完整回执，不重新生成文件。
+
 
 ## 自定义中间文件
 
@@ -83,11 +92,11 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_lifecycle.py\" pla
 完成实际业务验收、取得归档结果并等待worker退出后，seal/clean：
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_lifecycle.py\" seal task.cleanup.json --outcome success --verified --archive-status copied")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_lifecycle.py\" seal task.cleanup.json --outcome success --verified --archive-status success")
 execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_lifecycle.py\" clean task.cleanup.json")
 ```
 
-copied须换成实际归档结果。失败使用outcome failed后clean，不用retry/retain保留中间文件。禁止按.py/.json扩展名扫描、补登既存文件、删除输入或最终产物；指纹变化、符号/硬链接、非空目录等按公共核心保守处理。未验证清理结果不能声称已清理。
+success须换成实际归档结果。失败使用outcome failed后clean，不用retry/retain保留中间文件。禁止按.py/.json扩展名扫描、补登既存文件、删除输入或最终产物；指纹变化、符号/硬链接、非空目录等按公共核心保守处理。未验证清理结果不能声称已清理。
 
 ## 独立包与平台
 
@@ -99,11 +108,10 @@ XLSX原有标准库限制保留；项目维护工具是否使用标准库是独�
 
 runner新增`child_execution`，记录调用ID、exited/signaled/timeout/not_started、真实退出码或null、信号及两个输出通道的原字符数。合法JSON继续作为结构化业务结果返回；原始stdout不重复转贴。任意stderr和无效JSON可能包含配置、路径或业务数据，均不回显正文，明确标记omitted及原因；这不是完整原始日志，也不把空通道与省略混淆。参数解析失败返回child_argument_error；非JSON、超时及未启动分别报告，不伪造业务成功或正常退出码。超时、强杀后的主文件可能存在，先检查原任务。
 
-归档failed/skipped不再保留配置和清单，也不返回旧的review_archive_then_seal_original_manifest。已验收主文件可单独重试归档，不重跑计算。业务失败或部分计算也立即清理中间材料，通用clean最后删除清单；已写出输出不因清理被删除。已sealed且非retry的清单仅可clean，成功删除后不再重复调用。
+归档failed/partial不再保留配置和清单，也不返回旧的review_archive_then_seal_original_manifest。已验收主文件可单独重试归档，不重跑计算。业务失败或部分计算也立即清理中间材料，通用clean最后删除清单；已写出输出不因清理被删除。已sealed且非retry的清单仅可clean，成功删除后不再重复调用。
 
 `cleanup_complete`只针对登记项；公共clean返回`cleanup_scope=registered_entries_only`。内部原子暂存正常返回或可捕获异常时自行清理；强杀可能保留未登记暂存，不扫描删除、不承诺目录零残留。无configs分支没有清单，仍检查业务、归档及child_execution。
 
-归档默认保留同名旧文件；冲突返回archive_status=failed及对应files项的error_code=archive_conflict，主文件仍可交付，临时项照常清理。自动生成/编辑不会授权覆盖归档。只有用户明确授权更新所列归档时，才单独调用归档入口并显式传入--replace-existing（API为replace_existing=True），列全保护输入；该选项不绕过路径、链接、输入和其他交付物保护。不要为解决归档冲突删除旧文件或重跑生成。并发任务仍使用独立任务目录；显式更新不保证对抗同权限恶意并发写者。
 
 任务结束时必须清理本轮全部中间文件，包括脚本、配置、回读结果、日志、暂存、锁、回执和清单；仅将当前与历史交付物作为任务生成的留存文件。用户原件与其他任务文件仍受保护，不属于可删除中间文件。创建前完整登记，普通内部暂存由创建函数收尾；若删除失败、归属不明或强杀留下未确认残留，报告收尾未完成，不声称只剩交付物，也不扫描删除未知文件。生成或编辑失败同样立即清理本轮临时文件和清单，不因可能重试而保留；需要重试时从原始输入重新创建独占任务。删除受阻、锁仍被占用或归属无法确认时报告cleanup_incomplete，处理阻碍后继续清理，不能宣称已完成。
 
