@@ -1,0 +1,772 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
+  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。 2026-11-09 环境说明调整：人工复核31例选择期望及57个计划读取路径，业务描述、触发边界与按需参考不变；将任务目录、自检前移并保留各技能真实依赖，更新入口哈希。此为人工预期与静态测量，不代表模型选路或宿主 usage 实测。 2026-11-09 已逐项复核31条人工期望：本轮澄清路径映射、清理及输入输出边界，不改变技能选择范围；保留全部期望。刷新仅表示源码绑定，不代表真实模型选路或宿主使用量测量。 2026-11-09 逐项复核31例：仅移除 DOCX 不可执行的路径映射确认要求并更新版本，description及选择边界未变；原期望保留。本次为人工期望检查，不是模型选路实测。 本轮人工复核31项期望及计划读取范围：调整结果判读与大结果续读，不改变业务description或技能选择边界；原期望保留，未测真实模型选路与宿主usage。 2026-11-10 复核31例：本轮用户文件顶层查找及 execute 示例调整不改变业务 description 和技能选择边界，保留原有人工期望；更新指纹不是模型选路或宿主 usage 实测。 2026-11-10 WPS 交付提示调整：description 与适用边界不变，人工期望保留；指纹与静态加载记录更新不代表模型选路或宿主 usage 实测。 2026-11-10 WPS RTF/OOXML 读取恢复和可见性调整：description 与现有正负选路边界不变，人工期望保留；指纹及静态加载快照更新不是模型选路或宿主 usage 实测。 2026-11-10 优先项4/5/1：逐项复核既有31例并新增10例自然任务及易混淆边界；7项description遵循实际能力，ET/XLSX按需分流，PPTX公式读取保留限制。原快照逐字保存在*_before_review_451_20261110.json；41项均为人工期望，不是模型/宿主选路实测。 2026-11-10 OFD 写入暂停：保留读取选路并新增写入不可用边界；人工期望不代表模型实测。 2026-11-11 人工复核 ET 有界恢复和银行月报分析的选择边界，新增月报文字分析期望；更新指纹与静态加载快照不代表模型选路或宿主使用量实测。 2026-11-11 人工复核现有选择期望：宿主结果引用读取规则与 ET 既有可见性变更不改变各 Skill 的 description 或选路范围，保留用例；刷新指纹不是模型选路实测。 2026-11-11 OFD Skill 读取优先规则调整，不改变业务 description 或人工选择边界；更新指纹不代表模型选路或宿主读取实测。 2026-11-11 OFD 默认文本重构：人工复核7项相关读取/结构/混合/OCR/渲染/写入边界，原期望不变；新增普通文字读取期望。仅刷新 OFD 指纹，不代表模型触发实测。原 OFD 静态证据保存在 docs/maintenance/ofd/default-content-prior-evidence-20261111.json。 2026-11-12 OFD模板恢复：人工复核8个涉及OFD的选择场景，读取/结构显式请求及禁止写入、渲染、OCR边界不变；刷新OFD指纹与读取计划，不代表真实模型选择或host usage测量。 2026-11-12 ET规范修复：人工复核6项涉及ET的选择场景，保存值读取/统计、只读、不重算及原生XLSX分工不变；仅刷新ET指纹和受影响读取计划，不代表真实模型选路或host usage测量。 2026-11-12 ET Mixin计数器初始化契约修复：仅版本变化，人工复核ET选择边界不变；指纹刷新不代表模型实测。 2026-11-12 新增纯指导document-navigation：逐项复核原45例，原有能力期望保持；增加10例定位/已就绪/查看/混合/缺映射/歧义/不支持格式及纯文本边界。仅新增导航指纹，旧快照逐字保存在docs/maintenance/document-navigation/selection-before-20261112.json。本记录是人工期望，不是DeepAgents模型触发实测。 2026-11-12 按用户建议将导航触发扩为文档处理意图，不要求格式已知或上下文缺失；人工逐项复核55例，37个既有文档操作场景加入导航，更新3个导航边界并新增9例无格式自然请求及关键词反例，共64例。旧55例逐字保存在docs/maintenance/document-navigation/selection-before-intent-trigger-20261112.json；仅刷新导航指纹，不代表真实模型选路测量。 2026-11-12 分批提交前逐项复核64例，保留所有提示、选择期望与理由；归档展示和当前ET说明未改变既定任务选择边界，仅同步11个入口哈希。前版完整保存在skill_selection_current_cases_before_batch_commit_20261112.json。",
+  "entry_sha256": {
+    "artifact-lifecycle": "1e7406614cb420727d6d7ff0f53a7b037747c3b5a1dc9469294d01d3150c7286",
+    "bank-writing": "64dda5f5cc26582d387b5e2bd961bac558fbd568606212433b2aa977b504c88f",
+    "document-navigation": "33cd1d5fb56ee520b85e81222c26da680049c560fadf2875f7187751847ba2d9",
+    "docx": "53d836710b6229577f4fbfeebcc51b780dd71c68318354bcb98debc036e07d14",
+    "et": "8ab120eedfe3eeaa9953c45d3891d231ac1514350de0ba1ddb9b19b669ee25e7",
+    "ofd": "ac60bdd2ba1fd28927a83fa0392063e86446c3c7824db616508976f8fb9611f6",
+    "pptx": "050d4e8a5ea5f2a0a622c09209e5a3efb128605d4dba2f496e850a4d1e138e5f",
+    "skill-development-standards": "7f2d3b15a0101183aaf9c12e6b7c692865fd04149e66fa7b6f47e98693e0be39",
+    "table-workflow": "a9f349d7f4351441a013bda1d94269053830fa3fbc094fdcd457b9f7dd120c0d",
+    "wps": "eaa2e6c279d0dbf879bece3a43e2797f44572123c628e07cf7465af335ea75a6",
+    "xlsx": "f86ea63b7a7dccbd69cf79d9db49dbf59e6ecdd4a4180a63dadcc6a383e76f29"
+  },
+  "cases": [
+    {
+      "id": "artifact-lifecycle-positive",
+      "kind": "positive",
+      "prompt": "将本轮已验收文件归档并清理已登记临时项",
+      "expected_include": [
+        "artifact-lifecycle"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "artifact-lifecycle-negative",
+      "kind": "negative",
+      "prompt": "递归删除历史下载文件",
+      "expected_include": [],
+      "expected_exclude": [
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "bank-writing-positive",
+      "kind": "positive",
+      "prompt": "根据这些经营数据起草银行汇报，只要文字",
+      "expected_include": [
+        "document-navigation",
+        "bank-writing"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "bank-writing-negative",
+      "kind": "negative",
+      "prompt": "创建带公式的工作簿",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "bank-writing"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "docx-positive",
+      "kind": "positive",
+      "prompt": "生成含标题和表格的DOCX报告",
+      "expected_include": [
+        "document-navigation",
+        "docx"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "docx-negative",
+      "kind": "negative",
+      "prompt": "将旧DOC无损转换为DOCX",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "docx"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "et-positive",
+      "kind": "positive",
+      "prompt": "读取ET保存值并按部门汇总",
+      "expected_include": [
+        "document-navigation",
+        "et"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "et-negative",
+      "kind": "negative",
+      "prompt": "修改ET中的公式并写回",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "et"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "ofd-positive",
+      "kind": "positive",
+      "prompt": "读取OFD文字和结构",
+      "expected_include": [
+        "document-navigation",
+        "ofd"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "ofd-negative",
+      "kind": "negative",
+      "prompt": "对扫描图片做OCR并签章",
+      "expected_include": [],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "pptx-positive",
+      "kind": "positive",
+      "prompt": "将已有内容和受限SVG制作成可编辑PPTX",
+      "expected_include": [
+        "document-navigation",
+        "pptx"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "pptx-negative",
+      "kind": "negative",
+      "prompt": "无损编辑任意现有演示文稿",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "pptx"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "skill-development-standards-positive",
+      "kind": "positive",
+      "prompt": "修改本项目Skill参考并检查规范",
+      "expected_include": [
+        "skill-development-standards"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。"
+    },
+    {
+      "id": "skill-development-standards-negative",
+      "kind": "negative",
+      "prompt": "仅使用现有Skill生成报告，不维护Skill",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "skill-development-standards"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "table-workflow-positive",
+      "kind": "positive",
+      "prompt": "从多份XLSX和ET按键汇总填入既有XLSX模板副本",
+      "expected_include": [
+        "document-navigation",
+        "table-workflow"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "table-workflow-negative",
+      "kind": "negative",
+      "prompt": "只读取单个ET文件",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "wps-positive",
+      "kind": "positive",
+      "prompt": "读取WPS文字并生成RTF内容的WPS副本",
+      "expected_include": [
+        "document-navigation",
+        "wps"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "wps-negative",
+      "kind": "negative",
+      "prompt": "读取ET表格并统计",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "xlsx-positive",
+      "kind": "positive",
+      "prompt": "创建XLSX并计算支持的公式",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "xlsx-negative",
+      "kind": "negative",
+      "prompt": "读取XLSB或执行宏",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "xlsx"
+      ],
+      "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "mixed-bank-docx",
+      "kind": "mixed",
+      "prompt": "根据银行经营材料起草汇报，并生成DOCX文件",
+      "expected_include": [
+        "document-navigation",
+        "bank-writing",
+        "docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "起草与文件生成分别负责。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "mixed-et-xlsx",
+      "kind": "mixed",
+      "prompt": "读取ET数据并创建XLSX结果表",
+      "expected_include": [
+        "document-navigation",
+        "et",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "ET只读，XLSX承担结果创建。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "wps-app-native-xlsx",
+      "kind": "boundary",
+      "prompt": "读取由WPS软件保存的原生.xlsx工作簿",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "wps",
+        "et"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。按实际文件格式而非软件品牌选择。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "native-docx-reading",
+      "kind": "boundary",
+      "prompt": "读取原生.docx文档正文和表格",
+      "expected_include": [
+        "document-navigation",
+        "docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。常规原生DOCX读取使用docx。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "legacy-doc-reading",
+      "kind": "boundary",
+      "prompt": "兼容读取旧版二进制.doc文件中支持的文字内容",
+      "expected_include": [
+        "document-navigation",
+        "wps"
+      ],
+      "expected_exclude": [
+        "docx"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。旧DOC有限兼容读取，不能承诺无损转换。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "bank-short-polish",
+      "kind": "boundary",
+      "prompt": "润色这句银行汇报文字，只返回一句话不要文件",
+      "expected_include": [
+        "bank-writing"
+      ],
+      "expected_exclude": [
+        "docx",
+        "wps",
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。短句润色可用银行写作，不扩大到文件交付。"
+    },
+    {
+      "id": "wps-existing-receipt",
+      "kind": "boundary",
+      "prompt": "WPS runner已经完成自动归档清理，请核对已有回执",
+      "expected_include": [
+        "wps"
+      ],
+      "expected_exclude": [
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。核对原runner已有状态，不重复归档或登记清理。"
+    },
+    {
+      "id": "table-existing-receipt",
+      "kind": "boundary",
+      "prompt": "table-workflow已自动归档清理，请核对已有回执",
+      "expected_include": [
+        "table-workflow"
+      ],
+      "expected_exclude": [
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。核对原流程已有状态，不二次调用公共生命周期。"
+    },
+    {
+      "id": "single-xlsx-analysis",
+      "kind": "boundary",
+      "prompt": "只统计一个XLSX表明确区域的总额，结果直接回复",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。简单单表分析不引入跨表填报。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "single-et-analysis",
+      "kind": "boundary",
+      "prompt": "只统计一个ET表明确区域的保存值，结果直接回复",
+      "expected_include": [
+        "document-navigation",
+        "et"
+      ],
+      "expected_exclude": [
+        "table-workflow",
+        "wps"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。基础ET分析不引入跨表流程或WPS文字。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "mixed-ofd-pptx-read",
+      "kind": "mixed",
+      "prompt": "分别读取OFD文字与PPTX指定页内容，不生成文件",
+      "expected_include": [
+        "document-navigation",
+        "ofd",
+        "pptx"
+      ],
+      "expected_exclude": [
+        "docx",
+        "xlsx",
+        "artifact-lifecycle"
+      ],
+      "rationale": "人工能力边界期望，非模型实测。混合读取只选必要入口，不隐含生成归档。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "pptx-prose-create",
+      "kind": "boundary",
+      "prompt": "把这段已确认的工作总结做成可编辑的PPTX汇报",
+      "expected_include": [
+        "document-navigation",
+        "pptx"
+      ],
+      "expected_exclude": [],
+      "rationale": "已有文字材料即可启动创建；受限SVG是内部实现输入，不要求用户先提供。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "pptx-math-read-limit",
+      "kind": "boundary",
+      "prompt": "提取这份PPTX的文字和备注，公式无法准确读取的地方请指出",
+      "expected_include": [
+        "document-navigation",
+        "pptx"
+      ],
+      "expected_exclude": [],
+      "rationale": "可读取存储文字，但必须保留数学结构未保留诊断，不把拼接文字当准确公式。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "ofd-page-preview",
+      "kind": "boundary",
+      "prompt": "请将已有OFD每一页渲染成图片供我预览",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "当前没有页面渲染或预览能力；OFD 写入也暂不可用。人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "ofd-no-format-request",
+      "kind": "boundary",
+      "prompt": "请根据这些材料生成一份正式文档",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "OFD 写入暂不可用，不自动选择该格式；其他文档格式需按任务确认。人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "table-no-template-reconciliation",
+      "kind": "boundary",
+      "prompt": "核对两张XLSX表中同一客户编号的余额差异，直接回复，不填模板",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "xlsx表间核对任务；workflow的plan/apply必须已有目标模板。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "table-period-new-result",
+      "kind": "boundary",
+      "prompt": "比较两个期间的XLSX数据并新建一张结果表，我没有模板",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "table-workflow"
+      ],
+      "rationale": "期间比较和新建结果属于xlsx对应能力，不强行构造workflow目标模板。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "wps-app-native-docx",
+      "kind": "boundary",
+      "prompt": "读取WPS软件保存的.docx文件中的正文和表格",
+      "expected_include": [
+        "document-navigation",
+        "docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "按实际原生格式选择，不能只凭WPS产品名选择wps技能。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "bank-style-text",
+      "kind": "boundary",
+      "prompt": "先概括这份银行讲话稿，再仿照它的风格改写我的材料，只给文字",
+      "expected_include": [
+        "document-navigation",
+        "bank-writing"
+      ],
+      "expected_exclude": [
+        "docx",
+        "wps",
+        "artifact-lifecycle"
+      ],
+      "rationale": "摘要和仿写已在参考中支持，纯文本任务不扩大到文件生成或归档。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "xlsx-native-basic-profile",
+      "kind": "boundary",
+      "prompt": "检查这张XLSX表指定区域的空值、重复值和金额合计",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "et",
+        "table-workflow"
+      ],
+      "rationale": "原生基础区域分析只读所需统计契约，不预读ET交接或模板填报。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "xlsx-existing-et-json",
+      "kind": "boundary",
+      "prompt": "对已有ET原始提取JSON按明确范围汇总，保留来源的partial与缓存提示",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "消费现成受支持原始JSON需同时读ET来源契约和区域统计；不将投影当工作簿。 人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "ofd-writing-unavailable",
+      "kind": "boundary",
+      "prompt": "请创建一个新的OFD文件",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "当前 OFD skill 不提供写入服务；不可选路承诺创建或调用生成器。人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "ofd-edit-unavailable",
+      "kind": "boundary",
+      "prompt": "请修改这个OFD文件的正文",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "ofd"
+      ],
+      "rationale": "当前不提供 OFD 编辑；不应选路调用写入实现。人工期望，不是模型选路实测。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "bank-monthly-analysis",
+      "kind": "positive",
+      "prompt": "依据已给出的银行月报数字分析本月增长贡献与拖累，直接回复文字",
+      "expected_include": [
+        "bank-writing"
+      ],
+      "expected_exclude": [],
+      "rationale": "给定数据的银行月报分析适用 bank-writing；人工期望不代表模型实测。"
+    },
+    {
+      "id": "ofd-default-text-read",
+      "kind": "positive",
+      "prompt": "请读取这个OFD的标题、正文和页码，不要底层结构",
+      "expected_include": [
+        "document-navigation",
+        "ofd"
+      ],
+      "expected_exclude": [],
+      "rationale": "人工期望：默认页文本输出；仍保留缺口与分页信息，不是模型触发测量。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "navigation-upload-unknown",
+      "kind": "positive",
+      "prompt": "请读一下刚上传的文档；当前还不知道附件映射、任务目录和该加载哪个技能。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "先核对宿主证据和顶层候选；未定位格式前不预读全部技能。"
+    },
+    {
+      "id": "navigation-already-ready",
+      "kind": "negative",
+      "prompt": "同一任务已完整加载document-navigation和docx，输入合同.docx已定位且自检通过，上下文未变，请继续。",
+      "expected_include": [
+        "docx"
+      ],
+      "expected_exclude": [
+        "document-navigation"
+      ],
+      "rationale": "导航已完整加载且信息未变，直接复用，不重新读取；格式流程不反向依赖导航。"
+    },
+    {
+      "id": "navigation-view-ppt",
+      "kind": "positive",
+      "prompt": "我想看这个PPT；对话提到成品，但当前没有可用文件引用或确切文件名。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "先定位已有交付物；有真实预览则查看，否则按所需能力读取，不默认重建。"
+    },
+    {
+      "id": "navigation-mixed-unknown",
+      "kind": "mixed",
+      "prompt": "将本轮上传的ET数据用于新建DOCX报告，附件映射和工作目录尚未明确。",
+      "expected_include": [
+        "document-navigation",
+        "et",
+        "docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "先核对来源与目录；只加载读取与已授权目标所需技能，不写回ET。"
+    },
+    {
+      "id": "navigation-preview-ready",
+      "kind": "positive",
+      "prompt": "宿主已给出这份PPT的真实打开链接，我只想点开看，不需提取或修改；当前尚未加载导航。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "pptx"
+      ],
+      "rationale": "查看文档意图即可匹配导航；已有真实引用直接展示，不再查目录或解析文件。"
+    },
+    {
+      "id": "navigation-no-input-create",
+      "kind": "positive",
+      "prompt": "任务目录和xlsx入口已经确认，请用下面的数字新建XLSX表，不需要附件。",
+      "expected_include": [
+        "document-navigation",
+        "xlsx"
+      ],
+      "expected_exclude": [],
+      "rationale": "明确格式和任务目录仍可匹配导航；复用已有信息，新建无来源附件时不搜索输入。"
+    },
+    {
+      "id": "navigation-unknown-root",
+      "kind": "boundary",
+      "prompt": "只知道文件工具列出的根是/，请在不知道执行器任务目录的情况下读取上传的报告。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "工具根不是任务目录证据；可检查已定位入口，缺映射时停止依赖执行。"
+    },
+    {
+      "id": "navigation-top-level-ambiguous",
+      "kind": "boundary",
+      "prompt": "处理这个文档；宿主确认任务目录，但顶层有两份同类候选且没有附件映射。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "按当前请求消歧，不能按最新时间或扩展名擅自选择。"
+    },
+    {
+      "id": "navigation-unsupported-format",
+      "kind": "boundary",
+      "prompt": "请用导航确认这个PDF可由哪个技能读取；宿主列表只有本项目现有技能。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [
+        "docx",
+        "wps",
+        "ofd",
+        "pptx"
+      ],
+      "rationale": "导航可说明缺少PDF能力，不把相似格式当成可用解析器。"
+    },
+    {
+      "id": "navigation-text-only",
+      "kind": "negative",
+      "prompt": "只润色下面这句银行材料，不涉及任何附件或文件。",
+      "expected_include": [
+        "bank-writing"
+      ],
+      "expected_exclude": [
+        "document-navigation"
+      ],
+      "rationale": "纯文本且无需附件定位，不触发文档任务导航。"
+    },
+    {
+      "id": "navigation-generic-view",
+      "kind": "positive",
+      "prompt": "帮我看看这个文档。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "文档查看意图已充分，不要求格式、后缀或名称。"
+    },
+    {
+      "id": "navigation-generic-file",
+      "kind": "positive",
+      "prompt": "请处理一下我上传的文件。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "先加载导航核对具体处理目标与本轮附件，不先要求后缀。"
+    },
+    {
+      "id": "navigation-generic-organize",
+      "kind": "positive",
+      "prompt": "帮我整理一下附件。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "未指定格式的整理意图先进入导航；不授权擅自改名、移动或转换。"
+    },
+    {
+      "id": "navigation-generic-edit",
+      "kind": "positive",
+      "prompt": "把这份文档里需要改的地方调整好。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "先匹配导航，再核对具体修改范围与提供方支持。"
+    },
+    {
+      "id": "navigation-generic-create",
+      "kind": "positive",
+      "prompt": "生成一份报告。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "无需已有附件或指定格式，先明确目标和所需能力，不强选格式。"
+    },
+    {
+      "id": "navigation-generic-table",
+      "kind": "positive",
+      "prompt": "分析一下这个表格。",
+      "expected_include": [
+        "document-navigation"
+      ],
+      "expected_exclude": [],
+      "rationale": "表格处理意图即可匹配，确认输入后再选格式工具。"
+    },
+    {
+      "id": "navigation-known-format",
+      "kind": "positive",
+      "prompt": "读取报告.docx，目录和附件已由宿主确认。",
+      "expected_include": [
+        "document-navigation",
+        "docx"
+      ],
+      "expected_exclude": [],
+      "rationale": "触发不以格式未知或路径缺失为条件；复用已有证据。"
+    },
+    {
+      "id": "navigation-mention-only",
+      "kind": "negative",
+      "prompt": "文档处理这个词是什么意思？",
+      "expected_include": [],
+      "expected_exclude": [
+        "document-navigation"
+      ],
+      "rationale": "术语解释没有文档操作意图，不机械匹配关键词。"
+    },
+    {
+      "id": "navigation-code-file",
+      "kind": "negative",
+      "prompt": "请修复这个Python代码文件里的函数错误。",
+      "expected_include": [],
+      "expected_exclude": [
+        "document-navigation"
+      ],
+      "rationale": "代码维护不属于办公文档处理，不因文件字样误触发。"
+    }
+  ]
+}

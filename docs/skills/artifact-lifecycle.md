@@ -1,6 +1,6 @@
 # artifact-lifecycle：显式归档与受控清理
 
-> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261112.1921.3400`。本文描述固定基线的实际实现，不是清理任意目录的操作授权。
+> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261113.2302.5108`。本文描述固定基线的实际实现，不是清理任意目录的操作授权。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -20,7 +20,7 @@
 flowchart TD
     A["业务 Skill 或可信外层控制者"] --> B["lifecycle.py：公共 CLI"]
     B --> C["check：环境与独占读写探针"]
-    B --> D["archive_deliverables.py：显式产物归档"]
+    B --> D["archive_delivery.py：显式产物归档"]
     B --> E["cleanup_task.py：plan、seal、clean 分派"]
     E --> F["controlled_cleanup.py：清单与受控删除"]
     C --> F
@@ -37,8 +37,8 @@ flowchart TD
 
 | 模块 | 主要入口 | 实际职责 |
 | --- | --- | --- |
-| [lifecycle.py](../../skills/artifact-lifecycle/scripts/lifecycle.py) | `main`、`environment_check` | 统一 `check`、`archive`、`plan`、`seal`、`clean`；打印 JSON 并返回对应退出码 |
-| [archive_deliverables.py](../../skills/artifact-lifecycle/scripts/archive_deliverables.py) | `archive_outputs`、`finalize_delivery`、`choose_delivery_output` | 输入保护、显式归档列表、逐文件复制及 SHA-256 校验；归档失败不改写调用方业务成功状态 |
+| [lifecycle.py](../../skills/artifact-lifecycle/scripts/lifecycle.py) | `main`、`environment_check` | 提供 `check`、`plan`、`seal`、`clean`；归档使用独立 archive_delivery.py；打印 JSON 并返回对应退出码 |
+| [archive_delivery.py](../../skills/artifact-lifecycle/scripts/archive_delivery.py) | `archive_delivery`、`finalize_delivery`、`choose_delivery_output` | 输入保护、显式归档列表、逐文件复制及 SHA-256 校验；归档失败不改写调用方业务成功状态 |
 | 同上 | `archive_user_message`、`archive_user_notice` | 分别保留机器文案和不暴露内部路径的用户提示 |
 | [artifact_files.py](../../skills/artifact-lifecycle/scripts/artifact_files.py) | 内部路径检查、别名检查、原子复制原语 | 拒绝越界与符号链接，保护输入和其他交付物，默认独占发布归档 |
 | [router_config.py](../../skills/artifact-lifecycle/scripts/router_config.py) | `read_environment_parameter`、`get_common_parameter` | 读取原始环境值，严格解析参数；命名字符串值去掉两端空白，不负责文件路径策略 |
@@ -82,7 +82,7 @@ flowchart TD
 | --- | --- | --- |
 | `check` | 当前任务目录和平台能力 | 成功 JSON：`status=environment-ok`、`task_writable=true`、`check_kind=environment`、`artifact_validation=not_run`；退出 0。受控失败 JSON 为 `status=error`，退出 1 |
 | `plan MANIFEST` | 重复 `--file`、`--protect`、`--deliverable` | 新清单及临时项必须是任务根目录内的单一文件名；`--directory` 仍可解析但新登记会拒绝；成功为 `status=planned` |
-| `archive OUTPUT...` | 最终文件列表、重复 `--protect-input`、可选 `--replace-existing` | 退出 0 为 `copied`，3 为 `skipped`，1 为 `failed`；均须读取完整 JSON |
+| archive_delivery | archive_delivery(outputs, protected_inputs)、finalize_delivery、archive_user_message、archive_user_notice、choose_delivery_output |
 | `seal MANIFEST` | `--outcome`、可选 `--verified`、`--archive-status`、`--retain PATH REASON` | 成功为 `status=sealed`；成功结果要求非空交付物、验证声明和有效归档状态，但程序不验证业务声明真实性 |
 | `clean MANIFEST` | 原清单 | 最终核对和清理；查看 `cleanup_complete`、`manifest_removed`、`deleted`、`retained`、`failed`、`deliverables_unchanged` |
 
@@ -96,15 +96,15 @@ flowchart TD
 
 `ROUTER_CONFIG_VARIABLES` 支持含 `commonParam` 的对象或命名参数列表；`commonParam` 可为列表或其 JSON 字符串。`questionId` 经裁剪后须为非负整数或 1–128 位 ASCII 字母、数字、下划线、短横线字符串，并拒绝布尔、路径和保留设备名。重复 JSON 键、NaN、重复目标业务参数和错误结构拒绝。
 
-配置缺失或无效时，归档 `skipped`，主文件位置保持不变。有效配置把产物按 basename 平铺复制到任务目录内的 `output/{questionId}/`；这是实现路径，不是可直接交付用户的外部链接。默认关闭配置调试；显式启用时只输出配置是否存在和已脱敏的布尔字段，不记录参数原文。
+配置缺失或无效时，归档 `failed`，主文件位置保持不变。有效配置把产物按 basename 平铺复制到任务目录内的 `output/{questionId}/`；这是实现路径，不是可直接交付用户的外部链接。默认关闭配置调试；显式启用时只输出配置是否存在和已脱敏的布尔字段，不记录参数原文。
 
 ## 安全、partial 与失败边界
 
 ### 归档
 
-- 默认不覆盖同名归档；冲突项返回 `error_code=archive_conflict`，汇总 `archive_status=failed`，主文件和旧归档保留。仅明确授权覆盖所列文件后才传 `--replace-existing`，该选项不绕过输入保护。
+归档只使用本轮宿主环境提供的最新 questionId；缺失或无效返回 failed 并保留已验收主文件，不猜测、不复用历史回执中的 ID。宿主必须保证配置新鲜，脚本只能校验本次值是否合法，不能证明宿主未传旧值。归档清单仅列已验收的最终交付物，不包含中间文件。禁止覆盖既存归档；同一任务同名且内容、身份核验一致时返回 already_archived，异内容返回 archive_conflict。重试只重试归档，不重新生成主文件。归档目录及子目录禁止临时文件；暂存只在任务根目录。
 - 拒绝批内忽略大小写后的同名、目录组件符号链接、越界路径及指向输入/其他交付物的别名或硬链接。
-- 新副本先在任务根目录独占暂存，写入、flush/fsync 和设置权限后，以同文件系统硬链接独占发布；显式覆盖才用原子替换。硬链接或跨文件系统条件失败时不降级覆盖，也不换暂存目录。
+- 新副本先在任务根目录独占暂存，写入、flush/fsync 和设置权限后，以同文件系统硬链接独占发布；禁止覆盖既存文件。硬链接或跨文件系统条件失败时不降级覆盖，也不换暂存目录。
 - 每个新复制成功项在发布后核对来源和副本 SHA-256，返回 `archive_verified=true`。`already_archived` 是独立状态，不能据此推断完成了新复制或同样的重新校验。
 - 多文件不是整批事务，可能一些文件成功、另一些失败。必须检查 `files`，不能因汇总 `status=completed` 就认定归档成功。已经成功的副本不回滚。
 - 错误区分 `archive_cross_device`、`archive_permission_denied`、`archive_storage_full` 等；可能返回 `temporary_residuals`。归档失败不重跑业务生成来掩盖问题。
@@ -124,7 +124,7 @@ flowchart TD
 以下部署关系必须分开理解：
 
 1. **独立 artifact-lifecycle 包**：带齐同级运行时文件，通过本包 CLI 或明确 Python 接口使用；运行时不导入 DOCX 或仓库公共目录。缺失时报告能力不可用，不猜相邻安装路径。
-2. **DOCX 原有实现**：保留自己的 runner 和 CLI。公共包是显式提取的分发副本，五个文件要求逐字节一致；`archive_deliverables.py` 仅共享 `def main(argv=None)` 之前的部分，去掉 DOCX 专属 CLI 依赖。来源和哈希记录在 [upstream.json](../../skills/artifact-lifecycle/references/upstream.json)。
+2. **DOCX 原有实现**：保留自己的 runner 和 CLI。公共包是显式提取的分发副本，五个文件要求逐字节一致；`archive_delivery.py` 仅共享 `def main(argv=None)` 之前的部分，去掉 DOCX 专属 CLI 依赖。来源和哈希记录在 [upstream.json](../../skills/artifact-lifecycle/references/upstream.json)。
 3. **XLSX 自包含副本**：在其 `_artifact_runtime` 下携带六个模块；[lifecycle-upstream.json](../../skills/xlsx/references/lifecycle-upstream.json) 记录源哈希、安装哈希及添加 future annotations、改用包内相对导入的转换。这不是运行时调用独立 artifact-lifecycle 安装包，也不意味着副本与来源逐字节相同。
 4. **WPS 自包含副本**：在 `_wps_artifact_runtime` 下携带相同六个公共模块；其 [lifecycle-upstream.json](../../skills/wps/references/lifecycle-upstream.json) 同样记录来源、哈希和导入转换。WPS 的业务流程与收尾由自身入口负责，公共副本不是对相邻 Skill 安装目录的隐式依赖。
 
@@ -143,14 +143,16 @@ flowchart TD
 - [历史快照中的 artifact-lifecycle 目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/artifact-lifecycle)
 - [Skill 主入口](../../skills/artifact-lifecycle/SKILL.md)、[命令与失败恢复契约](../../skills/artifact-lifecycle/references/contract.md)
 - [复用与验证说明](../../skills/artifact-lifecycle/references/reuse.md)、[来源清单](../../skills/artifact-lifecycle/references/upstream.json)
-- [统一 CLI](../../skills/artifact-lifecycle/scripts/lifecycle.py)、[归档实现](../../skills/artifact-lifecycle/scripts/archive_deliverables.py)、[清理实现](../../skills/artifact-lifecycle/scripts/controlled_cleanup.py)
+- [统一 CLI](../../skills/artifact-lifecycle/scripts/lifecycle.py)、[归档实现](../../skills/artifact-lifecycle/scripts/archive_delivery.py)、[清理实现](../../skills/artifact-lifecycle/scripts/controlled_cleanup.py)
 
 ## 归档结果与用户提示
 
-仅汇总 `copied` 而清单缺失、为空或有异常项时，不能宣布全部成功；汇总 `failed` 即使明细看似全成功也不能改判部分成功。混合成功/失败明细才提示部分归档。`handoff_required`、`not_attempted`、`skipped` 和未知分别说明。
+仅汇总 `success` 而清单缺失、为空或有异常项时，不能宣布全部成功；汇总 `failed` 即使明细看似全成功也不能改判部分成功。混合成功/失败明细才提示部分归档。明确无需为 `not_required`；未知结果不能冒称成功。
 
-核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+核对汇总 `archive_status=success` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
 
 执行调用维护：业务脚本示例使用宿主的 `execute(command=...)`，执行前核对完整命令、stdin、路径及结果；这不改变 CLI 或协议，不代表真实宿主链路已经验收。
 
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+归档发布后再进行最终摘要与身份复核；若复核失败，已发布副本可能仍存在。本次不改变此时序，也不承诺后续云上传机制未观察到该副本。归档目录及子目录禁止任何临时校验文件；宿主云上传机制不由本技能控制。

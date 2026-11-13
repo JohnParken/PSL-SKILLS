@@ -6,7 +6,7 @@
     "references/reuse.md",
     "references/upstream.json",
     "requirements.txt",
-    "scripts/archive_deliverables.py",
+    "scripts/archive_delivery.py",
     "scripts/artifact_files.py",
     "scripts/cleanup_task.py",
     "scripts/controlled_cleanup.py",

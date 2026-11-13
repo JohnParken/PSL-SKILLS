@@ -12,7 +12,7 @@ MAX_ENTRIES = 2048
 MAX_MANIFEST_BYTES = 2 * 1024 * 1024
 MAX_FILE_BYTES = 128 * 1024 * 1024
 OUTCOMES = ("success", "failed", "stopped", "retry")
-ARCHIVE_STATUSES = ("copied", "already_archived", "skipped", "failed", "completed")
+ARCHIVE_STATUSES = ("success", "partial", "failed", "not_required")
 
 
 def _parts(value):

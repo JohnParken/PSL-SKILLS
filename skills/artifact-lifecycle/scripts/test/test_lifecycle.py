@@ -16,6 +16,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import lifecycle
+import archive_delivery
 import controlled_cleanup as cleanup
 from router_config import get_common_parameter, RouterConfigError
 
@@ -35,7 +36,7 @@ class LifecycleTests(unittest.TestCase):
 
     def call(self, *args):
         with contextlib.redirect_stdout(io.StringIO()) as output:
-            code = lifecycle.main(args)
+            code = archive_delivery.main(args[1:]) if args and args[0] == 'archive' else lifecycle.main(args)
         return code, json.loads(output.getvalue())
 
     def prepare(self):
@@ -57,7 +58,7 @@ class LifecycleTests(unittest.TestCase):
                 self.assertEqual(result['archive_status'], 'failed')
         code, result = self.call('archive', 'result.txt', '--protect-input', 'inputs/source.txt')
         self.assertEqual(code, 0)
-        self.assertEqual(result['archive_status'], 'copied')
+        self.assertEqual(result['archive_status'], 'success')
         self.assertEqual(Path('output/case/result.txt').read_text(), 'result')
         self.assertEqual(Path('inputs/source.txt').read_text(), 'source')
 
@@ -93,7 +94,7 @@ class LifecycleTests(unittest.TestCase):
             code, archived = self.call('archive', 'report.txt', '--protect-input', 'user.json')
             self.assertEqual(os.environ['ROUTER_CONFIG_VARIABLES'], raw)
         self.assertEqual(code, 0)
-        self.assertEqual(archived['archive_status'], 'copied')
+        self.assertEqual(archived['archive_status'], 'success')
         self.assertEqual(Path('output/case/report.txt').read_bytes(), Path('report.txt').read_bytes())
 
     def test_retry_preserves_then_success_cleans(self):
@@ -101,7 +102,7 @@ class LifecycleTests(unittest.TestCase):
         cleanup.seal_cleanup('manifest.json', outcome='retry')
         self.assertEqual(self.call('clean', 'manifest.json')[0], 3)
         self.assertTrue(Path('worker.py').exists())
-        cleanup.seal_cleanup('manifest.json', outcome='success', verified=True, archive_status='skipped')
+        cleanup.seal_cleanup('manifest.json', outcome='success', verified=True, archive_status='not_required')
         self.assertEqual(self.call('clean', 'manifest.json')[0], 0)
 
     def test_plan_protected_dot_components_and_overlap(self):
@@ -170,7 +171,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_changed_fingerprint_retained(self):
         self.prepare()
-        cleanup.seal_cleanup('manifest.json', outcome='success', verified=True, archive_status='skipped')
+        cleanup.seal_cleanup('manifest.json', outcome='success', verified=True, archive_status='not_required')
         Path('spec.json').write_text('changed')
         code, report = self.call('clean', 'manifest.json')
         self.assertNotEqual(code, 0)
@@ -190,7 +191,7 @@ class LifecycleTests(unittest.TestCase):
         for value in ('bad', ''):
             os.environ['ROUTER_CONFIG_VARIABLES'] = value
             code, result = self.call('archive', 'report.txt')
-            self.assertEqual((code, result['archive_status']), (3, 'skipped'))
+            self.assertEqual((code, result['archive_status']), (1, 'failed'))
             self.assertNotEqual(result['archive_message'], '归档完成')
         self.assertFalse(Path('output').exists())
 
@@ -202,10 +203,10 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(result['files'][0]['error_code'], 'archive_conflict')
         self.assertEqual(Path('output/case/report.txt').read_bytes(), b'first')
-        self.assertEqual(self.call('archive', 'report.txt', '--replace-existing',
-                                  '--protect-input', 'output/case/report.txt')[0], 1)
-        self.assertEqual(self.call('archive', 'report.txt', '--replace-existing')[0], 0)
-        self.assertEqual(Path('output/case/report.txt').read_bytes(), b'second')
+        with self.assertRaises(SystemExit) as rejected:
+            self.call('archive', 'report.txt', '--replace-existing')
+        self.assertEqual(rejected.exception.code, 2)
+        self.assertEqual(Path('output/case/report.txt').read_bytes(), b'first')
         self.assertFalse(list(Path('.').glob('.docx-*.tmp')))
 
     def test_archive_failure_preserves_primary_and_allows_truthful_cleanup(self):
@@ -224,7 +225,7 @@ class LifecycleTests(unittest.TestCase):
     def test_parent_path_and_unverified_seal_do_not_delete(self):
         self.assertEqual(self.call('plan', 'manifest.json', '--file', '../foreign')[0], 1)
         self.prepare()
-        self.assertEqual(self.call('seal', 'manifest.json', '--outcome', 'success', '--archive-status', 'copied')[0], 1)
+        self.assertEqual(self.call('seal', 'manifest.json', '--outcome', 'success', '--archive-status', 'success')[0], 1)
         self.assertTrue(Path('worker.py').exists())
 
     def test_missing_platform_capability_fails_without_deletion(self):
@@ -243,7 +244,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_changed_final_prevents_cleanup(self):
         self.prepare()
-        cleanup.seal_cleanup('manifest.json', outcome='success', verified=True, archive_status='skipped')
+        cleanup.seal_cleanup('manifest.json', outcome='success', verified=True, archive_status='not_required')
         Path('report.txt').write_text('changed final')
         code, result = self.call('clean', 'manifest.json')
         self.assertNotEqual(code, 0)
