@@ -5,7 +5,8 @@
 ## 文档导航与当前基线
 
 - [裸文件名输出契约与迁移](docs/output-filenames.md)：全 Skill 输出范围、接口版本与兼容边界。
-- [架构与功能文档](docs/README.md)：11 个独立 Skill 的模块、架构图、流程图和输入输出边界。
+- [架构与功能文档](docs/README.md)：12 个独立 Skill 的模块、架构图、流程图和输入输出边界。
+- [tl-docx](docs/skills/tl-docx.md) 提供独立的 `python-docx` 路线，优先覆盖复杂报告的存储内容，也支持创建和受控编辑副本。
 - [文档任务导航](docs/skills/document-navigation.md)：按通用文档处理意图选择，无需先说明格式或文件位置；帮助确认附件、任务目录和所需工具 Skill。自身按需加载，不保证最先加载；当前验证见 [触发范围更新](docs/maintenance/document-navigation/intent-trigger-20261112.md)。
 - 当前导读以 2026-11-12（UTC）的源码 `fb6cdff0161a137ebb0e64ebc64d09d11534d6d2` 加本轮工作区变更为基线，涵盖 ET 容错读取、文档导航与归档展示契约，Skill 版本以各自 `SKILL.md` 为准。[分批提交核验](docs/maintenance/commit-preparation/validation-20261112.md) 记录本轮实际检查；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
 - [历史文档核验](docs/skill-docs-validation-20261107.json) 与 [文档防漂移检查](tools/check_project_docs.py) 分别记录实际检查结果和可重复检查入口。
@@ -20,14 +21,15 @@
 | --- | --- | --- | --- |
 | [文档任务导航（document-navigation）](skills/document-navigation/SKILL.md) | 独立纯指导文档 | 20261112.1921.3400 | 查看、整理、修改、生成等文档处理请求即可匹配，无需预先知道格式；确认附件与目录、定位顶层候选并加载所需技能，不解析文件或配置宿主 |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261112.1921.3400 | 银行材料起草、改写、摘要、仿写与审校；月报解读、增长贡献/质量/机会分析，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261112.1921.3400 | DOCX 生成、DOCX/DOTX 读取与受控编辑；支持段落分页、左右/悬挂缩进、制表位及普通段落制表符，短诗等简短内容默认连续排版，回传已检出的静态排版风险提示，静态验收不代表视觉分页验证；标准入口自动检测同名并递增版本命名，管理临时文件并收尾；保留归档保护与复杂 JSON 输入；不生成 DOTX；WPS 文字使用 wps 技能，ET/ETT 使用 et 技能 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261112.1921.3400 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261112.1921.3400 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；受支持文字读取、内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261112.1921.3400 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值、公式缓存、行列尺寸、冻结窗格与当前单元格；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261112.1921.3400 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261112.1921.3400 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；数学结构丢失按页诊断；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
-| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261112.1921.3400 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
-| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261112.1921.3400 | 本轮临时文件登记、最终交付物清单归档（默认原子独占发布防同名覆盖，支持显式 `--replace-existing` 替换）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261113.2302.5108 | DOCX 生成、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
+| [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261113.2302.5108 | 基于 python-docx 读取原始 OOXML、修订和精细表头，导出报告；支持多级编号、复杂表格、分节页眉页脚、模板填充及线程批注。 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261113.2302.5108 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261113.2302.5108 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；读取文字、表格分组和合并、绘图、内嵌 PNG 及部分二进制图表缓存；内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261113.2302.5108 | 离线读取 .et/.ett 的 BIFF8/OOXML 保存值、公式缓存、行列尺寸、冻结窗格与当前单元格；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261113.2302.5108 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261113.2302.5108 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；数学结构丢失按页诊断；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
+| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261113.0623.0331 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261113.2302.5108 | 本轮临时文件登记、最终交付物清单归档（无覆盖、安全幂等重试）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261111.1531.2742 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构
@@ -62,7 +64,7 @@ PSL-SKILLS/
 
 ## 精简运行包与维护源码
 
-全 11 个 Skill 使用 [统一打包器](tools/package_skills.py) 与 [发布说明](docs/packaging.md)。排除测试、缓存、历史验收和维护工具；OFD 写入服务暂停并排除写入资源，运行脚本与静态资源按显式清单逐字节发布，新增未分类文件使构建失败。OFD 源码内置字体及许可保留供恢复；PPTX引擎数据、XLSX模板、生命周期副本来源信息必须保留。
+全 12 个 Skill 使用 [统一打包器](tools/package_skills.py) 与 [发布说明](docs/packaging.md)。排除测试、缓存、历史验收和维护工具；OFD 写入服务暂停并排除写入资源，运行脚本与静态资源按显式清单逐字节发布，新增未分类文件使构建失败。OFD 源码内置字体及许可保留供恢复；PPTX引擎数据、XLSX模板、生命周期副本来源信息必须保留。
 
 ```console
 python -I -S -B tools/package_skills.py
@@ -73,9 +75,12 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 
 ## 环境要求
 
+**TL 系列依赖政策：** 名称以 `tl-` 开头的 Skill 可按需使用第三方组件，不限于 Python 标准库。实际依赖、版本和部署条件须在各 Skill 的依赖清单、入口与自检中明确；允许使用不代表组件已安装或能力已实现。非 `tl-` Skill 继续遵守各自原有约束，独立运行、路径、归档清理和验收规则不变。维护要求见 [AGENTS.md](AGENTS.md#tl-系列-skill-的组件依赖)。
+
 - **document-navigation**：只有 `SKILL.md`；使用宿主已有的上下文、技能目录和读取/列目录能力，无脚本及 Python 依赖。所选格式 Skill 的执行条件另行自检。
 - **bank-writing**：主要面向云端 Linux 容器的对话式文本写作，开发可用 macOS、Windows 或 Linux；包内无脚本、第三方包或办公软件依赖。按任务读取参考，精确长度用宿主已有能力只读计数，不能核验时如实说明。
 - **docx**：Python 3.10 及以上标准库（包含 zlib，Expat >=2.6.0，需支持 POSIX 锁与文件描述符操作）；零第三方包依赖。
+- **tl-docx**：Python 3.10 及以上、`python-docx==1.2.0`（唯一直接依赖）及任务目录的安全文件操作。部署时提供该组件的上游依赖。
 - **xlsx**：Python 3.9 及以上；维护中的主流程与生命周期 runner 仅依赖标准库。
 - **wps**：Python 3.10 及以上，纯 Python 创建、读取、编辑与 RTF 导出仅用标准库；OOXML 读取另需 Expat >=2.6；二进制导出可选系统 LibreOffice。
 - **table-workflow**：Python >=3.12（维护基线3.12.11），仅标准库；单独安装完整 xlsx，含ET来源时再安装完整 et，通过实际读取主入口所得绝对根路径传参，不猜相邻位置。
@@ -84,7 +89,7 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 - **pptx**：Python >=3.10 标准库，含 zlib、Expat >=2.6.0 及 POSIX 描述符相对安全 I/O；Linux 为目标平台，Windows 不支持，不依赖外部程序。macOS 上已有维护回归不等于目标 Linux 当前版本验收。
 - **artifact-lifecycle**：Python 3.10 及以上标准库（需描述符相对安全文件操作及不跟随链接等能力）；零第三方包、零外部软件。实际操作前以自检结果为准。
 - **skill-development-standards**：Python 3.10 及以上标准库（需系统 IANA 时区支持以生成规范版本时间戳）；零第三方包依赖。
-- 办公格式处理与生命周期纯 Python 主流程无需安装第三方 Python 包；WPS 二进制导出可选使用系统 LibreOffice。脚本使用 `-I -S -B` 隔离运行环境并避免写入字节码缓存；纯文本写作不需要 Python。
+- 上述明确为标准库实现的主流程使用 `-I -S -B`；`tl-` 系列按自身声明加载第三方组件，例如 `tl-docx` 使用 `-I -B`，不加屏蔽 site-packages 的 `-S`。WPS 二进制导出可选使用系统 LibreOffice；纯文本写作不需要 Python。
 - XLSX 目录中保留的旧 legacy 工具可能依赖 pandas、openpyxl 或 LibreOffice，不属于推荐流程；不要据此为主流程安装依赖。
 
 ## 如何使用
@@ -129,7 +134,7 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" check
 ```
 
-小型已知值清单使用 [主入口简单静态创建](skills/xlsx/SKILL.md#简单静态创建仅本入口)，单入口包含 stdin 规格、回读、归档与清理，无需预读多个参考。含公式、既有文件修改或复杂外观时，再按主入口路由加载所需契约。以下是低层兼容命令示例，写文件交付优先使用 runner；先确认输入可读、输出目录可写：
+新建表默认对有内容且未显式设置样式的单元格添加底边线，对符合条件的首行使用淡蓝表头，并估算列宽与长文本换行及行高；显式外观配置优先，估算效果受查看器影响。小型已知值清单使用 [主入口简单静态创建](skills/xlsx/SKILL.md#简单静态创建仅本入口)，单入口包含 stdin 规格、回读、归档与清理，无需预读多个参考。含公式、既有文件修改或复杂外观时，再按主入口路由加载所需契约。以下是低层兼容命令示例，写文件交付优先使用 runner；先确认输入可读、输出目录可写：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" read ./input.xlsx
@@ -145,7 +150,7 @@ python3 -I -S -B "<skill-root>/scripts/stdlib_xlsx.py" edit ./input.xlsx ./patch
 
 修改已有 DOCX 的字体/字号按 [原文档格式编辑](skills/docx/references/structure-editing.md#已有文档字体修改) 使用 `run_docx_edit.py structure` 的 `format_run`，只传目标字段，保留原缩进、行距与样式继承。禁止提取文字或 compact 后重新 `create` 来冒充保格式编辑；表格内段落、页眉页脚、复杂范围等不支持的目标须明确报告并停止，不静默跳过或重建。低层 OOXML 候选必须经过 [受控格式核验与发布](skills/docx/references/ooxml-editing.md#字体修改与候选文件保护)，不能用基础结构或 `--original` 文本检查代替。回归覆盖与实际平台见 [DOCX 编辑保护](docs/skills/docx.md#已有文档字体修改与格式保留)。
 
-运行分发使用专用 [打包器](tools/package_docx_runtime.py) 和 [显式清单](packaging/runtime-manifests/docx.json)，默认输出新的 `dist/runtime/docx-runtime-<version>.zip`，不覆盖旧包。全部业务代码、标准库安全边界、自然分页、归档与清理保持不变；测试、维护历史/加载审计和兼容测试样本留在源码、不进入运行包。构建与独立验收方法见 [DOCX 运行包边界](docs/skills/docx.md#运行包与源码维护边界)。
+运行分发使用专用 [打包器](tools/package_docx_runtime.py) 和 [显式清单](packaging/runtime-manifests/docx.json)，默认输出新的 `dist/runtime/docx-runtime-<version>.zip`。运行包包含标准库业务代码、自然分页、归档与清理。测试、维护历史和兼容样本留在源码。构建与独立验收方法见 [DOCX 运行包边界](docs/skills/docx.md#运行包与源码维护边界)。
 
 调用前以宿主实际工具 schema 为准，将命令参数与 Python stdin 中的 JSON 区分；下方 shell 示例说明命令形态，不预设所有宿主均使用同一工具接口。历史维护记录中的终端命令仅供追溯。
 
@@ -169,13 +174,17 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 示例文件名须按实际任务替换：优先采用用户指定名称，否则按文档标题或主题命名，避免默认使用 `output.docx`；详见 [交付文件命名](skills/docx/references/generation-runtime.md#交付文件命名)。
 
-新建命令只接收输出文件名，不带 `./` 或目录。新建主文件固定生成到任务工作目录 `./`，生成及所要求的验证成功后，Python 从 `ROUTER_CONFIG_VARIABLES` 的 `commonParam` 取得有效 `questionId`，复制一份到 `./output/{questionId}/`。标准新建与编辑入口自动定点检测同名主文件及归档副本，自动递增版本命名（如“_第2版.docx”），以实际返回的 `output` 路径交付。归档默认原子独占发布，同名保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。字符串参数取值后自动 strip 两端空白，再进行原有校验；内部内容及非字符串类型保持。配置缺失或无效时跳过归档并记录固定原因码；归档失败保留主文件、主流程成功状态和退出码 0，仅通过 `archive_status=failed` 与 `warnings` 报告归档警告。JSON 的 `output` 指向主文件，`archive_output` 和 `archive_status` 说明副本路径和归档结果。宿主配置为外层参数列表：提取 `name="commonParam"` 项的 `value`，解析内层列表后提取 `questionId`；兼容原字典外层配置，内层支持列表或 JSON 编码列表；具体 ID、文件名规则及低层 API 边界见 [输出目录与文件名](skills/docx/references/generation-runtime.md#输出目录与文件名)。新建与五个编辑 CLI 均调用公开交付 API，再由同一个 `archive_outputs()` 自动归档。DOCX 所有新建临时文件直接平铺在宿主任务目录 `./`，不创建独立临时工作目录；生成辅助文件采用 `docx-task-<随机值>.*` 独占命名，包编辑和检查在内存处理。标准新建由 run_docx_task.py 包裹 `create_document_delivery()`，自定义交付或编辑使用对应 `*_delivery()`，接口见 [公开交付 API](skills/docx/references/delivery.md#公开交付-api)；底层 API 仅用于中间处理。归档处理必须执行，失败只警告；`--check` 不能代替归档。编辑和读取报告命令也只接收裸文件名；当轮其他最终交付物用显式清单归档，不扫描历史或临时文件，见 [统一归档](skills/docx/references/delivery.md)。
+归档只使用本轮宿主环境提供的最新 questionId；缺失或无效返回 failed 并保留已验收主文件，不猜测、不复用历史回执中的 ID。宿主必须保证配置新鲜，脚本只能校验本次值是否合法，不能证明宿主未传旧值。归档清单仅列已验收的最终交付物，不包含中间文件。禁止覆盖既存归档；同一任务同名且内容、身份核验一致时返回 already_archived，异内容返回 archive_conflict。重试只重试归档，不重新生成主文件。归档目录及子目录禁止临时文件；暂存只在任务根目录。
+
+最终交付不是任意写文件：正式创建/编辑/导出 CLI 自动收尾；DOCX 读取导出及 ET 完整 JSON 导出用 `--delivery` 明确最终用途。低层内部文件和 XLSX 协议 publish 不自动归档，最终交付前必须显式清单收尾；OFD 仅 stdout 读取，宿主保存为用户最终文件后另行归档。未调用属于待交接，不能当作无需归档或归档成功。
 
 `--verify` 核对生成子集的内容与 XML 排版意图，不等同于页面视觉验收；字体显示、实际分页和页码仍需在文档阅读器中检查。
 
 成功验收并核实文件后，在交付文件链接后简短提示“本次已按公文格式生成。还支持商务、学术排版，也可按需调整字体、字号和页边距。”用户指定主题或覆盖样式时按实际结果描述；提示不写入文档，用户要求只返回文件或不再提示时省略。完整规则见 [生成后格式引导](skills/docx/references/generation-runtime.md#生成后格式引导)。
 
 读取大表格时，compact 默认只含前两行；全文需要原有纯文本读取，或 `--compact-json --tables rows` 按行续读。可选 `--max-output-bytes` 计真实 UTF-8 JSON 与末尾换行，返回源 SHA/参数绑定的 `next_cursor`；元数据或单块放不下时明确失败，不静默截断。旧 `next_block` 路径和新绑定游标的区别见 [读取契约](skills/docx/references/inspection.md#utf-8-预算与绑定续读)。预算不是 token 数，也不替代宿主完整回传检查。
+
+使用 `read_docx.py 月报.docx` 一次返回全部支持的要素。加 `--section '完整标题'` 读取该节及下级章节的正文、表格、文本框、图表和图片引用。分页用 `--max-output-bytes` 与 `--cursor`，保持章节参数一致，复用首次解析结果。末页自动清理缓存，提前结束时传 `--release-cursor`。纯文本调用加 `--format text`。图表缺值保持空值，需由源工作簿确认。 [复杂报告读取](skills/docx/references/inspection.md#复杂报告读取)
 
 ### WPS 文字（.wps/.rtf）
 
@@ -188,6 +197,8 @@ python3 -I -S -B "<skill-root>/scripts/export_wps.py" check
 ```
 
 读取正文可使用全量 JSON、纯文本或大纲/章节切片；RTF 全文纯文本按顺序包含表格，JSON 的 text 保持段落口径，表格及顺序见 tables/blocks；超限及不支持的筛选不会静默冒充完整结果。可选 `--max-output-bytes` 为有界视图增加真实 UTF-8 JSON 字节预算，保留完整诊断及源绑定续读，详见 [有界读取](skills/wps/references/bounded-reading.md)；创建命令和共同边界见 WPS 主入口，编辑/导出按需加载其直达参考；仅创建支持 `--compact-receipt`，不省略现有 partial/警告。ET/ETT交给et，原生XLSX/XLSM交给xlsx，不自动转换。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
+
+使用 `--reading-mode maximum` 读取 MS-DOC 的一级表格分组、可确认的横向和纵向合并、直接段落属性、绘图锚点和组内文本框关联。`binary_images` 返回存储 PNG 元数据，显式加 `--include-image-bytes` 可取得有界原始字节。`binary_charts` 返回可定位的图表缓存及缺值范围，外部工作簿只记录引用状态。 [最大化读取](skills/wps/references/reading-assessment.md#最大化读取模式) · [图表缓存](skills/wps/references/binary-shapes.md#存储图表缓存)
 
 WPS新建默认公文参照当前DOCX：上下25.4mm、左右31.8mm，仿宋16pt／Times New Roman、固定28pt、首行2字、零段前段后；标题层级、页眉页脚和默认关闭页码同步。未明确要求新页时自然分页，保留用户显式配置。RTF与OOXML不是同一格式，不保证字体回退或跨阅读器分页一致；现有DOCX→RTF导出不解析完整样式继承，不作为统一排版的捷径。仓库对照回归见 [测试](tests/test_wps_docx_official_parity.py)，350项历史测试结果、缓存告警与未验证范围见 [排版对齐记录](tests/wps_docx_official_alignment_20261104.json)。后续 DOC 回读与格式匹配修复的377项 WPS、2项对照测试、8份已有输入回归及真实二进制导出未通过的范围，见 [导出契约验证](tests/wps_export_contract_validation_20261104.json)。默认 `.wps`、显式 `.rtf` 的命名与回读回归见 [后缀验证记录](tests/wps_default_suffix_validation_20261104.json)。
 
@@ -234,12 +245,12 @@ OFD 离线运行包由统一工具构建到 `dist/runtime/ofd-runtime-<version>.
 
 ### PPTX
 
-独立入口见 [pptx](skills/pptx/SKILL.md)。在满足其环境约束的解释器中先自检，再检查用户提供的相对文件路径：
+独立入口见 [pptx](skills/pptx/SKILL.md)。在满足其环境约束的解释器中先自检。用户上传文件只在任务目录顶层定位，文件名含空格时作为一个参数引用；配置中明确引用的 SVG 和图片可使用安全的任务相对路径：
 
 ```console
 python3 -I -S -B "<skill-root>/scripts/pptx.py" check
-python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect ./input.pptx --summary
-python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect ./input.pptx --slides 1-3 --notes omit --max-output-bytes 12000
+python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect "input.pptx" --summary
+python3 -I -S -B "<skill-root>/scripts/pptx.py" inspect "input.pptx" --slides 1-3 --notes omit --max-output-bytes 12000
 ```
 
 `inspect` 默认仍返回完整结果；选页、备注省略与字节预算不绕过未选页、关系和媒体的整包安全检查。备注读取包括受支持的文本形状和原生表格段落。分页只在完整幻灯片边界切分，继续时原样传回 `--cursor` 并重复原选项，单页过大明确失败。有限 PNG 零填充兼容需显式启用，结果保留 partial 并退出 3；不是对任意损坏文件的恢复。创建只接受声明的 SVG/配置子集并拒绝覆盖，不代表任意 PPTX 编辑或视觉验收。详细接口见 [PPTX 文档](docs/skills/pptx.md)。
@@ -257,7 +268,6 @@ python3 -I -S -B "<skill-root>/scripts/lifecycle.py" check
 标准五步工作流：
 1. **登记（plan）**：在创建临时文件前显式登记本轮中间文件路径（如 worker.py、spec.json），保护输入原件与历史交付物。
 2. **生成并验收**：业务技能生成文档并执行验证；失败时等待生产进程退出，再按原清单以 `failed` 封存并调用清理，不把公共 CLI 当作自动捕获任意业务失败的 runner。
-3. **原子归档（archive）**：对最终交付物执行归档，默认原子独占发布，同名保留历史副本；仅在明确授权时可使用 `--replace-existing`。
 4. **封存与清理（seal & clean）**：seal 封存清单，clean 仅删除本轮已登记、归属和身份检查通过且可安全删除的临时文件；全部收尾后移除清单（`manifest_removed=true`）。未知、占用或身份变化项保留并报告 `cleanup_incomplete`。
 5. **交付**：核对完整归档结果后，归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
 
@@ -286,12 +296,11 @@ python3 -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_ch
 
 ## 能力边界
 
-- **PPTX**：受限 SVG 创建可编辑的原生对象，支持 PNG/JPEG、有限图表、表格和公式；可读取 Transitional PPTX 子集的文本、备注及对象计数并检查包结构。不提供任意既有 PPTX 编辑、完整格式导入或桌面显示验证；创建拒绝覆盖同名文件，归档显式交给公共生命周期技能。
+- **PPTX**：受限 SVG 创建可编辑的原生对象，支持 PNG/JPEG、有限图表、表格和公式；可读取 Transitional PPTX 子集的文本、备注及对象计数并检查包结构。不提供任意既有 PPTX 编辑、完整格式导入或桌面显示验证；创建拒绝覆盖同名文件，归档由随包运行时自动完成。
 - **XLSX**：原生编辑仅支持受控单元格操作，不支持任意结构编辑；不直接读取 WPS 专有格式，ET/ETT 使用 [et](skills/et/SKILL.md) 技能。其 BIFF8 子集、样本清单与验证记录见 ET Skill；公式读取的是保存缓存，不重算。
 - **WPS**：读取受支持的 WPS 文字/RTF，并可生成 RTF 文档（可使用 `.wps` 后缀）、受控编辑及 DOCX 兼容导出；RTF 流不是金山原生 WPS 格式，不承诺无损编辑或页面视觉还原。未知私有记录、加密、损坏结构与资源错误按入口契约拒绝并报告。
 - **ET**：支持 .et/.ett 的 BIFF8 与 OOXML 有限读取、表头区域预览，以及按物理行号排除行、区域筛选、排序、去重、列统计和分组汇总，并提供统计质量报告；保留源 partial 与缓存缺口，不自动识别表头、小计或总计，不认证业务正确性。处理的是保存值与派生 JSON，不重算公式、不写回原格式或转换办公文件，不将有限子集表述为完整格式支持。
 - **DOCX**：支持受控的生成和编辑子集，不提供任意复杂文档的排版还原、页面预览或 PDF 导出。WPS 文字由独立 wps 技能提供，ET/ETT 由 et 技能提供。
-- **交付物归档与同名保护**：归档默认原子独占发布，同名拒绝覆盖并保留历史副本；仅在明确授权的独立归档调用中传 `--replace-existing` 允许替换。
 - **失败立即清理**：生成或编辑失败、子进程超时同样立即清理本轮中间辅助文件与清单，不因待重试保留临时材料；重试需从原始输入重新发起。
 - 更详细的限制、错误处理、验收和中间文件清理规则以各 skill 的 `SKILL.md` 为准。
 
@@ -381,7 +390,7 @@ PPTX 的历史 Linux 基线验证记录见 [标准库 PPTX 验证记录](tests/p
 | 后缀/输入 | 读取 | 生成或编辑 | 验证与边界 |
 |---|---|---|---|
 | .pptx | Transitional 子集文本、备注、对象计数与包摘要 | 从受限 SVG 新建原生 PPTX；不编辑现有文件 | 标准库结构验证及内容回读；PNG/JPEG、有限图表/表格/公式；无桌面视觉验收 |
-| .docx | 正文与显式结构 | 生成及受控编辑；标准入口定点防同名递增版本命名，失败立即清理中间文件 | 原生行为回归；不保证任意排版 |
+| .docx | 正文、显式结构和复杂报告元素 | 生成及受控编辑；标准入口定点防同名递增版本命名，失败立即清理中间文件 | 原生行为回归；图表为保存值，实际排版由客户端决定 |
 | .dotx | ZIP/XML读取 | 同后缀定点编辑，不生成DOTX | 规则受控，不以改后缀转换 |
 | .xlsx | 原生读取与分析 | XLSX生成、受控编辑/公式子集；标准任务入口自动防同名覆盖递增命名，失败立即清理中间文件 | 不等于完整Excel引擎 |
 | .xlsm | 原生读取 | 保留宏包的受控编辑 | 不执行宏、不创建宏工程 |
@@ -412,7 +421,7 @@ OFD 政务原件相关验收证据已因既有 Library scope 拒绝撤回，不�
 - `docx-read`：`docx/scripts/read_docx.py --check`
 - `docx-task`：`docx/scripts/run_docx_task.py check`
 - `docx-create`：`docx/scripts/create_docx.py --check`
-- `docx-archive`：`docx/scripts/archive_deliverables.py --check`
+- `docx-archive`：`docx/scripts/archive_delivery.py --check`
 - `wps`：`wps/scripts/read_wps.py --check`
 - `ofd`：`ofd/scripts/read_ofd.py --check`
 - `xlsx`：`xlsx/scripts/stdlib_xlsx.py check`
@@ -441,7 +450,6 @@ XLSX十个受支持写文件CLI在业务处理前检查输入、配置和输出�
 
 路由配置诊断默认关闭，开启时只输出是否配置和脱敏标记。XLSX包装入口返回子进程状态、真实退出码及明确的通道省略记录，不回显任意stderr或无效JSON正文。清理仅覆盖登记项；DOCX新建、受控编辑和XLSX配置runner在业务验收后删除本轮中间文件及清单，归档失败/跳过也收尾。保留材料可能含业务数据，归属核实及宿主留存策略不可省略。
 
-标准DOCX新建/编辑和XLSX任务runner在生成前检查主路径及归档同名，自动递增“_第2版”等后缀；归档默认拒绝覆盖，明确授权后可单独归档并使用--replace-existing。并发任务使用独立任务目录。发布包、测试命令和未验证范围以本轮仓库验证记录为准；旧ZIP保留，不因维护而删除。
 
 本轮验证记录：[上线修复与分发包验收](tests/production_readiness_20261029_20432946.json)。源码回归共579项通过；运行平台为macOS/Python3.12.14，不能替代目标Linux生产宿主验收。
 
@@ -502,7 +510,6 @@ XLSX十个受支持写文件CLI在业务处理前检查输入、配置和输出�
 
 ## 同名保护与递增版本命名（20261029.2203.2365）
 
-DOCX 标准新建/编辑与 XLSX 标准任务入口在生成前定点检查主路径和归档同名，保留主题并选择“_第2版”“_第3版”等可用名称；以返回的实际 output 交付。归档默认原子独占发布，同名保留历史副本；只有明确授权的独立归档调用可传 `--replace-existing`。失败仍清理本轮中间文件，删除受阻则报告 `cleanup_incomplete`。旧直接入口不自动改名，主输出行为保留；共享归档默认保护同步到公共生命周期包。
 
 源码回归 591 项通过（DOCX 269、XLSX 304、公共生命周期 16、来源一致性 2）；三包严格检查、CRC、源码逐字节核对及只读安装回归 52 项通过，安装内容哈希未变。description 能力与适用范围人工核对后保持不变。验证为 macOS/Python 3.12.14 和隔离合成样本，未执行云端 Linux/Windows、真实生产宿主、Office 视觉或模型触发验收；专用命名 linter 不可用。新版本三包保留于 skills 目录，旧包未覆盖。证据：[同名保护验收](tests/archive_collision_20261029_2203_2365.json)。本轮主代理完成实现、审查与验收，未调用子代理。
 
@@ -558,3 +565,18 @@ DOCX 新增可选 UTF-8 字节预算及源/参数绑定续读；ET/WPS 输出支
 提交前重新执行 29 个测试进程，共 2317 项全部通过；十份干净独立副本 strict 通过，当前加载快照 fresh，文档版本与 427 个本地链接检查通过。已保存的 [输出验证记录](docs/output-filenames-validation.json) 中“未提交/未推送”描述的是采样时状态，保留为历史证据；发布结果以 Git 历史为准。原三项未知文件和既有缓存未提交或清理，历史 ZIP 未替换。远端精确提交的 status 与 PR workflow 查询均为空，仓库现有工作流仅由 PR 或手动触发，不能称为远端 CI 已通过。
 
 归档回复展示边界已统一：内部回执用于核验，最终回复及下载链接不得带出归档地址；实际主文件引用仍可交付。范围、检查证据与未验证项见 [归档展示复核](docs/maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+### 最终交付入口与完整性边界
+
+文件写入不是归档完成。业务入口先声明用户最终交付清单，区分工作文件、读取中间结果与最终文件，再验证并收尾；禁止扫描工作目录把所有文件自动归档。
+
+| 场景 | 归档方式与完成条件 |
+| --- | --- |
+| DOCX、WPS、XLSX 的正式创建/编辑/导出 CLI；PPTX 创建/重建 | 正式入口调用随包归档实现；分别核对业务、发布、归档与清理，不以退出 0 代替归档成功 |
+| DOCX 读取落盘 | 用户要求最终交付时用 `--delivery`；普通 `-o` 仍是内部读取结果 |
+| ET 读取落盘 | 用户要求最终 JSON 时使用 `--output 文件名 --delivery`；普通读取中间 JSON 不归档 |
+| OFD 提取 | 默认 stdout 阅读不归档；用户明确要求保存提取结果时，由宿主保存验收后将准确文件名显式交接归档；不恢复 OFD 写入服务 |
+| DOCX 底层 pack/comment/merge_runs、XLSX 内存 API 或协议 publish | 属内部步骤，不等于完成交付；执行相应验收后显式调用正式收尾，协议 publish 后必须另执行 delivery |
+| 跨表工作流 | XLSX 与审计 JSON 是固定两件最终清单，两件均准备校验好才归档；准备失败保留已生成文件并标记整批未就绪，不擅自作为单件交付 |
+
+WPS 已声明交付但业务、发布或内部清理未就绪时，返回 failed 与阻塞原因，不能误报 not_required。跨表逐件归档可部分成功，整批完成必须全部核验且没有清理残留；失败时只重试归档，不重新生成覆盖原件。每次归档读取宿主当前 questionId，宿主仍须保证它确为最新轮次。归档目录和子目录不放临时校验文件；云上传及真实模型是否完整执行这些步骤仍需宿主验收，不能由单元测试证明绝无遗漏。

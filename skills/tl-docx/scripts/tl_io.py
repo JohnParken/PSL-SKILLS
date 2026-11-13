@@ -90,5 +90,3 @@ def read_task(root, value, limit=MAX_INPUT):
             return data
     finally:
         os.close(folder)
-
-

@@ -84,6 +84,8 @@ class RuntimeModuleTests(unittest.TestCase):
             self.assertIs(getattr(cleanup_task, name), getattr(controlled_cleanup, name))
 
     def test_archive_and_cleanup_import_without_docx_generator(self):
-        code = 'import sys; sys.path.insert(0, sys.argv[1]); import router_config, artifact_files, archive_delivery, controlled_cleanup; assert "create_docx" not in sys.modules; assert "office.xmlio" not in sys.modules'
+        code = ('import sys; sys.path.insert(0, sys.argv[1]); '
+                'import router_config, artifact_files, archive_delivery, controlled_cleanup; '
+                'assert "create_docx" not in sys.modules; assert "office.xmlio" not in sys.modules')
         result = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', code, str(Path(__file__).resolve().parents[1])], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)

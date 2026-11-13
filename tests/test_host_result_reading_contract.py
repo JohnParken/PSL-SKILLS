@@ -33,7 +33,7 @@ def contract_issues(text, *, navigation=False):
 class HostResultReadingContractTests(unittest.TestCase):
     def test_all_current_entries_have_independent_contract(self):
         entries = sorted((ROOT / 'skills').glob('*/SKILL.md'))
-        self.assertEqual(len(entries), 11)
+        self.assertEqual(len(entries), 12)
         for entry in entries:
             with self.subTest(skill=entry.parent.name):
                 self.assertEqual(contract_issues(entry.read_text(encoding='utf-8'),

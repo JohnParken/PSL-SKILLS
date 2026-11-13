@@ -7,12 +7,14 @@
 - `skills/<name>/`：唯一业务源码、运行参考、模板和许可；测试依规范保留 `scripts/test/`。
 - `docs/maintenance/<name>/`：历史样本证据、维护审计与测试报告。运行说明保留必要的当前能力/限制，维护文件不变成必需运行依赖。
 - `tests/fixtures/docx/`：跨 Skill 使用的七个既有 DOCX 样本，原字节不变。ET 来源清单和固定预期移至 `docs/maintenance/et/`，维护脚本及 CI 同步定位。
-- `packaging/runtime-manifests/`：11份审阅后的显式发布文件清单；不自动吸入新文件。
+- `packaging/runtime-manifests/`：12 份审阅后的显式发布文件清单；不自动吸入新文件。
 - `tools/`：统一构建、自检和回归工具。DOCX、OFD旧打包命令是兼容入口，复用同一构建实现。
 - `dist/runtime/`：本地已生成的 ZIP 与发布清单；`dist/archive/`：保留历史 ZIP，不覆盖原字节。整个 `dist/` 不纳入 Git；包文件名中的版本须与当前 `SKILL.md` 分别核对，已有包不必然对应当前源码。
 - `docs/validation/`：重组基线、历史包指纹和当前验收记录。旧证据保留原日期/版本结论，不伪装为本轮重跑。
 
 ## 保留与排除
+
+`tl-` 前缀 Skill 可按需使用第三方组件；运行包保留依赖声明，部署环境按其版本和条件提供组件。包内自有代码自包含不等于第三方组件已随 ZIP 安装，不应把依赖声明当成已安装证明；独立验收须使用具备声明依赖的解释器。其他 Skill 的原有依赖边界不变。
 
 运行包包含入口、声明依赖、当前启用的正式脚本、任务参考和必需静态资源。业务 Python 不压缩改写、不删兼容接口、不把运行时移到仓库共享目录。运行时不依赖仓库测试、维护资料或相邻 Skill 的私有模块。
 
@@ -35,6 +37,7 @@ OFD 写入服务暂停：新运行包排除生成器、生成参考、字体和�
 python -I -S -B tools/package_skills.py
 python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/review
 python -I -S -B tools/package_skills.py document-navigation
+python -I -S -B tools/package_skills.py tl-docx
 python -I -S -B tools/package_docx_runtime.py --output dist/runtime/docx-review.zip
 python -I -S -B tools/package_ofd.py dist/runtime/ofd-review.zip
 ```
@@ -59,7 +62,7 @@ python -I -S -B tools/check_project_docs.py
 
 独立安装验收从ZIP解压到互不相邻的只读安装，非root实际尝试写入并确认拒绝；业务工作目录另建，Python保留 `-I -S -B`、空PATH。核对源码、ZIP、安装文件前后哈希。直接业务进程使用Python审计钩子拒绝仓库及未声明其他包读取；这不是OS级沙箱，workflow子进程不继承审计钩子，仅获得明确的独立提供者路径。
 
-覆盖生成/读取/编辑、ET保存值和partial语义、OFD读取及生成入口缺席、PPTX原生生成、生命周期归档清理、组合依赖缺失，以及所有包严格路径闭包。真实原生ET、Word/WPS/PPT视觉、真实模型自动选技能、云空间同步和所有平台仍须分别验收。源码ET/WPS已有缓存不在此次授权清理范围内；源码严格检查可受缓存警告影响，所有运行包必须无缓存并通过严格检查。
+覆盖生成/读取/编辑、ET保存值和partial语义、OFD读取及生成入口缺席、PPTX原生生成、生命周期归档清理、组合依赖缺失，以及所有包严格路径闭包。`tl-docx` 独立运行验收使用预装 `python-docx==1.2.0` 的解释器，保留 `-I -B`，以便加载声明的依赖。真实原生ET、Word/WPS/PPT视觉、真实模型自动选技能、云空间同步和所有平台仍须分别验收。源码ET/WPS已有缓存不在此次授权清理范围内；源码严格检查可受缓存警告影响，所有运行包必须无缓存并通过严格检查。
 
 ## Python 模块拆分后的清单
 

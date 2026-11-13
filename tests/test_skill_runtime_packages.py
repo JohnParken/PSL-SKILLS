@@ -8,9 +8,11 @@ The printed platform is the only tested platform; Linux/Windows, client renderin
 network isolation at OS level and host/model delivery are not certified here.
 """
 import hashlib
+from base64 import b64decode
 import importlib.util
 import json
 import os
+from io import BytesIO
 from pathlib import Path
 import platform
 import re
@@ -26,7 +28,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 NAMES = ('artifact-lifecycle', 'bank-writing', 'document-navigation', 'docx', 'et', 'ofd', 'pptx',
-         'skill-development-standards', 'table-workflow', 'wps', 'xlsx')
+         'skill-development-standards', 'table-workflow', 'tl-docx', 'wps', 'xlsx')
 
 
 # A Python audit guard makes accidental repository reads and sibling-package
@@ -122,14 +124,15 @@ class SkillRuntimePackages(unittest.TestCase):
                     'DOCX_DEBUG_ROUTER_CONFIG': '0', 'PYTHONIOENCODING': 'utf-8',
                     'ROUTER_CONFIG_VARIABLES': json.dumps({'commonParam': [{'name': 'questionId', 'value': 'package-test'}]})}
 
-    def invoke(self, name, script, *args, payload=None, expected=0):
+    def invoke(self, name, script, *args, payload=None, expected=0, site_packages=False):
         allowed = {name}
         if name == 'table-workflow':
             allowed.update(('xlsx', 'et'))
         if name == 'skill-development-standards':
             allowed.update(NAMES)
         denied = [str(ROOT.resolve())] + [str(path.resolve()) for key, path in self.installs.items() if key not in allowed]
-        result = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', RUNTIME_GUARD,
+        flags = ['-I', '-B'] if site_packages else ['-I', '-S', '-B']
+        result = subprocess.run([sys.executable, *flags, '-c', RUNTIME_GUARD,
                                  str(self.installs[name] / 'scripts' / script), json.dumps(denied),
                                  *map(str, args)], cwd=self.work, env=self.env, text=True,
                                 input=None if payload is None else json.dumps(payload, ensure_ascii=False),
@@ -170,7 +173,10 @@ class SkillRuntimePackages(unittest.TestCase):
                               payload={'blocks': [{'type': 'paragraph', 'text': '合同 ABC'}]})
         self.assertEqual(json.loads(created.stdout)['status'], 'verified')
         original = (self.work / 'source.docx').read_bytes()
-        self.assertIn('合同 ABC', self.invoke('docx', 'read_docx.py', 'source.docx').stdout)
+        report = json.loads(self.invoke('docx', 'read_docx.py', 'source.docx').stdout)
+        self.assertEqual(report['format'], 'docx-report')
+        self.assertEqual([block['text'] for block in report['blocks'] if block['type'] == 'paragraph'], ['合同 ABC'])
+        self.assertFalse(report['has_more'])
         self.invoke('docx', 'run_docx_edit.py', 'text', 'source.docx', 'edited.docx',
                     payload={'replacements': [{'old': 'ABC', 'new': 'XYZ', 'count': 1}]})
         self.assertIn('合同 XYZ', self.invoke('docx', 'read_docx.py', 'edited.docx').stdout)
@@ -198,6 +204,72 @@ class SkillRuntimePackages(unittest.TestCase):
         self.invoke('wps', 'run_wps_edit.py', 'text', 'source.wps', 'edited.wps', '--find', 'ABC', '--replace', 'XYZ')
         self.assertIn('合同 XYZ', self.invoke('wps', 'read_wps.py', 'edited.wps').stdout)
         self.assertEqual((self.work / 'source.wps').read_bytes(), original)
+
+    def test_wps_reads_stored_png_from_readonly_package(self):
+        # Fixture builder belongs to the source tests. The runtime process
+        # reads the resulting bytes from its task directory with no repository access.
+        fixture_dir = str(ROOT / 'skills/wps/scripts/test')
+        script_dir = str(ROOT / 'skills/wps/scripts')
+        fixture_code = (
+            'from base64 import b64encode\n'
+            'from pathlib import Path\n'
+            'import sys\n'
+            'sys.path[:0] = sys.argv[1:3]\n'
+            'from test_wps_binary_images import inline_fixture, png_bytes\n'
+            "Path('binary.wps').write_bytes(inline_fixture())\n"
+            'print(b64encode(png_bytes()).decode("ascii"))\n'
+        )
+        expected = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', fixture_code, fixture_dir, script_dir],
+                                  cwd=self.work, env=self.env, capture_output=True, text=True, check=True, timeout=10)
+        original = (self.work / 'binary.wps').read_bytes()
+        response = self.invoke('wps', 'read_wps.py', 'binary.wps', '--reading-mode', 'maximum',
+                               '--include-image-bytes', expected=3)
+        images = json.loads(response.stdout)['binary_images']
+        self.assertEqual((images['image_count'], images['unresolved_reference_count']), (1, 0))
+        self.assertEqual(b64decode(images['images'][0]['data_base64']), b64decode(expected.stdout))
+        self.assertEqual((self.work / 'binary.wps').read_bytes(), original)
+
+    def test_wps_reads_grouped_merges_from_readonly_package(self):
+        fixture_code = (
+            'from pathlib import Path\n'
+            'import sys\n'
+            'sys.path[:0] = sys.argv[1:3]\n'
+            'from test_wps_msdoc_table_groups import grouped_fixture\n'
+            "Path('tables.doc').write_bytes(grouped_fixture())\n"
+        )
+        scripts = ROOT / 'skills/wps/scripts'
+        subprocess.run([sys.executable, '-I', '-S', '-B', '-c', fixture_code, str(scripts / 'test'), str(scripts)],
+                       cwd=self.work, env=self.env, capture_output=True, check=True, timeout=10)
+        original = (self.work / 'tables.doc').read_bytes()
+        response = self.invoke('wps', 'read_wps.py', 'tables.doc', '--reading-mode', 'maximum', expected=3)
+        structure = json.loads(response.stdout)['binary_table_structure']
+        self.assertEqual((structure['table_grouping'], structure['grid_and_merges']), ('stored', 'stored'))
+        self.assertEqual([table['row_count'] for table in structure['tables']], [2, 1])
+        self.assertEqual(structure['tables'][0]['vertical_merges'][0]['row_count'], 2)
+        self.assertEqual(structure['tables'][0]['horizontal_merges'][0]['cell_count'], 2)
+        self.assertEqual((self.work / 'tables.doc').read_bytes(), original)
+
+    def test_wps_reads_chart_caches_from_readonly_package(self):
+        fixture_code = (
+            'from pathlib import Path\n'
+            'import sys\n'
+            'sys.path[:0] = sys.argv[1:3]\n'
+            'from test_wps_binary_charts import chart_fixture, chart_package\n'
+            "Path('charts.wps').write_bytes(chart_fixture(floating=chart_package(), inline=chart_package(values='')))\n"
+        )
+        scripts = ROOT / 'skills/wps/scripts'
+        subprocess.run([sys.executable, '-I', '-S', '-B', '-c', fixture_code, str(scripts / 'test'), str(scripts)],
+                       cwd=self.work, env=self.env, capture_output=True, check=True, timeout=10)
+        path = self.work / 'charts.wps'
+        original = path.read_bytes()
+        response = self.invoke('wps', 'read_wps.py', path.name, '--reading-mode', 'maximum', expected=3)
+        report = json.loads(response.stdout)['binary_charts']
+        self.assertEqual((report['status'], report['chart_count']), ('partial', 2))
+        floating, inline = report['charts']
+        self.assertEqual([chart['references'][0]['kind'] for chart in (floating, inline)], ['floating', 'inline'])
+        self.assertEqual(floating['series'][0]['values']['points'], [{'index': 0, 'value': '9.1250'}, {'index': 1, 'value': '2.50E-2'}])
+        self.assertEqual(inline['series'][0]['values']['status'], 'unavailable')
+        self.assertEqual(path.read_bytes(), original)
 
     def test_et_synthetic_ooxml_read_and_analysis(self):
         self.invoke('et', 'et_cli.py', 'run', '--check')
@@ -314,9 +386,9 @@ class SkillRuntimePackages(unittest.TestCase):
                     '--protect', 'input.txt', '--deliverable', 'final.txt')
         (self.work / 'temporary.txt').write_bytes(b'owned temporary')
         (self.work / 'final.txt').write_bytes(b'verified result')
-        archived = self.invoke('artifact-lifecycle', 'lifecycle.py', 'archive', 'final.txt', '--protect-input', 'input.txt')
-        self.assertEqual(json.loads(archived.stdout)['archive_status'], 'copied')
-        self.invoke('artifact-lifecycle', 'lifecycle.py', 'seal', 'task.cleanup.json', '--outcome', 'success', '--verified', '--archive-status', 'copied')
+        archived = self.invoke('artifact-lifecycle', 'archive_delivery.py', 'final.txt', '--protect-input', 'input.txt')
+        self.assertEqual(json.loads(archived.stdout)['archive_status'], 'success')
+        self.invoke('artifact-lifecycle', 'lifecycle.py', 'seal', 'task.cleanup.json', '--outcome', 'success', '--verified', '--archive-status', 'success')
         cleaned = json.loads(self.invoke('artifact-lifecycle', 'lifecycle.py', 'clean', 'task.cleanup.json').stdout)
         self.assertTrue(cleaned['cleanup_complete'])
         self.assertTrue(cleaned['manifest_removed'])
@@ -348,6 +420,57 @@ class SkillRuntimePackages(unittest.TestCase):
         for _ in range(2):
             self.assertEqual(digest(entry.read_bytes()), self.before['document-navigation']['SKILL.md'])
         self.assertEqual(fingerprints(self.work), initial_work)
+
+    def test_tl_docx_reads_creates_and_edits_from_isolated_install(self):
+        entry = 'tl_docx.py'
+        without_dependency = self.invoke('tl-docx', entry, 'check', expected=1)
+        self.assertEqual('error', json.loads(without_dependency.stdout)['status'])
+        available = subprocess.run([sys.executable, '-I', '-B', '-c', 'import docx; assert docx.__version__ == "1.2.0"'],
+                                   env=self.env, capture_output=True, check=False, timeout=20)
+        if available.returncode:
+            self.skipTest('python-docx 1.2.0 not available to the selected interpreter with site enabled')
+
+        def call(*args, **kwargs):
+            response = self.invoke('tl-docx', entry, *args, site_packages=True, **kwargs)
+            return json.loads(response.stdout)
+
+        self.assertEqual('environment-ok', call('check', '--write')['status'])
+        created = call('create', 'source.docx', payload={'blocks': [{'type': 'paragraph', 'text': '月报原文'}]})
+        self.assertEqual('verified', created['status'])
+        self.assertEqual('success', created['archive_status'])
+        original = (self.work / 'source.docx').read_bytes()
+        result = call('read', 'source.docx')
+        self.assertIn('月报原文', [item.get('text') for item in result['records']])
+        spec = {'operations': [{'type': 'replace_run_text', 'paragraph_index': 0, 'run_index': 0,
+                                'expected_text': '月报原文', 'expected_run_text': '月报原文', 'text': '月报修订'}]}
+        edited = call('edit', 'source.docx', 'result.docx', payload=spec)
+        self.assertEqual('edited', edited['status'])
+        self.assertEqual('success', edited['archive_status'])
+        self.assertTrue(edited['cleanup']['manifest_removed'])
+        self.assertEqual(original, (self.work / 'source.docx').read_bytes())
+        with zipfile.ZipFile(BytesIO(original)) as source, zipfile.ZipFile(self.work / 'result.docx') as target:
+            self.assertEqual(source.namelist(), target.namelist())
+            self.assertEqual(['word/document.xml'], [name for name in source.namelist() if source.read(name) != target.read(name)])
+        comment = {'action': 'add', 'paragraph_index': 0, 'expected_text': '月报原文', 'anchor_text': '月报原文',
+                   'text': '请核对', 'author': '复核人'}
+        annotated = call('comments', 'source.docx', payload=comment)
+        self.assertEqual('source_批注版.docx', annotated['output'])
+        listed = call('comments', annotated['output'], payload={'action': 'list'})
+        self.assertEqual('modern', listed['mode'])
+        self.assertEqual('请核对', listed['comments'][0]['text'])
+        risk = call('create', 'risks.docx', payload={'blocks': [{'type': 'page_break'}]})
+        self.assertEqual('verified', risk['status'])
+        audit = call('validate', 'risks.docx', '--strict-pagination', expected=2)
+        self.assertTrue(audit['layout']['pagination_warnings'])
+        structure = call('read', 'source.docx', '--format', 'structure', '--revisions', 'all', '--xml-part', 'word/document.xml')
+        self.assertEqual(['word/document.xml'], [record['part'] for record in structure['records']])
+        export = call('read', 'source.docx', '--report', '-o', 'report.json', '--delivery')
+        self.assertEqual('exported', export['status'])
+        self.assertEqual('success', export['archive_status'])
+        self.assertEqual('report', json.loads((self.work / 'report.json').read_bytes())['view'])
+        substituted = call('replace', 'source.docx', 'filled.docx', payload={'replacements': [{'old': '月报原文', 'new': '月报填写'}]})
+        self.assertEqual([1], substituted['result']['rule_counts'])
+        self.assertEqual(original, (self.work / 'source.docx').read_bytes())
 
     def test_workflow_explicit_independent_providers_and_missing_refusal(self):
         workflow = 'table_workflow.py'

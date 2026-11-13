@@ -220,7 +220,8 @@ class LifecycleTests(unittest.TestCase):
 
     def test_duplicate_parameters_and_json_constants_rejected(self):
         for value in ('{"commonParam":[{"name":"x","value":1},{"name":"x","value":2}]}', '{"commonParam":NaN}'):
-            with self.assertRaises(RouterConfigError): get_common_parameter(value, 'x')
+            with self.assertRaises(RouterConfigError):
+                get_common_parameter(value, 'x')
 
     def test_parent_path_and_unverified_seal_do_not_delete(self):
         self.assertEqual(self.call('plan', 'manifest.json', '--file', '../foreign')[0], 1)

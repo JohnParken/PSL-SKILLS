@@ -164,19 +164,14 @@ class SelfCheckContractTests(unittest.TestCase):
         self._assert_text_failure(result, "check-failed:")
 
     def test_docx_archive_check_success_and_runtime_failure(self) -> None:
-        script = self._script("docx", "archive_deliverables.py")
-        self._assert_text_success(self._run_cli(script, "--check"), "check-ok")
+        script = self._script("docx", "archive_delivery.py")
+        self._assert_json_check(self._run_cli(script, "--check"), code=0, status="environment-ok")
         result = self._run_injected(
             script,
-            injection=textwrap.dedent(
-                """
-                import create_docx
-                create_docx.check_runtime = lambda: False
-                """
-            ),
+            injection="module.sys.version_info = (3, 9)",
             invoke='raise SystemExit(module.main(["--check"]))',
         )
-        self._assert_text_failure(result, "check-failed:")
+        self._assert_json_check(result, code=1, status="environment-unavailable")
 
     def test_wps_check_success_dependency_failure_and_old_python_status(self) -> None:
         script = self._script("wps", "read_wps.py")

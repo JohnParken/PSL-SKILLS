@@ -633,4 +633,3 @@ def read_chart_cache(root: Element, budget: ChartCacheBudget) -> dict[str, Any]:
         "series": series,
         "issues": final_issues,
     }
-

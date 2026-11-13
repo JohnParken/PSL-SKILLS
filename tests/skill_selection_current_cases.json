@@ -1,19 +1,20 @@
 {
   "schema_version": 1,
   "evidence_kind": "human_authored_expectations_not_model_or_host_measurement",
-  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。 2026-11-09 环境说明调整：人工复核31例选择期望及57个计划读取路径，业务描述、触发边界与按需参考不变；将任务目录、自检前移并保留各技能真实依赖，更新入口哈希。此为人工预期与静态测量，不代表模型选路或宿主 usage 实测。 2026-11-09 已逐项复核31条人工期望：本轮澄清路径映射、清理及输入输出边界，不改变技能选择范围；保留全部期望。刷新仅表示源码绑定，不代表真实模型选路或宿主使用量测量。 2026-11-09 逐项复核31例：仅移除 DOCX 不可执行的路径映射确认要求并更新版本，description及选择边界未变；原期望保留。本次为人工期望检查，不是模型选路实测。 本轮人工复核31项期望及计划读取范围：调整结果判读与大结果续读，不改变业务description或技能选择边界；原期望保留，未测真实模型选路与宿主usage。 2026-11-10 复核31例：本轮用户文件顶层查找及 execute 示例调整不改变业务 description 和技能选择边界，保留原有人工期望；更新指纹不是模型选路或宿主 usage 实测。 2026-11-10 WPS 交付提示调整：description 与适用边界不变，人工期望保留；指纹与静态加载记录更新不代表模型选路或宿主 usage 实测。 2026-11-10 WPS RTF/OOXML 读取恢复和可见性调整：description 与现有正负选路边界不变，人工期望保留；指纹及静态加载快照更新不是模型选路或宿主 usage 实测。 2026-11-10 优先项4/5/1：逐项复核既有31例并新增10例自然任务及易混淆边界；7项description遵循实际能力，ET/XLSX按需分流，PPTX公式读取保留限制。原快照逐字保存在*_before_review_451_20261110.json；41项均为人工期望，不是模型/宿主选路实测。 2026-11-10 OFD 写入暂停：保留读取选路并新增写入不可用边界；人工期望不代表模型实测。 2026-11-11 人工复核 ET 有界恢复和银行月报分析的选择边界，新增月报文字分析期望；更新指纹与静态加载快照不代表模型选路或宿主使用量实测。 2026-11-11 人工复核现有选择期望：宿主结果引用读取规则与 ET 既有可见性变更不改变各 Skill 的 description 或选路范围，保留用例；刷新指纹不是模型选路实测。 2026-11-11 OFD Skill 读取优先规则调整，不改变业务 description 或人工选择边界；更新指纹不代表模型选路或宿主读取实测。 2026-11-11 OFD 默认文本重构：人工复核7项相关读取/结构/混合/OCR/渲染/写入边界，原期望不变；新增普通文字读取期望。仅刷新 OFD 指纹，不代表模型触发实测。原 OFD 静态证据保存在 docs/maintenance/ofd/default-content-prior-evidence-20261111.json。 2026-11-12 OFD模板恢复：人工复核8个涉及OFD的选择场景，读取/结构显式请求及禁止写入、渲染、OCR边界不变；刷新OFD指纹与读取计划，不代表真实模型选择或host usage测量。 2026-11-12 ET规范修复：人工复核6项涉及ET的选择场景，保存值读取/统计、只读、不重算及原生XLSX分工不变；仅刷新ET指纹和受影响读取计划，不代表真实模型选路或host usage测量。 2026-11-12 ET Mixin计数器初始化契约修复：仅版本变化，人工复核ET选择边界不变；指纹刷新不代表模型实测。 2026-11-12 新增纯指导document-navigation：逐项复核原45例，原有能力期望保持；增加10例定位/已就绪/查看/混合/缺映射/歧义/不支持格式及纯文本边界。仅新增导航指纹，旧快照逐字保存在docs/maintenance/document-navigation/selection-before-20261112.json。本记录是人工期望，不是DeepAgents模型触发实测。 2026-11-12 按用户建议将导航触发扩为文档处理意图，不要求格式已知或上下文缺失；人工逐项复核55例，37个既有文档操作场景加入导航，更新3个导航边界并新增9例无格式自然请求及关键词反例，共64例。旧55例逐字保存在docs/maintenance/document-navigation/selection-before-intent-trigger-20261112.json；仅刷新导航指纹，不代表真实模型选路测量。 2026-11-12 分批提交前逐项复核64例，保留所有提示、选择期望与理由；归档展示和当前ET说明未改变既定任务选择边界，仅同步11个入口哈希。前版完整保存在skill_selection_current_cases_before_batch_commit_20261112.json。",
+  "maintenance_note": "仓库级维护场景；入口变化后须人工复核期望再刷新哈希，不自动宣称通过。原skill_selection_cases/results保留历史。 2026-11-09已人工核对：本轮仅分发/维护路径和版本调整，业务description未变，现有正负与混合场景期望保持；刷新入口指纹不代表模型选择测试。 2026-11-09 Python文件1000行上限维护后再次人工复核31例：代码按职责拆分、六技能版本更新与规范新增硬限制未扩展业务能力；保留已有DOCX字体编辑保护说明及描述精简，现有正负、混合与格式边界期望不变。刷新前当前选路和加载证据分别保存在同目录*_before_python_line_limit_20261109.json；模型选路和宿主usage未测。 2026-11-09 Pylint维护后人工复核：et、ofd、pptx、wps的SKILL.md仅更新版本至20261109.1911.3810，description、正文与选择边界不变；31例和57个读取计划保持原样。刷新前快照逐字保存在同目录*_before_pylint_fixes_20261109.json；新加载快照在Linux/Python 3.12.14重新计算，仍非模型选路或宿主usage实测。 2026-11-09 环境说明调整：人工复核31例选择期望及57个计划读取路径，业务描述、触发边界与按需参考不变；将任务目录、自检前移并保留各技能真实依赖，更新入口哈希。此为人工预期与静态测量，不代表模型选路或宿主 usage 实测。 2026-11-09 已逐项复核31条人工期望：本轮澄清路径映射、清理及输入输出边界，不改变技能选择范围；保留全部期望。刷新仅表示源码绑定，不代表真实模型选路或宿主使用量测量。 2026-11-09 逐项复核31例：仅移除 DOCX 不可执行的路径映射确认要求并更新版本，description及选择边界未变；原期望保留。本次为人工期望检查，不是模型选路实测。 本轮人工复核31项期望及计划读取范围：调整结果判读与大结果续读，不改变业务description或技能选择边界；原期望保留，未测真实模型选路与宿主usage。 2026-11-10 复核31例：本轮用户文件顶层查找及 execute 示例调整不改变业务 description 和技能选择边界，保留原有人工期望；更新指纹不是模型选路或宿主 usage 实测。 2026-11-10 WPS 交付提示调整：description 与适用边界不变，人工期望保留；指纹与静态加载记录更新不代表模型选路或宿主 usage 实测。 2026-11-10 WPS RTF/OOXML 读取恢复和可见性调整：description 与现有正负选路边界不变，人工期望保留；指纹及静态加载快照更新不是模型选路或宿主 usage 实测。 2026-11-10 优先项4/5/1：逐项复核既有31例并新增10例自然任务及易混淆边界；7项description遵循实际能力，ET/XLSX按需分流，PPTX公式读取保留限制。原快照逐字保存在*_before_review_451_20261110.json；41项均为人工期望，不是模型/宿主选路实测。 2026-11-10 OFD 写入暂停：保留读取选路并新增写入不可用边界；人工期望不代表模型实测。 2026-11-11 人工复核 ET 有界恢复和银行月报分析的选择边界，新增月报文字分析期望；更新指纹与静态加载快照不代表模型选路或宿主使用量实测。 2026-11-11 人工复核现有选择期望：宿主结果引用读取规则与 ET 既有可见性变更不改变各 Skill 的 description 或选路范围，保留用例；刷新指纹不是模型选路实测。 2026-11-11 OFD Skill 读取优先规则调整，不改变业务 description 或人工选择边界；更新指纹不代表模型选路或宿主读取实测。 2026-11-11 OFD 默认文本重构：人工复核7项相关读取/结构/混合/OCR/渲染/写入边界，原期望不变；新增普通文字读取期望。仅刷新 OFD 指纹，不代表模型触发实测。原 OFD 静态证据保存在 docs/maintenance/ofd/default-content-prior-evidence-20261111.json。 2026-11-12 OFD模板恢复：人工复核8个涉及OFD的选择场景，读取/结构显式请求及禁止写入、渲染、OCR边界不变；刷新OFD指纹与读取计划，不代表真实模型选择或host usage测量。 2026-11-12 ET规范修复：人工复核6项涉及ET的选择场景，保存值读取/统计、只读、不重算及原生XLSX分工不变；仅刷新ET指纹和受影响读取计划，不代表真实模型选路或host usage测量。 2026-11-12 ET Mixin计数器初始化契约修复：仅版本变化，人工复核ET选择边界不变；指纹刷新不代表模型实测。 2026-11-12 新增纯指导document-navigation：逐项复核原45例，原有能力期望保持；增加10例定位/已就绪/查看/混合/缺映射/歧义/不支持格式及纯文本边界。仅新增导航指纹，旧快照逐字保存在docs/maintenance/document-navigation/selection-before-20261112.json。本记录是人工期望，不是DeepAgents模型触发实测。 2026-11-12 按用户建议将导航触发扩为文档处理意图，不要求格式已知或上下文缺失；人工逐项复核55例，37个既有文档操作场景加入导航，更新3个导航边界并新增9例无格式自然请求及关键词反例，共64例。旧55例逐字保存在docs/maintenance/document-navigation/selection-before-intent-trigger-20261112.json；仅刷新导航指纹，不代表真实模型选路测量。 2026-11-12 分批提交前逐项复核64例，保留所有提示、选择期望与理由；归档展示和当前ET说明未改变既定任务选择边界，仅同步11个入口哈希。前版完整保存在skill_selection_current_cases_before_batch_commit_20261112.json。 2026-11-13 已核对旧 DOC/WPS 分组和合并、原生 DOCX 和 ET 边界。WPS 最大模式新增表格证据，原选择期望继续适用。 2026-11-13 提交前复核现有格式边界，新增 tl-docx 组件读取正反例并刷新入口指纹；归档和临时路径改动不扩大格式支持，真实模型选路仍未测。",
   "entry_sha256": {
-    "artifact-lifecycle": "1e7406614cb420727d6d7ff0f53a7b037747c3b5a1dc9469294d01d3150c7286",
+    "artifact-lifecycle": "a38b8a1a814db8042ea2b7a216964adbdc2b3199f7de6a8ffecc0d4acacf8c78",
     "bank-writing": "64dda5f5cc26582d387b5e2bd961bac558fbd568606212433b2aa977b504c88f",
     "document-navigation": "33cd1d5fb56ee520b85e81222c26da680049c560fadf2875f7187751847ba2d9",
-    "docx": "53d836710b6229577f4fbfeebcc51b780dd71c68318354bcb98debc036e07d14",
-    "et": "8ab120eedfe3eeaa9953c45d3891d231ac1514350de0ba1ddb9b19b669ee25e7",
-    "ofd": "ac60bdd2ba1fd28927a83fa0392063e86446c3c7824db616508976f8fb9611f6",
-    "pptx": "050d4e8a5ea5f2a0a622c09209e5a3efb128605d4dba2f496e850a4d1e138e5f",
+    "docx": "361a3a5d7359523e97bb51b5efd80b51f1cdf383d241e5ebaae0a40a78a2d57b",
+    "et": "73ca10742e4800df7b77550a37e336b2eb605ce7c8bc98391347901d621490ec",
+    "ofd": "a38e74d3798bfbae73f9902fad33677dba20fc8bd9b171b40267568ab52bcdf9",
+    "pptx": "53cafc8e9952c539e45ed6130e0759ad0402f04808fdc1a19240b275f1e15630",
     "skill-development-standards": "7f2d3b15a0101183aaf9c12e6b7c692865fd04149e66fa7b6f47e98693e0be39",
-    "table-workflow": "a9f349d7f4351441a013bda1d94269053830fa3fbc094fdcd457b9f7dd120c0d",
-    "wps": "eaa2e6c279d0dbf879bece3a43e2797f44572123c628e07cf7465af335ea75a6",
-    "xlsx": "f86ea63b7a7dccbd69cf79d9db49dbf59e6ecdd4a4180a63dadcc6a383e76f29"
+    "table-workflow": "a2ad04cc25a91a2818258b9195382712e43edca95eb9ad0f5427ec64663ab71d",
+    "tl-docx": "60fbf1a6c1c01aa41f6adc9611aef0841946703523d152201a536c7a7d61f109",
+    "wps": "b710f4ac92999860d0d8446178f869d82dd7bb1eb423b8762033a1648b2b9818",
+    "xlsx": "174fcaffc3eabde5c828fefa9d4c2b8f67b3d8c4bf7c5a97d31abc50c6f8ede4"
   },
   "cases": [
     {
@@ -204,6 +205,34 @@
       ],
       "expected_exclude": [],
       "rationale": "人工能力边界期望，不是模型预测；其他未列技能不作断言。 文档处理意图可先匹配导航，无需先确认格式；所需提供方的支持范围不变。"
+    },
+    {
+      "id": "legacy-doc-embedded-images",
+      "kind": "positive",
+      "prompt": "读取旧版二进制 .wps 里的表格和文本框，并提取存储的 PNG 原图。",
+      "expected_include": [
+        "document-navigation",
+        "wps"
+      ],
+      "expected_exclude": [
+        "docx",
+        "et"
+      ],
+      "rationale": "人工复核的格式边界。旧版 MS-DOC 的表格、文本框及内嵌 PNG 由 WPS 最大模式按受支持范围读取。"
+    },
+    {
+      "id": "legacy-doc-chart-cache",
+      "kind": "positive",
+      "prompt": "读取旧版二进制 WPS 文字文档中饼图的保存数值、分类和缺值。",
+      "expected_include": [
+        "document-navigation",
+        "wps"
+      ],
+      "expected_exclude": [
+        "docx",
+        "et"
+      ],
+      "rationale": "按 MS-DOC 内容和读取需求选择 WPS 最大模式，只提取已定位的兼容记录内存储值。"
     },
     {
       "id": "wps-negative",
@@ -767,6 +796,31 @@
         "document-navigation"
       ],
       "rationale": "代码维护不属于办公文档处理，不因文件字样误触发。"
+    },
+    {
+      "id": "tl-docx-positive",
+      "kind": "positive",
+      "prompt": "使用 python-docx 读取 DOCX 月报，核对复杂表头和图表缓存，并按需分页返回",
+      "expected_include": [
+        "tl-docx"
+      ],
+      "expected_exclude": [
+        "wps"
+      ],
+      "rationale": "TL-DOCX 声明支持组件驱动 DOCX/DOTX 阅读；WPS 不作为原生 DOCX 的默认读取器。人工能力期望，不是模型实测。"
+    },
+    {
+      "id": "tl-docx-negative",
+      "kind": "negative",
+      "prompt": "读取旧二进制 DOC 文件，环境只允许 Python 标准库",
+      "expected_include": [
+        "wps"
+      ],
+      "expected_exclude": [
+        "tl-docx"
+      ],
+      "rationale": "TL-DOCX 依赖 python-docx 且处理 DOCX/DOTX，不声明旧 DOC 或标准库独立运行。"
     }
-  ]
+  ],
+  "notes": " 2026-11-12 归档v2：逐项复核64例，技能业务选择边界不变；仅归档新入口、状态与重试语义变化。更新入口指纹和计划读取快照不代表模型或宿主实测；前版保存在docs/maintenance/archive-delivery-v2。"
 }

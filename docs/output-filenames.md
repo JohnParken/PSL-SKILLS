@@ -15,6 +15,7 @@
 | Skill | 本轮处理 |
 | --- | --- |
 | docx | 新建、编辑、报告保存、批注、run 合并、pack/rezip、runner 与显式归档均校验裸文件名；解包和内部 XML 操作为工作区能力 |
+| tl-docx | `create`、`edit`、`comments` 和 `replace` 使用任务根目录裸文件名，省略时自动取名，同名递增。`--exact-name` 可固定主文件名。`read` 和 `validate` 默认输出到 stdout，`-o` 发布指定新文件，`--delivery` 显式归档。 |
 | xlsx | Workbook.save、CSV/TSV与分析导出、标准CLI、runner、publish/delivery及legacy报告出口统一校验；禁用legacy编辑工具未重新启用 |
 | wps | 创建、受控编辑、RTF/DOCX兼容与可选转换导出、builder.save、job均校验；省略导出名时取输入主名，固定写任务根目录 |
 | pptx | create CLI/API校验原始输出字符串；读取、验证与组包内存输出不新增文件出口 |

@@ -8,7 +8,7 @@
 |---|---|---|
 | docx | `scripts/read_docx.py --check` | 只读环境检查；stdout的read-check-ok，失败stderr的check-failed，退出0/1 |
 | docx | `scripts/run_docx_task.py check` | 环境、目录探针与锁；stdout的check-ok，失败stderr的auto-cleanup-check-failed，退出0/1 |
-| docx | `scripts/create_docx.py --check`、`scripts/archive_deliverables.py --check` | 环境与目录能力；stdout的check-ok，失败stderr的check-failed，退出0/1；可选归档警告不等于主环境失败 |
+| docx | `scripts/create_docx.py --check`、`scripts/archive_delivery.py --check` | 环境与目录能力；stdout的check-ok，失败stderr的check-failed，退出0/1；可选归档警告不等于主环境失败 |
 | xlsx | `scripts/stdlib_xlsx.py check` | 导入、模板及有限计算；单个JSON的ready/failed/unsupported，退出0/1 |
 | pptx | `scripts/pptx.py check` | 隔离环境与内存示例导出；单个 JSON 的 ok=true、environment-ok、in_memory_export=passed，退出0/2；真实业务产物仍需另行验收 |
 | wps | `scripts/read_wps.py --check` | 依赖与版本；stdout的environment-ok及OOXML可用性；受控失败stderr的environment-failed，依赖失败退出1，Python不足退出2 |
@@ -17,7 +17,9 @@
 | bank-writing | 无脚本 | 人工确认任务、素材及资源可读；缺条件时说明具体缺口。无进程、stdout/stderr或退出码，不虚构执行证据 |
 | skill-development-standards | 入口Python版本检查、检查器`--help`；`scripts/check_skill.py 目标 --strict` | 版本命令已打印environment-ok，失败为断言诊断/非零退出；help是入口可用性信息。结构检查输出OK或ERROR/WARNING，不是环境/业务产物验收 |
 
-9个可执行环境自检入口使用 `check_kind=environment artifact_validation=not_run`。文本成功标记仍在stdout，文本受控失败标记在stderr；JSON入口使用同名字段，不在JSON前后插入普通文字。PPTX 的内存样例结构检查放在 `self_test`，不把它当作用户产物验收。未进入main的导入失败、语法错误或参数错误可能只有stderr诊断及非零退出，仍必须完整回传，不能冒称自检已运行。
+上表 9 个环境入口使用 `check_kind=environment artifact_validation=not_run`。文本成功标记仍在 stdout，文本受控失败标记在 stderr；JSON 入口使用同名字段。PPTX 的内存样例结构检查放在 `self_test`。未进入 main 的导入失败、语法错误或参数错误可能只有 stderr 诊断及非零退出，仍须回传。
+
+`tl-docx` 使用 [独立自检](../skills/tl-docx/SKILL.md#执行环境约束与首步自检)。在确认任务目录后，用预装 `python-docx==1.2.0` 的解释器以 `-I -B` 执行 `scripts/tl_docx.py check`。写入任务加 `--write`，同时检查目录锁、硬链接与同步能力。要求退出 0 与 `status=environment-ok`，写入任务还需 `task_write_check=passed`。结构节点树和模板填充另检查 `structure_available`、`template_dom_available`，由解释器的 Expat 版本决定。该入口保留 site-packages，由宿主直接执行。
 
 补充边界：上述 9 个入口是适配器固定注册表，不是当前 10 个 Skill 的全部自检。ET 的 `scripts/read_et.py --check`、`scripts/analyze_et.py --check`、table-workflow 的 `scripts/table_workflow.py check --xlsx-root "<已确认根目录>"`（ET 输入另传 `--et-root`）、WPS 的创建/导出自检按各自主入口直接调用；OFD 写入服务暂不提供。`skill-structure --skill` 当前白名单也不含 et/table-workflow；可直接用规范检查器检查其真实目录，不声称适配器已支持。
 
