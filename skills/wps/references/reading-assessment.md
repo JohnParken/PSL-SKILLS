@@ -8,6 +8,7 @@
 
 - 入口与失败行为 (`<skill-root>/references/reading-assessment.md#入口与失败行为`)
 - 结果字段与范围评估 (`<skill-root>/references/reading-assessment.md#结果字段与范围评估`)
+- 最大化读取模式 (`<skill-root>/references/reading-assessment.md#最大化读取模式`)
 - MS-DOC 段落 CP 来源（可选） (`<skill-root>/references/reading-assessment.md#ms-doc-段落-cp-来源可选`)
 - MS-DOC 段落 CHPX/PAPX 原始证据关联 (`<skill-root>/references/reading-assessment.md#ms-doc-段落-chpxpapx-原始证据关联`)
 - 可运行的契约示例 (`<skill-root>/references/reading-assessment.md#可运行的契约示例`)
@@ -36,7 +37,7 @@ CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返�
 - `outcome` 对应原始 `status`；`ok` 的 `completeness=within_declared_scope`，不代表完整格式、页面或生产软件认证。
 - `partial` 的 completeness 为 partial；返回失败字典的为 `no_content_delivered`。字段排除或隐藏策略继续由原始诊断解释，不统一改成损坏。
 - `events` 汇总原有诊断的 code、来源字段和已记录位置；缺失偏移不推测。
-- `coverage` 按 related_content、binary_tables、objects 及显式遗漏代码报告 extracted/not_requested/not_decoded/unknown；仅依据已记录证据，unknown 不表示不存在。每类最多保留 20 个位置并记录截断数；`evidence_count` 是证据条目数，不是字符覆盖率。部分二进制行已观察时完整结构仍为 not_decoded。
+- `coverage` 报告 related_content、binary_tables、objects、适用的 binary_images 及显式遗漏代码。状态取决于已记录证据，`unknown` 不表示不存在。每类最多保留 20 个位置并记录截断数。`evidence_count` 统计证据条目。最大模式已恢复二进制表格行时使用 `partially_extracted`，仍需查看表格分组和合并的实际范围。
 - `events` 也收集附加故事和工作表的嵌套诊断；最多保留 1000 项，超出数见 `events_truncated`。原始诊断仍是完整依据。
 - `omitted_regions` 是 MS-DOC 未请求的非空附加故事范围，不含文字；遇到这些区域时顶层 partial/退出 3。
 - `regions` 仅汇总附加区域类型、状态、来源、空状态与引用状态，不复制正文或被排除文字。
@@ -46,11 +47,21 @@ CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返�
 
 本轮二进制主正文新增保守绘图标记：`--object-policy placeholder` 可以在 `PlcfSpa` CP/存储字符全部经过校验的情况下，将 `U+0008` 替换成 `U+FFFC` 并返回 `drawn_shape_anchor_not_rendered`，保留 CP、WordDocument 偏移与 SPA 源偏移；默认 reject 不变。该诊断不是图像、文字、字体或绘制结果的还原。具体边界见 绘图锚点（`<skill-root>/references/binary-shapes.md`）。
 
-CFB 结构错误保持失败：若文件长度非扇区整数倍，可从失败 `location.reason_code=cfb_unaligned_physical_length` 区分；FAT 宣告分配未具备物理存储扇区时为 `cfb_fat_unbacked_allocation`。两类错误均属于 `invalid_or_unsupported`，不补齐缺失扇区，不忽略非零尾随数据。错误分层并非损坏文件读取成功。
+CFB 末扇区的 `cfb_missing_final_sector_padding` 属于兼容诊断。仅当所有声明的流字节和分配元数据实际存在时，data 策略才会在内存补齐未声明的填充，并保留 partial。声明的数据或扇区实际缺失时读取失败。失败原因可见 `cfb_unaligned_physical_length` 或 `cfb_fat_unbacked_allocation`。
 
 内部格式解析器、历史低层 CLI 可能没有此摘要或使用不同状态/退出码。合成回归验证范围限定、部分区域定位和隐藏文字不进入摘要，不构成真实文件语义对照。
 
 选中 `object_policy=placeholder` 或 `field_policy=cached_result` **不代表实际发生文本转换**。当存储故事没有需要替换的对象/字段/注释标记时，原文保持原样，可取得精确 CP 来源；内部不再为无转换内容构造逐字符复制列表。只有实际替换或过滤导致内容变化时才按 `unavailable_after_text_transform` 保守返回。此优化不改变任何输入选项、状态或文档格式支持范围。
+
+## 最大化读取模式
+
+显式 `--reading-mode maximum` 或 `read_bytes(data, reading_mode="maximum")` 只用于“尽量保留可安全取得的存储文字”。它固定采用 `compatibility=data`、二进制 `text_policy=recover`、`field_policy=cached_result`、`object_policy=placeholder`、`hidden_text=include`、`revisions=all` 和附加区域读取；与这些目标冲突的显式策略会在读取前拒绝，不静默覆盖。CLI 只允许完整 JSON，拒绝纯文本、摘要、标题/段落/章节选择和分页视图，因为这些投影会丢失独立区域或来源诊断。
+
+- **MS-DOC/CFB。** `binary_table_structure.tables` 补读可确认的一级表格分组、存储列边界及横向和纵向合并，参见 `<skill-root>/references/binary-tables.md#表格分组与合并`。`drawing_objects` 记录存储形状和锚点。`binary_images` 提供已验证的 PNG 元数据和位置，带 `--include-image-bytes` 或 Python `include_image_bytes=True` 时可取有界原始字节。`binary_charts` 提供已定位的图表分类、系列、缓存值及缺失范围，见 `<skill-root>/references/binary-shapes.md#存储图表缓存`。附加区域见 `<skill-root>/references/ms-doc-stories.md#最大模式文本框`。
+- **OOXML Word：** 使用全部存储修订视图并跟随主文显式引用的页眉页脚、脚尾注和批注；另外从已经通过 XML/ZIP 结构检查的 `w:txbxContent` 子树提取文字和有限表格，按独立 `related_stories[type=textboxes]` 返回。绘图锚点、页面位置、Markup Compatibility Choice/Fallback 分支和主文阅读顺序都不推断；同一逻辑文本存在于多个未选择分支时可能分别返回，不能自动去重或并入主正文。
+- **RTF：** 仅捕获已闭合且首控制字可证明为页眉、页脚、脚注或批注的目标组，在继承到该组的代码页和 `uc` 设置下隔离解析，并按独立故事返回。节、页面、引用锚点、目标组与主正文的阅读顺序未知；未闭合、超预算或无法可靠解析的区域保留失败/遗漏诊断，不猜测补齐。
+
+最大模式增加 `reading_mode=maximum` 与 `maximum_reading`。域及图表缓存以存储值返回。核对图表系列的 `status`、`points` 和 `missing_ranges`，这些字段的范围限于已定位的缓存。顶层 `status` 由全部诊断决定。加密、未知容器及安全和资源门禁按失败处理。WPS Office 12.1.0.26899 生产者和客户端视觉尚未验收。
 
 ## MS-DOC 段落 CP 来源（可选）
 

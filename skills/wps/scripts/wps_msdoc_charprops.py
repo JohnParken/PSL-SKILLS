@@ -7,9 +7,13 @@ MAX_CHPX_RUNS = 65536
 MAX_PROPERTY_BYTES = 1024 * 1024
 MODIFIERS = {0x0800: 'deleted_revision', 0x0801: 'inserted_revision',
              0x0802: 'field_hidden', 0x0811: 'web_hidden', 0x083C: 'hidden'}
+PIC_LOCATION = 0x6A03
+SPECIAL_CHARACTER = 0x0855
+NON_PICTURE_PROPERTIES = (0x0806, 0x080A, 0x0856)  # CFData, CFOle2, CFObj
+PICTURE_PROPERTIES = {PIC_LOCATION, SPECIAL_CHARACTER, *NON_PICTURE_PROPERTIES}
 
 
-def inspect_character_properties(word, table, pieces, positions, fib_end, table_ranges=(), cp_limit=None):
+def inspect_character_properties(word, table, pieces, positions, fib_end, table_ranges=(), cp_limit=None, *, picture_cps=None):
     # Local import prevents module-load dependency cycles with the public reader.
     from read_wps import require
     pair = 154 + 12 * 8
@@ -19,6 +23,9 @@ def inspect_character_properties(word, table, pieces, positions, fib_end, table_
     result = {'mode': 'annotate', 'effective_visibility': 'unknown',
               'effective_revisions': 'unknown', 'text_filtered': False,
               'style_and_piece_properties_applied': False, 'runs': []}
+    picture_offsets = {}
+    if picture_cps is not None:
+        result['stored_picture_offsets'] = picture_offsets
     if not length:
         result['availability'] = 'missing_bte'
         return result
@@ -73,6 +80,8 @@ def inspect_character_properties(word, table, pieces, positions, fib_end, table_
             mods = []
             unknown = 0
             group_offset = None
+            picture_properties = {}
+            complete_group = True
             if pointer:
                 require(header_end <= pointer < 511, page.location(pointer),
                         'Character property pointer overlaps FKP arrays')
@@ -97,6 +106,7 @@ def inspect_character_properties(word, table, pieces, positions, fib_end, table_
                     if sgc != 2:
                         # Paragraph/table variable-length exceptions are not decoded.
                         unknown += 1
+                        complete_group = False
                         break
                     width = (1, 1, 2, 4, 2, 2, None, 3)[spra]
                     if width is None:
@@ -111,6 +121,9 @@ def inspect_character_properties(word, table, pieces, positions, fib_end, table_
                         mods.append({'property': MODIFIERS[sprm], 'sprm': hex(sprm),
                                      'operand_raw': operand, 'source': page.location(at),
                                      'effective_value': 'unknown'})
+                    elif picture_cps is not None and sprm in PICTURE_PROPERTIES:
+                        value = page.number(cursor, width)
+                        picture_properties[sprm] = None if sprm in picture_properties else value
                     else:
                         unknown += 1
                     cursor += width
@@ -128,6 +141,13 @@ def inspect_character_properties(word, table, pieces, positions, fib_end, table_
                 right = min(right, piece_start + (cp_limit-positions[piece_index])*stride)
                 require((left - piece_start) % stride == 0 and (right - piece_start) % stride == 0,
                         word.location(left), 'Character run splits a UTF-16 code unit')
+                if picture_cps is not None:
+                    if cp_start in picture_cps and left == fc[run] and right == fc[run + 1] and right - left == stride and complete_group:
+                        picture_offset = picture_properties.get(PIC_LOCATION)
+                        if (picture_properties.get(SPECIAL_CHARACTER) == 1 and picture_offset is not None and picture_offset <= 0x7FFFFFFF
+                                and all(picture_properties.get(prop, 0) == 0 for prop in NON_PICTURE_PROPERTIES)):
+                            picture_offsets[cp_start] = {'data_offset': picture_offset, 'source': page.location(pointer + 1)}
+                    continue
                 require(len(result['runs']) < MAX_CHPX_RUNS, word.location(left),
                         'Character CP annotation budget exceeded', 'resource_limit')
                 result['runs'].append({'cp_start': positions[piece_index] + (left-piece_start)//stride,

@@ -1,3 +1,3 @@
 # Python >=3.10; standard library only; no third-party dependencies.
-# All OOXML reading additionally requires bundled Expat >=2.6.0.
+# OOXML and embedded DrawingML chart cache reading require bundled Expat >=2.6.0.
 # Optional binary MS-DOC export requires preinstalled LibreOffice; no installation or runtime network.

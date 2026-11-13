@@ -29,12 +29,18 @@ class RtfPolicyOutputTests(unittest.TestCase):
 
     def test_explicit_unsupported_policies_fail_closed(self):
         data = b'{\\rtf1 text\\par}'
-        for options in ({'include_related': True}, {'binary_paragraph_sources': True},
-                        {'text_policy': 'strict'},
+        for options in ({'binary_paragraph_sources': True}, {'text_policy': 'strict'},
                         {'chart_policy': 'opaque'}, {'compatibility': 'strict'}):
             with self.subTest(options=options), self.assertRaises(ParseError) as caught:
                 read_bytes(data, **options)
             self.assertEqual(caught.exception.status, 'unsupported')
+
+    def test_related_destinations_are_separate_and_unmapped(self):
+        result = read_bytes(b'{\\rtf1 Main\\par{\\header Header\\par}}', include_related=True)
+        self.assertEqual(result['text'], 'Main')
+        self.assertEqual(result['related_stories'][0]['text'], 'Header')
+        self.assertEqual(result['related_stories'][0]['page_mapping'], 'unknown')
+        self.assertEqual(result['status'], 'partial')
 
     def test_explicit_recover_matches_default(self):
         data = b'{\\rtf1 recoverable\\par'

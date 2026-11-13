@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 核对日期：2026-11-10；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；当前 Skill 版本：`20261112.1921.3400`。本文是仓库级说明，不替代 [SKILL.md](../../skills/wps/SKILL.md) 的运行约束，也不表示本次已执行转换或客户端验收。
+> 当前 Skill 版本为 `20261113.2302.5108`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -11,7 +11,7 @@
 WPS Skill 面向公文、报告、段落和基础表格，提供四条任务路径：
 
 1. **声明式创建**：JSON `blocks` 生成 RTF，默认最终文件名为“文档主题.wps”；用户明确要求 `.rtf` 时尊重该后缀。
-2. **内容读取**：根据真实字节识别 RTF、CFB 内受支持的 MS-DOC 子集、OOXML Word 子集，返回正文、有限结构、诊断和读取范围。支持标题、段落范围、章节及有界输出。
+2. **内容读取**。按字节识别 RTF、MS-DOC 和 OOXML Word 的受支持子集。可读取全文或选定范围。maximum 模式使用完整 JSON，补读受支持的文本框、绘图说明、表格、段落属性、MS-DOC 内嵌 PNG 及图表缓存。
 3. **受控重排编辑**：文字替换、段落替换/删除/追加、单元格更新及批量操作。读取后重建整份 RTF，不是对原格式的保留式编辑。
 4. **从 DOCX 兼容导出**：将 DOCX 转为 RTF，或通过实际预装 LibreOffice 转为二进制 MS-DOC；每种后端都需候选校验和回读。此路径不是 WPS 转 DOCX。
 
@@ -31,6 +31,7 @@ flowchart TD
     A["SKILL.md：任务分流与格式声明"] --> B["read_wps.py：按真实内容路由"]
     B --> C["wps_rtf_read：RTF 子集"]
     B --> D["wps_cfb 与 MS-DOC 解析：有界二进制证据"]
+    D --> Q["maximum：表格、文本框、存储图片和图表缓存"]
     B --> E["wps_ooxml：OOXML Word 子集"]
     B --> F["诊断与选择性读取；字符/UTF-8 字节预算及续页"]
     A --> G["run_wps_task：JSON 声明式创建"]
@@ -54,7 +55,9 @@ RTF 创建和重排共用构建器及内容账本。导出器具有自己的候�
 | 入口或模块 | 主要职责 |
 | --- | --- |
 | [read_wps.py](../../skills/wps/scripts/read_wps.py) | 统一 CLI 及 `read(path)`、`read_bytes(data)`；格式分支路由、策略兼容检查、状态及通道输出。 |
-| [wps_cfb.py](../../skills/wps/scripts/wps_cfb.py)、[wps_ooxml.py](../../skills/wps/scripts/wps_ooxml.py)、[wps_rtf_read.py](../../skills/wps/scripts/wps_rtf_read.py) | CFB 结构与流边界、OOXML 受限 ZIP/XML、RTF token 和有限结构读取。MS-DOC 正文及附加区域通过入口和专门模块组合解析。 |
+| [wps_cfb.py](../../skills/wps/scripts/wps_cfb.py)、[wps_ooxml.py](../../skills/wps/scripts/wps_ooxml.py)、[wps_ooxml_textboxes.py](../../skills/wps/scripts/wps_ooxml_textboxes.py)、[wps_rtf_read.py](../../skills/wps/scripts/wps_rtf_read.py) | CFB 结构与流边界、OOXML 受限 ZIP/XML、maximum 文本框独立故事、RTF token/目标组和有限结构读取。MS-DOC 正文及附加区域通过入口和专门模块组合解析。 |
+| [wps_binary_tables.py](../../skills/wps/scripts/wps_binary_tables.py)、[wps_binary_officeart.py](../../skills/wps/scripts/wps_binary_officeart.py)、[wps_binary_images.py](../../skills/wps/scripts/wps_binary_images.py) | 校验表格行和单元格，关联组合图形、文本框和图片，按请求返回有界 PNG 字节。 |
+| [wps_binary_charts.py](../../skills/wps/scripts/wps_binary_charts.py)、[wps_binary_chart_cache.py](../../skills/wps/scripts/wps_binary_chart_cache.py) | 从已验证的锚点关系读取图表部件、系列缓存和缺值范围。 |
 | [wps_diagnostics.py](../../skills/wps/scripts/wps_diagnostics.py)、[wps_selective.py](../../skills/wps/scripts/wps_selective.py)、[wps_read_view.py](../../skills/wps/scripts/wps_read_view.py) | 读取评估、标题/范围/章节投影、与原字节和选项绑定的分页游标；不把投影结果伪装为完整格式数据。 |
 | [run_wps_task.py](../../skills/wps/scripts/run_wps_task.py) | `check/create`；接收 stdin 或 `--spec`，规范化生成、候选回读、发布并输出回执。 |
 | [wps_rtf_builder.py](../../skills/wps/scripts/wps_rtf_builder.py) | `RtfRun/Paragraph/Table/Document` 与 `build_document_from_spec()`；文本转义、UTF-16 代理对、页面/段落控制与有限表格合并。 |
@@ -121,7 +124,9 @@ JSON
 
 默认读取 JSON 返回 `format/text/paragraphs` 及适用的 `tables/blocks/issues/diagnostics/omitted_regions`。`reading_assessment` 是范围摘要：`ok` 仅表示 `within_declared_scope`，`full_format_verified` 始终为 false。未知覆盖不表示该内容不存在。
 
-`--format text` 成功时 stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔，JSON 的 `text` 保持段落口径。partial 的状态和 issues 摘要在 stderr。RTF 对可证实的直接隐藏和修订标记支持筛选或注释；样式、历史属性、字段或结构边界使筛选不能保证时拒绝。默认保留存储文字并在遇相关控制时标 partial；图片和对象默认标 U+FFFC 及源位置，内容不执行或解码，显式 reject 遇对象拒绝。显式字段 reject 在已解析主内容遇域时拒绝，缓存结果不执行且标 partial。脚注和批注不混入主文，附加区域提取尚不支持。OOXML 默认 include 在可见性元数据损坏但正文可安全读取时保留正文并标 partial；标准 noBreakHyphen/softHyphen 保留为对应 Unicode 字符。失败 JSON 写 stderr，不用空正文伪装成功。默认 JSON 模式的读取失败写 stdout；参数解析错误只有用法/错误文本。JSON 输出有 16 MiB 预算，超限失败，不输出被截断的合法性未知结果。
+`--reading-mode maximum` 使用完整 JSON，读取字段缓存、对象占位、隐藏及全部修订存储文字，并请求附加区域。MS-DOC 的 `drawing_objects` 提供可确认的锚点和形状说明，`related_stories` 提供文本框及其范围。`binary_images` 提供已验证的 PNG 元数据和引用，带 `--include-image-bytes` 可取得原始字节。`binary_charts` 返回可定位的浮动或行内图表缓存、缺值和来源，外部工作簿只记录引用状态。RTF 读取已验证的附加目标组，OOXML 另列受检的 `w:txbxContent`。 [绘图与 PNG](../../skills/wps/references/binary-shapes.md#最大模式绘图说明) · [图表缓存](../../skills/wps/references/binary-shapes.md#存储图表缓存) · [附加故事与文本框](../../skills/wps/references/ms-doc-stories.md#最大模式文本框)
+
+`--format text` 成功时 stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔，JSON 的 `text` 保持段落口径。partial 的状态和 issues 摘要在 stderr。RTF 对可证实的直接隐藏和修订标记支持筛选或注释；样式、历史属性、字段或结构边界使筛选不能保证时拒绝。默认保留存储文字并在遇相关控制时标 partial；图片和对象默认标 U+FFFC 及源位置，内容不执行或解码，显式 reject 遇对象拒绝。显式字段 reject 在已解析主内容遇域时拒绝，缓存结果不执行且标 partial。脚注和批注不混入主文；RTF 仅在显式附加/maximum 模式提取可验证目标组并独立标注未知映射。OOXML 默认 include 在可见性元数据损坏但正文可安全读取时保留正文并标 partial；标准 noBreakHyphen/softHyphen 保留为对应 Unicode 字符。失败 JSON 写 stderr，不用空正文伪装成功。默认 JSON 模式的读取失败写 stdout；参数解析错误只有用法/错误文本。JSON 输出有 16 MiB 预算，超限失败，不输出被截断的合法性未知结果。
 
 `read_bytes()` 可能抛 `ParseError`，也可能返回格式分支生成的失败字典；调用方既要捕获异常，也要检查 `status`。`read(path)` 捕获 `ParseError/OSError` 并返回失败结果，但不保证捕获所有编程异常。
 
@@ -130,7 +135,7 @@ JSON
 - 段落范围为 1-based、两端包含；章节按检测到的标题边界选择，重复标题可用 `--section-index` 明确定位。
 - `wps_read_view_v1` 保留原状态、partial 和主要诊断，同时明确 `coverage/metadata_omitted/truncated/next_cursor`。游标绑定源 SHA-256、选项及 `projection_revision=2`，源文件或范围变化后拒绝复用。旧修订游标须重新开始；每次续读仍完整解析，不是流式读取或跨调用缓存。
 - 有界视图可加 `--max-output-bytes`（512..16777216），与原字符预算同时生效，按真实 JSON 加换行的 UTF-8 字节核算，包含中文、emoji、转义及游标。仅指定字节预算也启用视图；默认字符预算仍12000。新增 `has_more` 与 next_cursor 一致，概况 has_more=false 不表示返回全文。诊断或单个输出单元放不下时完整返回 output_view_error，不裁剪；预算也约束失败 JSON，参数错误仍为 stderr/退出2。详见 [有界读取](../../skills/wps/references/bounded-reading.md)。
-- MS-DOC 可选存储 CP 来源、隐藏文字证据及一级表格证据，不是页码、有效样式或完整逻辑表格。一级表格证据增加完整初始 TC80 记录的合并标志、宽度原值及有限局部宽度操作数；后续修饰未应用，merges 仍可为 unknown，不能据此推断最终网格、有效列宽或版式。见 [二进制表格证据](../../skills/wps/references/binary-tables.md)。OOXML 修订读取视图与 MS-DOC 存储文本策略不同，不能互换。
+- MS-DOC 最大模式在 `binary_table_structure.tables` 给出可确认的一级表格分组、存储列边界、横向合并和纵向合并跨度，通过行索引关联 `rows`。遇到无可靠边界或网格的记录会标明缺口，保留可用的行和原文字。嵌套表格、完整样式及版式仍待解析。 [二进制表格分组与合并](../../skills/wps/references/binary-tables.md#表格分组与合并)
 - 加密、结构损坏、安全校验或资源限制按失败契约停止；有可靠正文的 partial 不应被丢弃，但也不能自动用于无损编辑。
 
 详细字段与例外见 [读取结果契约](../../skills/wps/references/reading-assessment.md) 和 [格式边界](../../skills/wps/references/format.md)。
@@ -166,7 +171,7 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 - `output_written=null` / `publication_uncertain`：先检查目标与进程状态，不盲目重跑。
 - `cleanup_complete=true` 只对应内部候选清理；`run_wps_job` 的配置清理由 `job_cleanup` 另行表示。
 
-创建、编辑和导出 CLI 自动调用 `wps_delivery`；裸读取、`inspect/check` 和底层 API 不自动归档。只有发布核验及内部清理通过后才归档，归档前后再次核对主文件哈希。`delivery.archive_status` 单独表示 copied、skipped 或 failed；缺少有效宿主配置时 skipped，不能据业务退出 `0` 声称云空间成功。
+创建、编辑和导出 CLI 自动调用 `wps_delivery`；裸读取、`inspect/check` 和底层 API 不自动归档。只有发布核验及内部清理通过后才归档，归档前后再次核对主文件哈希。`delivery.archive_status` 单独表示 success、partial、failed 或 not_required；缺少有效宿主配置时 failed，不能据业务退出 `0` 声称云空间成功。
 
 归档复制成功即按 archive_user_notice 提示去云空间查看，无需等待宿主映射确认；这不宣称已验证上传完成或展示时效。失败保留主文件，不重跑生成或删除历史文件解决冲突。默认 stdin 不产生额外配置；确需落盘 JSON 时使用受控 job，创建前登记，仅清理自己的已确认文件，保护用户原配置。详见 [交付契约](../../skills/wps/references/delivery.md) 与 [公共副本来源记录](../../skills/wps/references/lifecycle-upstream.json)。
 
@@ -179,14 +184,14 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 - 安全路径与发布要求实际具备 `dir_fd`、不跟随链接及硬链接等能力；缺失时停止。Linux 容器是主要目标，macOS/Windows、实际宿主和客户端需要分别验证。
 - 静态结构、内容账本和原始控制字段验收不等于视觉分页；`layout_verification=not_run`、`native_wps=false`、格式 partial 都必须如实保留。
 
-本次工作仅在固定源码基线上审阅实现与参考契约，并编写仓库文档；未运行生成、编辑、格式转换、全量测试或 WPS/Word/LibreOffice 客户端验收。仓库历史样本记录不自动成为本次平台验证证据。
+仓库初版导读在固定源码基线上审阅实现与参考契约。当前二进制读取验证见 [最大模式二进制读取](../maintenance/wps/validation.md#最大模式二进制读取) 和 [绘图锚点与说明](../maintenance/wps/validation.md#绘图锚点与说明)。
 
 ## 源码追溯
 
 - 历史快照：[WPS 源目录](https://github.com/JohnParken/PSL-SKILLS/tree/6e4cca7a78a57acebe38448962c99cbc4814b409/skills/wps)。
 - 统一入口与格式路由：[SKILL.md](../../skills/wps/SKILL.md)、[read_wps.py](../../skills/wps/scripts/read_wps.py)、[wps_output_contract.py](../../skills/wps/scripts/wps_output_contract.py)。
 - 创建、编辑及计划校验：[run_wps_task.py](../../skills/wps/scripts/run_wps_task.py)、[run_wps_edit.py](../../skills/wps/scripts/run_wps_edit.py)、[wps_content_validation.py](../../skills/wps/scripts/wps_content_validation.py)。
-- 新边界回归（本轮未执行）：[入口流程](../../skills/wps/scripts/test/test_wps_entry_workflows.py)、[二进制表格](../../skills/wps/scripts/test/test_wps_binary_tables.py)。
+- 读取回归：[入口流程](../../skills/wps/scripts/test/test_wps_entry_workflows.py)、[二进制表格](../../skills/wps/scripts/test/test_wps_binary_tables.py)、[最大模式二进制读取](../../skills/wps/scripts/test/test_wps_msdoc_maximum.py)。
 - 后端与状态传播：[export_wps.py](../../skills/wps/scripts/export_wps.py)、[wps_task_paths.py](../../skills/wps/scripts/wps_task_paths.py)、[wps_delivery.py](../../skills/wps/scripts/wps_delivery.py)。
 
 ## 归档提示更新（2026-11-07）
@@ -211,3 +216,9 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。
 
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+本轮归档收尾补充：已声明最终交付但发布校验、业务结果或内部候选清理未就绪时，返回 failed 和具体 blocking_reasons，保留主文件，不误报 not_required；清理恢复并重新核验后仅重试归档，采用重试时最新宿主 questionId。CLI 业务退出码与归档结果仍须分别检查。
+
+## 2026-11-13 纯 Python 最大化读取
+
+新增 `--reading-mode maximum`，保持默认 standard 行为不变；目标是多返回有来源边界的存储文字，而不是放宽结构安全或伪造完整成功。实现、合成测试与未验证范围见 [最大化读取维护记录](../maintenance/wps/maximum-reading-20261113.md)。当前没有 WPS Office 12.1.0.26899 真实样本，因此不能称为该版本已认证兼容。

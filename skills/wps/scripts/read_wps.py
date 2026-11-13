@@ -28,6 +28,8 @@ MAX_PARAGRAPHS = 100000
 MAX_FIELD_DEPTH = 64
 MAX_FIELDS = 100000
 MAX_OBJECT_MARKERS = 1000
+MAX_TEXTBOX_COPY_UNITS = 65536
+TEXTBOX_STORIES = {'textboxes': (56, 'main'), 'header_textboxes': (58, 'headers_footers')}
 # MS-DOC FcCompressed substitutions recorded by the local binary_doc.py.
 COMPRESSED_MAPPING = dict(zip(
     (0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C,
@@ -69,7 +71,7 @@ class Region:
 
 
 def parse_streams(streams, *, field_policy='reject', object_policy='reject', include_related=False, hidden_text='include',
-                  binary_paragraph_sources=False, text_policy='strict'):
+                  binary_paragraph_sources=False, text_policy='strict', maximum=False, include_image_bytes=False):
     require(text_policy in ('strict', 'recover'), {'stage': 'options'}, 'Unknown binary text policy', 'unsupported')
     require(field_policy in ('reject', 'cached_result'), {'stage': 'options'},
             'Unknown MS-DOC field policy', 'unsupported')
@@ -79,6 +81,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             'Effective binary visibility is unknown; exclude unsupported', 'unsupported')
     require(type(binary_paragraph_sources) is bool, {'stage': 'options'},
             'binary_paragraph_sources must be boolean', 'unsupported')
+    require(not include_image_bytes or maximum, {'stage': 'options'}, 'Image bytes require maximum reading', 'unsupported')
     # CFB applies these budgets before materializing streams. Repeat at this
     # internal seam so direct tests/callers cannot bypass the parser budgets.
     require(len(streams) <= 4096, {'stage': 'streams'}, 'Stream count budget exceeded', 'resource_limit')
@@ -172,6 +175,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
     # Preflight ALL pieces and overlaps before decoding or allocating body text.
     pieces = []
     piece_properties = False
+    piece_prms = [] if maximum else None
     for index in range(piece_count):
         descriptor = cp_bytes + 8 * index
         location = plc.location(descriptor + 2, piece=index)
@@ -192,6 +196,8 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         require(not prm & 1 or (prm >> 1) < prc_count,
                 plc.location(descriptor + 6, piece=index), 'Invalid Prm1 Prc index')
         piece_properties = piece_properties or prm != 0
+        if piece_prms is not None:
+            piece_prms.append(prm)
         pieces.append((file_offset, end, stride, index))
     ordered = sorted(pieces)
     for left, right in zip(ordered, ordered[1:]):
@@ -211,6 +217,9 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
     # Table Stream ranges may not alias across notes, authors, sections or BTE.
     table_spans = [(clx_offset, clx_offset + clx_size)]
     decoded_pairs = (2, 3, 4, 5, 6, 11, 36, 46, 47) if include_related else ()
+    if maximum and include_related:
+        decoded_pairs += tuple(pair for pair, _ in TEXTBOX_STORIES.values())
+    drawing_region = None
     if hidden_text == 'annotate':
         decoded_pairs += (12,)
     for pair in decoded_pairs:
@@ -221,14 +230,24 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             require(all(offset + size <= left or right <= offset for left, right in table_spans),
                     table.location(offset), 'Overlapping decoded table/CLX ranges')
             table_spans.append((offset, offset + size))
-    shape_anchors = {}
+    anchors_by_story = {}
+    hidden_shape_cps = set()
     if object_policy == 'placeholder':
-        from wps_binary_shapes import main_shape_anchors
-        shape_anchors = main_shape_anchors(word, table, main_count, read_unit, table_spans)
-        if shape_anchors:
-            pair = FC_LCB_START + 40 * 8
-            start, size = word.number(pair), word.number(pair + 4)
-            table_spans.append((start, start + size))
+        from wps_binary_shapes import HEADER_SPA_PAIR, PLCF_SPA_PAIR, shape_anchors
+        shape_stories = [('main', 0, main_count, PLCF_SPA_PAIR)]
+        if maximum and include_related:
+            shape_stories.append(('headers_footers', main_count + other_counts[0], other_counts[1], HEADER_SPA_PAIR))
+        for kind, start_cp, count, pair_index in shape_stories:
+            anchors = shape_anchors(word, table, start_cp, count, read_unit, table_spans,
+                                    header=kind == 'headers_footers', include_placement=maximum)
+            anchors_by_story[kind] = anchors
+            if anchors:
+                pair = FC_LCB_START + pair_index * 8
+                start, size = word.number(pair), word.number(pair + 4)
+                table_spans.append((start, start + size))
+        if maximum and any(anchors_by_story.values()):
+            from wps_binary_shapes import drawing_metadata_region
+            drawing_region = drawing_metadata_region(word, table, table_spans, require)
     header_mapping = None
     note_mappings = {}
     automatic_note_markers = set()
@@ -263,9 +282,13 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
     remaining_fields = MAX_FIELDS
     remaining_objects = MAX_OBJECT_MARKERS
     remaining_controls = MAX_OBJECT_MARKERS
+    data_region = Region(streams[('Data',)], 'Data') if ('Data',) in streams else None
+    data_ownership = set() if maximum else None
 
     def render_story(cp_start, cp_end, story_type):
         nonlocal remaining_paragraphs, remaining_fields, remaining_objects, remaining_controls
+        story_anchors = anchors_by_story.get(story_type, {})
+        read_shapes = story_type in anchors_by_story
         body = bytearray()
         for file_offset, _, stride, index in pieces:
             begin = max(positions[index], cp_start)
@@ -290,6 +313,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         cp = cp_start
         fields = []
         field_count = 0
+        field_spans = []
         hidden = 0
         object_locations = []
         shape_locations = []
@@ -302,7 +326,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         needs_render = (
             (field_policy == 'cached_result' and any(char in text for char in '\x13\x14\x15'))
             or (object_policy == 'placeholder' and
-                ('\x01' in text or (story_type == 'main' and '\x08' in text)))
+                ('\x01' in text or (read_shapes and '\x08' in text)))
             or (bool(automatic_note_markers) and '\x02' in text)
             or (bool(comment_markers) and '\x05' in text)
             or (text_policy == 'recover' and any(ord(char) < 32 and char not in '\t\r\x07\x0b\x0c' for char in text)))
@@ -326,9 +350,11 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                     hidden -= 1
                 else:
                     require(bool(fields), location, 'Field end without start')
-                    has_result, _ = fields.pop()
+                    has_result, field_start = fields.pop()
                     if not has_result:
                         hidden -= 1
+                    if maximum and not fields:
+                        field_spans.append((field_start, cp + 1))
             elif char == '\x05' and cp in comment_markers:
                 note_marker_locations.append(text_location(cp))
                 if not hidden:
@@ -344,14 +370,19 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 object_locations.append({**text_location(cp), 'placeholder_emitted': not bool(hidden)})
                 if not hidden:
                     rendered.append('\ufffc')
-            elif char == '\x08' and object_policy == 'placeholder' and story_type == 'main':
-                require(cp in shape_anchors or text_policy == 'recover', text_location(cp),
+            elif char == '\x08' and read_shapes:
+                require(cp in story_anchors or text_policy == 'recover', text_location(cp),
                         'Drawn object marker lacks validated main-story PlcfSpa anchor', 'unsupported')
                 require(remaining_objects > 0, text_location(cp),
                         'Drawn object marker budget exceeded', 'resource_limit')
                 remaining_objects -= 1
-                if cp in shape_anchors:
-                    shape_locations.append({**text_location(cp), **shape_anchors[cp],
+                if cp in story_anchors:
+                    anchor = story_anchors[cp]
+                    if maximum and hidden:
+                        hidden_shape_cps.add(cp)
+                        anchor = {key: value for key, value in anchor.items()
+                                  if key not in ('shape_id', 'stored_rectangle_twips')}
+                    shape_locations.append({**text_location(cp), **anchor,
                                             'placeholder_emitted': not bool(hidden)})
                 else:
                     control_locations.append({**text_location(cp), 'marker': 'U+0008',
@@ -394,26 +425,37 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                            'message': 'Field instructions omitted; cached results retained without execution, '
                                       'freshness checks or sprmCFSpec/Plcfld validation'})
         if shape_locations:
+            shape_message = ('Validated PlcfSpa CP and U+0008 anchor; sprmCFSpec and shape rendering unverified' if maximum else
+                             'Validated main-story PlcfSpa CP and U+0008 anchor replaced '
+                             'by U+FFFC; sprmCFSpec, SPA properties and shape rendering unverified')
             issues.append({'code': 'drawn_shape_anchor_not_rendered',
                            'count': len(shape_locations), 'locations': shape_locations,
-                           'message': 'Validated main-story PlcfSpa CP and U+0008 anchor replaced '
-                                      'by U+FFFC; sprmCFSpec, SPA properties and shape rendering unverified'})
+                           'message': shape_message})
         if object_locations:
             issues.append({'code': 'picture_or_data_marker_not_decoded',
                            'count': len(object_locations), 'locations': object_locations,
                            'message': 'U+0001 replaced by U+FFFC outside hidden field instructions; '
                                       'picture/data bytes, sprmCFSpec and object type not decoded'})
         table_structure = None
-        if '\x07' in text and not field_count:
+        metadata_text = stored_story_text if field_spans else text
+        has_table_marks = '\x07' in metadata_text
+        has_layout = maximum and bool(word.number(FC_LCB_START + 13 * 8 + 4)) and '\r' in metadata_text
+        if (has_table_marks or has_layout) and (not field_count or maximum):
             from wps_binary_tables import inspect_tables
-            table_structure = inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
+            marker_replacements = None
+            if field_spans:
+                marker_replacements = {item['cp']: '\ufffc' for item in note_marker_locations}
+                for locations in (shape_locations, object_locations, control_locations):
+                    marker_replacements.update({item['cp']: '\ufffc' for item in locations if item['placeholder_emitted']})
+            table_structure = inspect_tables(metadata_text, cp_start, word, table, pieces, positions, fib_end,
                 table_ranges=table_spans,
                 word_ranges=[(item['offset'], item['offset'] + item['size'])
                              for item in header_mapping.get('word_ranges', [])] if header_mapping else (),
-                piece_properties=piece_properties,
-                data_region=Region(streams[('Data',)], 'Data') if ('Data',) in streams else None)
+                piece_properties=piece_properties, piece_prms=piece_prms, field_spans=field_spans,
+                marker_replacements=marker_replacements,
+                data_region=data_region, data_ownership=data_ownership)
             issues.extend(table_structure['issues'])
-        elif '\x07' in text:
+        elif has_table_marks:
             issues.append({'code': 'binary_table_fields_unresolved', 'stream': 'WordDocument',
                            'cp_start': cp_start, 'cp_end': cp_end})
         paragraph_total = text.count('\r') + int(bool(text) and not text.endswith('\r'))
@@ -432,7 +474,11 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 'field_policy': field_policy, 'fields_evaluated': False, 'issues': issues, 'text_policy': text_policy,
                 'object_policy': object_policy, 'objects_decoded': False,
                 'scope': 'stored_main_story_only', 'producer_verified': False}
-        if table_structure is not None:
+        if maximum and table_structure is not None:
+            story_result['binary_paragraph_layout'] = table_structure.pop('paragraph_layout')
+            if not has_table_marks:
+                story_result['binary_paragraph_layout']['fkp_ranges'] = table_structure['fkp_ranges']
+        if table_structure is not None and has_table_marks:
             story_result['binary_table_structure'] = table_structure
         if binary_paragraph_sources:
             # Selecting a filtering policy does not itself alter stored text.
@@ -501,6 +547,19 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 'status': 'partial' if story_issues else 'ok', 'issues': story_issues}
             if 'binary_table_structure' in story:
                 region['binary_table_structure'] = story['binary_table_structure']
+            if 'binary_paragraph_layout' in story:
+                region['binary_paragraph_layout'] = story['binary_paragraph_layout']
+            if maximum and count and story_type in TEXTBOX_STORIES:
+                pair_index, anchor_story = TEXTBOX_STORIES[story_type]
+                pair = FC_LCB_START + pair_index * 8
+                size = word.number(pair + 4)
+                if size:
+                    plc = table.region(word.number(pair), size)
+                    anchors = {cp: anchor for cp, anchor in anchors_by_story.get(anchor_story, {}).items()
+                               if 'shape_id' in anchor}
+                    from wps_binary_textboxes import attach_textbox_references
+                    attach_textbox_references(region, plc, count, read_unit, anchors, hidden_shape_cps, copy_limit=MAX_TEXTBOX_COPY_UNITS)
+                    story_issues = region['issues']
             if binary_paragraph_sources:
                 region['paragraph_sources'] = story['paragraph_sources']
                 region['paragraph_source_status'] = story['paragraph_source_status']
@@ -520,6 +579,15 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         result['scope'] = 'stored_main_and_related_subdocuments'
         result['partial'] = bool(result['issues'])
         result['status'] = 'partial' if result['partial'] else 'ok'
+    if maximum:
+        from wps_binary_charts import add_binary_charts
+        from wps_binary_images import add_binary_images
+        from wps_binary_shapes import add_drawing_descriptions
+        picture_links, chart_links = add_drawing_descriptions(result, drawing_region, anchors_by_story, require)
+        inline_charts = add_binary_images(result, region=drawing_region, word=word, data=data_region, table=table, pieces=pieces, positions=positions,
+                                         fib_end=fib_end, cb_mac=cb_mac, header_mapping=header_mapping, table_spans=table_spans,
+                                         data_spans=data_ownership, links=picture_links, piece_prms=piece_prms, include_bytes=include_image_bytes)
+        add_binary_charts(result, chart_links + inline_charts)
     result['visibility_status'] = 'visibility_unknown'
     if hidden_text == 'annotate':
         from wps_msdoc_charprops import inspect_character_properties
@@ -536,8 +604,9 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 for left, right in result['character_properties'].get('fkp_ranges', []):
                     require(stop <= left or right <= start, word.location(start),
                             'Section properties overlap character FKP page')
-        structures = [result.get('binary_table_structure', {})]
-        structures.extend(region.get('binary_table_structure', {}) for region in result.get('related_stories', []))
+        stories = (result, *result.get('related_stories', ()))
+        structures = [story.get(key, {}) for story in stories
+                      for key in ('binary_table_structure', 'binary_paragraph_layout')]
         for structure in structures:
             for left, right in structure.get('fkp_ranges', []):
                 for char_left, char_right in result['character_properties'].get('fkp_ranges', []):
@@ -581,7 +650,8 @@ def failure(status, location, message):
 
 def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                field_policy=None, object_policy=None, revisions=None, include_related=False,
-               hidden_text="include", binary_paragraph_sources=False, text_policy=None):
+               hidden_text="include", binary_paragraph_sources=False, text_policy=None,
+               reading_mode='standard', include_image_bytes=False):
     """Identify content first; the suffix is provenance, never a format selector."""
     require(isinstance(data, bytes) and len(data) <= MAX_FILE_BYTES,
             {'stage': 'input'}, 'Input exceeds byte budget or is not bytes', 'resource_limit')
@@ -590,18 +660,55 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
     require(type(binary_paragraph_sources) is bool, {'stage': 'options'},
             'binary_paragraph_sources must be boolean', 'unsupported')
     require(text_policy in (None, 'strict', 'recover'), {'stage': 'options'}, 'Unknown binary text policy', 'unsupported')
+    require(reading_mode in ('standard', 'maximum'), {'stage': 'options'},
+            'Unknown reading mode', 'unsupported')
+    require(revisions in (None, 'accepted', 'original', 'all'), {'stage': 'options'},
+            'Unknown revisions policy', 'unsupported')
+    maximum = reading_mode == 'maximum'
+    require(type(include_image_bytes) is bool and (not include_image_bytes or maximum),
+            {'stage': 'options'}, 'Image bytes require maximum reading', 'unsupported')
+    if maximum:
+        require(compatibility == 'data' and chart_policy in (None, 'reject'), {'stage': 'options'},
+                'Maximum reading requires data compatibility without chart recovery', 'unsupported')
+        require(field_policy in (None, 'cached_result') and object_policy in (None, 'placeholder'),
+                {'stage': 'options'}, 'Maximum reading retains cached fields and object placeholders', 'unsupported')
+        require(revisions in (None, 'all') and hidden_text == 'include' and text_policy in (None, 'recover'),
+                {'stage': 'options'}, 'Maximum reading retains hidden/all-revision stored text and bounded recovery',
+                'unsupported')
+        include_related = True
+        revisions = 'all'
+        text_policy = 'recover'
+        field_policy = 'cached_result'
+        object_policy = 'placeholder'
     requested_field_policy, requested_object_policy = field_policy, object_policy
     field_policy = 'reject' if field_policy is None else field_policy
     object_policy = 'reject' if object_policy is None else object_policy
     requested_chart_policy = chart_policy
     chart_policy = resolve_chart_policy(chart_policy, 'strict')
-    require(revisions in (None, 'accepted', 'original', 'all'), {'stage': 'options'},
-            'Unknown revisions policy', 'unsupported')
+
+    def finish(result):
+        if maximum:
+            result['reading_mode'] = 'maximum'
+            result['maximum_reading'] = {
+                'stored_text_view': 'hidden-and-all-revision-text-retained',
+                'related_content': 'requested',
+                'field_policy': 'cached_result-not-executed',
+                'object_policy': 'placeholder-with-optional-stored-png' if result.get('format') == 'ms_doc_subset' else 'placeholder-not-decoded',
+                'layout_verified': False,
+                'producer_profile_verified': False,
+            }
+            if result.get('format') == 'ms_doc_subset':
+                result['maximum_reading']['chart_policy'] = 'officeart_cache_only'
+        return result
+    require(not include_image_bytes or data.startswith(SIGNATURE), {'stage': 'options'},
+            'Image bytes are available only for binary MS-DOC', 'unsupported')
     if data.startswith((b'PK\x03\x04', b'PK\x05\x06')):
-        require(text_policy is None, {'stage': 'options'}, 'Binary text policy does not apply to OOXML', 'unsupported')
+        require(text_policy is None or maximum, {'stage': 'options'},
+                'Binary text policy does not apply to OOXML outside maximum reading', 'unsupported')
         require(not binary_paragraph_sources, {'stage': 'options'},
                 'Binary paragraph sources do not apply to OOXML', 'unsupported')
-        require(compatibility in ('strict', 'data') and chart_policy == 'reject' and field_policy == 'reject' and object_policy == 'reject', {'stage': 'options'},
+        require(compatibility in ('strict', 'data') and chart_policy == 'reject'
+                and (maximum or field_policy == 'reject' and object_policy == 'reject'), {'stage': 'options'},
                 'Binary compatibility/field/chart options do not apply to OOXML', 'unsupported')
         from wps_ooxml import package_kind, read_bytes as read_ooxml_bytes
         try:
@@ -611,11 +718,12 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
         if family == 'spreadsheet':
             raise ParseError('unsupported', {'stage': 'OOXML package'},
                              'Spreadsheets (.et/.ett) use the et skill; locate its actual SKILL.md and resolve scripts from that skill root.')
-        return read_ooxml_bytes(data, revisions=revisions or 'accepted', include_related=include_related, hidden_text=hidden_text)
+        return finish(read_ooxml_bytes(data, revisions=revisions or 'accepted', include_related=include_related,
+                                       hidden_text=hidden_text, recover_textboxes=maximum))
     if data.lstrip().startswith(b'{\\rtf'):
         require(hidden_text in ('include', 'exclude', 'annotate'), {'stage': 'options'},
                 'Unknown RTF hidden-text policy', 'unsupported')
-        require(not include_related and not binary_paragraph_sources and text_policy in (None, 'recover'),
+        require(not binary_paragraph_sources and text_policy in (None, 'recover'),
                 {'stage': 'options'}, 'Requested option does not apply to RTF', 'unsupported')
         require(compatibility == 'data' and requested_chart_policy is None,
                 {'stage': 'options'}, 'Requested compatibility or chart policy does not apply to RTF', 'unsupported')
@@ -626,14 +734,15 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
         from wps_rtf_read import parse_rtf_bytes
         try:
             result = parse_rtf_bytes(data, hidden_text=hidden_text, revisions=revisions,
-                                     object_policy=requested_object_policy or 'placeholder')
+                                     object_policy=requested_object_policy or 'placeholder',
+                                     include_related=include_related)
         except ParseError:
             raise
         except ValueError as exc:
             raise ParseError('corrupt', {'stage': 'RTF stream'}, str(exc)) from exc
         require(requested_field_policy != 'reject' or not result.get('field_count'), {'stage': 'RTF stream'},
                 'RTF fields found; field-policy reject does not permit cached results', 'unsupported')
-        return result
+        return finish(result)
     require(data.startswith(SIGNATURE), {'stage': 'container'},
             'Unknown container; native private WPS/Works/ET formats unsupported', 'unsupported')
     require(hidden_text in ('include', 'annotate'), {'stage': 'options'}, 'Binary visibility is unknown; exclude unsupported', 'unsupported')
@@ -653,7 +762,8 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
             object_policy = 'placeholder' if requested_object_policy is None else object_policy
         result = parse_streams(compound.streams, field_policy=field_policy, object_policy=object_policy,
                                include_related=include_related, hidden_text=hidden_text,
-                               binary_paragraph_sources=binary_paragraph_sources, text_policy=effective_text_policy)
+                               binary_paragraph_sources=binary_paragraph_sources, text_policy=effective_text_policy,
+                               maximum=maximum, include_image_bytes=include_image_bytes)
         result['compatibility_mode'] = compatibility
         result['container_compatibility'] = compound.compatibility
         result['container_issues'] = compound.issues
@@ -661,7 +771,7 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
             result['issues'] = result.get('issues', []) + compound.issues
             result['status'] = 'partial'
             result['partial'] = True
-        return result
+        return finish(result)
     if workbooks:
         raise ParseError('unsupported', {'stage': 'routing'},
                          'Spreadsheets (.et/.ett) use the et skill; locate its actual SKILL.md and resolve scripts from that skill root.')
@@ -726,6 +836,8 @@ def check_environment():
     print('check_kind=environment artifact_validation=not_run')
     print('ooxml-word=' + ('available' if expat.version_info >= (2, 6, 0)
                           else 'unavailable: Expat >=2.6 required'))
+    print('ms-doc-chart-cache=' + ('available' if expat.version_info >= (2, 6, 0)
+                                  else 'unavailable: Expat >=2.6 required'))
     print('environment-ok', flush=True)
     return 0
 
@@ -738,6 +850,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
     parser.add_argument('--format', choices=('json', 'text'), default='json')
+    parser.add_argument('--reading-mode', choices=('standard', 'maximum'), default='standard')
+    parser.add_argument('--include-image-bytes', action='store_true', help='Include bounded base64 PNG bytes from binary MS-DOC in maximum mode')
     parser.add_argument('--compatibility', choices=('data', 'strict', 'legacy_excel_clsid', 'legacy_word_clsid'), default='data')
     parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None)
     parser.add_argument('--object-policy', choices=('reject', 'placeholder'), default=None)
@@ -759,12 +873,22 @@ def main():
     parser.add_argument('--max-output-chars', type=int)
     parser.add_argument('--max-output-bytes', type=int)
     args = parser.parse_args()
+    if args.include_image_bytes and (args.reading_mode != 'maximum' or args.check):
+        parser.error('--include-image-bytes requires --reading-mode maximum and a binary document')
+    if args.reading_mode == 'maximum' and args.format != 'json':
+        parser.error('--reading-mode maximum requires JSON to preserve separate recovered regions')
     if args.include_related and args.format == 'text':
         parser.error('--include-related requires --format json to preserve separate story regions')
     if args.binary_paragraph_sources and args.format == 'text':
         parser.error('--binary-paragraph-sources requires --format json to retain provenance ranges')
     if args.section_index is not None and (args.section is None or args.section_index < 1):
         parser.error('--section-index requires --section and a positive paragraph index')
+    maximum_projection = any((args.summary, args.heading_only, args.paragraph_range is not None,
+                              args.section is not None, args.sheet is not None, args.page_size is not None,
+                              args.cursor is not None, args.max_output_chars is not None,
+                              args.max_output_bytes is not None))
+    if args.reading_mode == 'maximum' and maximum_projection:
+        parser.error('--reading-mode maximum requires full JSON; selective and bounded views omit recovered regions')
     if args.check:
         if any((args.summary, args.heading_only, args.paragraph_range is not None, args.section is not None,
                 args.sheet is not None, args.page_size is not None, args.cursor is not None,
@@ -786,6 +910,10 @@ def main():
                    field_policy=args.field_policy, object_policy=args.object_policy, revisions=args.revisions,
                    include_related=args.include_related, hidden_text=args.hidden_text,
                    binary_paragraph_sources=args.binary_paragraph_sources)
+    if args.reading_mode != 'standard':
+        options['reading_mode'] = args.reading_mode
+    if args.include_image_bytes:
+        options['include_image_bytes'] = True
     if view_requested:
         from wps_read_view import project
         try:

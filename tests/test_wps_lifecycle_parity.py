@@ -12,7 +12,7 @@ class WpsLifecycleParityTests(unittest.TestCase):
         metadata = json.loads((ROOT / 'skills/wps/references/lifecycle-upstream.json').read_text(encoding='utf-8'))
         self.assertEqual({item['file'] for item in metadata['files']},
                          {'router_config.py', 'output_location.py', 'artifact_files.py', 'controlled_cleanup.py',
-                          'cleanup_task.py', 'archive_deliverables.py'})
+                          'cleanup_task.py', 'archive_delivery.py'})
         for item in metadata['files']:
             with self.subTest(file=item['file']):
                 source = (ROOT / 'skills/artifact-lifecycle/scripts' / item['file']).read_bytes()

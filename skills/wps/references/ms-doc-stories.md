@@ -14,7 +14,7 @@ FIB的ccpText之后依次为ccpFtn、ccpHdd、ccpAtn、ccpEdn、ccpTxbx、ccpHdr
 
 零长度区域明确`empty=true`、空文字/空段落、`status=ok`、`anchor_status=not_applicable`。非空区域`empty=false`；未能映射的区域附加`story_references_not_decoded`诊断、`status=partial`、`anchor_status=unknown`、`references=[]`。空引用数组不代表无引用，而是未解释引用表。
 
-脚注PlcffndTxt/Ref和尾注PlcfendTxt/Ref的限定映射见引用表 (`<skill-root>/references/binary-note-references.md`)；PlcfandTxt/Ref的作者和锚点见批注子集 (`<skill-root>/references/binary-comments.md`)，PlcfHdd及分节的存储槽见页眉映射 (`<skill-root>/references/binary-headers.md`)。形状文本框关系仍未解释。页眉页脚合并故事可能含脚注/尾注分隔符及guard段落，存储槽映射不代表某页的有效页眉；文本框文字不是锚点阅读顺序。各已支持附表验证配对、数量、范围与交叠，具体有效语义和未支持结构以相应参考为准。
+脚注PlcffndTxt/Ref和尾注PlcfendTxt/Ref的限定映射见引用表 (`<skill-root>/references/binary-note-references.md`)；PlcfandTxt/Ref的作者和锚点见批注子集 (`<skill-root>/references/binary-comments.md`)，PlcfHdd及分节的存储槽见页眉映射 (`<skill-root>/references/binary-headers.md`)。页眉页脚合并故事可能含脚注/尾注分隔符及 guard 段落。文本框文字默认按存储顺序输出。最大模式另提供下述文本框范围。
 
 附加区域沿用字段/对象策略，默认遇未支持控制符即unsupported，不将它们默认为普通文字或空结果。cached_result及placeholder同样显式partial，位置CP仍为全局；字段不能跨区域闭合。默认自动注释C0仍拒绝；仅显式include-related并完成Ref/Txt验证时，在精确映射CP将U+0002变为U+FFFC并诊断partial，不计算编号。其他CP或未支持C0仍拒绝。非正文区不统一强加正文终止CR规则；已解码引用表或页眉槽按各自规则验证终止和guard，未解释区域仍partial。所有区域合用字符、段落、字段及对象诊断预算，先于分配；完整JSON仍有输出配额。
 
@@ -27,3 +27,11 @@ FIB的ccpText之后依次为ccpFtn、ccpHdd、ccpAtn、ccpEdn、ccpTxbx、ccpHdr
 ## 显式附表映射
 
 脚注/尾注以外，现有批注作者与锚点 (`<skill-root>/references/binary-comments.md`)及节/页眉存储槽 (`<skill-root>/references/binary-headers.md`)。精确匹配的批注U+0005在include-related下才占位并partial；不解释书签定义的非零长度批注范围。页眉槽是存储范围，不代表页面选择或最终继承。所有已解Table Stream范围统一检查与CLX、CHPX BTE等冲突；SEPX与FKP/文字范围交叠拒绝。原故事文字只存一份，映射元数据不重复计入主正文。
+
+## 最大模式文本框
+
+`--reading-mode maximum` 校验正文及页眉文本框的 `PlcftxbxTxt` 或 `PlcfHdrtxbxTxt`。每个实际文本框在对应故事的 `references` 中提供 `textbox_index`、`shape_id`、全局半开 `text_range` 和记录来源。跳过备用条目及最后一个保护条目。保护条目的末端只检查递增，不用来取文字，实际文本框范围仍必须在故事内并以段落结束符结尾。形状编号唯一匹配且该锚点可输出时提供 `anchor_cp`。组内形状还需 `lTxid` 匹配文本框索引及唯一可输出的组合锚点，成功时返回 `matched_officeart_group_shape_id`、`anchor_shape_id`、`group_shape_path` 及 `officeart_source`。匹配不到或存在歧义时，仍保留已校验的文本框范围。
+
+小故事（至多 65536 个 UTF-16 码元）的各条引用包含 `text`。大故事通过 `story_text_utf16_range` 从合并故事文字定位，避免复制整段输出。故事经字段过滤后只提供存储 CP 和合并文字，`textbox_text_status=combined_story_only_after_field_filtering` 表明不能用存储范围切分输出文字。
+
+缺附表时保留合并故事和引用未解码诊断。记录语义不一致时附加 `textbox_metadata_invalid` 并保留合并文字，流越界、结构重叠或超出 4096 条记录的资源检查按失败处理。链接文本框之间的流向、图形显示顺序和有效页面仍待核对，返回 partial。开发依据为 MS-DOC 的 PlcftxbxTxt、PlcfHdrtxbxTxt 和 FTXBXS 章节。

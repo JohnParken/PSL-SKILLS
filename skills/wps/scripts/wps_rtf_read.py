@@ -17,6 +17,11 @@ MAX_TABLE_CELLS = 100000
 MAX_TABLE_ROWS = 100000
 MAX_CELL_DEFINITIONS = 100000
 MAX_OBJECTS = 1000
+MAX_RELATED_STORIES = 4096
+RELATED_DESTINATIONS = {
+    'header', 'footer', 'headerl', 'headerr', 'headerf',
+    'footerl', 'footerr', 'footerf', 'footnote', 'annotation',
+}
 PINNED_ISSUE_CODES = {'rtf_field_cached_result_unverified', 'rtf_hidden_text_unfiltered', 'rtf_revisions_unfiltered',
                       'rtf_font_encoding_unresolved', 'rtf_encoding_assumed', 'rtf_visibility_unknown', 'rtf_revision_view_unknown',
                       'rtf_object_not_decoded'}
@@ -42,7 +47,7 @@ IGNORED_DESTINATIONS = {
 
 
 def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text='include', revisions=None,
-                    object_policy='placeholder') -> Dict[str, Any]:
+                    object_policy='placeholder', include_related=False) -> Dict[str, Any]:
     """Parse raw bytes of an RTF document into structured paragraphs and tables."""
     if not isinstance(data, (bytes, bytearray)):
         raise ValueError("RTF input must be bytes or bytearray")
@@ -54,6 +59,8 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
     object_policy = 'placeholder' if object_policy is None else object_policy
     if object_policy not in ('reject', 'placeholder'):
         raise ParseError('unsupported', {'stage': 'options'}, 'Unknown RTF object policy')
+    if type(include_related) is not bool:
+        raise ParseError('unsupported', {'stage': 'options'}, 'include_related must be boolean')
 
     # Fast signature check
     stripped_data = data.lstrip()
@@ -147,6 +154,8 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
     # First-control evidence identifies destinations, not arbitrary occurrences
     # of a similarly named control inside a content group.
     group_frames = []
+    related_groups = []
+    omitted_related_groups = 0
     hex_buffer = bytearray()
     byte_decoder = None
     hex_start = 0
@@ -345,7 +354,8 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
             group_depth += 1
             if group_frames:
                 group_frames[-1]['first_control'] = False
-            group_frames.append({'first_control': True, 'object_index': None})
+            group_frames.append({'first_control': True, 'object_index': None,
+                                 'group_start': idx, 'related': None})
             stack.append((skip_group_depth, skip_destination, uc, codepage, codepage_declared, dict(paragraph_format)))
             visibility.push()
             idx += 1
@@ -358,6 +368,13 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
                     item = objects[frame['object_index']]
                     item['complete'] = True
                     item['source_byte_end'] = idx + 1
+                if frame['related'] is not None:
+                    related = dict(frame['related'])
+                    related.update(group_start=frame['group_start'], content_end=idx, group_end=idx + 1)
+                    if len(related_groups) < MAX_RELATED_STORIES:
+                        related_groups.append(related)
+                    else:
+                        omitted_related_groups += 1
                 pending_format = paragraph_format if group_depth == 1 and current_para else None
                 skip_group_depth, skip_destination, uc, codepage, codepage_declared, paragraph_format = stack.pop()
                 visibility.pop()
@@ -407,9 +424,22 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
                     group_frames[-1]['first_control'] = True
                     idx += 1
                     continue
+                if include_related and destination_start and destination in RELATED_DESTINATIONS and match:
+                    content_start = idx + 1 + match.end()
+                    if content_start < length and text[content_start] == ' ':
+                        content_start += 1
+                    group_frames[-1]['related'] = {
+                        'destination': destination,
+                        'content_start': content_start,
+                        'codepage': codepage,
+                        'codepage_declared': codepage_declared,
+                        'uc': uc,
+                    }
+                elif destination not in {'fldinst', 'generator', 'fonttbl', 'colortbl', 'stylesheet',
+                                         'info', 'themedata', 'xmlnstbl', 'rsidtbl'}:
+                    add_geometry_issue({'code': 'rtf_destination_skipped',
+                                        'message': 'Optional destination omitted from main content'})
                 skip_destination = destination
-                if destination not in {'fldinst', 'generator', 'fonttbl', 'colortbl', 'stylesheet', 'info', 'themedata', 'xmlnstbl', 'rsidtbl'}:
-                    add_geometry_issue({'code': 'rtf_destination_skipped', 'message': 'Optional destination omitted from main content'})
                 skip_group_depth = group_depth
                 idx += 1
                 continue
@@ -478,14 +508,29 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
                 paragraph_format['alignment'] = word
             elif word in {'sl', 'slmult', 'fi', 'li', 'ri', 'sb', 'sa', 'outlinelevel', 'keepn', 'keep', 'pagebb'}:
                 paragraph_format[word] = num_val if num_val is not None else 1
-            elif word in IGNORED_DESTINATIONS:
-                if word in {'header', 'footer', 'pict'}:
+            elif word in RELATED_DESTINATIONS:
+                if include_related and destination_start:
+                    group_frames[-1]['related'] = {
+                        'destination': word,
+                        'content_start': idx,
+                        'codepage': codepage,
+                        'codepage_declared': codepage_declared,
+                        'uc': uc,
+                    }
+                else:
                     add_geometry_issue({'code': 'rtf_destination_skipped', 'destination': word,
-                                        'message': 'Related content or object omitted from main content'})
+                                        'message': 'Related content omitted from main content'})
                 skip_group_depth = group_depth
                 skip_destination = word
-            elif word in {'headerl', 'headerr', 'headerf', 'footerl', 'footerr', 'footerf', 'object', 'objdata', 'fldinst', 'footnote', 'annotation'}:
-                add_geometry_issue({'code': 'rtf_destination_skipped', 'destination': word, 'message': 'Related content, object or field instruction omitted'})
+            elif word in IGNORED_DESTINATIONS:
+                if word == 'pict':
+                    add_geometry_issue({'code': 'rtf_destination_skipped', 'destination': word,
+                                        'message': 'Object omitted from main content'})
+                skip_group_depth = group_depth
+                skip_destination = word
+            elif word in {'object', 'objdata', 'fldinst'}:
+                add_geometry_issue({'code': 'rtf_destination_skipped', 'destination': word,
+                                    'message': 'Object or field instruction omitted'})
                 skip_group_depth = group_depth
                 skip_destination = word
             elif word in {'fcharset', 'cpg'}:
@@ -621,6 +666,24 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
                             'message': 'Byte text uses the document code page; conflicting or unknown font encoding cannot be reliably applied'})
     if merge_markers != captured_merge_markers:
         add_geometry_issue({"code": "rtf_merge_geometry_not_reconstructed", "message": "Merge markers outside a complete cell grid"})
+    related_stories = []
+    if include_related:
+        related_stories = _read_related_groups(data, related_groups, hidden_text, revisions, object_policy)
+        if related_groups:
+            add_geometry_issue({
+                'code': 'rtf_related_content_recovered_unmapped',
+                'count': len(related_groups),
+                'message': ('Stored related text was returned separately; section/page/anchor mapping '
+                            'and main-body reading order remain unknown'),
+            })
+        if omitted_related_groups:
+            limit_issues.append({
+                'code': 'rtf_related_story_limit',
+                'limit': MAX_RELATED_STORIES,
+                'retained': len(related_groups),
+                'omitted': omitted_related_groups,
+                'message': 'Only the bounded prefix of related destination groups was retained',
+            })
     visibility_result = visibility.finish(idx)
     full_text = "\n".join(p["text"] for p in paragraphs)
     # Reserve diagnostic slots for omission notices even when recovery issues
@@ -632,6 +695,7 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
     return {
         "schema_version": "rtf_readonly_v1",
         "format": "rtf",
+        "scope": "main-plus-related" if include_related else "main-body",
         "page_properties": page_properties,
         "status": "partial" if partial else "ok",
         "partial": partial,
@@ -651,6 +715,11 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
         "paragraphs": paragraphs,
         "tables": tables,
         "blocks": blocks,
+        **({
+            "related_stories": related_stories,
+            "related_scope": "stored-destination-groups-only",
+            "related_page_mapping": "unknown",
+        } if include_related else {}),
         "reading_assessment": {
             "status": "partial" if partial else "ok",
             "character_count": len(full_text),
@@ -658,6 +727,83 @@ def parse_rtf_bytes(data: bytes, max_bytes: int = MAX_RTF_BYTES, *, hidden_text=
             "table_count": len(tables),
         },
     }
+
+
+def _related_text(candidate):
+    chunks = []
+    for block in candidate.get('blocks', []):
+        if block.get('type') == 'paragraph':
+            chunks.append(candidate['paragraphs'][block['index']]['text'])
+        elif block.get('type') == 'table':
+            table = candidate['tables'][block['index']]
+            chunks.extend('\t'.join(cell['text'] for cell in row) for row in table['rows'])
+    return '\n'.join(chunks)
+
+
+def _read_related_groups(data, groups, hidden_text, revisions, object_policy):
+    stories = []
+    for group in groups:
+        prefix = bytearray(b'{\\rtf1')
+        codepage = group['codepage']
+        if group['codepage_declared'] and codepage.startswith('cp') and codepage[2:].isdigit():
+            prefix.extend(('\\ansicpg' + codepage[2:]).encode('ascii'))
+        prefix.extend(('\\uc' + str(group['uc']) + ' ').encode('ascii'))
+        payload = bytes(prefix) + data[group['content_start']:group['content_end']] + b'}'
+        mapping_issue = {
+            'code': 'rtf_related_mapping_unknown',
+            'destination': group['destination'],
+            'message': ('Related destination text was parsed in isolation; inherited layout, '
+                        'section/page/anchor mapping and main-body order remain unknown'),
+        }
+        try:
+            candidate = parse_rtf_bytes(
+                payload,
+                hidden_text=hidden_text,
+                revisions=revisions,
+                object_policy=object_policy,
+                include_related=False,
+            )
+            story_issues = [mapping_issue, *candidate.get('issues', [])]
+            story = {
+                'type': group['destination'],
+                'source': {
+                    'byte_start': group['group_start'],
+                    'byte_end': group['group_end'],
+                    'destination': group['destination'],
+                },
+                'text': _related_text(candidate),
+                'paragraphs': [item['text'] for item in candidate.get('paragraphs', [])],
+                'tables': candidate.get('tables', []),
+                'references': [],
+                'anchor_status': 'stored_destination_group_only',
+                'page_mapping': 'unknown',
+                'cp_range': None,
+                'status': 'partial',
+                'issues': story_issues,
+            }
+        except (ParseError, ValueError) as exc:
+            story = {
+                'type': group['destination'],
+                'source': {
+                    'byte_start': group['group_start'],
+                    'byte_end': group['group_end'],
+                    'destination': group['destination'],
+                },
+                'text': None,
+                'paragraphs': [],
+                'tables': [],
+                'references': [],
+                'anchor_status': 'stored_destination_group_only',
+                'page_mapping': 'unknown',
+                'cp_range': None,
+                'status': getattr(exc, 'status', 'corrupt'),
+                'issues': [mapping_issue, {
+                    'code': 'rtf_related_content_unreadable',
+                    'message': str(exc),
+                }],
+            }
+        stories.append(story)
+    return stories
 
 
 def require_publishable_candidate(candidate):

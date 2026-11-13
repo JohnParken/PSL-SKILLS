@@ -109,7 +109,8 @@ def _read_exact(stream, length):
     return data
 
 
-def _preflight(stream, file_size):
+def preflight_archive(stream, file_size):
+    """Validate the ZIP central-directory bounds before constructing ZipFile."""
     if file_size < EOCD.size or file_size > MAX_ARCHIVE_BYTES:
         raise ValueError("ZIP compressed file size exceeds limits or is truncated")
     tail_size = min(file_size, MAX_EOCD_BYTES)
@@ -204,6 +205,10 @@ MAX_XML_NODES = 400_000
 ParseError = ValueError
 
 
+class XmlBudgetExceeded(ValueError):
+    """A shared XML parsing limit has been reached."""
+
+
 class XmlBudget:
     """Cumulative allocation counters for one package/read/validation operation.
 
@@ -223,7 +228,7 @@ class XmlBudget:
         value = getattr(self, kind) + amount
         setattr(self, kind, value)
         if value > limit:
-            raise ValueError(f"XML shared {kind.replace('_', ' ')} limit exceeded")
+            raise XmlBudgetExceeded(f"XML shared {kind.replace('_', ' ')} limit exceeded")
 
 
 def _checked(data, *, budget=None):
@@ -565,12 +570,14 @@ def _visible_elements(root, revisions):
         stack.extend(reversed(list(node)))
 
 
-def _related_target(target):
+def resolve_internal_target(target, source_part):
+    """Resolve a bounded internal OPC part URI relative to its source part."""
     # Resolve an internal OPC URI without permitting schemes, escapes or aliases.
     if not target or any(c in target for c in ('\\', '%', '?', '#', ':', '\x00')):
         raise ValueError('unsupported related-part target URI')
-    components = [] if target.startswith('/') else ['word']
-    for component in target.lstrip('/').split('/'):
+    components = [] if target.startswith('/') or not source_part else source_part.split('/')[:-1]
+    relative = target[1:] if target.startswith('/') else target
+    for component in relative.split('/'):
         if component in ('', '.'):
             raise ValueError('unsupported noncanonical related-part target')
         if component == '..':
@@ -584,7 +591,12 @@ def _related_target(target):
     return '/'.join(components)
 
 
-def _read_related(package, document, revisions, budget, record_omissions, issues, table_collector=None, visibility=None):
+def _related_target(target):
+    return resolve_internal_target(target, 'word/document.xml')
+
+
+def _read_related(package, document, revisions, budget, record_omissions, issues, table_collector=None,
+                  visibility=None, textbox_collector=None):
     """Follow main-part relationships and explicit IDs; never enumerate filenames."""
     rel_name = 'word/_rels/document.xml.rels'
     relationships = {}
@@ -701,9 +713,12 @@ def _read_related(package, document, revisions, budget, record_omissions, issues
                 raise ValueError('Related region count limit exceeded')
             first_issue = len(issues)
             visibility_issue_start = len(visibility.issues) if visibility is not None else 0
+            entry_path = "/" + kind + "[" + str(key) + "]"
             if visibility is not None:
-                visibility.apply(entry, part, "/" + kind + "[" + str(key) + "]")
+                visibility.apply(entry, part, entry_path)
             record_omissions(entry, part)
+            if textbox_collector is not None:
+                textbox_collector.collect(entry, part, entry_path)
             nested = sorted({node.tag.rsplit('}', 1)[-1] for node in _visible_elements(entry, revisions)
                              if node.tag in (_tag('footnoteReference'), _tag('endnoteReference'),
                                              _tag('commentReference'), _tag('headerReference'), _tag('footerReference'))})
@@ -726,14 +741,19 @@ def _read_related(package, document, revisions, budget, record_omissions, issues
     return stories
 
 
-def read_bytes(data, revisions="accepted", include_related=False, hidden_text="include"):
+def read_bytes(data, revisions="accepted", include_related=False, hidden_text="include", recover_textboxes=False):
     """Read immutable bytes; unknown programming exceptions are not swallowed."""
+    limitations = ["no-layout-or-list-number-calculation", "no-field-evaluation", "stored-revision-view-only"]
+    limitations.append("textbox-text-returned-without-layout-or-anchor" if recover_textboxes
+                       else "no-textboxes-or-drawings")
     result = {"status": "unsupported", "format": "ooxml-word", "text": None,
               "paragraphs": [], "partial": False, "producer_verified": False,
               "diagnostics": [], "scope": "main-plus-related" if include_related else "main-body",
-              "revisions": revisions,
-              "limitations": ["no-layout-or-list-number-calculation", "no-textboxes-or-drawings",
-                              "no-field-evaluation", "stored-revision-view-only"]}
+              "revisions": revisions, "limitations": limitations}
+    if recover_textboxes and not include_related:
+        result["diagnostics"] = [{"stream": None, "offset": None,
+                                  "message": "Textbox recovery requires separate related-story output"}]
+        return result
     if revisions not in _REVISION_TAGS or expat.version_info < (2, 6, 0):
         result["diagnostics"] = [{"stream": None, "offset": None, "message":
             "unsupported revision view" if revisions not in _REVISION_TAGS else "OOXML requires Expat >= 2.6.0"}]
@@ -744,6 +764,8 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
     def record_omissions(root, name):
         unsupported = {"txbxContent", "drawing", "object", "pict", "altChunk", "instrText", "fldSimple", "fldChar", "sym",
                        "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange"}
+        if recover_textboxes:
+            unsupported.remove("txbxContent")
         found = sorted({node.tag.rsplit("}", 1)[-1] for node in root.iter()
                         if node.tag.startswith("{" + W + "}")
                         and node.tag.rsplit("}", 1)[-1] in unsupported})
@@ -765,7 +787,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
         if len(data) > MAX_ARCHIVE_BYTES:
             raise ValueError("ZIP compressed file size limit exceeded")
         source = io.BytesIO(data)
-        _preflight(source, len(data))
+        preflight_archive(source, len(data))
         budget = XmlBudget()
         with zipfile.ZipFile(source) as package:
             check_archive(package)
@@ -773,7 +795,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             _check_wps_package(package, budget)
             part = "word/document.xml"
             document = _word_part(package, part, budget)
-            result["ooxml_conformance"] = "strict" if package._wps_strict_word else "transitional"
+            result["ooxml_conformance"] = "strict" if getattr(package, "_wps_strict_word", False) else "transitional"
             if document.tag != _tag("document") or document.find(_tag("body")) is None:
                 raise ValueError("invalid w:document or missing w:body")
             from wps_word_visibility import Visibility
@@ -822,15 +844,35 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             from wps_ooxml_tables import TableCollector
             table_collector = TableCollector(revisions, _paragraph_text)
             table_collector.collect(document, part, '/document')
-            related = _read_related(package, document, revisions, budget, record_omissions, issues, table_collector, visibility) if include_related else None
+            textbox_collector = None
+            textbox_table_collector = None
+            if recover_textboxes:
+                from wps_ooxml_textboxes import TextboxCollector
+                textbox_table_collector = TableCollector(revisions, _paragraph_text)
+                textbox_collector = TextboxCollector(revisions, _blocks, textbox_table_collector)
+                textbox_collector.collect(document, part, '/document')
+            related = (_read_related(package, document, revisions, budget, record_omissions, issues,
+                                     table_collector, visibility, textbox_collector)
+                       if include_related else None)
             issues.extend(table_collector.issues)
+            if textbox_table_collector is not None:
+                issues.extend(textbox_table_collector.issues)
             issues.extend(visibility.issues)
             result['visibility'] = {'policy': hidden_text, 'runs': visibility.records, 'purpose': 'stored-content-reading-not-authorization'}
             result['tables'] = table_collector.tables
             result['table_schema'] = 'word_logical_tables_v1'
             if include_related:
+                if textbox_collector is not None and textbox_collector.stories:
+                    related.extend(textbox_collector.stories)
+                    issues.append({'stream': 'word/document.xml', 'offset': None,
+                                   'location': 'related_stories',
+                                   'code': 'textbox_text_recovered_unmapped',
+                                   'count': len(textbox_collector.stories),
+                                   'message': ('Stored textbox text was returned as separate stories; '
+                                               'anchors, layout, branch selection and reading order remain unknown')})
                 result['related_stories'] = related
-                result['related_scope'] = 'explicit-main-document-references-only'
+                result['related_scope'] = ('explicit-main-document-references-plus-stored-textboxes'
+                                           if recover_textboxes else 'explicit-main-document-references-only')
                 result['related_page_mapping'] = 'unknown'
             result.update(status="partial" if issues else "ok", partial=bool(issues),
                           diagnostics=issues, text="\n".join(pieces), paragraphs=pieces)
@@ -852,7 +894,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
 def package_kind(data: bytes) -> str:
     """Identify whether an OOXML package represents a word document or spreadsheet."""
     stream = io.BytesIO(data)
-    _preflight(stream, len(data))
+    preflight_archive(stream, len(data))
     with zipfile.ZipFile(stream) as package:
         check_archive(package)
         names = set(package.namelist())

@@ -4,7 +4,7 @@ import os
 from pathlib import Path, PureWindowsPath
 import shutil
 import stat
-import tempfile
+import uuid
 from .output_location import OutputLocation
 
 class ArchiveConflictError(FileExistsError):
@@ -70,38 +70,41 @@ def _archive_output_path(task_dir: Path, location: OutputLocation, file_name: st
 
 def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLocation,
                           file_name: str, input_path: Path, image_paths: list[Path],
-                          *, replace_existing: bool = False) -> Path:
-    """Publish a complete copy without clobbering; replacement is explicit opt-in."""
-    if type(replace_existing) is not bool:
-        raise ValueError("replace_existing must be a boolean")
+                          ) -> Path:
+    """Publish a complete copy exclusively; never overwrite an existing archive."""
     archive_output = _archive_output_path(task_dir, location, file_name, input_path, image_paths)
     main_path = task_dir / main_output
     archive_path = task_dir / archive_output
-    if replace_existing and archive_path.exists():
-        archive_mode = stat.S_IMODE(archive_path.stat().st_mode)
-    else:
-        archive_mode = stat.S_IMODE(main_path.stat().st_mode)
+    archive_mode = stat.S_IMODE(main_path.stat().st_mode)
 
-    descriptor, temporary_name = tempfile.mkstemp(
-        prefix=".docx-", suffix=".tmp", dir=task_dir,
-    )
+    # Declare this invocation's candidate before exclusively creating it.
+    temporary_name = str(task_dir / f".archive-{uuid.uuid4().hex}.tmp")
+    descriptor = os.open(temporary_name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    info = os.fstat(descriptor)
+    temporary_identity = (info.st_dev, info.st_ino)
+
+    def remove_owned_temporary():
+        current = os.stat(temporary_name, follow_symlinks=False)
+        if (current.st_dev, current.st_ino) != temporary_identity:
+            raise OSError("temporary file identity changed; retained")
+        os.unlink(temporary_name)
+
     try:
         with os.fdopen(descriptor, "wb") as archive_file:
             descriptor = -1
             with main_path.open("rb") as main_file:
                 shutil.copyfileobj(main_file, archive_file)
             archive_file.flush()
+            os.fchmod(archive_file.fileno(), archive_mode)
             os.fsync(archive_file.fileno())
-        os.chmod(temporary_name, archive_mode)
-        if replace_existing:
-            os.replace(temporary_name, archive_path)
-        else:
-            try:
-                # Atomic exclusive publication also refuses a target appearing
-                # after path validation. Never fall back to replace on failure.
-                os.link(temporary_name, archive_path, follow_symlinks=False)
-            except FileExistsError as exc:
-                raise ArchiveConflictError("Archive target already exists; existing archive preserved") from exc
+        current = os.stat(temporary_name, follow_symlinks=False)
+        if (current.st_dev, current.st_ino) != temporary_identity:
+            raise OSError("temporary file identity changed; retained")
+        try:
+            # Publication refuses a target appearing after validation. Never replace.
+            os.link(temporary_name, archive_path, follow_symlinks=False)
+        except FileExistsError as exc:
+            raise ArchiveConflictError("Archive target already exists; existing archive preserved") from exc
     except BaseException as exc:
         cleanup_errors = []
         if descriptor >= 0:
@@ -110,7 +113,7 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
             except OSError as close_error:
                 cleanup_errors.append(f"descriptor close failed: {close_error}")
         try:
-            os.unlink(temporary_name)
+            remove_owned_temporary()
         except FileNotFoundError:
             pass
         except OSError as cleanup_error:
@@ -121,11 +124,10 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
                                       + "; ".join(cleanup_errors), temporary_path,
                                       error_code=getattr(exc, 'error_code', None)) from exc
         raise
-    if not replace_existing:
-        try:
-            os.unlink(temporary_name)
-        except OSError as exc:
-            temporary_path = Path(temporary_name).relative_to(task_dir).as_posix()
-            raise ArchiveCleanupError("Archive published but temporary cleanup failed: " + str(exc),
-                                      temporary_path) from exc
+    try:
+        remove_owned_temporary()
+    except OSError as exc:
+        temporary_path = Path(temporary_name).relative_to(task_dir).as_posix()
+        raise ArchiveCleanupError("Archive published but temporary cleanup failed: " + str(exc),
+                                  temporary_path) from exc
     return archive_output

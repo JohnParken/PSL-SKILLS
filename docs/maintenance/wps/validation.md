@@ -11,6 +11,12 @@
 - 读取质量基线与资源测量 (`docs/maintenance/wps/validation.md#读取质量基线与资源测量`)
 - 真实大型 WPS 测量和无转换快速路径 (`docs/maintenance/wps/validation.md#真实大型-wps-测量和无转换快速路径`)
 - 当前验证范围 (`docs/maintenance/wps/validation.md#当前验证范围`)
+- 纯 Python 最大化读取 (`docs/maintenance/wps/validation.md#纯-python-最大化读取`)
+- 最大模式二进制读取 (`docs/maintenance/wps/validation.md#最大模式二进制读取`)
+- 私有样本对照与 PNG 读取 (`docs/maintenance/wps/validation.md#私有样本对照与-png-读取`)
+- 二进制表格分组与合并 (`docs/maintenance/wps/validation.md#二进制表格分组与合并`)
+- 二进制图表缓存 (`docs/maintenance/wps/validation.md#二进制图表缓存`)
+- 绘图锚点与说明 (`docs/maintenance/wps/validation.md#绘图锚点与说明`)
 - 真实失败样本的受限修复 (`docs/maintenance/wps/validation.md#真实失败样本的受限修复`)
 - 分支增量：MS-DOC 段落来源范围 (`docs/maintenance/wps/validation.md#分支增量ms-doc-段落来源范围`)
 - 分支增量：CHPX/PAPX 观测来源关联 (`docs/maintenance/wps/validation.md#分支增量chpxpapx-观测来源关联`)
@@ -19,6 +25,58 @@
 - 可复现的本地检查 (`docs/maintenance/wps/validation.md#可复现的本地检查`)
 - 样本与未验证边界 (`docs/maintenance/wps/validation.md#样本与未验证边界`)
 - 历史证据 (`docs/maintenance/wps/validation.md#历史证据`)
+
+## 纯 Python 最大化读取
+
+2026-11-13 新增显式 `--reading-mode maximum`：组合既有 MS-DOC 有界恢复与附加故事，新增 OOXML `w:txbxContent` 独立 story 和 RTF 已验证目标组隔离解析；默认 standard 行为不变，结构/资源/加密门禁不降级。macOS / bundled Python 3.12 的变更前 551 项与变更后 558 项 WPS 单元测试均通过。用户指定的 WPS Office `12.1.0.26899` 暂无真实样本，且明确不使用外部后端，因此当前只证明合成契约，不证明该版本生产、私有格式、布局或客户端显示兼容。实现、命令和详细未验证范围见 `docs/maintenance/wps/maximum-reading-20261113.md`。
+
+## 最大模式二进制读取
+
+当前版本在 `--reading-mode maximum` 中按存储坐标保留未受字段和未解释片段属性影响的一级表格行。可验证的行内合并和纵向合并角色保留在行记录中。直接段落属性按其存储结束符定位，普通段落也可读取。正文及页眉文本框的附表提供独立文字范围，并按唯一的存储形状编号关联已验证的锚点。默认读取契约继续覆盖原调用方式。
+
+合成预期来自明确写入测试夹具的文字、CP、格式操作和形状编号。分别核对表格中有字段和无字段的行、字段跨边界、未解释片段属性、单元格及合并、段落属性、文本框分区与锚点、异常及有界输出。真实图形、图表数值、完整表格分组和版式仍需独立验收。详见 [合成集成回归](../../../skills/wps/scripts/test/test_wps_msdoc_maximum.py) 和 [文本框附表回归](../../../skills/wps/scripts/test/test_wps_binary_textboxes.py)。
+
+依据微软公开 MS-DOC 的直接段落属性及表格属性、形状和文本框记录说明。 [直接段落属性](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/61b635c3-2c44-4155-bf17-fec281b30c71) · [表格属性](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/b39a6648-501c-4361-8366-4f042f579469) · [形状记录](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/26fcafc0-554b-46bc-aebf-c755276c77a4) · [文本框附表](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/9f17f89a-64d6-4546-a811-e62e1d238102) · [文本框记录](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/d0a81fe8-f9e8-4130-9233-84732e3d9420)
+
+真实公开样本按固定版本取得，大小 125952 字节，SHA-256 为 `59ea15f76da2ae5a9cf9592a2c7623918c8e385dc9f587233a44ce166b2e5e8d`。standard 和 maximum 均返回 partial、24 段和 4 个观察行，每行 4 个单元格。正文和段落 JSON 哈希均符合历史独立解码基线。maximum 另外返回 4 个含居中操作的存储结束符，CP 为 183、188、193、198。该样本未覆盖新增文本框关联或合并恢复。中山和工行两份官网附件本轮因域名解析失败未取得。用户报告的原件未随任务提供。 [固定样本](https://github.com/listeng/wps2md/blob/c4ae028156e44ed8b57ef879dc7bd1d14750c0f1/tests/sample.wps) · [独立正文基线](wps-public-candidate-evidence.json)
+
+- macOS 27.2.1 arm64、Python 3.14.10、Expat 2.7.4。WPS 自检和严格结构检查通过。源码回归 583 项全部通过，包含 25 项新增合成测试。运行包安全测试 11 项通过。独立只读 WPS 包的精确清单、创建读取编辑和 maximum 文本框读取 3 项通过。合成 CLI 核对退出 3、可解析的 JSON stdout 和输入字节完整。
+- macOS Python 3.12.12。读取自检和 25 项新增回归全部通过。
+- `git diff --check` 通过。仓库导读检查覆盖 56 页和 597 个本地链接。WPS 版本及链接通过，仓库级命令因其他 5 个 Skill 共 10 处版本不一致退出 1。全仓独立安装在较早的工作区状态通过 13 项，最终复跑遇到同时维护的 DOCX 新脚本尚未列入清单，测试在初始化中止。单独安装 WPS 验收通过。
+- Pylint 未安装，未执行。Linux 目标容器、Windows、实际 WPS 客户端、用户原件和真实业务宿主回传均未验证。
+
+## 二进制表格分组与合并
+
+版本 `20261113.1824.3921` 在最大模式中建立一级表格索引，读取存储列边界、显式横向合并和可配对的纵向合并。独立的本机 HWPF 对照逐项核对表的 CP 范围、物理行列、合并标志、单元格两侧边界和合并范围。私有原件及回读数据仅用于本机运行，仓库只保留合成夹具。原件 CLI 返回 `partial` / 退出 3。读写边界和标准库依赖保持原约定。
+
+合成回归覆盖相邻表格的样式、方向和段落框架分界，无法确认的书签及未读行分界，横向合并与拆分、带有非空延续或不一致边界的纵向合并。真实样本的横向合并缺少独立实证，横向行为由合成夹具验证。依据 [MS-DOC 表格概述](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/5b45f0e7-7760-4fdb-af88-0146de2feb4c)、[行列初始定义](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/de06ec41-a0ac-4046-9096-cdfaa0091ad9)和 [纵向合并标志](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/1af35534-516e-4b58-986e-f2084bd6d56f)。
+
+macOS arm64 / Python 3.14.10 上通过 WPS 自检、严格结构检查、644 项源码回归和 11 项通用打包安全测试。只读包验收在 Python 3.12.14 上 16 项全通过，包括 WPS 表格分组与合并。最初使用 Python 3.14.10 时 15 项通过，`tl-docx` 因该解释器缺少依赖而跳过。Pylint 缺失，未执行。云端 Linux、WPS 客户端版式、嵌套表格及完整样式仍待验收。项目文档检查仍报告其他 Skill 的既有版本差异。
+
+## 二进制图表缓存
+
+版本 `20261113.1921.0201` 从浮动 OfficeArt 锚点和行内 PICF 的直接 SpContainer 定位三级 FOPT 的 metroBlob，沿兼容包里的内部 OPC 关系读取经典 Chart 部件。在最大模式的 `binary_charts` 输出存储的分类、数值、点索引、缺口及来源。缓存以原始字面值返回，工作簿连接只记录状态。 [OfficeArt 三级选项](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/a687e90c-1748-4f57-8758-be31cfb36185) · [Graphic Frame Doc](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/a76a4974-881b-4ca5-98fe-a758cda15e82) · [DrawingML 缓存](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.numberingcache?view=openxml-3.0.1)
+
+- 私有 MS-DOC 样本在本机通过入口验收。单独按 ZIP 中央目录和内容类型定位缓存，再从 XML 逐项对照标题、系列、分类和值，另按 PlcfSpa 与单字符 CHPX 分别核对两种锚点。确认原件字节未变、默认和最大模式正文一致、最大模式 JSON 可读且退出 3。私有文件及读出明细未落盘到仓库。没有用 PNG 推断原始值。
+- 合成回归覆盖精确字面值、稀疏和缺失缓存、相互重叠的图片记录、错误部件与外部关系、XML 与资源门禁、默认行为和只读安装。真实样本用于饼图兼容记录，其他分类/值图表类型未做真实样本验证。 [缓存回归](../../../skills/wps/scripts/test/test_wps_binary_chart_cache.py) · [锚点至 CLI 回归](../../../skills/wps/scripts/test/test_wps_binary_charts.py)
+- macOS 27.2.1 arm64、Python 3.14.10、Expat 2.7.4 下，WPS 源码 665 项、通用打包 11 项、入口自检、严格结构检查及 `git diff --check` 通过。独立包使用 Python 3.12.14 和 Expat 2.8.3，17 项均通过。WPS 导读与选路已人工同步，全仓导读检查仍报告其他 Skill 的既有版本差异，选路与加载快照全仓检查仍有其他 Skill 的已知差异。Pylint 未安装。Linux、Windows、WPS 客户端图形显示和业务宿主真实回传未验收。
+
+## 私有样本对照与 PNG 读取
+
+版本 `20261113.1704.0062` 在最大模式中恢复更多一级表格行，按直接或组合锚点关联文本框，并在 `binary_images` 返回存储 PNG 及引用。图片字节由 `--include-image-bytes` 显式请求。运行时仅用 Python 标准库。Apache POI HWPF 5.4.1 用于本地独立对照。规范依据见 [段落属性](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/484822ee-a9d9-4af4-8423-29fda67a6a58)、[文本框记录](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/d0a81fe8-f9e8-4130-9233-84732e3d9420)、[PICF 与绘图数据](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/dedb7505-8cc4-4053-aa2d-431b18d4bd97)及 [PNG BLIP](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/7af7d17e-6ae1-4c43-a3d6-691e6b3b4a45)。
+
+- 用户提供的一份 MS-DOC 月报只在本机临时核对。最大模式的 14 段相邻表格行、197 个行范围和 855 个单元格范围及文字与 HWPF 的读取逐项一致，未确认表格标记从 1050 减为 0。独立核对 30 个绘图锚点、13 个组合、27 个文本框索引与形状编号及 8 份原始 PNG 字节。行内及浮动共 13 处图片引用。默认和最大模式仍为 partial。原件、图片、文本及明细对照输出未写入仓库，临时副本已清理。
+- macOS arm64 / Python 3.14.10 / Expat 2.7.4 上，WPS 源码回归 619 项、打包安全测试 11 项、自检、严格结构检查和 `git diff --check` 均通过。独立安装验收 15 项中 14 项通过，含只读 WPS 包的 PNG 回读，1 项因该解释器缺 `tl-docx` 所需的 `python-docx` 跳过。本地原件 CLI 在 Python 3.12.14 下核对 stdout JSON、空 stderr 和退出 3。
+- 描述和读取路由已人工复核。项目文档检查仍报告 ET、OFD、table-workflow 和 XLSX 的既有版本差异。人工选路和静态加载快照的全仓检查仍受其他入口变动影响，WPS 相关条目已同步。Pylint 未安装，未执行。云端 Linux、真实业务宿主回传、客户端版式、全表分组与纵向合并配对、PNG 像素渲染和图表原始数据仍待验收。
+
+## 绘图锚点与说明
+
+当前最大模式从已确认的正文和页眉页脚锚点读取同故事、同形状编号的唯一 OfficeArt 记录。类型及主 FOPT 中的名称、说明、艺术字携带存储偏移。重复编号、不可输出的锚点和未识别记录继续提供现有 partial 证据。合成回归另覆盖倒序绘图标记、字段指令隔离、非法 UTF-16LE 和资源边界。 [OfficeArtContent](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/8699a984-3718-44be-adae-08b05827f8b3) · [绘图故事标记](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/c6897532-dffa-4106-a616-003afdd1df76) · [FSP](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/8a7e7be3-0582-4461-9400-29d7eda8497d) · [FOPT](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/10dc2fe1-9e69-48dc-a1d1-2921dfb9c28e) · [艺术字存储文字](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/c2dfbfd1-9652-40c2-a8d2-1f292bae61b5)
+
+- Apache POI 的 `FloatingPictures.doc`（335360 字节，SHA-256 `41cc0cd8f2d7390266f844f5bddbcd29d08ac5338abc33832d9c9a6ed5d0f85d`）走原件统一入口。两个模式均返回 partial 和相同的 177 段。最大模式匹配 4/4 个绘图锚点，均读到 picture frame 类型。锚点数与上游测试的四个 Escher 锚点一致。此样本没有返回说明文字。 [样本](https://github.com/apache/poi/blob/cba8f2740f45a6f5e906dc807f8d50c7da8b59a3/test-data/document/FloatingPictures.doc) · [上游图片测试](https://github.com/apache/poi/blob/cba8f2740f45a6f5e906dc807f8d50c7da8b59a3/poi-scratchpad/src/test/java/org/apache/poi/hwpf/usermodel/TestPictures.java)
+- 同一来源的 `watermark.doc`（20480 字节，SHA-256 `e6e74961fc41a00744b0f945639b4194d72028bb05589b069f56a09befd970be`）保留原件拒绝状态。维护验证仅在内存副本中将一个存储目录项的未使用起始扇区从 ENDOFCHAIN 改为零，以定位未改动的 Table Stream。副本整文件仍因 FIB 布局不匹配被拒绝。单独调用 OfficeArt 解析器按页眉 PlcfSpa 编号 1025 取到原记录的艺术字 `DRAFT CONTRACT`，与上游断言一致。页眉标记 1 先于正文标记 0，解析按唯一标记匹配。此项为原始记录级验收。 [样本](https://github.com/apache/poi/blob/cba8f2740f45a6f5e906dc807f8d50c7da8b59a3/test-data/document/watermark.doc) · [上游水印测试](https://github.com/apache/poi/blob/cba8f2740f45a6f5e906dc807f8d50c7da8b59a3/poi-scratchpad/src/test/java/org/apache/poi/hwpf/usermodel/TestOfficeDrawings.java)
+
+macOS arm64 / Python 3.14.10 上，599 项 WPS 回归、11 项打包安全测试、2 项只读 WPS 包核验、自检、严格结构检查和 `git diff --check` 均通过。Python 3.12.12 上，16 项新增回归通过。全仓独立包验收两次因运行期间 DOCX 源码变化在收尾核对失败。项目文档检查覆盖 56 页和 602 个本地链接，WPS 版本及链接核对通过，其他 4 个 Skill 的 8 处版本差异仍待同步。Pylint 未安装。用户原件、WPS Office 客户端、Linux 目标容器、Windows 和业务宿主回传尚未验证。
 
 ## 分支增量：MS-DOC 段落来源范围
 

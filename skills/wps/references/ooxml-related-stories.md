@@ -10,8 +10,10 @@
 
 脚注、尾注和批注由正文可见修订视图中的引用 ID 及对应唯一关系定位，验证定义 ID 唯一和范围，再仅提取被引用定义。空定义成功空文字；缺关系、缺定义、错误类型、重复定义或关系 ID 拒绝。批注范围的起止字符未映射，不声称恢复批注范围。特殊脚注分隔符不充当普通注释。
 
-未关联 ZIP 成员不作为附加文字解析，仍经过原有成员长度与 CRC 检查。外部关系不访问；目标拒绝 URI scheme/query/fragment/编码转义及越出包根。关联内的未知内容沿用 partial 诊断；嵌套引用不递归追踪，明确 partial。文本框、图形、布局、分页、字段执行和跨修订语义均不新增。
+未关联 ZIP 成员不作为附加文字解析，仍经过原有成员长度与 CRC 检查。外部关系不访问；目标拒绝 URI scheme/query/fragment/编码转义及越出包根。关联内的未知内容沿用 partial 诊断；嵌套引用不递归追踪，明确 partial。默认模式不新增文本框、图形、布局、分页、字段执行和跨修订语义。
 
-引用数100000、区域/定义4096，原有 ZIP/XML 累计预算和最终输出限额保持。所有关联 XML 使用同一个累计 XML budget，不按部件重置。无需写文件或网络。
+`--reading-mode maximum` 另从已经通过相同 ZIP/XML 检查的正文及已选关联区域中定位外层 `w:txbxContent`，将其存储段落和有限表格作为 `related_stories[type=textboxes]` 返回。它不解释 DrawingML/VML 锚点，不选择 Markup Compatibility Choice/Fallback，不推断页面或主文顺序；多个未选择分支中的相同文本可分别返回。每个 story 固定为 partial，`anchor_status=stored_textbox_subtree_only`，不能并入正文后声称阅读顺序准确。
+
+引用数100000、区域/定义4096，文本框 story 4096、文本框文字累计 8 Mi UTF-16 码元；原有 ZIP/XML 累计预算和最终输出限额保持。所有关联 XML 使用同一个累计 XML budget，不按部件重置。无需写文件或网络。
 
 公开依据见ooxml-related-evidence.json (`docs/maintenance/wps/ooxml-related-evidence.json`)，开发时核对，运行时不访问。测试均为标准库合成的固定预期，覆盖自定义部件名、未关联成员、三类 ID、修订、空区域、缺失/重复/越界、外部目标及配额；目前没有真实 WPS 关联文字的独立语义对照。

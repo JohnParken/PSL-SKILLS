@@ -10,7 +10,7 @@ import sys
 import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _wps_artifact_runtime.archive_deliverables import validate_input_path, validate_output_path
+from _wps_artifact_runtime.archive_delivery import validate_input_path, validate_output_path
 from _wps_artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, finalize_cleanup, finalize_failed_cleanup, _unique_object, _normalize_protected_path
 
 SCRIPTS = ('run_wps_task.py', 'run_wps_edit.py', 'export_wps.py')
@@ -179,7 +179,7 @@ def run_job(spec):
             cleanup = finalize_cleanup(manifest)
         elif (code in (0, 3) and result.get('status') in ('success', 'partial')
                 and result.get('publication_verification') == 'identity_and_bytes_verified'
-                and delivery.get('archive_status') in ('copied', 'failed', 'skipped') and not delivery.get('temporary_residuals')):
+                and delivery.get('archive_status') in ('success', 'partial', 'failed', 'not_required') and not delivery.get('temporary_residuals')):
             seal_cleanup(manifest, outcome='success', verified=True, archive_status=delivery['archive_status'])
             cleanup = finalize_cleanup(manifest)
         else:

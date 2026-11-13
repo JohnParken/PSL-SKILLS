@@ -27,12 +27,12 @@
 | 有效FIB D9/112 | 分别108对/2字/截止1024、183对/5字/截止1630 | 仅合成；完整扩展、片段界限及主正文范围测试，无对应真实WPS对照 |
 | 精确legacy_word_clsid v3 | data自动或显式策略接受观察GUID，partial | 历史真实样本及合成；默认路径新增覆盖仅合成，不推广任意CLSID |
 | 字段存储结果 | 显式cached_result、nested delimiter、partial | 仅合成；不验证sprmCFSpec/Plcfld、结果新鲜度或真实显示 |
-| U+0001图片/数据标记 | 显式placeholder为U+FFFC，partial | 真实sample有1个；不读取/解释对象类型或内容 |
-| U+0008绘图对象标记 | 显式placeholder，先验证主正文 PlcfSpa CP 与实际 U+0008，再替换为 U+FFFC，partial | 政府官网真实 WPS 原件回归：36 段；不验证有效 sprmCFSpec、SPA 全属性或绘图渲染，见 绘图锚点 (`<skill-root>/references/binary-shapes.md`) |
-| MS-DOC附加故事 | 显式六类CP分区，正文保持独立 | 合成分区/脚尾注/批注作者CP映射和节页眉槽；真实六区为空未验；不能称有效编号或某页页眉恢复 |
-| Strict/Transitional OOXML Word | 正文、表格文字、修订视图、显式关系/引用ID关联文字 | 合成；未知namespace/MC/绘图/字段等partial，需Expat>=2.6 |
+| U+0001图片/数据标记 | placeholder 为 U+FFFC，partial；最大模式可补读已验证的存储 PNG 和行内图表缓存 | 默认读取保留位置；最大模式见 `<skill-root>/references/binary-shapes.md#存储-png` |
+| U+0008 绘图对象标记 | 占位读取验证主正文 PlcfSpa CP 和实际 U+0008。maximum 另读页眉锚点、形状编号、存储矩形及能唯一匹配的 OfficeArt 类型、文字和图表缓存 | 图形渲染、路径及有效 sprmCFSpec 待验证。见 `<skill-root>/references/binary-shapes.md#存储图表缓存` |
+| MS-DOC附加故事 | 显式六类 CP 分区，maximum 可定位独立文本框 | 合成分区、脚尾注、批注作者 CP、节页眉槽和文本框。有效编号、页眉继承和页面待验证 |
+| Strict/Transitional OOXML Word | 正文、表格文字、修订视图、显式关系/引用ID关联文字；maximum 可另列受检 `w:txbxContent` 存储文字 | 合成；文本框锚点/页面/MC分支/顺序未知且partial，其他未知namespace/绘图/字段仍partial，需Expat>=2.6 |
 | OOXML逻辑表格 | tables坐标/gridSpan/vMerge/空单元格/嵌套来源 | 仅合成；缺网格坐标unknown/partial，默认文字契约保持，不渲染页面 |
-| MS-DOC直接PAPX行/单元格 | 一级行、文字、CP来源与初始列定义，partial | 仅合成；不归组表格、不恢复合并/嵌套，未知操作保留未解析诊断 |
+| MS-DOC直接PAPX行/单元格 | 一级行、文字、CP 来源与初始列定义，maximum 增加行内合并和直接段落操作证据 | 合成回归，完整归组、嵌套和有效样式仍未知 |
 | 其他FIB、私有WPS/Works | unsupported | 不猜测、不自动转换或软件回退 |
 
 后缀不是格式证据。主入口按签名、容器、内部负载分流；同时存在WordDocument和Workbook/Book则拒绝歧义。电子表格（.et/.ett）使用专门的 `et` 技能。
@@ -59,7 +59,7 @@ CR划分逻辑段落，软换行转LF，单元格标记转TAB；附加直接属�
 
 cached_result只按13/14/15分隔符和有界嵌套保留保存结果；隐藏指令不输出，缓存新鲜度和sprmCFSpec/Plcfld未验证，始终partial。不带结果的闭合域省略并报告；缺损、重复分隔、跨故事未闭合域仍corrupt，不用后续文字猜边界。显式field_policy=reject仍拒绝域。
 
-U+0001在placeholder模式替换U+FFFC，不推断图片/对象类型。U+0008有经校验的主正文PlcfSpa锚点时保留原形状来源；recover模式缺少锚点时仅作为未知标记占位，绝不伪造形状或读取其可能指向的字节。已有PlcfSpa结构损坏仍拒绝。其他未支持C0码元在recover模式替换U+FFFC，记录uninterpreted_control_markers_not_decoded、原marker、WordDocument物理偏移、piece和UTF-16 CP、placeholder_emitted；不复制控制符、不推断其关联内容。域指令内的标记不输出占位，诊断明确未输出。所有替换都partial，未知语义及可能关联内容未读取；损坏UTF-16、CLX/FIB/片段、加密与资源超限仍拒绝。
+U+0001 在 placeholder 模式替换 U+FFFC。在最大模式且直接字符属性及图片记录均可校验时补读内嵌 PNG 或存储图表缓存。U+0008 有经校验的主正文 PlcfSpa 锚点时保留形状来源；recover 模式缺少锚点时仅作未知标记占位。已有 PlcfSpa 结构损坏仍拒绝。其他未支持 C0 码元在 recover 模式替换 U+FFFC，记录 `uninterpreted_control_markers_not_decoded`、原 marker、WordDocument 物理偏移、piece、UTF-16 CP 和 `placeholder_emitted`。域指令内的标记不输出占位或媒体。所有替换都 partial；损坏的 UTF-16、CLX/FIB/片段、加密与资源超限仍拒绝。
 
 新增控制符诊断最多1000个，绘图/对象标记沿用1000个预算；超限停止，不静默截去后续正文。域位置最多保留20个并给locations_truncated，数量和嵌套上限仍生效。转换后paragraph_sources为空且unavailable_after_text_transform，不把变化后的字符串位置冒充原始CP。
 
@@ -87,7 +87,7 @@ CLI选项以 `"<skill-root>/scripts/read_wps.py" --help` 为准；含 `--hidden-
 
 ## OOXML结构化表格
 
-JSON的tables是独立逻辑结构，保留唯一ID、父表/父单元格、来源部件和路径、行与单元格、段落/run顺序以及合并锚点；嵌套表文字不复制入父cell.text。附加故事表格只在include-related时收集。缺失网格或无法可靠解释的网格扩展明确partial，保留文字且不猜列坐标；结构冲突拒绝。二进制MS-DOC正文保持文字/TAB，另可读取有限一级行/单元格证据；不恢复合并和表格归组，见二进制表格 (`<skill-root>/references/binary-tables.md`)。新表格能力尚无真实WPS独立内容对照，见精确范围 (`<skill-root>/references/ooxml-tables.md`)。
+JSON的tables是独立逻辑结构，保留唯一ID、父表/父单元格、来源部件和路径、行与单元格、段落/run顺序以及合并锚点；嵌套表文字不复制入父cell.text。附加故事表格只在include-related时收集。缺失网格或无法可靠解释的网格扩展明确partial，保留文字且不猜列坐标；结构冲突拒绝。二进制 MS-DOC 正文保持文字和 TAB，一级行及其受支持合并属性见 `<skill-root>/references/binary-tables.md`。新表格能力尚无真实 WPS 独立内容对照，见 `<skill-root>/references/ooxml-tables.md`。
 
 ## 隐藏文字与修订策略
 
@@ -111,8 +111,8 @@ reading_assessment (`<skill-root>/references/reading-assessment.md`)是统一入
 
 ## RTF部分恢复与发布边界
 
-RTF 的直接字节与十六进制字节按文档代码页解码；未声明代码页的高位字节沿用 CP936 假设并标 partial，解码替换及无法可靠应用的字体级代码页也有诊断。双字节与结构定界符无法消歧时拒绝，不猜测或把潜在控制符当作正文。正文段落和表格输出有上限，超限保留有界内容并标 partial/遗漏；嵌套或结构资源预算耗尽则拒绝，不能以 partial 绕过安全限制。全文 `--format text` 按 `blocks` 顺序输出段落与表格，行内单元格用制表符；为兼容既有接口，JSON 的 `text` 仍仅含段落，表格及次序取 `tables/blocks`。RTF 的隐藏排除/注释及 accepted/original/all 文本视图仅支持可验证的直接标记和组作用域；样式级联、历史属性、字段或结构边界使筛选无法保证时拒绝。默认保留存储文字，遇隐藏或修订标记标 partial。显式 field-policy=reject 在已解析主内容遇域时拒绝，cached_result 保留存储结果且 partial。页眉、页脚、脚注与批注不并入主文；附加区域提取和二进制段落来源目前不支持。默认对已识别的图片/对象保留 U+FFFC 占位与源字节位置并标 partial，不执行或解码对象；显式 object-policy=reject 遇到已解析对象拒绝。显式文本 recover 使用相同有界恢复；strict 以及不适用的兼容/图表策略请求仍拒绝。
+RTF 的直接字节与十六进制字节按文档代码页解码；未声明代码页的高位字节沿用 CP936 假设并标 partial，解码替换及无法可靠应用的字体级代码页也有诊断。双字节与结构定界符无法消歧时拒绝，不猜测或把潜在控制符当作正文。正文段落和表格输出有上限，超限保留有界内容并标 partial/遗漏；嵌套或结构资源预算耗尽则拒绝，不能以 partial 绕过安全限制。全文 `--format text` 按 `blocks` 顺序输出段落与表格，行内单元格用制表符；为兼容既有接口，JSON 的 `text` 仍仅含段落，表格及次序取 `tables/blocks`。RTF 的隐藏排除/注释及 accepted/original/all 文本视图仅支持可验证的直接标记和组作用域；样式级联、历史属性、字段或结构边界使筛选无法保证时拒绝。默认保留存储文字，遇隐藏或修订标记标 partial。显式 field-policy=reject 在已解析主内容遇域时拒绝，cached_result 保留存储结果且 partial。页眉、页脚、脚注与批注不并入主文；maximum 或显式附加区域读取可把已闭合且首控制字可验证的目标组隔离解析为独立 story，页面/锚点/主文顺序仍未知，二进制段落来源不支持。默认对已识别的图片/对象保留 U+FFFC 占位与源字节位置并标 partial，不执行或解码对象；显式 object-policy=reject 遇到已解析对象拒绝。显式文本 recover 使用相同有界恢复；strict 以及不适用的兼容/图表策略请求仍拒绝。
 
-RTF读取在未闭合组、行或单元格、Unicode/十六进制截断时保留可证实的文字和物理单元格，返回partial及rtf_*诊断；不能确认的字符不猜测。未配对Unicode代理项以替代字符显示并诊断。页眉页脚和相关区域省略明确标记；图片及对象默认保留占位并报告内容未解码。域只保留存储结果，不执行、不证明新鲜度。未知可选destination保守跳过并诊断；字体/颜色等已知元数据不因未呈现而自动标记正文缺失。二进制长度确定时按字节跳过，不将其字节误作正文或组边界。
+RTF读取在未闭合组、行或单元格、Unicode/十六进制截断时保留可证实的文字和物理单元格，返回partial及rtf_*诊断；不能确认的字符不猜测。未配对Unicode代理项以替代字符显示并诊断。默认省略页眉页脚和相关区域并明确标记；maximum/附加区域模式只返回已验证目标组的存储文字，隔离解析及来源范围不等于有效节页映射。图片及对象默认保留占位并报告内容未解码。域只保留存储结果，不执行、不证明新鲜度。未知可选destination保守跳过并诊断；字体/颜色等已知元数据不因未呈现而自动标记正文缺失。二进制长度确定时按字节跳过，不将其字节误作正文或组边界。
 
 生成/重排编辑在发布前拒绝带结构或文字恢复诊断的候选，保留原目标；仅附加内容省略、域缓存未验证可带partial回执发布，不意味着版式和所有内容已验收。普通编辑仍拒绝partial输入，用户明确授权--allow-lossy-reflow时才生成标注损失的新副本。读取变为partial可能使原来静默省略页眉/对象的RTF不再进入默认重排编辑，这是缺口显式化；不是取消读取能力。

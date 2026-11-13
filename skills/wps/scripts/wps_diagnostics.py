@@ -169,7 +169,8 @@ def _coverage(result, diagnostic_records):
     binary_statuses = [structure.get('status') if isinstance(structure, dict) else None
                        for structure, _ in binary_structures]
     binary_state = ('unknown' if not binary_structures else
-                    'extracted' if all(status == 'verified' for status in binary_statuses)
+                    'extracted' if all(status == 'verified' for status in binary_statuses) else
+                    'partially_extracted' if 'rows_partial' in binary_statuses and result.get('reading_mode') == 'maximum'
                     else 'not_decoded')
     binary = _CoverageEntry('binary_tables', binary_state)
     for structure, story_type in binary_structures:
@@ -227,6 +228,22 @@ def _coverage(result, diagnostic_records):
             })
 
     coverage = [related.as_dict(), binary.as_dict(), objects.as_dict()]
+    if 'binary_images' in result:
+        stored = result['binary_images']
+        image_state = ('extracted' if stored['status'] == 'extracted' else
+                       'partially_extracted' if stored['image_count'] else 'not_decoded')
+        images = _CoverageEntry('binary_images', image_state)
+        for index, image in enumerate(stored['images']):
+            images.add(image, {'index': index})
+        coverage.append(images.as_dict())
+    if 'binary_charts' in result:
+        stored = result['binary_charts']
+        state = ('extracted' if stored['status'] == 'stored_data' else
+                 'partially_extracted' if stored['chart_count'] else 'not_decoded')
+        charts = _CoverageEntry('binary_charts', state)
+        for index, chart in enumerate(stored['charts']):
+            charts.add(chart, {'index': index})
+        coverage.append(charts.as_dict())
     coverage.extend(entry.as_dict() for entry in unread.values()
                     if entry.evidence_count)
     return coverage

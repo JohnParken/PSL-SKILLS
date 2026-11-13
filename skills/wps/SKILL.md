@@ -1,7 +1,7 @@
 ---
 name: wps
-version: "20261112.1921.3400"
-description: 读取 .wps、.rtf 和旧版 .doc 的受支持文字与表格，按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。适合 WPS 兼容文字处理；不生成金山原生格式，不承诺保留原版式及对象。原生 DOCX（含 WPS 保存）优先使用 docx。
+version: "20261113.2302.5108"
+description: 读取 .wps、.rtf 和旧版 .doc 的文字及表格。最大模式可补读表格分组与合并、绘图、文本框、内嵌 PNG 和部分二进制图表缓存。按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。原生 DOCX（含 WPS 保存）优先使用 docx。
 ---
 
 # WPS 文字读取、RTF 创建与受控重排
@@ -25,7 +25,7 @@ description: 读取 .wps、.rtf 和旧版 .doc 的受支持文字与表格，按
 宿主路径与执行器：读取工具中的 `file_path` 属于该工具的路径空间；先用它定位和读取 Skill 内部资料。执行脚本前另确认该位置与执行器实际可访问路径的映射，并用执行器路径替换命令中的 `<skill-root>`；只有宿主确认两者一致时才可直接复用。确认执行器的当前目录就是宿主指定的任务目录，且任务输入在该执行器可见；不能确认映射或工作目录时停止并报告，不猜测或切换目录。
 
 1. **任务目录与输入。** `./` 为宿主确认的任务工作目录；在该目录运行并保持不变，该目录不是 Skill 源码目录；若仍在源码目录，先确认任务目录。输入及受控临时文件沿用该目录内相对路径规则。交付输出只传裸文件名（例如 `报告.wps`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。优先本轮附件映射与用户指定路径；唯一可访问候选直接处理，多候选无法消歧才询问。没有映射时只列出 `./` 顶层候选，不递归搜索或读取历史归档；无可访问文件如实报告，不要求用户重复已知文件名。
-2. **定位与环境。** 按上述真实 `file_path` 定位脚本，不为调用切换安装目录。使用宿主确认的 Python 3.10+、保留 `-I -S -B`；仅标准库（`<skill-root>/requirements.txt`），禁止安装包或运行时联网。OOXML 另需 Expat >=2.6；二进制导出需预装 LibreOffice。
+2. **定位与环境。** 按上述真实 `file_path` 定位脚本，不为调用切换安装目录。使用宿主确认的 Python 3.10+、保留 `-I -S -B`；仅标准库（`<skill-root>/requirements.txt`），禁止安装包或运行时联网。OOXML 和二进制图表缓存另需 Expat >=2.6；二进制导出需预装 LibreOffice。
 3. **首次操作前仅自检相关分支。** 读取用第一条，创建用第二条；编辑先完成两者，导出按专项参考自检。均要求退出 0 且输出 `environment-ok`，不只看无报错：
 
 ```python
@@ -53,11 +53,15 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" check"
 ```python
 # 全文分析、完整结构证据：默认完整 JSON
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps")
+# 需要附加区域、绘图说明、文本框或更多二进制表格证据时使用完整 JSON
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode maximum")
 # 只问大小/结构概况，不需要正文
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --summary")
 # 已明确只需这段正文；需要诊断时保持 JSON
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --paragraph-range 1:20")
 ```
+
+`--reading-mode maximum` 使用完整 JSON，读取附加区域并保留隐藏、修订和域缓存的存储文字。二进制文档的 `binary_table_structure.tables` 返回一级表格分组、存储列边界和可确认的合并范围，原始单元格文字仍在 `rows`。在 `drawing_objects` 查看绘图锚点和说明，在 `related_stories` 查看文本框和附加区域。`binary_images` 返回存储 PNG 的元数据和位置，确需原始字节时加 `--include-image-bytes`。`binary_charts` 返回由浮动绘图或行内图片记录定位的分类、系列存储值和缺失范围。查阅具体系列的状态，按点索引关联分类和值。遇到 `related_content_not_requested` 且只需附加文字时用 `--include-related`。
 
 概况不含正文，不用它回答全文问题。段落范围为1-based闭区间，只投影主段落；核对 `selection_status`、`source_status`、`projection_scope`，不把源 `reading_assessment` 当投影覆盖全文。保留本次可见输出、真实退出状态及 partial/遗漏诊断，按末节判读；宿主截断结果不是完整 JSON。纯文本 `--format text` 只在确实不需结构/诊断时用，partial 诊断仍在 stderr；合并流时不能把诊断混作正文，不替代结果契约。RTF 全文纯文本按块顺序输出正文和表格，单元格以制表符分隔；JSON 的 `text` 仍仅为段落，表格与顺序见 `tables/blocks`。RTF 的隐藏排除/注释和修订视图只支持可验证的直接标记与组作用域；未知样式、历史属性或结构边界影响筛选时拒绝。默认保留存储文字，遇隐藏或修订标记标 partial。图片及对象默认以 U+FFFC 标示位置并标 partial，不解码或执行；域默认仅保留存储结果且 partial，不执行；显式 `--field-policy reject` 在已解析主内容遇域时拒绝。
 
@@ -76,7 +80,10 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create
 | 大纲/指定章节、重复标题消歧 | `<skill-root>/references/selective-reading.md` |
 | 有界正文、字符预算、游标续读 | `<skill-root>/references/bounded-reading.md`；投影仍完整解析，不降低解析内存，全文统计不以摘要代替 |
 | 容器、对象、字段范围 | `<skill-root>/references/format.md` |
+| 二进制绘图锚点、说明、艺术字或 PNG | `<skill-root>/references/binary-shapes.md#最大模式绘图说明` |
+| 二进制图表的保存值、缺值和来源 | `<skill-root>/references/binary-shapes.md#存储图表缓存` |
 | 附加区域 | MS-DOC：`<skill-root>/references/ms-doc-stories.md`；OOXML：`<skill-root>/references/ooxml-related-stories.md` |
+| 尽量补读存储文字、文本框、附加区域或二进制表格属性 | `<skill-root>/references/reading-assessment.md#最大化读取模式`，使用完整 JSON 并核对 partial 和来源 |
 | 隐藏文字/修订 | `<skill-root>/references/word-visibility.md` |
 | 读取表格结构 | OOXML：`<skill-root>/references/ooxml-tables.md`；MS-DOC：`<skill-root>/references/binary-tables.md` |
 | 自定义创建、列表/页眉页脚、标题/制表位、合并/边框/物理列宽 | `<skill-root>/references/generation.md`，支持范围和单位以该文件为准，不照搬 DOCX 参数 |
@@ -96,5 +103,5 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create
 - 读取 `status=ok` / 退出0只表示声明范围内成功；`partial` / 退出3保留可靠正文并报告已知缺口；失败1、参数错误2。选择性歧义/未找到不能当已读到目标，partial源还可能保持退出3，须同时检查选择状态。
 - 创建/编辑退出0仍须检查 `partial`、`issues`、`spec_warnings` / `spec_warning_count`，不能只凭 `status=success`。未知配置或显式未知字体替换要说明；显式有损重排退出3。`--compact-receipt` 仅创建支持，省去预览、不省略现有警告及发布/归档状态；编辑不要传此参数。
 - 导出 success/partial/失败退出0/3/1，参数错误2。来源或候选partial、auto回退均保留诊断；正文回读成功不证明原版式、全格式或实机打开。交付前按任务核对标题、关键值、表格与遗漏，视觉未验收如实说明。
-- 创建、重排、导出 CLI 自动使用随包实现归档，返回 `delivery`；裸读取与底层API不自动归档，不重复调用外部生命周期。业务、发布、归档、清理分别核对；无配置为 skipped，归档失败保留主文件、不重跑。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。核对非空完整清单，汇总 copied 且全部项 copied/already_archived 才是全部成功；保留 archive_message，按实际结果展示 archive_user_notice。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。详细话术见 `<skill-root>/references/delivery.md`。
+- 创建、重排、导出 CLI 自动使用随包实现归档，返回 `delivery`；裸读取与底层API不自动归档，不重复调用外部生命周期。业务、发布、归档、清理分别核对；无配置为 failed；已声明最终交付但业务、发布验收或内部清理未就绪也为 failed，检查 blocking_reasons，不误称无需归档。归档失败保留主文件、不重跑。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。核对非空完整清单，汇总 success 且全部项 copied/already_archived 才是全部成功；保留 archive_message，按实际结果展示 archive_user_notice。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。详细话术见 `<skill-root>/references/delivery.md`。
 - 默认stdin不落额外JSON。确需落盘时先读 delivery，用受控job创建前登记尚不存在的临时项；生产进程结束后，成功则归档后收尾，失败也立即按原清单清理本次归属明确且可安全删除的临时项，不因待重试保留。保护原件、主文件、最终文件、未知或仍占用项，未完成如实报告；不扫描历史、不补认领，恢复核对原清单，重新生成从原始输入新任务开始。

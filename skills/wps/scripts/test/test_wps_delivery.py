@@ -20,7 +20,7 @@ from run_wps_job import run_job
 from wps_delivery import finish_delivery
 from test_wps_ooxml import package
 from _wps_artifact_runtime.controlled_cleanup import finalize_cleanup, finalize_failed_cleanup
-from _wps_artifact_runtime import archive_deliverables
+from _wps_artifact_runtime import archive_delivery
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 SPEC = {'blocks': [{'type': 'paragraph', 'text': 'Reliable text'}]}
@@ -54,13 +54,54 @@ class DeliveryTests(unittest.TestCase):
                         'output': output, 'configs': {'spec': spec}})
 
     def archived(self, result, name):
-        self.assertEqual(result['delivery']['archive_status'], 'copied', result)
+        self.assertEqual(result['delivery']['archive_status'], 'success', result)
         self.assertTrue(result['delivery']['files'][0]['archive_verified'])
         self.assertEqual((self.root / name).read_bytes(), (self.root / 'output/wps-test' / Path(name).name).read_bytes())
         notice = result['delivery']['archive_user_notice']
         self.assertIn('云空间', notice)
         self.assertNotIn('wps-test', notice)
         self.assertNotIn('output/', notice)
+
+
+    def test_unready_final_delivery_is_failed_not_unnecessary(self):
+        base = {'status': 'success', 'output_written': True,
+                'publication_verification': 'identity_and_bytes_verified', 'cleanup_complete': True}
+        for field, value, reason in (
+                ('cleanup_complete', False, 'internal_cleanup_incomplete'),
+                ('publication_verification', 'unknown', 'publication_not_verified'),
+                ('output_written', False, 'final_output_not_published'),
+                ('status', 'failed', 'business_result_not_accepted')):
+            with self.subTest(field=field), patch('wps_delivery.archive_delivery') as archive:
+                result = base | {field: value}
+                finish_delivery(result, 'requested.wps')
+                delivery = result['delivery']
+                self.assertEqual(delivery['archive_status'], 'failed')
+                self.assertEqual(delivery['requested_count'], 1)
+                self.assertEqual(delivery['failed_count'], 1)
+                self.assertIn(reason, delivery['blocking_reasons'])
+                self.assertEqual(delivery['files'][0]['output'], 'requested.wps')
+                self.assertNotIn('没有需要', delivery['archive_user_notice'])
+                archive.assert_not_called()
+
+    def test_cleanup_recovery_retries_same_main_under_current_id(self):
+        with self.working():
+            result = create_document(SPEC, Path('recover.wps'))
+            original = Path('recover.wps').read_bytes()
+            result['cleanup_complete'] = False
+            finish_delivery(result, 'recover.wps')
+            self.assertEqual(result['delivery']['archive_status'], 'failed')
+            self.assertFalse(Path('output').exists())
+            self.assertEqual(Path('recover.wps').read_bytes(), original)
+            # Simulate a separately verified cleanup recovery, not regeneration.
+            result['cleanup_complete'] = True
+            os.environ['ROUTER_CONFIG_VARIABLES'] = json.dumps(
+                {'commonParam': [{'name': 'questionId', 'value': 'current-retry'}]})
+            finish_delivery(result, 'recover.wps')
+            self.assertEqual(result['delivery']['archive_status'], 'success')
+            self.assertEqual(Path('output/current-retry/recover.wps').read_bytes(), original)
+            finish_delivery(result, 'recover.wps')
+            self.assertEqual(result['delivery']['files'][0]['archive_status'], 'already_archived')
+            self.assertEqual(Path('recover.wps').read_bytes(), original)
 
     def test_three_clis_auto_archive_and_preserve_inputs(self):
         (self.root / 'spec.json').write_text(json.dumps(SPEC), encoding='utf-8')
@@ -177,7 +218,7 @@ class DeliveryTests(unittest.TestCase):
                 name = 'missing.wps' if value is None else 'invalid.wps'
                 code, result = self.job(output=name)
                 self.assertEqual(code, 0, result)
-                self.assertEqual(result['delivery']['archive_status'], 'skipped')
+                self.assertEqual(result['delivery']['archive_status'], 'failed')
                 self.assertTrue(result['job_cleanup']['cleanup_complete'])
                 self.assertTrue(Path(name).is_file())
                 self.assertFalse(list(Path('.').glob('wps-job-*')))
@@ -199,11 +240,11 @@ class DeliveryTests(unittest.TestCase):
         with self.working():
             result = create_document(SPEC, Path('main.wps'))
             original = Path('main.wps').read_bytes()
-            copy = archive_deliverables._copy_main_to_archive
+            copy = archive_delivery._copy_main_to_archive
             def corrupted(source, target, **kwargs):
                 copy(source, target, **kwargs)
                 target.write_bytes(b'corrupted copy')
-            with patch.object(archive_deliverables, '_copy_main_to_archive', side_effect=corrupted):
+            with patch.object(archive_delivery, '_copy_main_to_archive', side_effect=corrupted):
                 finish_delivery(result, 'main.wps')
             self.assertEqual(result['delivery']['archive_status'], 'failed')
             self.assertNotEqual(result['delivery']['archive_message'], '归档完成')
@@ -256,6 +297,8 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(result['delivery']['archive_status'], 'failed')
         self.assertFalse((self.root / 'output').exists())
         self.assertEqual((self.root / 'main.wps').read_bytes(), b'changed')
+        self.assertEqual(result['delivery']['files'][0]['output'], 'main.wps')
+        self.assertEqual(result['delivery']['failed_count'], 1)
 
     def test_invalid_generation_cleans_configs_but_not_user_or_unknown_files(self):
         (self.root / 'user.json').write_bytes(b'user input')
