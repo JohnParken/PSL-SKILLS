@@ -73,6 +73,15 @@ class WorkflowTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.environment = {**os.environ, "PATH": "", "PYTHONPATH": str(self.root), "PYTHONNOUSERSITE": "1"}
 
+    def test_create_archives_final_presentation_without_changing_business_status(self):
+        self.environment['ROUTER_CONFIG_VARIABLES'] = json.dumps(
+            {'commonParam': [{'name': 'questionId', 'value': 'current-pptx'}]})
+        process, result = self.invoke('create', '-', 'report.pptx', payload=config())
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(result['archive_status'], 'success', result)
+        self.assertEqual((self.root/'report.pptx').read_bytes(),
+                         (self.root/'output/current-pptx/report.pptx').read_bytes())
+
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
@@ -251,6 +260,108 @@ class WorkflowTests(unittest.TestCase):
         result = self.assert_failure("create", "alias.json", "out.pptx")
         self.assertEqual(result["error"]["code"], "task_boundary")
         self.assertFalse((self.root / "out.pptx").exists())
+
+    def test_archive_check_uses_root_and_cleans_probe(self) -> None:
+        process = subprocess.run(
+            [sys.executable, "-I", "-S", "-B", str(SKILL_ROOT / "scripts/archive_delivery.py"), "--check"],
+            cwd=self.root, capture_output=True, text=True, encoding="utf-8", env=self.environment, check=False,
+        )
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(json.loads(process.stdout)["status"], "environment-ok")
+        self.assertEqual(list(self.root.iterdir()), [])
+
+    def test_archive_check_preserves_replaced_probe(self) -> None:
+        import archive_delivery
+        real_digest = archive_delivery._archive_digest
+        replaced = []
+
+        def replace_before_cleanup(path):
+            digest = real_digest(path)
+            if str(path).endswith(".link"):
+                path.unlink()
+                path.write_bytes(b"other task")
+                replaced.append(path)
+            return digest
+
+        previous = Path.cwd()
+        try:
+            os.chdir(self.root)
+            with patch.object(archive_delivery, "_archive_digest", side_effect=replace_before_cleanup):
+                with self.assertRaisesRegex(RuntimeError, "cleanup incomplete"):
+                    archive_delivery.environment_check()
+        finally:
+            os.chdir(previous)
+        self.assertEqual((self.root / replaced[0]).read_bytes(), b"other task")
+        self.assertEqual(len(list(self.root.iterdir())), 1)
+
+    def test_archive_declared_temporary_collision_preserves_existing_file(self) -> None:
+        from artifact_files import _copy_main_to_archive
+        from output_location import OutputLocation
+        from types import SimpleNamespace
+        source = self.root / "final.pptx"
+        source.write_bytes(b"final")
+        collision = self.root / (".archive-" + "a" * 32 + ".tmp")
+        collision.write_bytes(b"other task")
+        location = OutputLocation(output_dir=Path("output/job"), used_fallback=False, fallback_reason=None)
+        with patch("artifact_files.uuid.uuid4", return_value=SimpleNamespace(hex="a" * 32)):
+            with self.assertRaises(FileExistsError):
+                _copy_main_to_archive(self.root, Path("final.pptx"), location, "final.pptx", source, [])
+        self.assertEqual(collision.read_bytes(), b"other task")
+        self.assertEqual(source.read_bytes(), b"final")
+        self.assertEqual(list((self.root / "output/job").iterdir()), [])
+
+    def test_archive_failure_cleans_only_root_temporary(self) -> None:
+        from artifact_files import _copy_main_to_archive
+        from output_location import OutputLocation
+        source = self.root / "final.pptx"
+        source.write_bytes(b"final")
+        unrelated = self.root / "keep.tmp"
+        unrelated.write_bytes(b"keep")
+        location = OutputLocation(output_dir=Path("output/job"), used_fallback=False, fallback_reason=None)
+        with patch("artifact_files.shutil.copyfileobj", side_effect=OSError("copy failed")):
+            with self.assertRaises(OSError):
+                _copy_main_to_archive(self.root, Path("final.pptx"), location, "final.pptx", source, [])
+        self.assertEqual(source.read_bytes(), b"final")
+        self.assertEqual(unrelated.read_bytes(), b"keep")
+        self.assertEqual(sorted(path.name for path in self.root.iterdir()), ["final.pptx", "keep.tmp", "output"])
+        self.assertEqual(list((self.root / "output/job").iterdir()), [])
+
+    def test_archive_temporary_identity_change_is_retained(self) -> None:
+        from artifact_files import ArchiveCleanupError, _copy_main_to_archive
+        from output_location import OutputLocation
+        import artifact_files
+        source = self.root / "final.pptx"
+        source.write_bytes(b"final")
+        location = OutputLocation(output_dir=Path("output/job"), used_fallback=False, fallback_reason=None)
+        real_link = os.link
+
+        def replace_after_link(src, dst, **kwargs):
+            real_link(src, dst, **kwargs)
+            os.unlink(src)
+            Path(src).write_bytes(b"replacement")
+
+        with patch.object(artifact_files.os, "link", side_effect=replace_after_link):
+            with self.assertRaises(ArchiveCleanupError) as caught:
+                _copy_main_to_archive(self.root, Path("final.pptx"), location, "final.pptx", source, [])
+        residual = self.root / caught.exception.temporary_residuals[0]
+        self.assertEqual(residual.parent, self.root)
+        self.assertEqual(residual.read_bytes(), b"replacement")
+        self.assertEqual(source.read_bytes(), b"final")
+        self.assertEqual((self.root / "output/job/final.pptx").read_bytes(), b"final")
+
+    def test_paths_with_spaces_and_chinese_preserve_input(self) -> None:
+        source = self.root / "输入 配置.json"
+        source.write_text(json.dumps(config(), ensure_ascii=False), encoding="utf-8")
+        original = source.read_bytes()
+        process, result = self.invoke("create", source.name, "报告 成品.pptx")
+        self.assertEqual(process.returncode, 0, result)
+        self.assertEqual(source.read_bytes(), original)
+        process, inspected = self.invoke("inspect", "报告 成品.pptx")
+        self.assertEqual(process.returncode, 0, inspected)
+        self.assertEqual(inspected["title"], "检查 <中文> & English")
+        self.assertEqual(self.assert_failure("inspect", "缺失 文件.pptx")["error"]["code"], "input_missing")
+        self.assertEqual(self.assert_failure("create", source.name, "报告 成品.pptx")["error"]["code"], "output_exists")
+        self.assertEqual(source.read_bytes(), original)
 
     def test_output_requires_raw_bare_filename_for_cli_and_api(self) -> None:
         from pptx_core.runtime import TaskError, create

@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261112.1921.3400"
+version: "20261113.2302.5108"
 description: 读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，适合查看表头、筛选排序、去重及按指定范围统计汇总。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
@@ -134,3 +134,11 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 - `status=partial`、退出 3：保留提取结果并说明已知缺口。若 `cell_value_coverage=complete_within_declared_sheets` 且 `omissions_affect_cell_values=false`，继续普通读取、筛选、排序和统计，只需简短说明“保存值已读完，部分格式/元数据未解释”，不因 partial 单独要求用户确认或停止；若 omissions=true、存在未读声明表或缺缓存，才限制依赖完整数据的结论。
 - 读取失败退出 1；参数错误退出 2。
 - 维护验收与真实样例验证详见 真实 ET/ETT 记录（`docs/maintenance/et/et-real-validation.md`）与 格式说明（`<skill-root>/references/biff8-readonly.md`）。
+
+## 最终交付与读取中间结果
+
+纯读取 stdout、模型分析用 JSON 与调试结果不自动归档。只有用户明确要求交付的文件才列入最终清单；保留输入原件，验收后由本包统一归档入口处理。每次使用宿主当次最新 questionId，缺失报告失败并保留主文件；归档目录及子目录不放临时文件。成功须完整非空清单全部核验通过，才提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”。不复用历史回执，不声称已验证云端上传。
+
+验收用户明确要求的结果文件后，用宿主 execute 调用本包 `"<skill-root>/scripts/archive_delivery.py" 读取结果.json --protect-input 用户原件.et`，参数应替换为本轮实际文件名。批次状态 success/partial/failed/not_required，归档 CLI 分别退出 0/3/1/0，参数错误退出 2；单项 copied/already_archived/failed。仅分析用 JSON 不执行归档。
+
+显式最终导出优先直接调用 `execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --output 读取结果.json --delivery")`（归档需 Python 3.10+）。`--delivery` 必须与 `--output` 同用，不接受概况/分页或自检；写后核对文件字节数和 SHA-256，再保护原件并归档。stdout 清单包含 `final_deliverables`、`output_written` 和 `delivery`；读取 partial/退出 3 保留，归档状态独立检查。缺失 questionId 或归档失败仍保留已写 JSON，不重跑读取覆盖文件，改用显式归档入口重试。未加 `--delivery` 的 `--output` 仅为内部交接文件，不能把它交给用户后省略归档。分析器 stdout 另存最终文件也须验收后显式归档。

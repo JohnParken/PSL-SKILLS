@@ -6,6 +6,7 @@
     "assets/licenses/ppt_master.txt",
     "references/bounded-reading.md",
     "references/input-contract.md",
+    "references/lifecycle-upstream.json",
     "references/provenance.md",
     "requirements.txt",
     "scripts/_engine/hyperlink_contract.py",
@@ -148,6 +149,9 @@
     "scripts/_engine/svg_to_pptx/semantic_markers.py",
     "scripts/_engine/svg_to_pptx/tspan_flattener.py",
     "scripts/_engine/svg_to_pptx/use_expander.py",
+    "scripts/archive_delivery.py",
+    "scripts/artifact_files.py",
+    "scripts/output_location.py",
     "scripts/pptx.py",
     "scripts/pptx_core/__init__.py",
     "scripts/pptx_core/images.py",
@@ -155,7 +159,8 @@
     "scripts/pptx_core/package.py",
     "scripts/pptx_core/runtime.py",
     "scripts/pptx_core/svg_limits.py",
-    "scripts/pptx_core/validation.py"
+    "scripts/pptx_core/validation.py",
+    "scripts/router_config.py"
   ],
   "exclude_prefixes": [
     "scripts/test/"

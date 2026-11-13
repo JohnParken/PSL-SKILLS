@@ -66,3 +66,9 @@ UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型�
 `run --summary` 的完整诊断超过视图预算时，ET 专属 `<skill-root>/scripts/et_read_view.py` 组合公共分页实现，返回显式 `diagnostic_summary`；不修改公共运行时副本、不影响逐格分页或 read/metadata 协议。原风险字段保留，诊断样本及省略计数不能代替原始诊断。精简结果新增 `output_projection`，文件清单 SHA-256 和字节数包含末尾换行，文件上限仍为256 MiB。
 
 从已确认仓库根目录运行对应 `skills/et/scripts/test/` 的 unittest discover；测试目录以仓库根目录为基准，不存在于精简运行包。测试不属于普通业务必读材料，不预读全部测试或本文件。独立复制Skill目录后验证只读安装、无相邻模块及空外部程序PATH；跨表仍显式依赖已确认的XLSX/ET能力入口，不承诺单独复制跨表目录即可获得依赖。真实样本、合成测试、平台和宿主验收分别报告。
+
+## 显式最终文件导出
+
+`run ./input.et --output 读取结果.json --delivery` 将完整读取 JSON 声明为用户最终交付（Python 3.10+）；写后流式核对 manifest 字节数、SHA-256 和稳定文件身份，再保护原件调用本包归档。清单新增 final_deliverables、output_written、delivery，读取状态与退出码 0/3 保留；归档失败可能业务退出 0，必须检查 delivery.archive_status。--delivery 必须与 --output 同用，不能用于 --check 或有界视图。内部 --output 不自动归档。
+
+归档失败保留已写 JSON，修复配置或目标问题后只调用 archive_delivery.py 显式清单重试，按当次宿主 questionId 归档；不要重跑读取覆盖文件。宿主另存分析 JSON 时也须明确最终清单、保留 partial/范围诊断并验收后归档。协议 read/metadata 仍只返回数据，不自动声明文件交付；旧消费者无需新增参数。

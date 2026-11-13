@@ -84,8 +84,10 @@ class ReviewTests(unittest.TestCase):
         self.assertIsInstance(restored['sources']['current']['filters'][0]['value'], Decimal)
         again, _ = workflow.Workflow(self.api).prepare(restored)
         self.assertEqual(again.cells, candidate.cells)
-        code, _ = self.cli()
-        self.assertEqual(code, 0)
+        code, receipt = self.cli()
+        self.assertEqual(code, 3)
+        self.assertTrue(receipt['delivery_incomplete'])
+        self.assertEqual(receipt['status'], 'validated')
         audit = json.loads(Path('audit.json').read_text(encoding='utf-8'), parse_float=Decimal)
         self.assertEqual(audit['plan']['sources']['current']['filters'][0]['value'], number)
 
@@ -94,7 +96,7 @@ class ReviewTests(unittest.TestCase):
         self.plan['metrics'][0]['missing'] = 'omit'
         payload = {'archive_status': 'failed', 'archive_message': '归档失败', 'warnings': ['synthetic ' * 10000],
                    'temporary_residuals': ['synthetic-owned-residual']}
-        with patch('xlsx_delivery.archive_outputs', return_value=payload), patch.object(workflow, 'Dependencies', fixtures.Dependencies):
+        with patch('xlsx_delivery.archive_delivery', return_value=payload), patch.object(workflow, 'Dependencies', fixtures.Dependencies):
             code, result = self.cli()
         self.assertEqual(code, 3)
         self.assertEqual(result['status'], 'partial')
@@ -131,7 +133,31 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(result['verification'], 'workbook_and_inputs_passed')
         self.assertTrue(result['diagnostics']['output_exists'])
         self.assertFalse(result['diagnostics']['audit_exists'])
+        self.assertTrue(result['delivery_incomplete'])
+        self.assertEqual(result['delivery_batch_status'], 'not_ready')
+        self.assertEqual(result['final_deliverables'], ['filled.xlsx', 'audit.json'])
+        for item in result['delivery'].values():
+            self.assertEqual(item['archive_status'], 'failed')
+            self.assertFalse(item['archive_attempted'])
         archive.assert_not_called()
+
+    def test_delivery_exception_preserves_batch_and_other_file_receipt(self):
+        calls = []
+        def finish(result, path, protected):
+            calls.append(path)
+            if path.endswith('.xlsx'):
+                raise OSError('synthetic transport error')
+            result['delivery'] = {'archive_status': 'success', 'files': [
+                {'archive_status': 'copied', 'archive_verified': True}]}
+        with patch.object(self.api, 'finish_delivery', side_effect=finish):
+            result = workflow.Workflow(self.api).apply(self.plan, 'filled.xlsx', 'audit.json')
+        self.assertEqual(calls, ['filled.xlsx', 'audit.json'])
+        self.assertEqual(result['delivery_batch_status'], 'incomplete')
+        self.assertTrue(result['delivery_incomplete'])
+        self.assertEqual(result['delivery']['filled.xlsx']['reason_code'], 'delivery_call_failed')
+        self.assertEqual(result['delivery']['audit.json']['archive_status'], 'success')
+        self.assertTrue(Path('filled.xlsx').is_file())
+        self.assertTrue(Path('audit.json').is_file())
 
     def test_audit_partial_write_is_explicit(self):
         original_open = Path.open

@@ -480,7 +480,9 @@ class Workflow:
         output_path, audit_path = task_path(output, output=True), task_path(audit, output=True)
         require(output_path.suffix.lower() == '.xlsx' and audit_path.suffix.lower() == '.json', 'Output must be XLSX and audit must be JSON')
         require(output_path != audit_path, 'Outputs must be distinct')
-        self.publication.update(output=str(output_path), audit=str(audit_path))
+        self.publication.update(output=str(output_path), audit=str(audit_path),
+                                final_deliverables=[str(output_path), str(audit_path)],
+                                delivery_incomplete=True, delivery_batch_status='not_ready')
         candidate, report = self.prepare(plan)
         for directory in {output_path.parent, audit_path.parent}:
             probe(directory)
@@ -505,17 +507,35 @@ class Workflow:
         except Exception as exc:
             if self.publication['output_written'] is False and output_path.exists():
                 self.publication['output_written'] = 'unknown'
+            self.publication['delivery'] = {
+                str(path): {'archive_status': 'failed', 'reason_code': 'final_batch_not_ready',
+                            'archive_attempted': False, 'files': [],
+                            'archive_user_notice': '整批交付尚未准备完整，归档未执行；已生成文件保留供核验。'}
+                for path in (output_path, audit_path)}
             raise WorkflowError('Delivery incomplete; retain existing outputs for inspection, do not regenerate blindly',
                                 {'reason': str(exc), 'output_exists': output_path.exists(), 'audit_exists': audit_path.exists()}) from exc
         delivery = {}
         for path in (output_path, audit_path):
             result = {}
-            self.api.finish_delivery(result, str(path), [*self.snapshots, *(str(other) for other in (output_path, audit_path) if other != path)])
-            delivery[path.as_posix()] = result['delivery']
+            try:
+                self.api.finish_delivery(result, str(path), [*self.snapshots, *(str(other) for other in (output_path, audit_path) if other != path)])
+                delivery[path.as_posix()] = result['delivery']
+            except Exception as exc:
+                delivery[path.as_posix()] = {
+                    'archive_status': 'failed', 'reason_code': 'delivery_call_failed', 'files': [],
+                    'archive_user_notice': '交付文件归档未完成，请保留主文件后重试归档。',
+                    'warnings': [str(exc)]}
         residuals = any(item.get('temporary_residuals') for item in delivery.values())
-        archive_failed = any(item['archive_status'] not in ('copied', 'already_archived', 'skipped') for item in delivery.values())
+        archive_failed = any(
+            item.get('archive_status') != 'success' or not item.get('files')
+            or any(entry.get('archive_status') not in ('copied', 'already_archived')
+                   or entry.get('archive_verified') is not True
+                   for entry in item['files'])
+            for item in delivery.values())
         return self.receipt(report) | {'delivery': delivery, 'output': str(output_path), 'audit': str(audit_path),
                                       'output_written': True, 'audit_written': True,
+                                      'final_deliverables': [str(output_path), str(audit_path)],
+                                      'delivery_batch_status': 'incomplete' if residuals or archive_failed else 'complete',
                                       'delivery_incomplete': residuals or archive_failed,
                                       'workflow_intermediate_files_created': 0, 'write_probes': 'created_read_back_removed',
                                       'cleanup': 'archive_cleanup_incomplete' if residuals else 'no_workflow_intermediates'}
@@ -568,7 +588,7 @@ def bounded_result(result, limit=24000):
     # Projection must never turn an already published result into a new failure
     # or erase its file identities/partial/cleanup state because diagnostics grew.
     core = ('schema_version', 'status', 'operation', 'verification', 'output', 'audit', 'output_written', 'audit_written',
-            'delivery_incomplete', 'cleanup', 'write_count', 'warning_count', 'source_partial_count',
+            'delivery_incomplete', 'delivery_batch_status', 'final_deliverables', 'cleanup', 'write_count', 'warning_count', 'source_partial_count',
             'lookup_count', 'check_count', 'checks_failed', 'checks_unassessed',
             'complete_data_for_computation', 'error_type', 'check_kind', 'artifact_validation', 'task_writable')
     compact = {key: result[key] for key in core if key in result}

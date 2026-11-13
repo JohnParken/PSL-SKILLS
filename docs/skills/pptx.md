@@ -1,6 +1,8 @@
 # PPTX：受限 SVG 到可编辑演示文稿
 
-文档核对日期：2026-11-10。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261112.1921.3400`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。本轮备注读取修复的结果和未验证范围见 [核验记录](../maintenance/pptx/reading-20261110.md)。
+文档核对日期：2026-11-10。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261113.2302.5108`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。本轮备注读取修复的结果和未验证范围见 [核验记录](../maintenance/pptx/reading-20261110.md)。
+
+用户上传文件和待查交付物只在任务目录顶层发现；配置明确引用的 SVG 和图片可使用安全的任务相对路径。执行器可直接访问主入口真实路径时无需臆造路径映射；文件名含空格或中文须作为完整参数引用。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -38,7 +40,7 @@ flowchart TD
     O --> P["整页 UTF-8 分页、源与选项绑定游标；不渲染"]
 ```
 
-`runtime.render_deck()` 为整稿共享 `PackagePartRegistry`，按页调用 `convert_svg_to_slide_shapes()`，再将转换结果交给 `build_presentation()`。转换中的诊断重定向到 stderr，避免污染 JSON stdout。随包的 pptx_core、_engine 与静态度量资源组成自包含运行时，不依赖相邻 Skill 或上游源码仓库；最终归档是显式外部能力交接，不是隐藏导入。SVG 以字符串在内存传递，正常创建不落中间文件。
+`runtime.render_deck()` 为整稿共享 `PackagePartRegistry`，按页调用 `convert_svg_to_slide_shapes()`，再将转换结果交给 `build_presentation()`。转换中的诊断重定向到 stderr，避免污染 JSON stdout。随包的 pptx_core、_engine 与静态度量资源组成自包含运行时，不依赖相邻 Skill 或上游源码仓库；最终归档使用本包受追踪归档运行时，不依赖外部技能。SVG 以字符串在内存传递，创建、读取和转换不落业务中间文件；没有旧稿编辑入口。归档暂存先在进程内登记名称，再独占创建于任务根目录；写入探针也在根目录，归档目录不建立临时文件。清理前核对身份，变化或失败时保留并报告；强杀后内存登记丢失，核对与删除之间不具备原子绑定，不能保证抵抗任务目录中的恶意并发修改。外部工具的临时文件不受本包控制。
 
 ### 主要模块与入口
 
@@ -72,7 +74,7 @@ flowchart TD
     F --> G["内存转换与 OOXML 组包"]
     G --> H["结构验证后独占写出新文件并读回"]
     H --> I["inspect 最终文件，核对内容、页数和哈希"]
-    I --> J["说明视觉未验收，交接公共生命周期归档"]
+    I --> J["说明视觉未验收，随包归档并核对状态"]
     D -->|"读取"| K["inspect 或 validate"]
     K --> L{"全包结构与安全检查结果"}
     L -->|"拒绝"| Y["明确失败，不返回假空内容"]
@@ -129,7 +131,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 
 正常业务 stdout 是单个 `psl.pptx.result.v1` JSON。严格成功 `ok=true`、退出 0；显式有限 PNG 容错为 `ok=true`、`structural_validation=partial`、退出 3，不能仅凭 ok 判断完整成功；失败 `ok=false`、退出 2，并附 `error.code`、`error.message`，stderr 给出诊断。参数错误也经 JSON 契约处理；`--help` 为文本帮助，其成功不证明业务环境可用。
 
-创建回执包含 `output`、`bytes`、`sha256`、`slide_count` 和 `structural_validation=passed`；`visual_validation=not_run`、`temporary_files=0` 必须保留。`archive_status=handoff_required` 明确尚未归档。
+创建回执包含 `output`、`bytes`、`sha256`、`slide_count` 和 `structural_validation=passed`；`visual_validation=not_run` 与 `temporary_files` 报告的未清理暂存数量必须保留；强杀后状态未知不能据此断言无残留。创建入口自动调用随包归档运行时；归档状态与业务验收分别核对。
 
 `inspect` 已执行结构验证，额外返回标题及逐页 `text`、`notes`、`objects`；只需要结构结论时使用 `validate`，无需为同一结论重复执行两种读取。二者均返回页数、部件数、画布及哈希，不渲染页面，不验证全部 OOXML 语义。
 
@@ -161,7 +163,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 - 写入任务可用 `check --write-probe` 独占创建、读回并清理探针，要求 `write_probe=passed`；不接受输出子目录，纯读取无需探针。
 - 执行结果按宿主真实 schema 与可见证据消费；stdout/stderr 可能合并并附状态说明，不假定固定外层字段。只解析边界明确且完整的业务 JSON；工具层 `status=success`、调用完成或存在 artifact 不等于业务成功。核对真实退出码与截断/转存提示，缺失、为空或不可判断时如实说明并停止依赖步骤，不伪造退出码。
 - 转存引用（如 `/large_tool_results/`）只用宿主提供的 `read_file` 按真实 schema 补读，核对顺序、覆盖及结束；不能用 Shell/Python、换路径或复制绕过。缺工具、仍截断或无法确认完整性时报告缺口，不为补日志重复有副作用操作。补读不消除原结果的摘要、partial 或遗漏；本地捕获不能证明真实宿主回传已验证。 宿主转存补读与 PPTX 原生分页分别核对，不凭预览交付或重复创建。
-- 业务验收后，按宿主发现的真实 `artifact-lifecycle` 入口交接最终清单、来源和验证结果。公共能力不可用报告归档 skipped；失败保留主文件，不重新生成或删除已验收 PPTX。归档与业务成功分别判断。
+- 业务验收后自动调用随包归档运行时，不依赖相邻 Skill；失败保留主文件，仅重试归档。归档与业务成功分别判断。
 - [来源记录](../../skills/pptx/references/provenance.md) 固定 PPT Master v6.8.0 来源提交 `5e8856be0da8e6bc85c4aa28acc614478f7b7137`，记录保留的标准库适配、静态数据与 MIT/Apache 等许可。没有移植上游完整工作流、浏览器审查、渲染、任意模板导入或媒体流程。
 - [源码测试](../../skills/pptx/scripts/test/) 不随业务运行包分发；它与仓库级来源清单属于维护证据。结构、合成对象、独立内容预期、真实业务样本、PowerPoint/WPS 显示、只读安装及宿主触发验收必须分别报告，不能相互替代。
 
@@ -169,7 +171,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 
 ## 归档结果与用户提示
 
-核对汇总 `archive_status=copied` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
+核对汇总 `archive_status=success` 且完整、非空 `files` 清单全部为 `copied/already_archived` 后，保留 `archive_message` 并展示 `archive_user_notice`。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
 
 执行调用维护：业务脚本示例使用宿主的 `execute(command=...)`，执行前核对完整命令、stdin、路径及结果；这不改变 CLI 或协议，不代表真实宿主链路已经验收。
 

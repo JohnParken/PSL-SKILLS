@@ -5,14 +5,19 @@
     "references/boundaries.md",
     "references/compatibility.md",
     "references/contract.md",
+    "references/lifecycle-upstream.json",
     "references/output-views.md",
     "references/structure.md",
     "references/validation.md",
     "requirements.txt",
+    "scripts/archive_delivery.py",
+    "scripts/artifact_files.py",
     "scripts/ofd_common.py",
     "scripts/ofd_package.py",
     "scripts/ofd_structure.py",
-    "scripts/read_ofd.py"
+    "scripts/output_location.py",
+    "scripts/read_ofd.py",
+    "scripts/router_config.py"
   ],
   "exclude_prefixes": [
     "scripts/test/",

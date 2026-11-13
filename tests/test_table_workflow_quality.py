@@ -294,7 +294,9 @@ class QualityTests(unittest.TestCase):
         command = [sys.executable, '-I', '-S', '-B', str(fixtures.WORKFLOW_ROOT / 'scripts/table_workflow.py'),
                    'apply', '--xlsx-root', str(fixtures.XLSX_ROOT), '--output', 'filled.xlsx', '--audit', 'audit.json']
         child = subprocess.run(command, input=encode(self.plan), text=True, capture_output=True, timeout=60)
-        self.assertEqual(child.returncode, 0, child.stdout + child.stderr)
+        self.assertEqual(child.returncode, 3, child.stdout + child.stderr)
+        self.assertTrue(json.loads(child.stdout)['delivery_incomplete'])
+        self.assertEqual(json.loads(child.stdout)['status'], 'validated')
         self.assertEqual(child.stderr, '')
         result = json.loads(child.stdout)
         self.assertEqual((result['lookup_count'], result['check_count'], result['checks_failed']), (1, 1, 0))

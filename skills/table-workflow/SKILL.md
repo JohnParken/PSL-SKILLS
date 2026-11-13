@@ -1,6 +1,6 @@
 ---
 name: table-workflow
-version: "20261112.1921.3400"
+version: "20261113.0623.0331"
 description: 用于将多份 XLSX、ET/ETT 来源按明确口径计算后，填入已有 XLSX 模板副本并提供溯源；支持按键汇总、受控维表补列和业务勾稽。需已有目标模板；无模板的表间核对、期间比较或新建结果表使用 xlsx，不做多对多关联或 ET 写回。
 ---
 
@@ -77,3 +77,7 @@ stdin 示例：`{"files":[{"path":"./当期.xlsx"},{"path":"./上期.xlsx"},{"pa
 - 退出 0 表示本次命令完成；退出 3 保留 partial 或交付收尾不完整，先检查完整 JSON；退出 1 为失败，退出 2 为参数错误。成功读取不证明格式完全兼容；不能把失败、截断或部分结果当作完整成功。失败时核对 output_written、audit_written 和 verification；incomplete/unknown 不可当作文件完整成功。投影裁剪保留已生成文件、partial 与收尾状态，不因长日志改写业务结果。
 
 仅维护或评估本 Skill 时读取 仓库维护资料 `docs/maintenance/table-workflow/validation.md`；常规成功任务不加载历史验证说明，不递归预读所有依赖参考。真实路径、版本及上下文未变时复用已读内容；不承诺宿主自动缓存或 token 节省比例。
+
+归档回执使用批次 success/partial/failed/not_required；本流程的最终工作簿及审计文件均需归档，只有非空完整条目全部 copied/already_archived 且 archive_verified=true 才判定交付完成。缺失或无效宿主当次 questionId、部分成功或未核验均为 delivery_incomplete；已验证主文件仍保留，CLI 退出 3，不为补归档重新计算。
+
+整批交付清单固定为 `final_deliverables` 中的工作簿与审计 JSON。两项都写入并回读验收后才开始归档；准备失败时 `delivery_batch_status=not_ready`、`delivery_incomplete=true`，两项归档未执行，保留已生成文件但不得擅自作为单独最终交付。归档调用失败或仅部分成功为 `incomplete`；只有全部核验成功且无清理残留才是 `complete`。恢复前先核验已有文件，归档重试仅针对已验收的完整清单，不重复 apply，也不把未完成的审计 JSON 当作已验收交付。

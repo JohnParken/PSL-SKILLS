@@ -575,10 +575,12 @@ def create(config: str, output: str) -> dict:
     data = render_deck(deck)
     summary = validate_presentation(data)
     publish_exclusive(destination, data)
+    from archive_delivery import archive_delivery
+    delivery = archive_delivery([destination.relative_to(task_directory()).as_posix()], [] if config == "-" else [config])
     return {
         "output": destination.relative_to(task_directory()).as_posix(), "bytes": len(data),
         "sha256": hashlib.sha256(data).hexdigest(), **summary,
-        "archive_status": "handoff_required", "temporary_files": 0,
+        **delivery, "temporary_files": len(delivery.get("temporary_residuals", [])),
     }
 
 

@@ -1,6 +1,6 @@
 # table-workflow：多源表格分析与模板填报
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261112.1921.3400`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261113.0623.0331`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -164,7 +164,7 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 
 | 状态/退出码 | 语义 |
 | --- | --- |
-| 退出 `0` | 本次命令完成；可能为 environment-ok、inspected 或 validated，归档 skipped 仍需如实说明 |
+| 退出 `0` | 本次命令完成；可能为 environment-ok、inspected 或 validated，最终交付还须核对完整归档核验结果 |
 | 退出 `3` | 接受的 partial，或 `delivery_incomplete`；必须读完整 JSON 分辨原因 |
 | 退出 `1` | 业务、结构、来源、能力或运行失败；保留具体诊断及已写文件状态 |
 | 退出 `2` | argparse 参数错误，stderr usage；不是 XLSX 底层 incomplete 的含义 |
@@ -181,7 +181,7 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 - `replace_values` 不授权修改公式、键或表头；默认只写空白非公式格。候选的逐格值与计算写入清单独立比较，并拒绝新增非目标单元格/包部件。
 - 输入、键、表头、样式、非目标值和公式文本受保护；公式缓存允许受控重算。模板全部公式预检必须 `calculated_subset`，且 `retained_not_refreshed` 为空；不支持公式、错误、循环、特殊公式或未刷新图表/透视/外链缓存均阻断发布。不能静默清缓存后称完成填报。
 - 主工作簿和审计不是事务性双文件发布。失败时检查 `output_written/audit_written/verification`：`false`、`true`、`incomplete`、`unknown` 各有不同含义，存在文件不等于完整验收。已有本轮最终文件保留供核查，不覆盖重跑。
-- 无/无效归档配置为 skipped，实际复制失败为 delivery_incomplete；分别检查两份文件。归档失败保留主文件，不重新计算；有 `temporary_residuals` 即报告清理未完成。
+- 缺失或无效宿主当次 questionId 返回 failed，实际复制失败、partial 或缺少完整核验同样为 delivery_incomplete，主业务已验证时退出 3；分别检查两份文件。归档失败保留主文件，不重新计算；有 `temporary_residuals` 即报告清理未完成。
 - 正常执行不生成计划、脚本等中间文件，只有本次独占探针自行清理。若宿主必须另存辅助文件，先按已确认的公共生命周期入口事前登记；不扫描、认领或删除未知历史文件。
 
 ## 验证证据与本次未验证范围
@@ -217,3 +217,5 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。
 
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+整批交付状态：`final_deliverables` 声明工作簿及审计 JSON。两项准备和回读都成功才调用归档；准备失败返回 `delivery_batch_status=not_ready` 与 `delivery_incomplete=true`，保留已生成文件且不单独归档。归档阶段即使单项调用异常仍记录另一项结果，未全部核验成功或存在清理残留为 `incomplete`，全部完成为 `complete`。调用方不得仅用业务 status 或退出码代替完整交付核验；不为重试归档重跑 apply。

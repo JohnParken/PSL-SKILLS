@@ -1,5 +1,8 @@
 """Bounded, content-identified WPS Spreadsheets (ET/ETT) extraction."""
 import argparse
+import hashlib
+import os
+import stat
 import json
 from pathlib import Path
 import sys
@@ -218,6 +221,31 @@ def _full_output(result, args):
     return encoded
 
 
+def _verify_exported_json(name, facts):
+    """Check the written manifest without imposing the input document byte limit."""
+    if not hasattr(os, 'O_NOFOLLOW'):
+        raise ValueError('Safe final JSON verification requires O_NOFOLLOW')
+    descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, 'O_NONBLOCK', 0))
+    with os.fdopen(descriptor, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode) or before.st_size != facts['bytes']:
+            raise ValueError('Published JSON size or file type changed')
+        digest = hashlib.sha256()
+        remaining = facts['bytes']
+        while remaining:
+            chunk = stream.read(min(1024 * 1024, remaining))
+            if not chunk:
+                raise ValueError('Published JSON ended before declared size')
+            remaining -= len(chunk)
+            digest.update(chunk)
+        after = os.fstat(stream.fileno())
+    identity = lambda info: (info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+    if identity(before) != identity(after) or identity(after) != identity(os.stat(name, follow_symlinks=False)):
+        raise ValueError('Published JSON changed during verification')
+    if digest.hexdigest() != facts['sha256']:
+        raise ValueError('Published JSON changed before final delivery')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
@@ -241,12 +269,14 @@ def main():
     parser.add_argument('--compact', action='store_true',
                         help='Drop provenance-heavy per-cell fields while keeping saved values and diagnostics')
     parser.add_argument('--output', help='Write the complete JSON to a new task-root file; stdout returns a manifest')
+    parser.add_argument('--delivery', action='store_true',
+                        help='Treat --output as a final user deliverable and archive it; requires Python >=3.10')
     args = parser.parse_args()
 
     if args.check:
         if any((args.summary, args.sheet is not None, args.page_size is not None,
                 args.cursor is not None, args.max_output_chars is not None, args.max_output_bytes is not None,
-                args.max_json_bytes is not None, args.compact, args.output is not None)):
+                args.max_json_bytes is not None, args.compact, args.output is not None, args.delivery)):
             parser.error('--check does not accept read/output options')
         return check_environment()
 
@@ -254,6 +284,8 @@ def main():
         parser.error('Python >=3.9 required')
     if args.max_json_bytes is not None and (not 1024 * 1024 <= args.max_json_bytes <= MAX_JSON_OUTPUT_BYTES_LIMIT):
         parser.error('--max-json-bytes must be 1048576..268435456')
+    if args.delivery and (not args.output or sys.version_info < (3, 10)):
+        parser.error('--delivery requires --output and Python >=3.10')
     if not args.input:
         parser.error('input required')
 
@@ -315,6 +347,30 @@ def main():
         from wps_read_view import print_json_record
         print_json_record(encoded)
         return 1
+    if args.delivery:
+        from archive_delivery import finalize_delivery, archive_user_message, archive_user_notice
+        payload = json.loads(encoded)
+        facts = payload['output']
+        delivery = None
+        try:
+            _verify_exported_json(args.output, facts)
+            delivery = finalize_delivery(args.output, [args.input], status='read_exported')
+            for item in delivery.get('files', []):
+                if item.get('archive_verified') and (item.get('bytes') != facts['bytes'] or item.get('sha256') != facts['sha256']):
+                    raise ValueError('Final archive does not match the published JSON manifest')
+        except (OSError, ValueError, ParseError) as exc:
+            if delivery is None:
+                delivery = {'archive_contract': 'archive-delivery-v2', 'files': [
+                    {'output': args.output, 'archive_status': 'failed', 'archive_verified': False}], 'warnings': []}
+            delivery.update(archive_status='failed', requested_count=1, completed_count=0,
+                            failed_count=1, reason_code='delivery_verification_failed')
+            for item in delivery['files']:
+                item.update(archive_status='failed', archive_verified=False, reason_code='delivery_verification_failed')
+            delivery.setdefault('warnings', []).append(str(exc))
+            delivery['archive_message'] = archive_user_message(delivery)
+            delivery['archive_user_notice'] = archive_user_notice(delivery)
+        payload.update(delivery=delivery, final_deliverables=[args.output], output_written=True)
+        encoded = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
     from wps_read_view import print_json_record
     print_json_record(encoded)
     return 0 if result.get('status') == 'ok' else 3 if result.get('status') == 'partial' else 1

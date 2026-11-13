@@ -84,7 +84,7 @@ class WorkflowTests(unittest.TestCase):
         source['sha256'] = self.digest(source['path'])
         source['range'] = 'A1:B' + str(len(rows))
 
-    def test_end_to_end_values_provenance_preservation_and_archive_skip(self):
+    def test_end_to_end_values_preserved_with_missing_archive_id(self):
         before = {path: Path(path).read_bytes() for path in ('current.xlsx', 'prior.xlsx', 'target.xlsx')}
         report = Workflow(self.api).apply(self.plan, 'filled.xlsx', 'audit.json')
         self.assertEqual(report['status'], 'validated')
@@ -99,7 +99,9 @@ class WorkflowTests(unittest.TestCase):
         for path, raw in before.items():
             self.assertEqual(Path(path).read_bytes(), raw)
         self.assertEqual(set(p.name for p in Path('.').iterdir()), set(before) | {'filled.xlsx', 'audit.json'})
-        self.assertEqual(report['delivery']['filled.xlsx']['archive_status'], 'skipped')
+        self.assertEqual(report['delivery']['filled.xlsx']['archive_status'], 'failed')
+        self.assertTrue(report['delivery_incomplete'])
+        self.assertEqual(report['delivery']['filled.xlsx']['reason_code'], 'current_question_id_unavailable')
 
     def test_three_sources_and_input_order(self):
         self.book('third.xlsx', [['机构', '金额'], ['乙', 4], ['甲', 3]])
@@ -365,7 +367,8 @@ class WorkflowTests(unittest.TestCase):
     def test_cli_full_cycle_and_stream_contract(self):
         command = [sys.executable, '-I', '-S', '-B', str(WORKFLOW_ROOT / 'scripts' / 'table_workflow.py'),
                    'apply', '--xlsx-root', str(XLSX_ROOT), '--et-root', str(ET_ROOT), '--output', 'filled.xlsx', '--audit', 'audit.json']
-        child = subprocess.run(command, input=encode(self.plan), capture_output=True, text=True, timeout=60)
+        env = {**os.environ, 'ROUTER_CONFIG_VARIABLES': json.dumps({'commonParam': [{'name': 'questionId', 'value': 'full-cycle'}]})}
+        child = subprocess.run(command, env=env, input=encode(self.plan), capture_output=True, text=True, timeout=60)
         self.assertEqual(child.returncode, 0, child.stdout + child.stderr)
         self.assertEqual(child.stderr, '')
         self.assertEqual(json.loads(child.stdout)['write_count'], 6)
@@ -435,18 +438,49 @@ class WorkflowTests(unittest.TestCase):
         with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': config}):
             result = Workflow(self.api).apply(self.plan, 'filled.xlsx', 'audit.json')
         self.assertFalse(result['delivery_incomplete'])
+        self.assertEqual(result['delivery_batch_status'], 'complete')
+        self.assertEqual(result['final_deliverables'], ['filled.xlsx', 'audit.json'])
         for path in ('filled.xlsx', 'audit.json'):
-            self.assertEqual(result['delivery'][path]['archive_status'], 'copied')
+            self.assertEqual(result['delivery'][path]['archive_status'], 'success')
             self.assertEqual(Path(path).read_bytes(), Path('output/workflow-test', path).read_bytes())
-        with patch('xlsx_delivery.archive_outputs', side_effect=OSError('synthetic archive failure')):
+        with patch('xlsx_delivery.archive_delivery', side_effect=OSError('synthetic archive failure')):
             result = Workflow(self.api).apply(self.plan, 'filled-second.xlsx', 'audit-second.json')
         self.assertTrue(result['delivery_incomplete'])
         self.assertEqual(result['status'], 'validated')
         self.assertEqual(result['delivery']['filled-second.xlsx']['archive_status'], 'failed')
         self.assertTrue(Path('filled-second.xlsx').is_file())
 
+    def test_archive_retry_uses_existing_complete_batch_and_current_id(self):
+        result = Workflow(self.api).apply(self.plan, 'filled.xlsx', 'audit.json')
+        self.assertTrue(result['delivery_incomplete'])
+        before = {name: Path(name).read_bytes() for name in result['final_deliverables']}
+        for question_id, expected in (('retry-one', 'copied'), ('retry-one', 'already_archived'), ('retry-two', 'copied')):
+            config = json.dumps({'commonParam': [{'name': 'questionId', 'value': question_id}]})
+            with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': config}):
+                for name in result['final_deliverables']:
+                    receipt = {}
+                    self.api.finish_delivery(receipt, name, ['current.xlsx', 'prior.xlsx', 'target.xlsx'])
+                    self.assertEqual(receipt['delivery']['archive_status'], 'success')
+                    self.assertEqual(receipt['delivery']['files'][0]['archive_status'], expected)
+                    self.assertEqual(Path('output', question_id, name).read_bytes(), before[name])
+        self.assertEqual({name: Path(name).read_bytes() for name in before}, before)
+
+    def test_archive_claim_requires_nonempty_verified_items(self):
+        cases = [
+            {'archive_status': 'success', 'files': []},
+            {'archive_status': 'success', 'files': [{'archive_status': 'copied'}]},
+            {'archive_status': 'partial', 'files': [{'archive_status': 'copied', 'archive_verified': True}]},
+            {'archive_status': 'not_required', 'files': []},
+        ]
+        for index, payload in enumerate(cases):
+            with self.subTest(payload=payload), patch('xlsx_delivery.archive_delivery', return_value=payload):
+                result = Workflow(self.api).apply(self.plan, f'claim-{index}.xlsx', f'claim-{index}.json')
+            self.assertTrue(result['delivery_incomplete'])
+            self.assertEqual(result['status'], 'validated')
+            self.assertTrue(Path(f'claim-{index}.xlsx').is_file())
+
     def test_archive_residual_report_does_not_claim_cleaned(self):
-        with patch('xlsx_delivery.archive_outputs', return_value={'archive_status': 'failed', 'temporary_residuals': ['synthetic-residual']}):
+        with patch('xlsx_delivery.archive_delivery', return_value={'archive_status': 'failed', 'temporary_residuals': ['synthetic-residual']}):
             result = Workflow(self.api).apply(self.plan, 'filled.xlsx', 'audit.json')
         self.assertEqual(result['cleanup'], 'archive_cleanup_incomplete')
         self.assertTrue(result['delivery_incomplete'])
@@ -497,7 +531,7 @@ class WorkflowTests(unittest.TestCase):
             command = [sys.executable, '-I', '-S', '-B', str(Path('installed-workflow/scripts/table_workflow.py').resolve()),
                        'apply', '--xlsx-root', str(Path('installed-xlsx').resolve()), '--output', 'filled.xlsx', '--audit', 'audit.json']
             child = subprocess.run(command, input=encode(self.plan), capture_output=True, text=True, timeout=60,
-                                   env={**os.environ, 'PATH': '', 'ROUTER_CONFIG_VARIABLES': ''})
+                                   env={**os.environ, 'PATH': '', 'ROUTER_CONFIG_VARIABLES': json.dumps({'commonParam': [{'name': 'questionId', 'value': 'readonly-install'}]})})
             self.assertEqual(child.returncode, 0, child.stdout + child.stderr)
             for path, expected in hashes.items():
                 self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), expected)

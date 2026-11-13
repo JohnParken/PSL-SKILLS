@@ -68,7 +68,7 @@ class CliCapabilityTests(fixtures.WorkflowTests):
             result = Workflow(self.api).apply(self.plan, 'filled.xlsx', 'audit.json')
             self.assertFalse(result['delivery_incomplete'])
             for name in ('filled.xlsx', 'audit.json'):
-                self.assertEqual(result['delivery'][name]['archive_status'], 'copied')
+                self.assertEqual(result['delivery'][name]['archive_status'], 'success')
                 self.assertEqual(Path(name).read_bytes(), (Path('output/workflow-cli-test')/name).read_bytes())
             conflict = Path('output/workflow-cli-test/second.xlsx')
             conflict.write_bytes(b'existing protected archive')
@@ -78,10 +78,9 @@ class CliCapabilityTests(fixtures.WorkflowTests):
             self.assertTrue(Path('second.xlsx').is_file())
         with patch.dict(os.environ, {'ROUTER_CONFIG_VARIABLES': '{invalid'}):
             result = Workflow(self.api).apply(self.plan, 'third.xlsx', 'third.json')
-            # Preserve existing output_location fallback semantics: invalid
-            # configuration skips archival with a reason, rather than pretending copied.
-            self.assertFalse(result['delivery_incomplete'])
-            self.assertEqual(result['delivery']['third.xlsx']['archive_status'], 'skipped')
+            # Invalid host ID is a delivery failure, while verified main files survive.
+            self.assertTrue(result['delivery_incomplete'])
+            self.assertEqual(result['delivery']['third.xlsx']['archive_status'], 'failed')
             self.assertEqual(result['delivery']['third.xlsx']['fallback_reason'], 'invalid_router_config_json')
             self.assertTrue(result['output_written'])
             self.assertTrue(Path('third.xlsx').is_file())
@@ -89,7 +88,7 @@ class CliCapabilityTests(fixtures.WorkflowTests):
 
 # Tests requiring fixture mutation of ZIP internals remain in the compatibility
 # suite. Every ordinary/public-operation case is replayed here.
-EXCLUDE = {'test_merged_multilevel_header_paths', 'test_source_multilevel_merge_and_duplicate_leaf_ambiguity',
+EXCLUDE = {'test_archive_claim_requires_nonempty_verified_items', 'test_merged_multilevel_header_paths', 'test_source_multilevel_merge_and_duplicate_leaf_ambiguity',
            'test_preserve_untouched_zip_content_and_style', 'test_stale_chart_cache_and_shared_formula_preflight',
            'test_archive_success_and_failure_preserve_verified_outputs', 'test_archive_residual_report_does_not_claim_cleaned',
            'test_dependency_failure_preserves_both_channels_and_exit'}
