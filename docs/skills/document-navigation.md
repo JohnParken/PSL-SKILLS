@@ -1,6 +1,6 @@
 # document-navigation：文档任务导航
 
-Skill 版本：`20261112.1921.3400`。本页以仓库根目录为维护基准，核对日期 2026-11-12；正式入口为 [SKILL.md](../../skills/document-navigation/SKILL.md)。本页和测试记录不随运行包分发。
+Skill 版本：`20261114.2127.4001`。本页以仓库根目录为维护基准，核对日期 2026-11-12；正式入口为 [SKILL.md](../../skills/document-navigation/SKILL.md)。本页和测试记录不随运行包分发。
 
 ## 解决的问题与限制
 
