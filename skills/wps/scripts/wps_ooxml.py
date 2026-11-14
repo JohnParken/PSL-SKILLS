@@ -402,17 +402,12 @@ def _word_part(package, name, budget):
 
 def _check_wps_package(package, budget):
     """Recognize a narrow OOXML subset, without claiming full format validation."""
-    required = {"[Content_Types].xml", "_rels/.rels", "word/document.xml"}
+    required = {"[Content_Types].xml", "_rels/.rels"}
     if not required.issubset(package.namelist()):
         raise ValueError("unsupported WPS ZIP content: required OOXML document parts are missing")
     types = fromstring(read_part(package, "[Content_Types].xml"), budget=budget)
     if types.tag != f"{{{CONTENT_TYPES}}}Types":
         raise ValueError("unsupported WPS ZIP content: invalid OOXML content-types root")
-    declarations = [node.get("ContentType") for node in types
-                    if node.tag == f"{{{CONTENT_TYPES}}}Override"
-                    and node.get("PartName") == "/word/document.xml"]
-    if len(declarations) != 1 or declarations[0] not in WPS_MAIN_TYPES:
-        raise ValueError("unsupported WPS ZIP content: ambiguous or unsupported main content type")
     relationships = fromstring(read_part(package, "_rels/.rels"), budget=budget)
     if relationships.tag != f"{{{RELATIONSHIPS}}}Relationships":
         raise ValueError("unsupported WPS ZIP content: invalid OOXML relationships root")
@@ -425,11 +420,20 @@ def _check_wps_package(package, budget):
     main = [node for node in relationships if node.tag == f"{{{RELATIONSHIPS}}}Relationship"
             and node.get("Type") == OFFICE_DOCUMENT]
     if (len(main) != 1 or main[0].get("TargetMode", "Internal") != "Internal"
-            or main[0].get("Target") not in ("word/document.xml", "/word/document.xml")):
+            or not main[0].get("Target")):
         raise ValueError("unsupported WPS ZIP content: ambiguous or unsupported main document relationship")
+    main_part = resolve_internal_target(main[0].get("Target"), "")
+    declarations = [node.get("ContentType") for node in types
+                    if node.tag == f"{{{CONTENT_TYPES}}}Override"
+                    and node.get("PartName") == "/" + main_part]
+    if len(declarations) != 1 or declarations[0] not in WPS_MAIN_TYPES:
+        raise ValueError("unsupported WPS ZIP content: ambiguous or unsupported main content type")
+    if main_part not in package.namelist():
+        raise ValueError("Missing Word main document part: " + main_part)
     # Check every member's bounded length and CRC, including unparsed binary parts.
     for name in package.namelist():
         read_part(package, name)
+    return main_part
 
 
 _REVISION_TAGS = {
@@ -595,152 +599,6 @@ def _related_target(target):
     return resolve_internal_target(target, 'word/document.xml')
 
 
-def _read_related(package, document, revisions, budget, record_omissions, issues, table_collector=None,
-                  visibility=None, textbox_collector=None):
-    """Follow main-part relationships and explicit IDs; never enumerate filenames."""
-    rel_name = 'word/_rels/document.xml.rels'
-    relationships = {}
-    if rel_name in package.namelist():
-        root = _word_part(package, rel_name, budget)
-        if root.tag != '{' + RELATIONSHIPS + '}Relationships':
-            raise ValueError('Invalid document relationships root')
-        for item in root:
-            if item.tag != '{' + RELATIONSHIPS + '}Relationship':
-                raise ValueError('Invalid document relationship element')
-            identity = item.get('Id')
-            if not identity or identity in relationships:
-                raise ValueError('Missing/duplicate document relationship ID')
-            relationships[identity] = item
-    types = fromstring(read_part(package, '[Content_Types].xml'), budget=budget)
-    declarations = {}
-    for item in types:
-        if item.tag == '{' + CONTENT_TYPES + '}Override':
-            name = item.get('PartName')
-            if name in declarations:
-                raise ValueError('Duplicate part content-type declaration')
-            declarations[name] = item.get('ContentType')
-    header_owners = {}
-    for section_index, section in enumerate(document.iter(_tag('sectPr'))):
-        seen = set()
-        for child in section:
-            if child.tag not in (_tag('headerReference'), _tag('footerReference')):
-                continue
-            signature = (child.tag, child.get(_tag('type')))
-            if signature in seen:
-                raise ValueError('Duplicate header/footer type within section')
-            seen.add(signature)
-            header_owners[id(child)] = section_index
-    requests = {}
-    note_requests = {}
-    reference_count = 0
-    for index, node in enumerate(_visible_elements(document, revisions)):
-        local = node.tag.rsplit('}', 1)[-1]
-        if local not in ('headerReference', 'footerReference', 'footnoteReference', 'endnoteReference', 'commentReference'):
-            continue
-        reference_count += 1
-        if reference_count > MAX_RELATED_REFERENCES:
-            raise ValueError('Related reference count limit exceeded')
-        reference = {'source_part': 'word/document.xml', 'element_index': index, 'kind': local,
-                     'page': None, 'cp': None}
-        if local in ('headerReference', 'footerReference'):
-            if id(node) not in header_owners:
-                raise ValueError('Header/footer reference outside section properties')
-            reference['section_index'] = header_owners[id(node)]
-            kind = 'header' if local == 'headerReference' else 'footer'
-            identity = node.get('{' + R + '}id')
-            variant = node.get(_tag('type'))
-            if variant not in ('default', 'first', 'even'):
-                raise ValueError('Invalid header/footer reference type')
-            reference.update(relationship_id=identity, variant=variant)
-            key = (kind, identity)
-            requests.setdefault(key, []).append(reference)
-        else:
-            kind = {'footnoteReference': 'footnotes', 'endnoteReference': 'endnotes', 'commentReference': 'comments'}[local]
-            value = node.get(_tag('id'))
-            if value is None or not re.fullmatch(r'[0-9]{1,10}', value) or int(value) > 2147483647:
-                raise ValueError('Invalid related text reference ID')
-            identity = str(int(value))
-            reference['id'] = identity
-            note_requests.setdefault(kind, {}).setdefault(identity, []).append(reference)
-    for kind in note_requests:
-        matches = [(identity, item) for identity, item in relationships.items() if item.get('Type') == R + '/' + kind]
-        if len(matches) != 1:
-            raise ValueError('Missing/ambiguous ' + kind + ' relationship')
-        requests[(kind, matches[0][0])] = []
-    stories = []
-    loaded_parts = set()
-    for (kind, identity), references in requests.items():
-        relationship = relationships.get(identity)
-        if relationship is None or relationship.get('Type') != R + '/' + kind:
-            raise ValueError('Missing/wrong related-part relationship: ' + str(identity))
-        if relationship.get('TargetMode', 'Internal') != 'Internal':
-            raise ValueError('unsupported external related-part relationship')
-        part = _related_target(relationship.get('Target'))
-        if part not in package.namelist():
-            raise ValueError('Missing related part: ' + part)
-        if (kind, part) in loaded_parts:
-            raise ValueError('unsupported aliases to related part: ' + part)
-        loaded_parts.add((kind, part))
-        expected_root, expected_type = RELATED_TYPES[kind]
-        if declarations.get('/' + part) != expected_type:
-            raise ValueError('Missing/wrong related-part content type: ' + part)
-        root = _word_part(package, part, budget)
-        if root.tag != _tag(expected_root):
-            raise ValueError('Wrong related-part XML root: ' + part)
-        entries = [(None, root, references)]
-        if kind in note_requests:
-            singular = {'footnotes': 'footnote', 'endnotes': 'endnote', 'comments': 'comment'}[kind]
-            definitions = {}
-            for child in root:
-                if child.tag != _tag(singular):
-                    raise ValueError('Unexpected related text entry: ' + part)
-                value = child.get(_tag('id'))
-                if value is None or not re.fullmatch(r'-?[0-9]{1,10}', value) or not -2147483648 <= int(value) <= 2147483647:
-                    raise ValueError('Invalid related text definition ID: ' + part)
-                key = str(int(value))
-                if key in definitions:
-                    raise ValueError('Duplicate related text definition ID: ' + part)
-                if len(definitions) >= MAX_RELATED_REGIONS:
-                    raise ValueError('Related definition count limit exceeded')
-                definitions[key] = child
-            entries = []
-            for key, refs in note_requests[kind].items():
-                if key not in definitions or definitions[key].get(_tag('type'), 'normal') != 'normal':
-                    raise ValueError('Missing/non-normal related text definition: ' + part + ' id=' + key)
-                entries.append((key, definitions[key], refs))
-        for key, entry, refs in entries:
-            if len(stories) >= MAX_RELATED_REGIONS:
-                raise ValueError('Related region count limit exceeded')
-            first_issue = len(issues)
-            visibility_issue_start = len(visibility.issues) if visibility is not None else 0
-            entry_path = "/" + kind + "[" + str(key) + "]"
-            if visibility is not None:
-                visibility.apply(entry, part, entry_path)
-            record_omissions(entry, part)
-            if textbox_collector is not None:
-                textbox_collector.collect(entry, part, entry_path)
-            nested = sorted({node.tag.rsplit('}', 1)[-1] for node in _visible_elements(entry, revisions)
-                             if node.tag in (_tag('footnoteReference'), _tag('endnoteReference'),
-                                             _tag('commentReference'), _tag('headerReference'), _tag('footerReference'))})
-            if nested:
-                issues.append({'stream': part, 'offset': None, 'code': 'related_nested_reference_not_followed',
-                               'elements': nested, 'message': 'Only explicit main-document references are followed; nested references not resolved'})
-            story_issues = issues[first_issue:]
-            if visibility is not None:
-                story_issues += visibility.issues[visibility_issue_start:]
-            paragraphs = _blocks(entry, revisions)
-            if table_collector is not None:
-                table_issue_start = len(table_collector.issues)
-                table_collector.collect(entry, part, '/' + kind + '[' + str(key) + ']')
-                story_issues += table_collector.issues[table_issue_start:]
-            stories.append({'type': kind, 'source': {'part': part, 'id': key, 'relationship_id': identity},
-                            'text': '\n'.join(paragraphs), 'paragraphs': paragraphs,
-                            'references': refs, 'anchor_status': 'relationship_or_id_verified',
-                            'page_mapping': 'unknown', 'cp_range': None,
-                            'status': 'partial' if story_issues else 'ok', 'issues': story_issues})
-    return stories
-
-
 def read_bytes(data, revisions="accepted", include_related=False, hidden_text="include", recover_textboxes=False):
     """Read immutable bytes; unknown programming exceptions are not swallowed."""
     limitations = ["no-layout-or-list-number-calculation", "no-field-evaluation", "stored-revision-view-only"]
@@ -762,6 +620,8 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
     issues = []
 
     def record_omissions(root, name):
+        from wps_ooxml_omissions import content_omissions
+        issues.extend(content_omissions(root, name, _BLOCK_WRAPPERS, revisions))
         unsupported = {"txbxContent", "drawing", "object", "pict", "altChunk", "instrText", "fldSimple", "fldChar", "sym",
                        "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange"}
         if recover_textboxes:
@@ -792,8 +652,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
         with zipfile.ZipFile(source) as package:
             check_archive(package)
             part = "[Content_Types].xml / _rels/.rels"
-            _check_wps_package(package, budget)
-            part = "word/document.xml"
+            part = _check_wps_package(package, budget)
             document = _word_part(package, part, budget)
             result["ooxml_conformance"] = "strict" if getattr(package, "_wps_strict_word", False) else "transitional"
             if document.tag != _tag("document") or document.find(_tag("body")) is None:
@@ -801,7 +660,8 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             from wps_word_visibility import Visibility
             styles = None
             style_part = None
-            relationship_part = 'word/_rels/document.xml.rels'
+            from wps_ooxml_related import read_related, relationship_name
+            relationship_part = relationship_name(part)
             if relationship_part in package.namelist():
                 relationships = _word_part(package, relationship_part, budget)
                 relation_ns = 'http://schemas.openxmlformats.org/package/2006/relationships'
@@ -820,7 +680,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
                     relationship = style_relations[0]
                     if relationship.get('TargetMode', 'Internal') != 'Internal':
                         raise ValueError('unsupported external styles relationship')
-                    style_part = _related_target(relationship.get('Target'))
+                    style_part = resolve_internal_target(relationship.get('Target'), part)
                     styles = _word_part(package, style_part, budget)
                     if styles.tag != _tag('styles'):
                         raise ValueError('Invalid styles root')
@@ -851,8 +711,17 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
                 textbox_table_collector = TableCollector(revisions, _paragraph_text)
                 textbox_collector = TextboxCollector(revisions, _blocks, textbox_table_collector)
                 textbox_collector.collect(document, part, '/document')
-            related = (_read_related(package, document, revisions, budget, record_omissions, issues,
-                                     table_collector, visibility, textbox_collector)
+            if not include_related:
+                kinds = sorted({node.tag.rsplit('}', 1)[-1] for node in _visible_elements(document, revisions)
+                                if node.tag in {_tag(x) for x in ('headerReference', 'footerReference',
+                                                               'footnoteReference', 'endnoteReference', 'commentReference')}})
+                if kinds:
+                    result['omitted_regions'] = [{'type': kind, 'source': {'part': part}} for kind in kinds]
+                    issues.append({'stream': part, 'location': part, 'offset': None,
+                                   'code': 'related_content_not_requested', 'elements': kinds,
+                                   'message': 'Referenced headers, footers or notes were not requested; use include_related'})
+            related = (read_related(package, document, revisions, budget, record_omissions, issues,
+                                     table_collector, visibility, textbox_collector, main_part=part)
                        if include_related else None)
             issues.extend(table_collector.issues)
             if textbox_table_collector is not None:
@@ -864,7 +733,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             if include_related:
                 if textbox_collector is not None and textbox_collector.stories:
                     related.extend(textbox_collector.stories)
-                    issues.append({'stream': 'word/document.xml', 'offset': None,
+                    issues.append({'stream': part, 'offset': None,
                                    'location': 'related_stories',
                                    'code': 'textbox_text_recovered_unmapped',
                                    'count': len(textbox_collector.stories),
@@ -879,6 +748,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             return result
     except (ValueError, zipfile.BadZipFile, zlib.error, KeyError) as exc:
         message = str(exc)
+        part = getattr(exc, "wps_part", part)
         if "limit" in message or "exceeds" in message:
             result["status"] = "resource_limit"
         elif "Encrypted" in message:

@@ -91,7 +91,7 @@ def create_document(
     from wps_access import read_input
     with output_candidate(output_path) as (temp_path, publish):
         write_candidate(temp_path, raw_bytes)
-        candidate = read_bytes(read_input(temp_path))
+        candidate = read_bytes(read_input(temp_path), reading_mode='standard')
         from wps_rtf_read import require_publishable_candidate
         require_publishable_candidate(candidate)
         from wps_content_validation import validate_content, validate_format

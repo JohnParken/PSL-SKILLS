@@ -115,14 +115,14 @@ class ParagraphSourceTests(unittest.TestCase):
     def test_ooxml_branch_rejects_binary_only_option(self):
         with self.assertRaises(ParseError) as caught:
             read_bytes(b'PK\x03\x04not-a-valid-package',
-                       binary_paragraph_sources=True)
+                       binary_paragraph_sources=True, reading_mode='standard')
         self.assertEqual(caught.exception.status, 'unsupported')
 
     def test_source_metadata_requires_json_output(self):
         source = (Path(__file__).resolve().parents[1] / 'read_wps.py')
         result = run_task_cli(
             [sys.executable, '-I', '-S', '-B', str(source),
-             'synthetic.wps', '--format', 'text', '--binary-paragraph-sources'],
+             'synthetic.wps', '--format', 'text', '--binary-paragraph-sources', '--reading-mode', 'standard'],
             capture_output=True, text=True, timeout=15,
         )
         self.assertEqual(result.returncode, 2)
@@ -138,7 +138,7 @@ class ParagraphSourceTests(unittest.TestCase):
             source.write_bytes(data)
             command = [sys.executable, '-I', '-S', '-B',
                        str((Path(__file__).resolve().parents[1] / 'read_wps.py')),
-                       str(source), '--binary-paragraph-sources']
+                       str(source), '--binary-paragraph-sources', '--reading-mode', 'standard']
             completed = run_task_cli(command, capture_output=True,
                                        text=True, timeout=15)
             self.assertEqual(completed.returncode, 0, completed.stderr)

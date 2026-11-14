@@ -30,9 +30,9 @@ class WordProfileTests(unittest.TestCase):
     def test_explicit_exact_profile(self):
         data=container()
         with self.assertRaises(ParseError):
-            read_bytes(data,compatibility='strict')
+            read_bytes(data,compatibility='strict', reading_mode='standard')
         for mode in ('data', 'legacy_word_clsid'):
-            result=read_bytes(data,compatibility=mode)
+            result=read_bytes(data,compatibility=mode, reading_mode='standard')
             self.assertEqual(result['text'],'Hello 中文\n第二段\n')
             self.assertEqual(result['status'],'partial')
             self.assertTrue(result['partial'])
@@ -47,17 +47,17 @@ class WordProfileTests(unittest.TestCase):
             original = bytearray(container(guid=guid))
             struct.pack_into('<H', original, 24, 0x003B)
             data = bytes(original)
-            result = read_bytes(data)
+            result = read_bytes(data, reading_mode='standard')
             self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
             self.assertEqual(result['status'], 'partial')
             self.assertIn('legacy_cfb_minor_version',
                           [issue['code'] for issue in result['container_issues']])
             with self.assertRaises(ParseError):
-                read_bytes(data, compatibility='strict')
+                read_bytes(data, compatibility='strict', reading_mode='standard')
             broken = bytearray(data)
             broken[34] = 1
             with self.assertRaises(ParseError):
-                read_bytes(bytes(broken))
+                read_bytes(bytes(broken), reading_mode='standard')
             self.assertEqual(data, bytes(original))
 
     def test_scope_is_not_generic_relaxation(self):
@@ -77,7 +77,7 @@ class WordProfileTests(unittest.TestCase):
             path = Path(directory) / 'legacy.wps'
             path.write_bytes(original)
             command = [sys.executable, '-I', '-S', '-B',
-                       str((Path(__file__).parents[1] / 'read_wps.py')), str(path)]
+                       str((Path(__file__).parents[1] / 'read_wps.py')), str(path), '--reading-mode', 'standard']
             process = run_task_cli(command, capture_output=True, text=True,
                                      env={'PATH': ''}, timeout=5)
             self.assertEqual(process.returncode, 3, process.stderr)

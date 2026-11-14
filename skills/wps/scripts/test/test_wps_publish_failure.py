@@ -34,7 +34,7 @@ class PublishFailureTests(unittest.TestCase):
             output = Path(temporary) / 'output.wps'
             task_api(create_document, {'page_numbering': False, 'blocks': [{'type': 'paragraph', 'text': '原文'}]}, source)
             before = source.read_bytes()
-            parsed = read_bytes(before)
+            parsed = read_bytes(before, reading_mode='standard')
             output.write_bytes(b'old target')
             with patch('run_wps_edit.read_bytes', side_effect=[parsed, RuntimeError('candidate failed')]):
                 with self.assertRaises(RuntimeError):
@@ -47,7 +47,7 @@ class PublishFailureTests(unittest.TestCase):
         from wps_rtf_builder import build_document_from_spec
         from read_wps import read_bytes
         with tempfile.TemporaryDirectory() as temporary:
-            parsed = read_bytes(build_document_from_spec({'blocks': [{'type': 'paragraph', 'text': '正文'}]}).render().encode('ascii'))
+            parsed = read_bytes(build_document_from_spec({'blocks': [{'type': 'paragraph', 'text': '正文'}]}).render().encode('ascii'), reading_mode='standard')
             parsed.update(status='partial', issues=[{'code': 'rtf_destination_skipped'}])
             with patch('run_wps_task.read_bytes', return_value=parsed):
                 receipt = task_api(create_document, {'blocks': [{'type': 'paragraph', 'text': '正文'}]}, Path(temporary) / 'out.rtf')

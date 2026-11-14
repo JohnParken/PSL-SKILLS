@@ -160,7 +160,7 @@ class OoxmlRecoveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'input.wps'
             path.write_bytes(package('<w:p>' + run('保留', '<w:vanish w:val="maybe"/>') + '</w:p>'))
-            command = [sys.executable, '-I', '-S', '-B', str(Path(reader.__file__).with_name('read_wps.py')), './input.wps']
+            command = [sys.executable, '-I', '-S', '-B', str(Path(reader.__file__).with_name('read_wps.py')), './input.wps', '--reading-mode', 'standard']
             result = subprocess.run(command, cwd=directory, capture_output=True, text=True, encoding='utf-8', check=False)
             self.assertEqual(result.returncode, 3, result.stderr)
             self.assertEqual(json.loads(result.stdout)['text'], '保留')

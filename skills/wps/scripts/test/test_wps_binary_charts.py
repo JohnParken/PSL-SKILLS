@@ -128,7 +128,7 @@ def chart_fixture(*, floating=None, inline=None, floating_options=None,
 class BinaryChartsTests(unittest.TestCase):
     def test_both_anchor_paths_keep_exact_values_and_missing_channels(self):
         fixture = chart_fixture(floating=chart_package(), inline=chart_package(values=''))
-        standard = read_bytes(fixture)
+        standard = read_bytes(fixture, reading_mode='standard')
         self.assertNotIn('binary_charts', standard)
         maximum = read_bytes(fixture, reading_mode='maximum')
         self.assertEqual(maximum['text'], standard['text'])

@@ -80,10 +80,10 @@ class CharacterPropertiesTests(unittest.TestCase):
 
     def test_container_annotate_and_default_compatible(self):
         data=synthetic_cfb({key[0]:value for key,value in fixture().items()})
-        result=read_bytes(data,hidden_text='annotate')
+        result=read_bytes(data,hidden_text='annotate', reading_mode='standard')
         self.assertEqual(result['text'],'甲乙\n')
         self.assertEqual(result['status'],'partial')
-        self.assertEqual(read_bytes(data)['status'],'ok')
+        self.assertEqual(read_bytes(data, reading_mode='standard')['status'],'ok')
 
     def test_malformed_pages_pointers_prls_and_alignment(self):
         cases=[(250,0,4),(5120+511,0,1),(5120+511,102,1),(5120+4,4096,4),

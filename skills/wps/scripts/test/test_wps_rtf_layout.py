@@ -21,7 +21,7 @@ class LayoutTests(unittest.TestCase):
         doc = build_document_from_spec({'page_numbering': False, 'blocks': [{'type': 'paragraph', 'text': '甲😀乙'}]})
         raw = doc.render().encode('ascii')
         self.assertIn(br'\sl-560\slmult0', raw)
-        self.assertEqual(read_bytes(raw)['paragraphs'][0]['text'], '甲😀乙')
+        self.assertEqual(read_bytes(raw, reading_mode='standard')['paragraphs'][0]['text'], '甲😀乙')
 
     def test_wide_table_fits_printable_area(self):
         doc = build_document_from_spec({'blocks': [{'type': 'table', 'rows': [['x'] * 12]}]})
@@ -49,7 +49,7 @@ class LayoutTests(unittest.TestCase):
                             {'type': 'table', 'rows': [['单元格']]}, {'type': 'paragraph', 'text': '后'}]}, source)
             before = source.read_bytes()
             task_api(execute_edit_task, source, output, [{'operation': 'replace_text', 'find': '后', 'replace': '末'}])
-            parsed = read_bytes(output.read_bytes())
+            parsed = read_bytes(output.read_bytes(), reading_mode='standard')
             self.assertEqual([item['type'] for item in parsed['blocks']], ['paragraph', 'table', 'paragraph'])
             self.assertEqual(parsed['paragraphs'][-1]['text'], '末')
             self.assertEqual(source.read_bytes(), before)

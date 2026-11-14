@@ -14,10 +14,10 @@
 
 ```python
 # 输出结构化 JSON
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --heading-only")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --reading-mode standard --heading-only")
 
 # 输出精简纯文本大纲
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --heading-only --format text")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --reading-mode standard --heading-only --format text")
 ```
 
 ### 2. 按段落范围切片（`--paragraph-range START:END`）
@@ -26,7 +26,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇�
 
 ```python
 # 仅读取正文第 1 到第 30 段
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --paragraph-range 1:30 --format text")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇汇报.wps --reading-mode standard --paragraph-range 1:30 --format text")
 ```
 
 ### 3. 按章节标题定向提取（`--section EXACT_HEADING`）
@@ -35,7 +35,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./长篇�
 
 ```python
 # 定向读取“总体要求”章节
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./通知.wps --section \"总体要求\" --format text")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./通知.wps --reading-mode standard --section \"总体要求\" --format text")
 ```
 
 ## 适用场景与建议

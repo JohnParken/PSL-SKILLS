@@ -148,7 +148,7 @@ def _prepare_conversion(docx_path, output_path, expected_format):
     if source == target or (target.exists() and source.samefile(target)):
         raise ValueError('Output must not overwrite the source document')
     source_bytes = read_input(source)
-    payload = read_bytes(source_bytes)
+    payload = read_bytes(source_bytes, reading_mode='standard')
     if payload.get('format') != 'ooxml-word' or payload.get('status') not in ('ok', 'partial'):
         raise ValueError('DOCX conversion requires a readable OOXML Word package, regardless of its suffix')
     return source, target, source_bytes, payload
@@ -166,7 +166,7 @@ def _publish_conversion(candidate, target, source, source_bytes, source_payload,
     if read_input(source) != source_bytes:
         raise ValueError('Source changed during conversion; publication stopped')
     from read_wps import read_bytes
-    payload = read_bytes(data)
+    payload = read_bytes(data, reading_mode='standard')
     def main_text(value):
         if value.get('format') == 'rtf':
             parts = []
@@ -319,7 +319,7 @@ def verify_readback(wps_path, read_wps_script=None):
     access = ACTIVE.get()
     directory = access.root if access is not None else path.parent
     argument = str(path.relative_to(directory)) if access is not None else path.name
-    command = [sys.executable, '-I', '-S', '-B', str(script.resolve()), argument]
+    command = [sys.executable, '-I', '-S', '-B', str(script.resolve()), argument, '--reading-mode', 'standard']
     try:
         process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30, check=False, cwd=directory)
     except subprocess.TimeoutExpired:

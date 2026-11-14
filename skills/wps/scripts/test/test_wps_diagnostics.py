@@ -45,12 +45,12 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertNotIn('/hdr/r[1]',str(summary))
 
     def test_failure_no_partial_content_claim(self):
-        out=read('/definitely-not-a-real-file-diagnostics.wps')
+        out=read('/definitely-not-a-real-file-diagnostics.wps', reading_mode='standard')
         self.assertEqual(out['reading_assessment']['completeness'],'no_content_delivered')
         self.assertEqual(out['reading_assessment']['outcome'],'io_error')
     def test_binary_entry_keeps_original_fields(self):
         data=synthetic_cfb({path[0]:value for path,value in document().items()})
-        out=read_bytes(data)
+        out=read_bytes(data, reading_mode='standard')
         self.assertEqual(out['status'],'ok')
         self.assertEqual(out['reading_assessment']['scope'],out['scope'])
 

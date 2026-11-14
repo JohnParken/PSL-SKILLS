@@ -22,9 +22,9 @@
 | Python `read_bytes(data, **options)` | 返回结果字典；成功、部分结果及已由格式分支转成字典的失败都会附加 `reading_assessment`。 | 不捕获统一预检或二进制解析抛出的 `ParseError`；未知容器即会抛出，异常有 `status`、`location`。不能假定所有失败都是字典，需捕获异常并检查已返回字典的 `status`。 |
 | Python `read(path, **options)` | 读取普通文件后调用 `read_bytes`，返回结果字典。 | 捕获 `ParseError`、`OSError`，返回失败字典及 `reading_assessment`；不保证捕获编程错误或所有 Python 异常。 |
 | CLI 默认 JSON | stdout 为一个完整 JSON；ok 退出 0、partial 退出 3。 | 读取失败输出失败 JSON，退出 1；包括分支不适用的策略。未知参数、无效枚举、缺输入及 `--include-related --format text` 等参数解析错误退出 2，stderr 为用法/错误文本，无结果 JSON。 |
-| CLI `--format text` | stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔；partial 退出 3，stderr 另给 status/issues 摘要。 | 读取失败的 JSON 写 stderr，stdout 无正文，退出 1。电子表格不能输出 text。 |
+| CLI `--reading-mode standard --format text` | stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔；partial 退出 3，stderr 另给 status/issues 摘要。 | 读取失败的 JSON 写 stderr，stdout 无正文，退出 1。电子表格不能输出 text。 |
 
-读取失败的 `status` 包括 `unsupported`、`encrypted`、`corrupt`、`resource_limit`、`io_error`、`invalid_or_unsupported`。失败正文为 `text=null`、`partial=false`，不交付部分单元格或文字；`invalid_or_unsupported` 不应被调用方擅自归类为必然损坏。参数解析错误不是上述失败字典。
+已分类的独立关联内容损坏可以返回 partial 并保留正文；读取失败的 `status` 包括 `unsupported`、`encrypted`、`corrupt`、`resource_limit`、`io_error`、`invalid_or_unsupported`。失败正文为 `text=null`、`partial=false`，不交付部分单元格或文字；`invalid_or_unsupported` 不应被调用方擅自归类为必然损坏。参数解析错误不是上述失败字典。
 
 CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返回 unsupported；JSON 超过输出预算时返回 resource_limit。这两处重新生成的失败字典没有 `reading_assessment`。显式有界视图另用 `wps_read_view_v1`，输出投影失败可为 `output_view_error`/退出1且不带该摘要；其完整契约见有界输出（`<skill-root>/references/bounded-reading.md`）。CLI 参数错误、自检输出和纯文本正文也不提供该字段；调用方必须先判断退出码、输出模式和字段是否存在。
 
@@ -45,7 +45,7 @@ CLI 默认完整输出阶段还有两个例外：电子表格请求 text 时返�
 - `full_format_verified` 始终 false。原始诊断仍是完整依据，摘要不是隐私或安全认证。
 - 已有绘图锚点未渲染 `drawn_shape_anchor_not_rendered` 与 `picture_or_data_marker_not_decoded` 同属 `coverage.objects.state=not_decoded`；摘要按已有对象来源位置/CP 计数，允许保留 `shape_index`、`spa_record_offset`、`plcf_offset` 等受控定位字段，不读取、复制或展示对象正文。嵌套附加故事中出现的对象诊断同样参与覆盖统计；这些是未解码证据，不能视为对象渲染能力。
 
-本轮二进制主正文新增保守绘图标记：`--object-policy placeholder` 可以在 `PlcfSpa` CP/存储字符全部经过校验的情况下，将 `U+0008` 替换成 `U+FFFC` 并返回 `drawn_shape_anchor_not_rendered`，保留 CP、WordDocument 偏移与 SPA 源偏移；默认 reject 不变。该诊断不是图像、文字、字体或绘制结果的还原。具体边界见 绘图锚点（`<skill-root>/references/binary-shapes.md`）。
+本轮二进制主正文新增保守绘图标记：`--object-policy placeholder` 可以在 `PlcfSpa` CP/存储字符全部经过校验的情况下，将 `U+0008` 替换成 `U+FFFC` 并返回 `drawn_shape_anchor_not_rendered`，保留 CP、WordDocument 偏移与 SPA 源偏移；显式 standard 的 reject 策略不变。该诊断不是图像、文字、字体或绘制结果的还原。具体边界见 绘图锚点（`<skill-root>/references/binary-shapes.md`）。
 
 CFB 末扇区的 `cfb_missing_final_sector_padding` 属于兼容诊断。仅当所有声明的流字节和分配元数据实际存在时，data 策略才会在内存补齐未声明的填充，并保留 partial。声明的数据或扇区实际缺失时读取失败。失败原因可见 `cfb_unaligned_physical_length` 或 `cfb_fat_unbacked_allocation`。
 
@@ -55,7 +55,7 @@ CFB 末扇区的 `cfb_missing_final_sector_padding` 属于兼容诊断。仅当�
 
 ## 最大化读取模式
 
-显式 `--reading-mode maximum` 或 `read_bytes(data, reading_mode="maximum")` 只用于“尽量保留可安全取得的存储文字”。它固定采用 `compatibility=data`、二进制 `text_policy=recover`、`field_policy=cached_result`、`object_policy=placeholder`、`hidden_text=include`、`revisions=all` 和附加区域读取；与这些目标冲突的显式策略会在读取前拒绝，不静默覆盖。CLI 只允许完整 JSON，拒绝纯文本、摘要、标题/段落/章节选择和分页视图，因为这些投影会丢失独立区域或来源诊断。
+CLI、公开 `read()/read_bytes()` 默认 `reading_mode="maximum"`，固定附加区域读取、data兼容、recover文本、域缓存、对象占位及隐藏文字保留。OOXML/RTF 默认 accepted 正文，内容不同时把 all 存储视图放入独立 revision_content，避免删除文字混入当前正文；显式 all 始终标为非当前视图。MS-DOC 当前修订无法确认，存储文字仍返回但 current_view_available=false 且 partial。明确指定 standard 保持旧模式；窄范围、纯文本和隐藏筛选示例均显式选 standard。maximum 支持原完整JSON和新的完整结果无损分片；仍拒绝旧摘要/段落等仅主文投影。完整输出16 MiB上限，分片总规范JSON256 MiB上限，不静默裁剪；分片重组见 `<skill-root>/references/maximum-pagination.md`。
 
 - **MS-DOC/CFB。** `binary_table_structure.tables` 补读可确认的一级表格分组、存储列边界及横向和纵向合并，参见 `<skill-root>/references/binary-tables.md#表格分组与合并`。`drawing_objects` 记录存储形状和锚点。`binary_images` 提供已验证的 PNG 元数据和位置，带 `--include-image-bytes` 或 Python `include_image_bytes=True` 时可取有界原始字节。`binary_charts` 提供已定位的图表分类、系列、缓存值及缺失范围，见 `<skill-root>/references/binary-shapes.md#存储图表缓存`。附加区域见 `<skill-root>/references/ms-doc-stories.md#最大模式文本框`。
 - **OOXML Word：** 使用全部存储修订视图并跟随主文显式引用的页眉页脚、脚尾注和批注；另外从已经通过 XML/ZIP 结构检查的 `w:txbxContent` 子树提取文字和有限表格，按独立 `related_stories[type=textboxes]` 返回。绘图锚点、页面位置、Markup Compatibility Choice/Fallback 分支和主文阅读顺序都不推断；同一逻辑文本存在于多个未选择分支时可能分别返回，不能自动去重或并入主正文。
@@ -65,7 +65,7 @@ CFB 末扇区的 `cfb_missing_final_sector_padding` 属于兼容诊断。仅当�
 
 ## MS-DOC 段落 CP 来源（可选）
 
-默认读取返回值、状态和退出码**保持不变**。仅实际识别为 CFB + MS-DOC 的文档，显式使用 `--binary-paragraph-sources` 或 Python 的 `read_bytes(data, binary_paragraph_sources=True)` 才会尝试增加下列字段；CLI 必须使用默认 JSON 输出，`--format text` 与此来源选项组合会以参数错误退出 2，防止悄悄丢失来源字段；对 OOXML 或 BIFF8 使用此二进制专用参数会拒绝，而不是根据 `.wps` 后缀猜测格式。
+本段原主文来源契约在显式 standard 下保持；默认 maximum 会扩大读取范围并增加修订视图字段和 partial 诊断。仅实际识别为 CFB + MS-DOC 的文档，显式使用 `--binary-paragraph-sources` 或 Python 的 `read_bytes(data, binary_paragraph_sources=True)` 才会尝试增加下列字段；CLI 必须使用默认 JSON 输出，`--format text` 与此来源选项组合会以参数错误退出 2，防止悄悄丢失来源字段；对 OOXML 或 BIFF8 使用此二进制专用参数会拒绝，而不是根据 `.wps` 后缀猜测格式。
 
 - `paragraph_sources`：与**未转换的存储段落**一一对应的数组。每项仅包含 `index`、`cp_start`、`cp_end`、`text_cp_end`；其中 `[cp_start, cp_end)` 包含原存储段落结束符 CR（若有），`text_cp_end` 不包含该 CR。CP 坐标按 UTF-16 码元计数，补充平面字符占两个 CP，不是 Python 字符索引、物理字节偏移或页码。
 - `paragraph_source_status=exact_stored_cp`：表示当前故事的最终文本与存储文字相同（即使选择了但没有实际触发的转换策略），段落范围可以按存储段落顺序关联；这仍不证明页面布局、字符格式或生产软件来源。

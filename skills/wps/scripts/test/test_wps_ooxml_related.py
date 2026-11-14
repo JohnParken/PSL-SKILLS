@@ -88,17 +88,21 @@ class RelatedTests(unittest.TestCase):
         good=('word/h.xml','header',root('header',paragraph('H')))
         for relationships,parts,status in [('',[good],'corrupt'),(rel('h','footer','h.xml'),[good],'corrupt'),
                 (rel('h','header','h.xml','External'),[good],'unsupported'),
-                (rel('h','header','h.xml')*2,[good],'corrupt'),(rel('h','header','missing.xml'),[],'corrupt')]:
+                (rel('h','header','h.xml')*2,[good],'corrupt'),(rel('h','header','missing.xml'),[],'partial')]:
             with self.subTest(relationships=relationships):
                 result=reader.read_bytes(package(body,relationships,parts),include_related=True)
                 self.assertEqual(result['status'],status,result)
-                self.assertIsNone(result['text'])
+                if status == 'partial':
+                    self.assertEqual(result['text'], '')
+                else:
+                    self.assertIsNone(result['text'])
 
     def test_definition_ids_and_reference_bounds(self):
         body='<w:p><w:r><w:footnoteReference w:id="2"/></w:r></w:p>'
         for entries in ('<w:footnote w:id="3"/>','<w:footnote w:id="2"/><w:footnote w:id="2"/>','<w:footnote w:id="2147483648"/>', '<w:footnote w:id="2" w:type="separator"/>'):
             result=reader.read_bytes(package(body,rel('n','footnotes','n.xml'),[('word/n.xml','footnotes',root('footnotes',entries))]),include_related=True)
-            self.assertEqual(result['status'],'corrupt',result)
+            self.assertEqual(result['status'],'partial',result)
+            self.assertEqual(result['diagnostics'][0]['stream'], 'word/n.xml')
         for identity in ('-1','2147483648','a','0'*20):
             result=reader.read_bytes(package(body.replace('"2"','"'+identity+'"')),include_related=True)
             self.assertEqual(result['status'],'corrupt',result)
@@ -118,7 +122,7 @@ class RelatedTests(unittest.TestCase):
             result=reader.read_bytes(package(body,rel('h','header',target)),include_related=True)
             self.assertNotEqual(result['status'],'ok')
         data=package(body,rel('h','header','h.xml'),[('word/h.xml','footer',root('header',''))])
-        self.assertEqual(reader.read_bytes(data,include_related=True)['status'],'corrupt')
+        self.assertEqual(reader.read_bytes(data,include_related=True)['status'],'partial')
 
     def test_reference_and_region_budgets(self):
         body='<w:sectPr><w:headerReference w:type="default" r:id="h"/></w:sectPr>'

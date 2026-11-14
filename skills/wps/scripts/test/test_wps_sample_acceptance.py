@@ -144,7 +144,7 @@ class WpsSampleAcceptanceTests(unittest.TestCase):
     def test_binary_table_row_expectations_compare_exact_cell_texts(self):
         self.expectations['expected']['binary_table_rows'] = [['first', 'second']]
         self.write_manifest()
-        actual = read_wps.read_bytes(self.sample_data)
+        actual = read_wps.read_bytes(self.sample_data, reading_mode='standard')
         actual['binary_table_structure'] = {
             'rows': [{'cells': [{'text': 'first'}, {'text': 'second'}]}]
         }
@@ -187,7 +187,7 @@ class WpsSampleAcceptanceTests(unittest.TestCase):
         )
         for claim_path in claims:
             with self.subTest(claim=claim_path):
-                actual = read_wps.read_bytes(self.sample_data)
+                actual = read_wps.read_bytes(self.sample_data, reading_mode='standard')
                 if len(claim_path) == 1:
                     actual[claim_path[0]] = True
                 else:

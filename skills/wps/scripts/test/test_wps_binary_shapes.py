@@ -94,7 +94,7 @@ class BinaryShapesTests(unittest.TestCase):
             file = Path(temp) / 'synthetic.wps'
             file.write_bytes(data)
             from read_wps import read
-            result = read(file, object_policy='placeholder', binary_paragraph_sources=True)
+            result = read(file, object_policy='placeholder', binary_paragraph_sources=True, reading_mode='standard')
             self.assertEqual(result['status'], 'partial')
             self.assertIn('drawn_shape_anchor_not_rendered',
                           [issue['code'] for issue in result['issues']])

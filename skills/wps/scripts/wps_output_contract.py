@@ -56,7 +56,7 @@ def inspect_output_bytes(data, path, expected_format=None):
                  else 'zip' if data.startswith((b'PK\x03\x04', b'PK\x05\x06')) else 'unknown')
     result = {'valid': False, 'file_size': len(data), 'container': container, 'native_wps': False, 'full_format_verified': False}
     try:
-        payload = read_bytes(data)
+        payload = read_bytes(data, reading_mode='standard')
         actual = payload.get('format')
         result.update(detected_format=actual, output_format=actual, format=FORMAT_LABELS.get(actual, actual),
                       extension_matches=Path(path).suffix.lower() in OUTPUT_SUFFIXES.get(actual, ()), readback=readback_summary(payload))

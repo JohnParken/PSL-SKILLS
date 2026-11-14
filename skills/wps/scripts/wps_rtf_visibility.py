@@ -185,7 +185,7 @@ class RtfVisibility:
             action = 'revision_excluded' if revision_excluded else 'retained'
             record = dict(state=state, revision=revision, action=action, container=container, utf16_units=units,
                           source={'part': 'RTF main content', 'byte_start': start, 'byte_end': end})
-            previous = self.records[-1] if self.records else None
+            previous = self.records[-1] if self.records else {}
             if previous and all(previous[key] == record[key] for key in ('state', 'revision', 'action', 'container')):
                 previous['utf16_units'] += units
                 previous['source']['byte_end'] = end

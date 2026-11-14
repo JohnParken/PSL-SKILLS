@@ -20,6 +20,7 @@ from test_wps import document, synthetic_cfb
 
 class RoutingTests(unittest.TestCase):
     def result(self, data, suffix='.wps', **options):
+        options.setdefault('reading_mode', 'standard')
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / ('sample' + suffix)
             path.write_bytes(data)
@@ -74,7 +75,7 @@ class RoutingTests(unittest.TestCase):
             path = Path(directory) / 'fields.wps'
             path.write_bytes(package('<w:p><w:r><w:fldChar w:fldCharType="begin"/><w:t>1</w:t></w:r></w:p>'))
             process = run_task_cli([sys.executable, '-I', '-S', '-B',
-                                      str((Path(__file__).parents[1] / 'read_wps.py')), str(path), '--format', 'text'],
+                                      str((Path(__file__).parents[1] / 'read_wps.py')), str(path), '--format', 'text', '--reading-mode', 'standard'],
                                      capture_output=True, text=True, timeout=10, env={'PATH': ''})
             self.assertEqual(process.returncode, 3)
             self.assertEqual(process.stdout, '1')
@@ -85,7 +86,7 @@ class RoutingTests(unittest.TestCase):
             path = Path(directory) / 'table.et'
             path.write_bytes(synthetic_cfb({'Workbook': b'dummy'}))
             process = run_task_cli([sys.executable, '-I', '-S', '-B',
-                                      str((Path(__file__).parents[1] / 'read_wps.py')), str(path), '--format', 'text'],
+                                      str((Path(__file__).parents[1] / 'read_wps.py')), str(path), '--format', 'text', '--reading-mode', 'standard'],
                                      capture_output=True, text=True, timeout=10)
             self.assertEqual(process.returncode, 1)
             self.assertEqual(process.stdout, '')

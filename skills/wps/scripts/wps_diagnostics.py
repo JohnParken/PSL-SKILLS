@@ -127,7 +127,7 @@ def _unread_state(code):
     if {'not', 'requested'}.issubset(tokens):
         return 'not_requested'
     if tokens.intersection({'unsupported', 'not_decoded', 'uninterpreted',
-                             'unresolved', 'not_followed'}):
+                             'unresolved', 'unreadable', 'not_followed'}):
         return 'not_decoded'
     if {'not', 'decoded'}.issubset(tokens) or {'not', 'followed'}.issubset(tokens):
         return 'not_decoded'
@@ -142,6 +142,7 @@ def _coverage(result, diagnostic_records):
     related_stories = _sequence(result.get('related_stories'))
 
     related_state = ('not_requested' if omitted_regions else
+                     'partially_extracted' if any(isinstance(story, dict) and story.get('status') == 'partial' for story in related_stories) else
                      'extracted' if related_present else 'unknown')
     related = _CoverageEntry('related_content', related_state)
     for index, region in enumerate(omitted_regions):

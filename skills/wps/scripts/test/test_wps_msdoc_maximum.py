@@ -130,7 +130,7 @@ class MsDocMaximumTests(unittest.TestCase):
             ('\r', b''),
         )
         payload = cfb_payload(streams)
-        standard = read_bytes(payload)
+        standard = read_bytes(payload, reading_mode='standard')
         result = read_bytes(payload, reading_mode='maximum')
         self.assertNotIn('binary_table_structure', standard)
         self.assertEqual(result['text'], standard['text'])
@@ -159,7 +159,7 @@ class MsDocMaximumTests(unittest.TestCase):
         streams = papx_document(('甲\x07', props), ('乙\x07', props),
                                 ('\x07', props + b'\x17\x24\x01'), ('\r', b''))
         payload = cfb_payload(streams)
-        self.assertEqual(read_bytes(payload)['binary_table_structure']['rows'], [])
+        self.assertEqual(read_bytes(payload, reading_mode='standard')['binary_table_structure']['rows'], [])
         rows = read_bytes(payload, reading_mode='maximum')['binary_table_structure']['rows']
         self.assertEqual([cell['text'] for cell in rows[0]['cells']], ['甲', '乙'])
 
@@ -179,7 +179,7 @@ class MsDocMaximumTests(unittest.TestCase):
         install_papx(streams, [(4096, 4100, IN_TABLE), (4100, 4104, IN_TABLE),
                                (4104, 4106, ROW_END), (4106, 4108, b'')])
         payload = cfb_payload(streams)
-        self.assertEqual(read_bytes(payload)['binary_table_structure']['rows'], [])
+        self.assertEqual(read_bytes(payload, reading_mode='standard')['binary_table_structure']['rows'], [])
         result = read_bytes(payload, reading_mode='maximum')
         self.assertEqual([cell['text'] for cell in result['binary_table_structure']['rows'][0]['cells']], ['甲', '乙'])
         self.assertEqual(result['binary_table_structure']['rows'][0]['source']['cp_start'], 5)
@@ -219,7 +219,7 @@ class MsDocMaximumTests(unittest.TestCase):
         props = b'\x61\x24\x01\x05\x24\x01\x31\x24\x00\x5e\x84\x9c\xff\x13\xa4\x78\0'
         streams = papx_document(('标题😀\r', props), ('第二段\r', b'\x61\x24\xff'))
         payload = cfb_payload(streams)
-        self.assertNotIn('binary_paragraph_layout', read_bytes(payload))
+        self.assertNotIn('binary_paragraph_layout', read_bytes(payload, reading_mode='standard'))
         result = read_bytes(payload, reading_mode='maximum')
         self.assertNotIn('binary_table_structure', result)
         layout = result['binary_paragraph_layout']
@@ -243,7 +243,7 @@ class MsDocMaximumTests(unittest.TestCase):
     def test_unknown_marker_detail_is_bounded_with_omission_count(self):
         payload = cfb_payload(document([(b'A\x07B\x07\x07\r', True)]))
         with patch('wps_binary_tables.MAX_UNRESOLVED_MARKERS', 1):
-            standard = read_bytes(payload)['binary_table_structure']
+            standard = read_bytes(payload, reading_mode='standard')['binary_table_structure']
             structure = read_bytes(payload, reading_mode='maximum')['binary_table_structure']
         self.assertEqual(len(standard['unresolved_markers']), 3)
         self.assertEqual(len(structure['unresolved_markers']), 1)

@@ -21,11 +21,11 @@ class RtfPolicyOutputTests(unittest.TestCase):
             path.write_bytes(data)
             process = run_task_cli([sys.executable, '-I', '-S', '-B',
                                     str(Path(__file__).resolve().parents[1] / 'read_wps.py'),
-                                    str(path), '--format', 'text'], capture_output=True, text=True)
+                                    str(path), '--format', 'text', '--reading-mode', 'standard'], capture_output=True, text=True)
         self.assertEqual(process.returncode, 0, process.stderr)
         self.assertEqual(process.stdout, 'Before\nA\tB\nAfter')
         self.assertEqual(process.stderr, '')
-        self.assertEqual(read_bytes(data)['text'], 'Before\nAfter')
+        self.assertEqual(read_bytes(data, reading_mode='standard')['text'], 'Before\nAfter')
 
     def test_explicit_unsupported_policies_fail_closed(self):
         data = b'{\\rtf1 text\\par}'
@@ -36,7 +36,7 @@ class RtfPolicyOutputTests(unittest.TestCase):
             self.assertEqual(caught.exception.status, 'unsupported')
 
     def test_related_destinations_are_separate_and_unmapped(self):
-        result = read_bytes(b'{\\rtf1 Main\\par{\\header Header\\par}}', include_related=True)
+        result = read_bytes(b'{\\rtf1 Main\\par{\\header Header\\par}}', include_related=True, reading_mode='standard')
         self.assertEqual(result['text'], 'Main')
         self.assertEqual(result['related_stories'][0]['text'], 'Header')
         self.assertEqual(result['related_stories'][0]['page_mapping'], 'unknown')
@@ -44,29 +44,29 @@ class RtfPolicyOutputTests(unittest.TestCase):
 
     def test_explicit_recover_matches_default(self):
         data = b'{\\rtf1 recoverable\\par'
-        default = read_bytes(data)
-        selected = read_bytes(data, text_policy='recover')
+        default = read_bytes(data, reading_mode='standard')
+        selected = read_bytes(data, text_policy='recover', reading_mode='standard')
         self.assertEqual((selected['status'], selected['text']), ('partial', 'recoverable'))
         self.assertEqual(selected['issues'], default['issues'])
 
     def test_object_policy_via_public_reader(self):
         data = b'{\\rtf1 A{\\pict 0102}B}'
-        result = read_bytes(data)
+        result = read_bytes(data, reading_mode='standard')
         self.assertEqual((result['status'], result['text']), ('partial', 'A\ufffcB'))
         self.assertTrue(result['objects'][0]['placeholder_emitted'])
         with self.assertRaises(ParseError) as caught:
-            read_bytes(data, object_policy='reject')
+            read_bytes(data, object_policy='reject', reading_mode='standard')
         self.assertEqual(caught.exception.status, 'unsupported')
-        self.assertEqual(read_bytes(data, object_policy='placeholder')['text'], 'A\ufffcB')
+        self.assertEqual(read_bytes(data, object_policy='placeholder', reading_mode='standard')['text'], 'A\ufffcB')
 
     def test_explicit_field_policy(self):
         plain = b'{\\rtf1 ordinary\\par}'
         field = b'{\\rtf1 {\\field{\\*\\fldinst DATE}{\\fldrslt cached}}\\par}'
-        self.assertEqual(read_bytes(plain, field_policy='reject')['status'], 'ok')
+        self.assertEqual(read_bytes(plain, field_policy='reject', reading_mode='standard')['status'], 'ok')
         with self.assertRaises(ParseError) as caught:
-            read_bytes(field, field_policy='reject')
+            read_bytes(field, field_policy='reject', reading_mode='standard')
         self.assertEqual(caught.exception.status, 'unsupported')
-        result = read_bytes(field, field_policy='cached_result')
+        result = read_bytes(field, field_policy='cached_result', reading_mode='standard')
         self.assertEqual(result['status'], 'partial')
         self.assertIn('cached', result['text'])
 
@@ -75,7 +75,7 @@ class RtfPolicyOutputTests(unittest.TestCase):
             path = Path(directory) / 'table.rtf'
             path.write_bytes(b'{\\rtf1\\trowd\\cellx1000\\intbl A\\cell\\row}')
             command = [sys.executable, '-I', '-S', '-B',
-                       str(Path(__file__).resolve().parents[1] / 'read_wps.py'), str(path)]
+                       str(Path(__file__).resolve().parents[1] / 'read_wps.py'), str(path), '--reading-mode', 'standard']
             process = run_task_cli(command + ['--format', 'text'], capture_output=True, text=True)
             self.assertEqual((process.returncode, process.stdout, process.stderr), (0, 'A', ''))
             for option in (['--hidden-text', 'exclude'], ['--revisions', 'accepted']):
@@ -93,7 +93,7 @@ class RtfPolicyOutputTests(unittest.TestCase):
             path.write_bytes(b'{\\rtf1 ' + b'x\\par ' * 100000 + b'last}')
             process = run_task_cli([sys.executable, '-I', '-S', '-B',
                                     str(Path(__file__).resolve().parents[1] / 'read_wps.py'),
-                                    str(path), '--format', 'text'], capture_output=True, text=True, timeout=60)
+                                    str(path), '--format', 'text', '--reading-mode', 'standard'], capture_output=True, text=True, timeout=60)
         self.assertEqual(process.returncode, 3)
         self.assertEqual(len(process.stdout.splitlines()), 100000)
         diagnostic = json.loads(process.stderr)
@@ -106,7 +106,7 @@ class RtfPolicyOutputTests(unittest.TestCase):
             path.write_bytes(b'{\\rtf1 text\\par')
             process = run_task_cli([sys.executable, '-I', '-S', '-B',
                                     str(Path(__file__).resolve().parents[1] / 'read_wps.py'),
-                                    str(path), '--format', 'text'], capture_output=True, text=True)
+                                    str(path), '--format', 'text', '--reading-mode', 'standard'], capture_output=True, text=True)
         self.assertEqual(process.returncode, 3)
         self.assertEqual(process.stdout, 'text')
         self.assertEqual(json.loads(process.stderr)['status'], 'partial')

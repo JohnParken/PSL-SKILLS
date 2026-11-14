@@ -45,7 +45,7 @@ class ContentLedgerTests(unittest.TestCase):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
                 output = Path(directory) / 'out.rtf'
                 output.write_bytes(b'existing')
-                self.assertIn(read_bytes(wrong_rtf.encode('ascii'))['status'], ('ok', 'partial'))
+                self.assertIn(read_bytes(wrong_rtf.encode('ascii'), reading_mode='standard')['status'], ('ok', 'partial'))
                 with patch('wps_rtf_builder.RtfDocument.render', return_value=wrong_rtf), self.assertRaises(RuntimeError):
                     task_api(create_document, SPEC, output)
                 self.assertEqual(output.read_bytes(), b'existing')

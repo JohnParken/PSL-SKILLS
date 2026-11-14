@@ -1,10 +1,12 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 当前 Skill 版本为 `20261113.2302.5108`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
+> 当前 Skill 版本为 `20261114.1946.5595`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
 宿主返回的 `/large_tool_results/` 是结果引用，仅使用宿主 `read_file` 和实际 schema 补读并核对覆盖；不交给 execute、cat、Shell 或 Python，不猜映射或使用路径掩码。读取工具缺失或结果不完整时报告缺口并停止依赖。普通业务文件和 Skill 资源仍遵循各自路径规则。
+
+WPS 图表读取新增保存值展示：按分类索引对齐原始数值与简单百分比/小数格式，逐字段报告缺失，保留缓存来源和未刷新标记。不得自动访问外部工作簿、反算缺失计数或把存储系列当成已验证的视觉系列；不做图片 OCR。合法内嵌 XLSX 可按明确单行/列引用补读已存值，不覆盖图表缓存；外链、缺失单元格和不支持格式保持明确缺口。
 
 ## 功能与格式边界
 
@@ -24,6 +26,24 @@ WPS Skill 面向公文、报告、段落和基础表格，提供四条任务路�
 | 兼容导出 | RTF 可写 `.wps/.rtf`；受支持的 MS-DOC/CFB 可写 `.doc/.wps`；OOXML 不能改名冒充导出成功。 |
 | 电子表格 | 按实际格式和任务交接：原生 XLSX/XLSM 交给 xlsx，ET/ETT 交给 et；识别到电子表格容器时不继续按文字处理，也不自动转换。 |
 
+本轮合成与独立包验收见 [关联内容恢复记录](../maintenance/wps/related-recovery-20261114.md)。
+
+最新默认模式与兼容迁移验收见 [默认最大化读取记录](../maintenance/wps/default-maximum-20261114.md)。
+
+本轮完整结果分片验收见 [maximum分页记录](../maintenance/wps/maximum-pagination-20261114.md)。
+
+## 默认最大化读取与修订边界
+
+CLI 和公开 Python API 默认 maximum；显式 standard 保持原主文模式和旧窄范围能力。OOXML/RTF 默认当前 accepted 正文；不同的 all 存储视图单列 revision_content，不能当作变更清单或当前正文。MS-DOC 及已分类的无法过滤 RTF 修订只返回明确标识的存储内容，current_view_available=false、partial，不阻断可靠文字。修订补读失败保留已读正文并标缺口。
+
+maximum 默认完整JSON仍受16 MiB限制；显式分页改用完整结果无损分片，覆盖附加区域及修订，单条记录可跨片。按连续字符偏移和摘要重组，不能把半截payload当业务JSON；256 MiB总传输上限，不静默截断或降级成仅主文。创建/编辑/导出内部10处API及1处子进程固定 standard，避免扩大重排/验收范围。旧API调用者如需保持原策略、纯文本或窄范围必须显式迁移。底层解析器未改成独立默认maximum入口。
+
+## 本轮读取容错
+
+OOXML 主文按包根关系及内容类型定位；standard 未请求附加内容时报告已发现的关联引用。局部关联部件缺失、XML 或定义损坏不丢弃可靠正文，返回 partial 与准确部件位置，并继续其他部件。公式与未知块文字明确报告未解码；不推断未知结构的阅读顺序。MS-DOC maximum 对明确分类的独立映射/文字故障保留其余内容，不伪造页眉或注释锚点。共享结构、安全、加密和资源门禁不降级。
+
+maximum 的新分片是整个规范JSON的无损传输；标准主文分页不覆盖独立关联区域，不能混用游标。见 [完整结果分片](../../skills/wps/references/maximum-pagination.md)。标准有界视图保持原契约。合成测试不能替代真实 WPS 生产者和排版验收。
+
 ## 架构图
 
 ```mermaid
@@ -32,7 +52,9 @@ flowchart TD
     B --> C["wps_rtf_read：RTF 子集"]
     B --> D["wps_cfb 与 MS-DOC 解析：有界二进制证据"]
     D --> Q["maximum：表格、文本框、存储图片和图表缓存"]
+    B --> PAGES["可选全结果无损分片与校验重组"]
     B --> E["wps_ooxml：OOXML Word 子集"]
+    E --> ER["独立关联内容恢复与遗漏诊断"]
     B --> F["诊断与选择性读取；字符/UTF-8 字节预算及续页"]
     A --> G["run_wps_task：JSON 声明式创建"]
     A --> H["run_wps_edit：读取后受控重排"]
@@ -126,7 +148,7 @@ JSON
 
 `--reading-mode maximum` 使用完整 JSON，读取字段缓存、对象占位、隐藏及全部修订存储文字，并请求附加区域。MS-DOC 的 `drawing_objects` 提供可确认的锚点和形状说明，`related_stories` 提供文本框及其范围。`binary_images` 提供已验证的 PNG 元数据和引用，带 `--include-image-bytes` 可取得原始字节。`binary_charts` 返回可定位的浮动或行内图表缓存、缺值和来源，外部工作簿只记录引用状态。RTF 读取已验证的附加目标组，OOXML 另列受检的 `w:txbxContent`。 [绘图与 PNG](../../skills/wps/references/binary-shapes.md#最大模式绘图说明) · [图表缓存](../../skills/wps/references/binary-shapes.md#存储图表缓存) · [附加故事与文本框](../../skills/wps/references/ms-doc-stories.md#最大模式文本框)
 
-`--format text` 成功时 stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔，JSON 的 `text` 保持段落口径。partial 的状态和 issues 摘要在 stderr。RTF 对可证实的直接隐藏和修订标记支持筛选或注释；样式、历史属性、字段或结构边界使筛选不能保证时拒绝。默认保留存储文字并在遇相关控制时标 partial；图片和对象默认标 U+FFFC 及源位置，内容不执行或解码，显式 reject 遇对象拒绝。显式字段 reject 在已解析主内容遇域时拒绝，缓存结果不执行且标 partial。脚注和批注不混入主文；RTF 仅在显式附加/maximum 模式提取可验证目标组并独立标注未知映射。OOXML 默认 include 在可见性元数据损坏但正文可安全读取时保留正文并标 partial；标准 noBreakHyphen/softHyphen 保留为对应 Unicode 字符。失败 JSON 写 stderr，不用空正文伪装成功。默认 JSON 模式的读取失败写 stdout；参数解析错误只有用法/错误文本。JSON 输出有 16 MiB 预算，超限失败，不输出被截断的合法性未知结果。
+`--reading-mode standard --format text` 成功时 stdout 为正文；RTF 全文按块顺序包含表格行，单元格以制表符分隔，JSON 的 `text` 保持段落口径。partial 的状态和 issues 摘要在 stderr。RTF 对可证实的直接隐藏和修订标记支持筛选或注释；样式、历史属性、字段或结构边界使筛选不能保证时拒绝。standard 保留原存储策略；默认maximum将当前支持视图与不同的all存储视图分开；图片和对象默认标 U+FFFC 及源位置，内容不执行或解码，显式 reject 遇对象拒绝。显式字段 reject 在已解析主内容遇域时拒绝，缓存结果不执行且标 partial。脚注和批注不混入主文；RTF 仅在显式附加/maximum 模式提取可验证目标组并独立标注未知映射。OOXML 默认 include 在可见性元数据损坏但正文可安全读取时保留正文并标 partial；标准 noBreakHyphen/softHyphen 保留为对应 Unicode 字符。失败 JSON 写 stderr，不用空正文伪装成功。默认 JSON 模式的读取失败写 stdout；参数解析错误只有用法/错误文本。单次完整JSON输出有16 MiB预算；全结果分页是独立传输契约，按连续片段校验和重组，不输出被截断的合法性未知外壳。
 
 `read_bytes()` 可能抛 `ParseError`，也可能返回格式分支生成的失败字典；调用方既要捕获异常，也要检查 `status`。`read(path)` 捕获 `ParseError/OSError` 并返回失败结果，但不保证捕获所有编程异常。
 
@@ -222,3 +244,7 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 ## 2026-11-13 纯 Python 最大化读取
 
 新增 `--reading-mode maximum`，保持默认 standard 行为不变；目标是多返回有来源边界的存储文字，而不是放宽结构安全或伪造完整成功。实现、合成测试与未验证范围见 [最大化读取维护记录](../maintenance/wps/maximum-reading-20261113.md)。当前没有 WPS Office 12.1.0.26899 真实样本，因此不能称为该版本已认证兼容。
+
+WPS 11 / 12.1 生成的 `.doc` 直接按实际内容读取，不以应用版本或扩展名代替格式判断。默认 maximum 保留可读内容与局部缺口；五种 FIB 结构和内容路由有合成回归，但不等于所有软件构建、对象及版式均获兼容认证。
+
+WPS maximum 的可选图表检查保留64候选上限：达到上限不再解析后续候选，正文和已读图表保持可用，明确partial与未检查数量，不把候选数当图表数。其他共享结构和资源安全门禁保持拒绝。分页消费者区分standard主文text与maximum全JSON片段，不混用契约或游标。

@@ -22,6 +22,9 @@ def task_arguments(arguments):
 def run_task_cli(arguments, **kwargs):
     script_index = next((index for index, value in enumerate(arguments)
                          if str(value).endswith(('read_wps.py', 'run_wps_task.py', 'run_wps_edit.py', 'export_wps.py', 'wps_cfb.py'))), None)
+    # Legacy CLI fixture contract is explicitly standard; default-mode tests bypass this adapter.
+    if script_index is not None and str(arguments[script_index]).endswith('read_wps.py') and '--reading-mode' not in arguments:
+        arguments = [*arguments, '--reading-mode', 'standard']
     if script_index is None or kwargs.get('cwd') is not None:
         return subprocess.run(arguments, **kwargs)
     root, task = task_arguments(arguments[script_index + 1:])

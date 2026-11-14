@@ -367,21 +367,21 @@ class WpsTests(unittest.TestCase):
             path = Path(temp) / 'synthetic.wps'
             for major in (3, 4):
                 path.write_bytes(synthetic_cfb({key[0]: value for key, value in document().items()}, major))
-                self.assertEqual(read(path)['text'], 'Hello 中文\n第二段\n')
+                self.assertEqual(read(path, reading_mode='standard')['text'], 'Hello 中文\n第二段\n')
             for name in ('EncryptionInfo', 'EncryptedPackage', 'EncryptedSummary', 'DRMContent'):
                 path.write_bytes(synthetic_cfb({name: b'x'}))
-                self.assertEqual(read(path)['status'], 'encrypted')
+                self.assertEqual(read(path, reading_mode='standard')['status'], 'encrypted')
             data = bytearray(synthetic_cfb({}))
             struct.pack_into('<H', data, 24, 0xFFFF)
             path.write_bytes(data)
-            self.assertEqual(read(path)['status'], 'unsupported')
-            self.assertEqual(read(path)['location']['offset'], 24)
+            self.assertEqual(read(path, reading_mode='standard')['status'], 'unsupported')
+            self.assertEqual(read(path, reading_mode='standard')['location']['offset'], 24)
             path.write_bytes(b'PK rubbish, neither ZIP nor OOXML')
-            result = read(path)
+            result = read(path, reading_mode='standard')
             self.assertEqual(result['status'], 'unsupported')
             self.assertEqual(result['location']['stage'], 'container')
             path.write_bytes(SIGNATURE)
-            self.assertEqual(read(path)['status'], 'corrupt')
+            self.assertEqual(read(path, reading_mode='standard')['status'], 'corrupt')
 
     def test_file_budget_precedes_read_and_fifo_does_not_block(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -403,12 +403,12 @@ class WpsTests(unittest.TestCase):
                     calls.append(args)
                     raise AssertionError('oversized input must not be read')
             with patch('read_wps.os.fdopen', Guard):
-                self.assertEqual(read(path)['status'], 'resource_limit')
+                self.assertEqual(read(path, reading_mode='standard')['status'], 'resource_limit')
             self.assertEqual(calls, [])
             if hasattr(os, 'mkfifo'):
                 fifo = Path(temp) / 'pipe.wps'
                 os.mkfifo(fifo)
-                result = run_task_cli([sys.executable, '-I', '-S', '-B', str((Path(__file__).parents[1] / 'read_wps.py')), str(fifo)],
+                result = run_task_cli([sys.executable, '-I', '-S', '-B', str((Path(__file__).parents[1] / 'read_wps.py')), str(fifo), '--reading-mode', 'standard'],
                                         capture_output=True, text=True, timeout=5)
                 self.assertEqual(result.returncode, 1)
                 self.assertEqual(json.loads(result.stdout)['status'], 'unsupported')
@@ -421,7 +421,7 @@ class WpsTests(unittest.TestCase):
                 path.write_bytes(synthetic_cfb({key[0]: value for key, value in document(parts).items()}))
                 original = hashlib.sha256(path.read_bytes()).hexdigest()
                 for mode in ('json', 'text'):
-                    result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', mode],
+                    result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', mode, '--reading-mode', 'standard'],
                                             cwd=temp, capture_output=True, text=True, timeout=5, env={**os.environ, 'PATH': ''})
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(result.stderr, '')
@@ -429,14 +429,14 @@ class WpsTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), original)
             for data in (b'unknown', synthetic_cfb({'EncryptionInfo': b'x'}), SIGNATURE):
                 path.write_bytes(data)
-                result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', 'text'],
+                result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), './input.wps', '--format', 'text', '--reading-mode', 'standard'],
                                         cwd=temp, capture_output=True, text=True, timeout=5)
                 self.assertEqual(result.returncode, 1)
                 self.assertEqual(result.stdout, '')
                 report = json.loads(result.stderr)
                 self.assertIsNone(report['text'])
                 self.assertFalse(report['partial'])
-            missing = read(Path(temp) / 'absent.wps')
+            missing = read(Path(temp) / 'absent.wps', reading_mode='standard')
             self.assertEqual(missing['status'], 'io_error')
 
     def test_unexpected_programming_exception_is_not_swallowed(self):
@@ -445,7 +445,7 @@ class WpsTests(unittest.TestCase):
             path.write_bytes(synthetic_cfb({key[0]: value for key, value in document().items()}))
             with patch('wps_access.CompoundFile', side_effect=RuntimeError('sentinel programming defect')):
                 with self.assertRaisesRegex(RuntimeError, 'sentinel programming defect'):
-                    read(path)
+                    read(path, reading_mode='standard')
 
 
 class DeterministicMutationTests(unittest.TestCase):
@@ -512,7 +512,7 @@ class DeterministicMutationTests(unittest.TestCase):
             path = Path(temp) / 'mutated.wps'
             for data in mutations:
                 path.write_bytes(data)
-                result = read(path)
+                result = read(path, reading_mode='standard')
                 if result['status'] == 'ok':
                     self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
                 elif result['status'] == 'partial':

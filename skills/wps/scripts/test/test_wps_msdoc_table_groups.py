@@ -48,7 +48,7 @@ def grouped_fixture():
 class StoredTableGroupsTests(unittest.TestCase):
     def test_groups_index_physical_rows_and_return_stored_merges(self):
         payload = grouped_fixture()
-        original = read_bytes(payload)
+        original = read_bytes(payload, reading_mode='standard')
         result = read_bytes(payload, reading_mode='maximum')
         self.assertEqual(result['text'], original['text'])
         self.assertNotIn('tables', original['binary_table_structure'])

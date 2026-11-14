@@ -117,7 +117,7 @@ class TestWpsRtfReading(unittest.TestCase):
                 "-B",
                 str(Path(read_wps.__file__).resolve()),
                 tmp_name,
-            ]
+             '--reading-mode', 'standard']
             proc = run_task_cli(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
             self.assertEqual(proc.returncode, 0)
             payload = json.loads(proc.stdout)

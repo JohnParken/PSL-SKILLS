@@ -6,6 +6,8 @@ import zipfile
 import zlib
 from xml.parsers import expat
 
+from wps_chart_presentation import add_presentation
+from wps_chart_workbook import enrich_embedded
 from wps_access import require
 from wps_binary_chart_cache import CHART_NS, DRAWING_NS, ChartCacheBudget, ChartCacheLimit, read_chart_cache
 from wps_ooxml import (CONTENT_TYPES, R, RELATIONSHIPS, XmlBudget, XmlBudgetExceeded, check_archive,
@@ -186,7 +188,18 @@ def _chart_package(payload, budget):
         if workbook_status == 'unresolved':
             parsed['status'] = 'partial'
             parsed['issues'].append('workbook_relationship_unresolved')
-        return {**parsed, 'graphic_frame_part': frame, 'chart_part': chart, 'workbook_status': workbook_status}
+        result = {**parsed, 'graphic_frame_part': frame, 'chart_part': chart,
+                  'workbook_status': workbook_status}
+        if workbook_status == 'embedded_not_read':
+            enrichment = enrich_embedded(package, root, chart, types, budget, result)
+            result['workbook_enrichment'] = enrichment
+            state = enrichment['status']
+            result['workbook_status'] = state if state.startswith('embedded_') else 'embedded_' + state
+            if enrichment['issues']:
+                result['status'] = 'partial'
+                result['issues'].append('embedded_workbook_incomplete')
+        add_presentation(result, budget.caches)
+        return result
 
 
 def _read_blob(payload, source, budget):
@@ -210,11 +223,22 @@ def add_binary_charts(result, links):
         return
     budget = PackageBudget()
     parsed = {}
+    payloads = {}
+    skipped = {}
+    skipped_references = 0
     entries = []
     for reference, (payload, source) in sorted(links, key=lambda item: item[0]['anchor_cp']):
         key = (source['stream'], source['offset'])
+        if key in payloads:
+            require(payloads[key] == payload, source,
+                    'Conflicting chart payloads at one source position')
+        else:
+            payloads[key] = payload
+        if key in skipped or (key not in parsed and len(parsed) >= MAX_BLOBS):
+            skipped[key] = source
+            skipped_references += 1
+            continue
         if key not in parsed:
-            require(len(parsed) < MAX_BLOBS, source, 'Chart package count budget exceeded', 'resource_limit')
             entry = _read_blob(payload, source, budget)
             parsed[key] = entry
             if entry is not None:
@@ -223,18 +247,44 @@ def add_binary_charts(result, links):
         entry = parsed[key]
         if entry is not None:
             entry['references'].append(reference)
-    if not entries:
+    if not entries and not skipped:
         return
     unread = [entry for entry in entries if entry['status'] == 'not_decoded']
     incomplete = [entry for entry in entries if entry['status'] == 'partial']
     result['binary_charts'] = {
         'scope': 'officeart_metro_blob_cache',
-        'status': ('not_decoded' if len(unread) == len(entries) else
+        'status': ('partial' if skipped else
+                   'not_decoded' if len(unread) == len(entries) else
                    'partial' if incomplete or unread else 'stored_data'),
         'chart_count': len(entries) - len(unread),
         'unresolved_package_count': len(unread),
         'charts': entries,
     }
+    if skipped:
+        ranges = {}
+        for stream, offset in skipped:
+            item = ranges.setdefault(stream, {'stream': stream, 'min_offset': offset,
+                                              'max_offset': offset, 'candidate_count': 0})
+            item['min_offset'] = min(item['min_offset'], offset)
+            item['max_offset'] = max(item['max_offset'], offset)
+            item['candidate_count'] += 1
+        coverage = {
+            'candidate_scan_limit': MAX_BLOBS,
+            'scanned_candidate_count': len(parsed),
+            'uninspected_candidate_count': len(skipped),
+            'uninspected_reference_count': skipped_references,
+            'all_candidates_inspected': False,
+            'uninspected_source_bounds': list(ranges.values()),
+            'source_bounds_are_contiguous': False,
+        }
+        result['binary_charts']['inspection'] = coverage
+        result['issues'].append({
+            'code': 'binary_chart_candidate_scan_limit', **coverage,
+            'message': 'Optional chart inspection stopped at its candidate limit; '
+                       'remaining drawing packages were not inspected or classified as charts',
+        })
+        result['status'] = 'partial'
+        result['partial'] = True
     for entry in unread:
         result['issues'].append({'code': 'binary_chart_package_not_decoded', **entry['source'], 'reason': entry['reason'],
                                  'message': 'Stored OfficeArt chart package could not be verified'})

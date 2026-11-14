@@ -198,16 +198,16 @@ class RtfVisibilityTests(unittest.TestCase):
 
     def test_unified_entry_and_summary_describe_rtf_visibility(self):
         from read_wps import read_bytes
-        result = read_bytes(b'{\\rtf1 A{\\v hidden}B}', hidden_text='annotate')
+        result = read_bytes(b'{\\rtf1 A{\\v hidden}B}', hidden_text='annotate', reading_mode='standard')
         self.assertEqual(result['text'], 'AhiddenB')
         summary = result['reading_assessment']['visibility']
         self.assertEqual(summary['policy'], 'annotate')
         self.assertEqual(summary['recorded_run_decisions'], {'retained:visible': 2, 'retained:hidden': 1})
         self.assertEqual(summary['by_part']['RTF main content']['recorded_runs'], 3)
-        result = read_bytes(b'{\\rtf1 A{\\v hidden}B}', hidden_text='exclude')
+        result = read_bytes(b'{\\rtf1 A{\\v hidden}B}', hidden_text='exclude', reading_mode='standard')
         self.assertEqual(result['text'], 'AB')
         self.assertEqual(result['reading_assessment']['visibility']['policy'], 'exclude')
-        self.assertEqual(read_bytes(b'{\\rtf1 ordinary}')['text'], 'ordinary')
+        self.assertEqual(read_bytes(b'{\\rtf1 ordinary}', reading_mode='standard')['text'], 'ordinary')
 
     def test_unknown_control_annotation_never_claims_resolved_visibility(self):
         result = self.parse(b'\\newvisibility text', hidden_text='annotate')

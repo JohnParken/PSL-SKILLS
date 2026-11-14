@@ -35,7 +35,7 @@ class ReadViewCopies(unittest.TestCase):
             install = work / 'isolated-wps'
             shutil.copytree(ROOT / 'skills/wps/scripts', install, ignore=shutil.ignore_patterns('test', '__pycache__'))
             (work / 'input.wps').write_bytes(b'{\\rtf1\\ansi Hello world}')
-            command = [sys.executable, '-I', '-S', '-B', str(install / 'read_wps.py'), './input.wps', '--page-size', '3',
+            command = [sys.executable, '-I', '-S', '-B', str(install / 'read_wps.py'), './input.wps', '--reading-mode', 'standard', '--page-size', '3',
                        '--max-output-bytes', '3000']
             cursor, chunks = None, []
             while True:

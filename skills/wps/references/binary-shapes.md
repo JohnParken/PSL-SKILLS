@@ -37,8 +37,8 @@ MS-DOC 最大模式在 `binary_images.images` 返回可验证的 PNG。浮动图
 - 每个系列保留图表类型、存储 `index`、`order`、可用的系列名，以及 `categories`、`values` 两组点。用各自的 `points[].index` 对齐分类和值，数值以原始字符串返回，保留小数精度。支持经典饼图、环形图、柱状图、折线图和面积图等分类/值结构中的字符串、数值缓存及直接存储点。
 - `complete` 表示该组数据的声明点均可读。`partial` 保留可核实的点和缺口。`unavailable` 表示该组数据无法读取。`missing_ranges` 是含两端的零基索引区间，`null` 表示总范围未知。没有数值缓存时报告 `cache_missing`，缺值保持缺失。
 - `binary_charts.status=stored_data` 仅针对已解析的图表缓存范围。损坏或歧义的包显示 `not_decoded`，有其他可用图表时保留并返回 `partial`。缺少该字段表示当前路径未产出已识别记录，纯图片中的图表仍可能存在。顶层正文状态保留对象占位及其他诊断。
-- `workbook_status` 记录 `no_reference`、`external_not_followed`、`embedded_not_read` 或 `unresolved`。外链不访问，嵌入工作簿不解析，公式不返回或重算。保存值的新鲜度、纯图片图表、OLE 图表、图形渲染、新式及多层分类图表数据仍不在此能力范围。
-- 单包 2 MiB、所有图表包共 16 MiB，最多 64 个候选包，单包最多 128 个成员。被读取的 XML 单个最多 1 MiB，共 8 MiB。图表系列与点分别限制为 256 和 25,000 个候选，文本字段另有限额。达到图表专用资源门禁时明确失败。该路径在内存读取，用既有 JSON 通道输出。
+- `workbook_status` 记录无引用、外链未访问、内部工作簿补读或未解析状态。外链不访问，符合下述限定的内部 XLSX 可补读保存值，公式不返回或重算。保存值的新鲜度、纯图片图表、OLE 图表、图形渲染、新式及多层分类图表数据仍不在此能力范围。
+- 单包 2 MiB、所有图表包共 16 MiB，最多检查 64 个不同来源候选包，单包最多 128 个成员。被读取的 XML 单个最多 1 MiB，共 8 MiB。图表系列与点分别限制为 256 和 25,000 个候选，文本字段另有限额。仅候选数达到64时停止可选图表检查，保留正文与已读结果，标 partial 并报告未检查候选/引用数及非连续来源范围；不得把未检查候选当成图表或断言不存在图表。字节、解压、XML、点数等其他资源门禁仍明确失败。同来源冲突载荷继续拒绝。该路径在内存读取，用既有 JSON 通道输出。
 
 格式依据为 MS-ODRAW 第 2.3.4.41 节的 metroBlob、MS-OI29500 的 Graphic Frame Doc，以及 ISO/IEC 29500-1 的 DrawingML 数值缓存。
 
@@ -54,3 +54,17 @@ MS-DOC 最大模式在 `binary_images.images` 返回可验证的 PNG。浮动图
 ## 对照的 CFB 风险
 
 农行广西南宁分行 CFB `.doc` 长度不对齐 512 字节扇区，实际余数 51，且检查对齐前缀时 FAT 仍宣告越界分配。已补充明确的 CFB 诊断原因码：`cfb_unaligned_physical_length` 及 `cfb_fat_unbacked_allocation`。这属于拒绝原因的**定位修复**，没有提供可以安全读取的兼容策略。不得对原件自动裁剪、填零或放宽 FAT 约束；需要先取得可靠生产/软件验证及更完整的 FAT/链证据。
+
+## 图表可读结果
+
+`binary_charts.charts[].presentation` 是原结果的派生展示，不替代原 `series` 与 partial。按点的显式索引对齐分类和值；缺少分类或数值在行级 `missing_fields` 标出，未存储点的缺失区间原样保留，不展开巨大空区间。`raw_value` 保留数值字符串精度，`display_value` 仅支持 `0`、`0.0` 到八位小数及对应百分号格式；使用十进制四舍五入，不做占比归一化。其他格式回退原值并标 `format_not_rendered`，不是完整 Excel 格式引擎。
+
+`values_refreshed=false` 表示只读文件保存值；`visual_series_verified=false` 表示存储顺序不证明最终显示顺序。分类可读但值缺失时仍展示分类，不把缺值补零、不从其他百分比反算、不执行公式。仅有内部引用不代表已有可用缓存；外部关联路径不输出、不访问。展示重复文本计入原图表共享输出预算。
+
+## 内嵌工作簿补读
+
+仅在图表合法 `internal package` 关系指向真实 XLSX 类型时，按包根关系定位 workbook 和 worksheet；不猜目录、不扫描 ZIP 签名、不调用其他 Skill。仅单工作表 A1 单格、单行或单列范围，拒绝函数、名称、多区域、三维、外部引用及旧 XLS/宏格式。读取已存数值、字符串、共享字符串、布尔值；数值系列只补数值。公式单元格仅取已有保存值并标 `formula_cached`，不执行或保证新鲜度；日期/工作簿格式不应用。
+
+只补没有缓存点的位置，不覆盖已有点。原通道 `status/issues/missing_ranges` 仍描述图表缓存，`workbook_enrichment` 和 `effective_missing_indices` 单独报告补读覆盖；新增点的 `source.kind=embedded_workbook`，保留单元格位置及类型。展示的 `cache_missing_fields` 与补读后 `missing_fields` 分开。坏包或不支持引用保留可读图表并说明缺口，安全资源超限仍失败。不能把缺单元格当零，不用补读把原 partial 伪装成全格式成功。
+
+内部工作簿单个2 MiB、累计16 MiB；展开单个8 MiB、累计32 MiB，单包128成员。累计单元格100000、共享字符串25000；单引用范围25000点，工作表128个；还受现有共享 XML 字节/节点和图表点/文本预算限制。全部在内存完成，不写临时工作簿。`embedded_stored_values` 仅表示此补读子集完成；`embedded_partial`、`embedded_unresolved` 和 `embedded_format_unsupported` 明确局限，未读其他工作簿功能。

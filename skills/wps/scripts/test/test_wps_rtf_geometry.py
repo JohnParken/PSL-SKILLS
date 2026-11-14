@@ -22,7 +22,7 @@ LITERAL = (br'{\rtf1\ansi before\par '
 
 class GeometryTests(unittest.TestCase):
     def test_independent_literal_rectangle_and_order(self):
-        result = read_bytes(LITERAL)
+        result = read_bytes(LITERAL, reading_mode='standard')
         self.assertEqual(result['status'], 'ok')
         self.assertEqual(result['tables'][0]['merges'], [[0, 0, 1, 1]])
         self.assertEqual(result['tables'][0]['cell_boundaries_twips'], [1000, 2000, 3000])
@@ -36,19 +36,19 @@ class GeometryTests(unittest.TestCase):
         self.assertEqual(raw.count(br'\clmgf'), 2)
         self.assertEqual(raw.count(br'\clvmgf'), 2)
         self.assertEqual(raw.count(br'\clvmrg'), 2)
-        self.assertEqual(read_bytes(raw)['tables'][0]['merges'], [[0, 0, 1, 1]])
+        self.assertEqual(read_bytes(raw, reading_mode='standard')['tables'][0]['merges'], [[0, 0, 1, 1]])
 
     def test_damaged_grid_stays_partial_and_keeps_cell_text(self):
         for raw in (LITERAL.replace(br'\row ', br'\trleft100\row ', 1), LITERAL.replace(br'\trowd', br'\trowd\trleft100', 1), LITERAL.replace(br'\cellx2000', br'\cellx900', 1),
                     LITERAL.replace(br'\clmgf\clvmrg', br'\clmgf\clvmgf'),
                     LITERAL.replace(br'\clmgf\clvmgf', br'\clmrg\clvmgf', 1)):
-            result = read_bytes(raw)
+            result = read_bytes(raw, reading_mode='standard')
             self.assertEqual(result['status'], 'partial')
             self.assertEqual(result['tables'][0]['rows'][0][0]['text'], 'anchor')
             self.assertTrue(result['issues'])
 
     def test_nonempty_covered_text_not_dropped_or_silently_rebuilt(self):
-        result = read_bytes(LITERAL.replace(br'anchor\cell\cell', br'anchor\cell covered\cell'))
+        result = read_bytes(LITERAL.replace(br'anchor\cell\cell', br'anchor\cell covered\cell'), reading_mode='standard')
         self.assertEqual(result['status'], 'partial')
         self.assertEqual(result['tables'][0]['rows'][0][1]['text'], 'covered')
         self.assertEqual(result['issues'][0]['code'], 'rtf_merge_covered_content_retained')
@@ -58,7 +58,7 @@ class GeometryTests(unittest.TestCase):
             source, output = Path(temporary) / 'input.rtf', Path(temporary) / 'output.rtf'
             source.write_bytes(LITERAL)
             task_api(execute_edit_task, source, output, [{'operation': 'replace_text', 'find': 'anchor', 'replace': 'changed'}])
-            result = read_bytes(output.read_bytes())
+            result = read_bytes(output.read_bytes(), reading_mode='standard')
             self.assertEqual(result['tables'][0]['merges'], [[0, 0, 1, 1]])
             self.assertEqual(result['tables'][0]['rows'][0][0]['text'], 'changed')
             self.assertEqual(source.read_bytes(), LITERAL)

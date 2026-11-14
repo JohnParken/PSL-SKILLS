@@ -117,7 +117,7 @@ class HiddenTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'sample.wps'
             path.write_bytes(package('<w:p>'+run('A')+run('CLISECRET','<w:vanish/>')+'</w:p>'))
-            command=[sys.executable,'-I','-S','-B',str((Path(__file__).parents[1] / 'read_wps.py')),str(path),'--hidden-text','exclude']
+            command=[sys.executable,'-I','-S','-B',str((Path(__file__).parents[1] / 'read_wps.py')),str(path),'--hidden-text','exclude', '--reading-mode', 'standard']
             process=run_task_cli(command,capture_output=True,text=True,timeout=10,env={'PATH':''})
             self.assertIn(process.returncode,(0,3),process.stderr)
             self.assertEqual(json.loads(process.stdout)['text'],'A')

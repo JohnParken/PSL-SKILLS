@@ -58,6 +58,8 @@ class EntryWorkflowsTests(unittest.TestCase):
         self.spec = json.loads(match.group(1))
 
     def cli(self, script, *args, spec=None):
+        if script == 'read_wps.py' and '--reading-mode' not in args:
+            args = (*args, '--reading-mode', 'standard')
         return subprocess.run(
             [sys.executable, "-I", "-S", "-B", str(self.skill / "scripts" / script), *args],
             cwd=self.task, env=self.environment, input=None if spec is None else json.dumps(spec),

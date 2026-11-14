@@ -52,14 +52,15 @@ def ooxml_with_textbox():
 class MaximumReadingTests(unittest.TestCase):
     def test_ooxml_returns_all_revision_text_and_separate_textbox(self):
         data = ooxml_with_textbox()
-        standard = read_bytes(data)
+        standard = read_bytes(data, reading_mode='standard')
         self.assertEqual(standard['text'], 'MainNew\n')
         self.assertNotIn('related_stories', standard)
 
         result = read_bytes(data, reading_mode='maximum')
-        self.assertEqual(result['text'], 'MainNewOld\n')
+        self.assertEqual(result['text'], 'MainNew\n')
+        self.assertEqual(result['revision_content']['content']['text'], 'MainNewOld\n')
         self.assertEqual(result['reading_mode'], 'maximum')
-        self.assertEqual(result['revisions'], 'all')
+        self.assertEqual(result['revisions'], 'accepted')
         textboxes = [story for story in result['related_stories'] if story['type'] == 'textboxes']
         self.assertEqual([story['text'] for story in textboxes], ['Box text'])
         self.assertEqual(textboxes[0]['anchor_status'], 'stored_textbox_subtree_only')
@@ -68,7 +69,7 @@ class MaximumReadingTests(unittest.TestCase):
 
     def test_rtf_returns_related_destination_groups_separately(self):
         data = b'{\\rtf1\\ansi Main\\par{\\header Head\\par}{\\footer Foot\\par}{\\footnote Note\\par}}'
-        standard = read_bytes(data)
+        standard = read_bytes(data, reading_mode='standard')
         self.assertEqual(standard['text'], 'Main')
         self.assertNotIn('related_stories', standard)
 
@@ -93,7 +94,7 @@ class MaximumReadingTests(unittest.TestCase):
 
     def test_conflicting_maximum_policies_are_rejected(self):
         with self.assertRaises(ParseError):
-            read_bytes(ooxml_with_textbox(), reading_mode='maximum', revisions='accepted')
+            read_bytes(ooxml_with_textbox(), reading_mode='maximum', revisions='original')
         with self.assertRaises(ParseError):
             read_bytes(b'{\\rtf1 Text}', reading_mode='maximum', object_policy='reject')
 

@@ -21,7 +21,7 @@ class CfbDiagnosticTests(unittest.TestCase):
     def test_non_aligned_bytes_preserve_failure_status_and_location(self):
         data = fixture() + b'\x12\x34\x56'
         with self.assertRaises(ParseError) as caught:
-            read_bytes(data)
+            read_bytes(data, reading_mode='standard')
         failure = caught.exception
         self.assertEqual(failure.status, 'invalid_or_unsupported')
         self.assertEqual(failure.location['reason_code'], 'cfb_unaligned_physical_length')
@@ -34,14 +34,14 @@ class CfbDiagnosticTests(unittest.TestCase):
         # mutation deliberately marks a nonexistent sector as allocated.
         struct.pack_into('<I', data, 512 + sector_count * 4, 0xfffffffe)
         with self.assertRaises(ParseError) as caught:
-            read_bytes(bytes(data))
+            read_bytes(bytes(data), reading_mode='standard')
         failure = caught.exception
         self.assertEqual(failure.status, 'invalid_or_unsupported')
         self.assertEqual(failure.location['reason_code'], 'cfb_fat_unbacked_allocation')
         self.assertIn('first unbacked sector', str(failure))
 
     def test_valid_file_does_not_emit_structural_reasons(self):
-        result = read_bytes(fixture())
+        result = read_bytes(fixture(), reading_mode='standard')
         self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
         self.assertEqual(result['status'], 'ok')
 

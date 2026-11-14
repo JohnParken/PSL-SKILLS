@@ -88,7 +88,7 @@ class DrawingDescriptionsTests(unittest.TestCase):
     def test_body_and_header_objects_are_linked_with_verified_sources(self):
         streams = drawing_document()
         data = cfb_payload(streams)
-        standard = read_bytes(data)
+        standard = read_bytes(data, reading_mode='standard')
         self.assertNotIn('drawing_objects', standard)
         result = read_bytes(data, reading_mode='maximum')
         self.assertEqual(result['status'], 'partial')
@@ -158,7 +158,7 @@ class DrawingDescriptionsTests(unittest.TestCase):
                 word[554:562] = word[154 + source_pair * 8:162 + source_pair * 8]
                 streams[('WordDocument',)] = bytes(word)
                 data = cfb_payload(streams)
-                self.assertEqual(read_bytes(data)['status'], 'partial')
+                self.assertEqual(read_bytes(data, reading_mode='standard')['status'], 'partial')
                 with self.assertRaisesRegex(ParseError, 'OfficeArtContent aliases'):
                     read_bytes(data, reading_mode='maximum')
 

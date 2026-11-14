@@ -195,7 +195,7 @@ class TableTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'synthetic.wps'
             path.write_bytes(data)
-            command=[sys.executable,'-I','-S','-B',str((Path(__file__).parents[1] / 'read_wps.py')),str(path)]
+            command=[sys.executable,'-I','-S','-B',str((Path(__file__).parents[1] / 'read_wps.py')),str(path), '--reading-mode', 'standard']
             json_run=run_task_cli(command,capture_output=True,text=True,env={'PATH':''},timeout=10)
             self.assertEqual(json_run.returncode,0,json_run.stderr)
             result=json.loads(json_run.stdout)

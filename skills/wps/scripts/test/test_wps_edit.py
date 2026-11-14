@@ -51,7 +51,7 @@ class TestWpsEditOperations(unittest.TestCase):
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["edit_stats"]["text_replacements"], 1)
 
-        parsed = read_bytes(out_file.read_bytes())
+        parsed = read_bytes(out_file.read_bytes(), reading_mode='standard')
         self.assertIn("新办公室负责日常协调与推进。", parsed["text"])
         self.assertNotIn("旧机构名称", parsed["text"])
 
@@ -65,7 +65,7 @@ class TestWpsEditOperations(unittest.TestCase):
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["edit_stats"]["paragraphs_modified"], 1)
 
-        parsed = read_bytes(out_file.read_bytes())
+        parsed = read_bytes(out_file.read_bytes(), reading_mode='standard')
         self.assertIn("全新替换的正文段落。", parsed["text"])
         self.assertIn("结尾追加段落。", parsed["text"])
 
@@ -82,7 +82,7 @@ class TestWpsEditOperations(unittest.TestCase):
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["edit_stats"]["cells_updated"], 1)
 
-        parsed = read_bytes(out_file.read_bytes())
+        parsed = read_bytes(out_file.read_bytes(), reading_mode='standard')
         tbl = parsed.get("tables", [])[0]
         self.assertEqual(tbl["rows"][1][1]["text"], "新主任")
 

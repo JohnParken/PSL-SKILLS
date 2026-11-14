@@ -380,7 +380,7 @@ class OutputContractTests(unittest.TestCase):
         # Unsupported OOXML drawing is disclosed even when output text reads ok.
         source = self.root / 'partial.docx'
         source.write_bytes(package('<w:p><w:r><w:t>Main</w:t></w:r><w:drawing/></w:p>'))
-        source_payload = read_bytes(source.read_bytes())
+        source_payload = read_bytes(source.read_bytes(), reading_mode='standard')
         self.assertEqual(source_payload['status'], 'partial')
         result = task_api(export_wps.convert_docx_to_wps, source, self.root / 'partial.rtf', backend='rtf')
         self.assertEqual(result['status'], 'partial')

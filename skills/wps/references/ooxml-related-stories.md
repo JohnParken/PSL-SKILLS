@@ -4,16 +4,18 @@
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-显式 include-related 时，主 text/paragraphs 仍只包含正文，附加区域置于 related_stories，不再拼接标签和部件文字。默认正文读取不变。source 保留部件、定义 ID、关系 ID；references 保留正文 Word 元素序号、引用种类和 ID。元素序号不是字符 CP 或页码，页码/CP 映射均未知。
+显式 include-related 时，主 text/paragraphs 仍只包含正文，附加区域置于 related_stories，不再拼接标签和部件文字。附加内容不拼接主正文；显式 standard 未请求附加内容且发现引用时以 partial 和 related_content_not_requested 明确告知未读取范围。source 保留部件、定义 ID、关系 ID；references 保留正文 Word 元素序号、引用种类和 ID。元素序号不是字符 CP 或页码，页码/CP 映射均未知。
 
-页眉页脚由正文 sectPr 中 headerReference/footerReference 的 r:id 定位 document.xml.rels，检查内部关系类型和部件内容类型/根元素。按显式分节引用提取，不计算前节继承、奇偶页或首页显示。相同部件的同一关系可供多节引用；不同关系别名指向同一部件当前明确 unsupported。合法自定义部件名按关系支持，不按 header1.xml 等文件名枚举。
+页眉页脚由正文 sectPr 中 headerReference/footerReference 的 r:id 定位实际主部件所属的关系文件，检查内部关系类型和部件内容类型/根元素。按显式分节引用提取，不计算前节继承、奇偶页或首页显示。相同部件的同一关系可供多节引用；不同关系别名指向同一部件当前明确 unsupported。合法自定义部件名按关系支持，不按 header1.xml 等文件名枚举。
 
-脚注、尾注和批注由正文可见修订视图中的引用 ID 及对应唯一关系定位，验证定义 ID 唯一和范围，再仅提取被引用定义。空定义成功空文字；缺关系、缺定义、错误类型、重复定义或关系 ID 拒绝。批注范围的起止字符未映射，不声称恢复批注范围。特殊脚注分隔符不充当普通注释。
+脚注、尾注和批注由正文可见修订视图中的引用 ID 及对应唯一关系定位，验证定义 ID 唯一和范围，再仅提取被引用定义。空定义成功空文字；独立部件缺失、XML 损坏、错误类型、缺失或重复定义返回该区域 partial/text=null，并保留正文和其他可读部件。缺关系、重复关系 ID、主文引用非法等未分类结构故障仍拒绝。批注范围的起止字符未映射，不声称恢复批注范围。特殊脚注分隔符不充当普通注释。
 
-未关联 ZIP 成员不作为附加文字解析，仍经过原有成员长度与 CRC 检查。外部关系不访问；目标拒绝 URI scheme/query/fragment/编码转义及越出包根。关联内的未知内容沿用 partial 诊断；嵌套引用不递归追踪，明确 partial。默认模式不新增文本框、图形、布局、分页、字段执行和跨修订语义。
+未关联 ZIP 成员不作为附加文字解析，仍经过原有成员长度与 CRC 检查。外部关系不访问；目标拒绝 URI scheme/query/fragment/编码转义及越出包根。关联内的未知内容沿用 partial 诊断；嵌套引用不递归追踪，明确 partial。standard 模式不新增文本框、图形、布局、分页、字段执行和跨修订语义。
 
 `--reading-mode maximum` 另从已经通过相同 ZIP/XML 检查的正文及已选关联区域中定位外层 `w:txbxContent`，将其存储段落和有限表格作为 `related_stories[type=textboxes]` 返回。它不解释 DrawingML/VML 锚点，不选择 Markup Compatibility Choice/Fallback，不推断页面或主文顺序；多个未选择分支中的相同文本可分别返回。每个 story 固定为 partial，`anchor_status=stored_textbox_subtree_only`，不能并入正文后声称阅读顺序准确。
 
 引用数100000、区域/定义4096，文本框 story 4096、文本框文字累计 8 Mi UTF-16 码元；原有 ZIP/XML 累计预算和最终输出限额保持。所有关联 XML 使用同一个累计 XML budget，不按部件重置。无需写文件或网络。
 
 公开依据见ooxml-related-evidence.json (`docs/maintenance/wps/ooxml-related-evidence.json`)，开发时核对，运行时不访问。测试均为标准库合成的固定预期，覆盖自定义部件名、未关联成员、三类 ID、修订、空区域、缺失/重复/越界、外部目标及配额；目前没有真实 WPS 关联文字的独立语义对照。
+
+主文按包根 officeDocument 关系与唯一受支持内容类型定位，支持合法自定义主部件路径。所有相对关联目标相对实际主部件解析。数学公式单独报告 math_content_not_decoded，未知块内文字报告 unknown_block_content_not_decoded；不把数字拼接冒充公式。独立区域恢复采用明确错误白名单，DTD、实体、资源和共享包安全检查仍失败。

@@ -239,15 +239,17 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             shape_stories.append(('headers_footers', main_count + other_counts[0], other_counts[1], HEADER_SPA_PAIR))
         for kind, start_cp, count, pair_index in shape_stories:
             anchors = shape_anchors(word, table, start_cp, count, read_unit, table_spans,
-                                    header=kind == 'headers_footers', include_placement=maximum)
+                                    header=kind == 'headers_footers', include_placement=maximum, recover_mismatched=maximum)
             anchors_by_story[kind] = anchors
-            if anchors:
+            if anchors or getattr(anchors, 'issues', None):
                 pair = FC_LCB_START + pair_index * 8
                 start, size = word.number(pair), word.number(pair + 4)
                 table_spans.append((start, start + size))
         if maximum and any(anchors_by_story.values()):
             from wps_binary_shapes import drawing_metadata_region
             drawing_region = drawing_metadata_region(word, table, table_spans, require)
+    from wps_binary_recovery import read_mapping, read_story
+    mapping_issues = {}
     header_mapping = None
     note_mappings = {}
     automatic_note_markers = set()
@@ -256,16 +258,20 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         from wps_binary_refs import note_references
         from wps_binary_comments import comment_references
         from wps_binary_headers import header_sections
-        header_mapping = header_sections(word, table, main_count + other_counts[0],
+        header_mapping = read_mapping(header_sections, word, table, main_count + other_counts[0],
                                         other_counts[1], main_count, read_unit, require,
                                         fib_end=fib_end, cb_mac=cb_mac,
-                                        text_spans=[(p[0], p[1]) for p in pieces])
+                                        text_spans=[(p[0], p[1]) for p in pieces],
+                                        maximum=maximum, story="headers_footers", issues=mapping_issues)
         story_start = main_count
         for story_type, count in zip(('footnotes', 'headers_footers', 'comments', 'endnotes', 'textboxes', 'header_textboxes'), other_counts):
-            mapping = note_references(word, table, story_type, story_start, count,
-                                      main_count, read_unit, require)
+            mapping = read_mapping(note_references, word, table, story_type, story_start, count,
+                                   main_count, read_unit, require, maximum=maximum,
+                                   story=story_type, issues=mapping_issues)
             if story_type == 'comments':
-                mapping = comment_references(word, table, story_start, count, main_count, read_unit, require)
+                mapping = read_mapping(comment_references, word, table, story_start, count,
+                                       main_count, read_unit, require, maximum=maximum,
+                                       story=story_type, issues=mapping_issues)
                 for reference in mapping or []:
                     comment_markers.add(reference['anchor']['cp'])
                     comment_markers.add(reference['text_range']['cp_start'])
@@ -410,7 +416,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 'Unclosed field in story')
         if rendered is not None:
             text = ''.join(rendered)
-        issues = []
+        issues = list(getattr(story_anchors, 'issues', ()))
         if control_locations:
             issues.append({'code': 'uninterpreted_control_markers_not_decoded', 'count': len(control_locations),
                            'locations': control_locations,
@@ -525,11 +531,11 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 ('footnotes', 'headers_footers', 'comments', 'endnotes', 'textboxes', 'header_textboxes'),
                 (80, 84, 92, 96, 100, 104), other_counts):
             cp_end = cp_start + count
-            story = render_story(cp_start, cp_end, story_type)
+            story = read_story(render_story, cp_start, cp_end, story_type, maximum=maximum)
             paragraph_count += len(story['paragraphs'])
             require(paragraph_count <= MAX_PARAGRAPHS, word.location(count_offset),
                     'Combined story paragraph budget exceeded', 'resource_limit')
-            story_issues = story['issues']
+            story_issues = story['issues'] + mapping_issues.get(story_type, [])
             references = note_mappings.get(story_type)
             if count and references is None:
                 story_issues = story_issues + [{'code': 'story_references_not_decoded',
@@ -651,7 +657,7 @@ def failure(status, location, message):
 def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                field_policy=None, object_policy=None, revisions=None, include_related=False,
                hidden_text="include", binary_paragraph_sources=False, text_policy=None,
-               reading_mode='standard', include_image_bytes=False):
+               reading_mode='maximum', include_image_bytes=False):
     """Identify content first; the suffix is provenance, never a format selector."""
     require(isinstance(data, bytes) and len(data) <= MAX_FILE_BYTES,
             {'stage': 'input'}, 'Input exceeds byte budget or is not bytes', 'resource_limit')
@@ -672,11 +678,10 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                 'Maximum reading requires data compatibility without chart recovery', 'unsupported')
         require(field_policy in (None, 'cached_result') and object_policy in (None, 'placeholder'),
                 {'stage': 'options'}, 'Maximum reading retains cached fields and object placeholders', 'unsupported')
-        require(revisions in (None, 'all') and hidden_text == 'include' and text_policy in (None, 'recover'),
-                {'stage': 'options'}, 'Maximum reading retains hidden/all-revision stored text and bounded recovery',
+        require(revisions in (None, 'accepted', 'all') and hidden_text == 'include' and text_policy in (None, 'recover'),
+                {'stage': 'options'}, 'Maximum reading retains hidden text with accepted/all revision views and bounded recovery',
                 'unsupported')
         include_related = True
-        revisions = 'all'
         text_policy = 'recover'
         field_policy = 'cached_result'
         object_policy = 'placeholder'
@@ -688,17 +693,8 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
 
     def finish(result):
         if maximum:
-            result['reading_mode'] = 'maximum'
-            result['maximum_reading'] = {
-                'stored_text_view': 'hidden-and-all-revision-text-retained',
-                'related_content': 'requested',
-                'field_policy': 'cached_result-not-executed',
-                'object_policy': 'placeholder-with-optional-stored-png' if result.get('format') == 'ms_doc_subset' else 'placeholder-not-decoded',
-                'layout_verified': False,
-                'producer_profile_verified': False,
-            }
-            if result.get('format') == 'ms_doc_subset':
-                result['maximum_reading']['chart_policy'] = 'officeart_cache_only'
+            from wps_maximum_view import complete_maximum
+            result = complete_maximum(data, result, revisions=revisions)
         return result
     require(not include_image_bytes or data.startswith(SIGNATURE), {'stage': 'options'},
             'Image bytes are available only for binary MS-DOC', 'unsupported')
@@ -733,9 +729,13 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                 'Unknown RTF field policy', 'unsupported')
         from wps_rtf_read import parse_rtf_bytes
         try:
-            result = parse_rtf_bytes(data, hidden_text=hidden_text, revisions=revisions,
-                                     object_policy=requested_object_policy or 'placeholder',
-                                     include_related=include_related)
+            if maximum:
+                from wps_maximum_view import read_rtf_maximum
+                result = read_rtf_maximum(data, revisions)
+            else:
+                result = parse_rtf_bytes(data, hidden_text=hidden_text, revisions=revisions,
+                                         object_policy=requested_object_policy or 'placeholder',
+                                         include_related=include_related)
         except ParseError:
             raise
         except ValueError as exc:
@@ -850,7 +850,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
     parser.add_argument('--format', choices=('json', 'text'), default='json')
-    parser.add_argument('--reading-mode', choices=('standard', 'maximum'), default='standard')
+    parser.add_argument('--reading-mode', choices=('standard', 'maximum'), default='maximum')
     parser.add_argument('--include-image-bytes', action='store_true', help='Include bounded base64 PNG bytes from binary MS-DOC in maximum mode')
     parser.add_argument('--compatibility', choices=('data', 'strict', 'legacy_excel_clsid', 'legacy_word_clsid'), default='data')
     parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None)
@@ -884,11 +884,9 @@ def main():
     if args.section_index is not None and (args.section is None or args.section_index < 1):
         parser.error('--section-index requires --section and a positive paragraph index')
     maximum_projection = any((args.summary, args.heading_only, args.paragraph_range is not None,
-                              args.section is not None, args.sheet is not None, args.page_size is not None,
-                              args.cursor is not None, args.max_output_chars is not None,
-                              args.max_output_bytes is not None))
+                              args.section is not None, args.sheet is not None))
     if args.reading_mode == 'maximum' and maximum_projection:
-        parser.error('--reading-mode maximum requires full JSON; selective and bounded views omit recovered regions')
+        parser.error('Maximum pages preserve all regions; summary/heading/paragraph/section/sheet projections require explicit standard')
     if args.check:
         if any((args.summary, args.heading_only, args.paragraph_range is not None, args.section is not None,
                 args.sheet is not None, args.page_size is not None, args.cursor is not None,
@@ -904,14 +902,13 @@ def main():
     selective_count = sum((args.heading_only, args.paragraph_range is not None, args.section is not None))
     if selective_count > 1 or (selective_count and view_requested):
         parser.error('Choose one selective mode; do not combine selective reading with summary or paged read views')
-    if view_requested and (args.format != 'json' or args.include_related or args.binary_paragraph_sources):
+    if view_requested and (args.format != 'json' or args.reading_mode == 'standard' and (args.include_related or args.binary_paragraph_sources)):
         parser.error('Read views require JSON and main content only; use full reading for related stories or paragraph sources')
     options = dict(compatibility=args.compatibility, chart_policy=args.chart_policy, text_policy=args.text_policy,
                    field_policy=args.field_policy, object_policy=args.object_policy, revisions=args.revisions,
                    include_related=args.include_related, hidden_text=args.hidden_text,
                    binary_paragraph_sources=args.binary_paragraph_sources)
-    if args.reading_mode != 'standard':
-        options['reading_mode'] = args.reading_mode
+    options['reading_mode'] = args.reading_mode
     if args.include_image_bytes:
         options['include_image_bytes'] = True
     if view_requested:
@@ -919,9 +916,16 @@ def main():
         try:
             data = read_input(args.input)
             result = read_bytes(data, source=str(args.input), **options)
-            result = project(result, data, options, summary=args.summary, sheet=args.sheet,
-                             page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
-                             max_chars=12000 if args.max_output_chars is None else args.max_output_chars, max_bytes=args.max_output_bytes)
+            if args.reading_mode == 'maximum':
+                from wps_maximum_pages import project as project_maximum
+                result = project_maximum(result, data, options,
+                         page_size=8000 if args.page_size is None else args.page_size, cursor=args.cursor,
+                         max_chars=12000 if args.max_output_chars is None else args.max_output_chars,
+                         max_bytes=12000 if args.max_output_bytes is None else args.max_output_bytes)
+            else:
+                result = project(result, data, options, summary=args.summary, sheet=args.sheet,
+                                 page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
+                                 max_chars=12000 if args.max_output_chars is None else args.max_output_chars, max_bytes=args.max_output_bytes)
         except (ParseError, OSError) as exc:
             result = failure(getattr(exc, 'status', 'io_error'), getattr(exc, 'location', {'stage': 'input'}), str(exc))
     else:
@@ -946,7 +950,7 @@ def main():
             print(json.dumps({'status': 'partial', 'issues': result.get('issues', result.get('diagnostics', []))}, ensure_ascii=False), file=sys.stderr)
     else:
         try:
-            if result.get('schema_version') == 'wps_read_view_v1':
+            if result.get('schema_version') in ('wps_read_view_v1', 'wps_maximum_page_v1'):
                 from wps_read_view import encoded as encode_view
                 encoded = encode_view(result)
             else:
@@ -962,7 +966,8 @@ def main():
                 result = failure(exc.status, exc.location, str(exc))
                 encoded = json.dumps(result, ensure_ascii=False)
         from wps_read_view import print_json_record
-        print_json_record(encoded, max_bytes=args.max_output_bytes, stream=sys.stderr if args.format == 'text' else sys.stdout)
+        print_json_record(encoded, max_bytes=args.max_output_bytes or (12000 if result.get('schema_version') == 'wps_maximum_page_v1' else None),
+                          stream=sys.stderr if args.format == 'text' else sys.stdout)
     return 0 if result['status'] == 'ok' else 3 if result['status'] == 'partial' else 1
 
 

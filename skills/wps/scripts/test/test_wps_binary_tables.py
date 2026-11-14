@@ -215,7 +215,7 @@ class BinaryTableTests(unittest.TestCase):
     def test_public_api_adds_assessment(self):
         streams, _ = fixture()
         payload = synthetic_cfb({key[0]: value for key, value in streams.items()})
-        out = read_bytes(payload)
+        out = read_bytes(payload, reading_mode='standard')
         self.assertEqual(out['status'], 'partial')
         self.assertEqual(out['reading_assessment']['outcome'], 'partial')
 

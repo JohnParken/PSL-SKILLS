@@ -52,7 +52,7 @@ class NextIterationTests(unittest.TestCase):
             source = Path(directory) / 'in.rtf'
             source.write_bytes(br'{\rtf1\pard\outlinelevel0 Topic\par Body\par}')
             for options in (['--summary', '--section', 'Topic'], ['--heading-only', '--section', 'Topic']):
-                result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), str(source)] + options,
+                result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), str(source), '--reading-mode', 'standard'] + options,
                                         capture_output=True, text=True)
                 self.assertEqual(result.returncode, 2, result.stdout)
 
@@ -61,7 +61,7 @@ class NextIterationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / 'in.rtf'
             source.write_bytes(br'{\rtf1{\header omitted}\pard\outlinelevel0 Topic\par\pard Body\par\outlinelevel0 Topic\par}')
-            result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), str(source), '--section', 'Topic'],
+            result = run_task_cli([sys.executable, '-I', '-S', '-B', str(script), str(source), '--section', 'Topic', '--reading-mode', 'standard'],
                                     capture_output=True, text=True)
             data = json.loads(result.stdout)
             self.assertEqual(result.returncode, 3)
@@ -79,7 +79,7 @@ class NextIterationTests(unittest.TestCase):
             source.write_bytes(package(body))
             result = task_api(convert_docx_to_wps_rtf, source, target)
             self.assertEqual(result['status'], 'partial', result)
-            self.assertEqual(read_bytes(target.read_bytes())['text'], 'A\nBCachedNEW')
+            self.assertEqual(read_bytes(target.read_bytes(), reading_mode='standard')['text'], 'A\nBCachedNEW')
             self.assertEqual(result['source_readback']['reader_status'], 'partial')
             self.assertTrue(result['source_readback'].get('issues') or result['source_readback'].get('diagnostics'))
 
@@ -104,7 +104,7 @@ class NextIterationTests(unittest.TestCase):
 
     def test_rtf_stored_outline_outranks_numbering_heuristic(self):
         data = b'{\\rtf1\\pard\\outlinelevel1 Plain heading\\par\\pard Body\\par}'
-        headings = project_headings(read_bytes(data))['headings']
+        headings = project_headings(read_bytes(data, reading_mode='standard'))['headings']
         self.assertEqual((headings[0]['text'], headings[0]['level'], headings[0]['basis']), ('Plain heading', 2, 'stored_outline'))
 
     def test_hyperlinks_controls_and_accepted_revisions_keep_text(self):
@@ -116,7 +116,7 @@ class NextIterationTests(unittest.TestCase):
             source, target = Path(directory) / 'in.docx', Path(directory) / 'out.wps'
             source.write_bytes(package(body))
             result = task_api(convert_docx_to_rtf_wps, str(source), str(target))
-            self.assertEqual(read_bytes(target.read_bytes())['text'], 'ABCD\nZ')
+            self.assertEqual(read_bytes(target.read_bytes(), reading_mode='standard')['text'], 'ABCD\nZ')
             self.assertEqual(result['source_content_comparison'], 'normalized-readable-main-text-matched')
 
     def test_style_chain_direct_override_and_page_size(self):
@@ -135,9 +135,9 @@ class NextIterationTests(unittest.TestCase):
             self.assertEqual([item.align for item in document.elements], ['center', 'right'])
             self.assertEqual((paragraph.line_spacing_exact_pt, paragraph.first_line_indent_pt), (28, 20))
             self.assertEqual((paragraph.runs[0].size_pt, paragraph.runs[0].bold), (20, False))
-            self.assertEqual(project_headings(read_bytes(source.read_bytes()))['headings'][0]['level'], 1)
+            self.assertEqual(project_headings(read_bytes(source.read_bytes(), reading_mode='standard'))['headings'][0]['level'], 1)
             result = task_api(convert_docx_to_rtf_wps, str(source), str(target))
-            self.assertEqual(read_bytes(target.read_bytes())['page_properties']['paperw'], 15840)
+            self.assertEqual(read_bytes(target.read_bytes(), reading_mode='standard')['page_properties']['paperw'], 15840)
             self.assertEqual(result['format_validation']['status'], 'verified_raw_controls')
 
     def test_content_and_format_faults_never_overwrite_target(self):
@@ -182,7 +182,7 @@ class StyleAndEnvironmentTests(unittest.TestCase):
         document = build_document_from_spec({'blocks': [{'type': 'paragraph', 'text': 'A\nB'}]})
         rendered = document.render()
         self.assertIn('A\\line B', rendered)
-        result = read_bytes(rendered.encode('ascii'))
+        result = read_bytes(rendered.encode('ascii'), reading_mode='standard')
         self.assertEqual([item['text'] for item in result['paragraphs']], ['A\nB'])
 
     def test_style_cycle_is_bounded_and_reports_metadata(self):
@@ -211,7 +211,7 @@ class StyleAndEnvironmentTests(unittest.TestCase):
             self.assertEqual(check_environment(backend='rtf')['status'], 'environment-ok')
 
     def test_final_paragraph_retains_outline(self):
-        result = read_bytes(br'{\rtf1\ansi\outlinelevel0 Title}')
+        result = read_bytes(br'{\rtf1\ansi\outlinelevel0 Title}', reading_mode='standard')
         self.assertEqual(project_headings(result)['headings'][0]['text'], 'Title')
 
 

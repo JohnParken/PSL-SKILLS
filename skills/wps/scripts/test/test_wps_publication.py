@@ -48,7 +48,7 @@ class PublicationTests(unittest.TestCase):
             self.assertTrue(report['output_written'])
             self.assertEqual(report['publication_outcome'], 'published_verification_failed')
             self.assertTrue(report['cleanup_complete'])
-            self.assertEqual(read_bytes(Path('new.wps').read_bytes())['text'], 'Changed!')
+            self.assertEqual(read_bytes(Path('new.wps').read_bytes(), reading_mode='standard')['text'], 'Changed!')
             self.assertFalse(list(Path('.').glob('.tmp_wps_*')))
 
     def test_final_name_replacement_is_retained_for_inspection(self):
@@ -82,7 +82,7 @@ class PublicationTests(unittest.TestCase):
             self.assertTrue(report['output_written'])
             self.assertEqual(report['publication_outcome'], 'published_verified')
             self.assertFalse(report['cleanup_complete'])
-            self.assertEqual(read_bytes(Path('new.wps').read_bytes())['text'], 'Delivered')
+            self.assertEqual(read_bytes(Path('new.wps').read_bytes(), reading_mode='standard')['text'], 'Delivered')
             self.assertTrue(report['cleanup_issues'])
 
     def test_success_adds_independent_publication_and_cleanup_states(self):
@@ -133,7 +133,7 @@ class PublicationTests(unittest.TestCase):
             self.assertTrue({'spacing', 'keepNext', 'pageBreakBefore'} <= properties)
             self.assertEqual(result['source_format_mapping']['status'], 'detected_omissions')
             self.assertEqual(result['format_validation']['status'], 'verified_raw_controls')
-            self.assertEqual(read_bytes(target.read_bytes())['text'], 'Text')
+            self.assertEqual(read_bytes(target.read_bytes(), reading_mode='standard')['text'], 'Text')
 
     def test_mapping_diagnostics_are_bounded_and_exclude_deleted_properties(self):
         namespace = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'

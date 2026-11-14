@@ -58,7 +58,7 @@ class DocVersionTests(unittest.TestCase):
             result = parse_streams(streams)
             self.assertEqual((result['status'], result['text'], result['paragraphs']), ('ok', '', []))
             data = synthetic_cfb({name[0]: value for name, value in streams.items()})
-            self.assertEqual(read_bytes(data)['fib_version'], hex(version))
+            self.assertEqual(read_bytes(data, reading_mode='standard')['fib_version'], hex(version))
             self.error(replace_word(streams, 422, 0), 'corrupt')
 
     def test_extensions_and_array_counts_must_match_effective_version(self):

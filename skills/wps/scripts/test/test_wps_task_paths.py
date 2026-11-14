@@ -84,7 +84,7 @@ class TaskPathTests(unittest.TestCase):
         self.assertEqual(self.cli('read_wps.py', 'nested/new.wps').returncode, 0)
         edited = self.cli('run_wps_edit.py', 'text', 'nested/new.wps', 'edited.wps', '--find', 'Source', '--replace', 'Changed')
         self.assertEqual(edited.returncode, 0, edited.stderr)
-        self.assertEqual(read_bytes((self.task / 'edited.wps').read_bytes())['text'], 'Changed')
+        self.assertEqual(read_bytes((self.task / 'edited.wps').read_bytes(), reading_mode='standard')['text'], 'Changed')
 
     def test_conversion_and_inspect_confined(self):
         (self.task / 'in.docx').write_bytes(package('<w:p><w:r><w:t>Text</w:t></w:r></w:p>'))
@@ -173,7 +173,7 @@ class TaskPathTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(lambda _: self.cli('run_wps_task.py', 'create', 'shared.wps', stdin=spec), range(2)))
         self.assertEqual(sorted(result.returncode for result in results), [0, 1])
-        self.assertEqual(read_bytes((self.task / 'shared.wps').read_bytes())['text'], 'Winner')
+        self.assertEqual(read_bytes((self.task / 'shared.wps').read_bytes(), reading_mode='standard')['text'], 'Winner')
         self.assertFalse(list(self.task.glob('.tmp_wps_*')))
 
     def test_missing_capabilities_and_old_python_stop(self):

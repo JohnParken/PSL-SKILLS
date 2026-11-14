@@ -24,7 +24,7 @@ def load_wps_to_blocks(input_path: Path, parsed=None) -> Any:
     """Parse existing WPS document into structured blocks and tables."""
     try:
         if parsed is None:
-            parsed = read_bytes(read_input(input_path), source=str(input_path))
+            parsed = read_bytes(read_input(input_path), source=str(input_path), reading_mode='standard')
     except ParseError as exc:
         raise RuntimeError(f"Failed to read input WPS document: {exc}") from exc
 
@@ -178,7 +178,7 @@ def execute_edit_task(
     if input_path.resolve() == output_path.resolve():
         raise ValueError("Reflow editing requires a new output file; original is protected")
     source_bytes = read_input(input_path)
-    original = read_bytes(source_bytes)
+    original = read_bytes(source_bytes, reading_mode='standard')
     if original.get("status") not in ("ok", "partial"):
         raise ValueError("No reliable content available for reflow")
     order_unknown = bool(original.get("tables") and not original.get("blocks"))
@@ -226,7 +226,7 @@ def execute_edit_task(
     from wps_task_paths import output_candidate, write_candidate
     with output_candidate(output_path, prefix='.tmp_wps_edit_', exclusive=allow_lossy_reflow) as (temp_path, publish):
         write_candidate(temp_path, raw_bytes)
-        candidate = read_bytes(read_input(temp_path))
+        candidate = read_bytes(read_input(temp_path), reading_mode='standard')
         from wps_rtf_read import require_publishable_candidate
         require_publishable_candidate(candidate)
         from wps_content_validation import validate_content, validate_format

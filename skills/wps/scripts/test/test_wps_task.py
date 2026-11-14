@@ -68,7 +68,7 @@ class TestWpsTaskRunner(unittest.TestCase):
 
             raw = out_file.read_bytes()
             self.assertTrue(raw.startswith(b"{\\rtf"))
-            parsed = read_bytes(raw)
+            parsed = read_bytes(raw, reading_mode='standard')
             self.assertEqual(parsed["status"], "partial")
             self.assertIn("关于专项检查的通报", parsed["text"])
             self.assertIn("一、总体情况", parsed["text"])

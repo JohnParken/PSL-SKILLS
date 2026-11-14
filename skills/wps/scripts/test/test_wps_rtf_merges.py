@@ -21,7 +21,7 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(text.count(r'\clmrg'), 1)
         self.assertIn(r'\cellx1440', text)
         self.assertIn(r'\cellx2880', text)
-        parsed = read_bytes(text.encode('ascii'))
+        parsed = read_bytes(text.encode('ascii'), reading_mode='standard')
         self.assertEqual(parsed['status'], 'ok')
         self.assertEqual([c['text'] for c in parsed['tables'][0]['rows'][0]], ['合并标题', '', '第三列'])
         self.assertEqual(parsed['tables'][0]['merges'], [[0, 0, 0, 1]])
@@ -32,7 +32,7 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(text.count(r'\clvmrg'), 1)
         self.assertEqual(text.count(r'\cellx1440'), 3)
         self.assertEqual(text.count(r'\cellx4320'), 3)
-        self.assertEqual(read_bytes(text.encode('ascii'))['tables'][0]['rows'][2][1]['text'], '乙')
+        self.assertEqual(read_bytes(text.encode('ascii'), reading_mode='standard')['tables'][0]['rows'][2][1]['text'], '乙')
 
     def test_overlap_bounds_rectangular_and_content_protection(self):
         rows = [['标题', ''], ['', '']]

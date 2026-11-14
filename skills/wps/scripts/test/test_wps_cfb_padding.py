@@ -21,13 +21,13 @@ class FinalPaddingTests(unittest.TestCase):
         streams['WordDocument'] = word + bytes(8192 + 136 - len(word))
         full = synthetic_cfb(streams)
         short = full[:-376]
-        result = read_bytes(short)
+        result = read_bytes(short, reading_mode='standard')
         self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
         self.assertEqual(result['status'], 'partial')
         self.assertTrue(result['partial'])
         self.assertIn('cfb_missing_final_sector_padding', [item['code'] for item in result['container_issues']])
         with self.assertRaises(ParseError):
-            read_bytes(short, compatibility='strict')
+            read_bytes(short, compatibility='strict', reading_mode='standard')
 
     def fixture(self, remainder=73):
         content = b'\xec\xa5' + b'x' * (4096 + remainder - 2)

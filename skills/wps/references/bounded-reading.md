@@ -2,10 +2,10 @@
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-旧CLI/API默认仍输出完整读取结果。文字只需大小时先概况，局部任务可分页读取主正文。ET/ETT 使用 et Skill 的实际入口，不使用本入口。以下均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不写结果文件、不自动归档、不执行公式、宏或外链。
+本页仅描述显式 `--reading-mode standard` 的旧主文投影；默认 maximum 返回完整结果，分页时使用不同的全JSON传输契约。不要对 maximum 页面读取 `text` 或 `items` 字段；按 `<skill-root>/references/maximum-pagination.md` 的 `payload_fragment` 完整重组。原有只消费 `text` 的调用方必须显式选择 standard，并承认它不覆盖附加区域和修订视图。文字只需大小时先概况，局部任务可分页读取主正文。ET/ETT 使用 et Skill 的实际入口，不使用本入口。以下均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不写结果文件、不自动归档、不执行公式、宏或外链。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 2000 --max-output-chars 12000")
+execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --page-size 2000 --max-output-chars 12000")
 ```
 
 新输出使用 `schema_version=wps_read_view_v1`，原schema另存于 `source_schema_version`。保留原status/partial、issues、diagnostics、reading_assessment及已有coverage字段；源partial仍退出3，源ok退出0，失败退出1，参数错误退出2。视图省略的元数据逐项列于 `metadata_omitted`；未返回不表示不存在。样式、批注、附加区域等完整证据仍需旧完整读取。需要全文分析时保留原完整提取JSON。
@@ -35,7 +35,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wp
 
 ## 游标投影版本
 
-视图保留原schema和字段，并增加 `projection_revision=2`。新游标同时绑定此投影修订号、输入SHA256及选择/解析参数。缺少修订号的旧游标、不同修订号、非法游标或源/参数变化均明确拒绝续读；不能手改游标或混拼不同版本页，须从头重新读取。旧默认完整读取CLI/API不变，仅已开始的旧视图分页需要重启；以后改变投影顺序/解释时也应升级修订号。
+视图保留原schema和字段，并增加 `projection_revision=2`。新游标同时绑定此投影修订号、输入SHA256及选择/解析参数。缺少修订号的旧游标、不同修订号、非法游标或源/参数变化均明确拒绝续读；不能手改游标或混拼不同版本页，须从头重新读取。本段投影契约适用于显式 standard；当前默认 maximum 的同名分页参数用于全结果无损传输，不是本段主文投影；见 `<skill-root>/references/maximum-pagination.md`，旧视图分页需要重启；以后改变投影顺序/解释时也应升级修订号。
 
 字符预算按实际JSON编码（含转义和末尾换行）核对；多字节UTF-8字节数可能更多，字符不是token。正文编码累计后仍作最终完整JSON校验，诊断不裁剪；输出超预算保持原明确失败，不以空页或部分值假报成功。
 

@@ -4,7 +4,7 @@
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-`--include-related` 为二进制 MS-DOC 增加 `related_stories`；附加区域必须使用JSON：`--include-related --format text`明确参数失败（退出2），避免纯文本只输出正文而静默漏掉所请求区域。默认行为及顶层 `text`、`paragraphs`、`main_cp_units` 不变。附加文字只出现在各区域，不并入主正文，也不推测页码。按FIB长度分区，并不等于完整解析子文档内部各条注释、页眉或文本框。
+`--include-related` 为二进制 MS-DOC 增加 `related_stories`；附加区域必须使用JSON：`--include-related --format text`明确参数失败（退出2），避免纯文本只输出正文而静默漏掉所请求区域。默认 maximum 已自动请求这些区域；显式 standard 的顶层 `text`、`paragraphs`、`main_cp_units` 保持原范围。附加文字只出现在各区域，不并入主正文，也不推测页码。按FIB长度分区，并不等于完整解析子文档内部各条注释、页眉或文本框。
 
 ## 范围与结果
 
@@ -35,3 +35,5 @@ FIB的ccpText之后依次为ccpFtn、ccpHdd、ccpAtn、ccpEdn、ccpTxbx、ccpHdr
 小故事（至多 65536 个 UTF-16 码元）的各条引用包含 `text`。大故事通过 `story_text_utf16_range` 从合并故事文字定位，避免复制整段输出。故事经字段过滤后只提供存储 CP 和合并文字，`textbox_text_status=combined_story_only_after_field_filtering` 表明不能用存储范围切分输出文字。
 
 缺附表时保留合并故事和引用未解码诊断。记录语义不一致时附加 `textbox_metadata_invalid` 并保留合并文字，流越界、结构重叠或超出 4096 条记录的资源检查按失败处理。链接文本框之间的流向、图形显示顺序和有效页面仍待核对，返回 partial。开发依据为 MS-DOC 的 PlcftxbxTxt、PlcfHdrtxbxTxt 和 FTXBXS 章节。
+
+最大化读取的局部恢复：仅 reading-mode maximum 对已分类的页眉槽 CP/guard、注释映射语义错误保留可安全定界的存储文字，报告 binary_story_mapping_unresolved；不伪造锚点。独立区域 UTF-16 或域边界错误仅将该区域标 partial/text=null，正文及其他可读区域保留。标准 include-related 仍严格。SEPX/共享数据范围、重叠、安全与资源错误及未分类异常继续失败；恢复不等于全格式支持。

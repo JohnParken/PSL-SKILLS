@@ -75,7 +75,7 @@ class BinaryImagesTests(unittest.TestCase):
     def test_floating_image_retains_each_group_child_reference_and_deduplicates_bytes(self):
         image = png_bytes()
         payload = cfb_payload(floating_fixture(png_blip(image)))
-        standard = read_bytes(payload)
+        standard = read_bytes(payload, reading_mode='standard')
         self.assertNotIn('binary_images', standard)
         maximum = read_bytes(payload, reading_mode='maximum')
         self.assertEqual(maximum['text'], standard['text'])
@@ -138,7 +138,7 @@ class BinaryImagesTests(unittest.TestCase):
             source = Path(task) / 'sample.wps'
             source.write_bytes(payload)
             cli = [sys.executable, '-I', '-S', '-B', str(Path(__file__).resolve().parents[1] / 'read_wps.py'),
-                   source.name, '--include-image-bytes']
+                   source.name, '--include-image-bytes', '--reading-mode', 'standard']
             rejected = subprocess.run(cli, cwd=task, capture_output=True, check=False, timeout=10)
             self.assertEqual(rejected.returncode, 2)
             accepted = subprocess.run([*cli, '--reading-mode', 'maximum'], cwd=task, capture_output=True, check=False, timeout=10)

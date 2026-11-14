@@ -101,7 +101,7 @@ class StoriesTests(unittest.TestCase):
     def test_cli_related_text_rejected_before_input(self):
         process = subprocess.run([sys.executable, '-I', '-S', '-B',
             str((Path(__file__).parents[1] / 'read_wps.py')), 'does-not-exist.wps',
-            '--include-related', '--format', 'text'], capture_output=True, text=True,
+            '--include-related', '--format', 'text', '--reading-mode', 'standard'], capture_output=True, text=True,
             env={'PATH': ''}, timeout=10)
         self.assertEqual(process.returncode, 2)
         self.assertEqual(process.stdout, '')
@@ -110,7 +110,7 @@ class StoriesTests(unittest.TestCase):
     def test_unified_cfb_optin(self):
         streams=document([(b'A\r',True)],{92:'批\r'.encode('utf-16le')})
         data=synthetic_cfb({k[0]:v for k,v in streams.items()})
-        result=read_bytes(data,include_related=True)
+        result=read_bytes(data,include_related=True, reading_mode='standard')
         self.assertEqual(result['related_stories'][2]['text'],'批\n')
         self.assertEqual(result['text'],'A\n')
 

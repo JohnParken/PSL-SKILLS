@@ -87,7 +87,7 @@ class RtfIntegrityTests(unittest.TestCase):
                 self.assertNotIn('XYZ', result['text'])
                 self.assertTrue(result['text'].endswith('after'))
                 with self.assertRaises(ParseError) as caught:
-                    read_bytes(prefix + b'\\field}', field_policy='reject')
+                    read_bytes(prefix + b'\\field}', field_policy='reject', reading_mode='standard')
                 self.assertEqual(caught.exception.status, 'unsupported')
 
     def test_ambiguous_raw_dbcs_delimiters_fail_closed(self):
@@ -95,7 +95,7 @@ class RtfIntegrityTests(unittest.TestCase):
         # an RTF delimiter. Neither field nor binary controls may be guessed away.
         for suffix in (b'\\par next}', b'\\field}', b'\\bin3 XYZ}', b'{next}}', b'}', b'\\\\par next}', b'\\\\field}'):
             with self.subTest(suffix=suffix), self.assertRaises(ParseError) as caught:
-                read_bytes(b'{\\rtf1\\ansicpg936 \x81' + suffix)
+                read_bytes(b'{\\rtf1\\ansicpg936 \x81' + suffix, reading_mode='standard')
             self.assertEqual(caught.exception.status, 'unsupported')
 
     def test_explicit_hex_dbcs_delimiter_is_safe(self):
@@ -156,7 +156,7 @@ class RtfIntegrityTests(unittest.TestCase):
         for code in ('rtf_hidden_text_unfiltered', 'rtf_revisions_unfiltered', 'rtf_field_cached_result_unverified'):
             self.assertIn(code, self.codes(result))
         with self.assertRaises(ParseError):
-            read_bytes(data, field_policy='reject')
+            read_bytes(data, field_policy='reject', reading_mode='standard')
 
     def test_field_count_is_independent_of_diagnostic_cap(self):
         result = reader.parse_rtf_bytes(b'{\\rtf1 ' + b'{\\field{\\fldrslt x}}' * 105 + b'}')

@@ -32,7 +32,7 @@ class OfficialDefaultsTests(unittest.TestCase):
             self.assertIn(control, raw)
         self.assertNotIn(r'\footer', raw)
         self.assertNotIn(r'\header', raw)
-        result = read_bytes(raw.encode('ascii'))
+        result = read_bytes(raw.encode('ascii'), reading_mode='standard')
         self.assertEqual(result['status'], 'ok')
         self.assertEqual(result['paragraphs'][0]['text'], TEXT)
 
@@ -55,7 +55,7 @@ class OfficialDefaultsTests(unittest.TestCase):
             self.assertIn(f'\\{alignment}\\sl276\\slmult1', paragraph)
             self.assertIn(f'\\dbch\\af{font}\\loch\\f5\\fs{size}', paragraph)
             self.assertEqual(bool(re.search(r'\\b(?:\s|\\)', paragraph)), bold)
-        self.assertEqual(len(read_bytes(raw.encode('ascii'))['paragraphs']), len(blocks))
+        self.assertEqual(len(read_bytes(raw.encode('ascii'), reading_mode='standard')['paragraphs']), len(blocks))
 
     def test_explicit_page_numbers_and_running_content(self):
         for page_numbers in (True, False):
@@ -66,7 +66,7 @@ class OfficialDefaultsTests(unittest.TestCase):
             self.assertIn(r'{\footer \pard\ql\sl276\slmult1', raw)
             self.assertEqual(r'\fldinst PAGE' in raw, page_numbers)
             self.assertIn(r'\dbch\af2\loch\f5\fs32', raw)
-            parsed = read_bytes(raw.encode('ascii'))
+            parsed = read_bytes(raw.encode('ascii'), reading_mode='standard')
             self.assertEqual(parsed['status'], 'partial')
             self.assertEqual(parsed['paragraphs'][0]['text'], '正文')
         empty = build_document_from_spec({'header': '', 'blocks': [{'type': 'paragraph', 'text': '正文'}]}).render()
@@ -95,7 +95,7 @@ class OfficialDefaultsTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r'\\page\b', raw)), 1)
         self.assertEqual(len(re.findall(r'\\pagebb\b', raw)), 1)
         self.assertEqual(document.spec_warning_count, 0)
-        self.assertIn('默认显式', read_bytes(raw.encode('ascii'))['text'])
+        self.assertIn('默认显式', read_bytes(raw.encode('ascii'), reading_mode='standard')['text'])
 
     def test_table_and_list_avoid_body_indent_and_fixed_line_spacing(self):
         document = build_document_from_spec({'blocks': [
@@ -109,7 +109,7 @@ class OfficialDefaultsTests(unittest.TestCase):
         self.assertIn(r'\fs32', table)
         self.assertIn(r'\sl276\slmult1', table)
         self.assertNotIn(r'\clcbpat6', table)
-        parsed = read_bytes(document.render().encode('ascii'))
+        parsed = read_bytes(document.render().encode('ascii'), reading_mode='standard')
         self.assertEqual([[cell['text'] for cell in row] for row in parsed['tables'][0]['rows']], [['列', '金额'], ['甲', '100']])
         self.assertIn('3. 事项甲', parsed['text'])
         custom = build_document_from_spec({'blocks': [{'type': 'table', 'rows': [['甲'], ['乙']],
@@ -124,7 +124,7 @@ class OfficialDefaultsTests(unittest.TestCase):
             receipt = task_api(create_document, spec, target, compact_receipt=True)
             self.assertTrue(receipt['partial'])
             self.assertEqual(receipt['spec_warnings'][0]['code'], 'unsupported_font_substituted')
-            self.assertEqual(read_bytes(target.read_bytes())['paragraphs'][0]['text'], '保留文字')
+            self.assertEqual(read_bytes(target.read_bytes(), reading_mode='standard')['paragraphs'][0]['text'], '保留文字')
             spec['blocks'][0]['runs'][0]['font'] = '方正小标宋简体'
             supported = build_document_from_spec(spec)
             self.assertEqual(supported.spec_warning_count, 0)
@@ -137,7 +137,7 @@ class OfficialDefaultsTests(unittest.TestCase):
             self.assertIn(f'\\fs{body_size}', raw)
             self.assertIn(f'\\sl{spacing}\\slmult1', raw)
         legacy = br'{\rtf1\ansi\margt2098\margb1984\margl1588\margr1474\pard\qj\sl-576\slmult0\fi560\f2\fs28 old\par}'
-        self.assertEqual(read_bytes(legacy)['paragraphs'][0]['text'], 'old')
+        self.assertEqual(read_bytes(legacy, reading_mode='standard')['paragraphs'][0]['text'], 'old')
 
     def test_actual_cli_creates_readable_default_and_custom_files(self):
         with tempfile.TemporaryDirectory(prefix='wps-official-cli-') as directory:
@@ -151,7 +151,7 @@ class OfficialDefaultsTests(unittest.TestCase):
                 self.assertEqual(receipt['layout_verification'], 'not_run')
                 self.assertFalse(receipt['native_wps'])
                 self.assertEqual(receipt['partial'], bool(extra))
-                self.assertEqual(read_bytes((Path(directory) / name).read_bytes())['paragraphs'][-1]['text'], TEXT)
+                self.assertEqual(read_bytes((Path(directory) / name).read_bytes(), reading_mode='standard')['paragraphs'][-1]['text'], TEXT)
             self.assertEqual({path.name for path in Path(directory).iterdir()}, {'default.wps', 'custom.rtf'})
 
 

@@ -157,7 +157,8 @@ class BudgetOracleTests(unittest.TestCase):
             task = Path(directory)
             text = 'Hello bounded reading. ' * 40
             (task / 'input.wps').write_text('{\\rtf1\\ansi ' + text + '}', encoding='ascii')
-            command = [sys.executable, '-I', '-S', '-B', str(ROOT / 'skills/wps/scripts/read_wps.py'), './input.wps']
+            command = [sys.executable, '-I', '-S', '-B', str(ROOT / 'skills/wps/scripts/read_wps.py'), './input.wps',
+                       '--reading-mode', 'standard']
             full = subprocess.run(command, cwd=task, capture_output=True, text=True, check=True)
             expected = json.loads(full.stdout)['text']
             parts = []
@@ -178,6 +179,45 @@ class BudgetOracleTests(unittest.TestCase):
             rejected = subprocess.run(command + ['--cursor', 'invalid'], cwd=task, capture_output=True, text=True)
             self.assertEqual(rejected.returncode, 1)
             self.assertEqual(json.loads(rejected.stdout)['status'], 'output_view_error')
+
+    def test_default_maximum_cli_preserves_full_result_across_pages(self):
+        # Default maximum is a whole-JSON transport, never a main-text view.
+        with tempfile.TemporaryDirectory(prefix='wps-maximum-budget-') as directory:
+            task = Path(directory)
+            payload = br'{\rtf1\ansi{\header Header \u20013?}Amount {\deleted 100}{\revised 200}}'
+            (task / 'input.wps').write_bytes(payload)
+            command = [sys.executable, '-I', '-S', '-B', str(ROOT / 'skills/wps/scripts/read_wps.py'), './input.wps']
+            full = subprocess.run(command, cwd=task, capture_output=True, check=False)
+            self.assertEqual(full.returncode, 3)
+            expected = json.loads(full.stdout)
+            self.assertEqual(expected['text'], 'Amount 200')
+            self.assertIn('100', expected['revision_content']['content']['text'])
+            self.assertTrue(any('Header' in (story.get('text') or '') for story in expected['related_stories']))
+            pages, cursor, position = [], None, 0
+            while True:
+                flags = ['--page-size', '401', '--max-output-chars', '4000', '--max-output-bytes', '4000']
+                proc = subprocess.run(command + flags + (['--cursor', cursor] if cursor else []),
+                                      cwd=task, capture_output=True, check=False)
+                self.assertEqual(proc.returncode, 3)
+                self.assertLessEqual(len(proc.stdout), 4000)
+                self.assertLessEqual(len(proc.stdout.decode('utf-8')), 4000)
+                page = json.loads(proc.stdout)
+                self.assertEqual(page['schema_version'], 'wps_maximum_page_v1')
+                self.assertNotIn('text', page)
+                self.assertEqual(page['start'], position)
+                fragment = page['payload_fragment']
+                self.assertEqual(page['chunk_sha256'], hashlib.sha256(fragment.encode()).hexdigest())
+                position += len(fragment)
+                self.assertEqual(page['end'], position)
+                pages.append(page)
+                cursor = page['next_cursor']
+                if cursor is None:
+                    break
+            combined = ''.join(page['payload_fragment'] for page in pages)
+            self.assertEqual(json.loads(combined), expected)
+            self.assertEqual(hashlib.sha256(combined.encode()).hexdigest(), pages[-1]['result_sha256'])
+            self.assertFalse(pages[-1]['has_more'])
+            self.assertEqual((task / 'input.wps').read_bytes(), payload)
 
     def test_wps_summary_does_not_sort_and_keeps_diagnostics(self):
         _, source = self.inputs()

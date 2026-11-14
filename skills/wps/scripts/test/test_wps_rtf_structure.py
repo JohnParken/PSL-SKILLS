@@ -19,14 +19,14 @@ class StructureTests(unittest.TestCase):
         text = render([{'type': 'heading', 'level': n, 'text': str(n)} for n in (1, 2, 9)])
         for control in (r'\outlinelevel0', r'\outlinelevel1', r'\outlinelevel8'):
             self.assertIn(control, text)
-        self.assertEqual([p['text'] for p in read_bytes(text.encode('ascii'))['paragraphs']], ['1', '2', '9'])
+        self.assertEqual([p['text'] for p in read_bytes(text.encode('ascii'), reading_mode='standard')['paragraphs']], ['1', '2', '9'])
 
     def test_hanging_indents_tabs_and_alignment(self):
         text = render([{'type': 'paragraph', 'text': '甲\t乙', 'align': 'right', 'left_indent_pt': 36,
                         'right_indent_pt': 12, 'first_line_indent_pt': -18, 'tabs_pt': [72, 144]}])
         for control in (r'\qr', r'\li720', r'\ri240', r'\fi-360', r'\tx1440\tx2880'):
             self.assertIn(control, text)
-        self.assertEqual(read_bytes(text.encode('ascii'))['paragraphs'][0]['text'], '甲\t乙')
+        self.assertEqual(read_bytes(text.encode('ascii'), reading_mode='standard')['paragraphs'][0]['text'], '甲\t乙')
         multiple = render([{'type': 'paragraph', 'text': '倍数', 'line_spacing_mult': 1.5}])
         self.assertIn(r'\sl360\slmult1', multiple)
         self.assertNotIn(r'\sl-560', multiple)
@@ -60,7 +60,7 @@ class StructureTests(unittest.TestCase):
         doc = build_document_from_spec({'styles': {'Custom': {}}, 'blocks': [{'type': 'paragraph', 'text': '保留正文', 'style': 'Custom'}]})
         self.assertEqual(doc.spec_warning_count, 2)
         self.assertEqual([item['path'] for item in doc.spec_warnings], ['styles', 'blocks[0].style'])
-        self.assertIn('保留正文', read_bytes(doc.render().encode('ascii'))['text'])
+        self.assertIn('保留正文', read_bytes(doc.render().encode('ascii'), reading_mode='standard')['text'])
 
     def test_invalid_or_unsupported_new_parameters(self):
         for block in [dict(type='heading', level=0), dict(type='heading', level=True),

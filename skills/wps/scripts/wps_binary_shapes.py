@@ -18,8 +18,16 @@ DRAWING_LABELS = {'main': 0, 'headers_footers': 1}
 TEXTBOX_DRAWINGS = {'textboxes': 0, 'header_textboxes': 1}
 
 
+class AnchorMap(dict):
+    """Verified anchors plus bounded diagnostics for excluded mismatches."""
+
+    def __init__(self):
+        super().__init__()
+        self.issues = []
+
+
 def shape_anchors(word, table, story_start, story_count, read_unit, table_ranges=(), *,
-                  header=False, include_placement=False):
+                  header=False, include_placement=False, recover_mismatched=False):
     """Return global anchor CPs and the corresponding source metadata."""
     from read_wps import require
 
@@ -43,10 +51,21 @@ def shape_anchors(word, table, story_start, story_count, read_unit, table_ranges
     # must be greater than the previous CP. Only actual anchors are bounded.
     require(all(cp < story_count for cp in cps[:-1]), region.location(),
             'PlcfSpa shape anchor outside its declared story')
-    results = {}
+    results = AnchorMap()
     for index, relative_cp in enumerate(cps[:-1]):
         cp = story_start + relative_cp
-        require(read_unit(cp) == 8, region.location(4 * index, shape=index, cp=cp),
+        matches = read_unit(cp) == 8
+        if not matches and recover_mismatched:
+            results.issues.append({
+                'code': 'binary_shape_anchor_unresolved',
+                **region.location(4 * index, shape=index, cp=cp),
+                'story': 'headers_footers' if header else 'main',
+                'message': 'Stored drawing reference does not point to an object marker; '
+                           'drawing association omitted and document text retained',
+                'anchor_status': 'unverified',
+            })
+            continue
+        require(matches, region.location(4 * index, shape=index, cp=cp),
                 'PlcfSpa anchor does not point to U+0008')
         record = (count + 1) * 4 + index * SPA_BYTES
         anchor = {

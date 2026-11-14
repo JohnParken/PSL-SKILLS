@@ -350,7 +350,7 @@ def parse_docx_to_rtf_doc(docx_path: str) -> RtfDocument:
     from wps_ooxml import fromstring, read_part, check_archive, _related_target
     from wps_word_styles import WordStyles, format_mapping_diagnostics
     source_bytes = read_input(input_file)
-    source_payload = read_bytes(source_bytes)
+    source_payload = read_bytes(source_bytes, reading_mode='standard')
     if source_payload.get('format') != 'ooxml-word' or source_payload.get('status') not in ('ok', 'partial'):
         raise ValueError('A validated OOXML Word package is required')
     styles = None
@@ -446,7 +446,7 @@ def _convert_docx_to_rtf_candidate(docx_path, output_path):
     if in_path == out_path or (out_path.exists() and in_path.samefile(out_path)):
         raise ValueError('Output must not overwrite the source document')
     source_bytes = read_input(in_path)
-    source = read_bytes(source_bytes)
+    source = read_bytes(source_bytes, reading_mode='standard')
     if source.get('format') != 'ooxml-word' or source.get('status') not in ('ok', 'partial'):
         raise ValueError('DOCX conversion requires a readable OOXML Word package, regardless of its suffix')
 
@@ -468,7 +468,7 @@ def _convert_docx_to_rtf_candidate(docx_path, output_path):
         raise ValueError('DOCX readable content differs from conversion plan; original target preserved')
     data = rtf_doc.render().encode('ascii')
     inspection = require_output_bytes(data, out_path, 'rtf')
-    candidate = read_bytes(data)
+    candidate = read_bytes(data, reading_mode='standard')
     content_validation = validate_content(rtf_doc, candidate, verify_merges=False)
     from wps_content_validation import validate_format
     format_validation = validate_format(rtf_doc, candidate)
