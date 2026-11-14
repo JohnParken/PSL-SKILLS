@@ -8,9 +8,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def contract_issues(text, *, navigation=False):
+def contract_issues(text, *, navigation=False, writing=False):
     """Check the independently loaded common result-reference instruction."""
-    marker = '宿主返回 `/large_tool_results/`' if navigation else '**宿主大结果读取：**'
+    marker = '宿主返回 `/large_tool_results/`' if navigation or writing else '**宿主大结果读取：**'
     paragraphs = [part for part in text.split('\n\n') if marker in part]
     if len(paragraphs) != 1:
         return ['expected one host result paragraph']
@@ -27,6 +27,13 @@ def contract_issues(text, *, navigation=False):
             '准确引用', '续读', '覆盖', '截断', '执行器', 'Shell', 'Python', '不猜映射',
             '缺少读取能力', '报告缺口', '停止依赖',
         )
+    if writing:
+        # Pure writing still protects host references without requiring execution rules.
+        required = (
+            '/large_tool_results/', '仅用宿主 `read_file`', '实际 schema', '准确引用',
+            '续读覆盖', '截断', '不是普通文件路径', '不猜映射或改用其他方式',
+            '缺少 `read_file`', '报告具体缺口', '停止依赖', '普通业务文件', '顶层附件规则',
+        )
     return [fragment for fragment in required if fragment not in value]
 
 
@@ -37,7 +44,8 @@ class HostResultReadingContractTests(unittest.TestCase):
         for entry in entries:
             with self.subTest(skill=entry.parent.name):
                 self.assertEqual(contract_issues(entry.read_text(encoding='utf-8'),
-                                                 navigation=entry.parent.name == 'document-navigation'), [])
+                                                 navigation=entry.parent.name == 'document-navigation',
+                                                 writing=entry.parent.name == 'bank-writing'), [])
 
     def test_missing_safety_or_scope_requirements_are_detected(self):
         source = (ROOT / 'skills/docx/SKILL.md').read_text(encoding='utf-8')
@@ -49,6 +57,14 @@ class HostResultReadingContractTests(unittest.TestCase):
         for fragment in ('只用宿主 `read_file`', '执行器', '不猜映射', '缺少读取能力', '停止依赖'):
             with self.subTest(skill='document-navigation', fragment=fragment):
                 self.assertTrue(contract_issues(navigation.replace(fragment, ''), navigation=True))
+
+    def test_writing_reference_contract_detects_missing_boundaries(self):
+        source = (ROOT / 'skills/bank-writing/SKILL.md').read_text(encoding='utf-8')
+        self.assertEqual(contract_issues(source, writing=True), [])
+        for fragment in ('仅用宿主 `read_file`', '准确引用', '续读覆盖', '截断',
+                         '不猜映射或改用其他方式', '缺少 `read_file`', '停止依赖', '顶层附件规则'):
+            with self.subTest(fragment=fragment):
+                self.assertTrue(contract_issues(source.replace(fragment, ''), writing=True))
 
 
 if __name__ == '__main__':

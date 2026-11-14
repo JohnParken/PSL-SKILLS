@@ -11,6 +11,7 @@ class UserFileDiscoveryTests(unittest.TestCase):
         for name in SKILLS:
             with self.subTest(skill=name):
                 text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+                self.assertIn("**用户文件定位：**", text)
                 section = text.split("**用户文件定位：**", 1)[1].split("\n", 1)[0]
                 for fragment in ("附件映射", "文件名", "交付物", "`./` 顶层", "不递归", "子目录", "歧义", "报告"):
                     self.assertIn(fragment, section)
