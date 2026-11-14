@@ -98,10 +98,29 @@ class ContentTests(unittest.TestCase):
             collected.extend(result['records'])
             cursor = result['next_cursor']
         self.assertEqual(full['records'], collected)
-        for options in ([], ['--content', '--details']):
+        for options in (['--full'], ['--content', '--details']):
             other = arguments(['read', 'sample.docx', *options, '--cursor', first['next_cursor']])
             with self.assertRaisesRegex(ValueError, 'another document or view'):
                 read_result(package, other)
+
+    def test_default_content_and_explicit_routes(self):
+        """Default content equals its explicit spelling; full remains available."""
+        package = self.sample()
+        default = read_result(package, arguments(['read', 'sample.docx']))
+        explicit = read_result(package, arguments(['read', 'sample.docx', '--content']))
+        self.assertEqual(default, explicit)
+        self.assertEqual('content', default['view'])
+        full = read_result(package, arguments(['read', 'sample.docx', '--full']))
+        self.assertEqual('full', full['view'])
+        self.assertGreater(len(full['records']), len(default['records']))
+        self.assertTrue(arguments(['read', 'sample.docx', '--details']).content)
+        self.assertTrue(arguments(['read', 'sample.docx', '--table-header', '1:1']).content)
+        for options in (['--summary'], ['--headings'], ['--report'], ['--compact-json'],
+                        ['--format', 'text'], ['--format', 'xml'], ['--format', 'structure']):
+            self.assertFalse(arguments(['read', 'sample.docx', *options]).content)
+        for options in (['--full', '--content'], ['--full', '--report']):
+            with self.assertRaises(SystemExit):
+                arguments(['read', 'sample.docx', *options])
 
     def test_conflicting_modes(self):
         """Never silently reinterpret explicit structure or preview selections."""
@@ -110,7 +129,7 @@ class ContentTests(unittest.TestCase):
             with self.subTest(options=options), self.assertRaises(SystemExit):
                 arguments(['read', 'sample.docx', '--content', *options])
         with self.assertRaises(SystemExit):
-            arguments(['read', 'sample.docx', '--details'])
+            arguments(['read', 'sample.docx', '--full', '--details'])
 
 
 class ContentBoundaryTests(unittest.TestCase):

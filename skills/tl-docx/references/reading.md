@@ -4,18 +4,23 @@
 
 从已确认的任务目录执行。`capabilities` 报告 `api_version=1`。`read` 支持标准 DOCX 和 DOTX 的包内数据，文件扩展名须与包类型相符。输入为普通文件，限 64 MiB，包内至多 4096 项，单项展开至多 32 MiB，总展开至多 192 MiB。未知文件、损坏结构、加密项和超限输入会报错。外部关系只记录引用信息。
 
-## 普通阅读：内容优先视图
+## 普通阅读：默认内容优先
 
 ```console
-python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --content
-python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --content --max-output-bytes 12000
+python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx"
+python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --details
+python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --full
 ```
 
-`--content` 是显式 JSON 内容视图；不加该参数时，CLI 和完整报告 API 保持原契约。普通阅读、总结和问答优先用它，结构追溯或既有消费程序仍用完整报告。内容视图不输出纯样式、编号和分节定义；只在来源身份能核对时去除重复表格段落、文本框段落等表示，不按相同文字跨位置去重。表格保留所有行；嵌套表格单独列出，父格保留直属段落。图片提示未做 OCR，不把图片存在当作文字已读取。
+普通 `read` 默认返回内容优先 JSON，`--content` 是显式同义选项；`--full` 才返回原完整记录。内容视图不输出纯样式、编号和分节定义，只按可核对的来源身份去除重复表示，不按相同文字跨位置去重。表格保留所有行；嵌套表格父格的 `text` 留空并标记 `content_in_following_records=true`，其直属段落与内表按原顺序在后续记录呈现，不能把该空串理解成没有内容。图片提示未做 OCR。
 
-默认隐藏记录级 `part`、`path` 及部分格式定位，`--content --details` 可保留这些字段，`--details` 不能单独使用。`issues`、`coverage` 与实际读取状态仍保留；面向用户说明可读内容和具体缺口，不直接转贴内部定位或原始诊断。内容视图不是渲染器，不保证视觉顺序或页码，也不将未知内容伪装成成功。
+默认隐藏记录级 `part`、`path` 和部分格式定位，`issues`、`document_issues` 按代码汇总为 `count`，并标记 `details_available=true`。加 `--details` 保留完整记录定位及逐项诊断；`diagnostics.full_details_option` 指明详细入口。覆盖与 partial 状态不会因此被删除，面向用户说明可靠内容和缺口，不直接转贴内部定位。该投影不是渲染器，不保证视觉顺序、页码或完整理解，也不减少输入解析范围。
 
-可组合 `--section`、`--paragraph-range`、`--revisions`、`--body-only`、`--include-related`、JSON 分页、缓存及无损分片。不能组合 `--format text|structure|xml`、`--summary`、`--headings`、`--report`、`--compact-json`、`--tables` 或 `--table-header`。需要显式表头范围时改用完整报告的 `--report --table-header`。内容投影在分页前完成；续读保持 `--content`、`--details` 等视图选项和预算不变，不与完整报告游标混用。
+视图选择：省略 `--content` / `--full` 时，`--summary`、`--headings`、`--report`、`--compact-json` 或 `--format text|structure|xml` 自动切换到对应专项视图。显式 `--content` 或 `--full` 与这些专项视图冲突时拒绝；两者也互斥。`--details` 只用于内容视图，不能与 `--full` 或专项视图组合。`--table-header` 可以在默认或显式内容视图中确认表头范围。
+
+内容视图可结合 `--section`、`--paragraph-range`、`--revisions`、`--body-only`、`--include-related`、JSON 分页、缓存和无损分片。投影在分页前完成；续读保持视图、`--details`、表头范围等选项及预算一致。切换到 `--full` 等其他视图时从首批重读，不能复用旧游标。
+
+下表解释完整记录的字段；内容视图按上述规则隐藏或合并表示，需要来源定位时加 `--details`，需要纯结构定义时使用 `--full`。
 
 | 记录 | 使用方式 |
 | --- | --- |
@@ -26,7 +31,7 @@ python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --content --ma
 | `reference` | 保留正文脚注、尾注、批注引用的种类、ID 和 XML 位置，与附加文字分开，不将引用号冒充正文。 |
 | `story`、`section`、`metadata` 等 | 根据类型、`part` 和 `path` 判断正文、附加文字、分节或文档属性，阅读存储顺序不代表视觉页序。 |
 
-`--summary` 返回文档覆盖、诊断和可分页的正文标题记录，不返回完整正文；`summary.content_records_included=false` 标明内容未包含。`--headings` 只选择识别出的标题段落。`--paragraph-range 2:5` 选择从 1 开始的正文直属段落。`--section '章节名称'` 按去除首尾空白后的唯一正文直属标题选择到下一个同级或更高级标题之前。章节的 `coverage`、计数及有定位的 `issues` 只描述所选范围，同时以 `document_coverage`、`document_issues` 保留全篇证据；无位置或可能影响章节边界的问题仍保留。`--format text` 用于浏览正文、文本框和表格文字，机器交接使用 JSON。
+`--summary` 返回文档覆盖、诊断和可分页的正文标题记录，不返回完整正文；`summary.content_records_included=false` 标明内容未包含。`--headings` 只选择识别出的标题段落。`--paragraph-range 2:5` 选择从 1 开始的正文直属段落。此范围仅包含段落文字记录，不承诺返回段落内全部图像、图表或引用；需要这些对象时按章节或全文读取。`--section '章节名称'` 按去除首尾空白后的唯一正文直属标题选择到下一个同级或更高级标题之前。章节的 `coverage`、计数及有定位的 `issues` 只描述所选范围，同时以 `document_coverage`、`document_issues` 保留全篇证据；无位置或可能影响章节边界的问题仍保留。`--format text` 用于浏览正文、文本框和表格文字，机器交接使用 JSON。
 
 ## 原始 XML 与修订视图
 
@@ -38,7 +43,7 @@ python -I -B "<skill-root>/scripts/tl_docx.py" read "月报.docx" --revisions or
 
 `--format xml` 只取一个已验证的包内 XML 部件，省略 `--xml-part` 时取正文，保留原字节。`--format structure` 返回节点树，每个 `xml_part` 有包成员名、类型和根节点。节点保留名称、命名空间、前缀、局部声明、属性、子节点、文字和尾随文字，包含根内注释、处理指令和 CDATA。默认读正文及现有样式和编号定义，用一个或多个 `--xml-part` 定点选择其他部件。`--include-related` 加入内部关联部件；范围以 `records` 和 `coverage` 为准。默认大部件按单条完整记录返回，预算不足时选较小部件、直接导出或显式使用下文的无损分片。结构视图需要解释器自带 Expat ≥2.6.0，另有节点、深度和结果字节上限，超限直接报错。
 
-在结构或普通报告中，`accepted` 选择插入及移入，`original` 选择删除及移出，`all` 保留两类。结构保留被筛除容器的标记，内容视图以选中内容呈现。修订选项不会改写原件。普通报告省略该参数时沿用既有输出；`--body-only` 排除附加文字部件。段落属性历史、行修订标记和冲突嵌套按诊断核对，显示结果仍取决于阅读器。
+在结构或普通报告中，`accepted` 选择插入及移入，`original` 选择删除及移出，`all` 保留两类。结构保留被筛除容器的标记，内容视图以选中内容呈现。修订选项不会改写原件。普通报告省略修订参数时沿用原修订选择；`--body-only` 排除附加文字部件。段落属性历史、行修订标记和冲突嵌套按诊断核对，显示结果仍取决于阅读器。
 
 ## 表头定位及报告导出
 
@@ -47,11 +52,11 @@ python -I -B "<skill-root>/scripts/tl_docx.py" read "月报.docx" --report --tab
 python -I -B "<skill-root>/scripts/tl_docx.py" read "月报.docx" --compact-json --tables rows --max-output-bytes 12000
 ```
 
-`--report` 补充表头跨度及逐列标签路径、网格省略列、纵向合并总跨度、各行合并分组、图形位置和独立 `chart_point` 记录。图表一维 A1 引用可提供源单元格坐标；数值仍来自原缓存。散点图保留 x/y，气泡图另保留 bubble_size；多级类别按 XML 保存层序与稀疏点呈现，不推断视觉父级跨度。增强报告隐藏原图表公式及外部工作簿目标，默认读取仍使用原字段。`--table-header 表号:行数` 可多次指定不同表，0 表示无表头。默认先用连续且未覆盖全表的重复表头标记，否则首行只是候选。`header.status` 为 `confirmed`、`candidate` 或 `none`，`confirmation_basis` 区分显式范围和文档重复表头标记；confirmed 仅确认范围依据，不表示列的业务含义已核验。候选通过 `header_candidate_unconfirmed` 标记，不能当作已确认表头。结构有歧义时保留物理单元格并标明映射不可用。`--compact-json` 每表仅预览前两行，`table_rows_omitted` 报告省略量，`--tables rows` 取全表。重复章节标题用 `--section-occurrence` 从 1 开始消歧。
+`--report` 补充表头跨度及逐列标签路径、网格省略列、纵向合并总跨度、各行合并分组、图形位置和独立 `chart_point` 记录。图表一维 A1 引用可提供源单元格坐标；数值仍来自原缓存。散点图保留 x/y，气泡图另保留 bubble_size；多级类别按 XML 保存层序与稀疏点呈现，不推断视觉父级跨度。增强报告与内容视图隐藏原图表公式及外部工作簿目标，`--full` 保留原完整字段。`--table-header 表号:行数` 可多次指定不同表，0 表示无表头。默认先用连续且未覆盖全表的重复表头标记，否则首行只是候选。`header.status` 为 `confirmed`、`candidate` 或 `none`，`confirmation_basis` 区分显式范围和文档重复表头标记；confirmed 仅确认范围依据，不表示列的业务含义已核验。候选通过 `header_candidate_unconfirmed` 标记，不能当作已确认表头。结构有歧义时保留物理单元格并标明映射不可用。 图表系列的 `cache_summary` 区分 available/partial/unavailable，各维度只统计已观察索引的缓存。`point.display` 仅对 `0%` 及最多六位零小数的简单百分比给出显示文字，保留原始数值；其他格式、缺值、非法或极端数字显式标记，不宣称图表真实标签或外部数据已更新。`--compact-json` 每表仅预览前两行，`table_rows_omitted` 报告省略量，`--tables rows` 取全表。重复章节标题用 `--section-occurrence` 从 1 开始消歧。
 
 用 `-o` 保存本次输出到新文件，JSON 用 `.json`、纯文字用 `.txt`、原始 XML 用 `.xml`。排版检查也可导出 JSON。文件与同参数 stdout 内容一致，保存时 stdout 返回回执，含 `result.read_status` 和可用分页信息；分页输出仅保存当前一批。`--delivery` 与 `-o` 合用，独立报告归档状态。报告导出最多 64 MiB，不覆盖已有文件；归档失败按回执摘要重试。文件和报告均保留缺失诊断。
 
-`read` 退出 0 时，`status=ok` 或 `partial`，后者带 `issues`，保留已读记录。分页时每批都带全局覆盖、`start`、`end`、`total`、`has_more`。`end` 为排他索引。默认返回整个选定视图；加 `--max-output-bytes 12000` 限制 JSON UTF-8 字节数（含末尾换行）。本轮游标视图更新为 `read-view-v4`，缓存解析版本为 `tl-report-4`；旧游标须从首批重新开始，旧缓存不可混用。`next_cursor` 与源文件 SHA-256、API 版本及视图绑定，单传游标时预算为 12,000 字节。预算放不下下一完整记录时退出 1，增加预算再读取；不拼接被截断的工具文本。
+`read` 退出 0 时，`status=ok` 或 `partial`，后者带 `issues`，保留已读记录。分页时每批都带全局覆盖、`start`、`end`、`total`、`has_more`。`end` 为排他索引。默认返回整个选定视图；加 `--max-output-bytes 12000` 限制 JSON UTF-8 字节数（含末尾换行）。本轮游标视图更新为 `read-view-v5`，缓存解析版本为 `tl-report-5`；旧游标须从首批重新开始，旧缓存不可混用。`next_cursor` 与源文件 SHA-256、API 版本及视图绑定，单传游标时预算为 12,000 字节。预算放不下下一完整记录时退出 1，增加预算再读取；不拼接被截断的工具文本。
 
 ```console
 python -I -B "<skill-root>/scripts/tl_docx.py" read "月报.docx" --max-output-bytes 12000

@@ -10,11 +10,7 @@
 
 ## 新建
 
-```sh
-python -I -B "<skill-root>/scripts/tl_docx.py" create "报告.docx" <<'JSON'
-{"theme":"official","blocks":[{"type":"title","text":"月度报告"},{"type":"heading","level":1,"text":"业务概况"},{"type":"paragraph","text":"正文"},{"type":"table","header":true,"rows":[["项目","指标"],["示例","1"]]}]}
-JSON
-```
+简单新建的最短完整 JSON 和执行命令见主入口 `<skill-root>/SKILL.md#简单新建`，仅需标题、正文和规则表格时不用预读本参考。本页用于入口示例之外的参数、编辑与恢复。
 
 详细 Profile、角色样式和毫米页面参数见 `<skill-root>/references/typography.md`。顶层必需 `blocks`；可选 `theme`（`official`、`business`、`academic`）、`page`（`orientation`、`margins_cm`）、`metadata`、`header`、`footer`。页边距键为 `top`、`bottom`、`left`、`right`，单位 cm。公文正文默认仿宋和 Times New Roman 16 pt、固定行距 28 pt、首行 2 字。正文自然分页，明确需要时才加分页块或分节块。
 

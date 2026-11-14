@@ -22,7 +22,8 @@ MIN_BUDGET = 512
 CAPABILITIES = ['read-docx', 'read-dotx', 'source-bound-pages', 'create-docx', 'edit-docx', 'validate', 'archive',
                 'threaded-comments', 'versioned-output', 'resume-cleanup', 'pagination-audit',
                 'raw-ooxml', 'revision-views', 'report-export', 'table-header-mapping', 'template-replacement',
-                'native-role-styles', 'parse-cache', 'tracked-text-replacement', 'part-bundle-roundtrip', 'layout-audit', 'lossless-record-fragments', 'content-first-read']
+                'native-role-styles', 'parse-cache', 'tracked-text-replacement', 'part-bundle-roundtrip', 'layout-audit', 'lossless-record-fragments', 'content-first-read',
+                'default-content-read', 'full-record-read']
 
 
 
@@ -138,7 +139,7 @@ def read_result(package, args, raw_report=None, cache_meta=None):
         meta.update(document_coverage=document_coverage, document_issues=document_issues)
     if args.summary:
         meta['summary'] = {'heading_count': len(records), 'content_records_included': False}
-    binding_fields = [API_VERSION, 'read-view-v4', package.sha256, args.headings, args.summary, args.paragraph_range,
+    binding_fields = [API_VERSION, 'read-view-v5', package.sha256, args.headings, args.summary, args.paragraph_range,
                       args.section.strip() if args.section else None]
     if enhanced or args.revisions or args.include_related is not None or args.format == 'structure' or args.section_occurrence:
         options = {'format': args.format, 'revisions': args.revisions, 'include_related': args.include_related,
@@ -556,7 +557,9 @@ def arguments(argv):
     reader.add_argument('--max-output-bytes', type=int)
     reader.add_argument('--cursor')
     reader.add_argument('--fragment-records', action='store_true')
-    reader.add_argument('--content', action='store_true')
+    content_view = reader.add_mutually_exclusive_group()
+    content_view.add_argument('--content', action='store_true')
+    content_view.add_argument('--full', action='store_true')
     reader.add_argument('--details', action='store_true')
     cache = reader.add_mutually_exclusive_group()
     cache.add_argument('--cache', action='store_true')
@@ -588,10 +591,14 @@ def arguments(argv):
             writer.add_argument('--require-no-placeholders', action='store_true')
     args = parser.parse_args(argv)
     if args.action == 'read':
+        alternate_view = args.format != 'json' or any((args.report, args.compact_json, args.summary, args.headings, args.tables))
+        if args.content and alternate_view:
+            parser.error('--content cannot be combined with another explicit output view')
+        if args.full and alternate_view:
+            parser.error('--full cannot be combined with another explicit output view')
+        args.content = args.content or not (args.full or alternate_view)
         if args.details and not args.content:
-            parser.error('--details requires --content')
-        if args.content and (args.format != 'json' or any((args.report, args.compact_json, args.summary, args.headings, args.tables, args.table_header))):
-            parser.error('--content requires JSON without structure, XML, summary, headings or report table options')
+            parser.error('--details requires the content view')
         if args.fragment_records and (args.format not in ('json', 'structure') or args.max_output_bytes is None):
             parser.error('--fragment-records requires JSON/structure and an explicit --max-output-bytes')
         if (args.cache or args.cache_token) and (args.format != 'json' or args.output):

@@ -2,13 +2,13 @@
 
 本 Skill 属于允许按需使用第三方组件的 `tl-` 系列，不受“仅 Python 标准库”限制；当前实际依赖仍以下方说明及 `requirements.txt` 为准。本次政策调整未新增组件，不扩大已实现能力，路径、安全与归档清理约束不变。
 
-当前 Skill 版本 `20261114.1935.3715`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
+当前 Skill 版本 `20261114.2127.4001`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
 
 ## 与 docx 的能力对照
 
 | 任务 | tl-docx 实际入口及覆盖 |
 | --- | --- |
-| 读取报告 | 普通阅读推荐显式 `--content`，聚焦正文、表格与图表缓存，保留默认完整报告 API。标题支持有界样式继承，保留正文脚注/尾注/批注引用锚点，概要包含标题，章节统计与全篇诊断分列。支持原始 XML、节点树、三个修订视图、精细表头与合并定位、图形偏移、图表点分批、精简表格和重复章节消歧。`-o` 保存 JSON、文本或 XML，归档可显式开启。见 [本轮月报与安装验收](../maintenance/tl-docx/read-write-20261113.md)、[前轮回归](../maintenance/tl-docx/parity-20261113.md) 和 [首版验收](../maintenance/tl-docx/validation.md)。 |
+| 读取报告 | 普通阅读默认内容优先，聚焦正文、表格与图表缓存，`--full` 获取完整报告。标题支持有界样式继承，保留正文脚注/尾注/批注引用锚点，概要包含标题，章节统计与全篇诊断分列。支持原始 XML、节点树、三个修订视图、精细表头与合并定位、图形偏移、图表点分批、精简表格和重复章节消歧。`-o` 保存 JSON、文本或 XML，归档可显式开启。见 [本轮月报与安装验收](../maintenance/tl-docx/read-write-20261113.md)、[前轮回归](../maintenance/tl-docx/parity-20261113.md) 和 [首版验收](../maintenance/tl-docx/validation.md)。 |
 | 创建 | 支持公文、商务、学术主题、四种 Profile、角色样式和局部格式覆盖、中西文字体、多级编号、复杂表格与表头正文格式、毫米页面/分节尺寸、首页和奇偶页眉页脚、分节页码及独立交叉引用块。 |
 | 编辑及批注 | `edit` 支持定点文字和 run 格式、同格式纯文本 run 受控合并、段落插入、规则表格行和简单单元格、同类型图片。`replace` 按预期次数批量填充正文、指定页眉页脚的普通文字。`comments` 支持 DOCX/DOTX 的现代四部件批注查询、增加、一级回复、更新及删除，经典简单批注支持查询、更新、删除。格式参考 [Microsoft Word 扩展规范](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/b839fe1f-e1ca-4fa6-8c26-5954d0abbccd)。 |
 | 分页、命名及交付 | `validate --strict-pagination` 可将 12 类静态分页警告作为质量门禁。创建与编辑可自动命名，同名递增，发布时记录原清单。`resume` 只恢复该任务的收尾，`archive` 可按已核对的 SHA-256 重试归档。 |
@@ -47,6 +47,6 @@
 
 ## 面向内容的读取
 
-普通阅读、总结和问答推荐 `read 文件.docx --content`，结构追溯与既有程序调用仍使用原完整 API。显式内容视图减少内部结构信息，但不掩盖 partial、遗漏或续读状态；不是视觉渲染结果，也不代表全部 OOXML 内容已支持。
+普通阅读、总结和问答使用 `read 文件.docx`，结构追溯使用 `--full` 获取完整记录。默认内容视图减少内部结构信息，但不掩盖 partial、遗漏或续读状态；不是视觉渲染结果，也不代表全部 OOXML 内容已支持。
 
 单元格文字保留段落边界和空段，避免不同段落粘连。图表显示包内保存的系列数据，缺失或稀疏缓存不补值，不读取外部工作簿或重新计算。形状与绘图存在未处理内容时明确诊断，视觉渲染及 OCR 未执行。`header.status` 区分 confirmed/candidate/none，confirmed 只说明显式范围或文档标记依据，不等于业务含义核验。表头候选不是用户确认的列含义，跨行或合并不明时不猜测。内容视图只接受 JSON，保留诊断/覆盖和分页；`--details` 可保留记录定位，其他结构与显式表头任务使用完整报告。
