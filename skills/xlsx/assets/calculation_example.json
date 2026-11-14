@@ -4,20 +4,16 @@
       "name": "Sales",
       "cells": {
         "A1": {
-          "value": "Quantity",
-          "style": 4
+          "value": "Quantity"
         },
         "B1": {
-          "value": "Unit price",
-          "style": 4
+          "value": "Unit price"
         },
         "C1": {
-          "value": "Discount factor",
-          "style": 4
+          "value": "Discount factor"
         },
         "D1": {
-          "value": "Amount",
-          "style": 4
+          "value": "Amount"
         },
         "A2": {
           "value": 12

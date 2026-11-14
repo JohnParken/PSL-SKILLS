@@ -43,7 +43,7 @@ must match exactly; only listed sheets receive the preset. Without --appearance,
 Editing/loading existing files never applies presets; the helper rejects loaded workbooks.
 CSV export cannot retain colors and has no appearance option.
 
-Default styling is a pale-blue header (DCEAF7), bold dark-blue text (17365D), dark body
+The explicit readable preset (not the no-appearance defaults above) is a pale-blue header (DCEAF7), bold dark-blue text (17365D), dark body
 text (1F2937), and alternating white/very pale blue rows. Calibri 11 is requested; actual
 font availability/substitution depends on the viewing application. Category text remains
 visible and row order is unchanged; color is supplementary rather than the only label.
@@ -60,7 +60,7 @@ import, omitted header_rows inherits the importer's numeric --header-rows count 
 means no header); an explicit appearance setting takes precedence for styling only.
 
 Priority is **explicit cell style > header > category > alternating rows**. Any cell
-entry with an explicit `style` retains its full original style, including style 0; preset
+entry with an explicit `style` retains its full original style, including style 0. Template style 4 is bold black without blue fill or bottom borders; omit it for ordinary default headers. Preset
 fill, font, border, alignment and number format are all skipped for that cell. To combine
 a numeric display format with preset banding, use number_formats instead of a cell style.
 Header rows always use header styling unless explicitly overridden. Data category colors

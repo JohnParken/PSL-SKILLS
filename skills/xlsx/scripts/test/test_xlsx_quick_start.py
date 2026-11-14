@@ -14,6 +14,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from xml.etree import ElementTree as ET
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -104,6 +106,44 @@ class QuickStartTests(unittest.TestCase):
         self.assertEqual(cells['B2']['value'], '12')
         self.assertEqual(cells['B2']['type'], 'n')
         self.assertEqual(len(cells), 4)
+
+    def workbook_style(self, output, ref):
+        namespace = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
+        with zipfile.ZipFile(self.cwd / output) as package:
+            styles = ET.fromstring(package.read('xl/styles.xml'))
+            sheet = ET.fromstring(package.read('xl/worksheets/sheet1.xml'))
+        cell = sheet.find('.//' + namespace + "c[@r='" + ref + "']")
+        style = styles.find(namespace + 'cellXfs')[int(cell.get('s', '0'))]
+        return namespace, styles, sheet, style
+
+    def test_documented_example_default_header_style(self):
+        code, result = self.create()
+        self.assertEqual(code, 0)
+        for ref in ('A1', 'B1'):
+            ns, styles, sheet, style = self.workbook_style(result['output'], ref)
+            fill = styles.find(ns + 'fills')[int(style.get('fillId'))]
+            self.assertEqual(fill.find(ns + 'patternFill/' + ns + 'fgColor').get('rgb'), 'FFDCEAF7')
+            font = styles.find(ns + 'fonts')[int(style.get('fontId'))]
+            self.assertIsNotNone(font.find(ns + 'b'))
+            border = styles.find(ns + 'borders')[int(style.get('borderId'))]
+            self.assertEqual(border.find(ns + 'bottom').get('style'), 'thin')
+            self.assertEqual(style.find(ns + 'alignment').get('horizontal'), 'center')
+            self.assertIsNotNone(sheet.find(ns + 'cols'))
+        self.assert_clean(result)
+
+    def test_documented_entry_keeps_explicit_style_override(self):
+        spec = json.loads(self.spec_text)
+        cells = spec['configs']['spec']['sheets'][0]['cells']
+        cells['A1']['style'] = 4
+        cells['B1']['style'] = 0
+        code, result = self.create(spec)
+        self.assertEqual(code, 0)
+        for ref, index in (('A1', 4), ('B1', 0)):
+            ns, styles, _, style = self.workbook_style(result['output'], ref)
+            self.assertEqual(ET.tostring(style), ET.tostring(styles.find(ns + 'cellXfs')[index]))
+            self.assertEqual(style.get('fillId'), '0')
+            self.assertEqual(style.get('borderId'), '0')
+        self.assert_clean(result)
 
     def test_archived_and_repeated_tasks_keep_previous_file(self):
         self.env['ROUTER_CONFIG_VARIABLES'] = json.dumps({'commonParam': [{'name': 'questionId', 'value': 'quick'}]})

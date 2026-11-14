@@ -56,10 +56,10 @@ only listed cells; it does not replace the sheet's remaining data.
     {
       "name": "Sales",
       "cells": {
-        "A1": {"value": "Quantity", "style": 4},
-        "B1": {"value": "Unit price", "style": 4},
-        "C1": {"value": "Discount factor", "style": 4},
-        "D1": {"value": "Amount", "style": 4},
+        "A1": {"value": "Quantity"},
+        "B1": {"value": "Unit price"},
+        "C1": {"value": "Discount factor"},
+        "D1": {"value": "Amount"},
         "A2": {"value": 12},
         "B2": {"value": 19.90},
         "C2": {"value": 0.95},
