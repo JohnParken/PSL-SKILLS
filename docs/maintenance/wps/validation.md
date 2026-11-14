@@ -65,7 +65,7 @@ macOS arm64 / Python 3.14.10 上通过 WPS 自检、严格结构检查、644 项
 
 版本 `20261113.1704.0062` 在最大模式中恢复更多一级表格行，按直接或组合锚点关联文本框，并在 `binary_images` 返回存储 PNG 及引用。图片字节由 `--include-image-bytes` 显式请求。运行时仅用 Python 标准库。Apache POI HWPF 5.4.1 用于本地独立对照。规范依据见 [段落属性](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/484822ee-a9d9-4af4-8423-29fda67a6a58)、[文本框记录](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/d0a81fe8-f9e8-4130-9233-84732e3d9420)、[PICF 与绘图数据](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/dedb7505-8cc4-4053-aa2d-431b18d4bd97)及 [PNG BLIP](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/7af7d17e-6ae1-4c43-a3d6-691e6b3b4a45)。
 
-- 用户提供的一份 MS-DOC 月报只在本机临时核对。最大模式的 14 段相邻表格行、197 个行范围和 855 个单元格范围及文字与 HWPF 的读取逐项一致，未确认表格标记从 1050 减为 0。独立核对 30 个绘图锚点、13 个组合、27 个文本框索引与形状编号及 8 份原始 PNG 字节。行内及浮动共 13 处图片引用。默认和最大模式仍为 partial。原件、图片、文本及明细对照输出未写入仓库，临时副本已清理。
+- 用户提供的一份 MS-DOC 文档只在本机临时核对。最大模式的 14 段相邻表格行、197 个行范围和 855 个单元格范围及文字与 HWPF 的读取逐项一致，未确认表格标记从 1050 减为 0。独立核对 30 个绘图锚点、13 个组合、27 个文本框索引与形状编号及 8 份原始 PNG 字节。行内及浮动共 13 处图片引用。默认和最大模式仍为 partial。原件、图片、文本及明细对照输出未写入仓库，临时副本已清理。
 - macOS arm64 / Python 3.14.10 / Expat 2.7.4 上，WPS 源码回归 619 项、打包安全测试 11 项、自检、严格结构检查和 `git diff --check` 均通过。独立安装验收 15 项中 14 项通过，含只读 WPS 包的 PNG 回读，1 项因该解释器缺 `tl-docx` 所需的 `python-docx` 跳过。本地原件 CLI 在 Python 3.12.14 下核对 stdout JSON、空 stderr 和退出 3。
 - 描述和读取路由已人工复核。项目文档检查仍报告 ET、OFD、table-workflow 和 XLSX 的既有版本差异。人工选路和静态加载快照的全仓检查仍受其他入口变动影响，WPS 相关条目已同步。Pylint 未安装，未执行。云端 Linux、真实业务宿主回传、客户端版式、全表分组与纵向合并配对、PNG 像素渲染和图表原始数据仍待验收。
 

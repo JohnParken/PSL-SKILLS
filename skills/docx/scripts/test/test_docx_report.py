@@ -115,7 +115,7 @@ class DocxReportTests(unittest.TestCase):
         return json.loads(result.stdout)
 
     def test_shape_branches_anchors_and_related_story(self):
-        choice = f"<mc:Choice Requires='x'>{shape(textbox('月活79,519'))}</mc:Choice>"
+        choice = f"<mc:Choice Requires='x'>{shape(textbox('文档示例文字'))}</mc:Choice>"
         fallback = f"<mc:Fallback>{shape(textbox('重复副本'))}</mc:Fallback>"
         unknown = f"<mc:Choice xmlns:x='urn:unknown' Requires='x'>{shape(textbox('未选分支'))}</mc:Choice>"
         use_fallback = f"<mc:Fallback>{shape(textbox('兼容文字'))}</mc:Fallback>"
@@ -133,7 +133,7 @@ class DocxReportTests(unittest.TestCase):
         blocks = result["blocks"]
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["related_story_parts"], {"footnote": 1})
-        self.assertEqual([b["paragraphs"] for b in blocks if b["type"] == "textbox"], [["月活79,519"], ["兼容文字"]])
+        self.assertEqual([b["paragraphs"] for b in blocks if b["type"] == "textbox"], [["文档示例文字"], ["兼容文字"]])
         self.assertEqual([b["anchor"]["paragraph_index"] for b in blocks if b["type"] == "textbox"], [1, 1])
         self.assertEqual(blocks[1]["anchor"]["vertical"]["offset_emu"], "100")
         self.assertEqual([b["id"] for b in blocks if b["type"] == "reference"], ["2"])
@@ -214,7 +214,7 @@ class DocxReportTests(unittest.TestCase):
 
     def test_filename_only_returns_every_supported_element_without_pagination(self):
         """Read a larger mixed document in one call with no view flags."""
-        drawing = shape(textbox("月活79,519")) + shape("<c:chart r:id='chart'/>")
+        drawing = shape(textbox("文档示例文字")) + shape("<c:chart r:id='chart'/>")
         drawing += shape("<a:blip r:embed='image'/>")
         body = f"<w:p><w:r><w:t>正文</w:t>{drawing}</w:r></w:p>" + report_table() + paragraph("补充" * 1500) * 3
         self.write_docx(body, {
@@ -235,7 +235,7 @@ class DocxReportTests(unittest.TestCase):
         self.assertFalse(result["has_more"])
         self.assertIsNone(result["next_cursor"])
         blocks = result["blocks"]
-        self.assertEqual([b["paragraphs"] for b in blocks if b["type"] == "textbox"], [["月活79,519"]])
+        self.assertEqual([b["paragraphs"] for b in blocks if b["type"] == "textbox"], [["文档示例文字"]])
         self.assertEqual([b["resource_part"] for b in blocks if b["type"] == "image"], ["word/media/image.png"])
         self.assertEqual([b["value"] for b in blocks if b["type"] == "chart_point"], ["0.449700", None, "0.00"])
         self.assertEqual([b["value_cell"] for b in blocks if "value_cell" in b], ["B2"])
