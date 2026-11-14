@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261113.2302.5108"
+version: "20261114.1953.0326"
 description: 读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，适合查看表头、筛选排序、去重及按指定范围统计汇总。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
@@ -134,6 +134,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 - `status=partial`、退出 3：保留提取结果并说明已知缺口。若 `cell_value_coverage=complete_within_declared_sheets` 且 `omissions_affect_cell_values=false`，继续普通读取、筛选、排序和统计，只需简短说明“保存值已读完，部分格式/元数据未解释”，不因 partial 单独要求用户确认或停止；若 omissions=true、存在未读声明表或缺缓存，才限制依赖完整数据的结论。
 - 读取失败退出 1；参数错误退出 2。
 - 维护验收与真实样例验证详见 真实 ET/ETT 记录（`docs/maintenance/et/et-real-validation.md`）与 格式说明（`<skill-root>/references/biff8-readonly.md`）。
+
+完整 22 字节 BIFF8 Formula 固定头即使缺少表达式 token，仍读取其中已保存的数值、布尔、错误、空字符串或后续 String 缓存；返回 partial 并说明表达式缺口，不执行或重算公式。固定头不完整时仍跳过该受损记录，不猜测缓存。
 
 ## 最终交付与读取中间结果
 

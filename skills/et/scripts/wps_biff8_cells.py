@@ -206,7 +206,9 @@ def _handle_formula(reader, state, records, index, record, payload, row, col,
                     xf):
     """Parse one Formula record; unknown token/cache variants degrade."""
     name = state.bound['name']
-    if len(payload) < 23:
+    # The 22-byte fixed header already contains a complete saved cache.
+    # Missing expression tokens must not discard that independently framed value.
+    if len(payload) < 22:
         state.omit(record, 'cell_value_record_omitted',
                    'Truncated Formula record; record skipped')
         return index

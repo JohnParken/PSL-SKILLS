@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261113.2302.5108`（内容优先容错重构）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261114.1953.0326`（内容优先容错重构）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 默认只向 stdout 输出结果；完整读取可用 `--output <裸文件名>` 在任务根目录独占创建 JSON 文件并只在 stdout 返回 `et_output_manifest_v1` 清单。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -294,3 +294,9 @@ BIFF8 单元格值文字与展示文字改为独立预算：值上限 8Mi UTF-16
 ### 最终交付入口边界
 
 显式最终导出优先直接调用 `execute(command="python -I -S -B \"该 Skill 根目录/scripts/et_cli.py\" run ./input.et --output 读取结果.json --delivery")`（归档需 Python 3.10+）。`--delivery` 必须与 `--output` 同用，不接受概况/分页或自检；写后核对文件字节数和 SHA-256，再保护原件并归档。stdout 清单包含 `final_deliverables`、`output_written` 和 `delivery`；读取 partial/退出 3 保留，归档状态独立检查。缺失 questionId 或归档失败仍保留已写 JSON，不重跑读取覆盖文件，改用显式归档入口重试。未加 `--delivery` 的 `--output` 仅为内部交接文件，不能把它交给用户后省略归档。分析器 stdout 另存最终文件也须验收后显式归档。
+
+## 公式缓存容错补充（2026-11-14）
+
+完整的 22 字节 BIFF8 Formula 固定头已经包含独立保存的缓存。缺少表达式 token 时保留该缓存及后续 String 文本缓存，并报告 partial/公式表达式缺口，不再整格丢弃；固定头截断仍跳过受损记录，后续有效单元格继续读取。缓存可能过期，不能当作重新计算结果。
+
+本轮 macOS / Python 3.12.12 验证：ET 653 项测试通过；4 份既有公开 ET/ETT 样本哈希与冻结预期核验通过，覆盖 198 个保存值、其中 33 个公式缓存。新增缺 token 场景为合成测试，不代表真实生产文件出现率或全格式/版本认证。
