@@ -20,7 +20,7 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [文档任务导航（document-navigation）](skills/document-navigation/SKILL.md) | 独立纯指导文档 | 20261112.1921.3400 | 查看、整理、修改、生成等文档处理请求即可匹配，无需预先知道格式；确认附件与目录、定位顶层候选并加载所需技能，不解析文件或配置宿主 |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261112.1921.3400 | 银行材料起草、改写、摘要、仿写与审校；月报解读、增长贡献/质量/机会分析，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261114.2102.0194 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261113.2302.5108 | DOCX 生成、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
 | [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261114.1935.3715 | 基于 python-docx 按关系读取内容、公式与图表缓存，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261113.2302.5108 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
@@ -30,7 +30,7 @@
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261113.2302.5108 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；数学结构丢失按页诊断；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261113.0623.0331 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261113.2302.5108 | 本轮临时文件登记、最终交付物清单归档（无覆盖、安全幂等重试）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
-| [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261111.1531.2742 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
+| [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261114.2054.4410 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构
 
@@ -108,9 +108,11 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 
 ### 银行专业写作
 
-读取 [bank-writing](skills/bank-writing/SKILL.md) 完成经营解读、构思、起草、改写、整合或审校。月报任务先判断是否需要新经营判断：根据数据总结表现、找亮点/拖累或增长机会，即使只要三句话，也读取 [经营分析](skills/bank-writing/references/business-analysis.md#经营分析)；只压缩已有结论才走摘要，按已确认结论写工作总结才走综合写作。分析后成稿按需组合，不把所有月报都升级为分析。
+读取 [bank-writing](skills/bank-writing/SKILL.md) 完成经营解读、构思、起草、改写、整合或审校。月报任务先判断是否需要新经营判断：根据数据总结表现、找亮点/拖累或增长机会，即使只要三句话，也读取 [独立月报参考](skills/bank-writing/references/monthly-report.md)；只压缩已有结论才走摘要，按已确认结论写工作总结才走综合写作。月报分析与成稿由独立参考完成；只在复杂分解需要时追加经营分析，不把纯摘要或润色升级为分析。
 
-经营分析依次核对口径、比较基期、贡献与拖累、增长质量及用户需要的机会；区分数据事实、计算结果、原因假设与建议。批量表格计算按需由宿主定位已有 XLSX/ET 公开能力，保留来源、缓存和部分结果限制，不新增计算引擎或强制依赖。当前规则、虚构执行样例与未验证范围见 [月报增强记录](docs/maintenance/bank-writing/monthly-analysis-20261110/validation.md)。
+写作指导先核对受众、决策目的和证据，区分事实、假设、建议及已批安排；不以合规措辞粉饰风险，不套用未核验准入或制度阈值。文种最小要素与三级审校见[专业写作增强说明](docs/maintenance/bank-writing/professional-writing-20261114.md)。
+
+经营分析依次核对口径、比较基期、贡献与拖累、增长质量及用户需要的机会；区分数据事实、计算结果、原因假设与建议。批量表格计算按需由宿主定位已有 XLSX/ET 公开能力，保留来源、缓存和部分结果限制，不新增计算引擎或强制依赖。当前独立月报路线、合成演练与未验证范围见 [月报写作增强验收](docs/maintenance/bank-writing/monthly-writing-20261114.md)。
 
 摘要、参考范文仿写和先摘要再仿写按需读取专项参考。范文与目标事实分开，摘要保留关键限定，严格篇幅实际计数，直接交付文本。默认不追问导出；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
 
@@ -590,3 +592,7 @@ WPS 已声明交付但业务、发布或内部清理未就绪时，返回 failed
 WPS 11 / 12.1 生成的 `.doc` 直接按实际内容读取，不以应用版本或扩展名代替格式判断。默认 maximum 保留可读内容与局部缺口；五种 FIB 结构和内容路由有合成回归，但不等于所有软件构建、对象及版式均获兼容认证。
 
 WPS maximum 的可选图表检查保留64候选上限：达到上限不再解析后续候选，正文和已读图表保持可用，明确partial与未检查数量，不把候选数当图表数。其他共享结构和资源安全门禁保持拒绝。分页消费者区分standard主文text与maximum全JSON片段，不混用契约或游标。
+
+银行写作入口本轮精简为素材读取与纯文本指导，不要求执行环境自检；文件制作细节只在DOCX交接时读取，精确长度规则独立按需加载且不新增脚本。字符/字节与验证范围见 [精简记录](docs/maintenance/bank-writing/entry-slimming-20261114.md)。
+
+无脚本指导 Skill 可在入口集中说明资源定位，执行型仍按完整路径规范；bank-writing参考头及专业组合已按此调整，边界与验证见[无脚本指导验收](docs/maintenance/bank-writing/scriptless-guidance-20261114.md)。

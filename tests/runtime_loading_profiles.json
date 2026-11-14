@@ -1361,21 +1361,21 @@
         "files": [
           {
             "path": "bank-writing/SKILL.md",
-            "chars": 7404,
-            "bytes": 17630,
-            "sha256": "64dda5f5cc26582d387b5e2bd961bac558fbd568606212433b2aa977b504c88f",
+            "chars": 3928,
+            "bytes": 8518,
+            "sha256": "b3f600b996f63dfe8cac78d59695a561c4da46684c27d58ccf333b32d4111c89",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 7404,
-        "bytes": 17630,
+        "chars": 3928,
+        "bytes": 8518,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 1813,
-        "bytes": 4539,
+        "chars": -1663,
+        "bytes": -4573,
         "tokens": null,
         "read_events": 0
       }
@@ -1461,21 +1461,21 @@
         "files": [
           {
             "path": "skill-development-standards/SKILL.md",
-            "chars": 12382,
-            "bytes": 29610,
-            "sha256": "7f2d3b15a0101183aaf9c12e6b7c692865fd04149e66fa7b6f47e98693e0be39",
+            "chars": 12962,
+            "bytes": 31102,
+            "sha256": "8562479533e41433000677b9341faf0ae336daaba1f2492eee199c931bf7fb40",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 12382,
-        "bytes": 29610,
+        "chars": 12962,
+        "bytes": 31102,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 720,
-        "bytes": 1700,
+        "chars": 1300,
+        "bytes": 3192,
         "tokens": null,
         "read_events": 0
       }

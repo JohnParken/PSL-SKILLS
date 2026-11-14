@@ -29,7 +29,7 @@
 | Skill | 基线版本 | 文档内容与核心边界 |
 | --- | --- | --- |
 | [document-navigation](skills/document-navigation.md) | 20261112.1921.3400 | 通用文档处理意图即可匹配，无需先说明格式；确认附件和目录，再选择工具技能。无脚本，不能保证先加载或创造宿主映射。 |
-| [bank-writing](skills/bank-writing.md) | 20261112.1921.3400 | 银行材料写作与月报解读；贡献、质量、机会分析，纯摘要与新增判断分流；仅交付文本，表格计算按需交接。 |
+| [bank-writing](skills/bank-writing.md) | 20261114.2102.0194 | 银行材料写作与独立月报分析/比较/创建；贡献、质量、机会验证，纯摘要与新增判断分流；仅交付文本，表格计算按需交接。 |
 | [docx](skills/docx.md) | 20261113.2302.5108 | DOCX 创建、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、文本框、合并表格、图表缓存及图片引用。报告续读可复用解析结果。 |
 | [tl-docx](skills/tl-docx.md) | 20261114.1935.3715 | 基于 python-docx 的独立 Word 入口。普通读取推荐显式 `--content`，默认完整 API 保留；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
 | [xlsx](skills/xlsx.md) | 20261113.2302.5108 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
@@ -39,7 +39,7 @@
 | [pptx](skills/pptx.md) | 20261113.2302.5108 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
 | [table-workflow](skills/table-workflow.md) | 20261113.0623.0331 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
 | [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261113.2302.5108 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
-| [skill-development-standards](skills/skill-development-standards.md) | 20261111.1531.2742 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
+| [skill-development-standards](skills/skill-development-standards.md) | 20261114.2054.4410 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
 ## 整体架构图
 

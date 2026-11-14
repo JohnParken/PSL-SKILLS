@@ -1,6 +1,6 @@
 # bank-writing：银行经营解读、专业写作与文本交接
 
-> 文档核对日期：2026-11-10（America/Los_Angeles）；当前源码基线：`e4005a810e71278fc3705f6fd080d2d6ad31a280` 加本轮工作区变更；Skill 版本：`20261112.1921.3400`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束；历史日期记录只对应各自基线。
+> 文档核对日期：2026-11-14（UTC）；当前源码基线：`e4005a810e71278fc3705f6fd080d2d6ad31a280` 加本轮工作区变更；Skill 版本：`20261114.2102.0194`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束；历史日期记录只对应各自基线。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -24,7 +24,7 @@ flowchart TD
     B --> C["无新增专业判断的简单短文本：按入口写作"]
     B --> D["操作参考：编辑、摘要、仿写、审校"]
     B --> E["文种与业务参考：按任务选择"]
-    B --> M["新增经营判断：月报表现、贡献、质量、机会"]
+    B --> M["monthly-report.md：月报分析、对比、创建与增长点"]
     M --> F
     D --> F["事实、口径、状态与修改范围核对"]
     E --> F
@@ -35,7 +35,7 @@ flowchart TD
     B --> J["读取故障时：source-access.md"]
 ```
 
-资料中的链接是按需发现入口，不要求递归预读。根据数据判断当月情况、找增长点或分析增减，即使用户说“总结一下”“只要三句话”，也必须读取经营分析。纯摘要与定向润色不因出现“月报”就加载全部专项。涉及客户敏感信息、对外金融营销、金融承诺、授信、审计或 AML 结论时，也不能以篇幅短为由省略对应业务边界。
+资料中的链接是按需发现入口，不要求递归预读。根据数据判断当月情况、找增长点或分析增减，即使用户说“总结一下”“只要三句话”，月报任务也必须读取独立月报参考。纯摘要与定向润色不因出现“月报”就加载全部专项。涉及客户敏感信息、对外金融营销、金融承诺、授信、审计或 AML 结论时，也不能以篇幅短为由省略对应业务边界。
 
 ## 主要入口与参考资料
 
@@ -47,7 +47,7 @@ flowchart TD
 | [editing-and-integration.md](../../skills/bank-writing/references/editing-and-integration.md) | 多段改写、压缩、扩写、多轮编辑、多源整合 | 已确认段落锁定、删除项不回流、来源冲突不擅自裁定 |
 | [summary-reading.md](../../skills/bank-writing/references/summary-reading.md) | 仅重述已有内容的摘要、会议要点和决议提炼 | 保留限定、责任和时限；需要新经营判断时先进入经营分析 |
 | [style-imitation.md](../../skills/bank-writing/references/style-imitation.md) | 范文仿写 | 只迁移结构、语气和节奏，不迁移范文事实 |
-| [summary-and-imitation.md](../../skills/bank-writing/references/summary-and-imitation.md) | 明确的先摘要再仿写、长素材确需组合、精确字数 | 持续保留事实清单、来源差异与待核事项；约数与硬上限分开 |
+| [summary-and-imitation.md](../../skills/bank-writing/references/summary-and-imitation.md) | 明确的先摘要再仿写、长素材确需组合 | 持续保留事实清单、来源差异与待核事项；约数与硬上限分开 |
 | [writing-review.md](../../skills/bank-writing/references/writing-review.md) | 审校、专业措辞风险、重要复杂稿的读者检查 | 区分事实/口径、逻辑和风格问题，不用措辞替换掩盖违规事实 |
 | [source-access.md](../../skills/bank-writing/references/source-access.md) | 附件不可访问、工具参数异常、结果截断或转存 | 报告真实读取范围，不猜挂载或绕过宿主读取边界 |
 | [docx-handoff.md](../../skills/bank-writing/references/docx-handoff.md) | 已授权 DOCX、交接内容有歧义、导出受阻 | 交接确定正文与缺口，定位真实 docx 入口，不自行转换 |
@@ -59,8 +59,11 @@ flowchart TD
 | 根据已确认结论写工作总结、述职、综合汇报 | [comprehensive-writing.md](../../skills/bank-writing/references/comprehensive-writing.md)；需先分析数据时组合经营分析 |
 | 通知、请示、报告、函等正式行文 | [official-documents.md](../../skills/bank-writing/references/official-documents.md) |
 | 领导讲话、交流发言、专题汇报 | [speech-and-report.md](../../skills/bank-writing/references/speech-and-report.md) |
-| 月报解读、经营复盘、增长贡献/质量/机会 | [business-analysis.md 的经营分析](../../skills/bank-writing/references/business-analysis.md#经营分析) |
-| 业务专题、客户沟通 | [business-analysis.md](../../skills/bank-writing/references/business-analysis.md) 中对应章节；按需读取 |
+| 月报分析、跨期/同业比较、创建/续写、结论与增长点 | [monthly-report.md](../../skills/bank-writing/references/monthly-report.md)；月报独立路线，普通任务无需再加载经营分析 |
+| 非月报经营复盘、增长贡献/质量/机会 | [business-analysis.md 的经营分析](../../skills/bank-writing/references/business-analysis.md#经营分析) |
+| 业务专题 | [business-analysis.md](../../skills/bank-writing/references/business-analysis.md) 中对应章节；按需读取 |
+| 客户沟通 | [customer-communication.md](../../skills/bank-writing/references/customer-communication.md)；不限邮件 |
+| 跨文种组合 | [combined-writing.md](../../skills/bank-writing/references/combined-writing.md)；只按明确多稿任务使用 |
 | 商务邮件、跨部门或涉外联络 | [email-communication.md](../../skills/bank-writing/references/email-communication.md)；确需场景范式时追加 [email-scenarios.md](../../skills/bank-writing/references/email-scenarios.md) |
 | 尽职调查、授信审查、贷后、不良处置 | [credit-investigation.md](../../skills/bank-writing/references/credit-investigation.md) |
 | 产业信贷调研、竞品对标、网点效能 | [industry-research.md](../../skills/bank-writing/references/industry-research.md) |
@@ -92,7 +95,10 @@ flowchart TD
 
 关键歧义妨碍结果时才询问，非关键细节可使用稳妥默认值。简单任务不强制展示分析、先给提纲或反复询问导出。多轮编辑保持用户已确认部分，只有事实变更必然影响其他位置时才做最小联动并说明。
 
-## 月报分析的具体行为
+## 月报独立路线与具体行为
+
+月报由 `monthly-report.md` 独立承担分析、比较、创建、续写与机会验证；只在复杂分解或专业口径需要时追加经营分析。新增活跃/峰值/工作日日均辨析、同业可比性、原稿跨期续写、结论证据链和增长机会验证，并覆盖存贷、财富、渠道、服务运营与风险管理，不绑定任何用户范文。
+
 
 1. 核对来源、已读覆盖、期间、机构、币种、单位与指标定义，区分余额、发生额、累计、日均和比率。无法比较的口径不强行比较。
 2. 说明本月值、适用基期、变化与目标差距；缺期不替换，零/负基数不机械解释增速，百分比与百分点分开。
@@ -160,3 +166,21 @@ DOCX 是显式、可选的能力交接，不是默认运行时依赖。宿主必
 当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。
 
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+## 2026-11-14 月报独立路线
+
+月报分析、比较与创建已独立于通用经营分析；新参考覆盖多业务口径、活跃指标、跨期续写、证据结论及增长验证。实际检查、合成演练和未验证范围见[维护验收](../maintenance/bank-writing/monthly-writing-20261114.md)。
+
+## 2026-11-14 专业写作质量增强
+
+入口增加轻量任务卡与证据/制度边界，专项清除风险事实粉饰与无依据范例阈值；增加年度规划、文种要素和三级最小审校。纯文本、独立运行和按需加载不变。见[本轮验收说明](../maintenance/bank-writing/professional-writing-20261114.md)。
+
+## 2026-11-14 纯写作入口精简
+
+入口仅保留素材读取、事实边界、任务路由和文本验收；不要求写作执行脚本或执行环境自检。文件归档、执行及生成细节仅在明确DOCX交接时读取。长度限制独立使用 [length-check.md](../../skills/bank-writing/references/length-check.md)，默认码点数排除Unicode空白，不等同Word字数或token；无可靠计数能力不声称精确达标。邮件场景仍由邮件基础参考二级按需发现。
+
+## 无脚本参考组织与专业短例
+
+无脚本写作仅在入口说明资源定位，参考不重复执行路径长头；资源仍由真实入口定位并检查引用，不改变用户附件访问或隐私边界。客户沟通独立成参考，新增三种按需组合及六组完全合成短正反例，分类使用具体缺口标记。此次无生产脚本，未将用户业务材料用作示例。
+
+规范兼容与本轮检查见[无脚本指导验收](../maintenance/bank-writing/scriptless-guidance-20261114.md)。

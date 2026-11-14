@@ -14,4 +14,13 @@ Skill commands already distinguish standard and maximum. Reference docs now expl
 
 ## Validation
 
+macOS / Python 3.14.10:
+- WPS full suite: 743 passed, no skips.
+- Cross-repository budget worker: ET and WPS each 8 passed; wrapper 2 passed.
+- Read-view isolated copy tests: 2 passed.
+- Independent read-only WPS package: 5 passed; packager safety: 11 passed.
+- WPS scripts Pylint errors-only: exit 0; strict WPS structure and diff whitespace: pass.
+- Extra lint on the cross-repository worker test exposed existing conditional-import E0606 diagnostics; its executable isolated tests passed. These are not represented as full-repository lint success.
+- Project-doc check at this run reported unrelated document-navigation version drift; loading snapshot reported concurrent bank-writing changes, handed to its owner. WPS profiles were consistent.
+
 No private document identifiers or content are recorded. No uploads, commits, pushes, OCR or external data access. Linux, Windows, Office/WPS rendering and real host delivery remain unverified.
