@@ -22,7 +22,7 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [文档任务导航（document-navigation）](skills/document-navigation/SKILL.md) | 独立纯指导文档 | 20261114.2127.4001 | 查看、整理、修改、生成等文档处理请求即可匹配，无需预先知道格式；确认附件与目录、定位顶层候选并加载所需技能，不解析文件或配置宿主 |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261114.2206.4931 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261114.2248.0406 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261114.2127.4001 | DOCX 生成、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
 | [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261114.2127.4001 | 基于 python-docx 按关系读取内容、公式与图表缓存，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261114.2127.4001 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
@@ -600,3 +600,5 @@ WPS maximum 的可选图表检查保留64候选上限：达到上限不再解析
 无脚本指导 Skill 可在入口集中说明资源定位，执行型仍按完整路径规范；bank-writing参考头及专业组合已按此调整，边界与验证见[无脚本指导验收](docs/maintenance/bank-writing/scriptless-guidance-20261114.md)。
 
 银行写作按专业判断风险而非句数决定是否追加专项，纯摘要/编辑不背书原结论；本轮章节、描述及路由核查见[记录](docs/maintenance/bank-writing/routing-priority-20261114.md)。
+
+银行写作路由按局部与结构性编辑区分，月报摘要转分析直达月报；同类缺口可合并但审批状态不降格，锚点只作定位提示。见[精简与边界验收](docs/maintenance/bank-writing/route-cleanup-20261114.md)。
