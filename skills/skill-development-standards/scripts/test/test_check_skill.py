@@ -18,7 +18,7 @@ import check_skill
 DESCRIPTION = "A useful description that explains when and how this skill should be used, with enough detail for discovery and selection by the assistant."
 
 
-NOTICE = "路径占位符说明：<skill-root> 是占位符；由主入口 SKILL.md 的真实 file_path 按宿主基准解析相对路径，再去掉文件名确定；使用前替换并引用完整路径，无法确认时停止。\n"
+NOTICE = "路径占位符说明：<skill-root> 是占位符；由主入口 SKILL.md 的真实读取 file_path 按宿主基准解析相对路径，再去掉文件名确定；使用前替换并引用完整路径，无法确认时停止。\n"
 
 
 def make_skill(root: Path, body: str = "Instructions.\n", front: str | None = None) -> Path:
@@ -477,6 +477,8 @@ class CheckSkillTests(unittest.TestCase):
 
 
 class RootResourceTests(unittest.TestCase):
+    python_skill = CheckSkillTests.python_skill
+
     def test_literal_paths_spaces_unicode_anchors_and_command_escaping(self):
         with tempfile.TemporaryDirectory() as tmp:
             skill = make_skill(Path(tmp), '`<skill-root>/references/guide 空格.md#章节`\npython "<skill-root>/requirements.txt"\n')
@@ -512,7 +514,7 @@ class RootResourceTests(unittest.TestCase):
     def test_each_required_notice_clause_is_checked_in_every_markdown(self):
         for clause in ("主入口", "file_path", "相对", "基准", "去掉", "替换", "完整路径", "停止"):
             with self.subTest(clause=clause), tempfile.TemporaryDirectory() as tmp:
-                skill = make_skill(Path(tmp))
+                skill, _ = self.python_skill(Path(tmp), b"pass\n")
                 (skill / 'references').mkdir()
                 reference = skill / 'references/guide.md'
                 reference.write_text(NOTICE.replace(clause, '') + '# Guide\n')
@@ -536,7 +538,9 @@ class RootResourceTests(unittest.TestCase):
 
     def test_reference_notice_required_and_symlink_not_followed(self):
         with tempfile.TemporaryDirectory() as tmp:
-            skill = make_skill(Path(tmp), '`<skill-root>/references/outside.md`\n')
+            skill, _ = self.python_skill(Path(tmp), b"pass\n")
+            with (skill / "SKILL.md").open("a") as handle:
+                handle.write("`<skill-root>/references/outside.md`\n")
             (skill / 'references').mkdir()
             (skill / 'references/plain.md').write_text('# No notice\n')
             outside = Path(tmp) / 'outside.md'
@@ -547,6 +551,56 @@ class RootResourceTests(unittest.TestCase):
                 self.skipTest('symlink unavailable')
             rules = {i.rule for i in check_skill.check_skill(skill)}
             self.assertTrue({'root-notice', 'link-escape', 'symlink'} <= rules)
+
+    def test_guidance_central_notice_and_reference_without_header(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp), '`<skill-root>/references/guide.md#guide`\n')
+            entry = skill / 'SKILL.md'
+            short = '资源定位说明：<skill-root>取实际读取SKILL.md所在目录；相对路径按已知基准，无法定位时停止依赖读取。\n'
+            entry.write_text(entry.read_text().replace(NOTICE, short))
+            (skill / 'references').mkdir()
+            guide = skill / 'references/guide.md'
+            guide.write_text('# Guide\nText only.\n')
+            self.assertEqual([], check_skill.check_skill(skill))
+            entry.write_text(entry.read_text().replace(short, ''))
+            self.assertIn('resource-notice', {i.rule for i in check_skill.check_skill(skill)})
+
+    def test_guidance_still_checks_broken_anchor_escape_and_link_style(self):
+        for target, rule in [('references/missing.md', 'broken-link'),
+                             ('SKILL.md#missing', 'broken-anchor'), ('../outside.md', 'link-escape')]:
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as tmp:
+                skill = make_skill(Path(tmp), '`<skill-root>/' + target + '`\n')
+                self.assertIn(rule, {i.rule for i in check_skill.check_skill(skill)})
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp), '[entry](SKILL.md)\n')
+            self.assertIn('path-style', {i.rule for i in check_skill.check_skill(skill)})
+
+    def test_execution_detection_does_not_depend_on_script_presence(self):
+        for body in ['`<skill-root>/scripts/missing.py`\n',
+                     '```python\nprint("text")\n```\n', 'execute(command="tool")\n',
+                     '~~~bash\necho ok\n~~~\n', 'python -c \"print(1)\"\n']:
+            with self.subTest(body=body), tempfile.TemporaryDirectory() as tmp:
+                skill = make_skill(Path(tmp), body)
+                (skill / 'references').mkdir()
+                (skill / 'references/plain.md').write_text('# No notice\n')
+                self.assertIn('root-notice', {i.rule for i in check_skill.check_skill(skill)})
+
+    def test_asset_and_extensionless_scripts_require_full_notices(self):
+        for name, body in [('worker.sh', b'echo ok\n'), ('worker', b'#!/bin/sh\necho ok\n')]:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                skill = make_skill(Path(tmp))
+                (skill / 'assets').mkdir()
+                (skill / 'assets' / name).write_bytes(body)
+                (skill / 'references').mkdir()
+                (skill / 'references/plain.md').write_text('# No notice\n')
+                self.assertIn('root-notice', {i.rule for i in check_skill.check_skill(skill)})
+
+    def test_plain_guidance_handoff_does_not_become_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill(Path(tmp), '明确导出时定位另一个Skill，由提供方执行；本技能只写文本。\n')
+            (skill / 'references').mkdir()
+            (skill / 'references/handoff.md').write_text('# Handoff\nRead the provider entry when authorized.\n')
+            self.assertEqual([], check_skill.check_skill(skill))
 
 
 if __name__ == "__main__":

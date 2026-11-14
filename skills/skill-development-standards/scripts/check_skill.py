@@ -239,13 +239,39 @@ def _walk(skill: Path, issues: list[Issue]):
     return collected
 
 
-def _root_resources(text: str, rel: str, skill: Path, issues: list[Issue]) -> None:
+def _requires_execution(files: list[Path]) -> bool:
+    """Conservative structural detection; semantic task boundaries need review."""
+    executable_suffixes = TEST_SCRIPT_SUFFIXES | {".zsh", ".ksh", ".rb", ".pl", ".lua", ".bat", ".cmd"}
+    for path in files:
+        if path.suffix.lower() in executable_suffixes:
+            return True
+        try:
+            if path.suffix.lower() == ".md":
+                text = path.read_text(encoding="utf-8")
+                # Missing local scripts must not turn an execution skill into guidance.
+                if re.search(r"(?:<skill-root>/|scripts/)[^`\s<>]*\.(?:py|sh|bash|zsh|ps1|js|mjs|cjs|ts|rb|pl|lua|bat|cmd)\b", text):
+                    return True
+                if re.search(r"(?im)^\s*(?:`{3,}|~{3,})(?:python|javascript|bash|sh|shell|console|powershell)\s*$", text):
+                    return True
+                if re.search(r"\bexecute\s*\(|(?m:^\s*(?:python[0-9.]*|node|bash|sh|pwsh)\s+)", text):
+                    return True
+            else:
+                with path.open("rb") as handle:
+                    if handle.read(2) == b"#!":
+                        return True
+        except (OSError, UnicodeError):
+            # Existing read diagnostics report details; never grant an exemption.
+            return True
+    return False
+
+
+def _root_resources(text: str, rel: str, skill: Path, issues: list[Issue], execution: bool) -> None:
     """Check literal root-qualified paths, never execute examples or resolve task data."""
     prose = _outside_fences(text)
     notice = next((line for line in prose.splitlines() if line.startswith("路径占位符说明：")), "")
     required_notice = ("<skill-root>", "占位符", "主入口", "SKILL.md", "file_path",
                        "相对", "基准", "去掉", "替换", "完整路径", "停止")
-    if not all(word in notice for word in required_notice):
+    if execution and not all(word in notice for word in required_notice):
         issues.append(Issue("error", "root-notice", rel,
                             "Explain the root placeholder, entry file_path, relative read base, filename removal, "
                             "full-path substitution and stop condition in every Markdown file."))
@@ -293,14 +319,14 @@ def _root_resources(text: str, rel: str, skill: Path, issues: list[Issue]) -> No
             issues.append(Issue("error", "link-escape", rel, "Cannot safely read root resource: " + str(exc)))
 
 
-def _markdown_links(markdown: Path, skill: Path, issues: list[Issue]) -> None:
+def _markdown_links(markdown: Path, skill: Path, issues: list[Issue], execution: bool) -> None:
     rel = markdown.relative_to(skill).as_posix()
     try:
         text = markdown.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         issues.append(Issue("error", "unreadable", rel, f"Cannot read Markdown file: {exc}"))
         return
-    _root_resources(text, rel, skill, issues)
+    _root_resources(text, rel, skill, issues, execution)
     text = _outside_fences(text)
     for match in re.finditer(r"!??\[[^\]]*\]\(([^)]*)\)", text):
         raw = match.group(1).strip()
@@ -423,9 +449,20 @@ def check_skill(skill: Path) -> list[Issue]:
             if len(content.splitlines()) > 100 and not re.search(r"(?im)^\s*(#{1,6}\s+)?(table of contents|contents|目次|目录)\s*$", content):
                 issues.append(Issue("warning", "reference-toc", md.relative_to(skill).as_posix(), "Reference exceeds 100 lines and has no recognizable table of contents."))
     markdowns = ([skill_file] if skill_file in files else []) + reference_files
+    execution = _requires_execution(files)
+    if not execution:
+        # Guidance centralizes reading location once; reference files need no repeated header.
+        notices = [line for line in text.splitlines()
+                   if line.startswith(("资源定位说明：", "路径占位符说明："))]
+        required = ("<skill-root>", "SKILL.md", "读取", "相对", "无法")
+        uses_resources = len(markdowns) > 1 or "<skill-root>/" in text
+        if uses_resources and not any(all(word in line for word in required) for line in notices):
+            issues.append(Issue("error", "resource-notice", "SKILL.md",
+                                "Guidance needs one entry-level reading-location notice for its resources; "
+                                "explain actual SKILL.md reading location, relative paths and unavailable-location handling."))
     for md in markdowns:
         if md.is_file() and not md.is_symlink():
-            _markdown_links(md, skill, issues)
+            _markdown_links(md, skill, issues, execution)
     return issues
 
 

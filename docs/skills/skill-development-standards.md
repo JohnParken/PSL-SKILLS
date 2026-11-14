@@ -1,6 +1,6 @@
 # skill-development-standards：开发规范与只读结构检查
 
-> 文档核对日期：2026-11-07；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261111.1531.2742`。本文说明规范、工具及其边界，不修改或替代原规范。
+> 文档核对日期：2026-11-14；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261114.2054.4410`。本文说明规范、工具及其边界，不修改或替代原规范。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -168,3 +168,9 @@ python -I -S -B -m unittest discover -s skills/skill-development-standards/scrip
 ## 仓库导读同步要求
 
 [AGENTS.md](../../AGENTS.md) 要求每次功能或代码优化同步检查根 README 与 docs 中受影响的能力、接口、架构/流程、示例和证据；无需修改时在交付中说明已检查及原因。仓库级 [check_project_docs.py](../../tools/check_project_docs.py) 检查当前 Skill 覆盖、导读版本及本地链接/锚点，不随单个 Skill 分发，也不替代 check_skill.py、人工语义核对、Mermaid 解析或业务验收。仅改仓库导读不提升未变更 Skill 版本；历史证据保留原基线。
+
+## 2026-11-14 按执行需求区分路径说明
+
+完整执行路径与逐参考定位头仅用于需要执行脚本/命令的Skill。纯指导可在入口集中说明资源读取基准，参考免重复；仍使用可核验根引用，保留缺失、锚点、越界和符号链接检查，不要求执行器映射或修改宿主。脚本文件、缺失脚本引用和执行示例保守识别，动态语义仍需人工复核。纯文本交接由提供方自行遵循执行规则。
+
+本轮实际验收：检查器44项测试通过；当前12个Skill严格检查通过，含无脚本bank-writing与执行型技能。Pylint完整检查按项目200字符行长执行，Error/Fatal/C0301/C0321均0，另有C52/R13/W1保留，不声称零告警。未改变宿主机制，静态分类仍需人工核对动态执行及不常见语言。
