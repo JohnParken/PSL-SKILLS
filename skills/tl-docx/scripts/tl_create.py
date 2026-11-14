@@ -36,6 +36,7 @@ from tl_create_numbering import (
 )
 from tl_create_tables import build_table, validate_table as _validate_advanced_table
 from tl_create_tables import validate_table_format
+from tl_create_styles import normalize_spec, validate_format, apply_text_format, apply_table_styles, install_role_styles
 
 
 _BOOKMARK_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,39}\Z")
@@ -148,13 +149,14 @@ def _validate_runs(value, path: str, bookmark_references: list[str]) -> None:
         _expect_object(
             run,
             run_path,
-            {"text", "bold", "italic", "underline", "font", "size_pt", "color"},
+            {"text", "bold", "italic", "underline", "font", "font_east_asia", "font_latin", "size_pt", "color"},
             {"text"},
         )
         _text(run["text"], f"{run_path}.text")
         for flag in ("bold", "italic", "underline"):
             if flag in run:
                 _boolean(run[flag], f"{run_path}.{flag}")
+        validate_format({key: run[key] for key in ("font_east_asia", "font_latin") if key in run}, run_path)
         if "font" in run:
             _text(run["font"], f"{run_path}.font", allow_empty=False)
         if "size_pt" in run:
@@ -349,7 +351,7 @@ def _validate_block(block, path: str, bookmarks: set[str], bookmark_references: 
         raise ValueError(f"{path}.type must be a string")
     if kind in {"title", "subtitle", "heading", "paragraph"}:
         flags = ("page_break_before", "keep_with_next", "keep_together", "widow_control")
-        allowed = {"type", "text", "runs", "tab_stops", *flags}
+        allowed = {"type", "text", "runs", "tab_stops", "format", "align", *flags}
         if kind in {"heading", "paragraph"}:
             allowed.add("bookmark")
         if kind == "heading":
@@ -358,6 +360,9 @@ def _validate_block(block, path: str, bookmarks: set[str], bookmark_references: 
         if ("text" in block) == ("runs" in block):
             raise ValueError(f"{path} must contain exactly one of text or runs")
         _expect_object(block, path, allowed, required)
+        validate_format(block.get("format", {}), f"{path}.format")
+        if "align" in block:
+            validate_format({"align": block["align"]}, path)
         if "text" in block:
             _text(block["text"], f"{path}.text")
         else:
@@ -423,6 +428,8 @@ def _validate_block(block, path: str, bookmarks: set[str], bookmark_references: 
             {
                 "type",
                 "orientation",
+                "width_mm",
+                "height_mm",
                 "start_type",
                 "page_start",
                 "page_number_start",
@@ -471,6 +478,19 @@ def _validate_block(block, path: str, bookmarks: set[str], bookmark_references: 
             _text(block["title"], f"{path}.title")
         return
 
+    if kind == "reference":
+        _expect_object(block, path, {"type", "bookmark", "kind", "prefix", "suffix"}, {"type", "bookmark"})
+        name = _text(block["bookmark"], f"{path}.bookmark", allow_empty=False)
+        if _BOOKMARK_NAME.fullmatch(name) is None:
+            raise ValueError(f"{path}.bookmark must be a valid ASCII bookmark name")
+        if not isinstance(block.get("kind", "text"), str) or block.get("kind", "text") not in {"text", "page"}:
+            raise ValueError(f"{path}.kind must be text or page")
+        for key in ("prefix", "suffix"):
+            if key in block:
+                _text(block[key], f"{path}.{key}")
+        bookmark_references.append(name)
+        return
+
     if kind == "page_break":
         _expect_object(block, path, {"type"}, {"type"})
         return
@@ -484,6 +504,7 @@ def _validate_spec(spec) -> tuple[str, dict, dict, set[str], list[dict], str, di
         "spec",
         {
             "theme",
+            "styles",
             "blocks",
             "page",
             "metadata",
@@ -515,6 +536,8 @@ def _validate_spec(spec) -> tuple[str, dict, dict, set[str], list[dict], str, di
         "spec.page",
         {
             "orientation",
+            "width_mm",
+            "height_mm",
             "margins_cm",
             "page_start",
             "page_number_start",
@@ -675,6 +698,7 @@ def _add_text_block(
     theme: str,
     bookmark_ids: dict[str, int],
     heading_number_id: int | None,
+    styles: dict,
 ) -> None:
     kind = block["type"]
     style_name = {
@@ -683,7 +707,7 @@ def _add_text_block(
         "paragraph": "Normal",
     }.get(kind)
     level = None
-    paragraph_kind = "body" if kind == "paragraph" else "title"
+    paragraph_kind = "body" if kind == "paragraph" else kind
     if kind == "heading":
         level = block["level"]
         style_name = f"Heading {level}"
@@ -700,6 +724,7 @@ def _add_text_block(
         apply_run_format(run, theme, kind, level)
     else:
         _append_rich_runs(paragraph, block["runs"], theme, kind, level)
+    apply_text_format(paragraph, block, styles)
     if kind == "heading" and level is not None and level <= 4 and heading_number_id is not None:
         set_paragraph_numbering(paragraph, heading_number_id, level - 1)
     if "bookmark" in block:
@@ -739,6 +764,7 @@ def build_document(spec: dict, read_image: Callable[[str], bytes]):
     """
     if not callable(read_image):
         raise ValueError("read_image must be callable")
+    spec = normalize_spec(spec)
     (
         theme,
         page_options,
@@ -750,6 +776,7 @@ def build_document(spec: dict, read_image: Callable[[str], bytes]):
     ) = _validate_spec(spec)
     document = Document()
     apply_theme(document, theme)
+    install_role_styles(document, theme, spec.get("styles", {}))
     apply_page_setup(document.sections[0], theme, page_options)
     apply_section_options(document.sections[0], page_options)
     _apply_core_properties(document, metadata)
@@ -761,7 +788,7 @@ def build_document(spec: dict, read_image: Callable[[str], bytes]):
     for block in blocks:
         kind = block["type"]
         if kind in {"title", "subtitle", "heading", "paragraph"}:
-            _add_text_block(document, block, theme, bookmark_ids, heading_number_id)
+            _add_text_block(document, block, theme, bookmark_ids, heading_number_id, spec.get("styles", {}))
         elif kind == "list":
             list_id = block.get("list_id")
             if list_id is not None:
@@ -784,6 +811,7 @@ def build_document(spec: dict, read_image: Callable[[str], bytes]):
                 set_paragraph_numbering(paragraph, number_id, level)
         elif kind == "table":
             build_table(document, block, theme, table_format, read_image)
+            apply_table_styles(document.tables[-1], block, spec.get("styles", {}))
         elif kind == "image":
             _add_image(document, block, theme, read_image)
         elif kind == "section_break":
@@ -798,6 +826,16 @@ def build_document(spec: dict, read_image: Callable[[str], bytes]):
             field_paragraph = document.add_paragraph()
             apply_paragraph_defaults(field_paragraph, theme, "toc")
             set_toc_field(field_paragraph, block.get("levels", 3))
+        elif kind == "reference":
+            paragraph = document.add_paragraph()
+            apply_paragraph_defaults(paragraph, theme, "reference")
+            for location in ("prefix", "field", "suffix"):
+                if location == "field":
+                    instruction = "PAGEREF" if block.get("kind", "text") == "page" else "REF"
+                    insert_field(paragraph, f"{instruction} {block['bookmark']}")
+                elif block.get(location):
+                    run = paragraph.add_run(block[location])
+                    apply_run_format(run, theme, "body")
         elif kind == "page_break":
             document.add_page_break()
 

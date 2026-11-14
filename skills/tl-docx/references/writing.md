@@ -16,7 +16,7 @@ python -I -B "<skill-root>/scripts/tl_docx.py" create "报告.docx" <<'JSON'
 JSON
 ```
 
-顶层必需 `blocks`；可选 `theme`（`official`、`business`、`academic`）、`page`（`orientation`、`margins_cm`）、`metadata`、`header`、`footer`。页边距键为 `top`、`bottom`、`left`、`right`，单位 cm。公文正文默认仿宋和 Times New Roman 16 pt、固定行距 28 pt、首行 2 字。正文自然分页，明确需要时才加分页块或分节块。
+详细 Profile、角色样式和毫米页面参数见 `<skill-root>/references/typography.md`。顶层必需 `blocks`；可选 `theme`（`official`、`business`、`academic`）、`page`（`orientation`、`margins_cm`）、`metadata`、`header`、`footer`。页边距键为 `top`、`bottom`、`left`、`right`，单位 cm。公文正文默认仿宋和 Times New Roman 16 pt、固定行距 28 pt、首行 2 字。正文自然分页，明确需要时才加分页块或分节块。
 
 | 块类型 | 参数 |
 | --- | --- |
@@ -26,6 +26,7 @@ JSON
 | `image` | `path` 为任务内相对路径，可选 `width_cm` 和替代文字 `alt`。 |
 | `page_break` | 在指定位置显式分页。 |
 | `section_break` | 可选 `orientation`（`portrait` 或 `landscape`）、`start_type`、`page_start`、`margins_cm`、`header`、`footer`。 |
+| `reference` | `bookmark` 指向本次已定义书签；`kind` 为 `text` 或 `page`，可选 `prefix`、`suffix`，生成 REF/PAGEREF 字段，不计算页码。 |
 | `toc` | 可选 `levels` 和 `title`，插入原生目录字段，实际页码和目录由阅读器更新。 |
 
 `runs` 可含 `{"text":"重点","bold":true}`，可选 `italic`、`underline`、`font`、`size_pt`、六位 RGB `color`。`{"tab":true}` 配合 `tab_stops`（`position_cm`、`alignment`、`leader`）。`{"field":"PAGE","display":"1"}` 支持 `PAGE`、`NUMPAGES`、`REF 书签名`、`PAGEREF 书签名`，`display` 是可选保存文字。`header`、`footer` 使用字符串或同格式 `runs` 数组。`metadata` 支持 `title`、`subject`、`author`、`keywords`、`comments`、`category`、`identifier`、`language`、`last_modified_by`。
@@ -44,6 +45,8 @@ JSON
 | --- | --- |
 | `format_run` | `paragraph_index`、`expected_text`、`run_index`、`expected_run_text`。`format` 可选 `font_east_asia`、`font_ascii`、`size_pt`、`bold`、`italic`、`underline`、`color`，仅改所列属性。 |
 | `replace_run_text` | 同上定位，传新 `text`。目标 run 须为普通文本。 |
+| `tracked_replace_run` | 与 `format_run` 相同定位，另传新 `text`、`author`、UTC `date`（`YYYY-MM-DDTHH:MM:SSZ`）。生成删除/插入修订并保留字体和段落格式；限正文纯文本单 run，目标段已有修订、字段、范围锚点时拒绝。不接受/拒绝既有修订，不创建移动或格式修订。 |
+| `merge_runs` | `paragraph_index`、`expected_text`、`start_run` 及至少两个 `expected_runs` 文本。只合并连续、显式格式及属性相同的纯文本 run，保留原文字节点与空白；有字段、书签、批注范围、修订或分节的段落拒绝，不能跨不同格式合并。 |
 | `insert_paragraph` | `paragraph_index`、`expected_text`、`text`，可选 `style` 和 `position`（`before`、`after`）。 |
 | `replace_cell_text` | `table_index`、`row_index`、物理 `cell_index`、`expected_text`、`text`。目标为未合并的单段单 run 单元格。 |
 | `insert_row`、`delete_row` | `table_index`、`row_index`、`expected_rows`、目标行文本数组 `expected_text`。插入另需 `position` 和新行 `cells`。限未合并的规则表格，保留重复表头及至少一个数据行。 |

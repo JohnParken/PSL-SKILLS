@@ -16,6 +16,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
 from tl_create_layout import apply_paragraph_defaults, apply_run_format
+from tl_create_styles import validate_format
 
 
 _TABLE_FORMAT_KEYS = {
@@ -50,6 +51,8 @@ _TABLE_KEYS = {
     "merges",
     "format",
     "caption",
+    "body_format",
+    "header_format",
 }
 _IMAGE_KEYS = {"path", "width_mm", "height_mm", "alt"}
 _COLOR = re.compile(r"[0-9A-Fa-f]{6}\Z")
@@ -346,6 +349,9 @@ def _normalized_table(block: dict, path: str) -> dict:
             raise ValueError(f"{path}.col_widths_cm and widths_mm must agree when both are present")
     if "format" in block:
         validate_table_format(block["format"], f"{path}.format")
+    for text_format in ("body_format", "header_format"):
+        if text_format in block:
+            validate_format(block[text_format], f"{path}.{text_format}")
     if "caption" in block:
         _text(block["caption"], f"{path}.caption", allow_empty=False)
 
@@ -819,7 +825,7 @@ def build_table(
                 is_header=row_index < header_rows,
                 read_image=read_image,
                 width_mm=cell_width,
-        height_mm=_available_dimensions(document.sections[-1])[1],
+                height_mm=_available_dimensions(document.sections[-1])[1],
                 layout=layout,
             )
 

@@ -22,7 +22,27 @@ class MemoryPackage:
         self.names = set(parts)
         self.types = {name: "application/xml" for name in self.names}
         self._parts = {name: value.encode("utf-8") for name, value in parts.items()}
-        self._relationships = relationships or {}
+        self._relationships = dict(relationships or {})
+        # Declare the relationships/content types represented by legacy XML fixtures.
+        from tl_read_parts import SPECS
+        from tl_package import OFFICE_REL
+        for name, value in parts.items():
+            if not name.endswith('.xml'):
+                continue
+            root = parse_xml(value.encode('utf-8'))
+            for kind, (relation, content_type, local) in SPECS.items():
+                if root.tag.rsplit('}', 1)[-1] != local:
+                    continue
+                self.types[name] = content_type
+                source = '' if kind == 'core' else self.main
+                self._relationships[(source, 'fixture-' + name)] = {
+                    'type': relation if kind == 'core' else OFFICE_REL + relation,
+                    'target': name, 'external': False,
+                }
+
+    def relations(self, source):
+        """Expose the complete source-local OPC relationship mapping."""
+        return {rid: item for (owner, rid), item in self._relationships.items() if owner == source}
 
     def xml(self, name):
         return parse_xml(self.read(name))
@@ -165,7 +185,7 @@ class TlReadTests(unittest.TestCase):
         package = report_fixture()
         records, issues, coverage = report(package)
         paragraphs = [item for item in records if item["type"] == "paragraph"]
-        heading = next(item for item in paragraphs if item["text"] == "OverviewReference1")
+        heading = next(item for item in paragraphs if item["text"] == "OverviewReference1x+y")
         self.assertEqual(heading["style_name"], "Heading 1")
         self.assertEqual(heading["heading_level"], 1)
         self.assertEqual(heading["numbering"]["text"], "%1.")

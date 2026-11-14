@@ -142,9 +142,20 @@ def header_metadata(table, rows, override, safe):
         source, count = 'first_row_candidate', 1
     else:
         source, count = 'empty', 0
-    header = {'source': source, 'rows': list(range(1, count + 1)), 'spans': [], 'columns': []}
+    status = 'confirmed' if source in ('explicit', 'repeat_header') else 'candidate' if count else 'none'
+    basis = 'explicit' if source == 'explicit' else 'document_repeat_marker' if source == 'repeat_header' else None
+    descriptions = {'confirmed': '表头范围已按明确指定或文档重复表头标记选定，不代表业务含义已核验。',
+                    'candidate': '首行仅为表头候选，尚未确认；保留原行内容供核对。',
+                    'none': '没有可用表头行。'}
+    header = {'source': source, 'rows': list(range(1, count + 1)), 'spans': [], 'columns': [],
+              'status': status, 'confirmation_basis': basis, 'description': descriptions[status], 'diagnostics': []}
+    if source == 'explicit' and count == 0:
+        header['description'] = '已明确指定此表不使用表头。'
+    if status == 'candidate':
+        header['diagnostics'].append('header_candidate_unconfirmed')
     if not safe:
         header['mapping'] = 'unavailable'
+        header['diagnostics'].append('header_geometry_unavailable')
         return header
     spans = [{'row': row['row_index'], 'column': cell['column'], 'column_span': cell['colspan'], 'text': cell['text']}
              for row in rows[:count] for cell in row['cells'] if cell['text'].strip() and cell.get('vmerge') != 'continue']
@@ -194,5 +205,6 @@ def enrich_tables(package, records, overrides):
             diagnostics.add('all_rows_marked_repeat_header')
         if header['mapping'] == 'limit_exceeded':
             diagnostics.add('table_header_mapping_limit_exceeded')
+        header['diagnostics'] = sorted(set(header['diagnostics']) | diagnostics)
         issues.extend({'code': code, 'part': table['part'], 'path': table['path'], 'table_index': index} for code in sorted(diagnostics))
     return issues

@@ -21,8 +21,9 @@ MAX_SPEC = 16 * 1024 * 1024
 MIN_BUDGET = 512
 CAPABILITIES = ['read-docx', 'read-dotx', 'source-bound-pages', 'create-docx', 'edit-docx', 'validate', 'archive',
                 'threaded-comments', 'versioned-output', 'resume-cleanup', 'pagination-audit',
-                'raw-ooxml', 'revision-views', 'report-export', 'table-header-mapping', 'template-replacement']
-BODY_PARAGRAPH = re.compile(r'/w:document\[1\]/w:body\[1\]/w:p\[[0-9]+\]')
+                'raw-ooxml', 'revision-views', 'report-export', 'table-header-mapping', 'template-replacement',
+                'native-role-styles', 'parse-cache', 'tracked-text-replacement', 'part-bundle-roundtrip', 'layout-audit', 'lossless-record-fragments', 'content-first-read']
+
 
 
 def encode(payload):
@@ -94,50 +95,100 @@ def page(meta, records, budget, cursor, binding):
     return best
 
 
-def read_result(package, args):
+def read_result(package, args, raw_report=None, cache_meta=None):
     """Assemble one full or budgeted report with explicit coverage."""
     from tl_read import report  # pylint: disable=import-outside-toplevel
+    from tl_read_selection import body_paragraphs, select_body, selected_issues, scoped_coverage  # pylint: disable=import-outside-toplevel
 
     if args.format == 'structure':
         from tl_read_structure import structure  # pylint: disable=import-outside-toplevel
         records, issues, coverage = structure(package, revisions=args.revisions or 'accepted',
                                               include_related=bool(args.include_related), parts=args.xml_part)
     else:
-        records, issues, coverage = report(package, revisions=args.revisions, include_related=args.include_related is not False)
-    enhanced = args.report or args.compact_json or args.table_header
+        records, issues, coverage = raw_report if raw_report is not None else report(
+            package, revisions=args.revisions, include_related=args.include_related is not False)
+    enhanced = args.report or args.compact_json or args.table_header or getattr(args, 'content', False)
     if enhanced:
         from tl_read_tables import enrich_tables, table_header_arg  # pylint: disable=import-outside-toplevel
+        from copy import deepcopy  # pylint: disable=import-outside-toplevel
+        records = deepcopy(records)
         overrides = dict(map(table_header_arg, args.table_header))
         if len(overrides) != len(args.table_header):
             raise ValueError('A table header may be overridden only once')
         issues = issues + enrich_tables(package, records, overrides)
-        records = enhanced_records(package, records, compact=args.compact_json and args.tables != 'rows', points=args.report)
-    counts = dict(Counter(record['type'] for record in records))
-    if args.headings:
-        records = [record for record in records if record['type'] == 'paragraph' and record.get('heading_level') is not None]
-    elif args.summary:
-        records = []
+        records = enhanced_records(package, records, compact=args.compact_json and args.tables != 'rows', points=args.report or getattr(args, 'content', False))
+    document_coverage = coverage
+    document_issues = issues
+    document_counts = dict(Counter(record['type'] for record in records))
+    selection = args.paragraph_range or args.section or ('headings' if args.headings else 'summary' if args.summary else 'full')
+    if args.headings or args.summary:
+        records = [item for _, item in body_paragraphs(records, package.main) if item.get('heading_level') is not None]
     elif args.paragraph_range or args.section:
         records = select_body(records, package.main, args)
+    if args.headings or args.paragraph_range or args.section:
+        issues = selected_issues(issues, records, package.main)
+        coverage = scoped_coverage(coverage, records, issues, selection)
+    if getattr(args, 'content', False):
+        from tl_read_content import content_records  # pylint: disable=import-outside-toplevel
+        records = content_records(records, details=args.details)
+    counts = dict(Counter(record['type'] for record in records))
     meta = {'status': 'partial' if issues else 'ok', 'api_version': API_VERSION, 'sha256': package.sha256,
-            'coverage': {**coverage, 'counts': counts}, 'issues': issues,
-            'view': args.paragraph_range or args.section or ('headings' if args.headings else 'summary' if args.summary else 'full')}
-    binding_fields = [API_VERSION, package.sha256, args.headings, args.summary, args.paragraph_range, args.section]
+            'coverage': {**coverage, 'counts': document_counts if args.summary else counts}, 'issues': issues, 'view': selection}
+    if args.headings or args.paragraph_range or args.section:
+        meta.update(document_coverage=document_coverage, document_issues=document_issues)
+    if args.summary:
+        meta['summary'] = {'heading_count': len(records), 'content_records_included': False}
+    binding_fields = [API_VERSION, 'read-view-v4', package.sha256, args.headings, args.summary, args.paragraph_range,
+                      args.section.strip() if args.section else None]
     if enhanced or args.revisions or args.include_related is not None or args.format == 'structure' or args.section_occurrence:
         options = {'format': args.format, 'revisions': args.revisions, 'include_related': args.include_related,
                    'parts': args.xml_part, 'report': args.report, 'compact': args.compact_json, 'tables': args.tables,
                    'table_header': args.table_header, 'section_occurrence': args.section_occurrence}
         meta.update(options=options)
         binding_fields.append(options)
+    if getattr(args, 'content', False):
+        meta.update(view='content', selection=selection, details=args.details, projection='content-v1')
+        meta['coverage']['projection'] = {'mode': 'content', 'structural_definitions_omitted': True,
+                                          'duplicate_representations_removed': True, 'layout_reproduced': False}
+        if not args.details:
+            from tl_read_content import diagnostic_summary  # pylint: disable=import-outside-toplevel
+            meta['issues'] = diagnostic_summary(meta['issues'])
+            if 'document_issues' in meta:
+                meta['document_issues'] = diagnostic_summary(meta['document_issues'])
+            meta['diagnostics'] = {'mode': 'counts_by_code', 'full_details_option': '--content --details'}
+        binding_fields.extend(['content-v1', args.details])
     if args.format == 'structure':
         meta['view'] = 'structure'
-    elif enhanced:
+    elif enhanced and not getattr(args, 'content', False):
         meta['view'] = 'compact' if args.compact_json and args.tables != 'rows' else 'report'
     if args.compact_json and args.tables != 'rows':
-        meta['table_rows_omitted'] = coverage.get('tables', {}).get('rows', 0) - counts.get('table_row', 0)
+        meta['table_rows_omitted'] = sum(item['row_count'] for item in records if item['type'] == 'table') - counts.get('table_row', 0)
+    if cache_meta is not None:
+        meta['cache'] = cache_meta
+    if getattr(args, 'fragment_records', False):
+        from tl_read_fragments import fragment_records  # pylint: disable=import-outside-toplevel
+        meta.update(fragment_mode='json-record-v1', source_record_total=len(records))
+        records, _ = fragment_records(records, meta, args.max_output_bytes)
+        binding_fields.extend(['json-record-v1', args.max_output_bytes])
     binding = sha256(encode(binding_fields)).hexdigest()
     budget = args.max_output_bytes if args.max_output_bytes is not None or args.cursor is None else 12_000
     return page(meta, records, budget, args.cursor, binding)
+
+
+def cached_read(root, package, args):
+    """Cache only when explicitly requested, preserving default read-only behavior."""
+    from tl_read_cache import cached_report, release  # pylint: disable=import-outside-toplevel
+    raw, cache = cached_report(root, package, revisions=args.revisions,
+                               include_related=args.include_related is not False, token=args.cache_token)
+    try:
+        result = read_result(package, args, raw_report=raw, cache_meta=cache)
+    except Exception:
+        if cache['status'] != 'reused':
+            release(root, cache['token'])
+        raise
+    if not result['has_more']:
+        result['cache'] = release(root, cache['token'])
+    return result
 
 
 def enhanced_records(package, records, *, compact, points):
@@ -170,30 +221,6 @@ def enhanced_records(package, records, *, compact, points):
     return result
 
 
-def select_body(records, main, args):
-    """Select direct body paragraphs or a uniquely identified heading section."""
-    paragraphs = [(index, item) for index, item in enumerate(records) if item['part'] == main
-                  and item['type'] == 'paragraph' and BODY_PARAGRAPH.fullmatch(item['path'])]
-    if args.paragraph_range:
-        if not re.fullmatch(r'[1-9][0-9]{0,8}:[1-9][0-9]{0,8}', args.paragraph_range):
-            raise ValueError('Paragraph range must be inclusive START:END with positive indexes')
-        start, end = map(int, args.paragraph_range.split(':'))
-        if not start <= end <= len(paragraphs):
-            raise ValueError('Paragraph range exceeds the direct body paragraphs')
-        return [item for _, item in paragraphs[start - 1:end]]
-    headings = [(index, item) for index, item in paragraphs if item.get('heading_level') is not None]
-    matches = [(index, item) for index, item in headings if item['text'] == args.section]
-    if args.section_occurrence is None and len(matches) != 1:
-        raise ValueError('Section title must match exactly one direct body heading')
-    occurrence = args.section_occurrence or 1
-    if occurrence > len(matches):
-        raise ValueError('Section occurrence exceeds the matching headings')
-    start, heading = matches[occurrence - 1]
-    end = next((index for index, item in headings if index > start and item['heading_level'] <= heading['heading_level']), len(records))
-    return [item for item in records[start:end] if item.get('story_kind', 'main') == 'main'
-            and item['type'] not in ('story', 'metadata')]
-
-
 def plain_report(result):
     """Project selected records to readable UTF-8 text."""
     lines = []
@@ -220,16 +247,6 @@ def layout_report(body, part):
         return node is not None and node.get(qn('w:val'), '1') not in ('0', 'false', 'off')
 
     paragraph_breaks = [node for node in body.iter(qn('w:pageBreakBefore')) if enabled(node)]
-    for section in sections:
-        size = section.find(qn('w:pgSz'))
-        margins = section.find(qn('w:pgMar'))
-        if size is None or margins is None:
-            continue
-        for total, first, last in (('w', 'left', 'right'), ('h', 'top', 'bottom')):
-            value = int(size.get(qn('w:' + total), '0'))
-            offsets = sum(int(margins.get(qn('w:' + margin), '0')) for margin in (first, last))
-            if value <= offsets:
-                issues.append({'code': 'nonpositive_body_area', 'part': part, 'dimension': total})
     for position, para in enumerate(body.findall(qn('w:p')), 1):
         props = para.find(qn('w:pPr'))
         if props is not None and enabled(props.find(qn('w:pageBreakBefore'))) and any(
@@ -252,12 +269,16 @@ def validate(package):
     from docx.oxml.ns import qn  # pylint: disable=import-outside-toplevel
     from tl_package import OFFICE_REL, TYPES, rels_member  # pylint: disable=import-outside-toplevel
     from tl_pagination import audit_pagination  # pylint: disable=import-outside-toplevel
+    from tl_layout_audit import audit_layout  # pylint: disable=import-outside-toplevel
 
     for name, kind in package.types.items():
         if name.lower().endswith(('.xml', '.rels')) or kind.endswith(('+xml', '/xml')):
             package.xml(name)
     body = package.xml(package.main).find(qn('w:body'))
     issues, layout = layout_report(body, package.main)
+    audit = audit_layout(package)
+    layout['audit'] = audit
+    issues.extend(item for item in audit['issues'] if item['level'] == 'error')
     styles = next((rel['target'] for rel in package.relations(package.main).values()
                    if rel['type'] == OFFICE_REL + 'styles' and not rel['external'] and rel['target'] in package.names), None)
     layout['pagination_warnings'] = audit_pagination(body, package.xml(styles) if styles else None, package.main)
@@ -321,7 +342,8 @@ def export_report(root, args, result):
     if mode == 'xml':
         payload = result['data']
     else:
-        payload = plain_report(result) if mode == 'text' else encode(result)
+        payload = plain_report(result) if mode == 'text' else encode(
+            {key: value for key, value in result.items() if key != 'status'} if args.action == 'unpack' else result)
     from tl_package import MAX_INPUT  # pylint: disable=import-outside-toplevel
     if len(payload) > MAX_INPUT:
         raise ValueError('Report export exceeds the 64 MiB limit; use a narrower view or paging')
@@ -355,6 +377,9 @@ def execute(args):
     with task_root() as root:
         if args.action == 'check':
             return self_check(args, Document, Package, version), 0
+        if args.action == 'release-cache':
+            from tl_read_cache import release  # pylint: disable=import-outside-toplevel
+            return release(root, args.token), 0
         if args.action == 'resume':
             from tl_recovery import resume  # pylint: disable=import-outside-toplevel
             try:
@@ -371,12 +396,23 @@ def execute(args):
             if not args.source.lower().endswith(package.extension):
                 raise ValueError('Document extension does not match its package content type')
         if args.action == 'read':
-            result = read_xml_bytes(package, args.xml_part) if args.format == 'xml' else read_result(package, args)
+            if args.cache or args.cache_token:
+                result = cached_read(root, package, args)
+            else:
+                result = read_xml_bytes(package, args.xml_part) if args.format == 'xml' else read_result(package, args)
             return export_report(root, args, result) if args.output else (result, 0)
+        if args.action == 'unpack':
+            from tl_roundtrip import unpack_package  # pylint: disable=import-outside-toplevel
+            bundle = unpack_package(package)
+            if args.output:
+                return export_report(root, args, {'status': 'ok', **bundle})
+            return bundle, 0
         if args.action == 'validate':
             result = validate(package)
             strict_status = (1 if result['status'] != 'verified' else
-                             2 if args.strict_pagination and result['layout']['pagination_warnings'] else 0)
+                             2 if (args.strict_pagination and result['layout']['pagination_warnings']
+                                   or args.strict_layout and any(item['level'] == 'warning'
+                                       for item in result['layout']['audit']['issues'])) else 0)
             if args.output:
                 receipt, status = export_report(root, args, result)
                 return receipt, 1 if strict_status == 1 else status or strict_status
@@ -412,7 +448,7 @@ def write_document(root, args, package):
         raise ValueError('JSON specification exceeds 16 MiB')
     specification = decode(payload)
     protected = [args.source] if package is not None else []
-    extension = package.extension if args.action in ('comments', 'replace') else '.docx'
+    extension = package.extension if args.action in ('comments', 'replace', 'repack') else '.docx'
     name = output_name(args.output, extension) if args.output is not None else None
 
     def read_image(path):
@@ -420,7 +456,10 @@ def write_document(root, args, package):
         protected.append(path)
         return data
 
-    if args.action == 'edit':
+    if args.action == 'repack':
+        from tl_roundtrip import repack_package  # pylint: disable=import-outside-toplevel
+        data, details = repack_package(package, specification)
+    elif args.action == 'edit':
         from tl_edit import edit_document  # pylint: disable=import-outside-toplevel
         data, details = edit_document(package, specification, read_image)
     elif args.action == 'replace':
@@ -516,16 +555,28 @@ def arguments(argv):
     reader.add_argument('--delivery', action='store_true')
     reader.add_argument('--max-output-bytes', type=int)
     reader.add_argument('--cursor')
+    reader.add_argument('--fragment-records', action='store_true')
+    reader.add_argument('--content', action='store_true')
+    reader.add_argument('--details', action='store_true')
+    cache = reader.add_mutually_exclusive_group()
+    cache.add_argument('--cache', action='store_true')
+    cache.add_argument('--cache-token')
+    actions.add_parser('release-cache').add_argument('token')
     validator = actions.add_parser('validate')
     validator.add_argument('source')
     validator.add_argument('--strict-pagination', action='store_true')
+    validator.add_argument('--strict-layout', action='store_true')
     validator.add_argument('-o', '--output')
     validator.add_argument('--delivery', action='store_true')
     archiver = actions.add_parser('archive')
     archiver.add_argument('source')
     archiver.add_argument('--sha256', required=True)
     actions.add_parser('resume').add_argument('manifest')
-    for action in ('create', 'edit', 'comments', 'replace'):
+    unpacker = actions.add_parser('unpack')
+    unpacker.add_argument('source')
+    unpacker.add_argument('-o', '--output')
+    unpacker.add_argument('--delivery', action='store_true')
+    for action in ('create', 'edit', 'comments', 'replace', 'repack'):
         writer = actions.add_parser(action)
         if action != 'create':
             writer.add_argument('source')
@@ -537,6 +588,14 @@ def arguments(argv):
             writer.add_argument('--require-no-placeholders', action='store_true')
     args = parser.parse_args(argv)
     if args.action == 'read':
+        if args.details and not args.content:
+            parser.error('--details requires --content')
+        if args.content and (args.format != 'json' or any((args.report, args.compact_json, args.summary, args.headings, args.tables, args.table_header))):
+            parser.error('--content requires JSON without structure, XML, summary, headings or report table options')
+        if args.fragment_records and (args.format not in ('json', 'structure') or args.max_output_bytes is None):
+            parser.error('--fragment-records requires JSON/structure and an explicit --max-output-bytes')
+        if (args.cache or args.cache_token) and (args.format != 'json' or args.output):
+            parser.error('Parsing cache requires JSON stdout content/report output, without -o')
         if args.format == 'text' and (args.cursor is not None or args.max_output_bytes is not None or args.summary):
             parser.error('Text output cannot use cursors, a byte budget or summary mode')
         if args.max_output_bytes is not None and args.max_output_bytes < MIN_BUDGET:

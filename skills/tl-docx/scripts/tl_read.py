@@ -2,8 +2,10 @@
 
 from collections import Counter
 from hashlib import sha256
-import re
 
+from tl_read_numbering import NumberingReader
+from tl_read_parts import PartCatalog, STORIES, section_references
+from tl_read_styles import read_styles, heading_outline
 from tl_read_charts import read_chart
 from tl_read_revisions import revision_issues, revision_text, selected_children, text
 
@@ -26,13 +28,6 @@ WRAPPERS = {
 }
 PROPERTY_TAGS = {
     "pPr", "rPr", "tcPr", "trPr", "tblPr", "tblGrid", "sdtPr", "sdtEndPr",
-}
-STORY_PARTS = {
-    "header": re.compile(r"word/header[0-9]+\.xml\Z"),
-    "footer": re.compile(r"word/footer[0-9]+\.xml\Z"),
-    "footnote": re.compile(r"word/footnotes\.xml\Z"),
-    "endnote": re.compile(r"word/endnotes\.xml\Z"),
-    "comment": re.compile(r"word/comments\.xml\Z"),
 }
 STORY_ROOTS = {
     "header": "hdr", "footer": "ftr", "footnote": "footnotes",
@@ -114,9 +109,11 @@ class ReportReader:
         self.vmerge_origins = 0
         self.styles = {}
         self.numbering = {}
+        self.numbering_reader = None
         self.numbering_counters = {}
         self.numbering_with_overrides = set()
         self.current_part = None
+        self.catalog = PartCatalog(package, self._issue)
 
     def _issue(self, code, part, path=None, **identifiers):
         issue = {"code": code, "part": part}
@@ -214,34 +211,17 @@ class ReportReader:
         return simple_fields + complex_fields
 
     def _load_styles(self):
-        part = "word/styles.xml"
-        if part not in self.names:
-            return
-        root = self.package.xml(part)
-        for style in _children(root):
-            if not _is_word(style, "style"):
-                continue
-            style_id = style.get("{" + W_NS + "}styleId")
-            if not style_id:
-                continue
-            name_node = next((item for item in _children(style) if _is_word(item, "name")), None)
-            outline = next((item for item in _children(style) if _is_word(item, "pPr")), None)
-            outline_node = None if outline is None else next(
-                (item for item in _children(outline) if _is_word(item, "outlineLvl")), None
-            )
-            based_on = next((item for item in _children(style) if _is_word(item, "basedOn")), None)
-            self.styles[style_id] = {
-                "name": None if name_node is None else name_node.get("{" + W_NS + "}val"),
-                "type": style.get("{" + W_NS + "}type"),
-                "based_on": None if based_on is None else based_on.get("{" + W_NS + "}val"),
-                "outline_level": None if outline_node is None else outline_node.get("{" + W_NS + "}val"),
-            }
+        self.styles = read_styles(self.package, self.catalog)
 
     def _load_numbering(self):
-        part = "word/numbering.xml"
-        if part not in self.names:
-            return
-        root = self.package.xml(part)
+        self.numbering_reader = NumberingReader(self.package, self.catalog)
+        parts = self.catalog.locate('numbering')
+        for part in parts:
+            root = self.catalog.xml(part, 'numbering')
+            if root is not None:
+                self._numbering_part(part, root)
+
+    def _numbering_part(self, part, root):
         abstracts = {}
         nums = {}
         for node in _children(root):
@@ -276,7 +256,7 @@ class ReportReader:
                         num_id=num_id, abstract_num_id=abstract_id,
                         levels=abstracts.get(abstract_id, []),
                     )
-        self.numbering = {num_id: abstracts.get(abstract_id, []) for num_id, abstract_id in nums.items()}
+        self.numbering.update({num_id: abstracts.get(abstract_id, []) for num_id, abstract_id in nums.items()})
 
     def _paragraph_info(self, paragraph):
         properties = next((item for item in _children(paragraph) if _is_word(item, "pPr")), None)
@@ -296,12 +276,9 @@ class ReportReader:
         )
         outline = None if outline_node is None else outline_node.get("{" + W_NS + "}val")
         if outline is None:
-            outline = style.get("outline_level")
-        if outline is None:
-            heading_name = style.get("name") or style_id or ""
-            heading_match = re.search(r"(?:heading|标题)\s*([1-9])\Z", heading_name, re.IGNORECASE)
-            if heading_match is not None:
-                outline = str(int(heading_match.group(1)) - 1)
+            outline, issue = heading_outline(self.styles, style_id)
+            if issue:
+                self._issue(issue, self.current_part, _path(paragraph))
         if outline is not None:
             info["outline_level"] = outline
             try:
@@ -311,36 +288,11 @@ class ReportReader:
             except ValueError:
                 self._issue("paragraph_outline_level_invalid", self.current_part, _path(paragraph))
 
-        num_properties = None if properties is None else next(
-            (item for item in _children(properties) if _is_word(item, "numPr")), None
-        )
-        if num_properties is not None:
-            num_id_node = next((item for item in _children(num_properties) if _is_word(item, "numId")), None)
-            level_node = next((item for item in _children(num_properties) if _is_word(item, "ilvl")), None)
-            num_id = None if num_id_node is None else num_id_node.get("{" + W_NS + "}val")
-            level = "0" if level_node is None else level_node.get("{" + W_NS + "}val", "0")
-            level_info = self.numbering.get(num_id, [])
-            level_info = next((item for item in level_info if item.get("level") == level), None)
-            info["numbering"] = {
-                "num_id": num_id,
-                "level": level,
-                "format": None if level_info is None else level_info.get("numFmt"),
-                "text": None if level_info is None else level_info.get("lvlText"),
-                "suppressed": num_id == "0",
-            }
-            if (level == "0" and num_id not in (None, "0") and num_id not in self.numbering_with_overrides
-                    and len(self.numbering.get(num_id, [])) == 1 and level_info):
-                pattern, start = level_info.get("lvlText") or "", level_info.get("start") or "0"
-                if level_info.get("numFmt") == "decimal" and "%1" in pattern and not re.search(r"%[2-9]", pattern) and re.fullmatch(r"[0-9]{1,9}", start):
-                    key = (self.current_part, num_id)
-                    number = self.numbering_counters.get(key, int(start) - 1) + 1
-                    self.numbering_counters[key] = number
-                    info["numbering"]["label"] = pattern.replace("%1", str(number))
-            if num_id is not None and num_id != "0" and level_info is None:
-                self._issue(
-                    "numbering_definition_unavailable", self.current_part,
-                    _path(paragraph), num_id=num_id, level=level,
-                )
+        numbering, issues = self.numbering_reader.paragraph_info(paragraph, self.current_part)
+        if numbering is not None:
+            info['numbering'] = numbering
+        for code in issues:
+            self._issue(code, self.current_part, _path(paragraph))
         return info
 
     def _paragraph(self, paragraph, part, context):
@@ -375,6 +327,11 @@ class ReportReader:
                         display=child.tag == "{" + M_NS + "}oMathPara",
                         text=self._math_text(child),
                     )
+                elif _name(child.tag)[0] == W_NS and _name(child.tag)[1] in {
+                    "footnoteReference", "endnoteReference", "commentReference",
+                }:
+                    self._record("reference", part, child, kind=_name(child.tag)[1],
+                                 id=child.get("{" + W_NS + "}id"), **context)
                 elif _is_word(child, "sectPr"):
                     self._section(child, part)
                 elif _is_word(child, "altChunk"):
@@ -389,10 +346,11 @@ class ReportReader:
         visit(paragraph)
 
     def _math_text(self, node):
-        return "".join(
-            child.text or "" for child in node.iter()
-            if _is_ns(child, M_NS, "t")
-        )
+        from tl_read_math import math_expression  # pylint: disable=import-outside-toplevel
+        result = math_expression(node)
+        for issue in result['issues']:
+            self._issue(issue['code'], self.current_part, _path(node), element=issue.get('element'))
+        return result['text']
 
     def _hyperlink(self, node, part, context):
         relation_id = node.get("{" + R_NS + "}id")
@@ -446,8 +404,20 @@ class ReportReader:
         return {}
 
     def _drawing(self, node, part, context):
+        before_records, before_issues = len(self.records), len(self.issues)
+
         def visit(current):
             for child in self._selected_children(current, part):
+                namespace, local = _name(child.tag)
+                if (namespace == WPS_NS and local == 'wsp') or (namespace == V_NS and local in {'shape', 'rect', 'oval', 'line', 'polyline', 'roundrect', 'arc', 'curve'}):
+                    self._issue('drawing_geometry_not_rendered', part, _path(child),
+                                available_content='supported_text_and_image_references_only')
+                if local == 'relIds' and namespace == 'http://schemas.openxmlformats.org/drawingml/2006/diagram':
+                    self._issue('smartart_content_not_decoded', part, _path(child))
+                if _is_ns(child, A_NS, 'graphicData'):
+                    uri = child.get('uri')
+                    if uri and uri not in (C_NS, PIC_NS, WPS_NS, WPG_NS):
+                        self._issue('drawing_graphic_data_unsupported', part, _path(child), namespace=uri)
                 if _is_word(child, "txbxContent"):
                     self._textbox(child, part, context)
                     continue
@@ -463,6 +433,8 @@ class ReportReader:
                 visit(child)
 
         visit(node)
+        if len(self.records) == before_records and len(self.issues) == before_issues:
+            self._issue('drawing_content_not_read', part, _path(node))
 
     def _textbox(self, node, part, context):
         paragraphs = self._find_wrapped(node, "p", stop={"tbl", "txbxContent"})
@@ -547,9 +519,16 @@ class ReportReader:
         chart_data = {"title": None, "series": [], "external_data_id": None, "issues": []}
         if target is not None and target in self.names:
             try:
-                chart_data = read_chart(self.package.xml(target))
-            except (KeyError, TypeError, ValueError):
-                chart_data["issues"].append("chart_part_unreadable")
+                chart_root = self.package.xml(target)
+            except ValueError as exc:
+                if str(exc) != 'Malformed XML part':
+                    raise
+                chart_data['issues'].append('chart_part_unreadable')
+            else:
+                try:
+                    chart_data = read_chart(chart_root)
+                except (KeyError, TypeError, ValueError):
+                    chart_data['issues'].append('chart_part_unreadable')
         elif relation is None:
             chart_data["issues"].append("chart_relationship_unavailable")
         elif relation.get("external"):
@@ -623,6 +602,11 @@ class ReportReader:
             "numeric_value_count": numeric_count,
             "issues": series.get("issues", []),
         }
+        for key in ('category_levels', 'x_formula', 'x_source', 'x_format_code',
+                    'y_formula', 'y_source', 'y_format_code', 'bubble_size_formula',
+                    'bubble_size_source', 'bubble_size_format_code'):
+            if key in series:
+                record[key] = series[key]
         self.records.append(record)
         self.counts["chart_series"] += 1
         for code in record["issues"]:
@@ -708,7 +692,7 @@ class ReportReader:
                     else:
                         next_active[key] = origin
                 item = {
-                    "text": self._text(cell),
+                    "text": self._cell_text(cell),
                     "column": column,
                     "colspan": colspan,
                     "vmerge": merge,
@@ -760,6 +744,22 @@ class ReportReader:
             record["header_candidate"] = {"source": "repeat_header" if prefix else "first_row_candidate",
                                           "rows": repeated_rows if prefix else [1]}
 
+    def _cell_text(self, cell):
+        """Preserve paragraph boundaries, including empty and wrapped paragraphs."""
+        paragraphs = []
+
+        def visit(node):
+            for child in self._selected_children(node, self.current_part or ''):
+                if self.revisions is None and (_is_word(child, 'del') or _is_word(child, 'moveFrom')):
+                    continue
+                if _is_word(child, 'p'):
+                    paragraphs.append(self._text(child))
+                else:
+                    visit(child)
+
+        visit(cell)
+        return '\n'.join(paragraphs)
+
     def _cell_blocks(self, cell):
         events = []
 
@@ -789,6 +789,7 @@ class ReportReader:
                 fields["break_type"] = values.get("val")
             else:
                 fields[local] = values
+        fields["story_references"] = section_references(self, section, part)
         self._record("section", part, section, **fields)
 
     def _process_blocks(self, container, part, context=None):
@@ -817,13 +818,15 @@ class ReportReader:
 
     def _story(self, part, kind):
         self.current_part = part
-        root = self.package.xml(part)
+        root = self.package.xml(part) if kind == 'main' else self.catalog.xml(part, kind)
+        if root is None:
+            return
         revision_issues(self, root, part)
-        self._record(
-            "story", part, root,
-            story_kind=kind,
-            content_type=self.package.types.get(part),
-        )
+        context = {'story_kind': kind}
+        if part in self.catalog.orphans:
+            context['orphan_part'] = True
+            context['document_display_association'] = 'unconfirmed'
+        self._record("story", part, root, content_type=self.package.types.get(part), **context)
         if kind == "main":
             body = next((item for item in _children(root) if _is_word(item, "body")), None)
             if body is None:
@@ -835,15 +838,17 @@ class ReportReader:
         if not _is_word(root, expected):
             self._issue("story_root_unexpected", part, _path(root), expected=expected)
             return
-        self._process_blocks(root, part, {"story_kind": kind})
+        self._process_blocks(root, part, context)
 
     def _metadata(self):
         if not self.include_related:
             return
-        part = "docProps/core.xml"
-        if part not in self.names:
-            return
-        root = self.package.xml(part)
+        for part in self.catalog.locate('core'):
+            root = self.catalog.xml(part, 'core')
+            if root is not None:
+                self._core_part(part, root)
+
+    def _core_part(self, part, root):
         values = {}
         for child in _children(root):
             _, local = _name(child.tag)
@@ -857,8 +862,8 @@ class ReportReader:
 
     def _story_parts(self):
         result = []
-        for kind, pattern in STORY_PARTS.items():
-            result.extend((part, kind) for part in self.names if pattern.fullmatch(part))
+        for kind in STORIES:
+            result.extend((part, kind) for part in self.catalog.locate(kind))
         return sorted(result)
 
     def read(self):
@@ -873,19 +878,20 @@ class ReportReader:
         self._story(main, "main")
         parts = self._story_parts() if self.include_related else []
         for part, kind in parts:
-            self._story(part, kind)
+            try:
+                self._story(part, kind)
+            except ValueError as exc:
+                if str(exc) != 'Malformed XML part':
+                    raise
+                self.catalog.failed.add(part)
+                self._issue('support_story_incomplete', part, kind=kind)
         self._metadata()
         availability = {"main": "available"}
-        for kind in STORY_PARTS:
-            count = sum(1 for _, part_kind in parts if part_kind == kind)
-            availability[kind + "s"] = (
-                "available" if count else "absent"
-            ) if self.include_related else "excluded"
-        availability["styles"] = "available" if "word/styles.xml" in self.names else "absent"
-        availability["numbering"] = "available" if "word/numbering.xml" in self.names else "absent"
-        availability["core_metadata"] = (
-            "available" if "docProps/core.xml" in self.names else "absent"
-        ) if self.include_related else "excluded"
+        for kind in STORIES:
+            availability[kind + "s"] = self.catalog.state(kind) if self.include_related else 'excluded'
+        availability['styles'] = self.catalog.state('styles')
+        availability['numbering'] = self.catalog.state('numbering')
+        availability['core_metadata'] = self.catalog.state('core') if self.include_related else 'excluded'
         coverage = self._coverage(availability, main)
         if self.revisions is not None:
             coverage["revisions"] = self.revisions
@@ -931,14 +937,28 @@ class ReportReader:
             "charts": charts,
             "images": images,
             "textboxes": self.textbox_count,
+            "drawing_content": {
+                "unsupported_locations": len({(item['part'], item.get('path')) for item in self.issues
+                                              if item['code'] in {'drawing_geometry_not_rendered', 'drawing_content_not_read',
+                                                                  'smartart_content_not_decoded', 'drawing_graphic_data_unsupported'}}),
+                "visual_rendering": "not_performed", "image_ocr": "not_performed",
+            },
         }
 
 
-def report(package, *, revisions=None, include_related=True):
+def report(package, *, revisions=None, include_related=True, cache_root=None, cache_token=None):
     """Return flat records, location-keyed issues and explicit coverage counts."""
     if revisions not in (None, "accepted", "original", "all"):
         raise ValueError("revisions must be accepted, original, all or None")
     if not isinstance(include_related, bool):
         raise ValueError("include_related must be a boolean")
+    if cache_token is not None:
+        if cache_root is None:
+            raise ValueError("A pinned task root is required for read cache reuse")
+        from tl_read_cache import load  # pylint: disable=import-outside-toplevel
+        cached = load(cache_root, cache_token, package.sha256,
+                      {"revisions": revisions, "include_related": include_related})
+        if cached is not None:
+            return cached
     reader = ReportReader(package, revisions=revisions, include_related=include_related)
     return reader.read()

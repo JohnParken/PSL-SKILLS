@@ -435,12 +435,24 @@ class SkillRuntimePackages(unittest.TestCase):
             return json.loads(response.stdout)
 
         self.assertEqual('environment-ok', call('check', '--write')['status'])
+        styled = call('create', 'styled.docx', payload={
+            'profile': 'academic', 'styles': {'body': {'size_pt': 13}},
+            'page': {'margin_mm': 20},
+            'blocks': [{'type': 'heading', 'level': 1, 'text': 'Styled section'},
+                       {'type': 'paragraph', 'text': 'Styled content'}]})
+        self.assertEqual('verified', styled['status'])
+        summary = call('read', 'styled.docx', '--summary')
+        self.assertEqual('Styled section', summary['records'][0]['text'])
         created = call('create', 'source.docx', payload={'blocks': [{'type': 'paragraph', 'text': '月报原文'}]})
         self.assertEqual('verified', created['status'])
         self.assertEqual('success', created['archive_status'])
         original = (self.work / 'source.docx').read_bytes()
         result = call('read', 'source.docx')
         self.assertIn('月报原文', [item.get('text') for item in result['records']])
+        content = call('read', 'source.docx', '--content')
+        self.assertEqual('content', content['view'])
+        self.assertIn('月报原文', [item.get('text') for item in content['records']])
+        self.assertFalse(content['has_more'])
         spec = {'operations': [{'type': 'replace_run_text', 'paragraph_index': 0, 'run_index': 0,
                                 'expected_text': '月报原文', 'expected_run_text': '月报原文', 'text': '月报修订'}]}
         edited = call('edit', 'source.docx', 'result.docx', payload=spec)

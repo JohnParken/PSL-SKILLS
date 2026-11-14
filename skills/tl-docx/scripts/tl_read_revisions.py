@@ -1,5 +1,7 @@
 """Revision-view traversal helpers for the DOCX report reader."""
 
+from tl_read_math import MATH_NS, math_expression
+
 WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 MARKUP_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 REVISION_GROUPS = {
@@ -79,6 +81,17 @@ def text(reader, node, deleted_only=False):
         if revision is not None:
             group = REVISION_GROUPS[revision]
         deleted = group == "original"
+        if namespace == MATH_NS and local in ("oMath", "oMathPara"):
+            visible = group != "original" if reader.revisions == "accepted" else group != "accepted"
+            if legacy:
+                visible = deleted == deleted_only
+            elif deleted_only:
+                visible = deleted
+            if not deleted_only and reader.revisions == "all":
+                visible = True
+            if visible:
+                pieces.append(math_expression(current)["text"])
+            return
         if namespace == WORD_NS and local == "t":
             if legacy and deleted == deleted_only:
                 pieces.append(current.text or "")
@@ -171,6 +184,11 @@ def _revision_detail_text(reader, node, view):
         if revision is not None:
             group = REVISION_GROUPS[revision]
         deleted = group == "original"
+        if namespace == MATH_NS and local in ("oMath", "oMathPara"):
+            visible = view == "all" or (view == "original" and group != "accepted") or (view == "accepted" and not deleted)
+            if visible:
+                pieces.append(math_expression(current)["text"])
+            return
         if namespace == WORD_NS and local in ("t", "delText"):
             visible = view == "all" or (view == "original" and group != "accepted")
             if local == "delText":
@@ -235,8 +253,6 @@ def revision_text(reader, paragraph, legacy=False):
 
 def revision_issues(reader, root, part):
     """Report revision constructs whose effective state cannot be selected."""
-    if reader.revisions is None:
-        return
     for node in root.iter():
         namespace, local = _name(getattr(node, "tag", None))
         if namespace != WORD_NS:

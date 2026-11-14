@@ -23,6 +23,8 @@
 {"type":"table","caption":"指标对照","header_rows":2,"widths_mm":[50,60],"format":{"preset":"three_line","borders":{"top":{"width_pt":1.5}}},"rows":[[{"text":"汇总","col_span":2},null],["指标","数值"],["示例","1"]]}
 ```
 
+单表 `body_format`、`header_format` 使用 `<skill-root>/references/typography.md` 的格式字段，分别覆盖全局 `styles.table_body`、`styles.table_header`。表头行范围由 `header_rows` 或 `header` 确定，合并格只处理一次；显式 `false` 取消粗体，行距跨层覆盖时替换原模式。
+
 ## 首页、奇偶页和分节页码
 
 顶层 `odd_even_headers:true` 开启奇偶变体。首节和 `section_break` 可设 `different_first_page`，以及 `headers`、`footers` 对象的 `default`、`first`、`even`，值为文字、run 数组或显式空值 `null`。`first` 要求开启不同首页，`even` 要求文档已开启奇偶变体。`default` 可继续使用原 `header` 或 `footer` 字段。

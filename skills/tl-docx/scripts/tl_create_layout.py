@@ -131,20 +131,27 @@ def apply_page_setup(section, theme: str, page: dict | None = None) -> None:
     """Apply A4 page dimensions, theme margins, and explicit page options."""
     defaults = THEME_DEFAULTS[theme]
     options = page or {}
-    section.page_width = Cm(21)
-    section.page_height = Cm(29.7)
+    width = options.get("width_mm", 210) / 10
+    height = options.get("height_mm", 297) / 10
+    section.page_width = Cm(width)
+    section.page_height = Cm(height)
     section.orientation = WD_ORIENT.PORTRAIT
     orientation = options.get("orientation", "portrait")
     if orientation == "landscape":
         section.orientation = WD_ORIENT.LANDSCAPE
-        section.page_width = Cm(29.7)
-        section.page_height = Cm(21)
+        section.page_width = Cm(max(width, height))
+        section.page_height = Cm(min(width, height))
+    elif "orientation" in options:
+        section.page_width = Cm(min(width, height))
+        section.page_height = Cm(max(width, height))
     margins = dict(defaults["margins_cm"])
     margins.update(options.get("margins_cm", {}))
     section.top_margin = Cm(margins["top"])
     section.bottom_margin = Cm(margins["bottom"])
     section.left_margin = Cm(margins["left"])
     section.right_margin = Cm(margins["right"])
+    if section.page_width <= section.left_margin + section.right_margin or section.page_height <= section.top_margin + section.bottom_margin:
+        raise ValueError("Page margins must leave a positive usable page area")
 
 
 def apply_section_options(
@@ -154,6 +161,10 @@ def apply_section_options(
     clear_missing_page_start: bool = False,
 ) -> None:
     """Apply optional orientation and margins to a newly-created section."""
+    if "width_mm" in options:
+        section.page_width = Cm(options["width_mm"] / 10)
+    if "height_mm" in options:
+        section.page_height = Cm(options["height_mm"] / 10)
     if "orientation" in options:
         current_width, current_height = section.page_width, section.page_height
         if options["orientation"] == "landscape":
@@ -174,6 +185,8 @@ def apply_section_options(
         ):
             if key in margins:
                 setattr(section, property_name, Cm(margins[key]))
+    if section.page_width <= section.left_margin + section.right_margin or section.page_height <= section.top_margin + section.bottom_margin:
+        raise ValueError("Section margins must leave a positive usable page area")
     page_start = options.get("page_number_start", options.get("page_start"))
     if "page_number_start" in options and "page_start" in options:
         if options["page_number_start"] != options["page_start"]:
@@ -279,6 +292,11 @@ def apply_run_overrides(run, item: dict) -> None:
         run._element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:eastAsia"), item["font"])
         run._element.rPr.rFonts.set(qn("w:ascii"), item["font"])
         run._element.rPr.rFonts.set(qn("w:hAnsi"), item["font"])
+    if "font_east_asia" in item:
+        run._element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:eastAsia"), item["font_east_asia"])
+    if "font_latin" in item:
+        run.font.name = item["font_latin"]
+        run._element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:cs"), item["font_latin"])
     if "size_pt" in item:
         run.font.size = Pt(item["size_pt"])
     if "color" in item:

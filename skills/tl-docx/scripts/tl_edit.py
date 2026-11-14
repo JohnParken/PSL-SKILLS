@@ -10,12 +10,12 @@ import re
 from docx.image.exceptions import InvalidImageStreamError, UnexpectedEndOfFileError, UnrecognizedImageError
 from docx.image.image import Image
 from docx.opc.oxml import serialize_part_xml
-from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 from docx.text.paragraph import Paragraph
 
 from tl_package import OFFICE_REL, REL, TYPES, Package, parse, rels_member
+from tl_revisions import tracked_replace
 
 COMMENT_REF = qn('w:commentReference')
 COMMENT_MARKERS = (COMMENT_REF, qn('w:commentRangeStart'), qn('w:commentRangeEnd'))
@@ -176,6 +176,45 @@ def replace_image(package, operation, read_image, replacements):
     replacements[name] = blob
 
 
+def merge_runs(paragraph, operation):
+    """Merge an explicitly selected contiguous group of identical plain runs."""
+    fields(operation, ('type', 'paragraph_index', 'expected_text', 'start_run', 'expected_runs'))
+    expected = operation['expected_runs']
+    if not isinstance(expected, list) or len(expected) < 2 or any(not isinstance(item, str) for item in expected):
+        raise ValueError('Merge requires at least two expected run texts')
+    start = operation['start_run']
+    runs = paragraph.runs
+    index(runs, start)
+    chosen = runs[start:start + len(expected)]
+    if len(chosen) != len(expected) or [run.text for run in chosen] != expected:
+        raise ValueError('Merge targets no longer match expected run texts')
+    element = paragraph._p  # pylint: disable=protected-access
+    if any(child.tag not in (qn('w:pPr'), qn('w:r')) for child in element):
+        raise ValueError('Merge cannot cross fields, ranges, links or revision anchors')
+    if any(node.tag in (qn('w:sectPr'), qn('w:pPrChange'), qn('w:rPrChange')) for node in element.iter()):
+        raise ValueError('Merge cannot alter paragraphs with section or revision properties')
+    first = chosen[0]._r  # pylint: disable=protected-access
+    first_props = first.find(qn('w:rPr'))
+    signature = None if first_props is None else serialize_part_xml(first_props)
+    for run in chosen:
+        node = run._r  # pylint: disable=protected-access
+        if dict(node.attrib) != dict(first.attrib) or not node.findall(qn('w:t')):
+            raise ValueError('Merge requires identical run attributes and ordinary text')
+        if any(child.tag not in (qn('w:rPr'), qn('w:t')) for child in node):
+            raise ValueError('Merge supports text-only runs without fields or drawings')
+        if len(node.findall(qn('w:rPr'))) > 1:
+            raise ValueError('Merge rejects duplicate run properties')
+        props = node.find(qn('w:rPr'))
+        if (None if props is None else serialize_part_xml(props)) != signature:
+            raise ValueError('Merge requires identical explicit formatting')
+    # Keep the original text elements, including xml:space, rather than reinterpreting whitespace.
+    for run in chosen[1:]:
+        node = run._r  # pylint: disable=protected-access
+        for child in list(node.findall(qn('w:t'))):
+            first.append(child)
+        element.remove(node)
+
+
 def edit_body(document, operation):
     """Apply an exactly anchored edit through python-docx objects."""
     kind = operation['type']
@@ -194,6 +233,9 @@ def edit_body(document, operation):
         return
     paragraph = index(document.paragraphs, operation.get('paragraph_index'))
     expect(paragraph.text, operation.get('expected_text'))
+    if kind == 'merge_runs':
+        merge_runs(paragraph, operation)
+        return
     if kind == 'insert_paragraph':
         fields(operation, target_keys + ('text',), ('style', 'position'))
         position = operation.get('position', 'before')
@@ -328,7 +370,9 @@ def edit_document(package, spec, read_image):
     comment_xml = deepcopy(package.xml(comment_name)) if comment_name else None
     for operation in operations:
         kind = operation['type']
-        if kind == 'replace_image':
+        if kind == 'tracked_replace_run':
+            tracked_replace(doc, operation)
+        elif kind == 'replace_image':
             replace_image(package, operation, read_image, replacements)
         elif kind in ('update_comment', 'delete_comment'):
             change_comment(comment_xml, doc.element, operation)

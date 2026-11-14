@@ -1,6 +1,7 @@
 """Stored drawing offsets and chart cell locations for enhanced reports."""
 
 import re
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP, localcontext
 
 from tl_read_tables import resolve_path
 
@@ -88,7 +89,9 @@ def chart_range(formula):
 
 def locate_series(item, points):
     """Associate saved point indices with compatible stored formula ranges."""
-    for role in ('category', 'value'):
+    describe_series(item, points)
+    roles = ['category', 'value'] + [role for role in ('x', 'y', 'bubble_size') if role + '_source' in item]
+    for role in roles:
         location, coordinates = chart_range(item.get(role + '_formula'))
         item[role + '_reference'] = location
         if coordinates is None or not points:
@@ -103,5 +106,59 @@ def locate_series(item, points):
             column = left + index if left != right else left
             row = top + index if top != bottom else top
             point[role + '_cell'] = f'{column_letters(column)}{row}'
-    for key in ('name_formula', 'category_formula', 'value_formula'):
+    for key in ['name_formula'] + [role + '_formula' for role in roles]:
         item.pop(key, None)
+
+
+def display_value(raw, format_code):
+    """Offer a limited display without replacing the original saved string."""
+    result = {'text': raw, 'status': 'raw', 'format_code': format_code}
+    if raw is None:
+        return dict(result, status='missing')
+    if not format_code or format_code == 'General':
+        return result
+    match = re.fullmatch(r'0(?:\.(0{1,6}))?%', format_code)
+    if match is None:
+        return dict(result, status='unsupported_format')
+    if not isinstance(raw, str) or len(raw) > 256:
+        return dict(result, status='format_limit')
+    if re.fullmatch(r'[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]{1,4})?', raw) is None:
+        return dict(result, status='invalid_numeric')
+    try:
+        number = Decimal(raw)
+        if not number.is_finite() or abs(number.adjusted()) > 100:
+            return dict(result, status='format_limit')
+        digits = len(match[1] or '')
+        with localcontext() as context:
+            context.prec = 300
+            percentage = (number * 100).quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP)
+            rendered = format(percentage, f'.{digits}f') + '%'
+    except InvalidOperation:
+        return dict(result, status='invalid_numeric')
+    return dict(result, text=rendered, status='formatted_percent')
+
+
+def describe_series(item, points):
+    """Add saved-data availability and display values to an opt-in report only."""
+    roles = ['x', 'y'] if item.get('chart_type') in ('scatterChart', 'bubbleChart') else ['value']
+    if item.get('chart_type') == 'bubbleChart':
+        roles.append('bubble_size')
+    dimensions = {}
+    for role in roles:
+        available = sum(point.get(role) is not None for point in points)
+        dimensions[role] = {'available_points': available, 'missing_in_observed_points': len(points) - available,
+                            'source': item.get(role + '_source', item.get('value_source') if role == 'y' else None)}
+        for point in points:
+            code = item.get('format_code') if role == 'value' else item.get(role + '_format_code')
+            point.setdefault('display', {})[role] = display_value(point.get(role), code)
+    issues = list(item.get('issues', []))
+    available_count = sum(value['available_points'] for value in dimensions.values())
+    missing_count = sum(value['missing_in_observed_points'] for value in dimensions.values())
+    status = 'unavailable' if not available_count else 'partial' if issues or missing_count else 'available'
+    descriptions = {'available': '可读取此系列已保存的数据；不代表数据源已更新。',
+                    'partial': '此系列仅有部分已保存的数据可用，缺失项未补算。',
+                    'unavailable': '此系列没有可用的已保存数值，未从外部数据源补取。'}
+    item['cache_summary'] = {'status': status, 'description': descriptions[status],
+                             'dimensions': dimensions, 'diagnostics': issues,
+                             'point_scope': 'observed_indices_only',
+                             'display_scope': 'simple_percent_only; not rendered labels or formula calculation'}
