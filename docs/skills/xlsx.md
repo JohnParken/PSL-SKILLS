@@ -1,6 +1,6 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261114.2127.4001`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261115.2323.4212`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -104,7 +104,7 @@ flowchart TD
 - 读取保留原存储类型、公式与缓存来源。`xlsx_read_view_v1` 是独立视图 schema，不能代替旧完整 JSON 交给分析器。概况不含全部值；`truncated=true` 表示视图未取完，不等于源解析失败。游标绑定输入 SHA、选区及 `projection_revision=2`，输入/参数变化后须重新开始。
 - 分析区域返回列 ID、类型化表头、物理行和元数据。精确求和上限为 1000 位；均值为 34 位有效数字、`ROUND_HALF_EVEN`，报告 `mean_rounded`。隐藏/过滤行默认纳入，日期序列不自动解释成日历。
 - 公式策略默认 `reject`；`cached` 仅显式使用未验证的旧缓存，缺缓存或错误单元格拒绝；原生文件可 `calculate`，先在内存重算全簿，再分析，任意工作表的未支持公式/错误/循环都会阻断，不回退缓存。
-- ET JSON 仅接受 `biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1` 的原始类型化提取结果，保留 `source_status/issues/coverage`。分析完成不消除源 `partial`；`unverified_due_to_best_effort_salvage` 仅在源 partial 且覆盖字段一致时接受，保留“单元格值覆盖未经验证”的诊断，不制造完整覆盖；workflow 的 `accept_partial` 仍有独立覆盖门禁，未知值影响不能放行。ET JSON 不能在此重算。
+- ET JSON 仅接受 `biff5_readonly_v1`、`biff8_readonly_v1`、`ooxml_spreadsheet_readonly_v1` 的原始类型化提取结果，保留 `source_status/issues/coverage`。分析完成不消除源 `partial`；`unverified_due_to_best_effort_salvage` 仅在源 partial 且覆盖字段一致时接受，保留“单元格值覆盖未经验证”的诊断，不制造完整覆盖；workflow 的 `accept_partial` 仍有独立覆盖门禁，未知值影响不能放行。ET JSON 不能在此重算。
 - CSV/TSV 导入默认文字，数值列显式指定且限制为 Excel 可支持的有效数字；导出默认防护可能被表格软件解释为公式的文本，记录转义计数。选择原始文本或缓存导出需按对应契约明确决定。
 
 公式子集包括基础算术、比较、A1/区域引用、`SUM/COUNT/AVERAGE/MIN/MAX/IF/ROUND` 及受限条件汇总、`SUMPRODUCT`。**公式标量计算当前为 28 位有效数字**，不是分析均值的 34 位；精确汇总与最终舍入另有约定，详见 [formula-calculation.md](../../skills/xlsx/references/formula-calculation.md) 与 [formula_engine.py](../../skills/xlsx/scripts/formula_engine.py)。
@@ -190,3 +190,7 @@ flowchart TD
 ### 最终交付入口边界
 
 公开协议的 `publish` 只负责保存与回读，返回 `delivery_required=true`、`archive_attempted=false` 和实际 `output`，不是交付完成；调用方必须在整批最终文件均验收后调用 `delivery` 并逐项核对结果。低层 `Workbook.save()` 同样不归档。多步内部文件不在生成时归档；一旦明确成为用户最终交付，就必须进入显式清单收尾，不得以发布成功、进程退出 0 或协议 ok=true 代替归档成功。归档失败只重试归档，保留主文件。普通用户任务继续优先用自动收尾 runner/正式写入 CLI。
+
+## 2026-11-15 最终整合验收
+
+四技能最终版本、完整套件、独立包、仓库回归和未验范围见 [统一验收记录](../maintenance/et/final-integration-20261115.md)。仓库集成390项总计，389通过、1项TL-DOCX缺依赖跳过；全仓聚合另有TL-DOCX导入受阻，不能宣称全仓全绿。

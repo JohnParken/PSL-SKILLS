@@ -1,0 +1,23 @@
+[
+  {
+    "suite": "wps-followup",
+    "tests": 758,
+    "skipped": 0,
+    "exit_code": 0,
+    "seconds": 14.397
+  },
+  {
+    "suite": "repository-followup",
+    "tests": 390,
+    "skipped": 1,
+    "exit_code": 0,
+    "seconds": 108.947
+  },
+  {
+    "suite": "packages-followup",
+    "tests": 18,
+    "skipped": 1,
+    "exit_code": 0,
+    "seconds": 7.158
+  }
+]

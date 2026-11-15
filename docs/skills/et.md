@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261115.2251.2082`（内容优先容错重构）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261115.2326.5498`（BIFF5/7有限读取、SST恢复与解析期分页）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 默认只向 stdout 输出结果；完整读取可用 `--output <裸文件名>` 在任务根目录独占创建 JSON 文件并只在 stdout 返回 `et_output_manifest_v1` 清单。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -329,3 +329,27 @@ Pylint 模块缺失，未安装、未执行，不能宣称 Pylint Error 为零�
 SpreadsheetML 2003 的 Table TopCell/LeftCell 已作为坐标起点处理，Row/Cell Index 按该起点偏移并检查最终网格边界。HTML 提前 tfoot 或滞后 thead 的视觉行序尚未还原时，保留源序文字、标 partial 与 coordinates_verified=false，禁止按未验证坐标分析。新增 3 项测试方法覆盖 UTF-8/BOM UTF-16LE/BE、单轴/双轴/显式索引、非法和越界偏移及 HTML 行组顺序。
 
 Astra 修正后最终验收：ET 全量 **680 项通过**，仓库集成 **379 项通过（1 项 TL-DOCX 缺 python-docx 1.2.0 跳过）**；本轮 ET 没有跳过。全 12 技能严格检查、项目文档与差异检查通过；集成内 ET/WPS 独立复制各 8 项通过。版本为 `20261115.2251.2082`，当前静态加载/选路快照已同步；依旧不代表真实模型、宿主或客户端验收。Pylint 未安装、未执行；未提交推送。
+
+## SST 非规范头有限恢复与旧 BIFF 边界（2026-11-15）
+
+只对 SST 的 XLUnicodeRichExtendedString 忽略规范指定的保留位，完整保留 fHighByte、fRichSt、fExtSt 及对应长度字段；cRun=0 时不猜格式、不吞后续字节。返回原 flags/索引/位置诊断及 partial。声明总引用数小于 unique 时不再按 total 截断，仍只解析非负 unique 指定的有界条目数；unique 超预算仍拒绝，负 unique 不扫描猜条目。压缩文字仍是 Unicode 低字节，与 CodePage 无关。
+
+固定头跨记录、UTF-16 半单元、非法 Continue 编码、负 ExtRst 长度与字符截断仍不猜测恢复；保存完整前缀，受损条目后不扫描重新同步索引。公式 String 与普通 Label 不借用 SST 的富格式/注音标志规则。
+
+BIFF5/7 尚未实现，继续明确拒绝，不仅放宽 BOF。已核对 Microsoft 旧版规范的 8 字节 BOF/0x0500；旧字节字符串、CodePage、BoundSheet、XF、Dimensions、公式及缓存等须另建版本化解析和独立验收，不可套用 BIFF8 Unicode。此轮只交付可验证 SST 部分，无真实旧 BIFF 或非规范 SST 文件验收，不接触私人样本。新增证据为明确合成的 `skills/et/scripts/test/test_wps_sst_noncanonical.py`。
+
+规范依据：[MS-XLS XLUnicodeRichExtendedString](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/173d9f51-e5d3-43da-8de2-be7f22e119b9)、[SST](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/b6231b92-d32e-4626-badd-c3310a672bab)、[Microsoft Excel 97–2007 Binary Specification，BOF 页 43–44](https://download.microsoft.com/download/5/0/1/501ED102-E53F-4CE0-AA6B-B0F93629DDC6/Office/Excel97-2007BinaryFileFormat%28xls%29Specification.pdf)。仅开发查询，运行时不联网。
+
+本轮 SST 验证：macOS / Python 3.14.10 / Expat 2.7.4，ET 全量 **691 项通过**（新增 11 项合成回归）；ET 严格结构及差异检查通过。仓库集成阶段性 **380 项总计，3 失败、1 跳过**：两项当前入口哈希快照待并发维护全部冻结后统一更新，一项并发 WPS 参考目录检查失败；其中 ET/WPS 独立复制各 8 项通过。此阶段结果不是仓库全通过，最终集成结果由统一验收另记。Pylint 未安装、未执行；未安装依赖、未重打 ZIP、未提交推送。未执行 Linux/Windows 或真实旧 BIFF/非规范 SST 验收。描述人工核对仍准确，保持原文；代码、入口、参考、README 与 docs 同步，历史验收基线保留。
+
+## OOXML 解析期分页（2026-11-15）
+
+独立 `et_parse_page.py` 提供 `et_parse_page_v1`：完整扫描校验、只留当前页格对象，重复格坐标索引仍完整；行/列继承样式自动回退全量解析并标记 `full_parse_fallback`，不宣称内存优化。顺序为存储顺序，游标绑定输入/选项/接口修订，与旧输出视图不兼容；新schema不交给原工作簿分析器。SST/行元数据等仍有界留存，不是恒定内存。详见 [运行契约](../../skills/et/references/bounded-reading.md) 与 [实测记录](../maintenance/et/parse-page-20261115.md)。
+
+## 后续推进：BIFF5/7 独立核心已实现
+
+后续新增独立旧版读取路径，替代上一阶段“BIFF5/7 未实现”的当前状态；历史阶段记录仍保留。返回 `biff5_readonly_v1`/`biff5_subset`，仅保存值核心，严格CodePage、不套BIFF8结构，partial和遗漏保留。ET read/metadata/区域预览与分析显式支持新schema；跨技能table-workflow通过公开能力协商支持新schema，要求XLSX提供方显式声明；默认拒绝partial，accept_partial不能绕过未知值遗漏及缺失/错误缓存，保存缓存仍须cached，不改schema绕过门禁。完整边界与实物/合成证据见 [BIFF5与SST维护记录](../maintenance/et/biff5-sst-20261115.md) 和 [运行参考](../../skills/et/references/biff5-readonly.md)。公开Excel95原件195格读取，25项显式跨格式保存值对照通过；两个年代测试表101同坐标有37差异，不宣称整表相同或完整旧格式验收。
+
+## 2026-11-15 最终整合验收
+
+四技能最终版本、完整套件、独立包、仓库回归和未验范围见 [统一验收记录](../maintenance/et/final-integration-20261115.md)。仓库集成390项总计，389通过、1项TL-DOCX缺依赖跳过；全仓聚合另有TL-DOCX导入受阻，不能宣称全仓全绿。

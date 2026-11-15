@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 当前 Skill 版本为 `20261115.2235.4998`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
+> 当前 Skill 版本为 `20261115.2340.3260`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -261,3 +261,13 @@ macOS / Python 3.14.10 / Expat 2.7.4：本 Skill 全量 751 项测试通过，�
 全 12 个 Skill 严格结构检查、项目文档检查、git diff --check、ET/WPS 显式清单检查通过；只读独立安装自检与新增模块导入通过，测试临时副本已清理。
 当前选路预期与静态加载快照在人工复核后刷新，新增 3 项 ET 文本导出/合并布局与 WPS 嵌套读取边界预期；历史快照未改。该结果不等于模型选择或宿主调用实测。
 Pylint 模块缺失，未安装、未执行，不能宣称 Pylint Error 为零。未新增真实用户文档、Linux/DeepAgents 宿主或 Office/WPS 渲染验收；未提交或推送。
+
+嵌套读取新增子行容器内的表分组索引和已闭合父单元格 CP 证据；未知分组仍 partial，旧行/正文输出不变。不是完整嵌套布局支持。实测与限制见 [嵌套分组验证](../maintenance/wps/nested-grouping-20261115.md)。
+
+## 2026-11-15 最终整合验收
+
+四技能最终版本、完整套件、独立包、仓库回归和未验范围见 [统一验收记录](../maintenance/et/final-integration-20261115.md)。仓库集成390项总计，389通过、1项TL-DOCX缺依赖跳过；全仓聚合另有TL-DOCX导入受阻，不能宣称全仓全绿。
+
+公开 POI innertable.doc 已通过有界 maximum 兼容正向读取2×2子表及父单元格证据；非规范缺扩展与页眉映射仍明确 partial，standard 保持严格。并非整表布局/客户端验收。
+
+最新公开嵌套后续已完成统一复验：WPS 758/758通过，仓库390总计389通过1跳过，独立包18总计17通过1跳过。受限非规范兼容仍返回partial，不代表完整外表、视觉或WPS生产者验收；详见统一记录末节。

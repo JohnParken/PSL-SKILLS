@@ -1,0 +1,23 @@
+[
+  {
+    "suite": "xlsx-final",
+    "tests": 418,
+    "skipped": 0,
+    "exit_code": 0,
+    "seconds": 24.771
+  },
+  {
+    "suite": "workflow-final",
+    "tests": 191,
+    "skipped": 0,
+    "exit_code": 0,
+    "seconds": 48.361
+  },
+  {
+    "suite": "packages-final",
+    "tests": 18,
+    "skipped": 1,
+    "exit_code": 0,
+    "seconds": 7.42
+  }
+]

@@ -1,6 +1,6 @@
 # table-workflow：多源表格分析与模板填报
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261114.2127.4001`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261115.2323.4212`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -219,3 +219,11 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
 
 整批交付状态：`final_deliverables` 声明工作簿及审计 JSON。两项准备和回读都成功才调用归档；准备失败返回 `delivery_batch_status=not_ready` 与 `delivery_incomplete=true`，保留已生成文件且不单独归档。归档阶段即使单项调用异常仍记录另一项结果，未全部核验成功或存在清理残留为 `incomplete`，全部完成为 `complete`。调用方不得仅用业务 status 或退出码代替完整交付核验；不为重试归档重跑 apply。
+
+## BIFF5/7 ET保存值交接（2026-11-15）
+
+新增完整 `biff5_readonly_v1` 原schema消费。名称发现使用ET metadata；计算通过ET read与XLSX extract/region公开能力，XLSX须声明extraction_schemas含该schema。不导入提供方私有实现、不伪装BIFF8。旧网格16384×256，保留partial/覆盖/缓存门禁；默认拒绝partial，明确accept_partial仍不能放行未知遗漏或缺失/错误缓存，保存缓存须明确cached。仅合成CLI链路验证，不等于真实WPS或全格式认证。
+
+## 2026-11-15 最终整合验收
+
+四技能最终版本、完整套件、独立包、仓库回归和未验范围见 [统一验收记录](../maintenance/et/final-integration-20261115.md)。仓库集成390项总计，389通过、1项TL-DOCX缺依赖跳过；全仓聚合另有TL-DOCX导入受阻，不能宣称全仓全绿。
