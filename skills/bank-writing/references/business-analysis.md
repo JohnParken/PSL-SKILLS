@@ -19,7 +19,7 @@
 
 ## 经营分析
 
-本页用于非月报经营复盘、复杂贡献分解和业务专题；普通月报分析/成稿直接读 `<skill-root>/references/monthly-report.md`，只压缩已有结论走摘要，不因“找亮点”重复加载本页。客户沟通另见 `<skill-root>/references/customer-communication.md`。本页只交付文本，不自建计算脚本，不替代业务审批、政策核验或预测模型。
+本页用于非月报经营复盘、复杂贡献分解和业务专题；普通月报分析/成稿直接读 `<skill-root>/references/monthly-report.md`，仅提炼原文结论要点走摘要，压缩并改写原稿走编辑，不因“找亮点”重复加载本页。客户沟通另见 `<skill-root>/references/customer-communication.md`。本页只交付文本，不自建计算脚本，不替代业务审批、政策核验或预测模型。
 
 ### 经营任务与最小分析路径
 

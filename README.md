@@ -22,7 +22,7 @@
 | Skill | 来源 | 版本 | 主要能力 |
 | --- | --- | --- | --- |
 | [文档任务导航（document-navigation）](skills/document-navigation/SKILL.md) | 独立纯指导文档 | 20261114.2127.4001 | 查看、整理、修改、生成等文档处理请求即可匹配，无需预先知道格式；确认附件与目录、定位顶层候选并加载所需技能，不解析文件或配置宿主 |
-| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261115.1537.2261 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
+| [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261115.1637.2389 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261114.2127.4001 | DOCX 生成、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
 | [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261114.2127.4001 | 基于 python-docx 按关系读取内容、公式与图表缓存，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261114.2127.4001 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
@@ -110,7 +110,7 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 
 ### 银行专业写作
 
-读取 [bank-writing](skills/bank-writing/SKILL.md) 完成经营解读、构思、起草、改写、整合或审校。月报任务先判断是否需要新经营判断：根据数据总结表现、找亮点/拖累或增长机会，即使只要三句话，也读取 [独立月报参考](skills/bank-writing/references/monthly-report.md)；只压缩已有结论才走摘要，按已确认结论写工作总结才走综合写作。月报分析与成稿由独立参考完成；只在复杂分解需要时追加经营分析，不把纯摘要或润色升级为分析。
+读取 [bank-writing](skills/bank-writing/SKILL.md) 完成经营解读、构思、起草、改写、整合或审校。月报任务先判断是否需要新经营判断：根据数据总结表现、找亮点/拖累或增长机会，即使只要三句话，也读取 [独立月报参考](skills/bank-writing/references/monthly-report.md)；仅提炼原文结论要点走摘要，压缩并改写原稿走编辑，按已确认结论写工作总结才走综合写作。月报分析与成稿由独立参考完成；只在复杂分解需要时追加经营分析，不把纯摘要或润色升级为分析。
 
 写作指导先核对受众、决策目的和证据，区分事实、假设、建议及已批安排；不以合规措辞粉饰风险，不套用未核验准入或制度阈值。文种最小要素与三级审校见[专业写作增强说明](docs/maintenance/bank-writing/professional-writing-20261114.md)。
 
@@ -118,7 +118,7 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 
 非月报经营复盘按实际频率比较本期与前一可比期间，月报仍明确对比上月。常见邮件直接使用通用页的场景结构表；详细示例可选，客户服务/投诉专业内容按需追加。邮件示例均注明合成素材并保留审批、部署、收益与单据审查的证据边界，见[本轮精修验收](docs/maintenance/bank-writing/period-email-refinement-20261115.md)。
 
-摘要、参考范文仿写和先摘要再仿写按需读取专项参考。范文与目标事实分开，摘要保留关键限定，严格篇幅实际计数，直接交付文本。默认不追问导出；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
+摘要、参考范文仿写和先摘要再仿写按需读取专项参考；组合页只保留阶段与事实交接，不把范文摘要当成目标事实，也不保证素材已核实。范文与目标事实分开，摘要保留关键限定，严格篇幅实际计数，直接交付文本。默认不追问导出；用户确认或原请求已明确要求 DOCX 时，交给本项目 [docx](skills/docx/SKILL.md)，不重复确认。写作技能不生成文件，DOCX 不可用时保留正文并说明限制。
 
 前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；当时在 macOS 实测，云端 Linux 与 Windows 未验证。
 

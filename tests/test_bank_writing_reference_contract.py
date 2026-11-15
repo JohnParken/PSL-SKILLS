@@ -73,6 +73,46 @@ class BankWritingReferenceContractTests(unittest.TestCase):
         self.assertIn('Our review is not yet complete', bodies)
         self.assertIn('授信、定价及实施安排尚未确定', bodies)
 
+    def test_summary_editing_and_analysis_routes_remain_distinct(self):
+        """Condensing a draft must not be confused with extracting its points."""
+        entry = (ROOT / 'SKILL.md').read_text(encoding='utf-8')
+        summary_row = next(line for line in entry.splitlines() if line.startswith('|') and '/summary-reading.md' in line)
+        editing_row = next(line for line in entry.splitlines() if line.startswith('|') and '/editing-and-integration.md' in line)
+        self.assertIn('提炼原文要点', summary_row)
+        self.assertIn('不新增经营判断', summary_row)
+        self.assertIn('压缩并改写原稿', editing_row)
+        self.assertNotIn('只压缩已有内容走摘要', entry)
+        self.assertIn('须选下方月报/经营分析专项', entry)
+        self.assertIn('改写后的原稿为交付物', reference('editing-and-integration.md'))
+        self.assertIn('根据月报数据重新判断表现', reference('summary-reading.md'))
+        self.assertNotIn('已有结论的压缩仍是摘要', reference('summary-reading.md'))
+        self.assertNotIn('只压缩已有结论走摘要', reference('business-analysis.md'))
+
+    def test_combined_flow_keeps_order_and_target_fact_handoff(self):
+        """Summary-to-imitation handoff must not certify or import source facts."""
+        combined = reference('summary-and-imitation.md')
+        stages = re.findall(r'^\d+\. \*\*(.+?)。\*\*', combined, re.MULTILINE)
+        self.assertEqual(stages, ['摘要', '事实交接', '仿写', '复核与交付'])
+        for target in ('summary-reading.md', 'style-imitation.md'):
+            self.assertIn('<skill-root>/references/' + target, combined)
+        self.assertIn('若摘要对象是范文', combined)
+        self.assertIn('不能成为新稿事实来源', combined)
+        self.assertIn('不等于真实性已核验', combined)
+        self.assertIn('锁定已确认内容，删除项不回流', combined)
+        self.assertNotIn('百分之百真实', combined)
+        self.assertNotIn('## 交付与边界', combined)
+
+    def test_uncertainty_labels_name_the_actual_gap(self):
+        """Preserve the entry's brackets while refining three generic labels."""
+        entry = (ROOT / 'SKILL.md').read_text(encoding='utf-8')
+        for label in ('〔待核实：统计口径〕', '〔待补充：比较期数据〕', '〔待确认：审批状态〕'):
+            self.assertIn(label, entry)
+        for name in ('style-imitation.md', 'credit-investigation.md', 'speech-and-report.md'):
+            with self.subTest(reference=name):
+                body = reference(name)
+                self.assertNotIn('〔待核实〕', body)
+                self.assertRegex(body, r'〔待(?:核实|补充|确认)：[^〕]+〕')
+
 
 if __name__ == '__main__':
     unittest.main()

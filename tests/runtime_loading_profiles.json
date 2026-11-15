@@ -1361,21 +1361,21 @@
         "files": [
           {
             "path": "bank-writing/SKILL.md",
-            "chars": 4166,
-            "bytes": 9178,
-            "sha256": "7a693b659c1886eb9b2cef44dd971c0e8011d29a5d45c9488e74b93a525ea44d",
+            "chars": 4187,
+            "bytes": 9241,
+            "sha256": "550edd573fef590dfb00dddf3606cab67cd2fb8a57eb51a8ba7ff98fc8b3bcdd",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 4166,
-        "bytes": 9178,
+        "chars": 4187,
+        "bytes": 9241,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": -1425,
-        "bytes": -3913,
+        "chars": -1404,
+        "bytes": -3850,
         "tokens": null,
         "read_events": 0
       }

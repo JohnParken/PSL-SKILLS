@@ -2,9 +2,9 @@
 
 遵循主入口的素材、事实、隐私和纯文本交付边界；本页仅补充当前操作特有规则。
 
-摘要只回答原文说了什么；先确认已读范围，保留拟、原则同意、报批前提和待核项。只提供部分素材时不声称全文摘要；不推断责任、时限或未形成的决议。硬字数直接读 `<skill-root>/references/length-check.md`；确需摘要仿写组合才追加 `<skill-root>/references/summary-and-imitation.md`。
+摘要以提炼原文要点为目标，只回答原文说了什么；需要压缩并改写原稿时用 `<skill-root>/references/editing-and-integration.md`。先确认已读范围，保留拟、原则同意、报批前提和待核项。只提供部分素材时不声称全文摘要；不推断责任、时限或未形成的决议。硬字数直接读 `<skill-root>/references/length-check.md`；确需摘要仿写组合才追加 `<skill-root>/references/summary-and-imitation.md`。
 
-月报原文已有结论的压缩仍是摘要；根据月报数据重新判断表现、解释增减或找增长点则先读 `<skill-root>/references/monthly-report.md`；非月报经营分析才读 `<skill-root>/references/business-analysis.md#经营分析`，不能仅因用户说“总结一下”留在摘要路径。若只要求摘要，不额外计算贡献、推断原因或提出经营建议。
+提炼月报原文已有结论的要点仍是摘要；根据月报数据重新判断表现、解释增减或找增长点则先读 `<skill-root>/references/monthly-report.md`；非月报经营分析才读 `<skill-root>/references/business-analysis.md#经营分析`，不能仅因用户说“总结一下”留在摘要路径。若只要求摘要，不额外计算贡献、推断原因或提出经营建议。
 
 ## 摘要
 

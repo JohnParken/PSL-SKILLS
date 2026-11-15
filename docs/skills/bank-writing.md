@@ -1,6 +1,6 @@
 # bank-writing：银行经营解读、专业写作与文本交接
 
-> 文档核对日期：2026-11-15（UTC）；当前源码基线：`c34e25a043f08a2bfd844a19c6914f69aa4e3ccf` 加本轮工作区变更；Skill 版本：`20261115.1537.2261`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束；历史日期记录只对应各自基线。
+> 文档核对日期：2026-11-15（UTC）；当前源码基线：`b8643aa8b2a54e0a07b4e1472d14d94ac7f5e720` 加本轮工作区变更；Skill 版本：`20261115.1637.2389`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束；历史日期记录只对应各自基线。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -44,10 +44,10 @@ flowchart TD
 | 入口或资料 | 何时使用 | 核心约束 |
 | --- | --- | --- |
 | [SKILL.md](../../skills/bank-writing/SKILL.md) | 所有任务；简单短文本可仅依赖入口完成 | 素材可访问、事实不虚构、范围明确、默认文本交付 |
-| [editing-and-integration.md](../../skills/bank-writing/references/editing-and-integration.md) | 多段改写、压缩、扩写、多轮编辑、多源整合 | 已确认段落锁定、删除项不回流、来源冲突不擅自裁定 |
-| [summary-reading.md](../../skills/bank-writing/references/summary-reading.md) | 仅重述已有内容的摘要、会议要点和决议提炼 | 保留限定、责任和时限；需要新经营判断时按月报/非月报进入相应分析参考 |
+| [editing-and-integration.md](../../skills/bank-writing/references/editing-and-integration.md) | 重组、压缩并改写原稿、扩写、多轮编辑、多源整合 | 已确认段落锁定、删除项不回流、来源冲突不擅自裁定 |
+| [summary-reading.md](../../skills/bank-writing/references/summary-reading.md) | 提炼原文要点、会议要点和决议；不新增经营判断 | 保留限定、责任和时限；需要新经营判断时按月报/非月报进入相应分析参考 |
 | [style-imitation.md](../../skills/bank-writing/references/style-imitation.md) | 范文仿写 | 只迁移结构、语气和节奏，不迁移范文事实 |
-| [summary-and-imitation.md](../../skills/bank-writing/references/summary-and-imitation.md) | 明确的先摘要再仿写、长素材确需组合 | 持续保留事实清单、来源差异与待核事项；约数与硬上限分开 |
+| [summary-and-imitation.md](../../skills/bank-writing/references/summary-and-imitation.md) | 明确的先摘要再仿写、长素材确需组合 | 按阶段交接目标事实与限定；范文摘要不成为目标事实，来源可追溯不等于真实性已核验 |
 | [writing-review.md](../../skills/bank-writing/references/writing-review.md) | 审校、专业措辞风险、重要复杂稿的读者检查 | 区分事实/口径、逻辑和风格问题，不用措辞替换掩盖违规事实 |
 | [source-access.md](../../skills/bank-writing/references/source-access.md) | 附件不可访问、工具参数异常、结果截断或转存 | 报告真实读取范围，不猜挂载或绕过宿主读取边界 |
 | [docx-handoff.md](../../skills/bank-writing/references/docx-handoff.md) | 已授权 DOCX、交接内容有歧义、导出受阻 | 交接确定正文与缺口，定位真实 docx 入口，不自行转换 |
@@ -208,3 +208,7 @@ DOCX 是显式、可选的能力交接，不是默认运行时依赖。宿主必
 ## 2026-11-15 期间与邮件精修
 
 description补齐经营分析、讲话发言、客户沟通/投诉及公关；压缩文种路由前重复的短文专业判断提醒，保留操作路径的主规则。通用经营分析恢复跨期含义，邮件短表和长例分层保留。实际检查、合成请求演练及未验证范围见[精修验收](../maintenance/bank-writing/period-email-refinement-20261115.md)。
+
+## 2026-11-15 摘要与改写分流
+
+提炼原文要点走摘要，压缩并改写原稿走编辑；新增经营判断仍按月报/非月报进入专项。组合页保留摘要、事实交接、仿写和复核顺序，删除重复方法转接及交付说明；单一任务不加载组合页。仅细化三个通用待核提示，保留入口六角括号与经营分析锚点。见[本轮验收](../maintenance/bank-writing/summary-routing-refinement-20261115.md)。
