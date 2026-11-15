@@ -9,7 +9,7 @@
 For these stdout-only commands, use an existing, user-provided ET extraction JSON as a protected input; do not create a temporary JSON solely for this flow. The documented successful cleanup protocol requires a verified final file and an archive result, neither of which this flow produces. Do not label a successful analysis as failed to bypass that requirement, and do not delete or claim an existing JSON. If no suitable input or supported non-file handoff is available, stop and report the missing handoff.
 
 Pass the existing original spreadsheet JSON result from the et skill to the same region-based
-analysis command. Accepted typed-cell schemas are `biff8_readonly_v1` and
+analysis command. Accepted typed-cell schemas are `biff5_readonly_v1`, `biff8_readonly_v1` and
 `ooxml_spreadsheet_readonly_v1`; successful/partial extraction retains its actual
 input schema and diagnostics. Failed extraction and Word-text results are rejected.
 This validates schema/budgets and restores explicitly tagged numeric values as Decimal;
@@ -38,3 +38,5 @@ Formula cells still require explicit `--formulas cached`. Numeric strings retain
 `Decimal` values while text identifiers remain text. This analyzes previously extracted JSON,
 not WPS originals or independently validated caches. Other native loader APIs still require
 XLSX/XLSM. Dates, private streams and opaque charts retain source limits.
+
+BIFF5/7 JSON retains its distinct schema and the legacy 16384-row/256-column grid. Unknown date systems remain rejected; old formatting/date interpretations are not invented. All existing numeric precision, source coverage, partial and saved-cache gates remain unchanged. Public extract capabilities advertise accepted schemas in `extraction_schemas`; this is JSON consumption, not direct XLS/ET binary parsing.

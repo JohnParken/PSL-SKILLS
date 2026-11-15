@@ -88,3 +88,9 @@ UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型�
 从已确认仓库根目录运行对应 仓库维护路径 `skills/xlsx/scripts/test/` 的 unittest discover；实际命令中将占位符替换为真实根路径。测试不属于普通业务必读材料，不预读全部测试或本文件。独立复制Skill目录后验证只读安装、无相邻模块及空外部程序PATH；跨表仍显式依赖已确认的XLSX/ET能力入口，不承诺单独复制跨表目录即可获得依赖。真实样本、合成测试、平台和宿主验收分别报告。
 
 `delivery_required=true` 表示发布后仍需完成最终交付收尾，不是归档状态。调用方保存明确的最终清单，整批验收后调用 delivery；失败保留文件仅重试 delivery，不重跑 publish。协议 ok=true 仅表示本次能力调用成功。
+
+## BIFF5/7 原提取结果兼容
+
+XLSX公开 `extract` 另接受 `biff5_readonly_v1`，capabilities 的 `extraction_schemas` 显式声明支持；接口版本仍为2，既有BIFF8/OOXML不变。旧网格按16384行/256列校验，不改成BIFF8 schema，不解析二进制或推断旧日期/样式。workflow通过ET read/metadata及XLSX extract/region公开能力交接，不导入提供方私有模块；仅遇BIFF5计算来源时要求提供方显式声明该schema，缺声明则停止并提示升级，不影响原格式。names接受ET返回的新input_schema，不把名称发现当值覆盖验收。
+
+源partial默认拒绝计算；accept_partial只在原已声明格覆盖完整且无值遗漏时继续，并保留partial审计。未知覆盖、缺/错公式缓存、未知日期系统仍拒绝；采用保存缓存仍须明确cached。解析期分页或其它投影schema不能作为完整提取输入。

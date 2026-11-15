@@ -122,7 +122,9 @@ def load_result_bytes(raw, address):
     if not isinstance(result, dict):
         raise ValueError('Require a WPS spreadsheet JSON object')
     schema = result.get('schema_version')
-    if schema == 'biff8_readonly_v1' and result.get('biff_parsed') is True:
+    if schema == 'biff5_readonly_v1' and result.get('biff_parsed') is True:
+        max_row, max_col = 16384, 256
+    elif schema == 'biff8_readonly_v1' and result.get('biff_parsed') is True:
         max_row, max_col = 65536, 256
     elif schema == 'ooxml_spreadsheet_readonly_v1' and result.get('spreadsheet_parsed') is True:
         max_row, max_col = 1048576, 16384

@@ -79,3 +79,9 @@ names 对已核验SHA的不可变输入快照调用 XLSX open_metadata 或 ET me
 本轮同输入before/after基准位于仓库 tests/benchmark_large_workbooks.py；指定两个已确认源码快照根目录，默认各运行3次，输入仅生成一次。维护验收证据记录实际平台、脚本哈希、耗时范围、RPC及传输字节，不换算模型token或宣称普遍性能保证。
 
 整批交付状态：`final_deliverables` 声明工作簿及审计 JSON。两项准备和回读都成功才调用归档；准备失败返回 `delivery_batch_status=not_ready` 与 `delivery_incomplete=true`，保留已生成文件且不单独归档。归档阶段即使单项调用异常仍记录另一项结果，未全部核验成功或存在清理残留为 `incomplete`，全部完成为 `complete`。调用方不得仅用业务 status 或退出码代替完整交付核验；不为重试归档重跑 apply。
+
+## BIFF5/7 原提取结果兼容
+
+XLSX公开 `extract` 另接受 `biff5_readonly_v1`，capabilities 的 `extraction_schemas` 显式声明支持；接口版本仍为2，既有BIFF8/OOXML不变。旧网格按16384行/256列校验，不改成BIFF8 schema，不解析二进制或推断旧日期/样式。workflow通过ET read/metadata及XLSX extract/region公开能力交接，不导入提供方私有模块；仅遇BIFF5计算来源时要求提供方显式声明该schema，缺声明则停止并提示升级，不影响原格式。names接受ET返回的新input_schema，不把名称发现当值覆盖验收。
+
+源partial默认拒绝计算；accept_partial只在原已声明格覆盖完整且无值遗漏时继续，并保留partial审计。未知覆盖、缺/错公式缓存、未知日期系统仍拒绝；采用保存缓存仍须明确cached。解析期分页或其它投影schema不能作为完整提取输入。

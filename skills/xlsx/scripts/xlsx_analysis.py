@@ -117,6 +117,9 @@ def region_from_book(book, sheet, cell_range=None, header=True, formulas='reject
         r2, c2 = max(p[0] for p in positions), max(p[1] for p in positions)
     else:
         raise ValueError('Empty worksheet; supply an explicit range')
+    if getattr(book, 'wps_input_schema', None) == 'biff5_readonly_v1' and (
+            max(r1, r2) > 16384 or max(c1, c2) > 256):
+        raise ValueError('BIFF5 analysis range exceeds the 16384-row/256-column grid')
     if r2 < r1 or c2 < c1 or (r2-r1+1)*(c2-c1+1) > MAX_CELLS:
         raise ValueError('Reversed range or region exceeds 200000 cells')
     if header_rows is not None and not header:

@@ -335,7 +335,14 @@ class Dependencies(LegacyDependencies):
         return result
 
     def read_et(self, raw, source):
-        return json.loads(self.et_request('read', raw, source)['extraction'])
+        result = json.loads(self.et_request('read', raw, source)['extraction'])
+        if result.get('schema_version') == 'biff5_readonly_v1':
+            schemas = self.checks['xlsx']['interface'].get('extraction_schemas', [])
+            require(isinstance(schemas, list) and all(isinstance(schema, str) for schema in schemas),
+                    'Invalid XLSX extraction_schemas capability; require a list of schema strings')
+            require('biff5_readonly_v1' in schemas,
+                    'XLSX extract capability does not declare BIFF5 result support; upgrade the provider')
+        return result
 
     def metadata(self, path, raw):
         native = Path(path).suffix.lower() in ('.xlsx', '.xlsm')
@@ -358,7 +365,7 @@ class Dependencies(LegacyDependencies):
         require(metadata.get('source_status') in (('ok',) if native else ('ok', 'partial'))
                 and isinstance(metadata.get('source_issues'), list) and isinstance(metadata.get('source_coverage'), dict)
                 and (metadata.get('input_schema') is None if native else
-                     metadata.get('input_schema') in ('biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1')),
+                     metadata.get('input_schema') in ('biff5_readonly_v1', 'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1')),
                 'Incomplete source metadata diagnostics')
         return metadata
 

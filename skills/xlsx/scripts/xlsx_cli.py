@@ -25,6 +25,7 @@ OPERATIONS = ('open', 'open_metadata', 'create', 'extract', 'release', 'region',
 
 def capabilities():
     return {'protocol': PROTOCOL, 'interface_version': 2, 'delivery_filename_only': True, 'skill': 'xlsx', 'operations': list(OPERATIONS),
+            'extraction_schemas': ['biff5_readonly_v1', 'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1'],
             'transport': 'bounded_json_lines', 'max_frame_bytes': MAX_FRAME,
             'handles': 'process_local; opaque; release or close stdin', 'max_handles': 64,
             'max_typed_values': 10000, 'metadata_schema': 'workbook_metadata_v1'}
