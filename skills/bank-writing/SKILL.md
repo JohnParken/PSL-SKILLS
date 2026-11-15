@@ -1,7 +1,7 @@
 ---
 name: bank-writing
-version: "20261114.2248.0406"
-description: 用于银行材料的分析与专业写作，覆盖月报、总结述职、公文邮件、信贷合规、产业调研、营销活动、PRD和制度SOP的起草、编辑、摘要、仿写与审校。依据素材核对事实和口径，区分判断、假设与建议；默认交付可复制文本，明确要求DOCX时交接制作。
+version: "20261115.1537.2261"
+description: 用于银行材料分析与写作，支持月报与经营分析、总结述职、讲话发言、公文邮件、客户沟通与投诉回应、公关、信贷合规、产业调研、活动、PRD和制度SOP的起草、编辑、摘要、仿写与审校。依据素材核对事实与口径，区分判断、假设和建议；默认交付文本，明确要求DOCX时交接制作。
 ---
 
 # 银行专业写作｜按任务加载
@@ -49,7 +49,7 @@ description: 用于银行材料的分析与专业写作，覆盖月报、总结�
 
 ## 三、文种与分析专项
 
-完整成稿、文种转换或新增专业判断选最匹配一项；确需交叉任务才组合。纯摘要/润色不因素材提到业务词而全量加载；授信、审计、金融承诺等专业结论不因篇幅短而省略专项。
+按上方判断边界，完整成稿、文种转换或新增专业判断选最匹配一项；确需交叉任务才组合。
 
 | 任务 | 参考 |
 |---|---|
@@ -58,8 +58,8 @@ description: 用于银行材料的分析与专业写作，覆盖月报、总结�
 | 总结、述职、综合汇报与年度规划 | `<skill-root>/references/comprehensive-writing.md` |
 | 通知、请示、报告、函、纪要 | `<skill-root>/references/official-documents.md` |
 | 领导讲话、交流发言、专题汇报 | `<skill-root>/references/speech-and-report.md` |
-| 客户通知、服务解释、异议回应 | `<skill-root>/references/customer-communication.md`；邮件另按需选邮件参考 |
-| 工作邮件、跨部门/客户/涉外联络 | `<skill-root>/references/email-communication.md`；需要场景范式时按该页追加邮件案例 |
+| 客户通知、服务解释、异议/投诉回应 | `<skill-root>/references/customer-communication.md`；普通客户邮件走下行，确需服务/异议专业内容才叠加本页 |
+| 工作邮件、跨部门/客户/涉外联络 | `<skill-root>/references/email-communication.md`；常见结构在该页，确需详细示例才追加邮件案例 |
 | 信贷调查、审查、贷后与不良处置 | `<skill-root>/references/credit-investigation.md` |
 | 产业、同业与网点效能调研 | `<skill-root>/references/industry-research.md` |
 | 审计、案防、AML | `<skill-root>/references/audit-and-compliance.md` |

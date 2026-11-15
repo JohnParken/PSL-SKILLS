@@ -1,6 +1,6 @@
 # bank-writing：银行经营解读、专业写作与文本交接
 
-> 文档核对日期：2026-11-14（UTC）；当前源码基线：`e4005a810e71278fc3705f6fd080d2d6ad31a280` 加本轮工作区变更；Skill 版本：`20261114.2248.0406`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束；历史日期记录只对应各自基线。
+> 文档核对日期：2026-11-15（UTC）；当前源码基线：`c34e25a043f08a2bfd844a19c6914f69aa4e3ccf` 加本轮工作区变更；Skill 版本：`20261115.1537.2261`。本文是仓库级说明，不替代 [SKILL.md](../../skills/bank-writing/SKILL.md) 的运行约束；历史日期记录只对应各自基线。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -45,7 +45,7 @@ flowchart TD
 | --- | --- | --- |
 | [SKILL.md](../../skills/bank-writing/SKILL.md) | 所有任务；简单短文本可仅依赖入口完成 | 素材可访问、事实不虚构、范围明确、默认文本交付 |
 | [editing-and-integration.md](../../skills/bank-writing/references/editing-and-integration.md) | 多段改写、压缩、扩写、多轮编辑、多源整合 | 已确认段落锁定、删除项不回流、来源冲突不擅自裁定 |
-| [summary-reading.md](../../skills/bank-writing/references/summary-reading.md) | 仅重述已有内容的摘要、会议要点和决议提炼 | 保留限定、责任和时限；需要新经营判断时先进入经营分析 |
+| [summary-reading.md](../../skills/bank-writing/references/summary-reading.md) | 仅重述已有内容的摘要、会议要点和决议提炼 | 保留限定、责任和时限；需要新经营判断时按月报/非月报进入相应分析参考 |
 | [style-imitation.md](../../skills/bank-writing/references/style-imitation.md) | 范文仿写 | 只迁移结构、语气和节奏，不迁移范文事实 |
 | [summary-and-imitation.md](../../skills/bank-writing/references/summary-and-imitation.md) | 明确的先摘要再仿写、长素材确需组合 | 持续保留事实清单、来源差异与待核事项；约数与硬上限分开 |
 | [writing-review.md](../../skills/bank-writing/references/writing-review.md) | 审校、专业措辞风险、重要复杂稿的读者检查 | 区分事实/口径、逻辑和风格问题，不用措辞替换掩盖违规事实 |
@@ -62,9 +62,9 @@ flowchart TD
 | 月报分析、跨期/同业比较、创建/续写、结论与增长点 | [monthly-report.md](../../skills/bank-writing/references/monthly-report.md)；月报独立路线，普通任务无需再加载经营分析 |
 | 非月报经营复盘、增长贡献/质量/机会 | [business-analysis.md 的经营分析](../../skills/bank-writing/references/business-analysis.md#经营分析) |
 | 业务专题 | [business-analysis.md](../../skills/bank-writing/references/business-analysis.md) 中对应章节；按需读取 |
-| 客户沟通 | [customer-communication.md](../../skills/bank-writing/references/customer-communication.md)；不限邮件 |
+| 客户沟通 | [customer-communication.md](../../skills/bank-writing/references/customer-communication.md)；普通客户邮件先用邮件通用页，确需服务解释、异议/投诉专业内容才叠加 |
 | 跨文种组合 | [combined-writing.md](../../skills/bank-writing/references/combined-writing.md)；只按明确多稿任务使用 |
-| 商务邮件、跨部门或涉外联络 | [email-communication.md](../../skills/bank-writing/references/email-communication.md)；确需场景范式时追加 [email-scenarios.md](../../skills/bank-writing/references/email-scenarios.md) |
+| 商务邮件、跨部门或涉外联络 | [email-communication.md](../../skills/bank-writing/references/email-communication.md)；常见场景用该页短表，确需详细示例时追加 [email-scenarios.md](../../skills/bank-writing/references/email-scenarios.md) |
 | 尽职调查、授信审查、贷后、不良处置 | [credit-investigation.md](../../skills/bank-writing/references/credit-investigation.md) |
 | 产业信贷调研、竞品对标、网点效能 | [industry-research.md](../../skills/bank-writing/references/industry-research.md) |
 | 内部审计、案防、反洗钱分析 | [audit-and-compliance.md](../../skills/bank-writing/references/audit-and-compliance.md) |
@@ -72,6 +72,10 @@ flowchart TD
 | 品牌通稿、IR 问答、危机公关 | [pr-and-crisis-management.md](../../skills/bank-writing/references/pr-and-crisis-management.md) |
 | 规章制度、实施细则、网点 SOP | [banking-regulations-sop.md](../../skills/bank-writing/references/banking-regulations-sop.md) |
 | 活动策划、会议和营销方案 | [activity-planning.md](../../skills/bank-writing/references/activity-planning.md) |
+
+非月报经营分析使用本期与跨期口径：环比按数据频率选择前一可比期间，季度比上季度；月报规则仍明确上月。零/负基数、比率与互斥可加贡献规则保留在通用分析页，不反向依赖月报。
+
+邮件通用页包含通知、会签、科技协作、风险督导、客户跟进、银团及财富/双语联络的短结构表。详细案例仍为可选追加，每例以合成素材和可填写字段限定证据，不能迁移审批、部署、收益或法律结论。两页不要求宿主具备按章节读取能力。
 
 ## 任务流程
 
@@ -200,3 +204,7 @@ DOCX 是显式、可选的能力交接，不是默认运行时依赖。宿主必
 局部措辞调整不按句数升级为复杂编辑；重组、跨段/多轮约束或多源整合才加载编辑参考。摘要需新增月报判断时直达月报专项；通用经营分析保留复杂分解与口径，不强迫月报双重加载。审校页已移除三个无仓库内入链的兼容章节，外部旧章节链接需改为编辑参考。
 
 引用中的锚点仅用于人工定位，不作为读取文件名或未声明的工具参数；实际范围能力与完整性以宿主为准。同事实同来源同缺口可合并说明，审批/推进状态保持独立。验证见[维护记录](../maintenance/bank-writing/route-cleanup-20261114.md)。
+
+## 2026-11-15 期间与邮件精修
+
+description补齐经营分析、讲话发言、客户沟通/投诉及公关；压缩文种路由前重复的短文专业判断提醒，保留操作路径的主规则。通用经营分析恢复跨期含义，邮件短表和长例分层保留。实际检查、合成请求演练及未验证范围见[精修验收](../maintenance/bank-writing/period-email-refinement-20261115.md)。
