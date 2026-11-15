@@ -122,6 +122,8 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 
 业务参考按实际证据区分金额口径、交易特征、审计状态与审批权限；制度、工时、会议、活动和项目排期示例不作统一规则，规划中的服务与接口不默认已部署。仿写可保留目标素材独立支持的同名实体与数值，不凭范文补事实。对外文稿核对承诺与披露边界，排名证据不自动证明宣传用语合法，共情也不代替责任认定。修订与合成任务验证见[参考证据边界验收](docs/maintenance/bank-writing/reference-evidence-refinement-20261115.md)。
 
+基于稳定版本的[草稿、正式稿与高压场景验证](docs/maintenance/bank-writing/pressure-scenarios-20261115.md)覆盖一句话/无素材模板、关键缺口可见性、粉饰事实、越权赔付和跨任务污染，并配正常润色、建议与共情对照。保存9组13轮真实Codex合成输入输出与主代理评阅；仓库静态检查和真实DeepAgents未执行状态分别记录，本轮未增加写作规则或运行脚本。
+
 前次多轮编辑升级的同素材新旧执行、匿名评阅和读者检查见[写作评测记录](tests/bank_writing_upgrade_evaluation/summary.json)，结果包含持平与退步。摘要与仿写三路径的完整输入输出、计数和内容检查、独立评阅及本地分发校验见[专项评测记录](tests/bank_writing_summary_imitation_evaluation/summary.json)。两组记录均限于虚构场景，不等同于宿主自动触发验收；当时在 macOS 实测，云端 Linux 与 Windows 未验证。
 
 描述调整时的独立选择模拟见[描述评测记录](tests/bank_writing_description_evaluation/summary.json)，不代表宿主自动注册或触发验收。当前入口还包含按任务直达参考与归档交接约定；纯文本写作本身不触发文件归档。

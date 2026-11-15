@@ -123,6 +123,7 @@ flowchart TD
 ## 已有资料及本次核验
 
 - [月报分析路由与增长分析增强](maintenance/bank-writing/monthly-analysis-20261110/validation.md)：当前 bank-writing 的判断分流、贡献/质量/机会流程与独立虚构请求执行，实际验证与宿主自动选择、真实月报等未验证项分开记录。
+- [银行写作草稿与高压场景验证](maintenance/bank-writing/pressure-scenarios-20261115.md)：基于`3b81b0a`的9组13轮Codex合成观察，区分主代理语义评阅、证据一致性测试及未执行的真实DeepAgents验收；不修改Skill规则。
 - [2026-11-10 描述与读取路径优化](maintenance/skill-review/optimization-451-20261110.md)：ET/XLSX 按需加载、七项描述、PPTX 数学结构缺口诊断；本机回归与未验证范围单独记录，不代表真实宿主选路或 token 节省。
 - [自检与宿主回传契约](check-execution.md)：保留原有记录，注意其中日期和历史版本。
 - [Linux 发布验收清单](linux-release-acceptance.md)：既有待执行方案，不因新增本组文档而自动变成通过报告。
