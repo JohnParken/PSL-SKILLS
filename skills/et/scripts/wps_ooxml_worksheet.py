@@ -877,6 +877,9 @@ def read_worksheet(context):
     read_filters(context, ws_root)
     context.views = read_sheet_views(context, ws_root)
     report_unknown_worksheet_elements(context, ws_root)
+    if getattr(context, 'cell_window', False) and any(
+            entry['style_index_raw'] is not None for entry in context.rows + context.columns):
+        raise ValueError('Unsupported parse-page optimization: row/column inherited styles')
     apply_row_column_styles(context)
     comments = read_comments(context.package, context.sheet_part, context.conformance,
                              context.namespace, context.types, context.budget,

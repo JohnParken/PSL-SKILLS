@@ -32,7 +32,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 
 工作表和矩形范围必须明确。表头可选；不指定时第一行也是数据。`--header-rows 1:2` 使用已有表头重建规则，但列 ID 始终为物理字母 `A`、`B` 等，重复标题不会覆盖列。不要让标题、说明、小计、总计或无关表格落入统计范围后宣称得到业务总额；执行器不推断这些角色。连续区域内穿插这些行时，可用 `exclude_rows` 列出经任务确认的原始物理行号。
 
-程序入口是 `<skill-root>/scripts/et_table_analysis.py` 的 `analyze(result, query)`。`result` 必须为完整的 `biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1` 成功/partial 对象，也接受由完整 JSON 还原的数字字符串。分页投影、失败字典和其他 schema 拒绝。API 查询另外包含 `sheet`、`range` 和可选 `header_rows`。来源结果和查询均不原地修改。
+程序入口是 `<skill-root>/scripts/et_table_analysis.py` 的 `analyze(result, query)`。`result` 必须为完整的 `biff5_readonly_v1`、`biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1` 成功/partial 对象，也接受由完整 JSON 还原的数字字符串。分页投影、失败字典和其他 schema 拒绝。API 查询另外包含 `sheet`、`range` 和可选 `header_rows`。来源结果和查询均不原地修改。
 
 ## 查询示例
 

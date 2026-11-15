@@ -2,7 +2,7 @@
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-大 ET/ETT 只需结构时先概况，逐格任务按需分页。本入口仅处理电子表格，拒绝 WPS 文字内容。以下均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不自动归档、不执行公式、宏或外链。
+大 ET/ETT 只需结构时先概况，逐格任务按需分页。本入口仅处理电子表格，拒绝 WPS 文字内容。以下旧 read_et.py 视图均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不自动归档、不执行公式、宏或外链。
 
 ```python
 execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --summary")
@@ -59,3 +59,22 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 分页新增 `has_more`，与本页 `next_cursor != null` 一致；旧 `truncated`、`coverage` 和所有来源诊断保留。概况的 `has_more=false` 只表示概况无后续页，不表示已经返回值或全文。续读可调整字符/字节预算，文件、选择和解析参数仍必须保持不变。末页移除游标后可能比前一候选页更小，实现会单独核对整个不超 page-size 的尾页。
 
 来源追踪见 `<skill-root>/references/read-view-runtime.json`，它是维护信息，普通读取无需预读。
+
+## 可选 OOXML 解析期分页（独立接口）
+
+对 OOXML 容器的 ET/ETT，可使用 `<skill-root>/scripts/et_parse_page.py`。先执行主入口环境自检并确认 `ooxml-sheet=available`，再在已确认任务目录运行：
+
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/et_parse_page.py\" ./input.et --page-size 100 --max-output-bytes 1048576")
+```
+
+本入口提供 `--capabilities`，当前接口 `et_parse_page_v1`、`revision=1`，不替换原完整读取、分析或 `wps_read_view_v1`。只支持 OOXML 表格；BIFF5/7、BIFF8、文本容器使用原入口，不伪装为空页。
+
+- 每次仍完整扫描并按原解析器校验/解码所有已声明工作表和单元格，保持 ZIP/XML、全局文字、单元格/行数等原限制及诊断；只保留当前页的单元格结果对象，以轻量坐标集合保留重复格“首个可读值”语义。输入字节、共享字符串、行元数据、坐标索引仍占内存，不是恒定内存或读取时间优化，不放宽原限制。
+- 检测到任意已解析行/列继承样式时，自动释放窗口状态并重新使用完整读取路径，返回 `parse_mode=full_parse_fallback` 与原因。此时**未降低全量 cells 留存**；不能称优化成功。普通窗口为 `parse_time_cell_window`；显式单元格样式仍可窗口读取。无磁盘缓存，不写安装目录、不改原件。
+- 顺序为声明工作表顺序及各表首个可读单元格的**存储顺序**，不是旧视图的行列排序。可用 `--sheet` 按解析后的精确表名选择；未选表仍扫描并贡献源诊断。
+- `items[].sheet/cell/data` 保留原格值、类型、精度、保存缓存和格式解释；`issues`、`issues_truncated`、`text_budget` 与源值覆盖字段来自完整扫描，不从当前页推导全表正确性。原解析器的损坏恢复/截断限制仍适用。源覆盖仅表示已声明表的解析覆盖，不表示全部内容已交付。
+- 结果明确列出 `metadata_omitted`，不交付完整样式、合并、可见性、批注/超链接或全局共享字符串证据；需要这些字段或 `reading_assessment` 时使用完整读取。不得把新 schema 交给只接受原 schema 的分析器。
+- 核对 `source_sha256`、`start`、`returned_items`、`total_items` 和 `next_cursor`，逐页连续拼接；`source_cell_count` 是全工作簿已读保存格数。完整 `next_cursor` 传入 `--cursor`，保持输入、sheet、page-size 不变，仅输出字节预算可变。游标绑定源字节、独立接口修订与选项，不兼容旧视图游标；损坏/变更/越界明确失败，重新开始。游标不是签名或授权。
+- `page-size` 为1..10000；UTF-8 字节预算为512..67108864，默认1 MiB，计入完整 JSON 和末尾换行。整页及全部源诊断放不下就失败，不悄悄少返回格或截断字段；提高预算，或从头使用更小 page-size。只有 `next_cursor=null` 才取完所选已读格，源遗漏不会因此消失。
+- stdout 为单条 JSON，成功/partial/失败/参数错误分别退出0/3/1/2。每页重扫可能增加累计耗时，不建议全量统计遍历分页。平台与真实格式验收仍须单独核对。

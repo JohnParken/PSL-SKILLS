@@ -420,10 +420,10 @@ class GlobalSubstreamMixin:
             self.issue({'code': 'sst_counts_invalid', 'record_offset': offset,
                         'declared_total': total, 'declared_unique': unique,
                         'message': 'Invalid SST reference/unique counts; the '
-                                   'declared unique count is clamped to the '
-                                   'declared total.'})
-            total = max(0, total)
-            unique = min(max(0, unique), total)
+                                   'nonnegative unique count is used only as '
+                                   'a bounded parse limit, not inferred from '
+                                   'the reference count.'})
+            unique = max(0, unique)
         if unique > self.limits['max_shared_strings']:
             raise ResourceLimitError('SST unique string count budget exceeded')
         strings = self.continued_strings(self.records, index - 1, 8)
@@ -438,7 +438,8 @@ class GlobalSubstreamMixin:
                 value = strings.string(
                     allow_rich=True, metadata_budget=metadata_budget,
                     allow_phonetic=True,
-                    metadata_entries_remaining=entries_remaining)
+                    metadata_entries_remaining=entries_remaining,
+                    sst_compatibility=True)
                 rich = strings.last_rich
                 phonetic = strings.last_phonetic
             except ResourceLimitError:
@@ -452,8 +453,15 @@ class GlobalSubstreamMixin:
                                        'exhausted; plain string text is '
                                        'retained without run bytes.'})
                 value = strings.string(allow_rich=True, allow_phonetic=True,
-                                       retain_metadata=False)
+                                       retain_metadata=False,
+                                       sst_compatibility=True)
                 rich = phonetic = None
+            for anomaly in strings.last_sst_anomalies:
+                self.issue({**anomaly, **strings.last_string_location,
+                            'sst_index': len(self.strings),
+                            'message': 'Noncanonical SST header recovered with '
+                                       'unchanged text/metadata lengths; no '
+                                       'encoding or value was guessed.'})
             self.strings.append(value)
             parsed += 1
             if rich is not None:

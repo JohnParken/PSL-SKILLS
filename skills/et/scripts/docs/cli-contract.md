@@ -26,7 +26,7 @@ capabilities为普通JSON：skill=et、interface_version=1、operations=[read,me
 
 ## metadata 输入输出
 
-metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compatibility。它执行完整的 read_bytes 解析与安全/结构校验，但**不再序列化完整提取结果**；随后只投影受支持的 biff8_readonly_v1 或 ooxml_spreadsheet_readonly_v1。投影要求成功schema、已解析标记和 1–128 个合法唯一表名；未知提取schema或未解析标记拒绝，不猜表名。完整读取的 JSON 预算不影响 metadata 投影。
+metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compatibility。它执行完整的 read_bytes 解析与安全/结构校验，但**不再序列化完整提取结果**；随后只投影受支持的 biff5_readonly_v1、biff8_readonly_v1 或 ooxml_spreadsheet_readonly_v1。投影要求成功schema、已解析标记和 1–128 个合法唯一表名；未知提取schema或未解析标记拒绝，不猜表名。完整读取的 JSON 预算不影响 metadata 投影。
 
 返回 result={metadata:{schema_version:workbook_metadata_v1,sheet_names,native:false,source_status,source_issues,source_coverage,input_schema},exit_code}。保留原表序、issues及可用的cell_value_coverage/omissions_affect_cell_values/reading_assessment，不传输单元格；ok/partial仍分别退出0/3，投影或校验失败退出1。名称元数据不能供统计或代替完整提取。旧read/run结果不变，消费方必须先确认metadata能力。该路径减少进程间数据，不承诺跳过底层解析或降低内存上限。
 
@@ -72,3 +72,7 @@ UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型�
 `run ./input.et --output 读取结果.json --delivery` 将完整读取 JSON 声明为用户最终交付（Python 3.10+）；写后流式核对 manifest 字节数、SHA-256 和稳定文件身份，再保护原件调用本包归档。清单新增 final_deliverables、output_written、delivery，读取状态与退出码 0/3 保留；归档失败可能业务退出 0，必须检查 delivery.archive_status。--delivery 必须与 --output 同用，不能用于 --check 或有界视图。内部 --output 不自动归档。
 
 归档失败保留已写 JSON，修复配置或目标问题后只调用 archive_delivery.py 显式清单重试，按当次宿主 questionId 归档；不要重跑读取覆盖文件。宿主另存分析 JSON 时也须明确最终清单、保留 partial/范围诊断并验收后归档。协议 read/metadata 仍只返回数据，不自动声明文件交付；旧消费者无需新增参数。
+
+## 独立解析期分页接口
+
+`<skill-root>/scripts/et_parse_page.py --capabilities` 声明 `et_parse_page_v1` 与 revision 1；它不是 `psl_capabilities_v1` 的新增 operation，不改变原 read/metadata/run 协议。输入为任务相对文件，输出单条 UTF-8 JSON；无输出文件或缓存。完整扫描源诊断，存储顺序分页，行/列继承样式自动全量回退并通过 parse_mode 报告。完整输入/输出/游标/预算/遗漏规则见 `<skill-root>/references/bounded-reading.md#可选-ooxml-解析期分页独立接口`。独立 schema 不可直接交给原完整提取消费方。

@@ -15,7 +15,7 @@ from wps_access import DEFAULT_FILE_COMPATIBILITY, ParseError
 def metadata(result):
     """Project a fully parsed producer result without inventing coverage assertions."""
     schema = result.get('schema_version')
-    parsed = {'biff8_readonly_v1': 'biff_parsed',
+    parsed = {'biff8_readonly_v1': 'biff_parsed', 'biff5_readonly_v1': 'biff_parsed',
               'ooxml_spreadsheet_readonly_v1': 'spreadsheet_parsed'}.get(schema)
     if parsed is None or result.get(parsed) is not True or result.get('status') not in ('ok', 'partial'):
         raise ValueError('Metadata requires a successful supported ET spreadsheet schema')

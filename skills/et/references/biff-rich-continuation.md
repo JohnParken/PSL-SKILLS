@@ -26,3 +26,5 @@ cch≤32767，继续沿用记录数和文件/流预算；在收集正文或元�
 新增注音验证见 `skills/et/scripts/test/test_wps_phonetic.py`：字符编码切换、代理对、原始扩展的每个切分点、后接字符串、零长度扩展、组合预算及结构化失败位置。仍为合成证据，详见解析增强边界 (`<skill-root>/references/et-parser-stability.md`)。
 
 纯文字 `Label` 内联单元格复用字符续段规则：从六字节单元格前缀之后读取完整字符串头，只接受 flags 0/1，不接受富格式或注音字段，末尾必须恰好消费完。`skills/et/scripts/test/test_wps_biff_reading.py` 覆盖编码切换、跨记录代理对及失败边界；不扩大 SST 元数据或公式缓存的既有支持范围。详见内联文字与兼容元数据 (`<skill-root>/references/biff8-readonly.md#inline-text-and-passive-metadata`)。
+
+SST 非规范头有限恢复：规范保留位按 0x0D 掩码忽略并报告原 flags、SST 索引与位置；不清除 fRichSt/fExtSt，也不猜任何可选长度。cRun=0 仅读取零个 run 并标记 partial；声明 total 不限制非负 unique，但 unique 上限仍硬拒绝，负 unique 不扫描推测。字符、续段、UTF-16 与 ExtRst 长度检查不变，损坏后只保留此前完整字符串，不猜索引重新同步。证据为合成回归，不代表真实 WPS 非规范文件验收。BIFF5/7 另走独立核心分支，不能将其 CodePage 字节字符串当 BIFF8 Unicode；见 `<skill-root>/references/biff5-readonly.md`。

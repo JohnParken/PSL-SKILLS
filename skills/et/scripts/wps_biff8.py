@@ -414,7 +414,11 @@ def parse_stream(data, *, compatibility=None, chart_policy=None,
     a non-default compatibility or explicit chart rejection is reported as an
     issue while the tolerant reader is still used.
     """
-    reader = Reader(data, compatibility=compatibility,
+    reader_class = Reader
+    if isinstance(data, bytes) and len(data) >= 8 and data[:2] == b'\x09\x08' and data[4:6] == b'\x00\x05':
+        from wps_biff5 import LegacyReader
+        reader_class = LegacyReader
+    reader = reader_class(data, compatibility=compatibility,
                     chart_policy=chart_policy,
                     salvage_unknown_metadata=salvage_unknown_metadata,
                     extract_stored_values=extract_stored_values)
@@ -440,7 +444,7 @@ def normalize_result(result):
     result['partial'] = bool(result.get('issues')) or bool(
         result.get('issues_truncated'))
     result['status'] = 'partial' if result['partial'] else 'ok'
-    result['format'] = 'biff8_subset'
+    result.setdefault('format', 'biff8_subset')
     result['scope'] = 'stored_cells_and_metadata_subset'
     result['producer_verified'] = False
     return result

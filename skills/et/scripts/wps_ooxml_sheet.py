@@ -128,7 +128,7 @@ def _read_shared_strings(package, path, types, namespace, budget, report, text_r
     return strings, shared_formatting, shared_encoding
 
 
-def read_bytes(data):
+def read_bytes(data, *, _cell_store_factory=None):
     part = 'ZIP'
     try:
         stream = io.BytesIO(data)
@@ -342,6 +342,9 @@ def read_bytes(data):
                     used_parts=used_parts, used_comment_parts=used_comment_parts,
                     main_part=part,
                 )
+                if _cell_store_factory is not None:
+                    context.cells = _cell_store_factory(name)
+                    context.cell_window = True
                 parsed = read_worksheet(context)
                 if parsed is None:
                     data_uncertain = True

@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261115.2251.2082"
+version: "20261115.2326.5498"
 description: 读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，适合查看表头、筛选排序、去重及按指定范围统计汇总。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
@@ -44,7 +44,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check"
 
 维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
-用于读取 `.et/.ett` 的工作表、单元格保存值与保存的公式缓存；按实际内容识别 BIFF8 有限子集（CFB 容器内 Workbook/Book 流）或 OOXML 电子表格；也可识别 UTF-8/带 BOM 的 UTF-16 文本导出：HTML 表格、SpreadsheetML 2003、结构明确的 CSV/TSV。文本编号保留前导零，CSV/TSV 不自动推断数值或执行公式；合并布局/嵌套表格限制须保留 partial。原生 XLSX 任务使用对应技能；本技能不生成、编辑或转换办公文件，不恢复页面布局，不执行公式重算、宏、外链或嵌入对象。无法确认的文本编码、未知容器和私有格式明确拒绝，有限读取不等于完整 WPS 兼容。
+用于读取 `.et/.ett` 的工作表、单元格保存值与保存的公式缓存；按实际内容识别 BIFF5/7 核心或 BIFF8 有限子集（CFB 容器内 Workbook/Book 流）或 OOXML 电子表格；也可识别 UTF-8/带 BOM 的 UTF-16 文本导出：HTML 表格、SpreadsheetML 2003、结构明确的 CSV/TSV。文本编号保留前导零，CSV/TSV 不自动推断数值或执行公式；合并布局/嵌套表格限制须保留 partial。原生 XLSX 任务使用对应技能；本技能不生成、编辑或转换办公文件，不恢复页面布局，不执行公式重算、宏、外链或嵌入对象。无法确认的文本编码、未知容器和私有格式明确拒绝，有限读取不等于完整 WPS 兼容。
 
 还可对已读出的指定区域做类型明确的筛选、排序、去重、列统计与分组汇总，输出派生 JSON；原始文件及读取结果不变。统计不等于完整格式认证、公式重算或原格式写回。
 
@@ -73,11 +73,13 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check"
 execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et")
 ```
 
+OOXML 解析期分页可选独立入口 `<skill-root>/scripts/et_parse_page.py`；完整安全扫描但仅留页内单元格对象，行/列继承样式自动完整解析回退并明示未优化。使用前读取 `<skill-root>/references/bounded-reading.md#可选-ooxml-解析期分页独立接口`，不与旧视图混拼。
+
 只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其 `wps_read_view_v1` 是投影，不交给原 schema 分析器。分页用于抽查，不先遍历全部页做全量统计；每页仍重读解析输入。需要统计或处理结果表时用下方分析入口；已取得完整 JSON 的程序按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源 partial 与诊断。
 
 完整读取的 JSON 默认上限为 64 MiB，可用 `--max-json-bytes`（1 MiB–256 MiB）调整；超过预算时先自动精简一次（省略原始字节证据与重复来源字段，保存值、类型、缓存、合并、诊断不变）再决定成功或明确失败。`--compact` 可主动选择精简输出，`output_projection` 明确原始证据不完整。需要避免把大 JSON 全部回传时，使用 `--output <裸文件名>` 流式写入任务根目录新文件；文件预算默认 256 MiB（包含末尾换行），仍不能绕过上限。stdout 仅返回 `et_output_manifest_v1` 清单（文件名、实际字节数及 SHA-256、状态），不输出截断 JSON。
 
-1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认完整电子表格 `schema_version` 应为 `biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口，不等于失败或必须停止；退出 1 或 2 才停止后续分析，不把失败当空表。
+1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认完整电子表格 `schema_version` 应为 `biff5_readonly_v1`、`biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口，不等于失败或必须停止；退出 1 或 2 才停止后续分析，不把失败当空表。
 2. **解释保存值。** 按单元格 `type` 解释 `value`，保留数字字符串的精度和文本编号；`numeric_interpretation` 仅补充格式解释，不能替代原值。`formula` 存在时读取的是保存缓存，结合 `cache_status` 区分缺失、错误和未验证缓存，不能保证最新或重算。程序消费和保存值解释见电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）。
 3. **交付或分析。** 提交所需工作表/区域及明确缺口；需要汇总时选定区域和缓存政策，使用下面的只读分析入口。如另有 xlsx 技能，可消费满足其限制的原读取 JSON，仍保留源 partial 和诊断；不要把派生分析 schema 冒充原工作簿。
 
@@ -91,6 +93,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.
 - Row/ColInfo/筛选/视图/合并/公式组/DXF/表样式/条件格式/数据验证/图表/绘图/批注/链接/名称等**非单元格元数据**校验失败时，保留原始证据与问题，不中止单元格读取。
 - 单条单元格记录损坏时跳过该格并标记 `omissions_affect_cell_values=true`；其它单元格继续交付，不把不确定覆盖说成完整。
 - 宏存储、图表/宏/对话框工作表、缺失 Date1904/WsBool、未知 CodePage 等以诊断保留，不执行、不重算、不猜日期系统。
+- SST 规范保留位、零个 rich run 与错误 total 计数可有限恢复并报告 partial；不猜字符编码、长度或重新同步索引，非负 unique 仍受硬预算约束。BIFF5/7 使用独立核心分支、独立 schema 和显式 CodePage，不套用 BIFF8 字符串/结构；范围见 `<skill-root>/references/biff5-readonly.md`。
 - SST/单元格索引越界等局部值错误跳过受影响值并标记覆盖不确定；加密、无法安全建立解析基础、ZIP/XML 安全禁止项与硬资源上限仍返回失败，保留位置与原因；可恢复的短记录尾部或流链问题保留已验证部分及覆盖风险。
 - 图表缓存不作为工作表值。损坏图表只在已分帧的明确恢复点继续；图表/工作表 EOF 归属不明时保留有界证据并标记覆盖不确定。重复 OOXML `sheetData`/行继续读取不同坐标，冲突保留首个可读值并报告，不把恢复结果说成完整。
 - BIFF8 已确认的 Note 批注返回在 `sheets[].comments`（单元格/作者/纯文字），HLink/HLinkTooltip 返回在 `sheets[].hyperlinks`（目标只记录不解析、不跟随、不联网）；二者不并入单元格值，也不改变保存值。原始 note 记录、`note_drawings` 诊断和无法解析的链接记录仍作为有界证据保留。BIFF8 `sheet_coverage`/`read_status` 明确未读出的声明工作表；偏移不匹配、重叠或 BOF 无效时不能把 `cell_value_coverage` 报成完整。
@@ -130,7 +133,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 
 ## 结果与按需验收
 
-- 按实际容器和失败阶段说明范围。CFB 是容器，本包能读取其中受支持的 BIFF8 子集；不能把某个 CFB 文件被拒绝概括为“只支持 OOXML”。同样，`.et/.ett` 后缀不证明内部结构或生成软件。
+- 按实际容器和失败阶段说明范围。CFB 是容器，本包能读取其中受支持的 BIFF5/7 核心及 BIFF8 子集；不能把某个 CFB 文件被拒绝概括为“只支持 OOXML”。同样，`.et/.ett` 后缀不证明内部结构或生成软件。
 - 仅在解释容器恢复、名称、DXF、条件格式、绘图或验证组诊断时，读取 `<skill-root>/references/advanced-spreadsheet-routing.md#默认读取诊断与容器恢复`；常规保存值任务不预读。
 - `status=ok`、退出 0：声明范围内成功，允许空工作表，不等于完整格式认证。
 - `status=partial`、退出 3：保留提取结果并说明已知缺口。若 `cell_value_coverage=complete_within_declared_sheets` 且 `omissions_affect_cell_values=false`，继续普通读取、筛选、排序和统计，只需简短说明“保存值已读完，部分格式/元数据未解释”，不因 partial 单独要求用户确认或停止；若 omissions=true、存在未读声明表或缺缓存，才限制依赖完整数据的结论。

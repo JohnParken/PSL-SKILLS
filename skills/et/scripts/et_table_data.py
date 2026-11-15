@@ -15,7 +15,7 @@ MAX_QUERY_BYTES = 65536
 MAX_NUMBER_DIGITS = 1100
 MAX_NUMBER_EXPONENT = 2200
 MAX_EXCLUDED_ROWS = 10000
-SCHEMAS = {'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1', 'text_spreadsheet_readonly_v1'}
+SCHEMAS = {'biff5_readonly_v1', 'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1', 'text_spreadsheet_readonly_v1'}
 CELL_TYPES = {'number', 'text', 'boolean', 'blank', 'error'}
 # Saved formula caches that the reader may expose as usable when explicitly
 # selected. Empty-string caches are a present saved value, not a missing cache.
@@ -67,7 +67,8 @@ def bounds(region, schema):
         last_row, last_col = address(ends[-1])
     except ValueError as error:
         need(False, str(error))
-    max_row, max_col = (65536, 256) if schema == 'biff8_readonly_v1' else (1048576, 16384)
+    max_row, max_col = {'biff5_readonly_v1': (16384, 256),
+                        'biff8_readonly_v1': (65536, 256)}.get(schema, (1048576, 16384))
     need(1 <= first_row <= last_row <= max_row and 1 <= first_col <= last_col <= max_col, 'Region exceeds source grid or is reversed')
     need((last_row - first_row + 1) * (last_col - first_col + 1) <= MAX_TABLE_CELLS and last_col - first_col + 1 <= MAX_TABLE_COLUMNS,
          'Selected rectangle exceeds 200000 positions or 256 columns', 'resource_limit')

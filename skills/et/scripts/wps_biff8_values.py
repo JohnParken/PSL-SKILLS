@@ -27,11 +27,11 @@ class ContinuedStrings:
 
     def string(self, allow_rich=False, metadata_budget=None, allow_phonetic=False,
                metadata_entries_remaining=None, ignore_reserved_flags=False,
-               retain_metadata=True):
+               retain_metadata=True, sst_compatibility=False):
         try:
             return self._string(allow_rich, metadata_budget, allow_phonetic,
                                 metadata_entries_remaining, ignore_reserved_flags,
-                                retain_metadata)
+                                retain_metadata, sst_compatibility)
         except ValueError as exc:
             # Add physical context without changing the expected failure class.
             # Programming errors (IndexError, TypeError, etc.) are not swallowed.
@@ -57,7 +57,8 @@ class ContinuedStrings:
 
     def _string(self, allow_rich=False, metadata_budget=None, allow_phonetic=False,
                 metadata_entries_remaining=None, ignore_reserved_flags=False,
-                retain_metadata=True):
+                retain_metadata=True, sst_compatibility=False):
+        self.last_sst_anomalies = []
         self.last_rich = None
         self.last_phonetic = None
         payload = self.records[self.index][2]
@@ -65,8 +66,19 @@ class ContinuedStrings:
             self.advance()
             payload = self.records[self.index][2]
         require(len(payload)-self.position >= 3, 'String fixed header crosses record boundary')
+        self.last_string_location = {'record_offset': self.records[self.index][0],
+                                     'payload_offset': self.position}
         count, flag = struct.unpack_from('<HB', payload, self.position)
         self.last_flags_raw = flag
+        if sst_compatibility:
+            require(allow_rich and allow_phonetic,
+                    'SST recovery requires the rich/extended string grammar')
+            # MS-XLS 2.5.293: reserved bits MUST be ignored. Keep both
+            # length-bearing flags (fRichSt/fExtSt), never guess their absence.
+            if flag & 0xF2:
+                self.last_sst_anomalies.append({
+                    'code': 'sst_reserved_flags_ignored', 'flags_raw': flag})
+            flag &= 0x0D
         if ignore_reserved_flags:
             require(not allow_rich and not allow_phonetic, 'Reserved masking applies only to plain XLUnicodeString')
             flag &= 1
@@ -88,7 +100,11 @@ class ContinuedStrings:
             require(len(payload)-self.position >= 2, 'Rich string fixed header crosses record boundary')
             run_count = struct.unpack_from('<H', payload, self.position)[0]
             self.position += 2
-            require(run_count > 0, 'Rich string has no format runs')
+            if sst_compatibility and run_count == 0:
+                self.last_sst_anomalies.append({
+                    'code': 'sst_zero_format_runs', 'run_count_raw': 0})
+            else:
+                require(run_count > 0, 'Rich string has no format runs')
         ext_length = 0
         if flag & 4:
             require(len(payload)-self.position >= 4, 'Phonetic string fixed header crosses record boundary')

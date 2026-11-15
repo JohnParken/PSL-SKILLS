@@ -134,9 +134,10 @@ class PureTableTests(unittest.TestCase):
         bad_sst[position] = 0x81
         result = read_bytes(synthetic_cfb({'Workbook': bytes(bad_sst)}))
         self.assertEqual(result['status'], 'partial')
-        self.assertTrue([item for item in result['issues']
-                         if item['code'] in ('global_record_validation_failed',
-                                             'sst_index_out_of_range_omitted')])
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '中')
+        self.assertEqual(result['shared_string_formatting'], [])
+        self.assertIn('sst_reserved_flags_ignored',
+                      [item['code'] for item in result['issues']])
 
     def test_continued_plain_label_and_cache_use_independent_character_flags(self):
         prefix = struct.pack('<HB', 3, 0x81) + '中'.encode('utf-16le')
