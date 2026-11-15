@@ -249,6 +249,27 @@ class SkillRuntimePackages(unittest.TestCase):
         self.assertEqual(structure['tables'][0]['horizontal_merges'][0]['cell_count'], 2)
         self.assertEqual((self.work / 'tables.doc').read_bytes(), original)
 
+    def test_wps_reads_nested_ownership_from_readonly_package(self):
+        fixture_code = (
+            'from pathlib import Path\n'
+            'import sys\n'
+            'sys.path[:0] = sys.argv[1:3]\n'
+            'from test_wps_nested_tables import props, papx_document, cfb_payload\n'
+            "Path('nested.doc').write_bytes(cfb_payload(papx_document("
+            "('P\\r', props(1)), ('A\\r', props(2, cell=True)), ('\\r', props(2, row=True)),"
+            "('Q\\x07', props(1)), ('\\x07', props(1, row=True)), ('\\r', b''))))\n"
+        )
+        scripts = ROOT / 'skills/wps/scripts'
+        subprocess.run([sys.executable, '-I', '-S', '-B', '-c', fixture_code, str(scripts / 'test'), str(scripts)],
+                       cwd=self.work, env=self.env, capture_output=True, check=True, timeout=10)
+        original = (self.work / 'nested.doc').read_bytes()
+        response = self.invoke('wps', 'read_wps.py', 'nested.doc', expected=3)
+        cell = json.loads(response.stdout)['binary_table_structure']['nested_row_evidence']['rows'][0]['cells'][0]
+        table = cell['nested_tables'][0]['tables'][0]
+        self.assertEqual(table['grouping_status'], 'stored')
+        self.assertEqual(table['parent_cell_source'], cell['source'])
+        self.assertEqual((self.work / 'nested.doc').read_bytes(), original)
+
     def test_wps_reads_chart_caches_from_readonly_package(self):
         fixture_code = (
             'from pathlib import Path\n'

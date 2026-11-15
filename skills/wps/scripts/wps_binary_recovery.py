@@ -6,6 +6,7 @@ allowlisted; new parser failures cannot silently become successful partial reads
 from wps_access import ParseError
 
 _HEADER_ERRORS = frozenset({
+    "Header table without header story",
     "Header slot/section count mismatch", "Invalid header coverage/terminal CP",
     "Invalid header CP range/order", "Missing header story guard paragraph",
     "Header/footer requires content and guard paragraphs",
@@ -60,8 +61,9 @@ def read_mapping(operation, *args, maximum, story, issues, **kwargs):
             raise
         recovered = None
         if story == "headers_footers":
-            # These errors occur after section/SEPX validation. Repeat that
-            # validation without slots, so later readers still receive ranges.
+            # Re-run section/SEPX validation without slots, including when
+            # the header table has no story and failed before section parsing.
+            # Shared ownership checks must still succeed before recovery.
             recovered = operation(_WithoutHeaderSlots(args[0]), *args[1:], **kwargs)
             recovered["mapping_status"] = "header_slots_unresolved"
         issues.setdefault(story, []).append(_issue(exc, story, "binary_story_mapping_unresolved"))

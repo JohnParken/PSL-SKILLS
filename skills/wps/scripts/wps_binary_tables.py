@@ -268,7 +268,7 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
     from read_wps import ParseError, require
     from wps_nested_tables import NestedRows
     enhanced = piece_prms is not None
-    nested = NestedRows() if enhanced else None
+    nested = NestedRows(bookmarks=has_table_boundary_bookmarks(word)) if enhanced else None
     overlap_location = {'reason_code': 'overlapping_decoded_metadata'} if enhanced else {}
     result = {'schema_version': 'ms_doc_table_rows_v1', 'status': 'unresolved',
               'rows': [], 'unresolved_markers': [], 'table_grouping': 'unknown',

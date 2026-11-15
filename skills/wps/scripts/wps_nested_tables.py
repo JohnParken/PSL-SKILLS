@@ -7,7 +7,8 @@ MAX_EVENTS = 100000
 class NestedRows:
     """Keep hierarchy separate from legacy flat rows; never certify layout."""
 
-    def __init__(self):
+    def __init__(self, *, bookmarks=False):
+        self.bookmarks = bookmarks
         self.stack = []
         self.rows = []
         self.issues = []
@@ -24,7 +25,8 @@ class NestedRows:
     @staticmethod
     def frame(depth, cp):
         return {'depth': depth, 'start': cp, 'cell_start': cp, 'chunks': [],
-                'children': [], 'cells': [], 'rows': [], 'has_nested': False}
+                'children': [], 'cells': [], 'rows': [], 'identities': [],
+                'first_paragraph': None, 'has_nested': False}
 
     @staticmethod
     def pending(frame):
@@ -54,7 +56,7 @@ class NestedRows:
                 self.reject(start, 'unfinished_nested_row')
                 return
             parent = self.stack[-1]
-            parent['children'].append({'depth': child['depth'], 'row_fragments': child['rows'], 'grouping': 'unknown'})
+            parent['children'].append(self.group_child(child))
             parent['has_nested'] = True
         if not self.stack:
             if depth != 1:
@@ -68,6 +70,8 @@ class NestedRows:
                 return
             self.stack.append(self.frame(depth, start))
         frame = self.stack[-1]
+        if frame['first_paragraph'] is None:
+            frame['first_paragraph'] = props
         inner_cell, inner_row = props.get('inner_cell', 0), props.get('inner_row_end', 0)
         if depth == 1:
             if inner_cell or inner_row:
@@ -78,7 +82,10 @@ class NestedRows:
             valid_mark = mark == '\x07' if row_end else mark in ('\r', '\x07')
         else:
             row_end, cell_end = inner_row, inner_cell
-            valid_mark = mark == '\r' and not props.get('row_end') and not (row_end and cell_end)
+            # PFInnerTtp identifies the separate row terminator even when
+            # producers also retain PFInnerTableCell on that empty paragraph.
+            # The row-end branch still requires closed cells and no content.
+            valid_mark = mark == '\r' and not props.get('row_end')
         if not valid_mark:
             self.reject(start, 'wrong_nested_terminator')
             return
@@ -92,8 +99,11 @@ class NestedRows:
                 if frame['has_nested']:
                     self.rows.append(row)
             else:
+                from wps_binary_table_groups import row_identity
                 frame['rows'].append(row)
+                frame['identities'].append(row_identity(props, frame['first_paragraph']))
             frame['cells'] = []
+            frame['first_paragraph'] = None
             frame['start'] = end
             frame['cell_start'] = end
             frame['has_nested'] = False
@@ -106,8 +116,51 @@ class NestedRows:
             frame['cells'].append({'text': '\n'.join(frame['chunks']), 'text_scope': 'direct_paragraphs_only',
                                    'nested_tables': frame['children'],
                                    'source': {'cp_start': frame['cell_start'], 'cp_end': end}})
+            cell_source = frame['cells'][-1]['source']
+            for child in frame['children']:
+                for table in child['tables']:
+                    table['parent_cell_source'] = dict(cell_source)
+                    table['parent_cell_status'] = 'stored_boundaries'
             frame['chunks'], frame['children'] = [], []
             frame['cell_start'] = end
+
+    def group_child(self, frame):
+        """Index child rows without treating a depth run as one table.
+
+        MS-DOC 2.4.3: adjacent rows join only when the stored grouping
+        properties agree. Depth transitions prove the outer limits of this
+        run, but unknown properties/bookmarks still split partial groups.
+        Parent ownership is published only after its cell AND row close.
+        """
+        from wps_binary_table_groups import _adjacent_boundary, PROVEN_BOUNDARIES
+
+        rows = frame['rows']
+        tables = []
+        proven = PROVEN_BOUNDARIES | {'parent_depth_transition'}
+
+        def emit(first, limit, start_boundary, end_boundary):
+            source = {'cp_start': rows[first]['source']['cp_start'],
+                      'cp_end': rows[limit - 1]['source']['cp_end']}
+            tables.append({'table_id': f"nested-{frame['depth']}-{source['cp_start']}",
+                           'depth': frame['depth'], 'first_row_index': first,
+                           'row_count': limit - first, 'source': source,
+                           'grouping_status': ('stored' if start_boundary in proven and end_boundary in proven else 'partial'),
+                           'start_boundary': start_boundary, 'end_boundary': end_boundary,
+                           'layout': 'unknown', 'merges': 'unknown'})
+
+        first, start_boundary = 0, 'parent_depth_transition'
+        for index in range(1, len(rows)):
+            boundary = _adjacent_boundary(frame['identities'][index - 1], frame['identities'][index], self.bookmarks)
+            if rows[index - 1]['source']['cp_end'] != rows[index]['source']['cp_start']:
+                boundary = 'unresolved_row_gap'
+            if boundary is not None:
+                emit(first, index, start_boundary, boundary)
+                first, start_boundary = index, boundary
+        emit(first, len(rows), start_boundary, 'parent_depth_transition')
+        return {'depth': frame['depth'], 'row_fragments': rows,
+                'grouping': 'unknown',  # Compatibility: this container is a run, not a table.
+                'tables': tables,
+                'table_grouping': 'stored' if all(t['grouping_status'] == 'stored' for t in tables) else 'partial'}
 
     def finish(self, cp):
         if any(self.pending(frame) or frame['depth'] > 1 for frame in self.stack):

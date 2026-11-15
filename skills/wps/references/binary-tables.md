@@ -6,6 +6,19 @@
 
 先完成 环境自检 (`<skill-root>/SKILL.md#执行环境约束与首步自检`)。默认读取 MS-DOC 正文或显式选择的附加区域时，出现 U+0007 会附加 `binary_table_structure`；正文及段落的旧有 TAB 输出保持不变，但结果标为 partial。普通 TAB 不触发结构推断。
 
+## 目录
+
+- `<skill-root>/references/binary-tables.md#支持范围`
+- `<skill-root>/references/binary-tables.md#最大化读取的表格与段落证据`
+- `<skill-root>/references/binary-tables.md#表格分组与合并`
+- `<skill-root>/references/binary-tables.md#缺口和失败`
+- `<skill-root>/references/binary-tables.md#依据与验收边界`
+- `<skill-root>/references/binary-tables.md#固定段落属性与保守停止`
+- `<skill-root>/references/binary-tables.md#HugePapx与外部PrcData`
+- `<skill-root>/references/binary-tables.md#有界跳过与嵌套限制`
+- `<skill-root>/references/binary-tables.md#嵌套行片段读取`
+- `<skill-root>/references/binary-tables.md#子表分组与父单元格证据`
+
 ## 支持范围
 
 `schema_version=ms_doc_table_rows_v1` 的 `rows` 保留存储中的物理行及 `cells`、正文 CP 半开范围、行结束符 CP 与 PAPX 来源。每个 cell 有从零开始的行内 `index`、文字、CP 范围与属性来源。同一单元格的多段文字用换行连接，空单元格保留。CP 按 UTF-16 码元计算。
@@ -88,6 +101,14 @@ maximum 对未识别的非表 SPRM 按 SPRA 的固定或变长操作数边界继
 
 最大模式的 `nested_row_evidence.rows` 仅保留包含嵌套内容且父行已经闭合的一级行片段。每个单元格的 `text` 是本层直接段落，不重复拼入子表文字；按 `nested_tables[].row_fragments[].cells` 逐层读取子表有效文字，以各层 `source` 的 CP 范围定位。普通正文仍保留原文，原 `rows/tables` 一级证据字段不变，避免把不同表示重复计数。
 
-只在已观察到父单元格段落、深度逐级增加、CR 配合 PFInnerTableCell/PFInnerTtp 且各层行/单元格完整闭合时关联父子。缺父开端、深度跳跃、未知属性/PRM、字段重叠、错误终止符或未闭合层级不生成猜测关系，缺口见 `issues/issue_count/issues_omitted`。当前不支持缺少前置父段落的嵌套起始，不恢复样式继承、嵌套合并、表间分组或视觉排版；相邻子行只称行片段，不保证同一完整表。深度最多32层、事件及单元格最多10万，超限明确资源失败。
+只在已观察到父单元格段落、深度逐级增加、CR 配合 PFInnerTableCell/PFInnerTtp 且各层行/单元格完整闭合时关联父子。空内层行结束段可以同时含 PFInnerTableCell 与 PFInnerTtp，以显式行结束标记为准，仍要求先有完整单元格且该段无正文；不增加虚构空单元格。缺父开端、深度跳跃、未知属性/PRM、字段重叠、错误终止符或未闭合层级不生成猜测关系，缺口见 `issues/issue_count/issues_omitted`。当前不支持缺少前置父段落的嵌套起始，不恢复样式继承、嵌套合并或视觉排版。旧 `grouping=unknown` 继续描述子行容器，不将整个容器冒充单个表；新增 `tables` 为该容器内的分组索引。深度最多32层、事件及单元格最多10万，超限明确资源失败。
 
-开发依据为 MS-DOC 2.4.3 与 2.6.2：内层单元格和行使用 U+000D，顶层使用 U+0007。仅合成 PAPX/FKP 二层、三层及损坏边界回归，不代表真实 WPS 版本或客户端验收。
+开发依据为 MS-DOC 2.4.3 与 2.6.2：内层单元格和行使用 U+000D，顶层使用 U+0007。二层、三层及损坏边界有合成 PAPX/FKP 回归；后续公开真实样本验收见下节，不代表真实 WPS 版本或客户端验收。
+
+### 子表分组与父单元格证据
+
+`nested_tables[].tables` 使用 `first_row_index/row_count` 索引同容器的 `row_fragments`，不复制正文。每项包含故事内 CP 派生的 `table_id`、`depth`、`source`、`start_boundary/end_boundary`、`grouping_status` 及 `parent_cell_source/parent_cell_status`。ID 只在当前故事内使用，不作为跨文件或跨故事标识。父关联只有父单元格与父行都闭合才发布；祖先未闭合不发布后代。
+
+深度进出证明子行连续区段的外边界。相邻子行复用一级表的 MS-DOC 2.4.3 保存属性比较：分组号、样式、方向、定位/环绕及适用的首段框架。已证实差异拆表；未知属性、不可比较框架或保护书签不合并，分界两侧 `grouping_status=partial`。`table_grouping` 只总结此子行容器，整个读取仍 partial；`layout/merges=unknown`，不认证有效样式或视觉网格。旧 `rows/tables` 一级输出及正文保持原契约。
+
+新增合成测试覆盖相同行合并、不同分组拆表、未知属性/书签拒绝合并、多子表/多父单元格隔离和未闭合父行。公开 Apache POI `innertable.doc` 初次在 FIB 校验被拒绝；后续增加精确匹配的无扩展 partial 兼容、独立页眉映射降级及双内层终止标记支持，原件现返回2×2子表和已闭合父单元格范围。上游公开测试的2行/首行2格预期一致；standard 仍拒绝该非规范 FIB，未读取私人样本。仓库维护记录见 `docs/maintenance/wps/nested-grouping-20261115.md`（仓库根基准，不随运行包分发）。

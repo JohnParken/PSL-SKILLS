@@ -97,6 +97,34 @@ class BinaryRecoveryTests(unittest.TestCase):
                 maximum(headers(False))
             self.assertEqual(caught.exception.status, "resource_limit")
 
+    def test_header_table_without_story_retains_section_checks(self):
+        streams = document([(b'A\r', True)])
+        word = bytearray(streams[('WordDocument',)])
+        table = bytearray(streams[('0Table',)])
+        sed_offset = len(table)
+        sed = struct.pack('<IIHIHI', 0, 2, 13, 2000, 0, 0xffffffff)
+        for pair, raw in ((6, sed), (11, bytes(52))):
+            struct.pack_into('<II', word, 154 + pair * 8, len(table), len(raw))
+            table.extend(raw)
+        streams[('WordDocument',)] = bytes(word)
+        streams[('0Table',)] = bytes(table)
+        with self.assertRaises(ParseError):
+            parse_streams(streams, include_related=True)
+        result = maximum(streams)
+        self.assertEqual(result['text'], 'A\n')
+        header = result['related_stories'][1]
+        self.assertEqual(header['text'], '')
+        self.assertEqual(header['anchor_status'], 'header_slots_unresolved')
+        self.assertTrue(header['section_mapping']['word_ranges'])
+        self.assertTrue(any(i['code'] == 'binary_story_mapping_unresolved' for i in result['issues']))
+        # Even though the initial header error precedes SEPX parsing, recovery
+        # must not hide a section that aliases body text.
+        struct.pack_into('<I', table, sed_offset + 10, 4096)
+        streams[('0Table',)] = bytes(table)
+        with self.assertRaises(ParseError) as caught:
+            maximum(streams)
+        self.assertIn('SEPX', str(caught.exception))
+
     def test_table_alias_stays_fatal(self):
         streams = notes()
         word = bytearray(streams[("WordDocument",)])

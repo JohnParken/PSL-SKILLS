@@ -120,8 +120,14 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
     require(version in FIB_LAYOUTS, word.location(extension_offset + 2 if csw_new else 2),
             'Unsupported effective nFibNew version', 'unsupported')
     expected_pairs, expected_new, fib_end = FIB_LAYOUTS[version]
-    require(pair_count == expected_pairs and csw_new == expected_new,
+    # Bounded producer compatibility: an explicit zero length has no extension
+    # to parse (MS-DOC 2.5.14/15). Keep the exact known base/array combination,
+    # all stream/overlap checks and strict-mode refusal; never infer nFibNew.
+    missing_extension = maximum and csw_new == 0 and expected_new != 0 and pair_count == expected_pairs
+    require(pair_count == expected_pairs and (csw_new == expected_new or missing_extension),
             word.location(152), 'Inconsistent FIB version/array/extension layout', 'unsupported')
+    if missing_extension:
+        fib_end = extension_offset + 2
     word.view(0, fib_end)
     if csw_new:
         require(word.number(extension_offset + 4, 2) <= 15,
@@ -417,6 +423,12 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         if rendered is not None:
             text = ''.join(rendered)
         issues = list(getattr(story_anchors, 'issues', ()))
+        if missing_extension and story_type == 'main':
+            issues.append({'code': 'fib_extension_absent_compatibility', 'stream': 'WordDocument',
+                           'offset': extension_offset, 'base_version': hex(base_version),
+                           'pair_count': pair_count, 'csw_new': 0, 'expected_csw_new': expected_new,
+                           'message': 'Explicitly absent extension: known base version and exact array retained; '
+                                      'noncanonical producer layout, extension metadata unavailable'})
         if control_locations:
             issues.append({'code': 'uninterpreted_control_markers_not_decoded', 'count': len(control_locations),
                            'locations': control_locations,

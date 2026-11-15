@@ -106,6 +106,29 @@ class DocVersionTests(unittest.TestCase):
             self.error(replace_word(streams, 418, 0xFFFFFFFF), 'corrupt', 0xFFFFFFFF)
             self.error(replace_word(streams, 422, 0xFFFFFFFF), 'resource_limit', 422)
 
+    def test_absent_extension_maximum_is_bounded_and_partial(self):
+        for version, pairs in ((0xD9, 108), (0x101, 136), (0x10C, 164), (0x112, 183)):
+            streams = replace_word(replace_word(document(), 2, version, 2), 152, pairs, 2)
+            offset = 154 + pairs * 8
+            self.error(streams, 'unsupported', 152)
+            result = parse_streams(streams, maximum=True)
+            self.assertEqual(result['text'], 'Hello 中文\n第二段\n')
+            self.assertEqual(result['status'], 'partial')
+            issue = next(x for x in result['issues'] if x['code'] == 'fib_extension_absent_compatibility')
+            self.assertEqual((issue['offset'], issue['pair_count'], issue['csw_new']), (offset, pairs, 0))
+            raw = synthetic_cfb({name[0]: value for name, value in streams.items()})
+            self.assertEqual(read_bytes(raw)['fib_version'], hex(version))
+            self.error(replace_word(streams, 152, 93, 2), 'unsupported', 152, maximum=True)
+            self.error(replace_word(streams, offset, 1, 2), 'unsupported', offset, maximum=True)
+            self.error(replace_word(streams, 10, 0x1100, 2), 'encrypted', 10, maximum=True)
+            self.error(replace_word(streams, 64, offset + 1), 'corrupt', 64, maximum=True)
+            # The declared array and its length word remain owned by the FIB.
+            table = bytearray(streams[('0Table',)])
+            struct.pack_into('<I', table, 19, offset)
+            damaged = dict(streams)
+            damaged[('0Table',)] = table
+            self.error(damaged, 'corrupt', 19, maximum=True)
+
     def test_encryption_back_version_budget_and_unknowns(self):
         for version in (0xD9, 0x112):
             streams = fixture(version)

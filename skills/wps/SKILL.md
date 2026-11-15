@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261115.2235.4998"
+version: "20261115.2340.3260"
 description: 读取 .wps、.rtf 和旧版 .doc 的文字及表格。最大模式可补读表格分组与合并、绘图、文本框、内嵌 PNG 和部分二进制图表缓存。按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。原生 DOCX（含 WPS 保存）优先使用 docx。
 ---
 
@@ -69,7 +69,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wp
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --paragraph-range 1:20")
 ```
 
-`--reading-mode maximum` 是 CLI、`read()` 和 `read_bytes()` 的默认模式，使用完整 JSON，读取附加区域并保留隐藏文字及域缓存。OOXML/RTF 的 `text` 使用受支持的 accepted 当前视图；存在差异时，`revision_content` 单独保留 all 存储视图，不把删除文字拼进当前正文。显式 `--revisions all` 的正文标为 `all_stored_revisions_not_current`，不得当作当前有效内容。MS-DOC 无法可靠过滤修订，保留存储文字但 `current_view_available=false` 并标 partial；RTF 已知无法筛选的修订元数据也仅返回明确标识的存储文字，不伪造当前视图。二进制文档的 `binary_table_structure.tables` 返回一级表格分组、存储列边界和可确认的合并范围，原始单元格文字仍在 `rows`。可证实的嵌套内容另见 `nested_row_evidence.rows`，按单元格的 `nested_tables` 取子行文字；只表示存储边界片段，缺父范围或结束标记时不猜归属。在 `drawing_objects` 查看绘图锚点和说明，在 `related_stories` 查看文本框和附加区域。`binary_images` 返回存储 PNG 的元数据和位置，确需原始字节时加 `--include-image-bytes`。`binary_charts` 返回由浮动绘图或行内图片记录定位的分类、系列存储值和缺失范围。查阅具体系列的状态，按点索引关联分类和值。显式 standard 遇到 `related_content_not_requested` 时，可改用默认 maximum；确实只要标准模式的附加文字才用 `--reading-mode standard --include-related`。
+`--reading-mode maximum` 是 CLI、`read()` 和 `read_bytes()` 的默认模式，使用完整 JSON，读取附加区域并保留隐藏文字及域缓存。OOXML/RTF 的 `text` 使用受支持的 accepted 当前视图；存在差异时，`revision_content` 单独保留 all 存储视图，不把删除文字拼进当前正文。显式 `--revisions all` 的正文标为 `all_stored_revisions_not_current`，不得当作当前有效内容。MS-DOC 无法可靠过滤修订，保留存储文字但 `current_view_available=false` 并标 partial；RTF 已知无法筛选的修订元数据也仅返回明确标识的存储文字，不伪造当前视图。二进制文档的 `binary_table_structure.tables` 返回一级表格分组、存储列边界和可确认的合并范围，原始单元格文字仍在 `rows`。可证实的嵌套内容另见 `nested_row_evidence.rows`，按单元格的 `nested_tables` 取子行文字；子行容器的 `tables` 按保存属性给出可证实的表分组及 `parent_cell_source`；未知分组仍 partial，缺父范围或结束标记时不猜归属。在 `drawing_objects` 查看绘图锚点和说明，在 `related_stories` 查看文本框和附加区域。`binary_images` 返回存储 PNG 的元数据和位置，确需原始字节时加 `--include-image-bytes`。`binary_charts` 返回由浮动绘图或行内图片记录定位的分类、系列存储值和缺失范围。查阅具体系列的状态，按点索引关联分类和值。显式 standard 遇到 `related_content_not_requested` 时，可改用默认 maximum；确实只要标准模式的附加文字才用 `--reading-mode standard --include-related`。
 
 OOXML 主文按包根关系和内容类型定位，不限固定文件名；显式 standard 且未请求附加区域时，发现页眉、页脚或注释引用明确标 `related_content_not_requested` 和 partial。独立关联部件缺失、XML 损坏或定义不完整时保留正文及其他可读区域，故障区域标 partial 并给出真实来源。数学公式与未知块内文字未解码时明确诊断，不把残缺正文称为全文。MS-DOC 的 maximum 仅对已分类的独立映射/区域损坏降级，标准模式仍严格；安全、共享结构与资源限制继续阻断。
 
