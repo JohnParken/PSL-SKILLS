@@ -10,6 +10,8 @@ BUILTIN_FORMATS = {
     14: 'm/d/yy', 20: 'h:mm', 21: 'h:mm:ss', 22: 'm/d/yy h:mm', 37: '#,##0_);(#,##0)', 38: '#,##0_);[Red](#,##0)',
     39: '#,##0.00_);(#,##0.00)', 40: '#,##0.00_);[Red](#,##0.00)', 45: 'mm:ss', 46: '[h]:mm:ss', 49: '@',
 }
+CJK_BUILTIN_DATE_TIME_IDS = frozenset(range(27, 37)) | frozenset(range(50, 59))
+
 DATE_FORMATS = {'yyyy-mm-dd','yyyy/mm/dd','m/d/yy','yyyy-mm-dd hh:mm:ss','m/d/yy h:mm'}
 TIME_FORMATS = {'h:mm','hh:mm','h:mm:ss','hh:mm:ss','mm:ss','[h]:mm:ss'}
 COLOR = re.compile(r'\[(Black|Blue|Cyan|Green|Magenta|Red|White|Yellow|Color ?(?:[1-9]|[1-4][0-9]|5[0-6]))\]', re.ASCII | re.IGNORECASE)
@@ -90,6 +92,16 @@ def interpret_number(value, format_id, custom_format, date_system):
         return unknown('finite_decimal_required')
     if len(value.as_tuple().digits)>1024 or abs(value.adjusted())>1024:
         return unknown('interpretation_numeric_budget')
+    if custom_format is None and format_id in CJK_BUILTIN_DATE_TIME_IDS:
+        # Built-in East Asian IDs identify a date/time family, not a universal
+        # locale-independent display pattern. Preserve raw serial and evidence;
+        # never invent a Chinese layout or assume a workbook date system.
+        result.update(kind='date_time_candidate',
+                      reason='locale_dependent_builtin_date_time',
+                      confidence='builtin_family_only',
+                      builtin_date_time_evidence=True,
+                      display_locale_verified=False)
+        return result
     if fmt is None or len(fmt)>255:
         return unknown('format_not_in_supported_subset')
     if ';' not in fmt:

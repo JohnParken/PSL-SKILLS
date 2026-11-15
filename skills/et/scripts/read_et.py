@@ -95,6 +95,16 @@ def _read_bytes(data, *, source=None, compatibility=DEFAULT_FILE_COMPATIBILITY, 
                 'Package is not a spreadsheet', 'unsupported')
         return _annotate_legacy_options(read_sheet_bytes(data), compatibility, salvage_unknown_metadata)
 
+    if not data.startswith(SIGNATURE):
+        from wps_text_tables import read_text_table
+        try:
+            text_result = read_text_table(data)
+        except ParseError as exc:
+            if exc.status == 'unsupported':
+                raise ParseError('unsupported', {'stage': 'container'}, str(exc)) from exc
+            raise
+        return _annotate_legacy_options(text_result, compatibility, salvage_unknown_metadata)
+
     require(data.startswith(SIGNATURE), {'stage': 'container'},
             'Unknown container; native private ET formats unsupported', 'unsupported')
     compound = load_compound(data, compatibility)

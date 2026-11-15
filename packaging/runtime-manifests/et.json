@@ -84,6 +84,7 @@
     "scripts/wps_ooxml.py",
     "scripts/wps_ooxml_escape.py",
     "scripts/wps_ooxml_sheet.py",
+    "scripts/wps_ooxml_stream.py",
     "scripts/wps_ooxml_text.py",
     "scripts/wps_ooxml_worksheet.py",
     "scripts/wps_read_view.py",
@@ -92,6 +93,7 @@
     "scripts/wps_sheet_comments.py",
     "scripts/wps_sheet_views.py",
     "scripts/wps_style_formats.py",
+    "scripts/wps_text_tables.py",
     "scripts/wps_visibility.py",
     "scripts/wps_vml_notes.py"
   ],

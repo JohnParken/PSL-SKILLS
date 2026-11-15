@@ -13,6 +13,7 @@ from wps_ooxml import (
     TRANSITIONAL_REL, STRICT_REL, fromstring, is_security_error, read_part,
     relationships, rels_path, split_tag,
 )
+from wps_ooxml_stream import prepare_worksheet
 from wps_ooxml_escape import decode_ooxml_text
 from wps_numeric import interpret_number
 from wps_ooxml_text import MAX_CELL_TEXT, TextReader, is_main
@@ -812,8 +813,45 @@ def read_worksheet(context):
     """Read one worksheet part; returns None when the part/root is unusable."""
     report = context.report
     sheet = context.sheet_name
-    ws_root = load_part_xml(context.package, context.sheet_part, context.budget, report,
-                            'worksheet_part_not_read', sheet=sheet)
+    context.truncated = False
+    seen_rows = set()
+
+    def consume(row_node):
+        if context.truncated:
+            return
+        if not is_main(row_node, 'row'):
+            report.add('sheet_data_element_not_interpreted', sheet=sheet,
+                       element=str(row_node.tag)[:120])
+            context.uncertain = True
+            return
+        if len(context.rows) >= MAX_ROWS:
+            report.add('row_metadata_limit_reached', sheet=sheet, kept=MAX_ROWS)
+            context.uncertain = True
+            context.truncated = True
+            return
+        parse_row(context, row_node, seen_rows)
+
+    # Validate the immutable part before callbacks. Non-security malformed XML
+    # retains the existing unread-part behavior; safety failures still propagate.
+    try:
+        raw = read_part(context.package, context.sheet_part)
+    except (ValueError, KeyError) as exc:
+        if is_security_error(exc):
+            raise
+        report.add('worksheet_part_not_read',
+                   'Part was not read after a bounded read failure',
+                   part=context.sheet_part, reason=str(exc)[:120], sheet=sheet)
+        return None
+    try:
+        parse_rows = prepare_worksheet(raw, budget=context.budget)
+    except ValueError as exc:
+        if is_security_error(exc):
+            raise
+        report.add('worksheet_part_not_read',
+                   'Part was not interpreted after a bounded XML failure',
+                   part=context.sheet_part, reason=str(exc)[:120], sheet=sheet)
+        return None
+    ws_root = parse_rows(consume)
     if ws_root is None:
         return None
     namespace, local = split_tag(ws_root.tag)
@@ -832,25 +870,6 @@ def read_worksheet(context):
     if not sheet_data:
         report.add('worksheet_sheet_data_missing', sheet=sheet)
         context.uncertain = True
-    context.truncated = False
-    seen_rows = set()
-    for data in sheet_data:
-        for row_node in data:
-            if not is_main(row_node, 'row'):
-                report.add('sheet_data_element_not_interpreted', sheet=sheet,
-                           element=str(row_node.tag)[:120])
-                context.uncertain = True
-                continue
-            if len(context.rows) >= MAX_ROWS:
-                report.add('row_metadata_limit_reached', sheet=sheet, kept=MAX_ROWS)
-                context.uncertain = True
-                context.truncated = True
-                break
-            parse_row(context, row_node, seen_rows)
-            if context.truncated:
-                break
-        if context.truncated:
-            break
     read_columns(context, ws_root)
     read_merges(context, ws_root)
     relations, _ = read_sheet_relations(context, ws_root)

@@ -15,7 +15,7 @@ MAX_QUERY_BYTES = 65536
 MAX_NUMBER_DIGITS = 1100
 MAX_NUMBER_EXPONENT = 2200
 MAX_EXCLUDED_ROWS = 10000
-SCHEMAS = {'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1'}
+SCHEMAS = {'biff8_readonly_v1', 'ooxml_spreadsheet_readonly_v1', 'text_spreadsheet_readonly_v1'}
 CELL_TYPES = {'number', 'text', 'boolean', 'blank', 'error'}
 # Saved formula caches that the reader may expose as usable when explicitly
 # selected. Empty-string caches are a present saved value, not a missing cache.
@@ -151,6 +151,8 @@ def extract_table(result, query):
     """Keep physical columns as IDs; header labels never decide column identity."""
     need(isinstance(result, dict) and isinstance(result.get('schema_version'), str) and result['schema_version'] in SCHEMAS,
          'Complete ET spreadsheet schema required; projections are not tables')
+    need(result.get('coordinates_verified') is not False,
+         'Text extraction has unverified coordinates; rectangular analysis is unavailable')
     need(result.get('status') in ('ok', 'partial') and isinstance(result.get('sheets'), list), 'Successful complete reader result required')
     need(all(isinstance(sheet, dict) for sheet in result['sheets']), 'Malformed worksheet collection')
     need(isinstance(query.get('sheet'), str), 'Explicit worksheet name required')

@@ -33,3 +33,7 @@ OOXML 保存文本中的 `_xHHHH_`（UTF-16 代码单元）转义会在共享字
 常用会计格式 (`<skill-root>/references/accounting-formats.md`)只解释位置分段、货币/千分/小数/负括号/零破折号，列宽填充省略。comments读取规则和预算见传统批注 (`<skill-root>/references/sheet-comments.md`)；新行为仍为合成验证。
 
 传统Transitional批注的有限VML Note锚点 (`<skill-root>/references/vml-note-anchors.md`)只保留Row/Column和八整数矩形，严格一对一匹配，不渲染；Strict VML或未知活动内容拒绝。格式条件和区域边界见有限格式指令 (`<skill-root>/references/conditional-number-formats.md`)。
+
+安全逐行解析：工作表 XML 先完整通过原有 DTD/实体、深度、节点、命名空间展开及累计预算检查，再逐行读取并释放已消费的行 XML；行列样式、合并、筛选、链接及批注元数据继续按原流程处理。部件字节、共享字符串和最终单元格结果仍保留，不承诺恒定内存或无限大文件。实现位于 `<skill-root>/scripts/wps_ooxml_stream.py`，不引入外部依赖。
+
+分页仍使用现有读取视图的 `--page-size` / `--cursor`，保留来源哈希、覆盖与 partial；每次先解析完整受预算约束的来源，再选择返回页。页大小只限制返回内容，不限制解析成本，也不意味着可以跳过尚未显示部分的安全检查。

@@ -23,3 +23,8 @@ BIFF8 数字已确定为 `General`，且保存的 Decimal 可精确还原为 bin
 公开格式来源见numeric-evidence.json (`docs/maintenance/et/numeric-evidence.json`)。日期only忽略小数部分，不因秒四舍五入跨日。
 
 有限2–4分段会计格式另见会计边界 (`<skill-root>/references/accounting-formats.md`)；OOXML数字格式来源解析见两层样式链接 (`<skill-root>/references/style-inheritance.md`)。原值始终不变，不能把解释值代回原数据分析。
+
+## 东亚内置日期证据
+
+内置格式 ID 27–36、50–58 且无显式格式时返回 `date_time_candidate`，`builtin_date_time_evidence=true`；仅证明格式族，不证明具体地区显示。
+保留原始数值和 `date_system`，不自动把未知地区格式解释为中文日期，不生成猜测的 display_text。显式格式仍按原有限子集解释。
