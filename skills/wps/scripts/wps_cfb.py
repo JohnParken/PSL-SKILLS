@@ -29,9 +29,11 @@ COMPATIBILITY_MODES=("strict","legacy_excel_clsid","legacy_word_clsid")
 
 
 class CompoundFile:
-    def __init__(self,data,*,compatibility="strict", allow_missing_padding=False):
+    def __init__(self,data,*,compatibility="strict", allow_missing_padding=False, skip_large_optional=False):
         if compatibility not in COMPATIBILITY_MODES:
             raise ValueError("Unknown CFB compatibility mode")
+        if type(skip_large_optional) is not bool:
+            raise ValueError("skip_large_optional must be boolean")
         self.compatibility=compatibility
         self.issues=[]
         if not isinstance(data,bytes) or len(data)>MAX_FILE_BYTES:
@@ -157,11 +159,21 @@ class CompoundFile:
         for path,entry in self.paths.items():
             if entry['kind']!=2:
                 continue
-            if entry['size']>MAX_STREAM_BYTES:
+            core = len(path) == 1 and path[0].casefold() in ('worddocument', '0table', '1table', 'data', 'workbook', 'book')
+            security_stream = any(name.casefold() in ('vba', 'macros', '_vba_project', 'project', 'projectwm',
+                                                       'encryptedpackage', 'encryptioninfo', 'encryptedsummary', 'drmcontent') for name in path)
+            omit = skip_large_optional and not core and not security_stream and entry['size'] > MAX_STREAM_BYTES
+            if entry['size']>MAX_STREAM_BYTES and not omit:
                 raise ValueError('User stream exceeds 8 MiB limit')
             total+=entry['size']
             if total>MAX_FILE_BYTES:
                 raise ValueError('Aggregate stream size exceeds 32 MiB')
+            if omit:
+                self.regular(entry['start'], entry['size'], 'stream ' + repr(path), MAX_FILE_BYTES, materialize=False)
+                self.issues.append({'code': 'cfb_optional_stream_omitted', 'stream_path': list(path),
+                                    'declared_bytes': entry['size'], 'reason': 'optional_stream_materialization_budget',
+                                    'allocation_validated': True, 'content_read': False})
+                continue
             content=self.mini(entry['start'],entry['size']) if 0<entry['size']<4096 else self.regular(entry['start'],entry['size'],'stream '+repr(path),MAX_STREAM_BYTES)
             self.streams[path]=content
         if any(value!=FREE and index not in self.used for index,value in enumerate(self.fat[:self.sector_count])):
@@ -234,7 +246,7 @@ class CompoundFile:
             raise ValueError('Sector chain cycle/cross-link/duplicate allocation')
         self.used[identifier]=owner
 
-    def regular(self,start,size,owner,limit):
+    def regular(self,start,size,owner,limit,*,materialize=True):
         if size is not None and size>limit:
             raise ValueError(owner+' exceeds byte budget')
         parts=[]
@@ -248,7 +260,8 @@ class CompoundFile:
             if (current + 1) * self.sector_size + required > self.physical_length:
                 raise ValueError(owner + ' declared content is physically truncated')
             self.claim(current,owner)
-            parts.append(self.sector(current))
+            if materialize:
+                parts.append(self.sector(current))
             count+=1
             current=self.fat[current]
         if expected is not None and count!=expected:

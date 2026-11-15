@@ -91,6 +91,33 @@ def synthetic_cfb(streams=None,major=3):
 
 
 class CompoundTests(unittest.TestCase):
+    def test_optional_stream_budget_preserves_text_and_checks_allocation(self):
+        from test_wps import synthetic_cfb, document
+        from read_wps import read_bytes, ParseError
+        streams = {path[0]: value for path, value in document().items()}
+        streams['LargeAttachment'] = bytes(16384)
+        payload = synthetic_cfb(streams)
+        with patch('wps_cfb.MAX_STREAM_BYTES', 8192):
+            result = read_bytes(payload, reading_mode='maximum')
+            self.assertIn('Hello', result['text'])
+            issue = next(item for item in result['issues'] if item['code'] == 'cfb_optional_stream_omitted')
+            self.assertEqual(issue['declared_bytes'], 16384)
+            self.assertTrue(issue['allocation_validated'])
+            self.assertEqual(result['status'], 'partial')
+            with self.assertRaises(ParseError):
+                read_bytes(payload, reading_mode='standard')
+            compound = CompoundFile(payload, skip_large_optional=True)
+            start = compound.paths[('LargeAttachment',)]['start']
+            # The skipped stream must still reject cycles, not merely trust its size.
+            damaged = bytearray(payload)
+            struct.pack_into('<I', damaged, 512 + 4 * start, start)
+            with self.assertRaises(ValueError):
+                CompoundFile(bytes(damaged), skip_large_optional=True)
+            for protected in ('WordDocument', 'Data', 'EncryptionInfo', 'PROJECT'):
+                with self.subTest(protected=protected), self.assertRaises(ValueError):
+                    CompoundFile(synthetic_cfb({protected: bytes(16384)}), skip_large_optional=True)
+
+
     def test_synthetic_v3_regular_mini_unicode_and_empty(self):
         streams={'数据':'中文内容'.encode('utf-8'),'Empty':b'','Workbook':b'abcd'*1024}
         book=CompoundFile(synthetic_cfb(streams))

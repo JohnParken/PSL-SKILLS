@@ -69,6 +69,7 @@
     "scripts/wps_maximum_pages.py",
     "scripts/wps_maximum_view.py",
     "scripts/wps_msdoc_charprops.py",
+    "scripts/wps_nested_tables.py",
     "scripts/wps_ooxml.py",
     "scripts/wps_ooxml_omissions.py",
     "scripts/wps_ooxml_related.py",

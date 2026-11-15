@@ -10,9 +10,9 @@
 
 `schema_version=ms_doc_table_rows_v1` 的 `rows` 保留存储中的物理行及 `cells`、正文 CP 半开范围、行结束符 CP 与 PAPX 来源。每个 cell 有从零开始的行内 `index`、文字、CP 范围与属性来源。同一单元格的多段文字用换行连接，空单元格保留。CP 按 UTF-16 码元计算。
 
-默认模式只接受已校验 BTE/PAPX FKP 中显式 `sprmPFInTable=1`、`sprmPItap=1` 的一级段落或单元格边界。行终止必须有显式 `sprmPFTtp=1`，未写 PFTtp 的普通标记按规范默认 false。已知 TDefTable 保留初始列数和 twips 边界。未知段落操作在原位置停止解析。
+显式 standard 模式只接受已校验 BTE/PAPX FKP 中显式 `sprmPFInTable=1`、`sprmPItap=1` 的一级段落或单元格边界。行终止必须有显式 `sprmPFTtp=1`，未写 PFTtp 的普通标记按规范默认 false。已知 TDefTable 保留初始列数和 twips 边界。standard 的未知段落操作在原位置停止解析。
 
-`initial_definition` 描述保存的初始定义。默认模式的 `table_grouping`、`grid_and_merges` 和每行 `merges` 为 `unknown`。最大模式的表级结果见下文。
+`initial_definition` 描述保存的初始定义。standard 模式的 `table_grouping`、`grid_and_merges` 和每行 `merges` 为 `unknown`。最大模式的表级结果见下文。
 
 ## 最大化读取的表格与段落证据
 
@@ -57,7 +57,7 @@
 
 ## 固定段落属性与保守停止
 
-MS-DOC 2.6.2（开发来源URL：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/484822ee-a9d9-4af4-8423-29fda67a6a58`）及Sprm长度定义（开发来源URL：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/099eb99c-a927-4caf-a80c-66254ea83d6a`）为开发依据。仅明确白名单中的固定长度段落排版属性可越过，不应用其版式语义；长度不够仍报告元数据缺口，不扫描操作数字节寻找表格标志。
+MS-DOC 2.6.2（开发来源URL：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/484822ee-a9d9-4af4-8423-29fda67a6a58`）及Sprm长度定义（开发来源URL：`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/099eb99c-a927-4caf-a80c-66254ea83d6a`）为开发依据。白名单排版属性保留已识别证据；maximum 另可有界跳过未知操作，见末节。两者都不应用未知版式语义；长度不够仍报告元数据缺口，不扫描操作数字节寻找表格标志。
 
 | SPRM | 固定操作数 | 本轮处理 |
 |---|---|---|
@@ -75,3 +75,19 @@ MS-DOC 2.6.2（开发来源URL：`https://learn.microsoft.com/en-us/openspecs/of
 开发依据另见 MS-DOC 2.9.210（`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/473fd992-c824-4655-8880-3186bd432f80`），运行时不联网。PrcData的2字节有符号长度必须处于10至0x3FA2，且全部属性字节位于Data流内。HugePapx若非数组首项按规范忽略；位于内联GrpPrlAndIstd时要求istd=0且只有此PRL。处理外部数组后不再处理原数组后缀。支持HugePapx/PTableProps的有界交接链，每链最多32个不同引用、每次表格检查最多4096次引用，累计仍受1MiB属性预算约束。循环、缺Data流、指针/长度越界、部分重叠数组和破损PRL不生成猜测行，保留正文及metadata_invalid原因；预算超限明确失败。
 
 `external_property_references` 最多 100 条，附总计数和截断计数。行和单元格保留 FKP 来源及外部属性来源。可重复引用同一完整数组，交叉覆盖不同数组时拒绝合并证据。最大模式可在这些已验证的一级行上恢复存储分组和合并，完整样式和修订视图仍待核对。
+
+## 有界跳过与嵌套限制
+
+maximum 对未识别的非表 SPRM 按 SPRA 的固定或变长操作数边界继续读取后续显式表格属性；PChgTabs 的 255 长度哨兵按删除/新增制表位计数计算，TDefTable 使用其独立双字节长度，TDefTableShd80 不套用该特例。缺失、截断或非法计数仍报告局部元数据失败并保留正文，不扫描操作数内部寻找标记。未知语义保留 `unknown_property_skipped_semantics_unverified`，不据此认证有效布局；这不是对任意私有格式的支持保证。
+
+嵌套表格的文字仍可在正文中读取，但不输出未经验证的父子单元格归属。内层单元格/行依赖 U+000D 与 PFInnerTableCell/PFInnerTtp，不能沿用顶层 U+0007 推测嵌套边界；最大模式现以有界深度栈恢复可证实片段，仍为 partial，见下节。
+
+最大读取遇到超过 8 MiB 的非核心 CFB 可选流时，可只验证完整分配链、不物化内容，返回 `cfb_optional_stream_omitted` 并维持 partial。不能把该流的内容视为已读；核心文字/表/Data 及安全相关流保持原有预算，32 MiB 总输入限制未放宽。
+
+## 嵌套行片段读取
+
+最大模式的 `nested_row_evidence.rows` 仅保留包含嵌套内容且父行已经闭合的一级行片段。每个单元格的 `text` 是本层直接段落，不重复拼入子表文字；按 `nested_tables[].row_fragments[].cells` 逐层读取子表有效文字，以各层 `source` 的 CP 范围定位。普通正文仍保留原文，原 `rows/tables` 一级证据字段不变，避免把不同表示重复计数。
+
+只在已观察到父单元格段落、深度逐级增加、CR 配合 PFInnerTableCell/PFInnerTtp 且各层行/单元格完整闭合时关联父子。缺父开端、深度跳跃、未知属性/PRM、字段重叠、错误终止符或未闭合层级不生成猜测关系，缺口见 `issues/issue_count/issues_omitted`。当前不支持缺少前置父段落的嵌套起始，不恢复样式继承、嵌套合并、表间分组或视觉排版；相邻子行只称行片段，不保证同一完整表。深度最多32层、事件及单元格最多10万，超限明确资源失败。
+
+开发依据为 MS-DOC 2.4.3 与 2.6.2：内层单元格和行使用 U+000D，顶层使用 U+0007。仅合成 PAPX/FKP 二层、三层及损坏边界回归，不代表真实 WPS 版本或客户端验收。

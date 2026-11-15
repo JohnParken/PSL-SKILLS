@@ -80,7 +80,7 @@ def container_mode(data, compatibility):
     return compatibility
 
 
-def load_compound(data, compatibility):
+def load_compound(data, compatibility, *, skip_large_optional=False):
     if compatibility not in ('strict', 'data', 'legacy_excel_clsid', 'legacy_word_clsid'):
         raise ParseError('unsupported', {'stage': 'options'}, 'Unknown compatibility mode')
     if not data.startswith(SIGNATURE):
@@ -103,7 +103,7 @@ def load_compound(data, compatibility):
                          'Nonzero CFB header CLSID outside the explicitly supported profile')
     try:
         compound = CompoundFile(data, compatibility=container_mode(data, compatibility),
-                                allow_missing_padding=compatibility != 'strict')
+                                allow_missing_padding=compatibility != 'strict', skip_large_optional=skip_large_optional)
     except ValueError as exc:
         message = str(exc)
         location = {'stage': 'CFB'}
@@ -126,12 +126,12 @@ def load_compound(data, compatibility):
                                 'stream': 'CFB header', 'offset': 24,
                                 'minor_version': minor_version,
                                 'message': 'Legacy minor version 0x003B accepted with unchanged major-version, sector and allocation validation; not full format certification.'})
-    encrypted = [path for path in compound.streams
+    encrypted = [path for path in compound.paths
                  if path[-1].casefold() in ('encryptedpackage', 'encryptioninfo', 'encryptedsummary', 'drmcontent')]
     if encrypted:
         raise ParseError('encrypted', {'stage': 'CFB', 'stream': '/'.join(encrypted[0])}, 'Encrypted package')
     word = ('WordDocument',) in compound.streams
-    workbooks = [path for path in compound.streams if len(path) == 1 and path[0].casefold() in ('workbook', 'book')]
+    workbooks = [path for path in compound.paths if len(path) == 1 and path[0].casefold() in ('workbook', 'book')]
     if word and workbooks:
         raise ParseError('unsupported', {'stage': 'routing'}, 'Ambiguous document and workbook payloads; no branch chosen')
     return compound

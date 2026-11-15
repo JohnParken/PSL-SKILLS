@@ -746,7 +746,7 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
     require(data.startswith(SIGNATURE), {'stage': 'container'},
             'Unknown container; native private WPS/Works/ET formats unsupported', 'unsupported')
     require(hidden_text in ('include', 'annotate'), {'stage': 'options'}, 'Binary visibility is unknown; exclude unsupported', 'unsupported')
-    compound = load_compound(data, compatibility)
+    compound = load_compound(data, compatibility, skip_large_optional=maximum)
     word = ('WordDocument',) in compound.streams
     workbooks = [path for path in compound.streams if len(path) == 1 and path[0].casefold() in ('workbook', 'book')]
     require(not (word and workbooks), {'stage': 'routing'},

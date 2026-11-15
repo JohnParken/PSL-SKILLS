@@ -10,8 +10,8 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from read_wps import parse_streams, ParseError, read_bytes
-from wps_binary_tables import initial_cell_properties, table_width_operand
+from read_wps import parse_streams, ParseError, read_bytes, Region
+from wps_binary_tables import initial_cell_properties, table_width_operand, skipped_operand_end
 from test_wps import document, synthetic_cfb
 
 
@@ -87,6 +87,33 @@ class BinaryTableTests(unittest.TestCase):
         self.assertEqual(short['incomplete_tc80_bytes'], 3)
         self.assertEqual(short['columns_without_complete_tc80'], 1)
         self.assertEqual(initial_cell_properties(first + second, 1)['complete_tc80_records'], 1)
+
+    def test_operand_boundaries_and_variable_exceptions(self):
+        for spra, width in ((0, 1), (1, 1), (2, 2), (3, 4), (4, 2), (5, 2), (7, 3)):
+            data = bytes(width)
+            self.assertEqual(skipped_operand_end(spra << 13, Region(data, 'test'), 0, len(data)), width)
+        for sprm, data in ((0xD608, b'\x03\x00\x00\x00'),
+                           (0xD609, b'\x02\x00\x00'),
+                           (0xC615, b'\xff\x01' + bytes(4) + b'\x01' + bytes(3)),
+                           (0xC615, b'\x02\x00\x00')):
+            self.assertEqual(skipped_operand_end(sprm, Region(data, 'test'), 0, len(data)), len(data))
+            with self.assertRaises(ParseError):
+                skipped_operand_end(sprm, Region(data, 'test'), 0, len(data) - 1)
+        with self.assertRaises(ParseError):
+            skipped_operand_end(0xC615, Region(b'\xff\x41', 'test'), 0, 2)
+
+    def test_maximum_skips_unknown_operands_but_keeps_diagnostics(self):
+        from test_wps_msdoc_maximum import IN_TABLE, ROW_END, papx_document
+        # Unknown fixed operand contains bytes resembling a table flag. Only
+        # its bounded end, never an interior byte, may start the next PRL.
+        prefix = b'\x7f\x64\x16\x24\x00\x00'
+        for prefix in (prefix, b'\x7f\xc6\x03\x16\x24\x00', b'\x15\xc6\xff\x00\x00'):
+            streams = papx_document(('A\x07', prefix + IN_TABLE), ('\x07', ROW_END), ('\r', b''))
+            result = parse_streams(streams, maximum=True)
+            self.assertEqual(result['binary_table_structure']['rows'][0]['cells'][0]['text'], 'A')
+            self.assertEqual(result['status'], 'partial')
+            self.assertEqual(result['binary_table_structure']['unresolved_properties'][0]['reason'],
+                             'unknown_property_skipped_semantics_unverified')
 
     def test_explicit_cells_and_row_with_original_text_preserved(self):
         streams, _ = fixture()

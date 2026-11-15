@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 当前 Skill 版本为 `20261114.2127.4001`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
+> 当前 Skill 版本为 `20261115.2235.4998`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -157,7 +157,7 @@ JSON
 - 段落范围为 1-based、两端包含；章节按检测到的标题边界选择，重复标题可用 `--section-index` 明确定位。
 - `wps_read_view_v1` 保留原状态、partial 和主要诊断，同时明确 `coverage/metadata_omitted/truncated/next_cursor`。游标绑定源 SHA-256、选项及 `projection_revision=2`，源文件或范围变化后拒绝复用。旧修订游标须重新开始；每次续读仍完整解析，不是流式读取或跨调用缓存。
 - 有界视图可加 `--max-output-bytes`（512..16777216），与原字符预算同时生效，按真实 JSON 加换行的 UTF-8 字节核算，包含中文、emoji、转义及游标。仅指定字节预算也启用视图；默认字符预算仍12000。新增 `has_more` 与 next_cursor 一致，概况 has_more=false 不表示返回全文。诊断或单个输出单元放不下时完整返回 output_view_error，不裁剪；预算也约束失败 JSON，参数错误仍为 stderr/退出2。详见 [有界读取](../../skills/wps/references/bounded-reading.md)。
-- MS-DOC 最大模式在 `binary_table_structure.tables` 给出可确认的一级表格分组、存储列边界、横向合并和纵向合并跨度，通过行索引关联 `rows`。遇到无可靠边界或网格的记录会标明缺口，保留可用的行和原文字。嵌套表格、完整样式及版式仍待解析。 [二进制表格分组与合并](../../skills/wps/references/binary-tables.md#表格分组与合并)
+- MS-DOC 最大模式在 `binary_table_structure.tables` 给出可确认的一级表格分组、存储列边界、横向合并和纵向合并跨度，通过行索引关联 `rows`。遇到无可靠边界或网格的记录会标明缺口，保留可用的行和原文字。可证实的嵌套行片段另见 `nested_row_evidence`，完整嵌套分组、样式及版式仍待解析。 [二进制表格分组与合并](../../skills/wps/references/binary-tables.md#表格分组与合并)
 - 加密、结构损坏、安全校验或资源限制按失败契约停止；有可靠正文的 partial 不应被丢弃，但也不能自动用于无损编辑。
 
 详细字段与例外见 [读取结果契约](../../skills/wps/references/reading-assessment.md) 和 [格式边界](../../skills/wps/references/format.md)。
@@ -248,3 +248,16 @@ CLI 数据及配置使用任务目录内相对路径，拒绝父目录、绝对�
 WPS 11 / 12.1 生成的 `.doc` 直接按实际内容读取，不以应用版本或扩展名代替格式判断。默认 maximum 保留可读内容与局部缺口；五种 FIB 结构和内容路由有合成回归，但不等于所有软件构建、对象及版式均获兼容认证。
 
 WPS maximum 的可选图表检查保留64候选上限：达到上限不再解析后续候选，正文和已读图表保持可用，明确partial与未检查数量，不把候选数当图表数。其他共享结构和资源安全门禁保持拒绝。分页消费者区分standard主文text与maximum全JSON片段，不混用契约或游标。
+
+### PAPX 兼容读取边界
+
+最大模式可有界跳过未识别的非表 SPRM，继续提取后续显式一级表格属性，保留未知语义诊断；特殊 PChgTabs 长度与 TDefTable 长度分别处理。截断不猜测字节同步，正文继续保留。嵌套层级通过独立有界深度栈仅恢复有直接边界证据的行片段，不推测缺失的父单元格起点；新增标准库模块 wps_nested_tables.py 并登记运行包，原一级表格输出不变。
+
+最大读取对超过单流物化预算的非核心、非安全相关可选 CFB 流，仅完整验证分配链而不拼接流内容，明确列出遗漏大小与原因，保留可读正文；标准模式不变。WordDocument、表流、Data、工作簿及宏/加密识别相关流不采用此降级。总输入仍限 32 MiB，核心流仍限 8 MiB，不声称已实现大文件 mmap 或任意大文档读取。
+
+## 2026-11-15 最终集成验收
+
+macOS / Python 3.14.10 / Expat 2.7.4：本 Skill 全量 751 项测试通过，无失败、无跳过；仓库集成 379 项通过，其中 1 项跳过为 TL-DOCX 独立读写所需 python-docx 1.2.0 缺失，与 ET/WPS 运行依赖无关。
+全 12 个 Skill 严格结构检查、项目文档检查、git diff --check、ET/WPS 显式清单检查通过；只读独立安装自检与新增模块导入通过，测试临时副本已清理。
+当前选路预期与静态加载快照在人工复核后刷新，新增 3 项 ET 文本导出/合并布局与 WPS 嵌套读取边界预期；历史快照未改。该结果不等于模型选择或宿主调用实测。
+Pylint 模块缺失，未安装、未执行，不能宣称 Pylint Error 为零。未新增真实用户文档、Linux/DeepAgents 宿主或 Office/WPS 渲染验收；未提交或推送。

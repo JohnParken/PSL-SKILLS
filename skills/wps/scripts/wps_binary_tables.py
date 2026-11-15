@@ -13,9 +13,10 @@ MAX_CELLS = 100000
 MAX_PROPERTY_BYTES = 1024 * 1024
 MAX_LAYOUT_MODIFIERS = 1000
 MAX_UNRESOLVED_MARKERS = 1000
-TABLE_PROPERTIES = {0x2416: 'in_table', 0x2417: 'row_end', 0x6649: 'depth'}
+TABLE_PROPERTIES = {0x2416: 'in_table', 0x2417: 'row_end', 0x6649: 'depth',
+                    0x244B: 'inner_cell', 0x244C: 'inner_row_end'}
 # MS-DOC 2.6.2. These fixed-width operands do not change table depth or
-# row/cell marks. Preserve the unknown-operand stop rule for other SPRMs.
+# row/cell marks. Other operands retain explicit uninterpreted diagnostics.
 TABLE_NEUTRAL_PARAGRAPH_WIDTHS = {
     0x2407: 1,  # PFPageBreakBefore
     0x260A: 1, 0x460B: 2,  # PIlvl, PIlfo
@@ -106,6 +107,33 @@ def contiguous_row_runs(rows):
             runs[-1]['row_count'] += 1
             runs[-1]['cp_end'] = end
     return runs
+
+
+def skipped_operand_end(sprm, region, cursor, stop):
+    """Bound a PRL operand without interpreting its formatting semantics."""
+    from read_wps import require
+    width = (1, 1, 2, 4, 2, 2, None, 3)[sprm >> 13]
+    if sprm == 0xD608:
+        require(cursor + 2 <= stop, region.location(cursor), 'Truncated TDefTable size')
+        width = region.number(cursor, 2) + 1
+        require(width >= 3, region.location(cursor), 'Invalid TDefTable size')
+    elif width is None:
+        require(cursor < stop, region.location(cursor), 'Missing variable SPRM size')
+        size = region.number(cursor, 1)
+        width = size + 1
+        if sprm == 0xC615:  # PChgTabs, not PChgTabsPapx
+            require(size >= 2, region.location(cursor), 'Invalid PChgTabs size')
+            if size == 255:
+                require(cursor + 2 <= stop, region.location(cursor), 'Missing deleted tab count')
+                deleted = region.number(cursor + 1, 1)
+                require(deleted <= 64, region.location(cursor + 1), 'Invalid deleted tab count')
+                added_at = cursor + 2 + 4 * deleted
+                require(added_at < stop, region.location(added_at), 'Missing added tab count')
+                added = region.number(added_at, 1)
+                require(added <= 64, region.location(added_at), 'Invalid added tab count')
+                width = 3 + 4 * deleted + 3 * added
+    require(cursor + width <= stop, region.location(cursor), 'Truncated uninterpreted SPRM operand')
+    return cursor + width
 
 
 def initial_cell_properties(raw, columns):
@@ -238,7 +266,9 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                    piece_prms=None, field_spans=(), marker_replacements=None, data_ownership=None):
     """Read evidenced rows and, in maximum mode, direct PAPX layout operands."""
     from read_wps import ParseError, require
+    from wps_nested_tables import NestedRows
     enhanced = piece_prms is not None
+    nested = NestedRows() if enhanced else None
     overlap_location = {'reason_code': 'overlapping_decoded_metadata'} if enhanced else {}
     result = {'schema_version': 'ms_doc_table_rows_v1', 'status': 'unresolved',
               'rows': [], 'unresolved_markers': [], 'table_grouping': 'unknown',
@@ -457,8 +487,8 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                         props['depth'] = depth
                         cursor += 4
                         continue
-                    # Unrecognized operands may contain exceptional variable lengths.
-                    # Stop rather than scan their bytes for apparent table flags.
+                    # Handle exceptional table lengths before the generic SPRM path.
+                    # Never scan operand bytes for apparent table flags.
                     if sprm == 0xD608:  # TDefTable's exceptional two-byte length
                         require(cursor + 2 <= stop, properties_region.location(cursor), 'Truncated table definition length')
                         definition_end = cursor + properties_region.number(cursor, 2) + 1
@@ -509,11 +539,19 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                                 props['uninterpreted_table_modifier_ids_omitted'] = props.get(
                                     'uninterpreted_table_modifier_ids_omitted', 0) + 1
                             continue
+                        operand_end = skipped_operand_end(sprm, properties_region, cursor, stop) if enhanced else None
                         result['unresolved_property_count'] += 1
                         if len(result['unresolved_properties']) < 100:
                             result['unresolved_properties'].append({
                                 'sprm': hex(sprm), 'source': properties_region.location(cursor - 2),
-                                'reason': 'external_paragraph_properties_not_followed' if sprm == 0x6646 else 'unknown_property_not_skipped'})
+                                'reason': 'unknown_property_skipped_semantics_unverified' if enhanced else 'unknown_property_not_skipped'})
+                        if enhanced:
+                            # Reading later explicit boundaries is not proof of effective
+                            # formatting. Do not certify layout after opaque modifiers.
+                            props['unsupported_cell_layout'] = True
+                            props.pop('frame', None)
+                            cursor = operand_end
+                            continue
                         valid = False
                         break
                     width = 4 if sprm == 0x6649 else 1
@@ -567,6 +605,8 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
             if char in ('\r', '\x07'):
                 segment_has_field = crosses_field(segment_start, cp + 1)
                 props = properties(cp, segment_start)
+                if nested is not None and has_cell_marks:
+                    nested.feed(''.join(paragraph), char, segment_start, cp + width, props, segment_has_field)
                 if enhanced and props and props.get('layout_modifier_count') and not segment_has_field:
                     layout_seen += props['layout_modifier_count']
                     modifiers = props.get('layout_modifiers', ())[:MAX_LAYOUT_MODIFIERS - layout_retained]
@@ -651,11 +691,18 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
         if enhanced and exc.location.get('reason_code') == 'overlapping_decoded_metadata':
             raise
         result['rows'] = []
+        if nested is not None:
+            nested.rows.clear()
+            nested.reject(cp_start, 'invalid_paragraph_metadata')
         result['status'] = 'unresolved'
         layout_paragraphs, layout_seen, layout_retained = [], 0, 0
         code = 'binary_table_metadata_invalid' if has_cell_marks else 'binary_paragraph_metadata_invalid'
         result['issues'].append({'code': code, **exc.location,
                                  'metadata_status': exc.status, 'message': str(exc)})
+    if nested is not None and has_cell_marks:
+        evidence = nested.finish(cp_start + len(text.encode('utf-16le')) // 2)
+        if evidence['rows'] or evidence['issue_count']:
+            result['nested_row_evidence'] = evidence
     result['fkp_ranges'] = occupied_pages
     result['external_reference_count'] = external_reference_count
     result['external_references_truncated'] = max(0, external_reference_count - len(result['external_property_references']))
@@ -676,7 +723,7 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
         result['issues'].append({'code': 'binary_table_structure_incomplete', 'stream': 'WordDocument',
                                 'cp_start': cp_start, 'cp_end': cp_start + len(text.encode('utf-16le')) // 2,
                                 'message': ('Stored depth-one table evidence only; check grouping/merge coverage. '
-                                            'Nested tables, styles and visual layout remain unverified' if enhanced else
+                                            'Complete nested grouping, styles and visual layout remain unverified' if enhanced else
                                             'Only explicit depth-one PAPX row/cell boundaries; grouping, merges, '
                                             'styles and unsupported properties remain unknown')})
     return result
