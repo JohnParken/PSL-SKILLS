@@ -26,7 +26,7 @@ class EtPipelineTests(unittest.TestCase):
             self.assertEqual(process.returncode, 1)
             result = json.loads(process.stdout)
             self.assertEqual(result['status'], 'unsupported')
-            self.assertIsNone(result['text'])
+            self.assertIsNone(result.get('text'))
             self.assertIn('et skill', result['message'])
 
     def extract(self, directory, stream, *, profile="full"):

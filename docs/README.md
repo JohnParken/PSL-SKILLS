@@ -34,11 +34,11 @@
 | --- | --- | --- |
 | [document-navigation](skills/document-navigation.md) | 20261114.2127.4001 | 通用文档处理意图即可匹配，无需先说明格式；确认附件和目录，再选择工具技能。无脚本，不能保证先加载或创造宿主映射。 |
 | [bank-writing](skills/bank-writing.md) | 20261115.2044.5320 | 银行材料写作、月报与跨期经营分析；讲话、客户投诉及公关，邮件短结构与可选合成示例；仅交付文本，表格计算按需交接。 |
-| [docx](skills/docx.md) | 20261116.1353.3706 | DOCX 创建、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、文本框、合并表格、图表缓存及图片引用。报告续读可复用解析结果。 |
-| [tl-docx](skills/tl-docx.md) | 20261116.1353.3706 | 基于 python-docx 的独立 Word 入口。普通读取默认内容优先，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
+| [docx](skills/docx.md) | 20261116.1501.5700 | DOCX 创建、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、文本框、合并表格、图表缓存及图片引用。显式 --report 保留结构JSON，续读复用解析结果。 |
+| [tl-docx](skills/tl-docx.md) | 20261116.1511.1996 | 基于 python-docx 的独立 Word 入口。普通读取默认有用内容与图表，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
 | [xlsx](skills/xlsx.md) | 20261116.1353.3706 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261116.1353.3706 | 默认 content 读取文字、表格分组/合并与对象文字；PNG、图表缓存和布局证据显式 maximum；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
-| [et](skills/et.md) | 20261116.1353.3706 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认 content，原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
+| [wps](skills/wps.md) | 20261116.1522.4948 | 默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；PNG和布局证据显式 maximum，原结构显式 --profile full；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
+| [et](skills/et.md) | 20261116.1514.5688 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认可读 content（含支持的 OOXML 图表保存值），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
 | [ofd](skills/ofd.md) | 20261116.1353.3706 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
 | [pptx](skills/pptx.md) | 20261116.1353.3706 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
 | [table-workflow](skills/table-workflow.md) | 20261116.1353.3706 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
@@ -148,3 +148,5 @@ flowchart TD
 归档回复展示边界已统一：内部回执用于核验，最终回复及下载链接不得带出归档地址；实际主文件引用仍可交付。范围、检查证据与未验证项见 [归档展示复核](maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
 
 当前内容优先读取与缓存清理的迁移、独立包验收及未验证项见 [集成复核](validation/content-reading-integration-20261116.md)。
+
+DOCX 表内编号/公式文本及 WPS OOXML 图表/兼容分支的本轮边界与验收见 [报告要素集成复核](validation/report-elements-integration-20261116.md)。

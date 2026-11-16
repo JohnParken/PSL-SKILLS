@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -142,7 +143,19 @@ class ExecutionTests(unittest.TestCase):
                     self.assertEqual(json.loads(report['stdout'])['status'], 'ready')
 
     def test_structure_check_does_not_claim_environment_or_artifact_acceptance(self):
-        report = ADAPTER.run_check('skill-structure', skill='docx')
+        # Exercise the shipped files, not unrelated local bytecode caches. The
+        # real manifest builder still rejects missing/unknown runtime sources;
+        # source-tree strict warnings are checked separately, never suppressed.
+        spec = importlib.util.spec_from_file_location('strict_package_builder', ROOT / 'tools/package_skills.py')
+        builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(builder)
+        for name in ('docx', 'skill-development-standards'):
+            archive = self.directory / (name + '.zip')
+            builder.build_package(ROOT / 'skills' / name, archive)
+            with zipfile.ZipFile(archive) as package:
+                package.extractall(self.directory / 'skills')
+        with patch.object(ADAPTER, 'ROOT', self.directory):
+            report = ADAPTER.run_check('skill-structure', skill='docx')
         self.assertEqual(report['check_kind'], 'skill_structure')
         self.assertEqual(report['check_status'], 'passed', report)
         self.assertEqual(report['artifact_validation'], 'not_run')

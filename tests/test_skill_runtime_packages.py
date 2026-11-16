@@ -172,7 +172,7 @@ class SkillRuntimePackages(unittest.TestCase):
                               payload={'blocks': [{'type': 'paragraph', 'text': '合同 ABC'}]})
         self.assertEqual(json.loads(created.stdout)['status'], 'verified')
         original = (self.work / 'source.docx').read_bytes()
-        report = json.loads(self.invoke('docx', 'read_docx.py', 'source.docx').stdout)
+        report = json.loads(self.invoke('docx', 'read_docx.py', 'source.docx', '--report').stdout)
         self.assertEqual(report['format'], 'docx-report')
         self.assertEqual([block['text'] for block in report['blocks'] if block['type'] == 'paragraph'], ['合同 ABC'])
         self.assertFalse(report['has_more'])
@@ -180,6 +180,62 @@ class SkillRuntimePackages(unittest.TestCase):
                     payload={'replacements': [{'old': 'ABC', 'new': 'XYZ', 'count': 1}]})
         self.assertIn('合同 XYZ', self.invoke('docx', 'read_docx.py', 'edited.docx').stdout)
         self.assertEqual((self.work / 'source.docx').read_bytes(), original)
+
+    def test_docx_numbering_and_math_from_readonly_package(self):
+        scripts = ROOT / 'skills/docx/scripts'
+        code = (
+            'import sys; from pathlib import Path; import zipfile\n'
+            'sys.path[:0] = sys.argv[1:]\n'
+            'from test_docx_report_content import numbered, numbering, table\n'
+            'from test_docx_report import W\n'
+            "body = numbered('Before') + table(numbered('Cell') + '<m:oMath><m:f><m:num><m:r><m:t>1</m:t></m:r></m:num>' "
+            "+ '<m:den><m:r><m:t>2</m:t></m:r></m:den></m:f></m:oMath>') + numbered('After')\n"
+            "with zipfile.ZipFile('elements.docx', 'w') as z:\n"
+            " z.writestr('word/document.xml', '<w:document xmlns:w=\"' + W + '\" xmlns:m=\"http://schemas.openxmlformats.org/officeDocument/2006/math\"><w:body>' + body + '</w:body></w:document>')\n"
+            " z.writestr('word/numbering.xml', numbering())\n"
+        )
+        subprocess.run([sys.executable, '-I', '-S', '-B', '-c', code, str(scripts / 'test'), str(scripts)],
+                       cwd=self.work, env=self.env, check=True, capture_output=True, text=True)
+        before = (self.work / 'elements.docx').read_bytes()
+        report = json.loads(self.invoke('docx', 'read_docx.py', 'elements.docx', '--report', '--table-header', '1:0').stdout)
+        paragraphs = [b for b in report['blocks'] if b['type'] == 'paragraph']
+        self.assertEqual([b['numbering_label'] for b in paragraphs], ['1.', '3.'])
+        row = next(b for b in report['blocks'] if b['type'] == 'table_row')
+        self.assertEqual(row['cells'][0]['paragraph_numbering'][0]['numbering_label'], '2.')
+        equation = next(b for b in report['blocks'] if b['type'] == 'equation')
+        self.assertEqual(equation['text_runs'], ['1', '2'])
+        visible = self.invoke('docx', 'read_docx.py', 'elements.docx', '--table-header', '1:0').stdout
+        for content in ('Before', 'Cell', 'After', '公式文字片段', '"1" | "2"'):
+            self.assertIn(content, visible)
+        for internal in ('word/document.xml', 'schema_version', 'relationship', 'sha256'):
+            self.assertNotIn(internal, visible)
+        self.assertEqual(report['status'], 'partial')
+        self.assertEqual((self.work / 'elements.docx').read_bytes(), before)
+
+    def test_wps_native_chart_from_readonly_package(self):
+        scripts = ROOT / 'skills/wps/scripts'
+        code = ('import sys; from pathlib import Path\n'
+                'sys.path[:0] = sys.argv[1:]\n'
+                'from test_wps_ooxml_objects import native_package\n'
+                "Path('chart.docx').write_bytes(native_package())\n")
+        subprocess.run([sys.executable, '-I', '-S', '-B', '-c', code, str(scripts / 'test'), str(scripts)],
+                       cwd=self.work, env=self.env, check=True, capture_output=True, text=True)
+        before = (self.work / 'chart.docx').read_bytes()
+        result = json.loads(self.invoke('wps', 'read_wps.py', 'chart.docx', '--profile', 'full', expected=3).stdout)
+        chart = result['ooxml_charts']['charts'][0]
+        self.assertEqual(chart['title']['rich_text'], ['Visible title'])
+        points = chart['series'][0]['values']['caches'][0]['points']
+        self.assertEqual([p['raw_value'] for p in points], ['0.1250', '0002.500'])
+        self.assertFalse(chart['current_values_verified'])
+        visible = json.loads(self.invoke('wps', 'read_wps.py', 'chart.docx', expected=3).stdout)
+        self.assertEqual(visible['schema_version'], 'wps_content_v1')
+        self.assertEqual(visible['charts'][0]['title']['text'], 'Visible title')
+        values = visible['charts'][0]['series'][0]['values']['saved_data'][0]['points']
+        self.assertEqual([p['value'] for p in values], ['0.1250', '0002.500'])
+        for internal in ('word/charts/', 'relationship_id', 'source_sha256', 'ooxml_compatibility'):
+            self.assertNotIn(internal, json.dumps(visible))
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual((self.work / 'chart.docx').read_bytes(), before)
 
     def test_xlsx_create_read_edit(self):
         self.invoke('xlsx', 'xlsx_cli.py', 'run', 'check')
@@ -225,7 +281,8 @@ class SkillRuntimePackages(unittest.TestCase):
         self.assertEqual(content['reading_mode'], 'content')
         self.assertEqual(content['text'], '\ufffcA\n')
         self.assertNotIn('binary_images', content)
-        self.assertIn('binary_optional_content_not_requested', {item['code'] for item in content['issues']})
+        self.assertTrue(content['notes'])
+        self.assertNotIn('diagnostics', content)
         response = self.invoke('wps', 'read_wps.py', 'binary.wps', '--reading-mode', 'maximum',
                                '--include-image-bytes', expected=3)
         images = json.loads(response.stdout)['binary_images']
@@ -267,7 +324,7 @@ class SkillRuntimePackages(unittest.TestCase):
         subprocess.run([sys.executable, '-I', '-S', '-B', '-c', fixture_code, str(scripts / 'test'), str(scripts)],
                        cwd=self.work, env=self.env, capture_output=True, check=True, timeout=10)
         original = (self.work / 'nested.doc').read_bytes()
-        response = self.invoke('wps', 'read_wps.py', 'nested.doc', expected=3)
+        response = self.invoke('wps', 'read_wps.py', 'nested.doc', '--profile', 'full', expected=3)
         cell = json.loads(response.stdout)['binary_table_structure']['nested_row_evidence']['rows'][0]['cells'][0]
         table = cell['nested_tables'][0]['tables'][0]
         self.assertEqual(table['grouping_status'], 'stored')
@@ -294,6 +351,10 @@ class SkillRuntimePackages(unittest.TestCase):
         self.assertEqual([chart['references'][0]['kind'] for chart in (floating, inline)], ['floating', 'inline'])
         self.assertEqual(floating['series'][0]['values']['points'], [{'index': 0, 'value': '9.1250'}, {'index': 1, 'value': '2.50E-2'}])
         self.assertEqual(inline['series'][0]['values']['status'], 'unavailable')
+        visible = json.loads(self.invoke('wps', 'read_wps.py', path.name, expected=3).stdout)
+        self.assertEqual(len(visible['charts']), 2)
+        self.assertEqual([row['raw_value'] for row in visible['charts'][0]['series'][0]['rows']], ['9.1250', '2.50E-2'])
+        self.assertNotIn('binary_charts', visible)
         self.assertEqual(path.read_bytes(), original)
 
     def test_et_synthetic_ooxml_read_and_analysis(self):
@@ -309,7 +370,7 @@ class SkillRuntimePackages(unittest.TestCase):
         full = json.loads(self.invoke('et', 'et_cli.py', 'run', 'synthetic.et', '--profile', 'full', expected=(0, 3)).stdout)
         self.assertEqual(content['source_schema_version'], full['schema_version'])
         self.assertNotEqual(full['schema_version'], 'et_content_v1')
-        self.assertEqual(content['issues'], full['issues'])
+        self.assertEqual({i['code'] for i in content['issues']}, {i['code'] for i in full['issues']})
         for old_sheet, new_sheet in zip(full['sheets'], content['sheets']):
             self.assertEqual(set(old_sheet['cells']), set(new_sheet['cells']))
             for ref, cell in old_sheet['cells'].items():
@@ -323,6 +384,23 @@ class SkillRuntimePackages(unittest.TestCase):
         self.assertEqual(str(numeric[0]['sum']), '20')
         self.assertEqual(numeric[0]['numeric_count'], 2)
         self.assertEqual((self.work / 'synthetic.et').read_bytes(), source)
+
+    def test_et_default_chart_from_readonly_package(self):
+        scripts = ROOT / 'skills/et/scripts'
+        code = ('import sys; from pathlib import Path\n'
+                'sys.path[:0] = sys.argv[1:]\n'
+                'from test_et_visible_content import chart_package\n'
+                "Path('chart.et').write_bytes(chart_package())\n")
+        subprocess.run([sys.executable, '-I', '-S', '-B', '-c', code, str(scripts / 'test'), str(scripts)],
+                       cwd=self.work, env=self.env, check=True, capture_output=True, text=True)
+        before = (self.work / 'chart.et').read_bytes()
+        result = json.loads(self.invoke('et', 'read_et.py', 'chart.et', expected=3).stdout)
+        chart = result['sheets'][0]['charts'][0]
+        self.assertEqual(chart['title']['text'], '收入')
+        self.assertEqual(chart['series'][0]['val']['points'][0]['value'], '1.2500')
+        self.assertEqual(chart['series'][0]['cat']['cache_status'], 'incomplete')
+        self.assertNotIn('xl/charts/', json.dumps(result))
+        self.assertEqual((self.work / 'chart.et').read_bytes(), before)
 
     def test_et_synthetic_biff8_compatibility_in_readonly_package(self):
         fixture_root = ROOT / 'skills/et/scripts/test'
@@ -346,7 +424,8 @@ class SkillRuntimePackages(unittest.TestCase):
         full = json.loads(self.invoke('et', 'et_cli.py', 'run', path.name, '--profile', 'full', expected=3).stdout)
         self.assertEqual(full['schema_version'], 'biff8_readonly_v1')
         self.assertIn('uninterpreted_metadata', full)
-        self.assertEqual(result['issues'], full['issues'])
+        self.assertEqual({i['code'] for i in result['issues']}, {i['code'] for i in full['issues']})
+        self.assertEqual(sum(i['count'] for i in result['issues']), sum(i.get('count', 1) for i in full['issues']))
         self.assertEqual(result['sheets'][0]['cells']['A2']['value'], full['sheets'][0]['cells']['A2']['value'])
         cell_result = result['sheets'][0]['cells']['A2']
         self.assertEqual((cell_result['type'], cell_result['value']), ('number', '42'))

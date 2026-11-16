@@ -70,7 +70,7 @@ class RuntimePackageBuildTests(unittest.TestCase):
         expected = {n for n in actual if not n.startswith('scripts/test/') and n not in EXCLUDED}
         self.assertEqual(set(files), expected)
         self.assertTrue(EXCLUDED.isdisjoint(files))
-        self.assertEqual(len(files), 88)
+        self.assertEqual(len(files), 89)
         self.assertEqual(json.loads(MANIFEST.read_text(encoding='utf-8'))['exclude_files'], {})
         for name in ('maintenance-validation.md', 'reference-loading.md', 'token-optimization.md'):
             self.assertFalse((SOURCE / 'references' / name).exists())
@@ -600,7 +600,7 @@ print(json.dumps(result))
             'rows': [['分类', '数量'], [{'text': '问题', 'row_span': 2}, '10'], [None, '20']],
         }])
         original = source.read_bytes()
-        data = json.loads(self.run_script('read_docx.py', source.name).stdout)
+        data = json.loads(self.run_script('read_docx.py', source.name, '--report').stdout)
         table = next(block for block in data['blocks'] if block['type'] == 'table')
         rows = [block['cells'] for block in data['blocks'] if block['type'] == 'table_row']
         self.assertEqual(table['header']['source'], 'repeat_header')
@@ -608,17 +608,21 @@ print(json.dumps(result))
         self.assertEqual(rows[1][0]['row_span'], 2)
         self.assertEqual(rows[2][0]['merge_anchor'], {'row': 2, 'column': 1, 'label': '问题'})
         self.assertEqual(rows[2][1]['text'], '20')
+        visible = self.run_script('read_docx.py', source.name).stdout
+        for value in ('分类', '数量', '问题', '10', '20', '合并项'):
+            self.assertIn(value, visible)
+        self.assertNotIn('word/document.xml', visible)
         self.assertFalse(data['has_more'])
         self.assertEqual(source.read_bytes(), original)
 
     def test_report_reuses_parsed_pages_in_readonly_installation(self):
-        section = ('--section', '本节')
+        section = ('--report', '--section', '本节')
         body = [{'type': 'paragraph', 'text': '数据' * 100} for _ in range(12)]
         source = self.create('report-pages.docx', [
             {'type': 'paragraph', 'text': '前文'}, {'type': 'heading', 'level': 1, 'text': '本节'},
             *body, {'type': 'heading', 'level': 1, 'text': '下一节'}, {'type': 'paragraph', 'text': '后文'},
         ])
-        full = json.loads(self.run_script('read_docx.py', source.name).stdout)
+        full = json.loads(self.run_script('read_docx.py', source.name, '--report').stdout)
         expected = json.loads(self.run_script('read_docx.py', source.name, *section).stdout)['blocks']
         self.assertEqual(expected, full['blocks'][1:-2])
         data = json.loads(self.run_script('read_docx.py', source.name, *section, '--max-output-bytes', '2200').stdout)

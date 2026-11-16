@@ -153,10 +153,13 @@ class UnameSandboxTests(unittest.TestCase):
                                  '<w:body>' + body + '</w:body></w:document>')
             before = source.read_bytes()
             entry = 'skills/docx/scripts/read_docx.py'
-            expected = json.loads(self.run_entry(entry, ['synthetic.docx'], task, 'linux'))
-            first = json.loads(self.run_entry(entry, ['synthetic.docx', '--max-output-bytes', '3000'], task, 'linux'))
+            visible = self.run_entry(entry, ['synthetic.docx'], task, 'linux')
+            self.assertIn('synthetic text', visible)
+            self.assertNotIn('schema_version', visible)
+            expected = json.loads(self.run_entry(entry, ['synthetic.docx', '--report'], task, 'linux'))
+            first = json.loads(self.run_entry(entry, ['synthetic.docx', '--report', '--max-output-bytes', '3000'], task, 'linux'))
             self.assertTrue(first['has_more'])
-            last = json.loads(self.run_entry(entry, ['synthetic.docx', '--max-output-bytes', '200000',
+            last = json.loads(self.run_entry(entry, ['synthetic.docx', '--report', '--max-output-bytes', '200000',
                                                      '--cursor', first['next_cursor']], task, 'linux'))
             self.assertFalse(last['has_more'])
             self.assertEqual(first['blocks'] + last['blocks'], expected['blocks'])
