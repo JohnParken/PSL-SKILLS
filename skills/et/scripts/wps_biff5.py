@@ -27,7 +27,11 @@ def legacy_bof(record, expected):
     """Require the old fixed header, not a patched BIFF8 header."""
     _offset, kind, payload = record
     require(kind == 0x0809 and len(payload) == 8, 'Unsupported BIFF version/header: expected 8-byte BIFF5/7 BOF')
-    require(struct.unpack_from('<HH', payload) == (0x0500, expected),
+    version, substream = struct.unpack_from('<HH', payload)
+    # Excel 8+ may write 0600 in sheet BOFs when saving a BIFF5 workbook.
+    # The globals BOF alone selects this parser; never switch sheet layouts.
+    versions = (0x0500, 0x0600) if expected == 16 else (0x0500,)
+    require(version in versions and substream == expected,
             'Unsupported BIFF5/7 version/substream')
     return payload.hex()
 
@@ -147,6 +151,12 @@ class LegacyReader(Reader):
                 continue
             try:
                 sheet['bof_raw_hex'] = legacy_bof(self.records[target], 16)
+                version = struct.unpack_from('<H', self.records[target][2])[0]
+                if version != 0x0500:
+                    self.issue({'code': 'biff5_sheet_bof_version_mismatch',
+                                'sheet': bound['name'], 'record_offset': self.records[target][0],
+                                'version_raw': version, 'cell_value_impact': 'metadata_only',
+                                'message': 'Sheet BOF version differs; verified BIFF5/7 globals govern decoding.'})
             except ValueError as exc:
                 self.problem(self.records[target], bound['name'], str(exc))
                 continue

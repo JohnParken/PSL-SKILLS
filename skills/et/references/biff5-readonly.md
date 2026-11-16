@@ -2,7 +2,7 @@
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-只在 Workbook/Book 流具有 8 字节、版本 0x0500 的 globals BOF 时进入独立 `<skill-root>/scripts/wps_biff5.py`。0x0500 同时用于 Excel 5 与 Excel 95，不能据此分辨产品版本或证明 WPS 来源；不把修改过版本字段的 16 字节 BIFF8 BOF 当旧格式。
+只在 Workbook/Book 流具有 8 字节、版本 0x0500 的 globals BOF 时进入独立 `<skill-root>/scripts/wps_biff5.py`。0x0500 同时用于 Excel 5 与 Excel 95，不能据此分辨产品版本或证明 WPS 来源；不把修改过版本字段的 16 字节 BIFF8 BOF 当旧格式。已由 globals 确定旧版后，8 字节工作表 BOF 可接受 0x0600（Excel 新版另存旧格式的已记录差异），仍按旧版结构读取，保留原始头与 biff5_sheet_bof_version_mismatch/partial；其它版本、错误子流类型及非 8 字节头仍不放行。
 
 ## 范围和结果
 

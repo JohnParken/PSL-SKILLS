@@ -179,6 +179,28 @@ class Biff5CoreTests(unittest.TestCase):
             result = parse_stream(workbook(rec(6, (cell() + struct.pack('<d', 42) + bytes(8))[:size]) + number()))
             self.assertEqual(set(result['sheets'][0]['cells']), {'B1'})
 
+    def test_sheet_bof_0600_uses_globals_layout_and_reports_raw_version(self):
+        data = workbook(label(b'caf\xe9') + number())
+        data = data.replace(bof(16), bof(16, 0x0600), 1)
+        result = read_bytes(synthetic_cfb({'Book': data}))
+        self.assertEqual(result['schema_version'], 'biff5_readonly_v1')
+        self.assertEqual(result['sheets'][0]['cells']['A1']['value'], 'café')
+        self.assertEqual(result['sheets'][0]['cells']['B1']['value'], 42)
+        issue = next(i for i in result['issues'] if i['code'] == 'biff5_sheet_bof_version_mismatch')
+        self.assertEqual(issue['version_raw'], 0x0600)
+        self.assertEqual(result['status'], 'partial')
+
+    def test_sheet_bof_other_versions_types_and_sizes_stay_rejected(self):
+        invalid = [bof(16, 0x0400), bof(32),
+                   rec(0x809, struct.pack('<HH', 0x0600, 16)),
+                   rec(0x809, struct.pack('<4H2I', 0x0600, 16, 0, 1995, 0, 0))]
+        for replacement in invalid:
+            with self.subTest(replacement=replacement):
+                data = workbook(number()).replace(bof(16), replacement, 1)
+                result = parse_stream(data)
+                self.assertEqual(result['sheets'][0]['cells'], {})
+                self.assertTrue(result['omissions_affect_cell_values'])
+
     def test_biff8_header_not_relabelled_legacy(self):
         data = rec(0x0809, struct.pack('<4H2I', 0x0500, 5, 0, 1995, 0, 0)) + rec(10)
         with self.assertRaisesRegex(ValueError, '8-byte BIFF5/7 BOF'):

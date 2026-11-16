@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261115.2326.5498`（BIFF5/7有限读取、SST恢复与解析期分页）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.0724.0209`（BIFF5/7有限读取、SST恢复与解析期分页）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 默认只向 stdout 输出结果；完整读取可用 `--output <裸文件名>` 在任务根目录独占创建 JSON 文件并只在 stdout 返回 `et_output_manifest_v1` 清单。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -353,3 +353,11 @@ BIFF5/7 尚未实现，继续明确拒绝，不仅放宽 BOF。已核对 Microso
 ## 2026-11-15 最终整合验收
 
 四技能最终版本、完整套件、独立包、仓库回归和未验范围见 [统一验收记录](../maintenance/et/final-integration-20261115.md)。仓库集成390项总计，389通过、1项TL-DOCX缺依赖跳过；全仓聚合另有TL-DOCX导入受阻，不能宣称全仓全绿。
+
+## 2026-11-16 声明编码与工作表 BOF 兼容
+
+HTML 表格支持头部前 8192 字节、body/table 之前的显式 meta charset 或 http-equiv Content-Type 声明 GB18030、GBK、GB2312，严格解码且不以替代字符掩盖损坏。返回 encoding_source=html_meta_declaration、encoding_declaration_verified=false 及 html_declared_legacy_encoding/partial，表示按文件声明读取而非独立验证原始编码。注释、script 内容、正文和过晚声明不作编码依据；冲突/未知声明、重复属性、UTF-8 BOM 冲突和非法字节拒绝。无声明旧编码 HTML/CSV、旧编码 XML 不猜测；既有 UTF-8/BOM UTF-16 路线与入口不变。
+
+BIFF5/7 globals 仍要求 8 字节、0x0500。工作表 BOF 可兼容同为 8 字节的 0x0600，依 globals 选择旧版结构，保留原始头和版本差异诊断；不放宽其它版本/类型/长度、CodePage、缓存或资源限制。依据为 [OpenOffice BOF 说明](https://www.openoffice.org/sc/excelfileformat.pdf#page=135)，不据此声称完整旧格式兼容。
+
+本轮验证与未验证范围见 [专项记录](../maintenance/et/declared-encoding-bof-20261116.md)。

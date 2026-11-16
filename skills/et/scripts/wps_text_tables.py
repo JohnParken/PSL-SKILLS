@@ -196,14 +196,87 @@ def _index(raw, default, allow_zero=False):
     return result
 
 
+class HtmlEncoding(HTMLParser):
+    """Read explicit early HTML meta declarations, not comments or body text."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.labels = []
+        self.stopped = False
+        self.raw_tag = None
+
+    def handle_endtag(self, tag):
+        if tag == self.raw_tag:
+            self.raw_tag = None
+
+    def handle_starttag(self, tag, attrs):
+        if self.raw_tag is not None:
+            return
+        if tag in ('script', 'style', 'title', 'textarea', 'xmp', 'iframe', 'noembed', 'noframes'):
+            self.raw_tag = tag
+            return
+        if tag == 'plaintext':
+            self.stopped = True
+        if tag in ('body', 'table'):
+            self.stopped = True
+        if self.stopped or tag != 'meta':
+            return
+        keys = [key for key, _value in attrs]
+        need(len(keys) == len(set(keys)), 'Ambiguous HTML meta attributes', 'unsupported')
+        attributes = dict(attrs)
+        label = attributes.get('charset')
+        if label is not None:
+            self.labels.append(label.strip().lower())
+        if (attributes.get('http-equiv') or '').strip().lower() == 'content-type':
+            content = attributes.get('content') or ''
+            # Parse complete MIME parameters, not a substring such as xcharset
+            # or a charset-looking fragment inside another quoted parameter.
+            mime, separator, parameters = content.partition(';')
+            if mime.strip().lower() != 'text/html' or not separator:
+                return
+            pattern = re.compile(r"\s*([A-Za-z0-9_-]+)\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^;\s]+))\s*(?:;|$)")
+            position = 0
+            while position < len(parameters):
+                if not parameters[position:].strip():
+                    break
+                match = pattern.match(parameters, position)
+                need(match is not None, 'Malformed HTML Content-Type parameters', 'unsupported')
+                if match[1].lower() == 'charset':
+                    value = next(value for value in match.groups()[1:] if value is not None)
+                    self.labels.append(value.strip().lower())
+                position = match.end()
+
+
+
+def decode_table_text(data):
+    """No encoding guessing: legacy HTML needs an explicit supported declaration."""
+    encoding = 'utf-16' if data.startswith((b'\xff\xfe', b'\xfe\xff')) else 'utf-8-sig'
+    # BOM UTF-16 keeps its existing path; byte-level meta sniffing is ASCII-only.
+    declaration = None
+    if encoding != 'utf-16' and data.lstrip().startswith((b'<', b'\xef\xbb\xbf')):
+        probe = HtmlEncoding()
+        probe.feed(data[:8192].decode('latin-1'))
+        aliases = {'utf-8': 'utf-8-sig', 'utf8': 'utf-8-sig',
+                   'gb18030': 'gb18030', 'gbk': 'gbk', 'gb2312': 'gb2312'}
+        codecs = {aliases.get(label) for label in probe.labels}
+        need(not codecs or (len(codecs) == 1 and None not in codecs),
+             'Conflicting or unsupported HTML charset declaration', 'unsupported')
+        if codecs:
+            declaration = next(iter(codecs))
+            need(not data.startswith(b'\xef\xbb\xbf') or declaration == 'utf-8-sig',
+                 'HTML charset conflicts with UTF-8 BOM', 'unsupported')
+            encoding = declaration
+    try:
+        return data.decode(encoding, errors='strict'), encoding, declaration
+    except UnicodeError as exc:
+        raise ParseError('unsupported', {'stage': 'text_table'},
+                         'Text does not match a supported verified encoding') from exc
+
+
 def read_text_table(data):
     """Return a table only with positive content evidence, never by extension."""
     need(len(data) <= MAX_BYTES, 'Text table byte budget exceeded', 'resource_limit')
-    encoding = 'utf-16' if data.startswith((b'\xff\xfe', b'\xfe\xff')) else 'utf-8-sig'
-    try:
-        text = data.decode(encoding)
-    except UnicodeError as exc:
-        raise ParseError('unsupported', {'stage': 'text_table'}, 'Text encoding is not verified UTF-8/UTF-16') from exc
+    text, encoding, declaration = decode_table_text(data)
     need('\x00' not in text, 'Binary data is not a text table', 'unsupported')
     tables = Tables()
     stripped = text.lstrip()
@@ -246,4 +319,11 @@ def read_text_table(data):
             for col, value in enumerate(row, 1):
                 tables.add(sheet, row_number, col, value)
         kind = 'tsv_disguised' if delimiter == '\t' else 'csv_disguised'
-    return tables.result(kind, encoding)
+    if encoding in ('gb18030', 'gbk', 'gb2312'):
+        need(kind == 'html_table_disguised', 'Legacy charset supported only for declared HTML tables', 'unsupported')
+        tables.issue('html_declared_legacy_encoding')
+    result = tables.result(kind, encoding)
+    if declaration is not None:
+        result['encoding_source'] = 'html_meta_declaration'
+        result['encoding_declaration_verified'] = False
+    return result
