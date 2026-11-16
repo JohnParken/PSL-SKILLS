@@ -274,7 +274,7 @@ def _open_cache(position):
             if not isinstance(payload, dict) or payload.get("registration") != record:
                 raise ValueError("report page cache does not match the registered task or file")
             data = payload.get("report")
-            if (not isinstance(data, dict) or data.get("format") != "docx-report" or data.get("schema_version") != 1
+            if (not isinstance(data, dict) or data.get("format") not in ("docx-report", "docx-content") or data.get("schema_version") != 1
                     or not isinstance(data.get("blocks"), list) or not isinstance(data.get("issues"), dict)):
                 raise ValueError("invalid report page cache data")
             yield _CachedReport(data, directory, name, info)
@@ -283,6 +283,9 @@ def _open_cache(position):
 
 
 def _report_page(data, position, budget):
+    if data["format"] == "docx-content":
+        from docx_read_content import content_page
+        return content_page(data, position, budget)
     return bounded_page(data, position, budget, issues_present=bool(data["issues"]))
 
 

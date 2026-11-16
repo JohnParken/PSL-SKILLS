@@ -60,6 +60,10 @@ def _read_row(row, row_index, visible_children, cell_text, previous, issues):
             raise ValueError("invalid_table_cell_span")
         text = cell_text(element)
         item = {"column": column, "column_span": span, "text": text}
+        revisions = [] if props is None else [name for name in ("cellIns", "cellDel", "tcPrChange") if _one(props, name) is not None]
+        if revisions:
+            item["unresolved_revisions"] = revisions
+            issues.add("table_cell_revision_unresolved")
         merge = None if props is None else _one(props, "vMerge")
         if merge is not None:
             mode = merge.get(w("val"), "continue")
@@ -156,7 +160,7 @@ def read_table(table, visible_children, cell_text, header_count=None):
         issues.add("noncontiguous_repeat_headers")
     ambiguous_grid = issues & {
         "unresolved_vertical_merge", "legacy_horizontal_merge_unresolved", "table_merge_revision_unresolved",
-        "table_row_revision_unresolved", "table_row_grid_differs",
+        "table_row_revision_unresolved", "table_cell_revision_unresolved", "table_row_grid_differs",
     }
     if header_count is not None:
         if header_count > len(rows):

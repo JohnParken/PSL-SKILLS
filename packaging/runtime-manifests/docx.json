@@ -51,6 +51,7 @@
     "scripts/docx_create_xml.py",
     "scripts/docx_outcome.py",
     "scripts/docx_read_charts.py",
+    "scripts/docx_read_content.py",
     "scripts/docx_read_elements.py",
     "scripts/docx_read_numbering.py",
     "scripts/docx_read_pages.py",

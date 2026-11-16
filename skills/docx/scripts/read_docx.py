@@ -653,7 +653,7 @@ def read_docx_page(path: str | Path, *, max_output_bytes=12000, cursor=None, mod
 
 
 def read_docx_report(path: str | Path, *, max_output_bytes=12000, cursor=None, revisions="accepted", header_rows=None,
-                     section=None, section_occurrence=None):
+                     section=None, section_occurrence=None, _content=False):
     """Read report elements for the document or a heading, with reusable pagination."""
     from docx_read_elements import ReportReader
 
@@ -687,9 +687,12 @@ def read_docx_report(path: str | Path, *, max_output_bytes=12000, cursor=None, r
             data["scope"] = {"section": section, "section_occurrence": section_occurrence or 1,
                              "heading_level": blocks[0]["level"], "heading_paragraph_index": blocks[0]["paragraph_index"]}
             data["limitations"].append("related-story-bodies-not-in-heading-section")
+        if _content:
+            from docx_read_content import project_content
+            return project_content(data)
         return data
 
-    options = {"mode": "report", "schema_version": 1, "revisions": revisions, "header_rows": header_rows}
+    options = {"mode": "content" if _content else "report", "schema_version": 1, "revisions": revisions, "header_rows": header_rows}
     if section is not None:
         options.update(section=section, section_occurrence=section_occurrence)
     raw = _snapshot_input(path)
@@ -879,10 +882,14 @@ def main(argv: list[str] | None = None) -> int:
             budget = 12000 if bound_page and args.max_output_bytes is None else args.max_output_bytes
             data = read_docx_report(args.input, max_output_bytes=budget,
                                     cursor=args.cursor, revisions=args.revisions or "accepted", header_rows=overrides,
-                                    section=args.section, section_occurrence=args.section_occurrence)
+                                    section=args.section, section_occurrence=args.section_occurrence, _content=not args.report)
             if data.get("page_cache") in ("stored", "reused"):
                 unpublished_cursor = data["next_cursor"]
-            text = serialize_docx_page(data)
+            if args.report:
+                text = serialize_docx_page(data)
+            else:
+                from docx_read_content import serialize_content_page
+                text = serialize_content_page(data)
         elif using_fastpath:
             paragraph_range = None
             if args.paragraph_range is not None:
@@ -937,7 +944,7 @@ def main(argv: list[str] | None = None) -> int:
             if unpublished_cursor is not None:
                 sys.stdout.flush()
     except UnsupportedInputError as exc:
-        if report_mode or args.format == "json":
+        if args.report or args.format == "json":
             print(json.dumps({"status": "unsupported", "message": str(exc)}, ensure_ascii=False))
         else:
             print("unsupported: " + str(exc), file=sys.stderr)

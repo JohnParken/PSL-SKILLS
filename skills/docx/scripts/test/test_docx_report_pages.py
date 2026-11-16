@@ -208,7 +208,7 @@ class ReportPageCacheTests(unittest.TestCase):
             redirect_stderr(diagnostics),
             self.assertRaises(SystemExit) as raised,
         ):
-            read_docx.main([self.source.name, "--max-output-bytes", "2200", "-o", "page.json"])
+            read_docx.main([self.source.name, "--report", "--max-output-bytes", "2200", "-o", "page.json"])
         self.assertEqual(raised.exception.code, 2)
         self.assertIn("cannot publish output", diagnostics.getvalue())
         self.assertFalse((self.folder / "page.json").exists())
@@ -229,7 +229,7 @@ class ReportPageCacheTests(unittest.TestCase):
             redirect_stderr(io.StringIO()),
             self.assertRaises(SystemExit),
         ):
-            read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
+            read_docx.main([self.source.name, "--report", "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
         self.assertFalse(owned.exists())
         self.assertEqual(other.read_bytes(), other_raw)
         self.assertEqual(self.source.read_bytes(), original)
@@ -241,7 +241,7 @@ class ReportPageCacheTests(unittest.TestCase):
         first = self.read()
         owned = self.cache()
         with _task_directory(self.folder):
-            result = read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
+            result = read_docx.main([self.source.name, "--report", "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
         self.assertEqual(result, 0)
         self.assertTrue(owned.exists())
         self.assertTrue((self.folder / "page.json").exists())
@@ -261,7 +261,7 @@ class ReportPageCacheTests(unittest.TestCase):
                     redirect_stderr(io.StringIO()),
                     self.assertRaises(expected),
                 ):
-                    read_docx.main([self.source.name, "--max-output-bytes", "2200"])
+                    read_docx.main([self.source.name, "--report", "--max-output-bytes", "2200"])
                 self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
 
     def test_binary_stdout_flush_failure_releases_reused_cache(self):
@@ -276,7 +276,7 @@ class ReportPageCacheTests(unittest.TestCase):
             redirect_stderr(io.StringIO()),
             self.assertRaises(SystemExit),
         ):
-            read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"]])
+            read_docx.main([self.source.name, "--report", "--max-output-bytes", "2200", "--cursor", first["next_cursor"]])
         self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
 
     def test_serializer_failure_releases_new_cache(self):
@@ -285,7 +285,7 @@ class ReportPageCacheTests(unittest.TestCase):
             patch.object(read_docx, "serialize_docx_page", side_effect=RuntimeError("serialization failure")),
             self.assertRaisesRegex(RuntimeError, "serialization failure"),
         ):
-            read_docx.main([self.source.name, "--max-output-bytes", "2200"])
+            read_docx.main([self.source.name, "--report", "--max-output-bytes", "2200"])
         self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
 
     def test_failed_verified_page_releases_cache(self):
@@ -311,7 +311,7 @@ class ReportPageCacheTests(unittest.TestCase):
             redirect_stderr(diagnostics),
             self.assertRaises(SystemExit),
         ):
-            read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
+            read_docx.main([self.source.name, "--report", "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
         self.assertEqual(owned.read_bytes(), changed)
         self.assertIn("cleanup incomplete", diagnostics.getvalue())
         self.assertIn("output failed", diagnostics.getvalue())

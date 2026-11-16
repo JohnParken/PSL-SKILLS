@@ -233,21 +233,21 @@ class ControlledTests(unittest.TestCase):
         self.assertEqual(Path('final.txt').read_bytes(), before)
         self.assertFalse(Path('output/synthetic-task/internal.txt').exists())
 
-    def test_default_report_exports_the_same_complete_json_and_preserves_partial_status(self):
+    def test_default_content_exports_the_same_complete_text_and_preserves_partial_status(self):
         """Archive the full default view and keep its reading diagnostics in the receipt."""
         self.source([{'type': 'table', 'header': False, 'rows': [['标题'], ['内容']]}])
         with redirect_stdout(io.StringIO()) as output:
             self.assertEqual(read_main(['source.docx']), 0)
-        stdout_report = json.loads(output.getvalue())
-        self.assertEqual(stdout_report['status'], 'partial')
+        stdout_text = output.getvalue()
+        self.assertIn('读取状态：部分', stdout_text)
         with redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(read_main(['source.docx', '-o', 'result.json', '--delivery']), 0)
+            self.assertEqual(read_main(['source.docx', '-o', 'result.txt', '--delivery']), 0)
         receipt = json.loads(output.getvalue())
-        self.assertEqual(receipt['format'], 'docx-report')
+        self.assertEqual(receipt['format'], 'docx-content')
         self.assertEqual(receipt['read_status'], 'partial')
-        self.assertEqual(receipt['issues'], stdout_report['issues'])
-        self.assertEqual(json.loads(Path('result.json').read_text(encoding='utf-8')), stdout_report)
-        self.assertEqual(Path('output/synthetic-task/result.json').read_bytes(), Path('result.json').read_bytes())
+        self.assertTrue(receipt['issues'])
+        self.assertEqual(Path('result.txt').read_text(encoding='utf-8'), stdout_text)
+        self.assertEqual(Path('output/synthetic-task/result.txt').read_bytes(), Path('result.txt').read_bytes())
 
     def test_comments_list_does_not_create_helpers(self):
         self.source()

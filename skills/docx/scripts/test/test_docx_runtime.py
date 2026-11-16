@@ -108,10 +108,9 @@ class RuntimeTests(unittest.TestCase):
                                              capture_output=True, encoding='utf-8')
                     self.assertEqual(process.returncode, 0, process.stderr)
                     self.assertNotIn('private-invalid-config', process.stdout + process.stderr)
-                result = json.loads(process.stdout)
-                self.assertEqual(result['format'], 'docx-report')
-                self.assertEqual(result['blocks'][0]['text'], '只读内容 & 中文')
-                self.assertFalse(result['has_more'])
+                self.assertIn('只读内容 & 中文', process.stdout)
+                self.assertNotIn('word/document.xml', process.stdout)
+                self.assertNotIn('next_cursor:', process.stdout)
                 self.assertEqual([p.name for p in directory.iterdir()], ['input.docx'])
                 self.assertEqual(source.read_bytes(), before)
             finally:

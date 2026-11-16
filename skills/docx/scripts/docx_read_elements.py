@@ -24,6 +24,7 @@ CHART_EX = "{http://schemas.microsoft.com/office/drawing/2014/chartex}"
 CHART = "{" + CHART_NS + "}"
 A = "{" + DRAWING_NS + "}"
 R = "{" + REL_NS + "}"
+M = "{http://schemas.openxmlformats.org/officeDocument/2006/math}"
 PACKAGE_RELS = "{http://schemas.openxmlformats.org/package/2006/relationships}"
 SUPPORTED_CHOICES = {WPS[1:-1], WPG[1:-1], CHART_NS, DRAWING_NS, PIC[1:-1], WP[1:-1]}
 WRAPPERS = frozenset(map(w, ("sdt", "sdtContent", "customXml", "ins", "del", "moveFrom", "moveTo", "smartTag")))
@@ -136,6 +137,7 @@ class ReportReader:
         self.text_chars = 0
         self.block_bytes = 0
         self.heading_checkpoints = None
+        self.paragraph_numbering = {}
 
     def _add(self, block):
         if len(self.blocks) >= MAX_REPORT_BLOCKS:
@@ -223,6 +225,17 @@ class ReportReader:
             elif node.tag in WRAPPERS:
                 yield from self._direct(node, name)
 
+    def _prepare_numbering(self, container, numbering):
+        """Count visible main-story paragraphs once, including nested tables."""
+        for node in self._children(container):
+            if node.tag == w("p"):
+                label, issue = numbering.label(node)
+                if label is not None:
+                    self._checked_text(label)
+                self.paragraph_numbering[node] = (label, issue)
+            elif node.tag in WRAPPERS or node.tag in (w("tbl"), w("tr"), w("tc")):
+                self._prepare_numbering(node, numbering)
+
     def _text(self, paragraph):
         pieces = []
 
@@ -252,9 +265,9 @@ class ReportReader:
             if self.heading_checkpoints is not None:
                 self.heading_checkpoints[len(self.blocks)] = (self.stats.copy(), self.issues.copy())
         if numbering is not None:
-            label, issue = numbering.label(paragraph)
+            label, issue = self.paragraph_numbering.get(paragraph, (None, None))
             if label is not None:
-                block["numbering_label"] = self._checked_text(label)
+                block["numbering_label"] = label
             if issue:
                 self.issues[issue] += 1
         self._add(block)
@@ -266,12 +279,31 @@ class ReportReader:
                 self._drawing(node, source)
             elif node.tag in (w("object"), w("control")):
                 self.issues["embedded_object_not_decoded"] += 1
+            elif node.tag in (M + "oMath", M + "oMathPara"):
+                self._equation(node, source)
             elif node.tag in REFERENCE_TAGS:
                 self._add({"type": "reference", "anchor": source, "kind": node.tag.rsplit("}", 1)[-1], "id": node.get(w("id"))})
             elif node.tag in (w("sym"), w("subDoc"), w("contentPart"), w("altChunk")):
                 self.issues["unsupported_inline_content"] += 1
             elif node.tag not in (w("p"), w("txbxContent")):
                 self._paragraph_objects(node, source)
+
+    def _equation(self, container, source):
+        """Return stored runs without pretending their concatenation is a formula."""
+        runs = []
+
+        def visit(node):
+            for child in self._children(node):
+                if child.tag == M + "t":
+                    runs.append(self._checked_text(child.text or ""))
+                elif not child.tag.startswith(M) or not child.tag.endswith("Pr"):
+                    visit(child)
+
+        visit(container)
+        issue = "equation_structure_not_interpreted"
+        self.issues[issue] += 1
+        self._add({"type": "equation", "anchor": source, "text_runs": runs,
+                   "representation": "stored-text-runs", "issues": [issue]})
 
     def _drawing(self, drawing, source):
         self.stats["drawings"] += 1
@@ -320,6 +352,7 @@ class ReportReader:
         tables = list(self._direct(node, "tbl"))
         index = self.stats["textbox"] + 1
         self._add({"type": "textbox", "textbox_index": index, "anchor": anchor, "paragraphs": paragraphs})
+        self._other_blocks(node, {**anchor, "textbox_index": index})
         for position, paragraph in enumerate(source_paragraphs, 1):
             self._paragraph_objects(paragraph, {**anchor, "textbox_index": index, "textbox_paragraph": position})
         for table in tables:
@@ -392,20 +425,49 @@ class ReportReader:
         source = {**anchor, "table_index": index}
         declared_headers = self.header_rows.get(index)
 
+        cell_numbering = {}
+
         def cell_text(cell):
-            return "\n".join(self._text(paragraph) for paragraph in self._direct(cell, "p"))
+            paragraphs = list(self._direct(cell, "p"))
+            labels = []
+            for paragraph_index, paragraph in enumerate(paragraphs, 1):
+                label, issue = self.paragraph_numbering.get(paragraph, (None, None))
+                if label is not None:
+                    labels.append({"paragraph_index": paragraph_index, "numbering_label": label})
+                if issue:
+                    self.issues[issue] += 1
+            if labels:
+                cell_numbering[cell] = labels
+                self.stats["numbered_paragraphs"] += len(labels)
+            return "\n".join(self._text(paragraph) for paragraph in paragraphs)
 
         meta, rows = read_table(table, self._direct, cell_text, declared_headers)
         self.issues.update(meta["issues"])
         self.stats["table_cells"] += meta["physical_cell_count"]
         self._add({**meta, **source})
         for row, elements in rows:
+            for cell, element in zip(row["cells"], elements):
+                if element in cell_numbering:
+                    cell["paragraph_numbering"] = cell_numbering[element]
             self._add({**row, **source})
             for cell, element in zip(row["cells"], elements):
                 location = {**source, "row": row["row_index"], "column": cell["column"]}
                 self._cell_objects(element, location)
 
+    def _other_blocks(self, container, location):
+        """Recover equations and diagnose unhandled blocks outside paragraphs."""
+        for node in self._children(container):
+            if node.tag in WRAPPERS:
+                self._other_blocks(node, location)
+            elif node.tag in (M + "oMath", M + "oMathPara"):
+                self._equation(node, location)
+            elif node.tag == w("altChunk"):
+                self.issues["alternate_document_content_not_read"] += 1
+            elif node.tag not in (w("p"), w("tbl")) and node.tag not in IGNORABLE_BLOCKS:
+                self.issues["unrecognized_block_not_read"] += 1
+
     def _cell_objects(self, cell, location):
+        self._other_blocks(cell, location)
         for index, paragraph in enumerate(self._direct(cell, "p"), 1):
             self._paragraph_objects(paragraph, {**location, "cell_paragraph": index})
         for nested in self._direct(cell, "tbl"):
@@ -420,6 +482,8 @@ class ReportReader:
                 self._table(node, {"part": part, **context})
             elif node.tag in WRAPPERS:
                 self._walk(node, part, numbering, **context)
+            elif node.tag in (M + "oMath", M + "oMathPara"):
+                self._equation(node, {"part": part, **context})
             elif node.tag == w("altChunk"):
                 self.issues["alternate_document_content_not_read"] += 1
             elif node.tag not in IGNORABLE_BLOCKS:
@@ -454,7 +518,9 @@ class ReportReader:
         if numbering is not None and numbering.tag != w("numbering"):
             raise ValueError("invalid numbering root")
         self.heading_checkpoints = {} if section is not None else None
-        self._walk(bodies[0], MAIN_PART, DecimalNumbering(numbering))
+        numbering = DecimalNumbering(numbering)
+        self._prepare_numbering(bodies[0], numbering)
+        self._walk(bodies[0], MAIN_PART, numbering)
         selected = self._section_view(section, section_occurrence) if section is not None else None
         related = Counter()
         for kind, pattern, expected in RELATED_ROOTS:

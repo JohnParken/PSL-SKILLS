@@ -1,6 +1,6 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期为 2026-11-16，源码基线为 `8235397` 加本轮工作区变更，Skill 版本为 `20261116.1353.3706`。运行约束见 [SKILL.md](../../skills/docx/SKILL.md)。
+> 文档核对日期为 2026-11-16，源码基线为 `afe3bf0` 加本轮工作区变更，Skill 版本为 `20261116.1501.5700`。运行约束见 [SKILL.md](../../skills/docx/SKILL.md)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -13,7 +13,7 @@ Python 模块拆分及文件行数规则见 [行数规范与重构记录](../pyt
 现有分发边界只精简维护内容，不削减生成、读取、五类受控编辑、旧兼容入口或正式诊断能力。本轮在既有受控 run 格式范围内增加独立差异检查与候选发布模式，未扩大到任意 OOXML 编辑；标准库、独立运行、自然分页、输入保护、裸文件名输出、归档与清理契约保持。
 
 - 运行包由仓库维护工具 [package_docx_runtime.py](../../tools/package_docx_runtime.py) （兼容入口，复用 [统一打包器](../../tools/package_skills.py)）和 [显式文件清单](../../packaging/runtime-manifests/docx.json) 构建；工具、清单不作为运行依赖。
-- 运行清单包含 88 个文件，包括复杂报告解析及分页模块。源码回归及夹具位于 `scripts/test/`，维护历史位于 `docs/maintenance/docx/`。
+- 运行清单包含 89 个文件，包括复杂报告解析及分页模块。源码回归及夹具位于 `scripts/test/`，维护历史位于 `docs/maintenance/docx/`。
 - `audit_package.py`、`validate_layout.py`、ZIP/XML 和结构/内容校验等正式诊断继续分发。四个批注模板、四个样式 profile 和旧 CLI 也保留。
 - 构建拒绝未知源文件、缺失清单项和符号链接；缓存不进入包。新文件必须先人工归类，不能静默漏掉新依赖。文件按固定顺序、时间戳及压缩级别打包，逐成员验证 CRC、成员集合和源码快照字节一致。既有目标拒绝覆盖，旧 ZIP 不改动。
 - 运行包内主入口及参考不再要求读取未分发的维护文件。完整源码的历史记录、测试命令及审计工具继续可用；业务执行不依赖源码仓库或相邻 Skill。
@@ -38,7 +38,7 @@ python -I -S -B tools/check_project_docs.py
 DOCX Skill 用 Python 标准库构建 OOXML 文档包，适合公文、通知、报告、简单表格及声明式排版。它同时提供只读内容提取和严格限定的已有文档修改。
 
 - **创建**：有序 JSON `blocks` 转为 `.docx`。基础块为标题、副标题、1–4 级标题、正文、列表、表格和分页；专项能力包括 PNG/JPEG 图片、富文本、合并表格、编号、目录、分节及交叉引用。复杂需求按主入口直达相应参考，不需预读全部资料。
-- **读取** 原生 `.docx/.dotx` 默认一次读取正文、表头列映射和合并行类别、文本框、常见原生图表保存值及缺值范围、图片资源引用和常规附加部件。按完整标题可读取章节及其下级章节的正文和对象。纯文本、标题、段落范围、概览、精简结构和显式 OOXML 按需选择。修订视图只读。
+- **读取** 原生 `.docx/.dotx` 默认返回可读全文，读取正文、表头列映射和合并行类别、文本框、常见原生图表保存值及缺值范围、图片资源引用和常规附加部件。按完整标题可读取章节及其下级章节的正文和对象。纯文本、标题、段落范围、概览、精简结构和显式 OOXML 按需选择。修订视图只读。
 - **编辑**：普通文字节点替换、受控段落插入及 run 格式、规则表格数据行增删、同格式图片替换、有限批注事务。输出新文件，保留原件。
 - **不提供**：旧二进制 DOC、WPS 专有格式转换、PDF 生成、任意无损编辑、完整修订接受/拒绝或真实视觉分页验证。CFB 内容即使伪装成 `.docx` 也拒绝并指向 WPS 读取能力；电子表格最终由 ET Skill 处理。
 
@@ -164,7 +164,7 @@ JSON
 - 旧精简 JSON 默认上限 12,000 字符，`--max-output-chars` 可设 128–2,000,000；按完整块分页，单块超限失败。`next_block/--start-block` 不绑定源身份，仅为兼容入口。纯文本默认不限长，字符截断带显式标记且没有游标；全结构 JSON 超字符预算失败，不交付半截 JSON。
 - `docx-structure` 的 `schema_version=1` 描述显式 XML；未知元素以 opaque 节点保留。样式继承、自动编号、域结果和页面顺序未计算，不能直接作为生成器输入或无损编辑格式。
 - `--revisions accepted/original/all` 只控制读取视图，不能表述为已保存净稿。
-- 文件名直接返回完整的版本 1 `docx-report`。加 `--section '完整标题'` 返回同一格式和章节范围，保留原始对象编号及下级章节。章节中的附加内容引用随正文返回，关联部件正文可用全量视图读取。纯文本调用加 `--format text`。 [复杂报告读取契约](../../skills/docx/references/inspection.md#复杂报告读取)
+- 文件名默认返回可读全文，包含支持的表格和图表等内容；加 `--section '完整标题'` 只读对应章节及下级章节。显式 `--report` 返回版本 1 `docx-report` 结构 JSON；旧轻量文字仍用 `--format text`。章节中的附加内容引用随正文返回，关联部件正文须用全文读取。 [复杂报告读取契约](../../skills/docx/references/inspection.md#复杂报告读取)
 
 真实月报的全量、列映射、缺值定位、章节饼图和分页验证按各版记录。 [复杂报告验收](../maintenance/docx/report-reading-20261113.md)
 
@@ -242,9 +242,13 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --
 
 ### 最终交付入口边界
 
-正式创建和编辑 runner/交付 API 自动收尾。明确交付完整读取结果时用 `read_docx.py 文件.docx -o 结果.json --delivery`，纯文本使用 `--format text -o 结果.txt --delivery`。未加 `--delivery` 的读取导出、低层 pack/comment/merge_runs 和 Path 返回 API 仅产生内部文件。格式候选走 `format-checked` 验收。其他已验收最终文件用本包 `archive_delivery.py` 处理显式清单，归档重试使用已验收主文件。
+正式创建和编辑 runner/交付 API 自动收尾。明确交付完整读取结果时用 `read_docx.py 文件.docx --report -o 结果.json --delivery`，默认可读全文使用 `-o 结果.txt --delivery`，旧轻量文字再加 `--format text`。未加 `--delivery` 的读取导出、低层 pack/comment/merge_runs 和 Path 返回 API 仅产生内部文件。格式候选走 `format-checked` 验收。其他已验收最终文件用本包 `archive_delivery.py` 处理显式清单，归档重试使用已验收主文件。
 
 
 ## 2026-11-16 读取缓存异常收尾
 
 修复首次与续页输出交接不对称、文本 stdout 延迟刷新失败及分页异常导致的中间缓存残留。只清理已核实的本轮游标文件，原件、已有输出、其他并行游标及变更文件保留；不扫描历史残留。详细复现与本机验证见 [读取缓存清理验收](../maintenance/docx/read-cache-cleanup-20261116.md)。未调整公共生命周期副本或运行包文件边界。
+
+本轮补齐主 story 正文、表格及嵌套表格编号的顺序计数，单元格编号另列而不改原文字。OMML 仅保存有序 text_runs，不拼接成等价公式；数学结构、单元格结构修订和未知块明确 partial。验证见 [报告要素集成复核](../validation/report-elements-integration-20261116.md)。
+
+默认 CLI 及默认 `--section` 输出可读文本，内部结构、指纹及部件关系不作为普通阅读内容。`--report` 保留原报告 JSON，`--format json` 保留显式 XML 结构，`--format text` 保留旧轻量文字。默认全文不分页，受限时显式 `--max-output-bytes`，按 `next_cursor` 收齐并核对末页；缓存身份和模式绑定保持。

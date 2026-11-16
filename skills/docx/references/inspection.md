@@ -16,7 +16,8 @@
 
 ## 目录
 
-- 轻量读取 Fast Path（优先用于内容问答）
+- 内容优先默认输出
+- 轻量读取 Fast Path（按需概览或旧视图）
 - UTF-8 预算与绑定续读
 - 复杂报告读取
 - 宿主大结果与脚本分页
@@ -25,18 +26,29 @@
 
 读取结果只用于定位和检查，不是保格式重建规格；纯文本/compact 缺少原缩进、行距和完整继承关系，显式结构 JSON 也不是生成器输入。修改已有字体/字号必须带原 DOCX 调用 `<skill-root>/scripts/run_docx_edit.py` 的 `structure` 模式下的 `format_run`，详见 `<skill-root>/references/structure-editing.md`；不能保留的范围明确拒绝，不转为 `create`。
 
-## 轻量读取 Fast Path（优先用于内容问答）
+## 内容优先默认输出
+
+只传文件名，或仅用 `--section '完整标题'`，默认返回可读内容文本，不是 JSON。包含支持范围内的标题、正文、完整表格行、合并来源、表内编号、嵌套表归属、文本框、公式片段、图表标题/系列/类别/原始数值字符串及数字格式，并附页眉、页脚、脚注等相关文字。保持重复值与缺值，图表保存值不当作实时数据，不自行换算百分比；公式片段不拼成等价算式。图片只提示已有描述及未识别像素的缺口。
+
+默认仅保留理解所需的位置、修订视图及简明缺项提示，不输出 ZIP/XML 部件、关系、源指纹、布局坐标或工作表引用。需要详细结构、来源和原始诊断时显式用 `--report`；原始 XML 结构仍用 `--format json`。Python `read_docx_report()` 原有 JSON 字典接口不变；原先对无参数 CLI stdout 作 JSON 解析的调用必须加 `--report`。旧 `--format text`、单独 `--max-output-chars` 及轻量选择器保持其兼容行为，不把这些视图冒充默认完整对象读取。
+
+默认全文不分页，仍受底层 ZIP/XML、20,000 报告块、文字和输出安全上限约束；可读投影另有 32 MiB 上限。宿主回传受限时加 `--max-output-bytes N`，按实际 UTF-8 文本（含修订/缺项提示及页尾）分页。页尾显示内容块起止区间和总数，最后一行 `next_cursor: TOKEN` 给出原样续读令牌；`next_cursor: none` 是末页，必须合并此前连续区间才取完。只取输出末尾生成的令牌，不把文档正文中的同名字串当作游标。单块或提示放不进预算即明确报错，不截断文字。预算可在续页增大。
+
+默认内容续读与显式报告均复用经源字节、选项和身份校验的私有缓存，结束/失败/提前释放边界不变；缓存和摘要指纹不直接显示。模式也被绑定：内容续读不得加 `--report`，报告续读必须继续带 `--report`。字节预算仍为128–2,000,000；单独 `--cursor` 默认12,000字节。以下 `coverage`、`has_more`、`page_cache` 和块字段说明属于显式报告或其他 JSON 视图，不能套用为默认文本字段。
+
+## 轻量读取 Fast Path（按需概览或旧视图）
 
 普通问题优先只加载 `SKILL.md`，直接调用 `<skill-root>/scripts/read_docx.py`，不要为了“查看标题 / 统计结构 / 读取某节”加载完整 `inspection.md` 或先获取 `--format json` 的全部 XML 节点。**仅修改读出的内容表示，绝不修改原件。**
 
 | 问题 | 命令附加参数 | 返回内容 |
 |---|---|---|
-| 读取所有支持的文档要素 | 仅传文件名 | `docx-report` JSON，详见本页复杂报告读取 |
+| 读取所有支持的有用内容 | 仅传文件名 | 可读内容文本，含图表保存值与缺项提示 |
+| 查看报告结构及诊断 | `--report` | `docx-report` JSON，默认12,000字节分页 |
 | 读取正文与表格文字 | `--format text` | 原纯文本输出；可加 `--include-related` 追加附加部件文字 |
 | 文档大概有哪些内容、章节与表格？ | `--summary` | JSON：正文段落数、标题数、表格/表格行数及最多 100 个标题（超出有提示）；不返回正文全文 |
 | 标题与层级有哪些？ | `--heading-only` | `[H1] [p2] 标题` 格式，`p` 是正文段落序号 |
 | 查看第 N～M 段正文 | `--paragraph-range 1:20` | 仅正文级段落文本，1 起始且两端包含，不计表格单元格段落 |
-| 读取某节全部支持的要素 | `--section '标题文字'` | `docx-report` JSON，包含下级章节和本节对象 |
+| 读取某节全部支持的内容 | `--section '标题文字'` | 可读内容文本，包含下级章节和本节对象 |
 | 读取某节正文及表格文字 | `--section '标题文字' --format text` | 纯文本，含完整表格行 |
 | 查看精简结构 | `--compact-json` | 结构化 JSON（不包含完整 OOXML 节点树），表格默认仅预览前两行 |
 | 逐页读取大表格 | `--compact-json --tables rows --max-output-chars 4000` | 行级 `table_row` 块，响应含 `next_block` 游标 |
@@ -71,7 +83,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.d
 ```
 
 - `--max-output-bytes` 为 128～2,000,000，计**实际 UTF-8 JSON、全部元数据与末尾换行**。按完整块分页，不截断 Unicode 或诊断；元数据/单块放不下就失败，stdout 为空、完整错误在 stderr，需增大预算或缩小选择范围。预算不限制错误诊断，也不保证宿主不截断回传。
-- 默认要素、`--compact-json` 和 `--summary` 支持字节分页。`--cursor` 单独启用时默认 12,000 字节。分页与 `--start-block`（包括 0）、`--max-output-chars`、`--delivery` 互斥。`-o` 保存同一预算内的 UTF-8 结果。
+- 默认内容文本、显式 `--report`、`--compact-json` 和 `--summary` 支持字节分页。`--cursor` 单独启用时默认 12,000 字节。分页与 `--start-block`（包括 0）、`--max-output-chars`、`--delivery` 互斥。`-o` 保存同一预算内的 UTF-8 结果。
 - 新结果保留 `blocks`、`stats`、`related`、`limitations`、`truncated`、`next_block`、`total_blocks` 等旧字段，增加 `page_version:1`、`source_sha256`、`has_more`、`next_cursor` 和 `coverage`。`next_block` 只作兼容/核对；新模式只用 `next_cursor` 续读，不降级为旧索引。
 - `coverage.block_start` / `block_end_exclusive` 是所选视图的0起始半开块范围；`selected_total_blocks` 是其总块数。逐页核对范围连续、累计块数相符，并读到 `has_more=false` / `next_cursor=null`。`selected_view_complete` 只表示本响应是否一次覆盖整个所选视图，末页不代表已替你收集前页。
 - `coverage.document_complete` 始终为 false：这是有损读取视图，保留 `limitations` 与 `omissions`。`tables:summary` 超出两行时标明预览遗漏；`rows` 返回全部所选表格行块，仍不承诺布局/合并保真。相关部件保持原有计数或200字符预览及截断标记，作为完整元数据重复返回，不由块游标继续展开。
@@ -102,7 +114,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.do
 execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --section '总体情况' --cursor '上页next_cursor原值'")
 ```
 
-只传文件名一次返回版本 1 的 `docx-report` JSON。`--section` 返回同一格式，范围从指定标题到下一个同级或更高层级标题之前，包含下级章节及其对象。`scope` 给出章节名、出现序号、标题层级和正文段落编号。段落、表格、图表等沿用全量编号。`stats` 和业务缺项按所选范围统计，正文兼容分支缺失仍提示，因为可能影响章节边界。章节包含正文中的脚注、尾注和批注引用，关联部件正文可用全量视图读取。ZIP/XML 与关系检查沿用全量路径。
+仅传文件名返回上述可读内容；显式 `--report` 返回版本 1 的 `docx-report` JSON，并默认按12,000字节分页。`--report --section` 返回同一 JSON 格式，范围从指定标题到下一个同级或更高层级标题之前，包含下级章节及其对象。`scope` 给出章节名、出现序号、标题层级和正文段落编号。段落、表格、图表等沿用全量编号。`stats` 和业务缺项按所选范围统计，正文兼容分支缺失仍提示，因为可能影响章节边界。章节包含正文中的脚注、尾注和批注引用，关联部件正文可用全量视图读取。ZIP/XML 与关系检查沿用全量路径。
 
 `coverage.selected_view_complete=true`、`has_more=false` 表示脚本一次返回所选视图。分页字节预算为 128–2,000,000，含元数据、诊断及末尾换行。`--report` 和 `--cursor` 可在没有指定预算时使用 12,000 字节默认预算。续读保持章节名、出现序号、修订视图和显式表头设置一致，按 `coverage.block_start/block_end_exclusive` 收集连续块。
 
@@ -114,7 +126,7 @@ Python 调用 `read_docx_report(path, max_output_bytes=None)` 获取全量，可
 
 已通过归属及内容校验的缓存发生分页失败时立即清理；CLI 首次/续页序列化、落盘、stdout 写入或刷新失败（含可捕获中断）同样释放本轮游标。成功输出非末页时保留缓存供续读，不将正常待续读视为残留。源或选项检查尚未通过时不认领缓存；改动、替换、链接或无法核实的缓存保留并报告 cleanup incomplete，不扫描同名前缀历史文件。已释放缓存的原游标可从未变化的输入重新解析。SIGKILL、宿主崩溃及用户停止继续调用时不能保证自动收尾，应以原游标显式释放；不删除用户保存的 `-o` 结果。
 
-完整要素结果可用 `-o 结果.json` 保存。明确交付时可同时加 `--delivery`，回执的 `read_status` 和 `issues` 与归档状态分别核对。原先解析无选项纯文本 stdout 的调用改用 `--format text`，Python 的 `read_docx()` 仍返回纯文本。
+默认内容用 `-o 结果.txt` 保存；显式报告用 `--report -o 结果.json` 保存当前页。明确交付时可同时加 `--delivery`，回执的 `read_status` 和 `issues` 与归档状态分别核对。需要旧轻量文字的调用显式使用 `--format text`，Python 的 `read_docx()` 仍保持原接口。
 
 | 块类型 | 读取范围和用法 |
 |---|---|
@@ -123,6 +135,10 @@ Python 调用 `read_docx_report(path, max_output_bytes=None)` 获取全量，可
 | `textbox` | 读取浮动或内嵌图形、组合形状和 VML 的存储段落。一个 `AlternateContent` 选择一个可处理分支，重复的兼容副本只计一次。锚点保留部件、宿主位置及存在的相对偏移，实际分页与阅读顺序需客户端验证。 |
 | `chart` / `chart_series` / `chart_point` | 读取常见原生 DrawingML 类别/数值图表。按 `chart_index`、`series_index` 分组，原始 `index` 配对类别与数值。系列的 `category_reference` 和 `value_reference` 定位工作表与 A1 范围。缺值仍为 `null`，有充分证据时点的 `value_cell` 给出具体单元格。 |
 | `image` | 返回可定位的图片资源部件和使用位置。像素和 OCR 由其他工具处理。 |
+
+公式以 `equation` 块保留 `anchor` 与按存储顺序提取的 OMML `text_runs`，包括单元格内公式；`representation=stored-text-runs` 不表示线性公式。分子、分母、上下标等结构尚未解释，始终报告 `equation_structure_not_interpreted` 并标 `partial`。不要把文字片段直接拼接为等价算式或据此计算；普通 `cell.text` 不重复这些片段。修订容器仍按所选视图过滤，不接受或改写修订。
+
+主文档及嵌套表格的显式单级十进制编号按存储顺序计数。单元格 `paragraph_numbering` 以 1 起始 `paragraph_index` 给出各直接段落的 `numbering_label`，与 `cell.text` 分开；不支持的显式编号报告 `paragraph_numbering_unresolved`。文本框编号及复杂列表语义仍不在此能力范围。单元格 `altChunk` 与未知块保留缺项诊断，不自动打开嵌入文档或跟随外链。单元格 `cellIns/cellDel/tcPrChange` 保留原始文字及 `unresolved_revisions`，报告 `table_cell_revision_unresolved`；此时 accepted/original 标签不能视为已准确还原该单元格的修订布局。
 
 通过 `table_index` 与逻辑列 `column` 把数据单元格对应到 `header.columns[].labels`。横向合并单元格覆盖从 `column` 起的 `column_span` 列。原始 `header.spans` 继续保留行、起列、跨度和文字。连续且未覆盖整表的 `tblHeader` 给出 `repeat_header` 依据。缺标记或全表标记时标为 `first_row_candidate`。明确知道表头时用 `--table-header 3:2` 指定第 3 张表前 2 行，可重复指定，`3:0` 表示无表头。网格歧义时保留单元格和诊断。极宽或标签过多的表保留原始跨度并提示列映射超限。
 

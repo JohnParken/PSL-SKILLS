@@ -186,7 +186,7 @@ class DocxReportTests(unittest.TestCase):
         body = row([cell("来源类别", "<w:vMerge w:val='restart'/>"), cell("甲")])
         body += row([cell("", "<w:vMerge/>"), cell("乙")])
         self.write_docx(f"<w:tbl><w:tblGrid><w:gridCol/><w:gridCol/></w:tblGrid>{body}</w:tbl>")
-        table, first, second = json.loads(self.run_cli().stdout)["blocks"]
+        table, first, second = json.loads(self.run_cli("--report", "--max-output-bytes", "2000000").stdout)["blocks"]
         self.assertEqual(table["header"]["source"], "first_row_candidate")
         self.assertEqual(first["merged_groups"], second["merged_groups"])
         self.assertEqual(second["merged_groups"][0]["label"], "来源类别")
@@ -229,7 +229,12 @@ class DocxReportTests(unittest.TestCase):
         output = self.run_cli()
         self.assertEqual(output.stderr, b"")
         self.assertGreater(len(output.stdout), 12000)
-        result = json.loads(output.stdout)
+        readable = output.stdout.decode("utf-8")
+        for value in ("文档示例文字", "0.449700", "值缺失", "0.00", "意图识别", "完整页眉", "补充" * 1500):
+            self.assertIn(value, readable)
+        for internal in ("word/", "resource_part", "source_sha256", "schema_version"):
+            self.assertNotIn(internal, readable)
+        result = json.loads(self.run_cli("--report", "--max-output-bytes", "2000000").stdout)
         self.assertEqual(result["format"], "docx-report")
         self.assertTrue(result["coverage"]["selected_view_complete"])
         self.assertFalse(result["has_more"])
@@ -265,8 +270,8 @@ class DocxReportTests(unittest.TestCase):
             "word/header1.xml": f'<w:hdr xmlns:w="{W}">{paragraph("全局页眉")}</w:hdr>',
             "word/footnotes.xml": f'<w:footnotes xmlns:w="{W}"><w:footnote w:id="2">{paragraph("脚注文字")}</w:footnote></w:footnotes>',
         })
-        full = json.loads(self.run_cli().stdout)
-        result = json.loads(self.run_cli("--section", " 本节 ").stdout)
+        full = json.loads(self.run_cli("--report", "--max-output-bytes", "2000000").stdout)
+        result = json.loads(self.run_cli("--report", "--section", " 本节 ").stdout)
         self.assertEqual(result["format"], "docx-report")
         self.assertEqual(result["scope"], {
             "section": "本节", "section_occurrence": 1, "heading_level": 1, "heading_paragraph_index": 2,
@@ -290,7 +295,7 @@ class DocxReportTests(unittest.TestCase):
         self.assertIn("alternate_document_content_not_read", full["issues"])
         self.assertEqual(result["related_story_parts"], {})
         self.assertTrue(result["coverage"]["selected_view_complete"])
-        override = json.loads(self.run_cli("--section", "本节", "--table-header", "2:1").stdout)
+        override = json.loads(self.run_cli("--report", "--section", "本节", "--table-header", "2:1").stdout)
         table = next(block for block in override["blocks"] if block["type"] == "table")
         self.assertEqual(table["header"]["source"], "explicit")
 
@@ -309,7 +314,7 @@ class DocxReportTests(unittest.TestCase):
                 self.assertEqual(failed.stdout, b"")
                 self.assertIn(message, failed.stderr.decode())
         options = ("--section", "同名", "--section-occurrence", "2")
-        selected = json.loads(self.run_cli(*options).stdout)
+        selected = json.loads(self.run_cli(*options, "--report").stdout)
         self.assertEqual(selected["scope"]["section_occurrence"], 2)
         self.assertEqual([block["text"] for block in selected["blocks"]], ["同名", "最后一段"])
         self.assertEqual(json.loads(self.run_cli(*options, "--report").stdout), selected)
@@ -336,7 +341,7 @@ class DocxReportTests(unittest.TestCase):
         original_cursor = page["next_cursor"]
         combined = list(page["blocks"])
         while page["has_more"]:
-            result = self.run_cli("--cursor", page["next_cursor"], "--max-output-bytes", "2400")
+            result = self.run_cli("--report", "--cursor", page["next_cursor"], "--max-output-bytes", "2400")
             self.assertLessEqual(len(result.stdout), 2400)
             page = json.loads(result.stdout)
             self.assertEqual(page["page_cache"], "reused")
@@ -381,7 +386,7 @@ class DocxReportTests(unittest.TestCase):
         self.write_docx(paragraph("长" * 300) * 8)
         first = self.read_report(budget=2400)
         self.assertTrue(first["has_more"])
-        with_output = self.run_cli("--max-output-bytes", "2400", "-o", "page.json")
+        with_output = self.run_cli("--report", "--max-output-bytes", "2400", "-o", "page.json")
         self.assertEqual(with_output.stdout, b"")
         saved = json.loads((self.folder / "page.json").read_bytes())
         self.assertEqual(saved["page_cache"], "stored")
