@@ -1,6 +1,6 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期为 2026-11-13，源码基线为 `08fe335` 加本轮工作区变更，Skill 版本为 `20261114.2127.4001`。运行约束见 [SKILL.md](../../skills/docx/SKILL.md)。
+> 文档核对日期为 2026-11-16，源码基线为 `8235397` 加本轮工作区变更，Skill 版本为 `20261116.1353.3706`。运行约束见 [SKILL.md](../../skills/docx/SKILL.md)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -84,7 +84,7 @@ flowchart TD
 | [create_docx.py](../../skills/docx/scripts/create_docx.py) | `_validate_spec`、`_package_parts` 构建规范化规格与 ZIP 部件；`create_document_delivery()` 默认验证并归档。低层 `create_document()` 默认 `verify=False`，不能据此假定完成标准交付闭环。 |
 | [docx_create_common.py](../../skills/docx/scripts/docx_create_common.py)、[docx_create_validation.py](../../skills/docx/scripts/docx_create_validation.py)、[docx_create_xml.py](../../skills/docx/scripts/docx_create_xml.py) | 同包内部职责模块：共享格式约束、规格/图片校验和 OOXML 组包；原 `create_docx.py` 的公开/兼容入口继续可用，不依赖相邻 Skill。 |
 | [read_docx.py](../../skills/docx/scripts/read_docx.py) | 文件名直接返回完整要素，加 `--section` 按章节返回。文本、显式结构和精简视图按需选用。报告与精简视图共享源绑定分页。 |
-| [docx_read_pages.py](../../skills/docx/scripts/docx_read_pages.py) | 报告按源和选项复用任务内的解析结果。读完末页或显式释放游标后清理缓存。 |
+| [docx_read_pages.py](../../skills/docx/scripts/docx_read_pages.py) | 报告按源和选项复用任务内的解析结果。读完末页、已核实缓存的分页失败或显式释放游标后清理；CLI 输出失败同样释放本轮缓存。 |
 | [docx_read_elements.py](../../skills/docx/scripts/docx_read_elements.py) | 选择兼容分支，读取存储对象及锚点；调用同包的表格、图表缓存和显式编号解析。 |
 | [run_docx_edit.py](../../skills/docx/scripts/run_docx_edit.py) | `text/structure/tables/image/comments` 五类编辑及 `format-checked` 候选核验发布，stdin 接收操作规格；批注 `list` 使用原只读入口。 |
 | [format_guard.py](../../skills/docx/scripts/format_guard.py) | 核对指定普通正文 run 的受控格式差异；structure 格式阶段及候选发布模式复用，不支持任意 OOXML 修改。 |
@@ -181,7 +181,7 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --
 - 按 `coverage.block_start/block_end_exclusive` 的零起算半开范围收集连续块，核对 `selected_total_blocks`，直到 `has_more=false`、`next_cursor=null`。`selected_view_complete` 仅表示本次响应是否覆盖整个所选视图；末页不等于已收集前页。
 - `coverage.document_complete` 始终 false。保留 `limitations/omissions`：默认表格两行预览、相关部件计数或 200 字符预览不会因分页结束变成全文；完整表格文本需 `--tables rows`，仍非布局或合并保真。
 - API `read_docx_page()` 与 CLI 复用安全快照及分页实现，`serialize_docx_page()` 返回用于预算核对的精确 JSON（含换行）；调用方重新美化可能超预算。`-o` 保存同一预算结果，不自动归档。
-- 报告续读重新核对源 SHA-256，并复用仍有效的任务内缓存。`page_cache=stored` 表示保存成功，`page_cache=reused` 表示续读命中。读完末页自动清理。提前结束时在原任务目录执行 `read_docx.py --release-cursor '上次next_cursor原值'`。缓存不存在时可按源重新解析。
+- 报告续读重新核对源 SHA-256，并复用仍有效的任务内缓存。`page_cache=stored` 表示保存成功，`page_cache=reused` 表示续读命中。读完末页自动清理。已核实缓存的分页失败、首次或续页输出失败及可捕获中断也清理；成功非末页保留有效缓存供继续读取。源/选项尚未通过检查、身份或内容变化的缓存不认领、不删除。强杀/宿主崩溃无法保证自动收尾。提前结束时在原任务目录执行 `read_docx.py --release-cursor '上次next_cursor原值'`。缓存不存在时可按源重新解析。
 - 新模式对任务内相对路径逐层安全打开，拒绝绝对/父目录路径、符号链接及非普通文件；源指纹、ZIP/XML 校验与解析使用同一内存快照。游标校验不是签名、访问授权或防恶意伪造机制。
 
 详见 [读取契约](../../skills/docx/references/inspection.md) 与 [读取实现](../../skills/docx/scripts/read_docx.py)。
@@ -243,3 +243,8 @@ python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --
 ### 最终交付入口边界
 
 正式创建和编辑 runner/交付 API 自动收尾。明确交付完整读取结果时用 `read_docx.py 文件.docx -o 结果.json --delivery`，纯文本使用 `--format text -o 结果.txt --delivery`。未加 `--delivery` 的读取导出、低层 pack/comment/merge_runs 和 Path 返回 API 仅产生内部文件。格式候选走 `format-checked` 验收。其他已验收最终文件用本包 `archive_delivery.py` 处理显式清单，归档重试使用已验收主文件。
+
+
+## 2026-11-16 读取缓存异常收尾
+
+修复首次与续页输出交接不对称、文本 stdout 延迟刷新失败及分页异常导致的中间缓存残留。只清理已核实的本轮游标文件，原件、已有输出、其他并行游标及变更文件保留；不扫描历史残留。详细复现与本机验证见 [读取缓存清理验收](../maintenance/docx/read-cache-cleanup-20261116.md)。未调整公共生命周期副本或运行包文件边界。

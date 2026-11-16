@@ -7,7 +7,7 @@ import json
 import os
 import re
 import stat
-import uuid
+import secrets
 
 
 HEX_DIGEST = re.compile(r"[0-9a-f]{64}")
@@ -291,15 +291,21 @@ def report_page(position, budget, parse):
     if position.cache is not None:
         with _open_cache(position) as cached:
             if cached is not None:
+                drop_cache = False
                 try:
-                    page = _report_page(dict(cached.data, page_cache="reused"), position, budget)
-                except ValueError:
-                    # Retain the cursor on a genuine budget error. If only the
-                    # cache token is too large, return the legacy-size page.
-                    page = _report_page(cached.data, replace(position, cache=None), budget)
+                    try:
+                        page = _report_page(dict(cached.data, page_cache="reused"), position, budget)
+                    except ValueError:
+                        # If only the cache token is too large, return the
+                        # legacy-size page; it no longer needs this cache.
+                        page = _report_page(cached.data, replace(position, cache=None), budget)
+                        drop_cache = True
+                except BaseException:
+                    # The cache has already passed ownership/content checks.
+                    # A failed page must not retain intermediate report data.
                     cached.remove()
-                    return page
-                if not page["has_more"]:
+                    raise
+                if drop_cache or not page["has_more"]:
                     cached.remove()
                 return page
 
@@ -308,7 +314,7 @@ def report_page(position, budget, parse):
     page = _report_page(data, position, budget)
     if not page["has_more"] or not _cache_supported():
         return page
-    pending = replace(position, cache=CacheReference(uuid.uuid4().hex, "0" * 64))
+    pending = replace(position, cache=CacheReference(secrets.token_hex(16), "0" * 64))
     try:
         saved = _report_page(dict(data, page_cache="stored"), pending, budget)
     except ValueError:

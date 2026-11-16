@@ -880,7 +880,7 @@ def main(argv: list[str] | None = None) -> int:
             data = read_docx_report(args.input, max_output_bytes=budget,
                                     cursor=args.cursor, revisions=args.revisions or "accepted", header_rows=overrides,
                                     section=args.section, section_occurrence=args.section_occurrence)
-            if data.get("page_cache") == "stored":
+            if data.get("page_cache") in ("stored", "reused"):
                 unpublished_cursor = data["next_cursor"]
             text = serialize_docx_page(data)
         elif using_fastpath:
@@ -934,19 +934,25 @@ def main(argv: list[str] | None = None) -> int:
                 sys.stdout.buffer.flush()
         else:
             sys.stdout.write(text)
+            if unpublished_cursor is not None:
+                sys.stdout.flush()
     except UnsupportedInputError as exc:
         if report_mode or args.format == "json":
             print(json.dumps({"status": "unsupported", "message": str(exc)}, ensure_ascii=False))
         else:
             print("unsupported: " + str(exc), file=sys.stderr)
         return 1
-    except (ValueError, OSError, zipfile.BadZipFile) as exc:
+    except BaseException as exc:
+        # A page is handed off only after its output is written and flushed.
+        # Abort paths include interrupted writes and unexpected serializer errors.
         if unpublished_cursor is not None:
             try:
                 release_cursor(unpublished_cursor)
             except (ValueError, OSError) as cleanup_error:
                 parser.error(f"{exc}. Report page cache cleanup incomplete: {cleanup_error}")
-        parser.error(str(exc))
+        if isinstance(exc, (ValueError, OSError, zipfile.BadZipFile)):
+            parser.error(str(exc))
+        raise
     return 0
 
 

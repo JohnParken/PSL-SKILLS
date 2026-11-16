@@ -213,3 +213,105 @@ class ReportPageCacheTests(unittest.TestCase):
         self.assertIn("cannot publish output", diagnostics.getvalue())
         self.assertFalse((self.folder / "page.json").exists())
         self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
+
+    def test_failed_continuation_export_releases_only_its_cache(self):
+        first = self.read()
+        owned = self.cache()
+        second = self.read()
+        other = next(path for path in self.folder.glob(".docx-report-*.cache") if path != owned)
+        other_raw = other.read_bytes()
+        original = self.source.read_bytes()
+        destination = self.folder / "page.json"
+        destination.write_bytes(b"existing user result")
+        with (
+            _task_directory(self.folder),
+            patch.object(read_docx, "atomic_write_bytes", side_effect=OSError("cannot publish continuation")),
+            redirect_stderr(io.StringIO()),
+            self.assertRaises(SystemExit),
+        ):
+            read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
+        self.assertFalse(owned.exists())
+        self.assertEqual(other.read_bytes(), other_raw)
+        self.assertEqual(self.source.read_bytes(), original)
+        self.assertEqual(destination.read_bytes(), b"existing user result")
+        with _task_directory(self.folder):
+            docx_read_pages.release_cursor(second["next_cursor"])
+
+    def test_successful_continuation_export_keeps_active_cache(self):
+        first = self.read()
+        owned = self.cache()
+        with _task_directory(self.folder):
+            result = read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
+        self.assertEqual(result, 0)
+        self.assertTrue(owned.exists())
+        self.assertTrue((self.folder / "page.json").exists())
+        last = self.read(cursor=first["next_cursor"], max_output_bytes=2000000)
+        self.assertFalse(last["has_more"])
+        self.assertFalse(owned.exists())
+
+    def test_stdout_flush_failure_and_interrupt_release_cache(self):
+        for error in (BrokenPipeError("closed pipe"), KeyboardInterrupt(), RuntimeError("sink failure")):
+            with self.subTest(error=type(error).__name__):
+                stream = io.StringIO()
+                expected = SystemExit if isinstance(error, OSError) else type(error)
+                with (
+                    _task_directory(self.folder),
+                    patch.object(read_docx.sys, "stdout", stream),
+                    patch.object(stream, "flush", side_effect=error),
+                    redirect_stderr(io.StringIO()),
+                    self.assertRaises(expected),
+                ):
+                    read_docx.main([self.source.name, "--max-output-bytes", "2200"])
+                self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
+
+    def test_binary_stdout_flush_failure_releases_reused_cache(self):
+        first = self.read()
+        class Output:
+            """Minimal binary output sink with a delayed error."""
+            buffer = io.BytesIO()
+        with (
+            _task_directory(self.folder),
+            patch.object(read_docx.sys, "stdout", Output()),
+            patch.object(Output.buffer, "flush", side_effect=BrokenPipeError("closed binary pipe")),
+            redirect_stderr(io.StringIO()),
+            self.assertRaises(SystemExit),
+        ):
+            read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"]])
+        self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
+
+    def test_serializer_failure_releases_new_cache(self):
+        with (
+            _task_directory(self.folder),
+            patch.object(read_docx, "serialize_docx_page", side_effect=RuntimeError("serialization failure")),
+            self.assertRaisesRegex(RuntimeError, "serialization failure"),
+        ):
+            read_docx.main([self.source.name, "--max-output-bytes", "2200"])
+        self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
+
+    def test_failed_verified_page_releases_cache(self):
+        first = self.read()
+        with self.assertRaisesRegex(ValueError, "too small"):
+            self.read(cursor=first["next_cursor"], max_output_bytes=128)
+        self.assertFalse(list(self.folder.glob(".docx-report-*.cache")))
+        # The original cursor can safely rebuild from the unchanged source.
+        rebuilt = self.read(cursor=first["next_cursor"], max_output_bytes=2000000)
+        self.assertFalse(rebuilt["has_more"])
+
+    def test_changed_cache_during_output_failure_is_preserved_and_reported(self):
+        first = self.read()
+        owned = self.cache()
+        changed = b"do not delete changed data"
+        def fail_output(*_args):
+            owned.write_bytes(changed)
+            raise OSError("output failed")
+        diagnostics = io.StringIO()
+        with (
+            _task_directory(self.folder),
+            patch.object(read_docx, "atomic_write_bytes", side_effect=fail_output),
+            redirect_stderr(diagnostics),
+            self.assertRaises(SystemExit),
+        ):
+            read_docx.main([self.source.name, "--max-output-bytes", "2200", "--cursor", first["next_cursor"], "-o", "page.json"])
+        self.assertEqual(owned.read_bytes(), changed)
+        self.assertIn("cleanup incomplete", diagnostics.getvalue())
+        self.assertIn("output failed", diagnostics.getvalue())

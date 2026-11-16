@@ -112,6 +112,8 @@ Python 调用 `read_docx_report(path, max_output_bytes=None)` 获取全量，可
 
 末页读取成功后清理该游标的缓存。提前结束或源变更后放弃本轮时，在同一任务目录执行 `python -I -S -B "<skill-root>/scripts/read_docx.py" --release-cursor '本轮next_cursor原值'`。结果为 `released`、`already_absent` 或 `not_required`，分别表示已清理、已不存在或原游标无缓存。源文件、交付物和其他游标的缓存不参与清理。只读报告缓存不进入归档。
 
+已通过归属及内容校验的缓存发生分页失败时立即清理；CLI 首次/续页序列化、落盘、stdout 写入或刷新失败（含可捕获中断）同样释放本轮游标。成功输出非末页时保留缓存供续读，不将正常待续读视为残留。源或选项检查尚未通过时不认领缓存；改动、替换、链接或无法核实的缓存保留并报告 cleanup incomplete，不扫描同名前缀历史文件。已释放缓存的原游标可从未变化的输入重新解析。SIGKILL、宿主崩溃及用户停止继续调用时不能保证自动收尾，应以原游标显式释放；不删除用户保存的 `-o` 结果。
+
 完整要素结果可用 `-o 结果.json` 保存。明确交付时可同时加 `--delivery`，回执的 `read_status` 和 `issues` 与归档状态分别核对。原先解析无选项纯文本 stdout 的调用改用 `--format text`，Python 的 `read_docx()` 仍返回纯文本。
 
 | 块类型 | 读取范围和用法 |
