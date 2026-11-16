@@ -65,7 +65,12 @@ class NestedRows:
             self.stack.append(self.frame(1, start))
         if depth > self.stack[-1]['depth']:
             parent = self.stack[-1]
-            if depth != parent['depth'] + 1 or not parent['chunks']:
+            # A closed preceding cell also proves the next cell's start.
+            # Only accept an immediate transition in the same open row;
+            # never synthesize ancestors or replace their source CPs.
+            after_cell = (bool(parent['cells']) and not parent['children']
+                          and parent['cell_start'] == start)
+            if depth != parent['depth'] + 1 or not (parent['chunks'] or after_cell):
                 self.reject(start, 'parent_cell_start_unverified')
                 return
             self.stack.append(self.frame(depth, start))

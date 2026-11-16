@@ -143,6 +143,72 @@ class NestedTableTests(unittest.TestCase):
                 self.assertEqual(child['row_fragments'][0]['cells'][0]['text'], 'A')
                 self.assertEqual(child['tables'][0]['row_count'], 1)
 
+    def test_child_at_next_parent_cell_start_uses_closed_cell_boundary(self):
+        result = read_segments(('先😀\x07', props(1)), ('子😀\r', props(2, cell=True)),
+                               ('\r', props(2, row=True)), ('\x07', props(1)),
+                               ('\x07', props(1, row=True)), ('\r', b''))
+        evidence = result['binary_table_structure']['nested_row_evidence']
+        self.assertEqual(evidence['issue_count'], 0)
+        cells = evidence['rows'][0]['cells']
+        self.assertEqual([cell['text'] for cell in cells], ['先😀', ''])
+        self.assertEqual(cells[0]['nested_tables'], [])
+        self.assertEqual(cells[0]['source'], {'cp_start': 0, 'cp_end': 4})
+        self.assertEqual(cells[1]['source'], {'cp_start': 4, 'cp_end': 10})
+        table = cells[1]['nested_tables'][0]['tables'][0]
+        self.assertEqual(table['source'], {'cp_start': 4, 'cp_end': 9})
+        self.assertEqual(table['parent_cell_source'], cells[1]['source'])
+        self.assertEqual(table['parent_cell_status'], 'stored_boundaries')
+        self.assertEqual(result['status'], 'partial')
+        self.assertIn('子😀', result['text'])
+
+    def test_depth_three_next_cell_and_empty_leading_parent_paragraph(self):
+        result = read_segments(('\r', props(1)), ('先\r', props(2, cell=True)),
+                               ('内\r', props(3, cell=True)), ('\r', props(3, row=True)),
+                               ('\r', props(2, cell=True)), ('\r', props(2, row=True)),
+                               ('\x07', props(1)), ('\x07', props(1, row=True)), ('\r', b''))
+        evidence = result['binary_table_structure']['nested_row_evidence']
+        self.assertEqual(evidence['issue_count'], 0)
+        outer = evidence['rows'][0]['cells'][0]
+        middle = outer['nested_tables'][0]['row_fragments'][0]['cells']
+        self.assertEqual([cell['text'] for cell in middle], ['先', ''])
+        self.assertEqual(middle[0]['nested_tables'], [])
+        child = middle[1]['nested_tables'][0]
+        self.assertEqual(child['row_fragments'][0]['cells'][0]['text'], '内')
+        self.assertEqual(child['tables'][0]['parent_cell_source'], middle[1]['source'])
+
+    def test_next_cell_boundary_needs_adjacency_and_unbroken_evidence(self):
+        for interruption in ('gap', 'unknown', 'field', 'outside', 'closed_row'):
+            with self.subTest(interruption=interruption):
+                reader = NestedRows()
+                reader.feed('A', '\x07', 0, 2, {'depth': 1, 'in_table': 1})
+                start = 2
+                if interruption == 'gap':
+                    start = 3
+                elif interruption == 'closed_row':
+                    reader.feed('', '\x07', 2, 3, {'depth': 1, 'in_table': 1, 'row_end': 1})
+                    start = 3
+                else:
+                    changed = {'depth': 1, 'in_table': 1}
+                    if interruption == 'unknown':
+                        changed['structure_unknown'] = True
+                    elif interruption == 'outside':
+                        changed = {'depth': 0, 'in_table': 0}
+                    reader.feed('', '\r', 2, 3, changed, interruption == 'field')
+                    start = 3
+                reader.feed('B', '\r', start, start + 2, {'depth': 2, 'in_table': 1, 'inner_cell': 1})
+                self.assertEqual(reader.finish(start + 2)['rows'], [])
+                self.assertTrue(any(issue['reason'] == 'parent_cell_start_unverified' for issue in reader.issues))
+
+    def test_child_without_leading_paragraph_still_requires_complete_ancestors(self):
+        for ending in ((), (('\x07', props(1)),), (('\x07', props(1, row=True)),)):
+            with self.subTest(ending=ending):
+                result = read_segments(('A\x07', props(1)), ('B\r', props(2, cell=True)),
+                                       ('\r', props(2, row=True)), *ending, ('\r', b''))
+                evidence = result['binary_table_structure']['nested_row_evidence']
+                self.assertEqual(evidence['rows'], [])
+                self.assertGreater(evidence['issue_count'], 0)
+                self.assertIn('B', result['text'])
+
     def test_nested_budget_is_explicit(self):
         reader = NestedRows()
         reader.feed('父', '\r', 0, 2, {'depth': 1, 'in_table': 1})

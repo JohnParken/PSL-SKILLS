@@ -1,6 +1,6 @@
 ---
 name: wps
-version: "20261115.2340.3260"
+version: "20261116.0722.3668"
 description: 读取 .wps、.rtf 和旧版 .doc 的文字及表格。最大模式可补读表格分组与合并、绘图、文本框、内嵌 PNG 和部分二进制图表缓存。按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。原生 DOCX（含 WPS 保存）优先使用 docx。
 ---
 
