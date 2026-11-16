@@ -8,7 +8,6 @@ This is not a universal speedup claim or a ZIP-I/O/real-user workload benchmark.
 import argparse
 import hashlib
 from pathlib import Path
-import platform
 import pyexpat
 import statistics
 import sys
@@ -40,7 +39,7 @@ def benchmark(before, after, rows, repeats):
     base = new.create(formulas).parts
     patch = spec({f'A{row}': {'value': row + 1} for row in range(1, rows + 1)})
     result = {
-        'environment': {'platform': platform.platform(), 'machine': platform.machine(),
+        'environment': {'platform': sys.platform, 'machine': 'not_probed', 'platform_source': 'sys.platform',
                         'python': sys.version, 'expat': pyexpat.EXPAT_VERSION},
         'source_sha256': {'before': before_hash, 'after': after_hash},
         'rows': rows, 'create_cells': rows * 3, 'source_cells': rows * 2,

@@ -1,5 +1,5 @@
 {
-  "origin": "DOCX 20261113.2302.5108; unified archive-delivery-v2 explicit delivery API",
+  "origin": "DOCX 20261116.1353.3706; unified archive-delivery-v2 explicit delivery API",
   "policy": "Explicit vendored distribution; repository parity test must pass for changes to either copy. No runtime cross-skill imports.",
   "files": [
     {
@@ -15,12 +15,12 @@
     {
       "file": "artifact_files.py",
       "mode": "exact",
-      "sha256": "8bd1ee26556e92ba5f022dff7a1c3b5cd9f2647a0d2a1296e7e74024f6d66861"
+      "sha256": "21fd6ec9d5995f0544b63ef897cf0ee0a74f94c8d702b6fd307b0717cd85e098"
     },
     {
       "file": "controlled_cleanup.py",
       "mode": "exact",
-      "sha256": "3109414eb63b31042d833f0454ede81dfb525432e19d80647425c3cb4cdb0803"
+      "sha256": "576f8bd25a48ec627da10548f779cd3c34051d15b891b065d06c76347bb5f90c"
     },
     {
       "file": "cleanup_task.py",

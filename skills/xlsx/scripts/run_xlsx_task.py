@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
-import uuid
+import secrets
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _artifact_runtime.controlled_cleanup import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, finalize_failed_cleanup, _unique_object, _normalize_protected_path
@@ -30,7 +30,7 @@ def _stream_evidence(value, *, structured=False):
 
 def _run_child(script, arguments):
     """Preserve process outcome and explicit stream evidence without raw log leakage."""
-    invocation = uuid.uuid4().hex
+    invocation = secrets.token_hex(16)
     try:
         child = subprocess.run([sys.executable, '-I', '-S', '-B', str(Path(__file__).with_name(script)), *arguments],
                                capture_output=True, text=True, timeout=120)
@@ -117,7 +117,7 @@ def _run_task(specification):
     output = choose_delivery_output(output, protected_inputs=protected)
     arguments = list(arguments)
     arguments[output_index] = output.as_posix()
-    workspace = 'xlsx-task-' + uuid.uuid4().hex
+    workspace = 'xlsx-task-' + secrets.token_hex(16)
     manifest = workspace + '.cleanup.json'
     paths = {key: workspace + '.' + key + '.json' for key in configs}
     resolved = []

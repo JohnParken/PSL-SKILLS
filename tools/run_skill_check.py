@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-import uuid
+import secrets
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_LIMIT = 65536
@@ -35,7 +35,7 @@ JSON_CHECKS = frozenset(('xlsx', 'artifact-lifecycle', 'pptx'))
 
 
 def envelope(check_id, check_kind='environment'):
-    return {'schema_version': 'skill_check_execution_v1', 'invocation_id': uuid.uuid4().hex,
+    return {'schema_version': 'skill_check_execution_v1', 'invocation_id': secrets.token_hex(16),
             'check_id': check_id, 'check_kind': check_kind, 'artifact_validation': 'not_run',
             'execution_status': 'not_started', 'check_status': 'not_run',
             'argv': [], 'exit_code': None, 'returncode': None,

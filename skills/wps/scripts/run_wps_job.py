@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
-import uuid
+import secrets
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _wps_artifact_runtime.archive_delivery import validate_input_path, validate_output_path
@@ -23,7 +23,7 @@ def check_environment():
     import read_wps
     import wps_rtf_builder
     import docx_to_wps_rtf
-    path = 'wps-lifecycle-probe-' + uuid.uuid4().hex + '.json'
+    path = 'wps-lifecycle-probe-' + secrets.token_hex(16) + '.json'
     with TaskFiles() as task:
         with task.parent(path) as (parent, name):
             descriptor = os.open(name, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
@@ -98,7 +98,7 @@ def _command(spec):
 
 def run_job(spec):
     script, arguments, output, protected, configs = _command(spec)
-    prefix = 'wps-job-' + uuid.uuid4().hex
+    prefix = 'wps-job-' + secrets.token_hex(16)
     manifest = prefix + '.cleanup.json' if configs else None
     paths = {key: prefix + '.' + key + '.json' for key in configs}
     arguments = [paths[item[1:]] if item.startswith('@') else item for item in arguments]

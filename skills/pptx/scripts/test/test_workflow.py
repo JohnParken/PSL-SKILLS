@@ -297,13 +297,12 @@ class WorkflowTests(unittest.TestCase):
     def test_archive_declared_temporary_collision_preserves_existing_file(self) -> None:
         from artifact_files import _copy_main_to_archive
         from output_location import OutputLocation
-        from types import SimpleNamespace
         source = self.root / "final.pptx"
         source.write_bytes(b"final")
         collision = self.root / (".archive-" + "a" * 32 + ".tmp")
         collision.write_bytes(b"other task")
         location = OutputLocation(output_dir=Path("output/job"), used_fallback=False, fallback_reason=None)
-        with patch("artifact_files.uuid.uuid4", return_value=SimpleNamespace(hex="a" * 32)):
+        with patch("artifact_files.secrets.token_hex", return_value="a" * 32):
             with self.assertRaises(FileExistsError):
                 _copy_main_to_archive(self.root, Path("final.pptx"), location, "final.pptx", source, [])
         self.assertEqual(collision.read_bytes(), b"other task")

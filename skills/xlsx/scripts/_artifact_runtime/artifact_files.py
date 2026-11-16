@@ -4,7 +4,7 @@ import os
 from pathlib import Path, PureWindowsPath
 import shutil
 import stat
-import uuid
+import secrets
 from .output_location import OutputLocation
 
 class ArchiveConflictError(FileExistsError):
@@ -78,7 +78,7 @@ def _copy_main_to_archive(task_dir: Path, main_output: Path, location: OutputLoc
     archive_mode = stat.S_IMODE(main_path.stat().st_mode)
 
     # Declare this invocation's candidate before exclusively creating it.
-    temporary_name = str(task_dir / f".archive-{uuid.uuid4().hex}.tmp")
+    temporary_name = str(task_dir / f".archive-{secrets.token_hex(16)}.tmp")
     descriptor = os.open(temporary_name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     info = os.fstat(descriptor)
     temporary_identity = (info.st_dev, info.st_ino)

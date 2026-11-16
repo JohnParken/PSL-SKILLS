@@ -9,7 +9,7 @@ import stat
 from pathlib import Path
 import struct
 import sys
-import uuid
+import secrets
 import zipfile
 from xml.etree import ElementTree as ET
 
@@ -37,6 +37,14 @@ ZHUQUE_FILES = {
     'NOTICE.txt': (8192, '40ff310b33f4f52ad32c07b9b30161c090e85a6e1a71f1363c83ebb1d8b10ccc'),
 }
 ET.register_namespace('ofd', NS)
+
+
+def _new_document_id():
+    """Return an uppercase UUID v4 hex ID without platform discovery."""
+    value = bytearray(secrets.token_bytes(16))
+    value[6] = (value[6] & 0x0F) | 0x40
+    value[8] = (value[8] & 0x3F) | 0x80
+    return value.hex().upper()
 
 
 def element(name, parent=None, text=None, **attributes):
@@ -397,7 +405,7 @@ class Builder:
         ofd = element('OFD', Version='1.0', DocType='OFD')
         body = element('DocBody', ofd)
         info = element('DocInfo', body)
-        doc_id = uuid.uuid4().hex.upper()
+        doc_id = _new_document_id()
         element('DocID', info, doc_id)
         if 'title' in self.spec:
             element('Title', info, xml_string(self.spec['title'], 256))
@@ -450,7 +458,7 @@ def publish_new(data, output, validator):
     except (OSError, ValueError, TypeError) as exc:
         exc.publication = outcome.copy()
         raise
-    temporary = '._ofd_candidate_' + uuid.uuid4().hex + '.ofd'
+    temporary = '._ofd_candidate_' + secrets.token_hex(16) + '.ofd'
     descriptor = None
     identity = None
     outcome['cleanup_complete'] = False

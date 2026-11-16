@@ -19,7 +19,7 @@ import tempfile
 import threading
 import unittest
 from unittest.mock import patch
-import uuid
+import secrets
 import zipfile
 import zlib
 
@@ -92,8 +92,20 @@ def spec_fixture():
 
 
 class GenerationTests(unittest.TestCase):
+    def test_document_id_preserves_uuid_v4_bits_without_uname(self):
+        for fill in (0, 255):
+            with self.subTest(fill=fill), patch.object(WRITER.secrets, "token_bytes", return_value=bytes([fill]) * 16):
+                value = WRITER._new_document_id()
+            self.assertEqual(len(value), 32)
+            self.assertEqual(value, value.upper())
+            raw = bytes.fromhex(value)
+            self.assertEqual(raw[6] >> 4, 4)
+            self.assertEqual(raw[8] >> 6, 2)
+            self.assertEqual(raw[:6], bytes([fill]) * 6)
+            self.assertEqual(raw[9:], bytes([fill]) * 7)
+
     def setUp(self):
-        self.root = Path(tempfile.gettempdir()) / ('ofd-generate-test-' + uuid.uuid4().hex)
+        self.root = Path(tempfile.gettempdir()) / ('ofd-generate-test-' + secrets.token_hex(16))
         self.names = ['font.ttf', 'license.txt', 'image.png', 'spec.json', 'new.ofd', 'link.ofd', 'sentinel.txt']
         self.registered = [self.root / name for name in self.names]
         self.root.mkdir(mode=0o700)

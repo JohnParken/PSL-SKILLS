@@ -9,7 +9,7 @@ import importlib.util
 import tempfile
 import unittest
 from unittest import mock
-import uuid
+import secrets
 from xml.etree import ElementTree as ET
 
 BASE_SPEC = importlib.util.spec_from_file_location('ofd_structure_helpers', Path(__file__).with_name('test_ofd.py'))
@@ -20,7 +20,7 @@ READER = BASE.READER
 
 class StructureTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(tempfile.gettempdir()) / ('ofd-structure-test-' + uuid.uuid4().hex)
+        self.root = Path(tempfile.gettempdir()) / ('ofd-structure-test-' + secrets.token_hex(16))
         self.path = self.root / 'input.ofd'
         self.registered = {self.path}
         self.assertFalse(self.root.exists())

@@ -13,7 +13,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-import uuid
+import secrets
 
 if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -479,7 +479,7 @@ def _create_task(spec, output, *, protected_inputs=(), workspace=None):
     output = _delivery_output_path(Path.cwd(), str(output)).as_posix()
     protected = [Path(p).as_posix() for p in protected_inputs]
     output = choose_delivery_output(Path(output), protected_inputs=protected).as_posix()
-    workspace = workspace or 'docx-task-' + uuid.uuid4().hex
+    workspace = workspace or 'docx-task-' + secrets.token_hex(16)
     if not isinstance(workspace, str) or '/' in workspace or '\\' in workspace or workspace in ('', '.', '..'):
         raise ValueError('Workspace must be a new single task-relative filename prefix')
     manifest = workspace + '.cleanup.json'

@@ -9,7 +9,7 @@ import json
 import os
 import re
 import stat
-from uuid import uuid4
+from secrets import token_hex
 
 PARSER_VERSION = 'tl-report-5'
 MAX_BYTES = 64 * 1024 * 1024
@@ -89,7 +89,7 @@ def store(root, source_sha256, options, report_data):
         raise ValueError('Read cache source requires a SHA-256 digest')
     _validate_report(report_data)
     option_hash = _options(options)
-    session = uuid4().hex
+    session = token_hex(16)
     name = f'.tl-docx-read-{session}.cache'
     # Record intent and absence before exclusive creation; no directory scan.
     try:

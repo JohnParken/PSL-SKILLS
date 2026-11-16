@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 import sys
-import uuid
+import secrets
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cleanup_task import TaskFiles, plan_cleanup, seal_cleanup, cleanup_task, _unique_object
 from run_docx_task import task_environment, _finish_delivery, finish_failed_task, MAX_TASK_BYTES
@@ -57,7 +57,7 @@ def _edit_task(kind, source, output, specification, *, replacement=None):
     raw = json.dumps(specification, ensure_ascii=False, allow_nan=False).encode('utf-8')
     if len(raw) > MAX_TASK_BYTES:
         raise ValueError('Edit specification exceeds 2 MiB')
-    prefix = 'docx-edit-' + uuid.uuid4().hex
+    prefix = 'docx-edit-' + secrets.token_hex(16)
     config, manifest = prefix + '.spec.json', prefix + '.cleanup.json'
     plan_cleanup(manifest, files=[config], protected=[p.as_posix() for p in protected], deliverables=[output.as_posix()])
     result = None

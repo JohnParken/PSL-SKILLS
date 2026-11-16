@@ -7,7 +7,6 @@ See tests/skill_loading_benchmark.md for scope and reproducible commands.
 import argparse
 import hashlib
 import json
-import platform
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
@@ -269,7 +268,7 @@ def build_report(baseline=BASELINE, encoder=None, tokenizer=None):
                                                         for unit in ('chars', 'bytes', 'tokens', 'read_events')})
     return dict(schema_version=3, benchmark_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                 method='planned reference read events, not observed model routing', baseline_commit=revision,
-                after_source='working tree; per-file SHA256 recorded', platform=platform.system(), python=platform.python_version(),
+                after_source='working tree; per-file SHA256 recorded', platform=sys.platform, python=".".join(map(str, sys.version_info[:3])),
                 tokenizer=tokenizer or dict(status='not_measured'), host_usage=dict(status='not_measured',
                 reason='No Deep Agents trace, provider usage or model-visible tool payload captured.'), profiles=profiles,
                 limitations=['Characters and bytes are proxies only; no conversion to token estimates.',

@@ -11,7 +11,6 @@ import importlib.util
 import json
 import os
 from pathlib import Path
-import platform
 import re
 import shutil
 import struct
@@ -205,7 +204,7 @@ def main():
             row.pop('seconds')
             row['repeats'] = args.repeats
             results.append(row)
-    report = {'label': args.label, 'platform': platform.platform(), 'python': sys.version,
+    report = {'label': args.label, 'platform': sys.platform, 'python': sys.version,
               'baseline_ref': args.baseline_ref,
               'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
               'method': 'Already-parsed synthetic result projections; per-page sorting/encoding included; parsing and subprocess startup excluded.',

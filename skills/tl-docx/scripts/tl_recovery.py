@@ -7,7 +7,7 @@ import json
 import os
 import re
 import stat
-from uuid import uuid4
+from secrets import token_hex
 
 from tl_io import check_platform, output_name, read_task
 
@@ -90,7 +90,7 @@ def publish(root, name, data, *, status, finalize, task_id=None):
     """Publish validated bytes exclusively and retire only positively owned files."""
     if task_id is not None and not re.fullmatch(r'[0-9a-f]{32}', task_id):
         raise ValueError('Task ID must contain 32 lowercase hexadecimal digits')
-    manifest = '.tl-docx-' + (task_id or uuid4().hex) + '.cleanup.json'
+    manifest = '.tl-docx-' + (task_id or token_hex(16)) + '.cleanup.json'
     stage = stage_name(manifest)
     digest = sha256(data).hexdigest()
     journal_id = stage_id = delivery = None

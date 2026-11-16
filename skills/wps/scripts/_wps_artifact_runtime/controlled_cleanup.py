@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 import stat
-import uuid
+import secrets
 
 SCHEMA = "docx_cleanup_v1"
 MAX_ENTRIES = 2048
@@ -135,7 +135,7 @@ class TaskFiles:
         if len(raw) > MAX_MANIFEST_BYTES:
             raise ValueError("Manifest exceeds size budget")
         with self.parent(path) as (parent, name):
-            temporary = ".docx-cleanup-" + uuid.uuid4().hex + ".tmp"
+            temporary = ".docx-cleanup-" + secrets.token_hex(16) + ".tmp"
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
                                  0o600, dir_fd=self.root)
             try:

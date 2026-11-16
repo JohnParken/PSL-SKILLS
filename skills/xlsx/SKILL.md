@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261115.2323.4212"
+version: "20261116.1353.3706"
 description: 读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，适合区域统计、分组汇总、表间核对与公式子集计算。保留原件并报告缓存和未计算项；不做任意结构编辑或直接处理 XLS/XLSB、ET；多源填入既有模板交给 table-workflow。
 license: MIT
 ---

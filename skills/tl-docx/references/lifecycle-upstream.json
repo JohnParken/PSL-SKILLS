@@ -1,5 +1,5 @@
 {
-  "origin": "PSL-SKILLS artifact-lifecycle 20261113.2302.5108",
+  "origin": "PSL-SKILLS artifact-lifecycle 20261116.1353.3706",
   "origin_path": "skills/artifact-lifecycle/scripts",
   "license": "Repository-authored shared runtime, distributed under the same repository terms as its source.",
   "changes": "None; exact copies.",
@@ -10,7 +10,7 @@
     },
     {
       "file": "artifact_files.py",
-      "sha256": "8bd1ee26556e92ba5f022dff7a1c3b5cd9f2647a0d2a1296e7e74024f6d66861"
+      "sha256": "21fd6ec9d5995f0544b63ef897cf0ee0a74f94c8d702b6fd307b0717cd85e098"
     },
     {
       "file": "output_location.py",

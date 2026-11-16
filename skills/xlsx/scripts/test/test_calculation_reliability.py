@@ -10,7 +10,7 @@ import sys
 import tempfile
 import os
 import unittest
-import uuid
+import secrets
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -24,7 +24,7 @@ from xlsx_result_export import export_result
 class CalculationReliabilityTests(unittest.TestCase):
     def setUp(self):
         # Register exclusively owned maintenance paths before creating them.
-        self.root = Path(tempfile.gettempdir()) / ('xlsx_reliability_' + uuid.uuid4().hex)
+        self.root = Path(tempfile.gettempdir()) / ('xlsx_reliability_' + secrets.token_hex(16))
         self.owned = []
         self.root.mkdir()
         self.previous = Path.cwd()

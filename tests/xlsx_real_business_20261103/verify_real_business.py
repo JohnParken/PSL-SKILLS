@@ -16,7 +16,6 @@ from fractions import Fraction
 import hashlib
 import json
 from pathlib import Path
-import platform
 import posixpath
 import re
 import subprocess
@@ -302,8 +301,8 @@ def main():
     output = ROOT / args.output if args.output else None
     assert output is None or not output.exists(), 'Evidence output is exclusive; do not overwrite an earlier run'
     sources = json.loads((ROOT / 'sources.json').read_text(encoding='utf-8'))
-    results = {'executed_utc': datetime.now(timezone.utc).isoformat(), 'platform': platform.platform(),
-               'python': platform.python_version(), 'command': [sys.executable, '-I', '-S', '-B', *sys.argv],
+    results = {'executed_utc': datetime.now(timezone.utc).isoformat(), 'platform': sys.platform,
+               'python': ".".join(map(str, sys.version_info[:3])), 'command': [sys.executable, '-I', '-S', '-B', *sys.argv],
                'scope': 'original workbooks + independently labelled selected formula and derived transaction checks',
                'harness_sha256': digest(Path(__file__)), 'cache_is_oracle': False,
                'excel_recalculation_run': False, 'linux_validation_run': False, 'workbooks': []}

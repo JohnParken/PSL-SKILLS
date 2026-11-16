@@ -6,7 +6,6 @@ A skipped test is recorded, not silently presented as complete behavior coverage
 import argparse
 import json
 from pathlib import Path
-import platform
 import re
 import subprocess
 import sys
@@ -45,7 +44,7 @@ def main(argv=None):
             print(result.stdout, end="")
             print(result.stderr, end="", file=sys.stderr)
         print(json.dumps(item, ensure_ascii=False), flush=True)
-    report = {"platform": platform.platform(), "python": platform.python_version(), "expat": expat.EXPAT_VERSION,
+    report = {"platform": sys.platform, "python": ".".join(map(str, sys.version_info[:3])), "expat": expat.EXPAT_VERSION,
               "suites": reports, "tests": sum(item["tests"] for item in reports),
               "skipped": sum(item["skipped"] for item in reports),
               "ok": all(item["exit_code"] == 0 and item["tests"] > 0 for item in reports),

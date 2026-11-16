@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-import uuid
+import secrets
 import zipfile
 
 SPEC = importlib.util.spec_from_file_location('ofd_generation_helpers', Path(__file__).with_name('test_ofd_generate.py'))
@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class BundledFontTests(unittest.TestCase):
     def setUp(self):
-        self.directory = Path(tempfile.gettempdir()) / ('ofd-bundle-test-' + uuid.uuid4().hex)
+        self.directory = Path(tempfile.gettempdir()) / ('ofd-bundle-test-' + secrets.token_hex(16))
         self.registered = [self.directory / name for name in ('layout.json', 'result.ofd')]
         self.directory.mkdir(mode=0o700)
 

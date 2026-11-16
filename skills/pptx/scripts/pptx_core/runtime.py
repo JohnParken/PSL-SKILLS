@@ -9,12 +9,11 @@ import hashlib
 import json
 import math
 import os
-import platform
 import pyexpat
 import re
 import stat
 import sys
-import uuid
+import secrets
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 from urllib.parse import urlsplit
@@ -606,7 +605,8 @@ def environment() -> dict:
         raise TaskError("This release requires POSIX descriptor-relative file operations (Linux supported)", "environment_failed")
     task_directory()
     return {
-        "python": platform.python_version(), "platform": platform.system(), "expat": pyexpat.EXPAT_VERSION,
+        "python": ".".join(map(str, sys.version_info[:3])),
+        "platform": {"linux": "Linux", "darwin": "Darwin", "win32": "Windows"}.get(sys.platform, sys.platform), "expat": pyexpat.EXPAT_VERSION,
         "isolated": True, "site_packages": False, "bytecode_writes": False, "descriptor_relative_io": True,
         "third_party_python_dependencies": [], "external_programs": [],
     }
@@ -618,7 +618,7 @@ def check(*, write_probe: bool = False) -> dict:
     data = render_deck(Deck("Environment check", 1280, 720, "preserve", True, (PreparedSlide(svg, ""),)))
     summary = validate_presentation(data)
     if write_probe:
-        path = task_directory() / f"pptx-probe-{uuid.uuid4().hex}.tmp"
+        path = task_directory() / f"pptx-probe-{secrets.token_hex(16)}.tmp"
         created_identity = None
         try:
             created_identity = publish_exclusive(path, b"pptx-write-probe\n")

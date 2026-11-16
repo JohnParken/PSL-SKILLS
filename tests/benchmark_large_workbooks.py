@@ -8,7 +8,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import platform
 import pyexpat
 import statistics
 import subprocess
@@ -77,7 +76,7 @@ def main():
         parser.error('Supply baseline root; repeats=1..20 and rows=1..10000')
     roots = {'before': args.before_root.resolve(), 'after': args.after_root.resolve()}
     script = Path(__file__).resolve()
-    result = {'platform': platform.platform(), 'python': sys.version.split()[0], 'expat': pyexpat.EXPAT_VERSION,
+    result = {'platform': sys.platform, 'python': sys.version.split()[0], 'expat': pyexpat.EXPAT_VERSION,
               'repeats': args.repeats, 'target_rows': args.rows, 'target_key_columns': 2, 'names_stored_cells': args.names_rows * 2,
               'scope': 'Workflow.names/target: immutable input snapshot, CLI startup, complete parsing, IPC and result validation; '
                        'excludes dependency self-check/capability startup, fixture generation, ZIP writing and model/host usage',

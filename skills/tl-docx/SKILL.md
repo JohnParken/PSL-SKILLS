@@ -1,6 +1,6 @@
 ---
 name: tl-docx
-version: "20261114.2127.4001"
+version: "20261116.1353.3706"
 description: 使用 python-docx 读取 DOCX 或 DOTX 月报和复杂文档，提取正文、合并表格和图表保存值，按需核对结构与修订，支持导出报告。也可创建带多级编号和分节版式的 Word 文档，按明确目标填充模板、编辑副本或处理线程批注。
 dependency:
   python:

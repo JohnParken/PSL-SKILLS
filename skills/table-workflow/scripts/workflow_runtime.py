@@ -7,7 +7,7 @@ from pathlib import Path
 import stat
 import subprocess
 import sys
-import uuid
+import secrets
 
 MAX_FILE_BYTES = 64 * 1024 * 1024
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
@@ -99,7 +99,7 @@ def read_request(stream):
 
 
 def probe(directory):
-    path = Path(directory) / ('workflow-probe-' + uuid.uuid4().hex)
+    path = Path(directory) / ('workflow-probe-' + secrets.token_hex(16))
     # Explicitly register this unique, nonexistent probe before exclusive creation.
     task_path(path.as_posix(), output=True)
     created = False

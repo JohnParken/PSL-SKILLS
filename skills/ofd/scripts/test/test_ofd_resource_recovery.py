@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-import uuid
+import secrets
 
 SPEC = importlib.util.spec_from_file_location('ofd_recovery_helpers', Path(__file__).with_name('test_ofd.py'))
 BASE = importlib.util.module_from_spec(SPEC)
@@ -21,7 +21,7 @@ READER = BASE.READER
 
 class ResourceRecoveryTests(unittest.TestCase):
     def setUp(self):
-        self.directory = Path(tempfile.gettempdir()) / ('ofd-resource-recovery-' + uuid.uuid4().hex)
+        self.directory = Path(tempfile.gettempdir()) / ('ofd-resource-recovery-' + secrets.token_hex(16))
         self.path = self.directory / 'input.ofd'
         self.registered = (self.directory, self.path)
         self.directory.mkdir(mode=0o700)

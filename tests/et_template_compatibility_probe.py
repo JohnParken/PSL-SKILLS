@@ -9,7 +9,6 @@ from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
-import platform
 import struct
 import sys
 from urllib.parse import quote, urlsplit
@@ -201,7 +200,7 @@ def main():
                 passed = False
                 reports.append({'sample': entry['filename'], 'status': 'failed', 'message': str(error)})
     print(json.dumps({'status': 'passed' if passed else 'failed',
-                      'platform': platform.platform(), 'python': platform.python_version(),
+                      'platform': sys.platform, 'python': ".".join(map(str, sys.version_info[:3])),
                       'isolated': bool(sys.flags.isolated), 'no_site': bool(sys.flags.no_site),
                       'oracle_file_sha256': hashlib.sha256((ROOT / 'tests' / 'wps_source_oracle.py').read_bytes()).hexdigest(),
                       'samples': reports}, ensure_ascii=False, indent=2))

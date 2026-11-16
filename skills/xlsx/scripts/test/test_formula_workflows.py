@@ -11,7 +11,7 @@ import sys
 import tempfile
 import os
 import unittest
-import uuid
+import secrets
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
@@ -21,7 +21,7 @@ from xlsx_analysis import FormulaCalculationError, profile, summarize
 
 class FormulaWorkflowTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(tempfile.gettempdir()) / ('xlsx_formulas_' + uuid.uuid4().hex)
+        self.root = Path(tempfile.gettempdir()) / ('xlsx_formulas_' + secrets.token_hex(16))
         self.owned = []
         self.root.mkdir()
         self.previous = Path.cwd()

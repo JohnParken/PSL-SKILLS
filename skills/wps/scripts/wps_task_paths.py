@@ -9,7 +9,7 @@ from pathlib import Path
 import stat
 import sys
 import tempfile
-import uuid
+import secrets
 
 ACTIVE = ContextVar('wps_task_paths', default=None)
 WRITES = ContextVar('wps_candidate_writes', default=None)
@@ -209,7 +209,7 @@ def output_candidate(target, *, prefix='.tmp_wps_', exclusive=False):
         else:
             parent_info = os.fstat(parent)
             parent_identity = (parent_info.st_dev, parent_info.st_ino)
-            temporary = prefix + uuid.uuid4().hex + '.rtf'
+            temporary = prefix + secrets.token_hex(16) + '.rtf'
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
             candidate = Path(target).parent / temporary
         try:
