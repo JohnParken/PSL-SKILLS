@@ -1,7 +1,7 @@
 """Keep current and stored revision views separate in maximum reading results."""
 from wps_access import ParseError
 
-CONTENT_FIELDS = ('text', 'paragraphs', 'tables', 'blocks', 'related_stories')
+CONTENT_FIELDS = ('text', 'paragraphs', 'tables', 'blocks', 'related_stories', 'ooxml_charts', 'body_blocks')
 
 
 def _partial(result, code, message, *, stage='revision_view'):
@@ -23,21 +23,24 @@ def complete_maximum(data, result, *, revisions, reading_mode='maximum'):
     if result.get('status') not in ('ok', 'partial'):
         result['content_view'] = 'unavailable'
         return result
+    if 'ooxml_charts' in result:
+        result['maximum_reading'].update(chart_policy='stored_native_chart_xml_only',
+                                         object_policy='stored_native_charts_and_textboxes_not_rendered')
     if result.get('format') == 'ms_doc_subset':
         result['maximum_reading'].update(chart_policy='officeart_cache_only',
                                          object_policy='placeholder-with-optional-stored-png',
                                          stored_text_view='stored-text-revisions-unresolved')
         if reading_mode == 'content':
-            result['maximum_reading'].update(chart_policy='not_requested', object_policy='placeholder-with-stored-object-text')
+            result['maximum_reading'].update(chart_policy='officeart_cache_only', object_policy='placeholder-with-stored-object-text')
             result['content_reading'] = {
                 'scope': 'supported_stored_text_tables_related_and_object_text',
-                'not_requested': ['binary_image_payloads', 'binary_chart_caches', 'paragraph_layout_only'],
+                'not_requested': ['binary_image_payloads', 'paragraph_layout_only'],
                 'embedded_object_contents_complete': False,
                 'upgrade': '--reading-mode maximum',
             }
             _partial(result, 'binary_optional_content_not_requested',
-                     'Image payloads and chart caches were not inspected; object-only text or values may be missing. '
-                     'Use maximum for supported media/cache evidence; neither mode performs OCR or renders layout', stage='reading_scope')
+                     'Image payloads were not inspected; image-only text or unsupported chart values may be missing. '
+                     'Supported chart caches were requested; use maximum for media evidence; neither mode performs OCR or renders layout', stage='reading_scope')
         result['content_view'] = 'stored_text_not_verified_current'
         result['current_view_available'] = False
         _partial(result, 'current_revision_view_unresolved',

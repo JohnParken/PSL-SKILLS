@@ -1,7 +1,7 @@
 ---
 name: wps
-version: "20261116.1353.3706"
-description: 读取 .wps、.rtf 和旧版 .doc 的全文、表格、文本框及可提取对象文字，报告遗漏与修订边界。默认内容优先，图片、排版和二进制图表缓存按需读取。按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。原生 DOCX 优先使用 docx。
+version: "20261116.1522.4948"
+description: 读取 .wps、.rtf 和旧版 .doc 的全文、表格、文本框及可提取对象文字，报告遗漏与修订边界。默认回传有用内容及可读取图表保存值，图片和排版证据按需读取。按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。原生 DOCX 优先使用 docx。
 ---
 
 # WPS 文字读取、RTF 创建与受控重排
@@ -55,22 +55,26 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" check"
 ### 读取：默认全文，内容优先
 
 ```python
-# 默认 content：正文、表格、可提取对象文字与附加区域，完整 JSON
+# 默认 content：正文、表格、图表保存值与附加区域，精简内容 JSON
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps")
 # 完整结果过长时无损分片，不改成摘要或仅主文
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 8000 --max-output-bytes 12000")
-# 明确需要二进制图表保存值、PNG 证据或段落布局属性时才升级
+# 明确需要 PNG 证据或段落布局属性时才升级
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode maximum")
 # 只有用户明确只需概况或这段主文时才用 standard
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --summary")
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --paragraph-range 1:20")
 ```
 
+CLI 默认 `--profile content` 返回 `wps_content_v1`：正文、保留分组/合并的精简表格、可确认父子单元格的 `nested_content`、附加区域、图表保存值与归并遗漏提示，不倾倒关系ID、XML路径、二进制记录及密集诊断。OOXML 含表格时用 `body` 顺序引用 `tables`，表格文字不再重复进入正文 `text`；嵌套单元格的 `content` 保留段落/子表顺序，同文但独立段落不会删除。`--profile full` 返回原详细结构；显式 standard/maximum 未指定 profile 时保持原详细输出。API `read()`、`read_bytes()` schema 不变。分页对所选 profile 的完整结果无损分片，游标不能跨 profile 复用。
+
 CLI、`read()`、`read_bytes()` 默认 `reading_mode=content`，不先跑摘要、渲染、转换或图片提取。正文、表格、文本框与附加区域分别按既有结构返回，保留原始文字、来源、可确认分组/合并及缺口，不把 `text` 一栏当作全文。`drawing_objects` 保留支持的 OfficeArt 描述/艺术字，`related_stories` 保留文本框、页眉页脚、脚尾注等支持区域；不猜页面、阅读顺序或未知对象内容。二进制 `binary_table_structure` 保留单元格文字、表格分组和可确认合并，嵌套内容按 `nested_row_evidence` 和 `nested_tables` 读取，缺父范围或边界不猜归属。
 
-二进制 content 不解析 PNG/图表缓存、不复制可选图表 blob，也不为纯段落读取 PAPX 布局；含表格时仍验证必要属性、结构和共享范围，只省略非必要布局明细。`content_reading.not_requested` 和 `binary_optional_content_not_requested` 明示未检查项目；图片/内嵌图表中独有的文字或数值可能遗漏，不能称全格式完整。需要它们时显式 maximum；`binary_images` 为有界 PNG 元数据，原始字节再加 `--include-image-bytes`；`binary_charts.charts[].presentation` 为可用保存值、格式及缺值范围，不补零、不反算、不访问外部工作簿。两模式都不做 OCR、渲染或版式复原。CFB/ZIP/XML、加密、重叠、大小和资源门禁不降低；没有新增依赖。
+二进制 content 默认有界读取浮动/内联图表保存缓存，不解析 PNG，也不为纯段落读取 PAPX 布局；含表格时仍验证必要属性、结构和共享范围，只省略非必要布局明细。`content_reading.not_requested` 和 `binary_optional_content_not_requested` 明示未检查项目；图片/内嵌图表中独有的文字或数值可能遗漏，不能称全格式完整。PNG或布局证据需显式 maximum，图片专有内容仍不做OCR；`binary_images` 为有界 PNG 元数据，原始字节再加 `--include-image-bytes`；`binary_charts.charts[].presentation` 为可用保存值、格式及缺值范围，不补零、不反算、不访问外部工作簿。两模式都不做 OCR、渲染或版式复原。CFB/ZIP/XML、加密、重叠、大小和资源门禁不降低；没有新增依赖。
 
-两种全文模式均保留隐藏文字与域缓存但不执行。OOXML/RTF 正文用受支持 accepted 当前视图，不同的 all 存储视图另放 `revision_content`；显式 all 标 `all_stored_revisions_not_current`，不可当当前内容。MS-DOC 与无法可靠过滤的已分类 RTF 修订返回存储文字，但 `current_view_available=false` 且 partial。关联区域缺失/损坏保留可靠正文并明确缺口；未知块、公式、图片与对象未解码仍报告，不以空数据伪装完整。完整边界与诊断见 `<skill-root>/references/reading-assessment.md#最大化读取模式`，仅需要细节时加载。
+OOXML 的 content/maximum 同时返回 `ooxml_charts` 中原生图表的标题、系列名、类别与数值保存缓存，保留原始字符串、格式代码、点索引和缺值诊断；不刷新、反算、打开外链或内嵌工作簿，不把缓存等同已验证可见值。图片图表不做 OCR。MC AlternateContent 按 Requires 在真实 XML 作用域解析的命名空间选择受支持 Choice，否则 Fallback；未能选择时明确 partial 与分支来源，不称已确认当前视图，不按相同文字删除独立对象。
+
+两种全文模式均保留隐藏文字与域缓存但不执行。OOXML/RTF 正文用受支持 accepted 当前视图，不同的 all 存储视图在 full/API 另放 `revision_content`，内容投影仅提示另有存储修订，不混入当前正文；显式 all 标 `all_stored_revisions_not_current`，不可当当前内容。MS-DOC 与无法可靠过滤的已分类 RTF 修订返回存储文字，但 `current_view_available=false` 且 partial。关联区域缺失/损坏保留可靠正文并明确缺口；未知块、公式、图片与对象未解码仍报告，不以空数据伪装完整。完整边界与诊断见 `<skill-root>/references/reading-assessment.md#最大化读取模式`，仅需要细节时加载。
 
 概况不含正文；段落范围只投影主段落，核对 `selection_status/source_status/projection_scope`。全文结果必须保留 JSON 与诊断；宿主截断不是完整 JSON。显式 standard 的 `--format text` 仅在确实不需结构时用，partial 诊断仍在 stderr；RTF 纯文本按块顺序包含表格，JSON `text` 仅段落，表格及顺序在 `tables/blocks`。standard 的附加区域需 `--include-related`，正文投影不得冒充全文。
 
@@ -86,7 +90,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create
 
 只有明确只需主文摘要、段落/章节切片、旧纯文本或特定策略时才显式指定 `--reading-mode standard`（API 同名参数）。不要为了避开限制偷偷降级，也不要用标准模式的主文投影回答包含附加区域的全文问题。创建、编辑、转换及发布回读内部固定 standard，保持原验收语义。
 
-默认不带输出参数仍返回完整 JSON（16 MiB上限）；需要分次读取时用 content 或 maximum 的 `--page-size/--cursor`，无损传输完整结果，包括正文、表格、附加区域、修订与诊断。单条超长内容可跨片，不能把片段当完整业务JSON；必须从0连续收齐、核对源/选项/结果及分片摘要再重组。详见 `<skill-root>/references/maximum-pagination.md`。这不是物理文档分页或流式解析；分页总规范JSON另受256 MiB限制。宿主截断也不能当作完整结果。修订补读失败保留当前已读正文并标 partial 和具体缺口；`revision_content` 是另一个存储视图，不是变更清单。回答“当前内容”前必须核对 `content_view/current_view_available`，未知则说明不能确认，不能把存储文字直接当作当前版本。
+默认不带输出参数返回完整内容投影 JSON（16 MiB上限），详细结构用 `--profile full`；需要分次读取时用 content 或 maximum 的 `--page-size/--cursor`，无损传输完整结果，包括该 profile 的正文、表格、图表、附加区域和遗漏；详细修订与诊断仅 full 返回。单条超长内容可跨片，不能把片段当完整业务JSON；必须从0连续收齐、核对源/选项/结果及分片摘要再重组。详见 `<skill-root>/references/maximum-pagination.md`。这不是物理文档分页或流式解析；分页总规范JSON另受256 MiB限制。宿主截断也不能当作完整结果。修订补读失败保留当前已读正文并标 partial 和具体缺口；`revision_content` 是另一个存储视图，不是变更清单。回答“当前内容”前必须核对 `content_view/current_view_available`，未知则说明不能确认，不能把存储文字直接当作当前版本。
 
 ## 按需直达
 

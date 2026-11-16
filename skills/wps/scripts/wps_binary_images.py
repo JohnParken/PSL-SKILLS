@@ -109,7 +109,7 @@ def _floating_images(region, word, word_spans, links, issues, reserve):
     return output
 
 
-def _inline_objects(data, data_spans, markers, offsets, issues, reserve):
+def _inline_objects(data, data_spans, markers, offsets, issues, reserve, *, charts_only=False):
     cache = {}
     images = []
     charts = []
@@ -134,7 +134,7 @@ def _inline_objects(data, data_spans, markers, offsets, issues, reserve):
                 cache[offset] = (None, None)
             else:
                 picture_sources.append(picture[0].location(size=len(picture[0].data)))
-                cache[offset] = (_checked_image(lambda: read_inline_png_preview(*picture, require, reserve=reserve), location, issues),
+                cache[offset] = (None if charts_only else _checked_image(lambda: read_inline_png_preview(*picture, require, reserve=reserve), location, issues),
                                  _inline_chart(*picture))
         image, chart = cache[offset]
         reference = {'kind': 'inline', 'story': story, 'anchor_cp': cp, 'source': location,
@@ -238,7 +238,7 @@ def _mark_recovered_placeholders(result, pairs):
 
 
 def add_binary_images(result, *, region, word, data, table, pieces, positions, fib_end, cb_mac,
-                      header_mapping, table_spans, data_spans, links, piece_prms, include_bytes):
+                      header_mapping, table_spans, data_spans, links, piece_prms, include_bytes, charts_only=False):
     """Publish PNG metadata and return independently framed inline chart links."""
     markers = _picture_markers(result)
     if not (links or markers):
@@ -254,10 +254,13 @@ def add_binary_images(result, *, region, word, data, table, pieces, positions, f
     offsets = evidence.get('stored_picture_offsets', {})
     word_spans.extend(evidence.get('fkp_ranges', ()))
     reserve = _image_scan_budget(word)
-    pairs = _floating_images(region, word, word_spans, links, issues, reserve) if floating_available else []
-    inline_images, charts, picture_sources = _inline_objects(data, data_spans, markers, offsets, issues, reserve)
+    pairs = _floating_images(region, word, word_spans, links, issues, reserve) if floating_available and not charts_only else []
+    inline_images, charts, picture_sources = _inline_objects(data, data_spans, markers, offsets, issues, reserve, charts_only=charts_only)
     pairs.extend(inline_images)
     pairs, charts = _exclude_overlapping_records(pairs, charts, picture_sources, issues)
+    if charts_only:
+        result["issues"].extend(issues)
+        return charts
     images, bytes_emitted, omitted = _image_records(pairs, include_bytes)
     _mark_recovered_placeholders(result, pairs)
     result['binary_images'] = {

@@ -1,5 +1,7 @@
 """Recover bounded stored Word textbox text without claiming layout or anchors."""
 
+from wps_ooxml_objects import stored_objects
+
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 MAX_TEXTBOX_STORIES = 4096
 MAX_TEXTBOX_TEXT_UNITS = 8 * 1024 * 1024
@@ -9,13 +11,6 @@ def tag(name):
     return "{" + W + "}" + name
 
 
-def _textboxes(node):
-    """Yield outermost textbox-content subtrees across foreign wrappers."""
-    for child in node:
-        if child.tag == tag("txbxContent"):
-            yield child
-            continue
-        yield from _textboxes(child)
 
 
 class TextboxCollector:
@@ -29,7 +24,7 @@ class TextboxCollector:
         self.text_units = 0
 
     def collect(self, root, part, base_path):
-        for element_index, node in enumerate(_textboxes(root)):
+        for element_index, (node, branches) in enumerate(stored_objects(root, tag("txbxContent"), self.revisions)):
             if len(self.stories) >= MAX_TEXTBOX_STORIES:
                 raise ValueError("Textbox story count limit exceeded")
             paragraphs = self.blocks(node, self.revisions)
@@ -49,12 +44,15 @@ class TextboxCollector:
                 "code": "textbox_text_recovered_unmapped",
                 "message": (
                     "Stored Word textbox text was recovered separately; drawing anchor, "
-                    "page position, branch selection and reading order remain unknown"
+                    "page position and reading order remain unknown; unresolved alternatives retain provenance"
                 ),
             }
+            from wps_ooxml import _ordered_blocks
             self.stories.append({
+                "body_blocks": _ordered_blocks(node, self.revisions, self.table_collector.node_ids),
                 "type": "textboxes",
-                "source": {"part": part, "element_index": element_index, "path": path},
+                "source": {"part": part, "element_index": element_index, "path": path,
+                           "alternate_content": branches},
                 "text": text,
                 "paragraphs": paragraphs,
                 "tables": self.table_collector.tables[table_start:],

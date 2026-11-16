@@ -1,19 +1,23 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 当前 Skill 版本为 `20261116.1353.3706`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
+> 当前 Skill 版本为 `20261116.1522.4948`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
 宿主返回的 `/large_tool_results/` 是结果引用，仅使用宿主 `read_file` 和实际 schema 补读并核对覆盖；不交给 execute、cat、Shell 或 Python，不猜映射或使用路径掩码。读取工具缺失或结果不完整时报告缺口并停止依赖。普通业务文件和 Skill 资源仍遵循各自路径规则。
 
-WPS 图表读取新增保存值展示：按分类索引对齐原始数值与简单百分比/小数格式，逐字段报告缺失，保留缓存来源和未刷新标记。不得自动访问外部工作簿、反算缺失计数或把存储系列当成已验证的视觉系列；不做图片 OCR。合法内嵌 XLSX 可按明确单行/列引用补读已存值，不覆盖图表缓存；外链、缺失单元格和不支持格式保持明确缺口。
+二进制 WPS 图表读取提供保存值展示：按分类索引对齐原始数值与简单百分比/小数格式，逐字段报告缺失，保留缓存来源和未刷新标记。不得自动访问外部工作簿、反算缺失计数或把存储系列当成已验证的视觉系列；不做图片 OCR。合法内嵌 XLSX 可按明确单行/列引用补读已存值，不覆盖图表缓存；外链、缺失单元格和不支持格式保持明确缺口。
+
+OOXML content/maximum 新增原生图表标题、系列、分类及数值的保存缓存，原始字符串与缺值诊断保留，不读外链/嵌入工作簿、不声称缓存最新。MC Choice 按真实作用域内 Requires 与读取器支持的命名空间选择，否则 Fallback；无法选择明确 partial，不按文字去重独立对象。图表与文本框都尊重修订视图；standard 不增加图表工作。
+
+CLI默认 `--profile content` 输出 `wps_content_v1`：可用正文、精简表格、文本框/附加区域、图表保存值及归并缺口。内部ID、XML路径、二进制记录和详细诊断不默认回传。OOXML含表格时正文用 `body` 段落/表格顺序引用，表格内容仅保留于 `tables`；附加区域和嵌套单元格同样按真实归属处理，不按相同文字去重。`--profile full` 与原API保留详细结构；显式standard/maximum未指定profile时仍输出full。分页先投影后无损分片，游标绑定profile。
 
 ## 功能与格式边界
 
 WPS Skill 面向公文、报告、段落和基础表格，提供四条任务路径：
 
 1. **声明式创建**：JSON `blocks` 生成 RTF，默认最终文件名为“文档主题.wps”；用户明确要求 `.rtf` 时尊重该后缀。
-2. **内容读取**。按字节识别 RTF、MS-DOC 和 OOXML Word 的受支持子集。默认 content 读取正文、表格、文本框、支持的对象文字与附加区域，使用完整 JSON 保留遗漏。显式 maximum 才增加二进制段落布局、PNG 与图表缓存；standard 用于明确的主文窄范围。
+2. **内容读取**。按字节识别 RTF、MS-DOC 和 OOXML Word 的受支持子集。默认 content 读取正文、表格、文本框、支持的对象文字与附加区域，使用完整 JSON 保留遗漏。显式 maximum 才增加二进制段落布局和 PNG，图表缓存默认读取；standard 用于明确的主文窄范围。
 3. **受控重排编辑**：文字替换、段落替换/删除/追加、单元格更新及批量操作。读取后重建整份 RTF，不是对原格式的保留式编辑。
 4. **从 DOCX 兼容导出**：将 DOCX 转为 RTF，或通过实际预装 LibreOffice 转为二进制 MS-DOC；每种后端都需候选校验和回读。此路径不是 WPS 转 DOCX。
 
@@ -36,7 +40,7 @@ WPS Skill 面向公文、报告、段落和基础表格，提供四条任务路�
 
 本轮实现与验收见 [内容优先全文记录](../maintenance/wps/content-first-20261116.md)。
 
-content 不解析二进制 PNG、图表缓存和纯段落 PAPX 布局，不复制可选图表 blob；含表格时仍读取结构所需属性并校验共享范围，省略非必要排版明细。对象独有文字/数值可能缺失，`content_reading.not_requested` 与 partial 诊断明示；不得把支持文字范围称全格式完整。显式 `--reading-mode maximum` 保留高级能力，`--include-image-bytes` 仍必须配合 maximum。未增加依赖、不做 OCR 或渲染、不自动转换；安全门禁和原 standard 契约保留。高级 `wps_maximum_pages.read_page()` 为兼容仍默认 maximum，调用 content 时必须显式传参；CLI 分页跟随默认 content，游标不能跨模式复用。
+content 默认有界读取二进制浮动/内联图表缓存，不解析 PNG 和纯段落 PAPX 布局；含表格时仍读取结构所需属性并校验共享范围，省略非必要排版明细。对象独有文字/数值可能缺失，`content_reading.not_requested` 与 partial 诊断明示；不得把支持文字范围称全格式完整。显式 `--reading-mode maximum` 保留高级能力，`--include-image-bytes` 仍必须配合 maximum。未增加依赖、不做 OCR 或渲染、不自动转换；安全门禁和原 standard 契约保留。高级 `wps_maximum_pages.read_page()` 为兼容仍默认 maximum，调用 content 时必须显式传参；CLI 分页跟随默认 content，游标不能跨模式复用。
 
 CLI、`read()` 和 `read_bytes()` 默认 content；显式 standard 保持原主文模式和旧窄范围能力。OOXML/RTF 默认当前 accepted 正文；不同的 all 存储视图单列 revision_content，不能当作变更清单或当前正文。MS-DOC 及已分类的无法过滤 RTF 修订只返回明确标识的存储内容，current_view_available=false、partial，不阻断可靠文字。修订补读失败保留已读正文并标缺口。
 

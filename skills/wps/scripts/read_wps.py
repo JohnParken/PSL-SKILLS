@@ -602,13 +602,13 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
     if maximum:
         from wps_binary_shapes import add_drawing_descriptions
         picture_links, chart_links = add_drawing_descriptions(result, drawing_region, anchors_by_story, require, content_only=content_only)
-        if not content_only:
-            from wps_binary_charts import add_binary_charts
-            from wps_binary_images import add_binary_images
-            inline_charts = add_binary_images(result, region=drawing_region, word=word, data=data_region, table=table, pieces=pieces, positions=positions,
-                                             fib_end=fib_end, cb_mac=cb_mac, header_mapping=header_mapping, table_spans=table_spans,
-                                             data_spans=data_ownership, links=picture_links, piece_prms=piece_prms, include_bytes=include_image_bytes)
-            add_binary_charts(result, chart_links + inline_charts)
+        from wps_binary_charts import add_binary_charts
+        from wps_binary_images import add_binary_images
+        inline_charts = add_binary_images(result, region=drawing_region, word=word, data=data_region, table=table, pieces=pieces, positions=positions,
+                                         fib_end=fib_end, cb_mac=cb_mac, header_mapping=header_mapping, table_spans=table_spans,
+                                         data_spans=data_ownership, links=picture_links, piece_prms=piece_prms,
+                                         include_bytes=include_image_bytes, charts_only=content_only)
+        add_binary_charts(result, chart_links + inline_charts)
     result['visibility_status'] = 'visibility_unknown'
     if hidden_text == 'annotate':
         from wps_msdoc_charprops import inspect_character_properties
@@ -864,6 +864,7 @@ from wps_task_paths import cli_boundary, validate_argument
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
+    parser.add_argument('--profile', choices=('content', 'full'), help='Content-focused output (default); full retains machine structure')
     parser.add_argument('--format', choices=('json', 'text'), default='json')
     parser.add_argument('--reading-mode', choices=('standard', 'content', 'maximum'), default='content')
     parser.add_argument('--include-image-bytes', action='store_true', help='Include bounded base64 PNG bytes from binary MS-DOC in maximum mode')
@@ -888,6 +889,8 @@ def main():
     parser.add_argument('--max-output-chars', type=int)
     parser.add_argument('--max-output-bytes', type=int)
     args = parser.parse_args()
+    from wps_content_view import configure, project_content
+    configure(args, parser)
     if args.include_image_bytes and (args.reading_mode != 'maximum' or args.check):
         parser.error('--include-image-bytes requires --reading-mode maximum and a binary document')
     if args.reading_mode != 'standard' and args.format != 'json':
@@ -933,7 +936,7 @@ def main():
             result = read_bytes(data, source=str(args.input), **options)
             if args.reading_mode != 'standard':
                 from wps_maximum_pages import project as project_maximum
-                result = project_maximum(result, data, options,
+                result = project_maximum(project_content(result) if args.profile == 'content' else result, data, {**options, 'profile': args.profile},
                          page_size=8000 if args.page_size is None else args.page_size, cursor=args.cursor,
                          max_chars=12000 if args.max_output_chars is None else args.max_output_chars,
                          max_bytes=12000 if args.max_output_bytes is None else args.max_output_bytes)
@@ -945,6 +948,8 @@ def main():
             result = failure(getattr(exc, 'status', 'io_error'), getattr(exc, 'location', {'stage': 'input'}), str(exc))
     else:
         result = read(args.input, **options)
+    if not view_requested and args.profile == 'content':
+        result = project_content(result)
     selective_requested = any((args.heading_only, args.paragraph_range is not None, args.section is not None))
     if selective_requested and result.get('status') in ('ok', 'partial'):
         from wps_selective import project_headings, project_paragraph_range, project_section

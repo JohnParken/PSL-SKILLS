@@ -348,9 +348,13 @@ def _checked(data, *, budget=None):
     return data
 
 
-def fromstring(data, *, budget=None):
+def fromstring(data, *, budget=None, capture_compatibility=False):
     try:
-        return ET.fromstring(_checked(data, budget=budget))
+        parser = None
+        if capture_compatibility:
+            from wps_ooxml_objects import CompatibilityTreeBuilder
+            parser = ET.XMLParser(target=CompatibilityTreeBuilder())
+        return ET.fromstring(_checked(data, budget=budget), parser=parser)
     except ET.ParseError as exc:
         raise ValueError(f"Invalid XML: {exc}") from exc
 
@@ -369,7 +373,7 @@ STRICT_W = 'http://purl.oclc.org/ooxml/wordprocessingml/main'
 STRICT_R = 'http://purl.oclc.org/ooxml/officeDocument/relationships'
 
 def _word_part(package, name, budget):
-    root = fromstring(read_part(package, name), budget=budget)
+    root = fromstring(read_part(package, name), budget=budget, capture_compatibility=True)
     strict = getattr(package, '_wps_strict_word', False)
     expected_w, rejected_w = (STRICT_W, W) if strict else (W, STRICT_W)
     expected_r, rejected_r = (STRICT_R, R) if strict else (R, STRICT_R)
@@ -497,6 +501,20 @@ def _blocks(node: Element, revisions: str) -> list[str]:
     return result
 
 
+
+def _ordered_blocks(node, revisions, table_ids):
+    """Content ownership from parsed nodes, never inferred from matching strings."""
+    result = []
+    for child in node:
+        if child.tag == _tag('p'):
+            result.append({'type': 'paragraph', 'text': _paragraph_text(child, revisions)})
+        elif child.tag == _tag('tbl'):
+            result.append({'type': 'table', 'table_id': table_ids[id(child)]})
+        elif child.tag.startswith('{' + W + '}') and child.tag.rsplit('}', 1)[-1] in _BLOCK_WRAPPERS:
+            if child.tag.rsplit('}', 1)[-1] not in _REVISION_TAGS[revisions]:
+                result.extend(_ordered_blocks(child, revisions, table_ids))
+    return result
+
 def _table(tbl: Element, revisions: str) -> list[str]:
     rows: list[str] = []
     for tr in tbl.findall(_tag("tr")):
@@ -618,9 +636,12 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
         return result
     part = "ZIP"
     issues = []
+    chart_collector = None
 
     def record_omissions(root, name):
         from wps_ooxml_omissions import content_omissions
+        if chart_collector is not None:
+            chart_collector.collect(root, name)
         issues.extend(content_omissions(root, name, _BLOCK_WRAPPERS, revisions))
         unsupported = {"txbxContent", "drawing", "object", "pict", "altChunk", "instrText", "fldSimple", "fldChar", "sym",
                        "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange"}
@@ -635,7 +656,7 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             issues.append({"stream": name, "offset": None, "location": name,
                            "code": "uninterpreted_namespace", "elements": foreign[:32],
                            "distinct_elements": len(foreign),
-                           "message": "Foreign namespace or markup-compatibility content omitted; no Choice/Fallback branch selected"})
+                           "message": "Uninterpreted foreign content remains; selected MC scope and recovered objects are reported separately"})
         if found:
             issues.append({"stream": name, "offset": None, "location": name,
                            "code": "uninterpreted_content", "elements": found,
@@ -654,6 +675,11 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             part = "[Content_Types].xml / _rels/.rels"
             part = _check_wps_package(package, budget)
             document = _word_part(package, part, budget)
+            compatibility = []
+            if recover_textboxes:
+                from wps_ooxml_objects import select_compatibility
+                compatibility.append(select_compatibility(document, part, issues, revisions))
+                result["ooxml_compatibility"] = compatibility
             result["ooxml_conformance"] = "strict" if getattr(package, "_wps_strict_word", False) else "transitional"
             if document.tag != _tag("document") or document.find(_tag("body")) is None:
                 raise ValueError("invalid w:document or missing w:body")
@@ -689,6 +715,9 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
                     if declarations != ['application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml']:
                         raise ValueError('Invalid styles content type')
 
+            if recover_textboxes:
+                from wps_ooxml_charts import ChartCollector
+                chart_collector = ChartCollector(package, budget, revisions, issues)
             visibility = Visibility(hidden_text, styles, revisions, style_part=style_part)
             visibility.apply(document, part, "/document")
             record_omissions(document, part)
@@ -704,6 +733,8 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
             from wps_ooxml_tables import TableCollector
             table_collector = TableCollector(revisions, _paragraph_text)
             table_collector.collect(document, part, '/document')
+            if recover_textboxes:
+                result['body_blocks'] = _ordered_blocks(document.find(_tag('body')), revisions, table_collector.node_ids)
             textbox_collector = None
             textbox_table_collector = None
             if recover_textboxes:
@@ -721,8 +752,10 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
                                    'code': 'related_content_not_requested', 'elements': kinds,
                                    'message': 'Referenced headers, footers or notes were not requested; use include_related'})
             related = (read_related(package, document, revisions, budget, record_omissions, issues,
-                                     table_collector, visibility, textbox_collector, main_part=part)
+                                     table_collector, visibility, textbox_collector, main_part=part, compatibility=compatibility)
                        if include_related else None)
+            if chart_collector is not None:
+                result['ooxml_charts'] = {'schema': 'stored_native_chart_content_v1', 'charts': chart_collector.charts}
             issues.extend(table_collector.issues)
             if textbox_table_collector is not None:
                 issues.extend(textbox_table_collector.issues)
@@ -738,11 +771,13 @@ def read_bytes(data, revisions="accepted", include_related=False, hidden_text="i
                                    'code': 'textbox_text_recovered_unmapped',
                                    'count': len(textbox_collector.stories),
                                    'message': ('Stored textbox text was returned as separate stories; '
-                                               'anchors, layout, branch selection and reading order remain unknown')})
+                                               'anchors, layout and reading order remain unknown; unresolved alternatives retain provenance')})
                 result['related_stories'] = related
                 result['related_scope'] = ('explicit-main-document-references-plus-stored-textboxes'
                                            if recover_textboxes else 'explicit-main-document-references-only')
                 result['related_page_mapping'] = 'unknown'
+            if any(item.get("code") == "alternate_content_unresolved" for item in issues):
+                result["current_view_available"] = False
             result.update(status="partial" if issues else "ok", partial=bool(issues),
                           diagnostics=issues, text="\n".join(pieces), paragraphs=pieces)
             return result

@@ -4,7 +4,7 @@
 
 ## 何时使用
 
-默认 content 不加输出参数仍返回原完整 JSON，保留16 MiB单次序列化上限。结果太长或需要分次回传时，使用 content 或 maximum 的 `--page-size` / `--cursor` / 输出预算；它覆盖完整结果的正文、表格、附加区域、修订视图、来源和全部诊断，不降级成仅主文投影。
+默认 content 不加输出参数返回完整内容投影 JSON；原详细结构用 `--profile full`，保留16 MiB单次序列化上限。结果太长或需要分次回传时，使用 content 或 maximum 的 `--page-size` / `--cursor` / 输出预算；它覆盖所选 profile 的完整结果；content 包含正文、表格、图表和附加区域/归并遗漏，full另含详细修订、来源和诊断，不降级成仅主文投影。
 
 这是规范化 JSON 的字符分片，不是文档物理页、段落页或流式文档解析。每次续读仍完整解析同一份输入；没有缓存、没有新建状态文件，不降低解析内存上限。显式 standard 的旧主文分页保持不变，其游标与本接口互不兼容。
 
@@ -20,7 +20,7 @@
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 8000 --max-output-chars 12000 --max-output-bytes 12000")
 ```
 
-读取返回的 `next_cursor`，下一次原样传入 `--cursor`，保持输入、读取选项与 page-size 相同。可以调整字符/字节预算，但不能手改游标或把其他文件的游标复用。游标很长，不逐字重写；按宿主安全参数传递能力原样引用。例中省略 reading-mode 即默认 content；显式 maximum 保留高级证据。跨模式续读拒绝，必须从头开始。
+读取返回的 `next_cursor`，下一次原样传入 `--cursor`，保持输入、读取选项与 page-size 相同。可以调整字符/字节预算，但不能手改游标或把其他文件的游标复用。游标很长，不逐字重写；按宿主安全参数传递能力原样引用。例中省略 reading-mode 即默认 content；显式 maximum 保留高级证据。跨模式或profile续读拒绝，必须从头开始。
 
 - `page_size` 默认8000，范围1..262144，指规范JSON的Unicode字符数，不是正文长度。
 - `max-output-chars` 默认12000，范围512..2097152。

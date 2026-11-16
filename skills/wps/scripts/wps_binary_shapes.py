@@ -173,7 +173,7 @@ def add_drawing_descriptions(result, region, anchors_by_story, require, *, conte
                     textbox_ids[label] = {record['shape_id']: record['textbox_index'] for record in records
                                           if counts[record['shape_id']] == 1}
                 metadata = read_officeart(region, wanted, require, textbox_ids_by_label=textbox_ids,
-                                          object_links=links, blocked_by_label=blocked, include_media=not content_only)
+                                          object_links=links, blocked_by_label=blocked, include_media=True)
             except ParseError as exc:
                 if exc.status == 'resource_limit':
                     raise

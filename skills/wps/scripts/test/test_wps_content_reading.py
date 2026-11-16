@@ -33,15 +33,13 @@ class ContentReadingTests(unittest.TestCase):
         self.assertEqual(result['status'], 'partial')
         self.assertIn('binary_optional_content_not_requested', [issue['code'] for issue in result['issues']])
 
-    def test_binary_media_decoders_and_blob_copy_are_not_called(self):
+    def test_binary_png_decoders_are_not_called_but_chart_scan_is_available(self):
         data = cfb_payload(floating_fixture(png_blip(png_bytes())))
-        with (patch('wps_binary_images.add_binary_images', side_effect=AssertionError('image decode')) as images,
-              patch('wps_binary_charts.add_binary_charts', side_effect=AssertionError('chart decode')) as charts,
-              patch('wps_binary_officeart._metro_blob', side_effect=AssertionError('media blob')) as blobs):
+        with (patch('wps_binary_images._floating_images', side_effect=AssertionError('image decode')) as images,
+              patch('wps_binary_images.read_inline_png_preview', side_effect=AssertionError('image decode')) as preview):
             result = read_bytes(data)
         images.assert_not_called()
-        charts.assert_not_called()
-        blobs.assert_not_called()
+        preview.assert_not_called()
         self.assertEqual(result['text'], '\ufffc\n')
         self.assertNotIn('binary_images', result)
         self.assertNotIn('binary_charts', result)

@@ -19,3 +19,12 @@
 公开依据见ooxml-related-evidence.json (`docs/maintenance/wps/ooxml-related-evidence.json`)，开发时核对，运行时不访问。测试均为标准库合成的固定预期，覆盖自定义部件名、未关联成员、三类 ID、修订、空区域、缺失/重复/越界、外部目标及配额；目前没有真实 WPS 关联文字的独立语义对照。
 
 主文按包根 officeDocument 关系与唯一受支持内容类型定位，支持合法自定义主部件路径。所有相对关联目标相对实际主部件解析。数学公式单独报告 math_content_not_decoded，未知块内文字报告 unknown_block_content_not_decoded；不把数字拼接冒充公式。独立区域恢复采用明确错误白名单，DTD、实体、资源和共享包安全检查仍失败。
+
+
+## 原生图表与兼容分支
+
+content/maximum 在正文及已请求附加区域中追踪原生 `c:chart` 关系，返回 `ooxml_charts`，不按文件名扫描孤立图表。`charts[].title` 与 `series[]` 保留富文本片段、系列名、分类/数值/XY/气泡缓存、原始字符串、格式代码、点索引、公式来源及缺值范围；公式仅为来源，不执行。覆盖不全、缺失部分、损坏局部 XML、未知格式和多级分类仍为 partial；不补零、不反算、不读取嵌入工作簿或外链，不把未刷新的缓存当作已验证当前视觉内容，图片图表不做 OCR。显式 standard 不增加图表工作。
+
+每次读取最多128个图表引用、50000个缓存点、10000个系列/缓存记录及2 Mi字符图表文本；同一图表多次引用仍累计预算，保持独立对象。新读取与现有 Word 部件共享 XML 预算；ZIP、DTD/实体、外部关系、越界、安全及资源错误仍拒绝，不降级为局部 partial。
+
+MC Choice 的 Requires 前缀在各自 XML 作用域解析，选择第一个全部命名空间受支持的 Choice，否则 Fallback。当前支持 Word、VML、Word 2010 wps/wpg 文本框包装及经典 chart URI；不靠前缀拼写猜测扩展，c14/c15 等不冒充支持。不选分支不贡献对象或诊断。未知且无 Fallback 或分支结构歧义保留存储分支来源、标 partial 与 `current_view_available=false`。这是读取器支持视图，不证明客户端版式；独立相同文本对象不会被合并。`ooxml_compatibility` 报告选择数及未知数，`related_stories[].source.alternate_content` 只描述未解决分支。

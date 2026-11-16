@@ -55,11 +55,13 @@ CFB 末扇区的 `cfb_missing_final_sector_padding` 属于兼容诊断。仅当�
 
 ## 最大化读取模式
 
-默认 content 与显式 maximum 共用全文、附加区域、修订视图和有界内容恢复。content 在二进制文档中保留正文、表格与可提取对象文字，但跳过图片/图表缓存及纯段落布局扫描。表格相关 PAPX 仍解析验证，非必要布局明细不物化；`content_reading.not_requested` 与 partial 提示说明未检查范围，不声称所有对象内容已读取。maximum 保持原高级提取能力，图片/图表/布局问题才显式选用；原依赖该默认行为的调用方需传 `reading_mode="maximum"`。standard 及创建/编辑/转换内部读取不变。两模式均保留共享 `maximum_reading` 兼容描述字段，以 `reading_mode` 区分实际配置。
+默认CLI为内容投影 `wps_content_v1`，下文原详细字段在 `--profile full` 或API可用。默认仅归并提示遗漏，不回传密集结构；图表保存值默认包含。
+
+默认 content 与显式 maximum 共用全文、附加区域、修订视图和有界内容恢复。content 在二进制文档中保留正文、表格与可提取对象文字，默认读取有界图表缓存，但跳过图片及纯段落布局扫描。表格相关 PAPX 仍解析验证，非必要布局明细不物化；`content_reading.not_requested` 与 partial 提示说明未检查范围，不声称所有对象内容已读取。maximum 保持原高级提取能力，图片/布局问题才显式选用；原依赖该默认行为的调用方需传 `reading_mode="maximum"`。standard 及创建/编辑/转换内部读取不变。两模式均保留共享 `maximum_reading` 兼容描述字段，以 `reading_mode` 区分实际配置。
 
 CLI、公开 `read()/read_bytes()` 默认 `reading_mode="content"`，显式 maximum 保留高级证据；两模式固定附加区域读取、data兼容、recover文本、域缓存、对象占位及隐藏文字保留。OOXML/RTF 默认 accepted 正文，内容不同时把 all 存储视图放入独立 revision_content，避免删除文字混入当前正文；显式 all 始终标为非当前视图。MS-DOC 当前修订无法确认，存储文字仍返回但 current_view_available=false 且 partial。明确指定 standard 保持旧模式；窄范围、纯文本和隐藏筛选示例均显式选 standard。content/maximum 支持原完整JSON和新的完整结果无损分片；仍拒绝旧摘要/段落等仅主文投影。完整输出16 MiB上限，分片总规范JSON256 MiB上限，不静默裁剪；分片重组见 `<skill-root>/references/maximum-pagination.md`。
 
-- **MS-DOC/CFB（以下 PNG 和图表缓存仅显式 maximum）。** `binary_table_structure.tables` 补读可确认的一级表格分组、存储列边界及横向和纵向合并，参见 `<skill-root>/references/binary-tables.md#表格分组与合并`。`drawing_objects` 记录存储形状和锚点。`binary_images` 提供已验证的 PNG 元数据和位置，带 `--include-image-bytes` 或 Python `include_image_bytes=True` 时可取有界原始字节。`binary_charts` 提供已定位的图表分类、系列、缓存值及缺失范围，见 `<skill-root>/references/binary-shapes.md#存储图表缓存`。附加区域见 `<skill-root>/references/ms-doc-stories.md#最大模式文本框`。
+- **MS-DOC/CFB（以下 PNG 仅显式 maximum，图表缓存默认 content 也读取）。** `binary_table_structure.tables` 补读可确认的一级表格分组、存储列边界及横向和纵向合并，参见 `<skill-root>/references/binary-tables.md#表格分组与合并`。`drawing_objects` 记录存储形状和锚点。`binary_images` 提供已验证的 PNG 元数据和位置，带 `--include-image-bytes` 或 Python `include_image_bytes=True` 时可取有界原始字节。`binary_charts` 提供已定位的图表分类、系列、缓存值及缺失范围，见 `<skill-root>/references/binary-shapes.md#存储图表缓存`。附加区域见 `<skill-root>/references/ms-doc-stories.md#最大模式文本框`。
 - **OOXML Word：** 使用 accepted 正文和独立 all 存储修订视图，并跟随主文显式引用的页眉页脚、脚尾注和批注；另外从已经通过 XML/ZIP 结构检查的 `w:txbxContent` 子树提取文字和有限表格，按独立 `related_stories[type=textboxes]` 返回。绘图锚点、页面位置、Markup Compatibility Choice/Fallback 分支和主文阅读顺序都不推断；同一逻辑文本存在于多个未选择分支时可能分别返回，不能自动去重或并入主正文。
 - **RTF：** 仅捕获已闭合且首控制字可证明为页眉、页脚、脚注或批注的目标组，在继承到该组的代码页和 `uc` 设置下隔离解析，并按独立故事返回。节、页面、引用锚点、目标组与主正文的阅读顺序未知；未闭合、超预算或无法可靠解析的区域保留失败/遗漏诊断，不猜测补齐。
 

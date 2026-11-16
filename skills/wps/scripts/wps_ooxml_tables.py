@@ -18,6 +18,7 @@ class TableCollector:
         self.revisions = revisions
         self.paragraph_text = paragraph_text
         self.tables = []
+        self.node_ids = {}
         self.issues = []
         self.cells = 0
         self.text_units = 0
@@ -96,6 +97,7 @@ class TableCollector:
         if depth >= MAX_TABLE_DEPTH or len(self.tables) >= MAX_TABLES:
             raise ValueError('Table count/depth limit exceeded')
         identity = 'table-' + str(len(self.tables) + 1)
+        self.node_ids[id(node)] = identity
         grids = node.findall(tag('tblGrid'))
         if len(grids) > 1:
             raise ValueError('Duplicate table grid')

@@ -23,7 +23,7 @@ def recoverable_content_error(exc):
 
 
 def read_related(package, document, revisions, budget, record_omissions, issues, table_collector=None,
-                  visibility=None, textbox_collector=None, main_part="word/document.xml"):
+                  visibility=None, textbox_collector=None, main_part="word/document.xml", compatibility=None):
     """Follow main-part relationships and explicit IDs; never enumerate filenames."""
     rel_name = relationship_name(main_part)
     relationships = {}
@@ -144,6 +144,11 @@ def read_related(package, document, revisions, budget, record_omissions, issues,
                 first_issue = len(issues)
                 visibility_issue_start = len(visibility.issues) if visibility is not None else 0
                 entry_path = "/" + kind + "[" + str(key) + "]"
+                if textbox_collector is not None:
+                    from wps_ooxml_objects import select_compatibility
+                    selection = select_compatibility(entry, part, issues, revisions)
+                    if compatibility is not None:
+                        compatibility.append(selection)
                 if visibility is not None:
                     visibility.apply(entry, part, entry_path)
                 record_omissions(entry, part)
@@ -159,11 +164,16 @@ def read_related(package, document, revisions, budget, record_omissions, issues,
                 if visibility is not None:
                     story_issues += visibility.issues[visibility_issue_start:]
                 paragraphs = core._blocks(entry, revisions)
+                table_start = len(table_collector.tables) if table_collector is not None else 0
                 if table_collector is not None:
                     table_issue_start = len(table_collector.issues)
                     table_collector.collect(entry, part, '/' + kind + '[' + str(key) + ']')
                     story_issues += table_collector.issues[table_issue_start:]
-                stories.append({'type': kind, 'source': {'part': part, 'id': key, 'relationship_id': identity},
+                content = {}
+                if textbox_collector is not None and table_collector is not None:
+                    content = {'body_blocks': core._ordered_blocks(entry, revisions, table_collector.node_ids),
+                               'tables': table_collector.tables[table_start:]}
+                stories.append({**content, 'type': kind, 'source': {'part': part, 'id': key, 'relationship_id': identity},
                                 'text': '\n'.join(paragraphs), 'paragraphs': paragraphs,
                                 'references': refs, 'anchor_status': 'relationship_or_id_verified',
                                 'page_mapping': 'unknown', 'cp_range': None,
