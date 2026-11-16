@@ -1,5 +1,7 @@
 # PSL-SKILLS
 
+2026-11-16：移除脚本对 uname 的直接及已确认间接依赖，修复旧版 Python 在 Linux 分支导入 uuid 的阻断；[根因与验证边界](docs/validation/uname-sandbox-20261116.md)。
+
 运行检查按任务区分：仅读只做指定最小自检，输入可读即读；实际写入才检查写入能力，纯指导不执行环境检查。不主动倾倒挂载/系统信息，不以根目录只读推断任务目录不可用，安全检查保留。详见[说明](docs/minimal-runtime-checks.md)。
 
 面向银行材料写作、Word 文档处理、电子表格读写计算、WPS 文字读取与受控编辑、RTF 文档生成和 DOCX 兼容导出、WPS 表格（.et/.ett）有限读取、OFD 1.0/1.1/1.2 XML 结构与存储文字提取、受限 SVG 到原生 PPTX 的创建与有界读取、多源表格模板填报、交付物归档与受控清理，以及 Skill 开发规范与质量检查器的 Agent Skills 集合。每个 Skill 包含独立的 `SKILL.md`，并按需附带脚本、参考文档和资源，可按完整目录加载或独立分发。
@@ -23,15 +25,15 @@
 | --- | --- | --- | --- |
 | [文档任务导航（document-navigation）](skills/document-navigation/SKILL.md) | 独立纯指导文档 | 20261114.2127.4001 | 查看、整理、修改、生成等文档处理请求即可匹配，无需预先知道格式；确认附件与目录、定位顶层候选并加载所需技能，不解析文件或配置宿主 |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261115.2044.5320 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261114.2127.4001 | DOCX 生成、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
-| [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261114.2127.4001 | 基于 python-docx 按关系读取内容、公式与图表缓存，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261115.2323.4212 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261116.0722.3668 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；读取文字、表格分组和合并、绘图、内嵌 PNG 及部分二进制图表缓存；内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261116.0724.0209 | 离线读取 .et/.ett 的 BIFF5/7核心、BIFF8/OOXML 保存值、公式缓存、行列尺寸、冻结窗格与当前单元格；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261114.2127.4001 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261114.2127.4001 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；数学结构丢失按页诊断；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
-| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261115.2323.4212 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
-| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261114.2127.4001 | 本轮临时文件登记、最终交付物清单归档（无覆盖、安全幂等重试）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261116.1353.3706 | DOCX 生成、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
+| [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261116.1353.3706 | 基于 python-docx 按关系读取内容、公式与图表缓存，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261116.1353.3706 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261116.1353.3706 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；默认 content 读取文字、表格分组/合并与对象文字；显式 maximum 读取内嵌 PNG、图表缓存及布局证据；内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261116.1353.3706 | 离线读取 .et/.ett 的 BIFF5/7核心、BIFF8/OOXML 保存值与公式缓存；CLI 默认 content，完整原 schema 与行列/绘图证据用 --profile full；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261116.1353.3706 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261116.1353.3706 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；数学结构丢失按页诊断；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
+| [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261116.1353.3706 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
+| [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261116.1353.3706 | 本轮临时文件登记、最终交付物清单归档（无覆盖、安全幂等重试）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261114.2127.4001 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |
 
 ## 目录结构
@@ -194,7 +196,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/run_docx_task.py\" crea
 
 读取大表格时，compact 默认只含前两行；全文需要原有纯文本读取，或 `--compact-json --tables rows` 按行续读。可选 `--max-output-bytes` 计真实 UTF-8 JSON 与末尾换行，返回源 SHA/参数绑定的 `next_cursor`；元数据或单块放不下时明确失败，不静默截断。旧 `next_block` 路径和新绑定游标的区别见 [读取契约](skills/docx/references/inspection.md#utf-8-预算与绑定续读)。预算不是 token 数，也不替代宿主完整回传检查。
 
-使用 `read_docx.py 月报.docx` 一次返回全部支持的要素。加 `--section '完整标题'` 读取该节及下级章节的正文、表格、文本框、图表和图片引用。分页用 `--max-output-bytes` 与 `--cursor`，保持章节参数一致，复用首次解析结果。末页自动清理缓存，提前结束时传 `--release-cursor`。纯文本调用加 `--format text`。图表缺值保持空值，需由源工作簿确认。 [复杂报告读取](skills/docx/references/inspection.md#复杂报告读取)
+使用 `read_docx.py 月报.docx` 一次返回全部支持的要素。加 `--section '完整标题'` 读取该节及下级章节的正文、表格、文本框、图表和图片引用。分页用 `--max-output-bytes` 与 `--cursor`，保持章节参数一致，复用首次解析结果。末页自动清理缓存；已核实缓存的分页失败、首次或续页输出失败也清理本轮缓存，成功续页仍保留有效缓存。提前结束时传 `--release-cursor`。纯文本调用加 `--format text`。图表缺值保持空值，需由源工作簿确认。 [复杂报告读取](skills/docx/references/inspection.md#复杂报告读取)
 
 ### WPS 文字（.wps/.rtf）
 
@@ -206,19 +208,21 @@ python3 -I -S -B "<skill-root>/scripts/run_wps_task.py" check
 python3 -I -S -B "<skill-root>/scripts/export_wps.py" check
 ```
 
-读取正文可使用全量 JSON、纯文本或大纲/章节切片；RTF 全文纯文本按顺序包含表格，JSON 的 text 保持段落口径，表格及顺序见 tables/blocks；超限及不支持的筛选不会静默冒充完整结果。可选 `--max-output-bytes` 为有界视图增加真实 UTF-8 JSON 字节预算，保留完整诊断及源绑定续读，详见 [有界读取](skills/wps/references/bounded-reading.md)；创建命令和共同边界见 WPS 主入口，编辑/导出按需加载其直达参考；仅创建支持 `--compact-receipt`，不省略现有 partial/警告。ET/ETT交给et，原生XLSX/XLSM交给xlsx，不自动转换。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
+默认 content 返回全文结构 JSON；纯文本、大纲或章节切片须显式 --reading-mode standard，不能当全文；RTF 全文纯文本按顺序包含表格，JSON 的 text 保持段落口径，表格及顺序见 tables/blocks；超限及不支持的筛选不会静默冒充完整结果。可选 `--max-output-bytes` 为有界视图增加真实 UTF-8 JSON 字节预算，保留完整诊断及源绑定续读，详见 [有界读取](skills/wps/references/bounded-reading.md)；创建命令和共同边界见 WPS 主入口，编辑/导出按需加载其直达参考；仅创建支持 `--compact-receipt`，不省略现有 partial/警告。ET/ETT交给et，原生XLSX/XLSM交给xlsx，不自动转换。纯 Python 工作流无需第三方包；系统安装 LibreOffice 时可选择二进制导出后端。读取及导出退出码 3 表示 `status=partial`，须保留已读内容、降级原因和缺口诊断。输入按内容识别，`.doc` 内装 RTF/OOXML 仍可读取；创建/重排/纯 Python 导出只写 `.rtf/.wps`，`.doc` 必须实际取得 MS-DOC 字节。`auto` 仅对 `.wps` 允许明确标记的 RTF 回退；检查与回读不能证明视觉或原生格式完整性。
 
-使用 `--reading-mode maximum` 读取 MS-DOC 的一级表格分组、可确认的横向和纵向合并、直接段落属性、绘图锚点和组内文本框关联。`binary_images` 返回存储 PNG 元数据，显式加 `--include-image-bytes` 可取得有界原始字节。`binary_charts` 返回可定位的图表缓存及缺值范围，外部工作簿只记录引用状态。 [最大化读取](skills/wps/references/reading-assessment.md#最大化读取模式) · [图表缓存](skills/wps/references/binary-shapes.md#存储图表缓存)
+默认 content 保留 MS-DOC 的表格分组、可确认的横向和纵向合并、绘图文字及组内文本框关联；直接段落属性、PNG 和图表保存值须显式 `--reading-mode maximum`。`binary_images` 返回存储 PNG 元数据，显式加 `--include-image-bytes` 可取得有界原始字节。`binary_charts` 返回可定位的图表缓存及缺值范围，外部工作簿只记录引用状态。 [最大化读取](skills/wps/references/reading-assessment.md#最大化读取模式) · [图表缓存](skills/wps/references/binary-shapes.md#存储图表缓存)
 
 WPS 图表读取新增保存值展示：按分类索引对齐原始数值与简单百分比/小数格式，逐字段报告缺失，保留缓存来源和未刷新标记。不得自动访问外部工作簿、反算缺失计数或把存储系列当成已验证的视觉系列；不做图片 OCR。合法内嵌 XLSX 可按明确单行/列引用补读已存值，不覆盖图表缓存；外链、缺失单元格和不支持格式保持明确缺口。
 
-WPS 公开读取默认 maximum（CLI/API），standard 必须显式选择；OOXML/RTF 当前正文与修订存储视图分开，二进制不能确认当前修订视图时明确 partial。完整 JSON 保留16 MiB上限；maximum 新增全结果无损分片，正文、表格、附加区域、修订和诊断均可续读重组，不静默丢弃。单页字符与UTF-8预算含外壳；游标绑定源与选项，摘要校验不是密钥认证。旧主文分页仅允许显式 standard。创建/编辑/导出内部回读保持 standard。
+WPS 公开读取默认 content（CLI/API），maximum 和 standard 均须显式选择；content 在二进制解析期跳过 PNG/图表缓存与非必要段落布局明细，保留正文、表格和支持的对象文字。图片或图表独有文字/数值可能未读，输出明确标记缺口，需要时升级 maximum；两者都不做 OCR。OOXML/RTF 当前正文与修订存储视图分开，二进制不能确认当前修订视图时明确 partial。完整 JSON 保留16 MiB上限；content/maximum 均支持全结果无损分片，正文、表格、附加区域、修订和诊断均可续读重组。单页字符与UTF-8预算含外壳；游标绑定源与选项，摘要校验不是密钥认证。分片仍完整解析，CFB流物化及OOXML/RTF双视图解析尚未优化，不能宣称流式解析或通用内存降幅。旧主文分页仅允许显式 standard。创建/编辑/导出内部回读保持 standard。
 
-读取容错：OOXML 主文按合法包关系定位；独立附加部件损坏保留正文和其他可读内容，standard 未请求的关联文字明确提示。公式、未知块内容与损坏位置保留诊断。MS-DOC maximum 对已分类的独立映射/文字损坏返回部分结果；安全、资源及共享结构错误不放宽。maximum 支持完整 JSON 或 [全结果无损分片](skills/wps/references/maximum-pagination.md)，不把仅正文分页当完整附加区域读取。
+读取容错：OOXML 主文按合法包关系定位；独立附加部件损坏保留正文和其他可读内容，standard 未请求的关联文字明确提示。公式、未知块内容与损坏位置保留诊断。MS-DOC content/maximum 对已分类的独立映射/文字损坏返回部分结果；安全、资源及共享结构错误不放宽。content/maximum 支持完整 JSON 或 [全结果无损分片](skills/wps/references/maximum-pagination.md)，不把仅正文分页当完整附加区域读取。
 
 WPS新建默认公文参照当前DOCX：上下25.4mm、左右31.8mm，仿宋16pt／Times New Roman、固定28pt、首行2字、零段前段后；标题层级、页眉页脚和默认关闭页码同步。未明确要求新页时自然分页，保留用户显式配置。RTF与OOXML不是同一格式，不保证字体回退或跨阅读器分页一致；现有DOCX→RTF导出不解析完整样式继承，不作为统一排版的捷径。仓库对照回归见 [测试](tests/test_wps_docx_official_parity.py)，350项历史测试结果、缓存告警与未验证范围见 [排版对齐记录](tests/wps_docx_official_alignment_20261104.json)。后续 DOC 回读与格式匹配修复的377项 WPS、2项对照测试、8份已有输入回归及真实二进制导出未通过的范围，见 [导出契约验证](tests/wps_export_contract_validation_20261104.json)。默认 `.wps`、显式 `.rtf` 的命名与回读回归见 [后缀验证记录](tests/wps_default_suffix_validation_20261104.json)。
 
 ### WPS 表格（.et/.ett）
+
+CLI 默认内容读取 `et_content_v1`，保留文字、保存值、缓存状态、数值含义、合并、批注/超链接和覆盖诊断，省略样式/绘图/原始二进制证据。需要原始完整 schema 时用 `--profile full`；Python API、分析与跨技能协议仍默认原 schema，不将内容投影作为原工作簿交接。BIFF 内容路径不构造不必要元数据 hex，安全扫描与预算不省略；其余路径仍完整解析后投影，不承诺普遍降低解析内存。
 
 真实扩样（2026-11-12）：通过 Edge 新下载五个政府发布方的 8 份 ET 原件，599 个非空保存值（含 83 个缓存）、712 个空白及 102 处合并核对一致；发现并修复一处共享公式 cUse=0 的兼容性缺口，保存值未丢失。详见 [本轮审计与限制](docs/maintenance/et/edge-real-samples-20261112.md) 与 [专项修复](docs/maintenance/et/shared-formula-zero-use-20261112.md)；这不是完整格式或 WPS 版本认证。
 

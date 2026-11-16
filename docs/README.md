@@ -1,5 +1,7 @@
 # PSL-SKILLS 架构与功能文档
 
+2026-11-16：移除脚本对 uname 的直接及已确认间接依赖，修复旧版 Python 在 Linux 分支导入 uuid 的阻断；[根因与验证边界](validation/uname-sandbox-20261116.md)。
+
 运行检查按任务区分：仅读只做指定最小自检，输入可读即读；实际写入才检查写入能力，纯指导不执行环境检查。不主动倾倒挂载/系统信息，不以根目录只读推断任务目录不可用，安全检查保留。详见[说明](minimal-runtime-checks.md)。
 
 本文档集逐一说明仓库中的 12 个 Skill：功能范围、实际模块、执行流程、输入输出、依赖、失败与部分结果边界。架构图描述当前实现与任务交接，不表示存在统一的自动路由服务。
@@ -32,15 +34,15 @@
 | --- | --- | --- |
 | [document-navigation](skills/document-navigation.md) | 20261114.2127.4001 | 通用文档处理意图即可匹配，无需先说明格式；确认附件和目录，再选择工具技能。无脚本，不能保证先加载或创造宿主映射。 |
 | [bank-writing](skills/bank-writing.md) | 20261115.2044.5320 | 银行材料写作、月报与跨期经营分析；讲话、客户投诉及公关，邮件短结构与可选合成示例；仅交付文本，表格计算按需交接。 |
-| [docx](skills/docx.md) | 20261114.2127.4001 | DOCX 创建、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、文本框、合并表格、图表缓存及图片引用。报告续读可复用解析结果。 |
-| [tl-docx](skills/tl-docx.md) | 20261114.2127.4001 | 基于 python-docx 的独立 Word 入口。普通读取默认内容优先，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
-| [xlsx](skills/xlsx.md) | 20261115.2323.4212 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261116.0722.3668 | 读取文字、表格分组和合并、文本框、内嵌 PNG 及部分二进制图表缓存，创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
-| [et](skills/et.md) | 20261116.0724.0209 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值与视图读取、有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261114.2127.4001 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
-| [pptx](skills/pptx.md) | 20261114.2127.4001 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
-| [table-workflow](skills/table-workflow.md) | 20261115.2323.4212 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
-| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261114.2127.4001 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
+| [docx](skills/docx.md) | 20261116.1353.3706 | DOCX 创建、DOCX/DOTX 读取与受控编辑。全量或按章节读取正文、文本框、合并表格、图表缓存及图片引用。报告续读可复用解析结果。 |
+| [tl-docx](skills/tl-docx.md) | 20261116.1353.3706 | 基于 python-docx 的独立 Word 入口。普通读取默认内容优先，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
+| [xlsx](skills/xlsx.md) | 20261116.1353.3706 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [wps](skills/wps.md) | 20261116.1353.3706 | 默认 content 读取文字、表格分组/合并与对象文字；PNG、图表缓存和布局证据显式 maximum；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
+| [et](skills/et.md) | 20261116.1353.3706 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认 content，原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261116.1353.3706 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
+| [pptx](skills/pptx.md) | 20261116.1353.3706 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
+| [table-workflow](skills/table-workflow.md) | 20261116.1353.3706 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
+| [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261116.1353.3706 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
 | [skill-development-standards](skills/skill-development-standards.md) | 20261114.2127.4001 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
 ## 整体架构图
@@ -144,3 +146,5 @@ flowchart TD
 未运行 Linux、Windows 或真实 DeepAgents 验证；Pylint 未安装，未执行。ET 和 WPS 源码目录的严格检查因先前已有缓存警告未通过；独立包严格检查通过。本机测试及静态检查不证明未测平台或真实宿主行为。
 
 归档回复展示边界已统一：内部回执用于核验，最终回复及下载链接不得带出归档地址；实际主文件引用仍可交付。范围、检查证据与未验证项见 [归档展示复核](maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+当前内容优先读取与缓存清理的迁移、独立包验收及未验证项见 [集成复核](validation/content-reading-integration-20261116.md)。
