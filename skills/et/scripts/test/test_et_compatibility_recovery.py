@@ -295,7 +295,7 @@ class OutputIntegrityTests(unittest.TestCase):
             Path(task, 'source.et').write_bytes(raw)
             script = Path(__file__).resolve().parents[1] / 'et_cli.py'
             proc = subprocess.run([sys.executable, '-I', '-S', '-B', str(script), 'run', 'source.et',
-                                   '--summary', '--max-output-chars', '6000', '--max-output-bytes', '6000'],
+                                   '--profile', 'full', '--summary', '--max-output-chars', '6000', '--max-output-bytes', '6000'],
                                   cwd=task, capture_output=True, timeout=20, check=False)
             self.assertEqual(proc.returncode, 3, proc.stderr + proc.stdout)
             self.assertEqual(proc.stderr, b'')

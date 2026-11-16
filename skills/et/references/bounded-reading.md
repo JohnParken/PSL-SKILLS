@@ -19,7 +19,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 
 分页返回total_items/start/returned_items、truncated、next_cursor。truncated只表示当前视图还有后续，不改变源status；概况truncated=false也不表示数据已完整交付。保持文件、所有解析参数、sheet、page-size不变，将完整next_cursor作为正确引用的 `--cursor` 参数续读；允许调整字符预算。只有next_cursor=null才取完所选范围。源字节SHA256或选项变化、游标损坏会拒绝续读；从头重读，不混拼两版数据。游标不是授权或签名。
 
-当前 CLI 默认 `--profile content`：有界视图的 `source_schema_version=et_content_v1`，原解析 schema 和投影遗漏在 `content_profile_projection` 诊断中说明；诊断概况 fallback 仍明确省略详情。保存值与缓存保留，二进制/版式证据不随默认页回传；需要原格证据加 `--profile full`。游标绑定 profile，不能混用或手改，旧游标重新开始。
+当前 CLI 默认 `--profile content`：有界视图的 `source_schema_version=et_content_v1`，原解析 schema 和投影遗漏在 `content_profile_projection` 诊断中说明；诊断概况 fallback 仍明确省略详情。保存值与缓存保留，二进制/版式证据不随默认页回传；默认诊断为代码/次数与有界定位，完整诊断或原格证据加 `--profile full`。摘要和逐格分页不返回图表，图表内容须使用不带 --summary/--page-size 的默认内容读取。游标绑定 profile，不能混用或手改，旧游标重新开始。
 
 ## 完整 JSON 的预算、精简与文件输出
 

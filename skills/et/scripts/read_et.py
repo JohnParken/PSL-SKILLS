@@ -75,7 +75,7 @@ def _select_workbook(compound, require, location):
 
 def _read_bytes(data, *, source=None, compatibility=DEFAULT_FILE_COMPATIBILITY, chart_policy=None,
                 requested_chart_policy=None, salvage_unknown_metadata=False,
-                retain_metadata_payloads=True, **ignored_kwargs):
+                retain_metadata_payloads=True, read_charts=False, **ignored_kwargs):
     """Identify content first; suffix is provenance, never a format selector."""
     if ignored_kwargs:
         raise TypeError('Unsupported read options: ' + ', '.join(sorted(ignored_kwargs)))
@@ -94,7 +94,7 @@ def _read_bytes(data, *, source=None, compatibility=DEFAULT_FILE_COMPATIBILITY, 
             raise ParseError('invalid_or_unsupported', {'stage': 'OOXML package'}, str(exc)) from exc
         require(family == 'spreadsheet', {'stage': 'OOXML package'},
                 'Package is not a spreadsheet', 'unsupported')
-        return _annotate_legacy_options(read_sheet_bytes(data), compatibility, salvage_unknown_metadata)
+        return _annotate_legacy_options(read_sheet_bytes(data, read_charts=read_charts), compatibility, salvage_unknown_metadata)
 
     if not data.startswith(SIGNATURE):
         from wps_text_tables import read_text_table
@@ -132,6 +132,7 @@ def read_bytes(data, *, profile='full', **options):
         raise ParseError('unsupported', {'stage': 'options'}, 'profile must be content or full')
     if profile == 'content':
         options['retain_metadata_payloads'] = False
+        options['read_charts'] = True
     result = summarize(_read_bytes(data, **options))
     if profile == 'content':
         from et_content import project_content
@@ -279,7 +280,7 @@ def main():
     parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None,
                         help='Deprecated no-op; charts are always retained as bounded opaque bytes')
     parser.add_argument('--profile', choices=('content', 'full'),
-                        help='Default: content (stored tables, no visual/binary evidence); full restores original extraction')
+                        help='Default: content (stored tables and referenced OOXML chart caches); full restores original diagnostics/evidence')
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--include-related', action='store_true')
     parser.add_argument('--summary', action='store_true')

@@ -124,3 +124,11 @@ TxO (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/638
 Obj (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/dd34df60-8250-40a9-83a3-911476a31ea7`),
 FtNts (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/b0991167-6b90-4e6f-910b-8c153a7e0f87`),
 NoteSh (`https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/3a610bb3-9d35-435f-92ef-cdbc42974404`).
+
+## 默认 OOXML 图表内容（2026-11-16）
+
+`read_et.py` / `et_cli.py run` 默认 content 会读取工作表中实际引用的绘图/图表，输出标题、轴标题、系列名、分类和数值缓存；仅保存字符串和点索引，不执行公式、不取外部数据、不从表格重新推算。隐藏图表对象和孤立图表部件不输出；工作表隐藏状态保留，不能把结果当客户端可见性或布局认证。
+
+缓存缺失、稀疏点或异常索引保留明确状态及诊断，不补零。数值缓存保持保存字符串和可用格式码；日期序列/百分比等须结合格式及工作簿 date_system 解释，不把保存数当已渲染标签。共同 XML/ZIP 安全限制不放宽，图表共享最多256个、100000点、100000个系列/标签/缓存等内容记录、2Mi文字预算，安全/资源超限拒绝，普通图表XML损坏可返回单元格及partial。
+
+BIFF图表只保留“未提取语义”的缺口与数量，不冒充可读图表；完整原始二进制仍在 --profile full。独立图表表、chartEx、多级分类、图片内文字、一般绘图文字和图表版式未覆盖。默认图表是保存内容子集，不宣称完整图表格式支持。程序full协议不变；摘要/单元格分页不附图表，须普通内容读取获取。

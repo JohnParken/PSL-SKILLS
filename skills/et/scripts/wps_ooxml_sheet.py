@@ -128,7 +128,7 @@ def _read_shared_strings(package, path, types, namespace, budget, report, text_r
     return strings, shared_formatting, shared_encoding
 
 
-def read_bytes(data, *, _cell_store_factory=None):
+def read_bytes(data, *, _cell_store_factory=None, read_charts=False):
     part = 'ZIP'
     try:
         stream = io.BytesIO(data)
@@ -144,6 +144,10 @@ def read_bytes(data, *, _cell_store_factory=None):
             part = main['path']
             used_parts.add(part)
             used_parts.add(rels_path(part))
+            chart_reader = None
+            if read_charts:
+                from et_ooxml_charts import ChartContent
+                chart_reader = ChartContent(package, budget, report, used_parts)
             main_type = types.get(part)
             if main_type is not None and main_type not in BOOK_TYPES:
                 raise ValueError('Unsupported spreadsheet main content type')
@@ -342,6 +346,7 @@ def read_bytes(data, *, _cell_store_factory=None):
                     used_parts=used_parts, used_comment_parts=used_comment_parts,
                     main_part=part,
                 )
+                context.chart_reader = chart_reader
                 if _cell_store_factory is not None:
                     context.cells = _cell_store_factory(name)
                     context.cell_window = True
@@ -351,6 +356,8 @@ def read_bytes(data, *, _cell_store_factory=None):
                     continue
                 if parsed['truncated'] or context.uncertain:
                     data_uncertain = True
+                if read_charts:
+                    record['charts'] = parsed.get('charts', [])
                 record['cells'] = parsed['cells']
                 record['merges'] = parsed['merges']
                 record['hyperlinks'] = parsed['hyperlinks']

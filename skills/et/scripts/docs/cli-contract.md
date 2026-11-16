@@ -18,7 +18,7 @@ capabilities为普通JSON：skill=et、interface_version=1、operations=[read,me
 
 ## 内容 profile 与迁移
 
-`run`/`read_et.py` 默认 `--profile content`，返回 `et_content_v1` 和 `source_schema_version`，不冒充原工作簿 schema。保存值/类型/公式缓存风险、数字解释、合并、批注/链接文字、诊断及覆盖保留；视觉样式、绘图对象和二进制证据按 `output_projection` 明示省略。完整证据和旧 CLI 消费者加 `--profile full`；程序 API 与下述 read/metadata 协议仍默认 full，不改变 v1 提供方契约。
+`run`/`read_et.py` 默认 `--profile content`，返回 `et_content_v1` 和 `source_schema_version`，不冒充原工作簿 schema。投影 revision 2 保留保存值/类型/缓存风险、数字解释、合并、批注/链接文字、OOXML工作表引用图表的标题/系列/保存点和源覆盖。诊断按代码/次数及最多两处表格位置汇总，full 保留原始诊断；内部样式/偏移/重复assessment省略。图表缓存不重算、不填缺点，不读取隐藏图表对象或孤立部件；隐藏工作表状态仍返回。BIFF图表语义、独立图表表、图片/一般绘图文字未提取，见 content_scope。完整证据和旧 CLI 消费者加 `--profile full`；程序 API 与下述 read/metadata 协议仍默认 full，不改变 v1 提供方契约。
 
 BIFF content 在解析阶段不生成一般元数据 payload_hex，Font 仍供内部富文本校验；预算按原字节计算，安全扫描与诊断不变。它不是完全省去绘图/样式解码；OOXML/文本主要是输出投影，未声明解析峰值内存改进。内容投影不可交给原 schema 消费方。`--compact` 对 content 无额外改变，full 保留旧精简/预算降级；content 超预算直接失败。`--output` 清单附 `output_projection`，文件可含 content 或 full，按文件 schema 判读。
 
@@ -82,3 +82,5 @@ UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型�
 ## 独立解析期分页接口
 
 `<skill-root>/scripts/et_parse_page.py --capabilities` 声明 `et_parse_page_v1` 与 revision 1；它不是 `psl_capabilities_v1` 的新增 operation，不改变原 read/metadata/run 协议。输入为任务相对文件，输出单条 UTF-8 JSON；无输出文件或缓存。完整扫描源诊断，存储顺序分页，行/列继承样式自动全量回退并通过 parse_mode 报告。完整输入/输出/游标/预算/遗漏规则见 `<skill-root>/references/bounded-reading.md#可选-ooxml-解析期分页独立接口`。独立 schema 不可直接交给原完整提取消费方。
+
+默认内容中的无公式纯 blank 格以 `stored_blank_cells.count/ranges` 无损合并坐标区间，保留已读显式空白与未读/缺失的区别；非空保存值、空文本、缺缓存公式和合并范围不改。不能把区间外未返回坐标推成空白；如需逐格原结构使用 full。

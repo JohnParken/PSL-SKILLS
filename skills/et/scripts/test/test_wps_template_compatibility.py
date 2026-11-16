@@ -225,7 +225,7 @@ class PageBreakDataReadingTests(unittest.TestCase):
             self.assertEqual(process.stderr, '')
             result = json.loads(process.stdout)
             self.assertEqual(result['status'], 'partial')
-            self.assertFalse(result['reading_assessment']['full_format_verified'])
+            self.assertTrue(result['content_scope']['not_rendered'])
             self.assertTrue(any(item['code'] == 'page_break_layout_not_applied' for item in result['issues']))
             self.assertEqual(source.read_bytes(), raw)
 

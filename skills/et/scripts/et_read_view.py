@@ -11,7 +11,7 @@ def project(result, data, options, **view_options):
         result['issues'] = [*result.get('issues', []), {
             'code': 'content_profile_projection',
             'source_schema_version': result.get('source_schema_version'),
-            'omitted': 'visual_layout_rich_formatting_and_binary_evidence',
+            'omitted': 'layout_parser_structure_binary_and_full_diagnostics; charts_require_nonpaged_content_read',
             'saved_values_unchanged': True, 'retrieve_full': '--profile full'}]
     try:
         return shared_project(result, data, options, **view_options)

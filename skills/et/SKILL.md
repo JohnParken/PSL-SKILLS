@@ -1,7 +1,7 @@
 ---
 name: et
-version: "20261116.1353.3706"
-description: 读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，适合查看表头、筛选排序、去重及按指定范围统计汇总。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
+version: "20261116.1514.5688"
+description: 读取金山 WPS 表格（.et/.ett）的文字、保存值、公式缓存及可提取图表，适合查看表头、筛选排序、去重及指定范围统计。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
 # WPS 表格（ET/ETT）只读提取与统计
@@ -65,7 +65,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check"
 - 表名与规模概况：`<skill-root>/scripts/read_et.py` 加 `--summary`。
 - 候选表头与空位：下方 `analyze_et.py --preview` 指定矩形。
 - 本 Skill 区域统计：直接使用下方 `analyze_et.py`，不遍历分页或绕经完整 JSON。
-- 单元格文字和表格保存值：默认内容读取，返回 `et_content_v1`。
+- 单元格文字、表格保存值与可提取图表：默认内容读取，返回 `et_content_v1`。
 - 完整证据、图片/绘图/版式调查或外部原 schema 消费：显式加 `--profile full`；普通任务不加载高级参考。
 
 在任务工作目录运行，将文件名换成实际输入。读取一律使用内容优先的容错策略，不再需要 `--compatibility strict` 等选项；旧参数仅为兼容而接受，会被忽略并记录 `compatibility_option_ignored`。
@@ -78,13 +78,13 @@ OOXML 解析期分页可选独立入口 `<skill-root>/scripts/et_parse_page.py`�
 
 只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其 `wps_read_view_v1` 是投影，不交给原 schema 分析器。分页用于抽查，不先遍历全部页做全量统计；每页仍重读解析输入。需要统计或处理结果表时用下方分析入口；已取得完整 JSON 的程序按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源 partial 与诊断。
 
-默认内容结果为 `et_content_v1`：保留所有已读工作表/坐标、文字、类型化数值、公式缓存及风险、数字解释、合并、批注/链接文字和诊断；省略图片/绘图对象、版式、富文本样式和非必要二进制证据。`output_projection` 明示遗漏和来源 schema，不把投影交给要求原工作簿 schema 的程序。`--profile full` 恢复原提取；Python `read_bytes/read` 和跨技能 `et_cli.py read/metadata` 仍默认完整，接口版本不变。
+默认内容结果为 `et_content_v1`（投影 revision 2）：保留所有已读工作表/坐标、文字、类型化数值、公式缓存及风险、数字解释、合并、批注/链接文字，以及 OOXML 工作表实际引用的图表标题、系列名、分类及保存点。诊断按代码汇总次数并保留最多两处表/格定位，不输出重复 assessment、样式索引、内部偏移及部件/关系清单；原始诊断仍在 full。`content_scope` 与 `output_projection` 明示范围、遗漏和来源 schema，不把投影交给要求原工作簿 schema 的程序。`--profile full` 恢复原提取；Python `read_bytes/read` 和跨技能 `et_cli.py read/metadata` 仍默认完整，接口版本不变。
 
 BIFF 内容路径在解析时不生成一般不透明元数据的十六进制副本；Font 字节仍留给现有校验。安全扫描、预算、诊断和数字格式解释照旧；不是跳过全部绘图/样式解析或恒定内存。OOXML 与文本路径目前主要减少输出，不声称解析成本下降。
 
 JSON 默认上限为 64 MiB，可用 `--max-json-bytes`（1 MiB–256 MiB）调整；完整 profile 超过预算时先自动精简一次（省略原始字节证据与重复来源字段，保存值、类型、缓存、合并、诊断不变）再决定成功或明确失败；内容 profile 已精简，超预算明确失败。`--profile full --compact` 可主动选择旧精简输出；内容 profile 的 `--compact` 不再改变结果，`output_projection` 明确原始证据不完整。需要避免把大 JSON 全部回传时，使用 `--output <裸文件名>` 流式写入任务根目录新文件；文件预算默认 256 MiB（包含末尾换行），仍不能绕过上限。stdout 仅返回 `et_output_manifest_v1` 清单（文件名、实际字节数及 SHA-256、状态），不输出截断 JSON。
 
-1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认 `schema_version=et_content_v1`；`--profile full` 的电子表格 schema 应为 `biff5_readonly_v1`、`biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1` 或文本导出的 `text_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口，不等于失败或必须停止；退出 1 或 2 才停止后续分析，不把失败当空表。
+1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认 `schema_version=et_content_v1`；`--profile full` 的电子表格 schema 应为 `biff5_readonly_v1`、`biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1` 或文本导出的 `text_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与覆盖字段中的缺口（full 另含 `reading_assessment`），不等于失败或必须停止；退出 1 或 2 才停止后续分析，不把失败当空表。
 2. **解释保存值。** 按单元格 `type` 解释 `value`，保留数字字符串的精度和文本编号；`numeric_interpretation` 仅补充格式解释，不能替代原值。`formula` 存在时读取的是保存缓存，结合 `cache_status` 区分缺失、错误和未验证缓存，不能保证最新或重算。程序消费和保存值解释见电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）。
 3. **交付或分析。** 提交所需工作表/区域及明确缺口；需要汇总时选定区域和缓存政策，使用下面的只读分析入口。如另有 xlsx 技能，可消费满足其限制的原读取 JSON，仍保留源 partial 和诊断；不要把派生分析 schema 冒充原工作簿。
 
@@ -93,8 +93,9 @@ JSON 默认上限为 64 MiB，可用 `--max-json-bytes`（1 MiB–256 MiB）调�
 ### 内容与安全边界
 
 - 只使用已解析保存值，不重算公式、不执行宏/嵌入对象、不联网或跟随外链；缓存可能过期。未知容器、加密、ZIP/XML 安全禁止项、无法安全建立基础分配表和硬资源上限仍拒绝。
-- 局部损坏保留可靠内容及原 `partial`/`issues`/`reading_assessment`。未知记录、跳表、缺缓存或文字截断可能影响值覆盖，不能因省略二进制证据把覆盖改为完整；已知非值元数据错误不等于单元格值丢失。
-- 默认内容投影不认证视觉布局、图片中的文字或绘图文字；需要这些时明确缺口并按需查高级参考，不能把未提取说成不存在。合并范围与文本导出的坐标风险保持原标记。
+- 局部损坏保留可靠内容及原 `partial`/值覆盖，默认 `issues` 为代码/次数摘要；完整 `issues`/`reading_assessment` 在 full。未知记录、跳表、缺缓存或文字截断可能影响值覆盖，不能因省略二进制证据把覆盖改为完整；已知非值元数据错误不等于单元格值丢失。
+- 默认图表只读 OOXML 工作表→绘图→图表引用链，不扫描孤立图表部件，不跟随外链；保存为隐藏的图表对象不输出，工作表隐藏状态保留。分类/数值保留源点索引和原字符串，缺失缓存或稀疏点不填零、不从公式推算；缓存不保证最新。详细范围见 `<skill-root>/references/embedded-charts.md`。
+- 默认内容不等于客户端渲染：仍包含隐藏表/行中的保存单元格；BIFF 图表语义、独立图表表、图片内及一般绘图文字未提取，明确提示而不称不存在或完整。图表版式/扩展不认证，合并及文本坐标风险保留。
 - 仅调查复杂文件、记录损坏或原始证据时，使用 `--profile full` 并读取 `<skill-root>/references/advanced-spreadsheet-routing.md`；BIFF5/7 边界见 `<skill-root>/references/biff5-readonly.md`，缓存和数值解释按上节任务直达参考。
 
 ## 统计与结果表处理
@@ -144,3 +145,5 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 验收用户明确要求的结果文件后，用宿主 execute 调用本包 `"<skill-root>/scripts/archive_delivery.py" 读取结果.json --protect-input 用户原件.et`，参数应替换为本轮实际文件名。批次状态 success/partial/failed/not_required，归档 CLI 分别退出 0/3/1/0，参数错误退出 2；单项 copied/already_archived/failed。仅分析用 JSON 不执行归档。
 
 显式最终导出优先直接调用 `execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --output 读取结果.json --delivery")`（归档需 Python 3.10+）。`--delivery` 必须与 `--output` 同用，不接受概况/分页或自检；写后核对文件字节数和 SHA-256，再保护原件并归档。stdout 清单包含 `final_deliverables`、`output_written` 和 `delivery`；读取 partial/退出 3 保留，归档状态独立检查。缺失 questionId 或归档失败仍保留已写 JSON，不重跑读取覆盖文件，改用显式归档入口重试。未加 `--delivery` 的 `--output` 仅为内部交接文件，不能把它交给用户后省略归档。分析器 stdout 另存最终文件也须验收后显式归档。
+
+默认内容中的无公式纯 blank 格以 `stored_blank_cells.count/ranges` 无损合并坐标区间，保留已读显式空白与未读/缺失的区别；非空保存值、空文本、缺缓存公式和合并范围不改。不能把区间外未返回坐标推成空白；如需逐格原结构使用 full。

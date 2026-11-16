@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.1353.3706`（默认内容 profile，完整证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.1514.5688`（默认内容 profile，完整证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 默认只向 stdout 输出结果；完整读取可用 `--output <裸文件名>` 在任务根目录独占创建 JSON 文件并只在 stdout 返回 `et_output_manifest_v1` 清单。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -366,6 +366,16 @@ BIFF5/7 globals 仍要求 8 字节、0x0500。工作表 BOF 可兼容同为 8 �
 
 ## 2026-11-16 默认内容读取
 
-常用 `read_et.py`/`et_cli.py run` 默认 `--profile content`：保留文字、类型化保存值、公式缓存风险、数字解释、合并与全部诊断/覆盖；省略绘图/对象、版式、富文本格式及非必要二进制证据。新 schema 为 `et_content_v1`，`source_schema_version` 和 `output_projection` 明示来源与遗漏，不得当原工作簿 schema。`--profile full` 是旧 CLI 与高级证据的迁移入口；Python API、公开 read/metadata、区域分析的原契约不变。文件清单也标记投影。
+常用 `read_et.py`/`et_cli.py run` 默认 `--profile content`：保留文字、类型化保存值、公式缓存风险、数字解释、合并、引用图表内容及诊断摘要/覆盖；省略内部结构、版式、富文本格式及非必要二进制证据。新 schema 为 `et_content_v1`，`source_schema_version` 和 `output_projection` 明示来源与遗漏，不得当原工作簿 schema。`--profile full` 是旧 CLI 与高级证据的迁移入口；Python API、公开 read/metadata、区域分析的原契约不变。文件清单也标记投影。
 
 BIFF 内容路径在解析时免生成一般 opaque payload_hex，Font 暂保留给已有富文本校验；字节/记录预算、未知记录诊断和安全扫描不变。尚未完全跳过绘图/样式解码，OOXML/文本主要为输出减少，不声称全解析内存或运行时间已优化。图片及绘图文字不在内容覆盖保证内。具体实测与限制见 [内容读取验收](../maintenance/et/content-profile-20261116.md)。
+
+## 2026-11-16 面向模型的可用内容与图表
+
+默认 content 的投影 revision 2 去掉逐格样式/来源/偏移和重复 assessment，只保留类型化保存值、数值/日期含义、公式缓存风险、批注/链接、合并及必要定位。诊断以代码/次数和最多两处表格位置汇总；所有完整诊断与内部结构仍由 --profile full 显式获取，不静默改变程序 full 协议。
+
+新增 OOXML 工作表引用链图表的标题、轴标题、系列名、分类和保存点；隐藏对象/孤立部件/外链不读，工作表隐藏状态保留。缺缓存/稀疏点不补值、不重算。BIFF图表、独立图表表、图片内/一般绘图文字和版式仍明确未覆盖。常规内容含所有已读保存单元格，包括隐藏行/表，不冒充屏幕渲染。摘要与单元格分页不附图表，须不分页内容读取。
+
+本轮证据与平台边界见 [内容与图表验收](../maintenance/et/visible-content-20261116.md)。
+
+默认内容中的无公式纯 blank 格以 `stored_blank_cells.count/ranges` 无损合并坐标区间，保留已读显式空白与未读/缺失的区别；非空保存值、空文本、缺缓存公式和合并范围不改。不能把区间外未返回坐标推成空白；如需逐格原结构使用 full。

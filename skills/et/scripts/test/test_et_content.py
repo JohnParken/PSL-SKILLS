@@ -9,7 +9,7 @@ import unittest
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(SCRIPTS), str(Path(__file__).resolve().parent)]
-from et_content import project_content
+from et_content import project_content, _blank_ranges
 from read_et import read_bytes
 from test_wps_biff8 import rec, workbook
 from test_wps_cfb import synthetic_cfb
@@ -24,15 +24,20 @@ class ContentProfileTests(unittest.TestCase):
     def assert_values_preserved(self, full, content):
         self.assertEqual(content['schema_version'], 'et_content_v1')
         self.assertEqual(content['source_schema_version'], full['schema_version'])
-        for key in ('status', 'partial', 'issues', 'reading_assessment',
+        for key in ('status', 'partial',
                     'cell_value_coverage', 'omissions_affect_cell_values', 'sheet_coverage'):
             if key in full:
                 self.assertEqual(content[key], full[key], key)
         self.assertEqual(len(full['sheets']), len(content['sheets']))
         for old, new in zip(full['sheets'], content['sheets']):
             self.assertEqual(old['name'], new['name'])
-            self.assertEqual(set(old['cells']), set(new['cells']))
+            blanks, ranges = _blank_ranges(old['cells'])
+            self.assertEqual(set(old['cells']) - blanks, set(new['cells']))
+            if blanks:
+                self.assertEqual(new['stored_blank_cells'], {'count': len(blanks), 'ranges': ranges})
             for ref, cell in old['cells'].items():
+                if ref in blanks:
+                    continue
                 for key in ('value', 'type', 'cache_status', 'numeric_interpretation', 'text_truncated'):
                     if key in cell:
                         # Numeric provenance may contain hex, but its meaning cannot change.
@@ -75,6 +80,7 @@ class ContentProfileTests(unittest.TestCase):
         content = read_bytes(raw, profile='content')
         self.assert_values_preserved(full, content)
         self.assertTrue(full['embedded_charts'])
+        self.assertEqual(content['chart_gaps'][0]['count'], 1)
         self.assertNotIn('embedded_charts', content)
         self.assertNotIn('note_drawings', content)
         self.assertEqual(content['sheets'][0]['cells']['A2']['value'], 42)
@@ -103,7 +109,8 @@ class ContentProfileTests(unittest.TestCase):
         full = read_bytes(raw)
         content = read_bytes(raw, profile='content')
         self.assert_values_preserved(full, content)
-        self.assertEqual(content['sheets'][0]['cells']['C1']['formula'], full['sheets'][0]['cells']['C1']['formula'])
+        self.assertEqual(content['sheets'][0]['cells']['C1']['formula']['text'], 'B1*2')
+        self.assertTrue(content['sheets'][0]['cells']['C1']['formula']['cache_may_be_stale'])
         self.assertNotIn('styles', content)
         self.assertNotIn('rows', content['sheets'][0])
 
@@ -127,7 +134,7 @@ class ContentProfileTests(unittest.TestCase):
         formula = content['sheets'][0]['cells']['A1']['formula']
         self.assertNotIn('tokens_hex', formula)
         self.assertTrue(formula['cache_may_be_stale'])
-        self.assertEqual(content['issues'], source['issues'])
+        self.assertEqual([x['code'] for x in content['issues']], [x['code'] for x in source['issues']])
 
     def test_security_refusals_and_invalid_profile(self):
         for profile in ('content', 'full'):

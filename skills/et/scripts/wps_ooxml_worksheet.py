@@ -888,7 +888,10 @@ def read_worksheet(context):
                              sheet_name=sheet)
     if comments:
         report.add('comment_layout_not_decoded', sheet=sheet, part=context.sheet_part)
-    return {'cells': context.cells, 'rows': context.rows, 'columns': context.columns,
+    chart_reader = getattr(context, 'chart_reader', None)
+    charts = chart_reader.worksheet(ws_root, relations, sheet) if chart_reader else None
+    return {**({'charts': charts} if charts is not None else {}),
+            'cells': context.cells, 'rows': context.rows, 'columns': context.columns,
             'merges': context.merges, 'filters': context.filters,
             'hyperlinks': context.hyperlinks, 'views': context.views,
             'comments': comments, 'truncated': context.truncated}

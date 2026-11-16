@@ -43,6 +43,7 @@
     "scripts/et_cli.py",
     "scripts/et_cli_protocol.py",
     "scripts/et_content.py",
+    "scripts/et_ooxml_charts.py",
     "scripts/et_output_page.py",
     "scripts/et_parse_page.py",
     "scripts/et_read_view.py",
