@@ -1,6 +1,6 @@
 ---
 name: tl-docx
-version: "20261116.1353.3706"
+version: "20261116.1511.1996"
 description: 使用 python-docx 读取 DOCX 或 DOTX 月报和复杂文档，提取正文、合并表格和图表保存值，按需核对结构与修订，支持导出报告。也可创建带多级编号和分节版式的 Word 文档，按明确目标填充模板、编辑副本或处理线程批注。
 dependency:
   python:
@@ -46,7 +46,7 @@ dependency:
 python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx"
 ```
 
-默认返回内容优先 JSON，聚焦正文、表格文字和图表保存值，隐藏纯结构定义及重复表示。看 `status`、`issues`、`coverage`、`has_more`：partial 时先提供可靠内容并明确遗漏，不把未知形状、图片未做 OCR、图表缓存缺失当作已完整读取。诊断默认按代码汇总，`--details` 可查看完整定位和诊断；原完整记录用 `--full`，不作为普通阅读前置步骤。显式选择 `--summary`、`--report` 或其他输出格式会切换专项视图，不同时传 `--content` / `--full`。
+默认返回内容优先 JSON，聚焦正文、表格文字和图表保存值，隐藏纯结构定义、文档属性、嵌套来源定位、字段指令及重复表示。保留编号、表格合并关系与表头确定性，图表包括保存的标题、轴标题、自定义标签和系列数值；不将保存值冒充实时值或完整渲染标签。看 `status`、`issues`、`coverage`、`has_more`：partial 时先提供可靠内容并明确遗漏，不把未知形状、图片未做 OCR、图表缓存缺失当作已完整读取。诊断默认按代码汇总，`--details` 可查看完整定位和诊断；原完整记录用 `--full`，不作为普通阅读前置步骤。显式选择 `--summary`、`--report` 或其他输出格式会切换专项视图，不同时传 `--content` / `--full`。
 
 结果过大时加 `--max-output-bytes 12000`，将返回的 `next_cursor` 原样传给 `--cursor`，保持视图及预算一致，直到 `has_more=false`。不能拼接被宿主截断的 JSON 或以首批代替全文。单记录超限、导出、其他格式和专项报告按读取参考处理。该视图调整不等于流式解析，也不承诺固定 token 降幅。
 

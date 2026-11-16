@@ -216,7 +216,7 @@ class WorkflowTests(unittest.TestCase):
         (self.task / 'red.png').write_bytes(red)
         (self.task / 'blue.png').write_bytes(blue)
         self.create([{'type': 'image', 'path': 'red.png', 'alt': '原图'}])
-        data, _ = self.invoke('read', 'source.docx')
+        data, _ = self.invoke('read', 'source.docx', '--full')
         image = next(item for item in data['records'] if item['type'] == 'image')
         part = image['resource_part']
         self.assertEqual(sha256(red).hexdigest(), image['resource_sha256'])

@@ -564,6 +564,7 @@ class ReportReader:
             chart_part=target,
             relationship_id=relationship_id,
             title=chart_data.get("title"),
+            annotations=chart_data.get("annotations", []),
             series_count=len(chart_data.get("series", [])),
             workbook_source=workbook,
             issues=list(dict.fromkeys(chart_data.get("issues", []))),

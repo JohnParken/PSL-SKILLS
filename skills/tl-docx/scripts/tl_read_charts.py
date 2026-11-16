@@ -168,6 +168,46 @@ def _series_nodes(root):
     return result, issues
 
 
+def chart_text(node):
+    """Read only rich/literal/cache text; formulas and formatting are not text."""
+    if node is None:
+        return None
+    drawing = '{http://schemas.openxmlformats.org/drawingml/2006/main}'
+    paragraphs = list(node.iter(drawing + 'p'))
+    if paragraphs:
+        return '\n'.join(''.join(item.text or '' for item in paragraph.iter(drawing + 't'))
+                         for paragraph in paragraphs) or None
+    return '\n'.join(item.text or '' for item in node.iter(_q('v'))) or None
+
+
+def chart_annotations(chart):
+    """Keep explicit axis titles and custom data-label text, not inferred labels."""
+    plot = _one(chart, 'plotArea')
+    result = []
+    if plot is None:
+        return result
+    series, _ = _series_nodes(chart.getparent())
+    series_numbers = {node: index for index, (_, node) in enumerate(series, 1)}
+    for child in plot:
+        local = child.tag.rsplit('}', 1)[-1] if isinstance(child.tag, str) else ''
+        if local in ('catAx', 'valAx', 'dateAx', 'serAx'):
+            title = chart_text(_one(_one(child, 'title'), 'tx'))
+            if title:
+                result.append({'kind': 'axis_title', 'axis_type': local, 'text': title})
+        if local.endswith('Chart'):
+            for label in child.iter(_q('dLbl')):
+                deleted = _one(label, 'delete')
+                if deleted is not None and deleted.get('val', '1') not in ('0', 'false', 'off'):
+                    continue
+                owner = next((node for node in label.iterancestors(_q('ser'))), None)
+                value = chart_text(_one(label, 'tx'))
+                if value:
+                    index = _one(label, 'idx')
+                    result.append({'kind': 'data_label', 'series_index': series_numbers.get(owner), 'point_index': None if index is None else _unsigned(index.get('val')),
+                                   'text': value})
+    return result
+
+
 def read_chart(root):
     """Return chart title, series cache records and cache coverage diagnostics."""
     if root.tag != _q("chartSpace"):
@@ -261,6 +301,7 @@ def read_chart(root):
         series_records.append(record)
     return {
         "title": title,
+        "annotations": chart_annotations(chart),
         "series": series_records,
         "external_data_id": external_id,
         "issues": list(dict.fromkeys(issues)),

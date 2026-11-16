@@ -2,7 +2,7 @@
 
 本 Skill 属于允许按需使用第三方组件的 `tl-` 系列，不受“仅 Python 标准库”限制；当前实际依赖仍以下方说明及 `requirements.txt` 为准。本次政策调整未新增组件，不扩大已实现能力，路径、安全与归档清理约束不变。
 
-当前 Skill 版本 `20261116.1353.3706`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
+当前 Skill 版本 `20261116.1511.1996`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
 
 ## 与 docx 的能力对照
 
@@ -50,3 +50,7 @@
 普通阅读、总结和问答使用 `read 文件.docx`，结构追溯使用 `--full` 获取完整记录。默认内容视图减少内部结构信息，但不掩盖 partial、遗漏或续读状态；不是视觉渲染结果，也不代表全部 OOXML 内容已支持。
 
 单元格文字保留段落边界和空段，避免不同段落粘连。图表显示包内保存的系列数据，缺失或稀疏缓存不补值，不读取外部工作簿或重新计算。形状与绘图存在未处理内容时明确诊断，视觉渲染及 OCR 未执行。`header.status` 区分 confirmed/candidate/none，confirmed 只说明显式范围或文档标记依据，不等于业务含义核验。表头候选不是用户确认的列含义，跨行或合并不明时不猜测。内容视图只接受 JSON，保留诊断/覆盖和分页；`--details` 可保留记录定位，其他结构与显式表头任务使用完整报告。
+
+默认内容投影 `content-v2` 进一步移除文档属性、字段指令和嵌套内部定位，保留表头确定性、合并关系、保存的图表轴标题与自定义数据标签。诊断与完整记录仍按需使用 `--details` / `--full`；图表数据不代表工作簿实时值或完整视觉渲染。游标 `read-view-v6`、缓存 `tl-report-6` 不与旧版本混用。
+
+本轮精简投影、完整续读及授权真实样本的范围与缺口见 [默认可见内容验收](../maintenance/tl-docx/visible-content-20261116.md)。

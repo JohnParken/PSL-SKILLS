@@ -1,5 +1,15 @@
 # 读取和验证
 
+## 目录
+
+- 普通阅读：默认内容优先
+- 原始 XML 与修订视图
+- 表头定位及报告导出
+- 显式解析缓存
+- 静态布局审查
+- 内容完整性和局部恢复
+- 超长单记录的无损分片
+
 路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
 
 从已确认的任务目录执行。`capabilities` 报告 `api_version=1`。`read` 支持标准 DOCX 和 DOTX 的包内数据，文件扩展名须与包类型相符。输入为普通文件，限 64 MiB，包内至多 4096 项，单项展开至多 32 MiB，总展开至多 192 MiB。未知文件、损坏结构、加密项和超限输入会报错。外部关系只记录引用信息。
@@ -12,7 +22,7 @@ python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --details
 python -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --full
 ```
 
-普通 `read` 默认返回内容优先 JSON，`--content` 是显式同义选项；`--full` 才返回原完整记录。内容视图不输出纯样式、编号和分节定义，只按可核对的来源身份去除重复表示，不按相同文字跨位置去重。表格保留所有行；嵌套表格父格的 `text` 留空并标记 `content_in_following_records=true`，其直属段落与内表按原顺序在后续记录呈现，不能把该空串理解成没有内容。图片提示未做 OCR。
+普通 `read` 默认返回内容优先 JSON，`--content` 是显式同义选项；`--full` 才返回原完整记录。内容视图不输出纯样式、编号和分节定义，只按可核对的来源身份去除重复表示，不按相同文字跨位置去重。表格保留所有行；嵌套表格父格的 `text` 留空并标记 `content_in_following_records=true`，其直属段落与内表按原顺序在后续记录呈现，不能把该空串理解成没有内容。图片是否 OCR 由 `coverage.drawing_content.image_ocr` 统一说明。
 
 默认隐藏记录级 `part`、`path` 和部分格式定位，`issues`、`document_issues` 按代码汇总为 `count`，并标记 `details_available=true`。加 `--details` 保留完整记录定位及逐项诊断；`diagnostics.full_details_option` 指明详细入口。覆盖与 partial 状态不会因此被删除，面向用户说明可靠内容和缺口，不直接转贴内部定位。该投影不是渲染器，不保证视觉顺序、页码或完整理解，也不减少输入解析范围。
 
@@ -56,7 +66,7 @@ python -I -B "<skill-root>/scripts/tl_docx.py" read "月报.docx" --compact-json
 
 用 `-o` 保存本次输出到新文件，JSON 用 `.json`、纯文字用 `.txt`、原始 XML 用 `.xml`。排版检查也可导出 JSON。文件与同参数 stdout 内容一致，保存时 stdout 返回回执，含 `result.read_status` 和可用分页信息；分页输出仅保存当前一批。`--delivery` 与 `-o` 合用，独立报告归档状态。报告导出最多 64 MiB，不覆盖已有文件；归档失败按回执摘要重试。文件和报告均保留缺失诊断。
 
-`read` 退出 0 时，`status=ok` 或 `partial`，后者带 `issues`，保留已读记录。分页时每批都带全局覆盖、`start`、`end`、`total`、`has_more`。`end` 为排他索引。默认返回整个选定视图；加 `--max-output-bytes 12000` 限制 JSON UTF-8 字节数（含末尾换行）。本轮游标视图更新为 `read-view-v5`，缓存解析版本为 `tl-report-5`；旧游标须从首批重新开始，旧缓存不可混用。`next_cursor` 与源文件 SHA-256、API 版本及视图绑定，单传游标时预算为 12,000 字节。预算放不下下一完整记录时退出 1，增加预算再读取；不拼接被截断的工具文本。
+`read` 退出 0 时，`status=ok` 或 `partial`，后者带 `issues`，保留已读记录。分页时每批都带全局覆盖、`start`、`end`、`total`、`has_more`。`end` 为排他索引。默认返回整个选定视图；加 `--max-output-bytes 12000` 限制 JSON UTF-8 字节数（含末尾换行）。本轮游标视图更新为 `read-view-v6`，缓存解析版本为 `tl-report-6`；旧游标须从首批重新开始，旧缓存不可混用。`next_cursor` 与源文件 SHA-256、API 版本及视图绑定，单传游标时预算为 12,000 字节。预算放不下下一完整记录时退出 1，增加预算再读取；不拼接被截断的工具文本。
 
 ```console
 python -I -B "<skill-root>/scripts/tl_docx.py" read "月报.docx" --max-output-bytes 12000
@@ -94,3 +104,9 @@ python -I -B "<skill-root>/scripts/tl_docx.py" validate "月报.docx"
 续读保持全部视图选项、分片开关及相同预算，并传 next_cursor；预算变化拒绝旧游标。source_record_total 是原记录数，分页 total 是含片段的输出单元数。小记录保持原结构。此功能不减少解析输入内存，不绕过总量限制；覆盖/诊断等元信息本身超预算仍须增大预算或缩小视图。当前读取和缓存版本已升级，旧游标及旧缓存不可混用。
 
 图形读取仅提取支持的存储文字和关联信息，不进行视觉渲染或 OCR。未还原的形状几何、无可读内容的绘图和未知图形内容通过诊断标记 partial；`coverage.drawing_content` 说明未支持的位置及渲染/OCR 未执行，不能从正文可读推断图形已完整读取。
+
+默认 `content-v2` 保留正文、附加故事、表格行及合并关系、图表点和显式轴标题/自定义标签；不输出文档属性、字段指令、内部部件路径及工作簿单元格定位。字段结果已在原段落时不再重复；编号显示标签保留。`--details` 保留来源与诊断，`--full` 保持完整记录接口。缓存值不等于实时工作簿、渲染标签或隐藏数据的可见性判断；图片文字仍未 OCR，缺失点保持 null，不从外部补取。
+
+`content-v2` 省略可恢复的重复默认值：普通正文记录省略 `story_kind=main`，单元格省略 `colspan=1`/`vmerge=null`，行省略零网格偏移和 `repeat_header=false`。合并关系仍由单元格 `origin`/`row_span`/非默认 `colspan` 表示，不再复制表级和逐行分组标签；表头保留范围、确定性和诊断，实际文字只在原行。图表原值不变的 raw/missing 显示副本省略，格式近似与不支持状态保留；全局 OCR/渲染提示不逐图片重复。高级编辑定位需 `--details` 或 `--full`，不得以默认视图寻找内部图片部件路径。
+
+默认内容顶层不回显源 SHA-256 或完整内部选项清单，源摘要仍参与游标绑定；需校验摘要用 `--details`/`--full`。仅显式影响内容范围的 options 保留。`api_version`、覆盖/分页字段用于公开契约和完整性核对；`cache` 仅在主动启用缓存时出现，token 是续页和释放所必需，不属于普通默认输出。

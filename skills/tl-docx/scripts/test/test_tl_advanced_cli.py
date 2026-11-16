@@ -36,7 +36,7 @@ class AdvancedCliTests(unittest.TestCase):
 
     def test_cache_continuations_and_release(self):
         """Final page releases the cache and explicit release is idempotent."""
-        first = self.invoke('read', 'source.docx', '--cache', '--max-output-bytes', '5000')
+        first = self.invoke('read', 'source.docx', '--cache', '--max-output-bytes', '3500')
         self.assertTrue(first['has_more'])
         token = first['cache']['token']
         last = self.invoke('read', 'source.docx', '--cache-token', token, '--cursor', first['next_cursor'],

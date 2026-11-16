@@ -48,7 +48,7 @@ def content_records(records, *, details=False):
     result = []
     for item in records:
         kind = item['type']
-        if kind in STRUCTURAL_TYPES or id(item) in duplicate_paragraphs:
+        if kind in STRUCTURAL_TYPES or (not details and kind == 'metadata') or id(item) in duplicate_paragraphs:
             continue
         duplicate = False
         ancestor = item.get('path', '').rsplit('/', 1)[0]
@@ -63,14 +63,10 @@ def content_records(records, *, details=False):
         if duplicate:
             continue
         projected = deepcopy(item)
-        if kind == 'image':
+        if kind == 'image' and details:
             projected['notice'] = 'Image present; text inside the image has not been read by OCR.'
         if not details:
-            for key in LAYOUT_KEYS | {'part', 'path'}:
-                projected.pop(key, None)
-            for cell in projected.get('cells', []):
-                cell.pop('part', None)
-                cell.pop('path', None)
+            projected = visible_record(projected)
         result.append(projected)
     return result
 
@@ -82,3 +78,91 @@ def diagnostic_summary(issues):
         code = issue.get('code', 'unspecified_diagnostic')
         counts[code] = counts.get(code, 0) + 1
     return [{'code': code, 'count': count, 'details_available': True} for code, count in counts.items()]
+
+
+# Hide known implementation fields, not arbitrary unknown record content.
+INTERNAL_KEYS = LAYOUT_KEYS | {
+    'part', 'path', 'content_type', 'chart_part', 'resource_part', 'resource_sha256',
+    'relationship_id', 'relationship_type', 'workbook_source', 'source_index',
+    'category_reference', 'value_reference', 'x_reference', 'y_reference',
+    'bubble_size_reference', 'category_cell', 'value_cell', 'x_cell', 'y_cell',
+    'bubble_size_cell', 'name_formula', 'category_formula', 'value_formula',
+    'x_formula', 'y_formula', 'bubble_size_formula', 'instruction',
+}
+
+
+def visible_record(item):
+    """Keep stored visible values and meaningful context, without OPC internals."""
+    kind = item.get('type')
+    for key in INTERNAL_KEYS:
+        item.pop(key, None)
+    if kind == 'image':
+        item.pop('target', None)  # The image's source is not visible image text.
+    if kind == 'paragraph':
+        if 'numbering' in item:
+            number = item['numbering']
+            item['numbering'] = {key: value for key, value in number.items()
+                                 if key in ('label', 'level')}
+        if 'fields' in item:
+            # Field instructions are never visible prose. Keep only results not
+            # already represented by this same source paragraph.
+            results = [field.get('text', '') for field in item.pop('fields')
+                       if field.get('text') and field['text'] not in item.get('text', '')]
+            if results:
+                item['field_results'] = results
+    if item.get('story_kind') == 'main' and kind != 'story':
+        item.pop('story_kind')
+    if kind == 'table_row':
+        item.pop('merged_groups', None)  # Already represented by cell origins/spans.
+        for key in ('grid_before', 'grid_after'):
+            if item.get(key) == 0:
+                item.pop(key)
+        if item.get('repeat_header') is False:
+            item.pop('repeat_header')
+        for cell in item.get('cells', []):
+            if cell.get('colspan') == 1:
+                cell.pop('colspan')
+            if cell.get('vmerge') is None:
+                cell.pop('vmerge', None)
+            cell.pop('merge_anchor', None)  # The origin still links to its text.
+    if kind == 'table' and isinstance(item.get('header'), dict):
+        # Rows already contain every label. Preserve header certainty and range.
+        for key in ('spans', 'columns'):
+            item['header'].pop(key, None)
+        item.pop('merged_groups', None)
+        item.pop('header_candidate', None)  # The enriched header retains certainty.
+    if kind == 'chart_series':
+        summary = item.get('cache_summary', {})
+        for key in ('description', 'diagnostics'):
+            summary.pop(key, None)
+        item.pop('category_levels', None)  # Each chart_point has its own levels.
+    if kind == 'chart_point':
+        for role, display in list(item.get('display', {}).items()):
+            if display.get('status') in ('raw', 'missing') and display.get('text') == item.get(role):
+                item['display'].pop(role)
+            elif display.get('text') == item.get(role):
+                display.pop('text', None)
+        if not item.get('display'):
+            item.pop('display', None)
+    return visible_fields(item)
+
+
+def visible_fields(value):
+    """Strip known source fields recursively, including cells and revisions."""
+    if isinstance(value, list):
+        return [visible_fields(item) for item in value]
+    if isinstance(value, dict):
+        return {key: visible_fields(item) for key, item in value.items()
+                if key not in INTERNAL_KEYS}
+    return value
+
+
+def content_coverage(coverage):
+    """Keep coverage and omissions while avoiding repeated parser inventories."""
+    result = deepcopy(coverage)
+    for key in ('main_part', 'records_by_type'):
+        result.pop(key, None)
+    if 'availability' in result:
+        result['availability'] = {key: value for key, value in result['availability'].items()
+                                  if key not in ('styles', 'numbering', 'core_metadata')}
+    return result

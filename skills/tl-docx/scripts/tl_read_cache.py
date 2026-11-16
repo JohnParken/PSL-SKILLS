@@ -11,7 +11,7 @@ import re
 import stat
 from secrets import token_hex
 
-PARSER_VERSION = 'tl-report-5'
+PARSER_VERSION = 'tl-report-6'
 MAX_BYTES = 64 * 1024 * 1024
 TOKEN_PATTERN = re.compile(r'tlc1\.([0-9a-f]{32})\.([0-9a-f]{64})\.([0-9a-f]{64})\.([0-9a-f]{64})\Z')
 

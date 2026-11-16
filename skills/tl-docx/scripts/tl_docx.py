@@ -23,7 +23,7 @@ CAPABILITIES = ['read-docx', 'read-dotx', 'source-bound-pages', 'create-docx', '
                 'threaded-comments', 'versioned-output', 'resume-cleanup', 'pagination-audit',
                 'raw-ooxml', 'revision-views', 'report-export', 'table-header-mapping', 'template-replacement',
                 'native-role-styles', 'parse-cache', 'tracked-text-replacement', 'part-bundle-roundtrip', 'layout-audit', 'lossless-record-fragments', 'content-first-read',
-                'default-content-read', 'full-record-read']
+                'default-content-read', 'full-record-read', 'visible-content-v2', 'stored-chart-annotations']
 
 
 
@@ -139,7 +139,7 @@ def read_result(package, args, raw_report=None, cache_meta=None):
         meta.update(document_coverage=document_coverage, document_issues=document_issues)
     if args.summary:
         meta['summary'] = {'heading_count': len(records), 'content_records_included': False}
-    binding_fields = [API_VERSION, 'read-view-v5', package.sha256, args.headings, args.summary, args.paragraph_range,
+    binding_fields = [API_VERSION, 'read-view-v6', package.sha256, args.headings, args.summary, args.paragraph_range,
                       args.section.strip() if args.section else None]
     if enhanced or args.revisions or args.include_related is not None or args.format == 'structure' or args.section_occurrence:
         options = {'format': args.format, 'revisions': args.revisions, 'include_related': args.include_related,
@@ -148,16 +148,25 @@ def read_result(package, args, raw_report=None, cache_meta=None):
         meta.update(options=options)
         binding_fields.append(options)
     if getattr(args, 'content', False):
-        meta.update(view='content', selection=selection, details=args.details, projection='content-v1')
+        meta.update(view='content', selection=selection, details=args.details, projection='content-v2')
         meta['coverage']['projection'] = {'mode': 'content', 'structural_definitions_omitted': True,
                                           'duplicate_representations_removed': True, 'layout_reproduced': False}
         if not args.details:
-            from tl_read_content import diagnostic_summary  # pylint: disable=import-outside-toplevel
+            from tl_read_content import content_coverage, diagnostic_summary  # pylint: disable=import-outside-toplevel
+            meta.pop('sha256', None)  # Still bound privately into every cursor.
+            selected_options = {key: value for key, value in meta.pop('options', {}).items()
+                                if key in ('revisions', 'include_related', 'table_header', 'section_occurrence')
+                                and value is not None and value != []}
+            if selected_options:
+                meta['options'] = selected_options
+            meta['coverage'] = content_coverage(meta['coverage'])
+            if 'document_coverage' in meta:
+                meta['document_coverage'] = content_coverage(meta['document_coverage'])
             meta['issues'] = diagnostic_summary(meta['issues'])
             if 'document_issues' in meta:
                 meta['document_issues'] = diagnostic_summary(meta['document_issues'])
             meta['diagnostics'] = {'mode': 'counts_by_code', 'full_details_option': '--content --details'}
-        binding_fields.extend(['content-v1', args.details])
+        binding_fields.extend(['content-v2', args.details])
     if args.format == 'structure':
         meta['view'] = 'structure'
     elif enhanced and not getattr(args, 'content', False):

@@ -49,7 +49,7 @@ class ContentTests(unittest.TestCase):
         projected = content_records(records)
         self.assertEqual(['same', 'same', 'box text', 'box text'], [item['text'] for item in projected if 'text' in item])
         self.assertNotIn('part', projected[0])
-        self.assertIn('OCR', projected[-1]['notice'])
+        self.assertNotIn('notice', projected[-1])  # OCR limitation is global coverage.
         self.assertIn('part', content_records(records, details=True)[0])
         self.assertEqual(6, len(records))
 
