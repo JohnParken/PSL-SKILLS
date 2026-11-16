@@ -202,7 +202,7 @@ class Biff8ToleranceTests(unittest.TestCase):
             self.assertNotIn('salvage_requested', default)
             self.assertIn('salvage_option_ignored', [x['code'] for x in obj['issues']])
             entry = Path(__file__).resolve().parents[1] / 'et_cli.py'
-            unified = subprocess.run([sys.executable, '-I', '-S', '-B', str(entry), 'run', str(p)],
+            unified = subprocess.run([sys.executable, '-I', '-S', '-B', str(entry), 'run', str(p), '--profile', 'full'],
                                      text=True, capture_output=True, timeout=20)
             self.assertEqual(unified.returncode, 3, unified.stdout + unified.stderr)
             self.assertEqual(json.loads(unified.stdout)['sheets'], default['sheets'])

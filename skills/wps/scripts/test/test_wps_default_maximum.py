@@ -1,4 +1,4 @@
-"""Default maximum, explicit legacy mode, and non-current revision boundaries."""
+"""Default content-first, explicit legacy mode, and non-current revision boundaries."""
 import json
 from pathlib import Path
 import subprocess
@@ -16,7 +16,7 @@ from test_wps import document, synthetic_cfb
 class DefaultMaximumTests(unittest.TestCase):
     def test_default_api_keeps_current_text_and_separate_stored_view(self):
         result = read_wps.read_bytes(ooxml_with_textbox())
-        self.assertEqual(result['reading_mode'], 'maximum')
+        self.assertEqual(result['reading_mode'], 'content')
         self.assertEqual(result['text'], 'MainNew\n')
         self.assertEqual(result['revision_content']['content']['text'], 'MainNewOld\n')
         self.assertEqual(result['content_view'], 'accepted_supported_revision_view')
@@ -55,7 +55,7 @@ class DefaultMaximumTests(unittest.TestCase):
         result = read_wps.read_bytes(header_package())
         self.assertEqual(result['text'], 'Intact body')
         self.assertEqual(result['related_stories'][1]['text'], 'Intact footer')
-        self.assertEqual(result['reading_mode'], 'maximum')
+        self.assertEqual(result['reading_mode'], 'content')
 
     def test_explicit_standard_does_not_read_related(self):
         result = read_wps.read_bytes(header_package(), reading_mode='standard')
@@ -87,7 +87,7 @@ class DefaultMaximumTests(unittest.TestCase):
             base = [sys.executable, '-I', '-S', '-B', script, 'source.wps']
             result = subprocess.run(base, cwd=directory, capture_output=True, text=True, check=False)
             self.assertEqual(result.returncode, 3)
-            self.assertEqual(json.loads(result.stdout)['reading_mode'], 'maximum')
+            self.assertEqual(json.loads(result.stdout)['reading_mode'], 'content')
             standard = subprocess.run([*base, '--reading-mode', 'standard'], cwd=directory, capture_output=True, text=True, check=False)
             self.assertNotIn('related_stories', json.loads(standard.stdout))
             rejected = subprocess.run([*base, '--summary'], cwd=directory, capture_output=True, text=True, check=False)

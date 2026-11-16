@@ -55,17 +55,19 @@ CFB 末扇区的 `cfb_missing_final_sector_padding` 属于兼容诊断。仅当�
 
 ## 最大化读取模式
 
-CLI、公开 `read()/read_bytes()` 默认 `reading_mode="maximum"`，固定附加区域读取、data兼容、recover文本、域缓存、对象占位及隐藏文字保留。OOXML/RTF 默认 accepted 正文，内容不同时把 all 存储视图放入独立 revision_content，避免删除文字混入当前正文；显式 all 始终标为非当前视图。MS-DOC 当前修订无法确认，存储文字仍返回但 current_view_available=false 且 partial。明确指定 standard 保持旧模式；窄范围、纯文本和隐藏筛选示例均显式选 standard。maximum 支持原完整JSON和新的完整结果无损分片；仍拒绝旧摘要/段落等仅主文投影。完整输出16 MiB上限，分片总规范JSON256 MiB上限，不静默裁剪；分片重组见 `<skill-root>/references/maximum-pagination.md`。
+默认 content 与显式 maximum 共用全文、附加区域、修订视图和有界内容恢复。content 在二进制文档中保留正文、表格与可提取对象文字，但跳过图片/图表缓存及纯段落布局扫描。表格相关 PAPX 仍解析验证，非必要布局明细不物化；`content_reading.not_requested` 与 partial 提示说明未检查范围，不声称所有对象内容已读取。maximum 保持原高级提取能力，图片/图表/布局问题才显式选用；原依赖该默认行为的调用方需传 `reading_mode="maximum"`。standard 及创建/编辑/转换内部读取不变。两模式均保留共享 `maximum_reading` 兼容描述字段，以 `reading_mode` 区分实际配置。
 
-- **MS-DOC/CFB。** `binary_table_structure.tables` 补读可确认的一级表格分组、存储列边界及横向和纵向合并，参见 `<skill-root>/references/binary-tables.md#表格分组与合并`。`drawing_objects` 记录存储形状和锚点。`binary_images` 提供已验证的 PNG 元数据和位置，带 `--include-image-bytes` 或 Python `include_image_bytes=True` 时可取有界原始字节。`binary_charts` 提供已定位的图表分类、系列、缓存值及缺失范围，见 `<skill-root>/references/binary-shapes.md#存储图表缓存`。附加区域见 `<skill-root>/references/ms-doc-stories.md#最大模式文本框`。
-- **OOXML Word：** 使用全部存储修订视图并跟随主文显式引用的页眉页脚、脚尾注和批注；另外从已经通过 XML/ZIP 结构检查的 `w:txbxContent` 子树提取文字和有限表格，按独立 `related_stories[type=textboxes]` 返回。绘图锚点、页面位置、Markup Compatibility Choice/Fallback 分支和主文阅读顺序都不推断；同一逻辑文本存在于多个未选择分支时可能分别返回，不能自动去重或并入主正文。
+CLI、公开 `read()/read_bytes()` 默认 `reading_mode="content"`，显式 maximum 保留高级证据；两模式固定附加区域读取、data兼容、recover文本、域缓存、对象占位及隐藏文字保留。OOXML/RTF 默认 accepted 正文，内容不同时把 all 存储视图放入独立 revision_content，避免删除文字混入当前正文；显式 all 始终标为非当前视图。MS-DOC 当前修订无法确认，存储文字仍返回但 current_view_available=false 且 partial。明确指定 standard 保持旧模式；窄范围、纯文本和隐藏筛选示例均显式选 standard。content/maximum 支持原完整JSON和新的完整结果无损分片；仍拒绝旧摘要/段落等仅主文投影。完整输出16 MiB上限，分片总规范JSON256 MiB上限，不静默裁剪；分片重组见 `<skill-root>/references/maximum-pagination.md`。
+
+- **MS-DOC/CFB（以下 PNG 和图表缓存仅显式 maximum）。** `binary_table_structure.tables` 补读可确认的一级表格分组、存储列边界及横向和纵向合并，参见 `<skill-root>/references/binary-tables.md#表格分组与合并`。`drawing_objects` 记录存储形状和锚点。`binary_images` 提供已验证的 PNG 元数据和位置，带 `--include-image-bytes` 或 Python `include_image_bytes=True` 时可取有界原始字节。`binary_charts` 提供已定位的图表分类、系列、缓存值及缺失范围，见 `<skill-root>/references/binary-shapes.md#存储图表缓存`。附加区域见 `<skill-root>/references/ms-doc-stories.md#最大模式文本框`。
+- **OOXML Word：** 使用 accepted 正文和独立 all 存储修订视图，并跟随主文显式引用的页眉页脚、脚尾注和批注；另外从已经通过 XML/ZIP 结构检查的 `w:txbxContent` 子树提取文字和有限表格，按独立 `related_stories[type=textboxes]` 返回。绘图锚点、页面位置、Markup Compatibility Choice/Fallback 分支和主文阅读顺序都不推断；同一逻辑文本存在于多个未选择分支时可能分别返回，不能自动去重或并入主正文。
 - **RTF：** 仅捕获已闭合且首控制字可证明为页眉、页脚、脚注或批注的目标组，在继承到该组的代码页和 `uc` 设置下隔离解析，并按独立故事返回。节、页面、引用锚点、目标组与主正文的阅读顺序未知；未闭合、超预算或无法可靠解析的区域保留失败/遗漏诊断，不猜测补齐。
 
 最大模式增加 `reading_mode=maximum` 与 `maximum_reading`。域及图表缓存以存储值返回。核对图表系列的 `status`、`points` 和 `missing_ranges`，这些字段的范围限于已定位的缓存。顶层 `status` 由全部诊断决定。加密、未知容器及安全和资源门禁按失败处理。WPS Office 12.1.0.26899 生产者和客户端视觉尚未验收。
 
 ## MS-DOC 段落 CP 来源（可选）
 
-本段原主文来源契约在显式 standard 下保持；默认 maximum 会扩大读取范围并增加修订视图字段和 partial 诊断。仅实际识别为 CFB + MS-DOC 的文档，显式使用 `--binary-paragraph-sources` 或 Python 的 `read_bytes(data, binary_paragraph_sources=True)` 才会尝试增加下列字段；CLI 必须使用默认 JSON 输出，`--format text` 与此来源选项组合会以参数错误退出 2，防止悄悄丢失来源字段；对 OOXML 或 BIFF8 使用此二进制专用参数会拒绝，而不是根据 `.wps` 后缀猜测格式。
+本段原主文来源契约在显式 standard 下保持；默认 content 会扩大读取范围并增加修订视图字段和 partial 诊断。仅实际识别为 CFB + MS-DOC 的文档，显式使用 `--binary-paragraph-sources` 或 Python 的 `read_bytes(data, binary_paragraph_sources=True)` 才会尝试增加下列字段；CLI 必须使用默认 JSON 输出，`--format text` 与此来源选项组合会以参数错误退出 2，防止悄悄丢失来源字段；对 OOXML 或 BIFF8 使用此二进制专用参数会拒绝，而不是根据 `.wps` 后缀猜测格式。
 
 - `paragraph_sources`：与**未转换的存储段落**一一对应的数组。每项仅包含 `index`、`cp_start`、`cp_end`、`text_cp_end`；其中 `[cp_start, cp_end)` 包含原存储段落结束符 CR（若有），`text_cp_end` 不包含该 CR。CP 坐标按 UTF-16 码元计数，补充平面字符占两个 CP，不是 Python 字符索引、物理字节偏移或页码。
 - `paragraph_source_status=exact_stored_cp`：表示当前故事的最终文本与存储文字相同（即使选择了但没有实际触发的转换策略），段落范围可以按存储段落顺序关联；这仍不证明页面布局、字符格式或生产软件来源。

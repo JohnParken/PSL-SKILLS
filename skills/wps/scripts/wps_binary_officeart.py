@@ -349,7 +349,7 @@ def _anchored_candidate_path(candidate, by_id, requested):
     return ()
 
 
-def _collect_object_links(officeart, by_id, requested, textboxes, links):
+def _collect_object_links(officeart, by_id, requested, textboxes, links, *, include_media=True):
     """Retain stored links only for uniquely identified, anchored shapes."""
     for shape_id, candidate in by_id.items():
         if not shape_id or candidate['flags'] & HIDDEN_FROM_LINKING:
@@ -361,6 +361,8 @@ def _collect_object_links(officeart, by_id, requested, textboxes, links):
         textbox = refs.get(TEXTBOX_ID_PROPERTY)
         if textbox and textboxes.get(shape_id) == textbox[0]:
             links['textboxes'][shape_id] = (path, textbox[1])
+        if not include_media:
+            continue
         picture = refs.get(PICTURE_INDEX_PROPERTY)
         if picture:
             links['pictures'].append((path, *picture))
@@ -369,7 +371,7 @@ def _collect_object_links(officeart, by_id, requested, textboxes, links):
             links['metro_blobs'].append((path, blob))
 
 
-def read_officeart(officeart, wanted_by_label, require, *, textbox_ids_by_label=None, object_links=None, blocked_by_label=None):
+def read_officeart(officeart, wanted_by_label, require, *, textbox_ids_by_label=None, object_links=None, blocked_by_label=None, include_media=True):
     """Return metadata for unique requested shapes in validated drawings.
 
     ``officeart`` is a bounded Region already checked for FIB range and
@@ -411,7 +413,7 @@ def read_officeart(officeart, wanted_by_label, require, *, textbox_ids_by_label=
             links = object_links[label] = {'textboxes': {}, 'pictures': [], 'metro_blobs': []}
             blocked = (blocked_by_label or {}).get(label, ())
             linkable = {shape_id: candidate for shape_id, candidate in unique.items() if shape_id not in blocked}
-            _collect_object_links(officeart, linkable, requested, (textbox_ids_by_label or {}).get(label, {}), links)
+            _collect_object_links(officeart, linkable, requested, (textbox_ids_by_label or {}).get(label, {}), links, include_media=include_media)
         cursor = drawing[4]
     require(labels_seen, officeart.location(cursor),
             'OfficeArt stream has no drawing container')

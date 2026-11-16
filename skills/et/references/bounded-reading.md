@@ -9,7 +9,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --sheet \"Data\" --page-size 100 --max-output-chars 65536")
 ```
 
-新输出使用 `schema_version=wps_read_view_v1`，原schema另存于 `source_schema_version`。保留原status/partial、issues、diagnostics、reading_assessment及已有coverage字段；源partial仍退出3，源ok退出0，失败退出1，参数错误退出2。视图省略的全局与工作表元数据逐项列于 `metadata_omitted`；未返回不表示不存在。样式、合并、超链接、批注、附加区域等完整证据仍需完整读取。不得把投影交给只接受原schema的XLSX分析器；本 Skill 区域统计直接使用 analyze_et.py；外部原 schema 消费时保留完整提取 JSON。
+新输出使用 `schema_version=wps_read_view_v1`，原schema另存于 `source_schema_version`。保留原status/partial、issues、diagnostics、reading_assessment及已有coverage字段；源partial仍退出3，源ok退出0，失败退出1，参数错误退出2。视图省略的全局与工作表元数据逐项列于 `metadata_omitted`；未返回不表示不存在。样式、合并、超链接、批注、附加区域等完整证据仍需 `--profile full` 完整读取。不得把投影交给只接受原schema的XLSX分析器；本 Skill 区域统计直接使用 analyze_et.py；外部原 schema 消费时保留完整提取 JSON。
 
 概况只返回表名与存储单元格数，不含单元格值，`coverage=overview_only_no_values_or_text`。单元格模式保留 `items[].sheet/cell/data` 的原始值、类型、数字解释、公式及cache_status，不丢精度或把文本编号转数值；只按表原顺序及行列顺序取已存单元格，不填空白。`--sheet` 按精确名称选表，不提供range参数。
 
@@ -18,6 +18,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 视图默认最多200个存储单元格，字符预算65536；`--page-size` 为1..10000，`--max-output-chars` 为512..2097152，预算含JSON末尾换行。仅 `--summary` 在完整诊断过大时改为 `diagnostic_summary`：保留源 status/partial、值覆盖风险和 assessment 的核心结论，报告源诊断条目数、至多20类代码样本及省略字段；计数是诊断条目，不是受影响单元格或聚合事件数。摘要不提供完整诊断，`details_omitted=true` 时须按需完整读取或提高预算；摘要本身仍放不下则失败。逐格分页不省略诊断，单格或完整诊断超过预算时返回 output_view_error。字符不是token，完整 JSON 预算也不同于视图预算。
 
 分页返回total_items/start/returned_items、truncated、next_cursor。truncated只表示当前视图还有后续，不改变源status；概况truncated=false也不表示数据已完整交付。保持文件、所有解析参数、sheet、page-size不变，将完整next_cursor作为正确引用的 `--cursor` 参数续读；允许调整字符预算。只有next_cursor=null才取完所选范围。源字节SHA256或选项变化、游标损坏会拒绝续读；从头重读，不混拼两版数据。游标不是授权或签名。
+
+当前 CLI 默认 `--profile content`：有界视图的 `source_schema_version=et_content_v1`，原解析 schema 和投影遗漏在 `content_profile_projection` 诊断中说明；诊断概况 fallback 仍明确省略详情。保存值与缓存保留，二进制/版式证据不随默认页回传；需要原格证据加 `--profile full`。游标绑定 profile，不能混用或手改，旧游标重新开始。
 
 ## 完整 JSON 的预算、精简与文件输出
 
@@ -48,7 +50,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 
 ## 游标投影版本
 
-视图保留原schema和字段，并增加 `projection_revision=2`。新游标同时绑定此投影修订号、输入SHA256及选择/解析参数。缺少修订号的旧游标、不同修订号、非法游标或源/参数变化均明确拒绝续读；不能手改游标或混拼不同版本页，须从头重新读取。旧默认完整读取CLI/API不变，仅已开始的旧视图分页需要重启；以后改变投影顺序/解释时也应升级修订号。
+视图保留原schema和字段，并增加 `projection_revision=2`。新游标同时绑定此投影修订号、输入SHA256及选择/解析参数。缺少修订号的旧游标、不同修订号、非法游标或源/参数变化均明确拒绝续读；不能手改游标或混拼不同版本页，须从头重新读取。Python API 保留完整默认；CLI 当前默认 content，旧完整 CLI 改用 --profile full，已开始的旧视图分页需要重启；以后改变投影顺序/解释时也应升级修订号。
 
 字符预算按实际JSON编码（含转义和末尾换行）核对；多字节UTF-8字节数可能更多，字符不是token。单元格逐项编码累计后仍作最终完整JSON校验，诊断不裁剪；输出超预算保持原明确失败，不以空页或部分值假报成功。
 

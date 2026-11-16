@@ -4,16 +4,16 @@ from wps_access import ParseError
 CONTENT_FIELDS = ('text', 'paragraphs', 'tables', 'blocks', 'related_stories')
 
 
-def _partial(result, code, message):
+def _partial(result, code, message, *, stage='revision_view'):
     result['status'] = 'partial'
     result['partial'] = True
     field = 'diagnostics' if result.get('format') == 'ooxml-word' else 'issues'
-    result.setdefault(field, []).append({'code': code, 'message': message, 'stage': 'revision_view'})
+    result.setdefault(field, []).append({'code': code, 'message': message, 'stage': stage})
 
 
-def complete_maximum(data, result, *, revisions):
+def complete_maximum(data, result, *, revisions, reading_mode='maximum'):
     """Return accepted text when supported; never present mixed revisions as current."""
-    result['reading_mode'] = 'maximum'
+    result['reading_mode'] = reading_mode
     result['maximum_reading'] = {
         'stored_text_view': 'accepted-plus-separate-stored-revision-content',
         'related_content': 'requested', 'field_policy': 'cached_result-not-executed',
@@ -27,6 +27,17 @@ def complete_maximum(data, result, *, revisions):
         result['maximum_reading'].update(chart_policy='officeart_cache_only',
                                          object_policy='placeholder-with-optional-stored-png',
                                          stored_text_view='stored-text-revisions-unresolved')
+        if reading_mode == 'content':
+            result['maximum_reading'].update(chart_policy='not_requested', object_policy='placeholder-with-stored-object-text')
+            result['content_reading'] = {
+                'scope': 'supported_stored_text_tables_related_and_object_text',
+                'not_requested': ['binary_image_payloads', 'binary_chart_caches', 'paragraph_layout_only'],
+                'embedded_object_contents_complete': False,
+                'upgrade': '--reading-mode maximum',
+            }
+            _partial(result, 'binary_optional_content_not_requested',
+                     'Image payloads and chart caches were not inspected; object-only text or values may be missing. '
+                     'Use maximum for supported media/cache evidence; neither mode performs OCR or renders layout', stage='reading_scope')
         result['content_view'] = 'stored_text_not_verified_current'
         result['current_view_available'] = False
         _partial(result, 'current_revision_view_unresolved',

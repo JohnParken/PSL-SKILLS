@@ -15,7 +15,7 @@ import struct
 import subprocess
 import sys
 import unittest
-import uuid
+import secrets
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from et_table_analysis import analyze
@@ -199,7 +199,7 @@ class ReportRowsTests(unittest.TestCase):
                    formula(2, 0, struct.pack('<d', 999)))
         data = synthetic_cfb({'Workbook': workbook([payload], strings=[])})
         # Register the exclusive task-local tree before creating any test files.
-        directory = Path('et-row-selection-' + uuid.uuid4().hex)
+        directory = Path('et-row-selection-' + secrets.token_hex(16))
         self.assertFalse(directory.exists())
         directory.mkdir()
         try:

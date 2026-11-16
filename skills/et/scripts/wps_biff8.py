@@ -101,13 +101,16 @@ class Reader(GlobalSubstreamMixin, ResultAssemblyMixin):
     """One tolerant BIFF8 parse; never writes its input."""
 
     def __init__(self, data, *, compatibility=None, chart_policy=None,
-                 salvage_unknown_metadata=False, extract_stored_values=False):
+                 salvage_unknown_metadata=False, extract_stored_values=False,
+                 retain_metadata_payloads=True):
         require(compatibility is None or compatibility in READING_MODES,
                 'Unknown BIFF compatibility mode')
         require(type(salvage_unknown_metadata) is bool,
                 'Salvage option must be boolean')
         require(chart_policy is None or chart_policy in CHART_POLICIES,
                 'Unknown chart policy')
+        require(type(retain_metadata_payloads) is bool, 'Metadata retention option must be boolean')
+        self.retain_metadata_payloads = retain_metadata_payloads
         self.requested_compatibility = compatibility
         self.effective_compatibility = (compatibility
                                         or DEFAULT_READING_MODE)
@@ -210,7 +213,13 @@ class Reader(GlobalSubstreamMixin, ResultAssemblyMixin):
         self.metadata_bytes += size
         entry = {'scope': scope, 'offset': offset,
                  'record_id': hex(kind) if kind is not None else None,
-                 'name': name, 'payload_hex': payload.hex(), **extra}
+                 'name': name, **extra}
+        # Font bytes are consumed by rich-text validation during finalization.
+        # All budgets and metadata diagnostics stay identical in content mode.
+        if self.retain_metadata_payloads or name == 'Font':
+            entry['payload_hex'] = payload.hex()
+        else:
+            entry.update(payload_bytes=size, payload_omitted=True)
         self.metadata.append(entry)
         return len(self.metadata) - 1
 
@@ -406,7 +415,7 @@ class Reader(GlobalSubstreamMixin, ResultAssemblyMixin):
 
 def parse_stream(data, *, compatibility=None, chart_policy=None,
                  salvage_unknown_metadata=False,
-                 extract_stored_values=False):
+                 extract_stored_values=False, retain_metadata_payloads=True):
     """Parse BIFF8 bytes with the single tolerant policy.
 
     ``compatibility``/``salvage_unknown_metadata``/``extract_stored_values``
@@ -421,7 +430,8 @@ def parse_stream(data, *, compatibility=None, chart_policy=None,
     reader = reader_class(data, compatibility=compatibility,
                     chart_policy=chart_policy,
                     salvage_unknown_metadata=salvage_unknown_metadata,
-                    extract_stored_values=extract_stored_values)
+                    extract_stored_values=extract_stored_values,
+                    retain_metadata_payloads=retain_metadata_payloads)
     try:
         return reader.parse()
     except ValueError as exc:
@@ -481,7 +491,7 @@ def read_file(path, *, compatibility=DEFAULT_FILE_COMPATIBILITY,
 def read_container(container, path=None, *,
                    compatibility=DEFAULT_FILE_COMPATIBILITY,
                    chart_policy=None,
-                   salvage_unknown_metadata=False):
+                   salvage_unknown_metadata=False, retain_metadata_payloads=True):
     """Read one Workbook/Book stream from a validated CFB container."""
     if container.encrypted:
         raise EncryptedError('Encrypted compound workbook unsupported; no '
@@ -508,7 +518,7 @@ def read_container(container, path=None, *,
     result = parse_stream(
         content, compatibility=compatibility, chart_policy=chart_policy,
         salvage_unknown_metadata=salvage_unknown_metadata,
-        extract_stored_values=True)
+        extract_stored_values=True, retain_metadata_payloads=retain_metadata_payloads)
     macro_streams = [list(stream) for stream in container.streams
                      if any(part.casefold() in ('vba', '_vba_project_cur',
                                                 'macros')

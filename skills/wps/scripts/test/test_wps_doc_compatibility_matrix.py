@@ -30,7 +30,7 @@ def packed(streams):
 
 
 class DocCompatibilityMatrixTests(unittest.TestCase):
-    def test_five_binary_layouts_both_table_streams_default_maximum(self):
+    def test_five_binary_layouts_both_table_streams_default_content(self):
         for version in (0xC1, 0xD9, 0x101, 0x10C, 0x112):
             for table_one in (False, True):
                 with self.subTest(version=version, table_one=table_one):
@@ -38,7 +38,7 @@ class DocCompatibilityMatrixTests(unittest.TestCase):
                     self.assertEqual(result['text'], '正文 中文\n')
                     self.assertEqual(result['fib_version'], hex(version))
                     self.assertFalse(result['producer_verified'])
-                    self.assertEqual(result['reading_mode'], 'maximum')
+                    self.assertEqual(result['reading_mode'], 'content')
                     self.assertFalse(result['current_view_available'])
 
     def test_doc_cli_routes_actual_binary_rtf_and_ooxml_content(self):

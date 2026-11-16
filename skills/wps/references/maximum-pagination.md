@@ -1,10 +1,10 @@
-# maximum 完整结果无损分片
+# content/maximum 完整结果无损分片
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
 ## 何时使用
 
-默认 maximum 不加输出参数仍返回原完整 JSON，保留16 MiB单次序列化上限。结果太长或需要分次回传时，使用 maximum 的 `--page-size` / `--cursor` / 输出预算；它覆盖完整结果的正文、表格、附加区域、修订视图、来源和全部诊断，不降级成仅主文投影。
+默认 content 不加输出参数仍返回原完整 JSON，保留16 MiB单次序列化上限。结果太长或需要分次回传时，使用 content 或 maximum 的 `--page-size` / `--cursor` / 输出预算；它覆盖完整结果的正文、表格、附加区域、修订视图、来源和全部诊断，不降级成仅主文投影。
 
 这是规范化 JSON 的字符分片，不是文档物理页、段落页或流式文档解析。每次续读仍完整解析同一份输入；没有缓存、没有新建状态文件，不降低解析内存上限。显式 standard 的旧主文分页保持不变，其游标与本接口互不兼容。
 
@@ -20,7 +20,7 @@
 execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 8000 --max-output-chars 12000 --max-output-bytes 12000")
 ```
 
-读取返回的 `next_cursor`，下一次原样传入 `--cursor`，保持输入、读取选项与 page-size 相同。可以调整字符/字节预算，但不能手改游标或把其他文件的游标复用。游标很长，不逐字重写；按宿主安全参数传递能力原样引用。例中省略 reading-mode 即默认 maximum。
+读取返回的 `next_cursor`，下一次原样传入 `--cursor`，保持输入、读取选项与 page-size 相同。可以调整字符/字节预算，但不能手改游标或把其他文件的游标复用。游标很长，不逐字重写；按宿主安全参数传递能力原样引用。例中省略 reading-mode 即默认 content；显式 maximum 保留高级证据。跨模式续读拒绝，必须从头开始。
 
 - `page_size` 默认8000，范围1..262144，指规范JSON的Unicode字符数，不是正文长度。
 - `max-output-chars` 默认12000，范围512..2097152。
@@ -31,7 +31,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wp
 
 ## 读取和完整性判断
 
-每次返回一个合法JSON外壳，`schema_version=wps_maximum_page_v1`。其中 `payload_fragment` 是完整结果JSON的一段字符串，可能截在字段或字符串内部，不能把单个片段当完整业务JSON解析，也不能靠首尾括号猜测边界。
+两模式沿用同一分片 schema；外壳 reading_mode 区分模式，coverage 分别为 complete_content_result_json_transport 或 complete_maximum_result_json_transport。每次返回一个合法JSON外壳，`schema_version=wps_maximum_page_v1`。其中 `payload_fragment` 是完整结果JSON的一段字符串，可能截在字段或字符串内部，不能把单个片段当完整业务JSON解析，也不能靠首尾括号猜测边界。
 
 1. 从start=0开始，按收到顺序收集payload_fragment；后页start必须等于前页end，不能跳过、重复或排序后假装连续。
 2. 核对各页source_sha256/result_sha256/options_sha256和total长度一致；每页chunk_sha256及累计prefix_sha256对应其真实UTF-8内容。
@@ -45,7 +45,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wp
 
 运行模块为 `<skill-root>/scripts/wps_maximum_pages.py`；按已确认根定位，不猜相邻Skill。
 
-- `read_page(data, page_size=8000, cursor=None, max_output_chars=12000, max_output_bytes=12000, **parse_options)`：data为不可变bytes，默认maximum；明确standard会拒绝。
+- `read_page(data, page_size=8000, cursor=None, max_output_chars=12000, max_output_bytes=12000, **parse_options)`：data为不可变bytes；此高级分页 API 为兼容保留默认 maximum，内容优先时显式传 reading_mode="content"；standard 会拒绝。
 - `project(result, data, options, page_size=8000, cursor=None, max_chars=12000, max_bytes=12000)`：把已经解析的完整结果作无损传输投影。
 - `assemble_pages(pages)`：校验按顺序提供的页面，拒绝缺页、重复、乱序、混源、内容/摘要不符，返回重组后的完整JSON对象。重组最多65536页，超过时明确失败并需以更大片重新读取；需要保存所有页面或完整结果的内存，不是流式文档分析器。
 

@@ -79,7 +79,7 @@ class EtErrorLocationTests(unittest.TestCase):
             sample = Path(directory) / 'synthetic.et'
             sample.write_bytes(payload)
             script = Path(__file__).resolve().parents[1] / 'read_wps.py'
-            process = subprocess.run([sys.executable, '-I', '-S', '-B', str(script), str(sample)],
+            process = subprocess.run([sys.executable, '-I', '-S', '-B', str(script), str(sample), '--profile', 'full'],
                                      capture_output=True, text=True)
             self.assertEqual(process.returncode, 3, process.stderr)
             self.assertEqual(json.loads(process.stdout)['shared_string_phonetics'][0]['raw_ext_hex'], '726177')

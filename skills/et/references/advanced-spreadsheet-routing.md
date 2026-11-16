@@ -14,6 +14,8 @@ Globals 首位空负载 `WriteProtect` 和 Worksheet 首位零保留字段 `Unca
 
 已在中山市交通运输局两份公开 `.et` 文件上补齐 BIFF8 `TableStyle (0x088F)` 与相邻 `TableStyleElement (0x0890)` 的有界格式证据读取：校验完整样式组及 DXF 索引后原样保留，返回 `partial`，不应用视觉样式；组不可验证时保留原始字节并报告 issue。真实文件核验分别读取 32/43 个单元格，独立 MS-XLS 记录观察器共对照 37 项保存值；详见真实 ET 实测（`docs/maintenance/et/biff8-gov-real-et-validation.md`）。两份的 CodePage 都为 1200，不证明其他 CodePage 的生产兼容性。
 
+本参考讨论高级完整提取。常用 CLI 默认为 `et_content_v1` 内容投影；读取本参考涉及的原始元数据、绘图或版式前显式使用 `--profile full`。Python API 和公开 read/metadata 协议保留默认完整提取。内容投影的省略不表示相关内容不存在；不从原始二进制推测未验证文字或图片含义。
+
 ## BIFF8 条件格式与分页元数据（默认部分读取）
 
 可读的 `CF` 常量比较和单独填充样式随 `uninterpreted_metadata[].structure` 返回，分别查看 `cell_value_comparison` 和 `differential_fill`。规则保持未执行、格式保持未应用。

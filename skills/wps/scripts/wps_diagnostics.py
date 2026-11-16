@@ -171,7 +171,7 @@ def _coverage(result, diagnostic_records):
                        for structure, _ in binary_structures]
     binary_state = ('unknown' if not binary_structures else
                     'extracted' if all(status == 'verified' for status in binary_statuses) else
-                    'partially_extracted' if 'rows_partial' in binary_statuses and result.get('reading_mode') == 'maximum'
+                    'partially_extracted' if 'rows_partial' in binary_statuses and result.get('reading_mode') in ('content', 'maximum')
                     else 'not_decoded')
     binary = _CoverageEntry('binary_tables', binary_state)
     for structure, story_type in binary_structures:

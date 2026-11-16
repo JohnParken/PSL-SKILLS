@@ -71,7 +71,7 @@ class Region:
 
 
 def parse_streams(streams, *, field_policy='reject', object_policy='reject', include_related=False, hidden_text='include',
-                  binary_paragraph_sources=False, text_policy='strict', maximum=False, include_image_bytes=False):
+                  binary_paragraph_sources=False, text_policy='strict', maximum=False, include_image_bytes=False, content_only=False):
     require(text_policy in ('strict', 'recover'), {'stage': 'options'}, 'Unknown binary text policy', 'unsupported')
     require(field_policy in ('reject', 'cached_result'), {'stage': 'options'},
             'Unknown MS-DOC field policy', 'unsupported')
@@ -81,6 +81,8 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
             'Effective binary visibility is unknown; exclude unsupported', 'unsupported')
     require(type(binary_paragraph_sources) is bool, {'stage': 'options'},
             'binary_paragraph_sources must be boolean', 'unsupported')
+    require(type(content_only) is bool and (not content_only or maximum and not include_image_bytes),
+            {'stage': 'options'}, 'Content-only binary reading requires maximum recovery without image bytes', 'unsupported')
     require(not include_image_bytes or maximum, {'stage': 'options'}, 'Image bytes require maximum reading', 'unsupported')
     # CFB applies these budgets before materializing streams. Repeat at this
     # internal seam so direct tests/callers cannot bypass the parser budgets.
@@ -457,7 +459,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         table_structure = None
         metadata_text = stored_story_text if field_spans else text
         has_table_marks = '\x07' in metadata_text
-        has_layout = maximum and bool(word.number(FC_LCB_START + 13 * 8 + 4)) and '\r' in metadata_text
+        has_layout = maximum and not content_only and bool(word.number(FC_LCB_START + 13 * 8 + 4)) and '\r' in metadata_text
         if (has_table_marks or has_layout) and (not field_count or maximum):
             from wps_binary_tables import inspect_tables
             marker_replacements = None
@@ -471,7 +473,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                              for item in header_mapping.get('word_ranges', [])] if header_mapping else (),
                 piece_properties=piece_properties, piece_prms=piece_prms, field_spans=field_spans,
                 marker_replacements=marker_replacements,
-                data_region=data_region, data_ownership=data_ownership)
+                data_region=data_region, data_ownership=data_ownership, include_layout=not content_only)
             issues.extend(table_structure['issues'])
         elif has_table_marks:
             issues.append({'code': 'binary_table_fields_unresolved', 'stream': 'WordDocument',
@@ -492,7 +494,7 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
                 'field_policy': field_policy, 'fields_evaluated': False, 'issues': issues, 'text_policy': text_policy,
                 'object_policy': object_policy, 'objects_decoded': False,
                 'scope': 'stored_main_story_only', 'producer_verified': False}
-        if maximum and table_structure is not None:
+        if maximum and table_structure is not None and not content_only:
             story_result['binary_paragraph_layout'] = table_structure.pop('paragraph_layout')
             if not has_table_marks:
                 story_result['binary_paragraph_layout']['fkp_ranges'] = table_structure['fkp_ranges']
@@ -598,14 +600,15 @@ def parse_streams(streams, *, field_policy='reject', object_policy='reject', inc
         result['partial'] = bool(result['issues'])
         result['status'] = 'partial' if result['partial'] else 'ok'
     if maximum:
-        from wps_binary_charts import add_binary_charts
-        from wps_binary_images import add_binary_images
         from wps_binary_shapes import add_drawing_descriptions
-        picture_links, chart_links = add_drawing_descriptions(result, drawing_region, anchors_by_story, require)
-        inline_charts = add_binary_images(result, region=drawing_region, word=word, data=data_region, table=table, pieces=pieces, positions=positions,
-                                         fib_end=fib_end, cb_mac=cb_mac, header_mapping=header_mapping, table_spans=table_spans,
-                                         data_spans=data_ownership, links=picture_links, piece_prms=piece_prms, include_bytes=include_image_bytes)
-        add_binary_charts(result, chart_links + inline_charts)
+        picture_links, chart_links = add_drawing_descriptions(result, drawing_region, anchors_by_story, require, content_only=content_only)
+        if not content_only:
+            from wps_binary_charts import add_binary_charts
+            from wps_binary_images import add_binary_images
+            inline_charts = add_binary_images(result, region=drawing_region, word=word, data=data_region, table=table, pieces=pieces, positions=positions,
+                                             fib_end=fib_end, cb_mac=cb_mac, header_mapping=header_mapping, table_spans=table_spans,
+                                             data_spans=data_ownership, links=picture_links, piece_prms=piece_prms, include_bytes=include_image_bytes)
+            add_binary_charts(result, chart_links + inline_charts)
     result['visibility_status'] = 'visibility_unknown'
     if hidden_text == 'annotate':
         from wps_msdoc_charprops import inspect_character_properties
@@ -669,7 +672,7 @@ def failure(status, location, message):
 def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
                field_policy=None, object_policy=None, revisions=None, include_related=False,
                hidden_text="include", binary_paragraph_sources=False, text_policy=None,
-               reading_mode='maximum', include_image_bytes=False):
+               reading_mode='content', include_image_bytes=False):
     """Identify content first; the suffix is provenance, never a format selector."""
     require(isinstance(data, bytes) and len(data) <= MAX_FILE_BYTES,
             {'stage': 'input'}, 'Input exceeds byte budget or is not bytes', 'resource_limit')
@@ -678,12 +681,12 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
     require(type(binary_paragraph_sources) is bool, {'stage': 'options'},
             'binary_paragraph_sources must be boolean', 'unsupported')
     require(text_policy in (None, 'strict', 'recover'), {'stage': 'options'}, 'Unknown binary text policy', 'unsupported')
-    require(reading_mode in ('standard', 'maximum'), {'stage': 'options'},
+    require(reading_mode in ('standard', 'content', 'maximum'), {'stage': 'options'},
             'Unknown reading mode', 'unsupported')
     require(revisions in (None, 'accepted', 'original', 'all'), {'stage': 'options'},
             'Unknown revisions policy', 'unsupported')
-    maximum = reading_mode == 'maximum'
-    require(type(include_image_bytes) is bool and (not include_image_bytes or maximum),
+    maximum = reading_mode != 'standard'
+    require(type(include_image_bytes) is bool and (not include_image_bytes or reading_mode == 'maximum'),
             {'stage': 'options'}, 'Image bytes require maximum reading', 'unsupported')
     if maximum:
         require(compatibility == 'data' and chart_policy in (None, 'reject'), {'stage': 'options'},
@@ -706,7 +709,7 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
     def finish(result):
         if maximum:
             from wps_maximum_view import complete_maximum
-            result = complete_maximum(data, result, revisions=revisions)
+            result = complete_maximum(data, result, revisions=revisions, reading_mode=reading_mode)
         return result
     require(not include_image_bytes or data.startswith(SIGNATURE), {'stage': 'options'},
             'Image bytes are available only for binary MS-DOC', 'unsupported')
@@ -775,7 +778,7 @@ def _read_bytes(data, *, source=None, compatibility='data', chart_policy=None,
         result = parse_streams(compound.streams, field_policy=field_policy, object_policy=object_policy,
                                include_related=include_related, hidden_text=hidden_text,
                                binary_paragraph_sources=binary_paragraph_sources, text_policy=effective_text_policy,
-                               maximum=maximum, include_image_bytes=include_image_bytes)
+                               maximum=maximum, include_image_bytes=include_image_bytes, content_only=reading_mode == 'content')
         result['compatibility_mode'] = compatibility
         result['container_compatibility'] = compound.compatibility
         result['container_issues'] = compound.issues
@@ -862,7 +865,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
     parser.add_argument('--format', choices=('json', 'text'), default='json')
-    parser.add_argument('--reading-mode', choices=('standard', 'maximum'), default='maximum')
+    parser.add_argument('--reading-mode', choices=('standard', 'content', 'maximum'), default='content')
     parser.add_argument('--include-image-bytes', action='store_true', help='Include bounded base64 PNG bytes from binary MS-DOC in maximum mode')
     parser.add_argument('--compatibility', choices=('data', 'strict', 'legacy_excel_clsid', 'legacy_word_clsid'), default='data')
     parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None)
@@ -887,8 +890,8 @@ def main():
     args = parser.parse_args()
     if args.include_image_bytes and (args.reading_mode != 'maximum' or args.check):
         parser.error('--include-image-bytes requires --reading-mode maximum and a binary document')
-    if args.reading_mode == 'maximum' and args.format != 'json':
-        parser.error('--reading-mode maximum requires JSON to preserve separate recovered regions')
+    if args.reading_mode != 'standard' and args.format != 'json':
+        parser.error('Full content reading requires JSON to preserve separate recovered regions')
     if args.include_related and args.format == 'text':
         parser.error('--include-related requires --format json to preserve separate story regions')
     if args.binary_paragraph_sources and args.format == 'text':
@@ -897,8 +900,8 @@ def main():
         parser.error('--section-index requires --section and a positive paragraph index')
     maximum_projection = any((args.summary, args.heading_only, args.paragraph_range is not None,
                               args.section is not None, args.sheet is not None))
-    if args.reading_mode == 'maximum' and maximum_projection:
-        parser.error('Maximum pages preserve all regions; summary/heading/paragraph/section/sheet projections require explicit standard')
+    if args.reading_mode != 'standard' and maximum_projection:
+        parser.error('Full content pages preserve all regions; summary/heading/paragraph/section/sheet projections require explicit standard')
     if args.check:
         if any((args.summary, args.heading_only, args.paragraph_range is not None, args.section is not None,
                 args.sheet is not None, args.page_size is not None, args.cursor is not None,
@@ -928,7 +931,7 @@ def main():
         try:
             data = read_input(args.input)
             result = read_bytes(data, source=str(args.input), **options)
-            if args.reading_mode == 'maximum':
+            if args.reading_mode != 'standard':
                 from wps_maximum_pages import project as project_maximum
                 result = project_maximum(result, data, options,
                          page_size=8000 if args.page_size is None else args.page_size, cursor=args.cursor,

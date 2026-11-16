@@ -22,6 +22,8 @@ reader writes no files; no write probe is needed for inspection. Resolve `<skill
 from the actual SKILL.md and replace it before running commands with task-relative input.
 Python 3.9+, standard library only; no Office launch, network calls or installations at runtime.
 
+当前内容/证据区分：常用 CLI 默认 `et_content_v1` 内容投影。本参考涉及的原工作簿 schema、样式、绘图及二进制证据，使用 `--profile full` 获取；省略不表示不存在。Python API、独立审计入口与公开 read/metadata 协议仍默认完整提取，安全、缓存、partial 和覆盖规则不变。
+
 ## Contents
 
 - Evidence and provenance (`<skill-root>/references/et-ett-readonly.md#evidence-and-provenance`)
@@ -60,7 +62,7 @@ Renamed XLS/XLSX or simulated containers are never counted as real ET/ETT accept
 ## CLI and support levels
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" input.et")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" input.et --profile full")
 execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_cfb.py\" input.et")
 ```
 

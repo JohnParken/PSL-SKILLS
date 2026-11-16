@@ -14,7 +14,7 @@ import subprocess
 import sys
 import unittest
 from unittest.mock import patch
-import uuid
+import secrets
 from xml.parsers import expat
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -245,7 +245,7 @@ class TablePreviewTests(unittest.TestCase):
         self.assertEqual(direct['rows'][2]['cells']['A']['value'], Decimal(999))
         self.assertEqual(direct['rows'][2]['cells']['A']['formula_text'], '=42')
         self.assertEqual(direct['rows'][2]['cells']['B']['type'], 'missing')
-        directory = Path('et-preview-' + uuid.uuid4().hex)
+        directory = Path('et-preview-' + secrets.token_hex(16))
         self.assertFalse(directory.exists())
         directory.mkdir()
         try:

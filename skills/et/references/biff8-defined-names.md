@@ -4,6 +4,8 @@
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
+当前内容/证据区分：常用 CLI 默认 `et_content_v1` 内容投影。本参考涉及的原工作簿 schema、样式、绘图及二进制证据，使用 `--profile full` 获取；省略不表示不存在。Python API、独立审计入口与公开 read/metadata 协议仍默认完整提取，安全、缓存、partial 和覆盖规则不变。
+
 ## 目标与允许范围
 
 这是独立 ET Skill 的 **BIFF8 `.et/.ett` 只读 Name 兼容子集**。依据 MS-XLS Lbl、XLUnicodeStringNoCch、NameParsedFormula、PtgArea3d、RgceAreaRel 和 XtiIndex 规范，明确区分非宏的普通静态区域、内置打印区域、宏以及外部引用。该能力在所有公开入口的默认容错策略下可用，不需要也不再有 `--salvage-unknown-metadata` 或 strict/legacy 开关（旧参数为 no-op 并附 issue）；BIFF8 核心安全校验不变。只消费 Workbook 内部保存的字节，不计算名称/公式、不打开外部链接、不执行宏。
@@ -56,7 +58,7 @@ MS-XLS 规范依据（只用于维护研究，运行时不联网）：`Lbl`（�
 
 ## 使用与限制
 
-仍按主入口 `<skill-root>/SKILL.md#执行环境约束与首步自检` 确认 Linux/Python 标准库、真实目录、输入来源和 `environment-ok`。用户只读 ET 业务任务执行 `execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et")`，允许返回 `partial` /退出码 3，并保留 `issues` 与 `reading_assessment`。完整文档、样式、命名公式求值、复杂外链和宏仍不支持。失败停止依赖操作，禁止把未知名称忽略后声称单元格完整。
+仍按主入口 `<skill-root>/SKILL.md#执行环境约束与首步自检` 确认 Linux/Python 标准库、真实目录、输入来源和 `environment-ok`。用户只读 ET 业务任务执行 `execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --profile full")`，允许返回 `partial` /退出码 3，并保留 `issues` 与 `reading_assessment`。完整文档、样式、命名公式求值、复杂外链和宏仍不支持。失败停止依赖操作，禁止把未知名称忽略后声称单元格完整。
 
 ## 格式依据
 

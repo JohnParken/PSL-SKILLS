@@ -109,7 +109,9 @@ def project(result, data, options, *, page_size=8000, cursor=None,
         'status': result.get('status', 'invalid_or_unsupported'),
         'source_status': result.get('status', 'invalid_or_unsupported'),
         'partial': result.get('partial', False),
-        'coverage': 'complete_maximum_result_json_transport',
+        'coverage': ('complete_content_result_json_transport' if result.get('reading_mode') == 'content'
+                     else 'complete_maximum_result_json_transport'),
+        'reading_mode': result.get('reading_mode', 'maximum'),
         'source_sha256': source, 'result_sha256': result_hash, 'options_sha256': binding,
         'total_chars': total, 'total_utf8_bytes': total_bytes, 'start': start,
         'offset_unit': 'unicode_characters_in_canonical_json_not_document_pages',
@@ -162,9 +164,9 @@ def read_page(data, *, page_size=8000, cursor=None, max_output_chars=12000,
     """Public in-memory entry; each continuation reparses the immutable input."""
     from read_wps import read_bytes
     options = dict(options)
-    if options.get('reading_mode', 'maximum') != 'maximum':
-        fail('Maximum pages require reading_mode=maximum')
-    options['reading_mode'] = 'maximum'
+    if options.get('reading_mode', 'maximum') not in ('content', 'maximum'):
+        fail('Full-result pages require reading_mode=content or maximum')
+    options.setdefault('reading_mode', 'maximum')
     result = read_bytes(data, **options)
     return project(result, data, options, page_size=page_size, cursor=cursor,
                    max_chars=max_output_chars, max_bytes=max_output_bytes)

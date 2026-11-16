@@ -127,7 +127,7 @@ def _link_textboxes(result, boxes, links, anchor_positions):
             story['anchor_status'] = 'stored_shape_id_matches'
 
 
-def add_drawing_descriptions(result, region, anchors_by_story, require):
+def add_drawing_descriptions(result, region, anchors_by_story, require, *, content_only=False):
     """Link optional shape content to visible anchors outside field instructions."""
     from wps_binary_officeart import read_officeart
 
@@ -173,7 +173,7 @@ def add_drawing_descriptions(result, region, anchors_by_story, require):
                     textbox_ids[label] = {record['shape_id']: record['textbox_index'] for record in records
                                           if counts[record['shape_id']] == 1}
                 metadata = read_officeart(region, wanted, require, textbox_ids_by_label=textbox_ids,
-                                          object_links=links, blocked_by_label=blocked)
+                                          object_links=links, blocked_by_label=blocked, include_media=not content_only)
             except ParseError as exc:
                 if exc.status == 'resource_limit':
                     raise

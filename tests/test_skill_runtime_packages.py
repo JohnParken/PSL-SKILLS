@@ -14,7 +14,6 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-import platform
 import re
 import stat
 import struct
@@ -73,7 +72,7 @@ class SkillRuntimePackages(unittest.TestCase):
             raise RuntimeError('Acceptance requires Python >=3.12.11 and Expat >=2.6; not a skipped pass')
         if hasattr(os, 'geteuid') and os.geteuid() == 0:
             raise RuntimeError('Actual read-only enforcement requires a non-root user')
-        print(json.dumps({'platform': platform.platform(), 'python': platform.python_version(),
+        print(json.dumps({'platform': sys.platform, 'python': ".".join(map(str, sys.version_info[:3])),
                           'expat': expat.EXPAT_VERSION, 'fixtures': 'synthetic only',
                           'not_verified': ['other operating systems', 'Office/WPS rendering', 'real native ET',
                                            'OS-level network/read sandbox', 'host/model result delivery']}, ensure_ascii=False))
@@ -222,6 +221,11 @@ class SkillRuntimePackages(unittest.TestCase):
         expected = subprocess.run([sys.executable, '-I', '-S', '-B', '-c', fixture_code, fixture_dir, script_dir],
                                   cwd=self.work, env=self.env, capture_output=True, text=True, check=True, timeout=10)
         original = (self.work / 'binary.wps').read_bytes()
+        content = json.loads(self.invoke('wps', 'read_wps.py', 'binary.wps', expected=3).stdout)
+        self.assertEqual(content['reading_mode'], 'content')
+        self.assertEqual(content['text'], '\ufffcA\n')
+        self.assertNotIn('binary_images', content)
+        self.assertIn('binary_optional_content_not_requested', {item['code'] for item in content['issues']})
         response = self.invoke('wps', 'read_wps.py', 'binary.wps', '--reading-mode', 'maximum',
                                '--include-image-bytes', expected=3)
         images = json.loads(response.stdout)['binary_images']
@@ -300,6 +304,17 @@ class SkillRuntimePackages(unittest.TestCase):
         (self.work / 'synthetic.et').write_bytes(source)
         read = self.invoke('et', 'et_cli.py', 'run', 'synthetic.et', expected=(0, 3))
         self.assertIn('000123', read.stdout)
+        content = json.loads(read.stdout)
+        self.assertEqual(content['schema_version'], 'et_content_v1')
+        full = json.loads(self.invoke('et', 'et_cli.py', 'run', 'synthetic.et', '--profile', 'full', expected=(0, 3)).stdout)
+        self.assertEqual(content['source_schema_version'], full['schema_version'])
+        self.assertNotEqual(full['schema_version'], 'et_content_v1')
+        self.assertEqual(content['issues'], full['issues'])
+        for old_sheet, new_sheet in zip(full['sheets'], content['sheets']):
+            self.assertEqual(set(old_sheet['cells']), set(new_sheet['cells']))
+            for ref, cell in old_sheet['cells'].items():
+                self.assertEqual(cell['value'], new_sheet['cells'][ref]['value'])
+                self.assertEqual(cell['type'], new_sheet['cells'][ref]['type'])
         result = self.invoke('et', 'analyze_et.py', 'synthetic.et', '--sheet', 'Data', '--range', 'A1:B3', '--header-rows', '1', expected=(0, 3))
         data = json.loads(result.stdout)
         self.assertEqual(data['schema_version'], 'et_table_analysis_v1')
@@ -326,6 +341,13 @@ class SkillRuntimePackages(unittest.TestCase):
         path.write_bytes(source)
         response = self.invoke('et', 'et_cli.py', 'run', path.name, expected=3)
         result = json.loads(response.stdout)
+        self.assertEqual(result['schema_version'], 'et_content_v1')
+        self.assertNotIn('uninterpreted_metadata', result)
+        full = json.loads(self.invoke('et', 'et_cli.py', 'run', path.name, '--profile', 'full', expected=3).stdout)
+        self.assertEqual(full['schema_version'], 'biff8_readonly_v1')
+        self.assertIn('uninterpreted_metadata', full)
+        self.assertEqual(result['issues'], full['issues'])
+        self.assertEqual(result['sheets'][0]['cells']['A2']['value'], full['sheets'][0]['cells']['A2']['value'])
         cell_result = result['sheets'][0]['cells']['A2']
         self.assertEqual((cell_result['type'], cell_result['value']), ('number', '42'))
         self.assertEqual(result['cell_value_coverage'], 'complete_within_declared_sheets')

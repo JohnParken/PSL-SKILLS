@@ -29,7 +29,8 @@ class FileAccessTests(unittest.TestCase):
     def cli(self, name, path, mode='data'):
         return subprocess.run(
             [sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / name)),
-             str(path), '--compatibility', mode],
+             str(path), '--compatibility', mode,
+             *(['--profile', 'full'] if name == 'read_wps.py' else [])],
             capture_output=True, text=True, encoding='utf-8', timeout=10,
         )
 

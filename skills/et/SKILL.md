@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261116.0724.0209"
+version: "20261116.1353.3706"
 description: 读取金山 WPS 表格（.et/.ett）的保存值与公式缓存，适合查看表头、筛选排序、去重及按指定范围统计汇总。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
@@ -65,7 +65,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check"
 - 表名与规模概况：`<skill-root>/scripts/read_et.py` 加 `--summary`。
 - 候选表头与空位：下方 `analyze_et.py --preview` 指定矩形。
 - 本 Skill 区域统计：直接使用下方 `analyze_et.py`，不遍历分页或绕经完整 JSON。
-- 完整证据或外部原 schema 消费：使用以下默认完整读取。
+- 单元格文字和表格保存值：默认内容读取，返回 `et_content_v1`。
+- 完整证据、图片/绘图/版式调查或外部原 schema 消费：显式加 `--profile full`；普通任务不加载高级参考。
 
 在任务工作目录运行，将文件名换成实际输入。读取一律使用内容优先的容错策略，不再需要 `--compatibility strict` 等选项；旧参数仅为兼容而接受，会被忽略并记录 `compatibility_option_ignored`。
 
@@ -77,30 +78,24 @@ OOXML 解析期分页可选独立入口 `<skill-root>/scripts/et_parse_page.py`�
 
 只需概况或逐格查看时，读有界输出（`<skill-root>/references/bounded-reading.md`）；其 `wps_read_view_v1` 是投影，不交给原 schema 分析器。分页用于抽查，不先遍历全部页做全量统计；每页仍重读解析输入。需要统计或处理结果表时用下方分析入口；已取得完整 JSON 的程序按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）交接，保留源 partial 与诊断。
 
-完整读取的 JSON 默认上限为 64 MiB，可用 `--max-json-bytes`（1 MiB–256 MiB）调整；超过预算时先自动精简一次（省略原始字节证据与重复来源字段，保存值、类型、缓存、合并、诊断不变）再决定成功或明确失败。`--compact` 可主动选择精简输出，`output_projection` 明确原始证据不完整。需要避免把大 JSON 全部回传时，使用 `--output <裸文件名>` 流式写入任务根目录新文件；文件预算默认 256 MiB（包含末尾换行），仍不能绕过上限。stdout 仅返回 `et_output_manifest_v1` 清单（文件名、实际字节数及 SHA-256、状态），不输出截断 JSON。
+默认内容结果为 `et_content_v1`：保留所有已读工作表/坐标、文字、类型化数值、公式缓存及风险、数字解释、合并、批注/链接文字和诊断；省略图片/绘图对象、版式、富文本样式和非必要二进制证据。`output_projection` 明示遗漏和来源 schema，不把投影交给要求原工作簿 schema 的程序。`--profile full` 恢复原提取；Python `read_bytes/read` 和跨技能 `et_cli.py read/metadata` 仍默认完整，接口版本不变。
 
-1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认完整电子表格 `schema_version` 应为 `biff5_readonly_v1`、`biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口，不等于失败或必须停止；退出 1 或 2 才停止后续分析，不把失败当空表。
+BIFF 内容路径在解析时不生成一般不透明元数据的十六进制副本；Font 字节仍留给现有校验。安全扫描、预算、诊断和数字格式解释照旧；不是跳过全部绘图/样式解析或恒定内存。OOXML 与文本路径目前主要减少输出，不声称解析成本下降。
+
+JSON 默认上限为 64 MiB，可用 `--max-json-bytes`（1 MiB–256 MiB）调整；完整 profile 超过预算时先自动精简一次（省略原始字节证据与重复来源字段，保存值、类型、缓存、合并、诊断不变）再决定成功或明确失败；内容 profile 已精简，超预算明确失败。`--profile full --compact` 可主动选择旧精简输出；内容 profile 的 `--compact` 不再改变结果，`output_projection` 明确原始证据不完整。需要避免把大 JSON 全部回传时，使用 `--output <裸文件名>` 流式写入任务根目录新文件；文件预算默认 256 MiB（包含末尾换行），仍不能绕过上限。stdout 仅返回 `et_output_manifest_v1` 清单（文件名、实际字节数及 SHA-256、状态），不输出截断 JSON。
+
+1. **核对结果。** 退出 0 或 3 均读取完整 JSON；默认 `schema_version=et_content_v1`；`--profile full` 的电子表格 schema 应为 `biff5_readonly_v1`、`biff8_readonly_v1` 或 `ooxml_spreadsheet_readonly_v1` 或文本导出的 `text_spreadsheet_readonly_v1`。退出 3 保留已读数据并报告 `issues` 与 `reading_assessment` 中的缺口，不等于失败或必须停止；退出 1 或 2 才停止后续分析，不把失败当空表。
 2. **解释保存值。** 按单元格 `type` 解释 `value`，保留数字字符串的精度和文本编号；`numeric_interpretation` 仅补充格式解释，不能替代原值。`formula` 存在时读取的是保存缓存，结合 `cache_status` 区分缺失、错误和未验证缓存，不能保证最新或重算。程序消费和保存值解释见电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）。
 3. **交付或分析。** 提交所需工作表/区域及明确缺口；需要汇总时选定区域和缓存政策，使用下面的只读分析入口。如另有 xlsx 技能，可消费满足其限制的原读取 JSON，仍保留源 partial 和诊断；不要把派生分析 schema 冒充原工作簿。
 
-查询保存行高/列宽、冻结窗格和当前单元格时读 `<skill-root>/references/saved-visibility.md`；解释数字显示时读 `<skill-root>/references/numeric-interpretation.md`。需要富文本、简单公式文字或相关字段概况时读 `<skill-root>/references/advanced-spreadsheet-routing.md#显示与保存视图`；统计始终使用保存值。
+只有确需展示证据时使用 `--profile full`。查询保存行高/列宽、冻结窗格和当前单元格时读 `<skill-root>/references/saved-visibility.md`；解释数字显示时读 `<skill-root>/references/numeric-interpretation.md`。需要富文本、简单公式文字或相关字段概况时读 `<skill-root>/references/advanced-spreadsheet-routing.md#显示与保存视图`；统计始终使用保存值。
 
-### 内容优先的容错读取
+### 内容与安全边界
 
-读取器以“尽量交付已解析的单元格和内容”为先：容器、记录分帧、非单元格元数据、扩展关系或输出预算的差异，按可恢复程度降级为 `partial` + `issues[]` + 原始证据，而不是丢弃整本结果。安全硬边界仍然保留：不执行宏/公式、不联网、不跟随外链、不解密；无法安全建立基础分配表、加密、超大记录载荷、ZIP 逃逸、DTD/实体和硬资源上限仍拒绝。流级分配链越界、循环或交叉占用会停止该链，不读取问题扇区；若已有可验证前缀则保留并报告覆盖风险，不等于整本数据完整。
-
-- 未知/未实现的全局或工作表记录保留原始字节并报告 coverage 不确定；紧邻的 Continue 一并保留。
-- Row/ColInfo/筛选/视图/合并/公式组/DXF/表样式/条件格式/数据验证/图表/绘图/批注/链接/名称等**非单元格元数据**校验失败时，保留原始证据与问题，不中止单元格读取。
-- 单条单元格记录损坏时跳过该格并标记 `omissions_affect_cell_values=true`；其它单元格继续交付，不把不确定覆盖说成完整。
-- 宏存储、图表/宏/对话框工作表、缺失 Date1904/WsBool、未知 CodePage 等以诊断保留，不执行、不重算、不猜日期系统。
-- SST 规范保留位、零个 rich run 与错误 total 计数可有限恢复并报告 partial；不猜字符编码、长度或重新同步索引，非负 unique 仍受硬预算约束。BIFF5/7 使用独立核心分支、独立 schema 和显式 CodePage，不套用 BIFF8 字符串/结构；范围见 `<skill-root>/references/biff5-readonly.md`。
-- SST/单元格索引越界等局部值错误跳过受影响值并标记覆盖不确定；加密、无法安全建立解析基础、ZIP/XML 安全禁止项与硬资源上限仍返回失败，保留位置与原因；可恢复的短记录尾部或流链问题保留已验证部分及覆盖风险。
-- 图表缓存不作为工作表值。损坏图表只在已分帧的明确恢复点继续；图表/工作表 EOF 归属不明时保留有界证据并标记覆盖不确定。重复 OOXML `sheetData`/行继续读取不同坐标，冲突保留首个可读值并报告，不把恢复结果说成完整。
-- BIFF8 已确认的 Note 批注返回在 `sheets[].comments`（单元格/作者/纯文字），HLink/HLinkTooltip 返回在 `sheets[].hyperlinks`（目标只记录不解析、不跟随、不联网）；二者不并入单元格值，也不改变保存值。原始 note 记录、`note_drawings` 诊断和无法解析的链接记录仍作为有界证据保留。BIFF8 `sheet_coverage`/`read_status` 明确未读出的声明工作表；偏移不匹配、重叠或 BOF 无效时不能把 `cell_value_coverage` 报成完整。
-- OOXML 保存文本的 `_xHHHH_` 转义只解码一次，`_x005F_` 字面保护不误解为控制字符；共享/内联/富文本与 `t="str"` 的保留文字共用 Unicode 代码点预算，超限返回截断值并标记 `text_truncated`/`text_budget`，不能当完整原值。原始编码证据见 `text_encoding`/`shared_string_encoding`。
-- BIFF8 共享公式 `ShrFmla` 的 `cUse=0` 在真实 WPS 原件中按“未指定”处理：仅当范围、锚点、token、重叠和成员标志等其余检查通过时保留组定义，标 `use_count_unspecified` 和 metadata-only 诊断；不把它当正常使用次数，也不取消其他校验。保存缓存和单元格值不受影响，但组表达式语义仍不认证。
-- 已知非值元数据（合并、公式组、条件格式/验证、HLink、绘图外 Note 等）损坏只保留 issue 和 `partial`，不单独把 `cell_value_coverage` 降为不确定；未知记录、OfficeArt/对象、值承载记录、跳表、缺 EOF 和文字截断仍按值覆盖保守处理。不能把 `complete` 理解为元数据语义已验证。
-- BIFF8 单元格值文字和展示文字使用独立预算：值上限 8Mi UTF-16 单位，自定义格式/批注/链接展示上限 2Mi，格式文本按格式 ID 去重；OOXML 自定义格式也使用独立展示预算并按 numFmtId 去重。展示超限只省略展示字段并附诊断，继续返回全部保存值；`output_text_budget`/`text_budget` 报告两套预算。BIFF8 `RString (0x00D6)` 返回有界纯文字和可选 run 证据，格式 run 异常不回退掉可确定文字。
+- 只使用已解析保存值，不重算公式、不执行宏/嵌入对象、不联网或跟随外链；缓存可能过期。未知容器、加密、ZIP/XML 安全禁止项、无法安全建立基础分配表和硬资源上限仍拒绝。
+- 局部损坏保留可靠内容及原 `partial`/`issues`/`reading_assessment`。未知记录、跳表、缺缓存或文字截断可能影响值覆盖，不能因省略二进制证据把覆盖改为完整；已知非值元数据错误不等于单元格值丢失。
+- 默认内容投影不认证视觉布局、图片中的文字或绘图文字；需要这些时明确缺口并按需查高级参考，不能把未提取说成不存在。合并范围与文本导出的坐标风险保持原标记。
+- 仅调查复杂文件、记录损坏或原始证据时，使用 `--profile full` 并读取 `<skill-root>/references/advanced-spreadsheet-routing.md`；BIFF5/7 边界见 `<skill-root>/references/biff5-readonly.md`，缓存和数值解释按上节任务直达参考。
 
 ## 统计与结果表处理
 

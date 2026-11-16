@@ -29,11 +29,11 @@ class EtPipelineTests(unittest.TestCase):
             self.assertIsNone(result['text'])
             self.assertIn('et skill', result['message'])
 
-    def extract(self, directory, stream):
+    def extract(self, directory, stream, *, profile="full"):
         path = directory / 'input.et'
         path.write_bytes(synthetic_cfb({'Workbook': stream}))
         process = subprocess.run([sys.executable, '-I', '-S', '-B',
-                                  str(ROOT / 'skills/et/scripts/read_et.py'), str(path)],
+                                  str(ROOT / 'skills/et/scripts/read_et.py'), str(path), '--profile', profile],
                                  capture_output=True, text=True, encoding='utf-8', check=False)
         self.assertIn(process.returncode, (0, 3), process.stdout)
         result = json.loads(process.stdout)
@@ -41,6 +41,13 @@ class EtPipelineTests(unittest.TestCase):
         target = directory / 'result.json'
         target.write_text(process.stdout, encoding='utf-8')
         return target, result
+
+    def test_content_projection_is_not_accepted_as_original_schema(self):
+        with tempfile.TemporaryDirectory(dir='.') as temp:
+            target, result = self.extract(Path(temp), workbook(), profile='content')
+            self.assertEqual(result['schema_version'], 'et_content_v1')
+            with self.assertRaisesRegex(ValueError, 'supported WPS spreadsheet JSON schema'):
+                region(target, '中文表1', 'A2:B2', header=False)
 
     def test_partial_roundtrip_precision_identifier_and_cache(self):
         with tempfile.TemporaryDirectory(dir='.') as temp:

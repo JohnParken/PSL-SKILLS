@@ -104,7 +104,8 @@ class DxfReadabilityTests(unittest.TestCase):
             path = Path(temporary) / 'input.et'
             path.write_bytes(data)
             for script in ('read_wps.py', 'wps_biff8.py'):
-                child = subprocess.run([sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / script)), './input.et'],
+                child = subprocess.run([sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / script)), './input.et',
+                                        *(['--profile', 'full'] if script == 'read_wps.py' else [])],
                                        cwd=temporary, capture_output=True, text=True)
                 self.assertEqual(child.returncode, 3)
                 result = json.loads(child.stdout)

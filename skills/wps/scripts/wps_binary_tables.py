@@ -263,7 +263,7 @@ def observe_table_operand(props, sprm, raw):
 
 def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                    table_ranges=(), word_ranges=(), piece_properties=False, data_region=None,
-                   piece_prms=None, field_spans=(), marker_replacements=None, data_ownership=None):
+                   piece_prms=None, field_spans=(), marker_replacements=None, data_ownership=None, include_layout=True):
     """Read evidenced rows and, in maximum mode, direct PAPX layout operands."""
     from read_wps import ParseError, require
     from wps_nested_tables import NestedRows
@@ -277,6 +277,8 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
     result['layout_properties_not_rendered'] = []
     result['unresolved_properties'] = []
     result['layout_property_count'] = 0
+    if not include_layout:
+        result['layout_metadata_requested'] = False
     result['unresolved_property_count'] = 0
     result['external_property_references'] = []
     external_reference_count = 0
@@ -443,10 +445,10 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
                             value = properties_region.number(cursor, width)
                             props.setdefault('frame', {})[sprm] = value & 0xF0 if sprm == PARAGRAPH_POSITION_CODE else value
                         result['layout_property_count'] += 1
-                        if enhanced:
+                        if enhanced and include_layout:
                             props['layout_modifier_count'] = props.get('layout_modifier_count', 0) + 1
-                        keep_raw = len(result['layout_properties_not_rendered']) < 100
-                        keep_typed = enhanced and result['layout_property_count'] <= MAX_LAYOUT_MODIFIERS
+                        keep_raw = include_layout and len(result['layout_properties_not_rendered']) < 100
+                        keep_typed = include_layout and enhanced and result['layout_property_count'] <= MAX_LAYOUT_MODIFIERS
                         if keep_raw or keep_typed:
                             raw = properties_region.view(cursor, width)
                             modifier = {'sprm': hex(sprm), 'name': name, 'operand_hex': bytes(raw).hex(),
@@ -711,9 +713,10 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
     if enhanced:
         if has_cell_marks:
             result['contiguous_row_runs'] = contiguous_row_runs(result['rows'])
-        result['paragraph_layout'] = {'scope': 'direct_papx_operands', 'effective_layout': 'unknown',
-                                      'paragraphs': layout_paragraphs, 'modifier_count': layout_seen,
-                                      'modifiers_omitted': layout_seen - layout_retained}
+        if include_layout:
+            result['paragraph_layout'] = {'scope': 'direct_papx_operands', 'effective_layout': 'unknown',
+                                          'paragraphs': layout_paragraphs, 'modifier_count': layout_seen,
+                                          'modifiers_omitted': layout_seen - layout_retained}
         result['unresolved_marker_count'] = result.get('unresolved_marker_count', 0)
         result['unresolved_markers_omitted'] = result['unresolved_marker_count'] - len(result['unresolved_markers'])
         if has_cell_marks:

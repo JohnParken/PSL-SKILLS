@@ -7,6 +7,8 @@
 Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
+当前内容/证据区分：常用 CLI 默认 `et_content_v1` 内容投影。本参考涉及的原工作簿 schema、样式、绘图及二进制证据，使用 `--profile full` 获取；省略不表示不存在。Python API、独立审计入口与公开 read/metadata 协议仍默认完整提取，安全、缓存、partial 和覆盖规则不变。
+
 ## Contents
 
 - Policy (`<skill-root>/references/embedded-charts.md#explicit-policy`)
@@ -22,7 +24,7 @@ directory of the actual SKILL.md read by the harness.
 ## Explicit policy
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" ./Schedule.ett")
+execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" ./Schedule.ett --profile full")
 execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_biff8.py\" ./Schedule.ett")
 ```
 

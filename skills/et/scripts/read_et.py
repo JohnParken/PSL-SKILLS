@@ -74,7 +74,8 @@ def _select_workbook(compound, require, location):
 
 
 def _read_bytes(data, *, source=None, compatibility=DEFAULT_FILE_COMPATIBILITY, chart_policy=None,
-                requested_chart_policy=None, salvage_unknown_metadata=False, **ignored_kwargs):
+                requested_chart_policy=None, salvage_unknown_metadata=False,
+                retain_metadata_payloads=True, **ignored_kwargs):
     """Identify content first; suffix is provenance, never a format selector."""
     if ignored_kwargs:
         raise TypeError('Unsupported read options: ' + ', '.join(sorted(ignored_kwargs)))
@@ -115,7 +116,8 @@ def _read_bytes(data, *, source=None, compatibility=DEFAULT_FILE_COMPATIBILITY, 
         effective_chart = resolve_chart_policy(requested_chart, compatibility)
         result = read_container(compound, path=source, compatibility='data',
                                 chart_policy=effective_chart,
-                                salvage_unknown_metadata=salvage_unknown_metadata)
+                                salvage_unknown_metadata=salvage_unknown_metadata,
+                                retain_metadata_payloads=retain_metadata_payloads)
     except ValueError as exc:
         location = {'stage': 'BIFF', 'stream': workbook[0], 'compatibility_mode': 'data'}
         location.update(getattr(exc, 'location', {}))
@@ -123,10 +125,18 @@ def _read_bytes(data, *, source=None, compatibility=DEFAULT_FILE_COMPATIBILITY, 
     return _annotate_legacy_options(normalize_result(result), compatibility, salvage_unknown_metadata)
 
 
-def read_bytes(data, **options):
-    """Read immutable bytes and add scope-limited confidence diagnostics."""
+def read_bytes(data, *, profile='full', **options):
+    """Keep the public API full by default; content is an explicit projection."""
     from wps_diagnostics import summarize
-    return summarize(_read_bytes(data, **options))
+    if profile not in ('content', 'full'):
+        raise ParseError('unsupported', {'stage': 'options'}, 'profile must be content or full')
+    if profile == 'content':
+        options['retain_metadata_payloads'] = False
+    result = summarize(_read_bytes(data, **options))
+    if profile == 'content':
+        from et_content import project_content
+        return project_content(result)
+    return result
 
 
 def read(path, **options):
@@ -182,6 +192,7 @@ def _manifest_payload(result, manifest, compacted):
         'omissions_affect_cell_values': result.get('omissions_affect_cell_values'),
         'output': manifest,
         'compacted': bool(compacted),
+        'output_projection': result.get('output_projection'),
         'note': 'Complete JSON was written to a new task-root file; stdout only carries this manifest.',
     }
     return json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
@@ -190,14 +201,15 @@ def _manifest_payload(result, manifest, compacted):
 def _full_output(result, args):
     """Write or encode a full result; compact once before failing a budget."""
     limit = _validate_json_budget(args.max_json_bytes)
-    if args.compact:
+    content_profile = result.get('schema_version') == 'et_content_v1'
+    if args.compact and not content_profile:
         result = compact_result(result)
     if args.output:
         output_limit = limit if args.max_json_bytes is not None else MAX_JSON_OUTPUT_BYTES_LIMIT
         try:
             manifest = write_result_file(args.output, result, limit=output_limit)
         except ParseError as exc:
-            if exc.status != 'resource_limit' or args.compact:
+            if exc.status != 'resource_limit' or args.compact or content_profile:
                 raise
             result = compact_result(result)
             result.setdefault('issues', []).append({
@@ -214,7 +226,7 @@ def _full_output(result, args):
     try:
         encoded = _encode_result(result, limit=limit)
     except ParseError as exc:
-        if exc.status != 'resource_limit' or args.compact:
+        if exc.status != 'resource_limit' or args.compact or content_profile:
             raise
         result = compact_result(result)
         result.setdefault('issues', []).append({
@@ -266,6 +278,8 @@ def main():
                         help='Deprecated no-op; best-effort retention is the default')
     parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None,
                         help='Deprecated no-op; charts are always retained as bounded opaque bytes')
+    parser.add_argument('--profile', choices=('content', 'full'),
+                        help='Default: content (stored tables, no visual/binary evidence); full restores original extraction')
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--include-related', action='store_true')
     parser.add_argument('--summary', action='store_true')
@@ -286,7 +300,7 @@ def main():
     if args.check:
         if any((args.summary, args.sheet is not None, args.page_size is not None,
                 args.cursor is not None, args.max_output_chars is not None, args.max_output_bytes is not None,
-                args.max_json_bytes is not None, args.compact, args.output is not None, args.delivery)):
+                args.max_json_bytes is not None, args.compact, args.output is not None, args.delivery, args.profile is not None)):
             parser.error('--check does not accept read/output options')
         return check_environment()
 
@@ -310,7 +324,7 @@ def main():
     if args.output and (not isinstance(args.output, str) or not args.output or args.output in ('.', '..')
                         or any(char in args.output for char in ('/', '\\', '\x00'))):
         parser.error('--output must be a bare filename in the current task directory')
-    options = dict(compatibility=args.compatibility, chart_policy=args.chart_policy,
+    options = dict(profile=args.profile or 'content', compatibility=args.compatibility, chart_policy=args.chart_policy,
                    salvage_unknown_metadata=args.salvage_unknown_metadata)
 
     if view_requested:

@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.0724.0209`（BIFF5/7有限读取、SST恢复与解析期分页）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.1353.3706`（默认内容 profile，完整证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 默认只向 stdout 输出结果；完整读取可用 `--output <裸文件名>` 在任务根目录独占创建 JSON 文件并只在 stdout 返回 `et_output_manifest_v1` 清单。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -14,7 +14,7 @@ ET Skill 离线读取 `.et/.ett` 中的工作表、单元格保存值和公式�
 
 - 二进制分支：读取 CFB 容器内的 `Workbook` / `Book` 流（多个候选时选首条通过 BIFF8 globals BOF 校验者并记 issue），在统一容错策略下解析受支持的 BIFF8 记录子集。
 - ZIP 分支：按安全 OPC 关系识别并读取受支持的 OOXML 电子表格子集；未知关系只记录不读取，外部目标不跟随。原生 XLSX 业务任务仍按入口约定交给 XLSX Skill。
-- 输出分支：run 完整读取默认 64 MiB JSON（`--max-json-bytes` 1–256 MiB），可用 `--compact` 精简、`--output` 写文件清单；有界视图/预览/分析另走投影契约。
+- 输出分支：run 默认 `et_content_v1` 保存表格内容，`--profile full` 才返回原完整提取；默认 64 MiB JSON（`--max-json-bytes` 1–256 MiB），可用 `--compact` 精简、`--output` 写文件清单；有界视图/预览/分析另走投影契约。
 - 分析分支：使用已读取的类型化保存值生成派生 JSON，不修改原表或输入提取对象。
 - 跨表计算后填入另一份 XLSX 模板由 `table-workflow` 编排；ET 只提供原始完整提取结果及诊断；名称发现可使用仅元数据接口。
 
@@ -135,6 +135,8 @@ python -I -S -B "<skill-root>/scripts/analyze_et.py" --check
 python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D8 --preview
 python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1 --query ./query.json
 ```
+
+以上 run 默认返回内容投影，`--output result.json` 也不改变 profile。向 XLSX 原 schema 分析器交接须显式 `--profile full`；`--compact` 仅压缩 full 原始证据，content 已是独立投影。公开 `et_cli.py read/metadata` 与分析 API 保持 full，不改成普通 run。
 
 CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各入口契约使用 stderr。它不写回 ET。run 完整读取默认 JSON 上限 64 MiB，可用 `--max-json-bytes`（1–256 MiB）调整、`--compact` 精简；需要完整逐格 JSON 时用 `--output <裸文件名>`，脚本在任务根目录独占创建新文件并在 stdout 只返回 `et_output_manifest_v1` 清单。有界视图与 `--output` 不能同时使用；纯 stdout 任务不建立无用归档清单。
 
@@ -361,3 +363,9 @@ HTML 表格支持头部前 8192 字节、body/table 之前的显式 meta charset
 BIFF5/7 globals 仍要求 8 字节、0x0500。工作表 BOF 可兼容同为 8 字节的 0x0600，依 globals 选择旧版结构，保留原始头和版本差异诊断；不放宽其它版本/类型/长度、CodePage、缓存或资源限制。依据为 [OpenOffice BOF 说明](https://www.openoffice.org/sc/excelfileformat.pdf#page=135)，不据此声称完整旧格式兼容。
 
 本轮验证与未验证范围见 [专项记录](../maintenance/et/declared-encoding-bof-20261116.md)。
+
+## 2026-11-16 默认内容读取
+
+常用 `read_et.py`/`et_cli.py run` 默认 `--profile content`：保留文字、类型化保存值、公式缓存风险、数字解释、合并与全部诊断/覆盖；省略绘图/对象、版式、富文本格式及非必要二进制证据。新 schema 为 `et_content_v1`，`source_schema_version` 和 `output_projection` 明示来源与遗漏，不得当原工作簿 schema。`--profile full` 是旧 CLI 与高级证据的迁移入口；Python API、公开 read/metadata、区域分析的原契约不变。文件清单也标记投影。
+
+BIFF 内容路径在解析时免生成一般 opaque payload_hex，Font 暂保留给已有富文本校验；字节/记录预算、未知记录诊断和安全扫描不变。尚未完全跳过绘图/样式解码，OOXML/文本主要为输出减少，不声称全解析内存或运行时间已优化。图片及绘图文字不在内容覆盖保证内。具体实测与限制见 [内容读取验收](../maintenance/et/content-profile-20261116.md)。

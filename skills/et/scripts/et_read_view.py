@@ -5,6 +5,14 @@ from wps_read_view import project as shared_project
 
 def project(result, data, options, **view_options):
     """Keep full diagnostics normally; explicitly summarize only oversized overviews."""
+    if result.get('output_projection', {}).get('kind') == 'stored_table_content':
+        # Add within the shared budget checks, never after serialization limits.
+        result = dict(result)
+        result['issues'] = [*result.get('issues', []), {
+            'code': 'content_profile_projection',
+            'source_schema_version': result.get('source_schema_version'),
+            'omitted': 'visual_layout_rich_formatting_and_binary_evidence',
+            'saved_values_unchanged': True, 'retrieve_full': '--profile full'}]
     try:
         return shared_project(result, data, options, **view_options)
     except ParseError as exc:

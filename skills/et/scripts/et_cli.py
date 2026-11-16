@@ -1,4 +1,4 @@
-"""Stable ET capability entry; legacy read_et CLI and API remain unchanged."""
+"""Stable full-schema ET protocol entry; run delegates to the content-first CLI."""
 import argparse
 from copy import deepcopy
 import json

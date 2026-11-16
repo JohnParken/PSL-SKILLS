@@ -157,7 +157,7 @@ class WpsViewTests(unittest.TestCase):
             (Path(tmp) / 'source.et').write_bytes(raw)
             def run(*args):
                 return subprocess.run([sys.executable, '-I', '-S', '-B', script, './source.et', *args], cwd=tmp, capture_output=True, text=True)
-            child = run()
+            child = run('--profile', 'full')
             self.assertIn(child.returncode, (0, 3))
             self.assertEqual(json.loads(child.stdout)['schema_version'], read_bytes(raw)['schema_version'])
             child = run('--summary')

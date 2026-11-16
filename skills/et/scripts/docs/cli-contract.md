@@ -6,7 +6,7 @@
 
 ## 入口
 
-标准读取与外部编排共用 `<skill-root>/scripts/et_cli.py`；实际解析仍由原read_et实现，旧read_et CLI/API保留。先按主入口完成环境自检；原生XLSX交给对应技能。
+标准读取与外部编排共用 `<skill-root>/scripts/et_cli.py`；实际解析仍由原read_et实现，旧read_et API保留；run/read_et.py CLI 默认改为内容 profile，原输出显式使用 --profile full。先按主入口完成环境自检；原生XLSX交给对应技能。
 
 ```python
 execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" capabilities")
@@ -15,6 +15,12 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./明细
 ```
 
 capabilities为普通JSON：skill=et、interface_version=1、operations=[read,metadata]；不代表OOXML环境或文件验收。run原样调用 read_et.py 主入口并保留其参数、JSON、分页、stderr和退出码；除原有查看参数外，完整读取支持 `--max-json-bytes`（1–256 MiB）、`--compact` 与 `--output <裸文件名>`。read仅供程序编排，从stdin读取一个完整协议请求，不是Shell路径参数或分页接口。
+
+## 内容 profile 与迁移
+
+`run`/`read_et.py` 默认 `--profile content`，返回 `et_content_v1` 和 `source_schema_version`，不冒充原工作簿 schema。保存值/类型/公式缓存风险、数字解释、合并、批注/链接文字、诊断及覆盖保留；视觉样式、绘图对象和二进制证据按 `output_projection` 明示省略。完整证据和旧 CLI 消费者加 `--profile full`；程序 API 与下述 read/metadata 协议仍默认 full，不改变 v1 提供方契约。
+
+BIFF content 在解析阶段不生成一般元数据 payload_hex，Font 仍供内部富文本校验；预算按原字节计算，安全扫描与诊断不变。它不是完全省去绘图/样式解码；OOXML/文本主要是输出投影，未声明解析峰值内存改进。内容投影不可交给原 schema 消费方。`--compact` 对 content 无额外改变，full 保留旧精简/预算降级；content 超预算直接失败。`--output` 清单附 `output_projection`，文件可含 content 或 full，按文件 schema 判读。
 
 ## read 输入输出
 
@@ -28,7 +34,7 @@ capabilities为普通JSON：skill=et、interface_version=1、operations=[read,me
 
 metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compatibility。它执行完整的 read_bytes 解析与安全/结构校验，但**不再序列化完整提取结果**；随后只投影受支持的 biff5_readonly_v1、biff8_readonly_v1 或 ooxml_spreadsheet_readonly_v1。投影要求成功schema、已解析标记和 1–128 个合法唯一表名；未知提取schema或未解析标记拒绝，不猜表名。完整读取的 JSON 预算不影响 metadata 投影。
 
-返回 result={metadata:{schema_version:workbook_metadata_v1,sheet_names,native:false,source_status,source_issues,source_coverage,input_schema},exit_code}。保留原表序、issues及可用的cell_value_coverage/omissions_affect_cell_values/reading_assessment，不传输单元格；ok/partial仍分别退出0/3，投影或校验失败退出1。名称元数据不能供统计或代替完整提取。旧read/run结果不变，消费方必须先确认metadata能力。该路径减少进程间数据，不承诺跳过底层解析或降低内存上限。
+返回 result={metadata:{schema_version:workbook_metadata_v1,sheet_names,native:false,source_status,source_issues,source_coverage,input_schema},exit_code}。保留原表序、issues及可用的cell_value_coverage/omissions_affect_cell_values/reading_assessment，不传输单元格；ok/partial仍分别退出0/3，投影或校验失败退出1。名称元数据不能供统计或代替完整提取。旧 read/metadata 协议结果不变，消费方必须先确认metadata能力。该路径减少进程间数据，不承诺跳过底层解析或降低内存上限。
 
 ## 版本与兼容策略
 
@@ -38,7 +44,7 @@ metadata 命令与 operation=metadata 接受和 read 相同的 raw/source/compat
 
 ## 完整读取的输出预算与文件输出
 
-完整读取的 run 入口默认 JSON 上限 64 MiB；超预算时先自动精简一次（去重原始字节证据，保存值、类型、缓存、合并、诊断保留）并附 `output_auto_compacted`、转 partial，绝不输出截断 JSON。read 协议保持完整原始 schema，不自动精简；依据128 MiB帧预算扣除报文封装后，再按 Base64 的4:3及补齐开销计算原 JSON 预算（略低于96 MiB）。超过预算返回结构化 resource_limit 和退出1，不输出部分报文。metadata 也在完整报文预算内校验；若错误诊断本身不能编码或超限，返回明确标记 diagnostics_omitted 的小型错误，不伪装成成功。仅当请求ID本身无法安全放入错误帧时返回 id=null。
+full profile 的 run 入口默认 JSON 上限 64 MiB；超预算时先自动精简一次（去重原始字节证据，保存值、类型、缓存、合并、诊断保留）并附 `output_auto_compacted`、转 partial，绝不输出截断 JSON。read 协议保持完整原始 schema，不自动精简；依据128 MiB帧预算扣除报文封装后，再按 Base64 的4:3及补齐开销计算原 JSON 预算（略低于96 MiB）。超过预算返回结构化 resource_limit 和退出1，不输出部分报文。metadata 也在完整报文预算内校验；若错误诊断本身不能编码或超限，返回明确标记 diagnostics_omitted 的小型错误，不伪装成成功。仅当请求ID本身无法安全放入错误帧时返回 id=null。
 
 - `--max-json-bytes <字节>`：1048576..268435456，显式调整完整 JSON 预算。
 - `--compact`：主动精简输出。
