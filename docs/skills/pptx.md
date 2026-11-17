@@ -1,6 +1,6 @@
 # PPTX：受限 SVG 到可编辑演示文稿
 
-文档核对日期：2026-11-10。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.1353.3706`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时按需读取 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。本轮备注读取修复的结果和未验证范围见 [核验记录](../maintenance/pptx/reading-20261110.md)。
+当前能力核对日期：2026-11-17；本轮基于 `f9dfab7` 加工作区变更。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261118.0325.5874`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时读取 [创建参考](../../skills/pptx/references/creation.md) 与 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。2026-11-10 备注读取修复的历史结果和未验证范围见 [核验记录](../maintenance/pptx/reading-20261110.md)。
 
 用户上传文件和待查交付物只在任务目录顶层发现；配置明确引用的 SVG 和图片可使用安全的任务相对路径。执行器可直接访问主入口真实路径时无需臆造路径映射；文件名含空格或中文须作为完整参数引用。
 
@@ -14,7 +14,7 @@ Python 模块拆分及文件行数规则见 [行数规范与重构记录](../pyt
 
 PPTX Skill 将已确认内容与受限 SVG 页面转换为新 `.pptx`。文本、形状、图片、有限原生图表、语义表格和 Office 数学对象可在兼容客户端中继续编辑。JSON 负责稿件配置与备注，SVG 负责显式页面布局，转换器生成 DrawingML 并在内存组装 OOXML 包。
 
-它还可读取受支持的现有 Transitional PPTX，提取标题、逐页文本、备注和对象计数，或仅检查包结构。备注的受支持文本形状和原生表格按对象及段落顺序返回，形状占位符按所选 MCE 分支过滤；不恢复表格行列结构。不提供任意现有 PPTX 导入、原位编辑、模板回填、无损转换、旧式 `.ppt`、OCR、PDF 导出或桌面页面渲染。
+它还可读取受支持的现有 Transitional PPTX，提取标题、逐页文本、备注、结构化表格、图表保存值和对象计数，或仅检查包结构。备注的受支持文本形状和原生表格按对象及段落顺序返回，形状占位符按所选 MCE 分支过滤；原 text/notes 段落保持，另有结构化表格行列和合并标记；不保证视觉阅读顺序或任意图表完整语义。不提供任意现有 PPTX 导入、原位编辑、模板回填、无损转换、旧式 `.ppt`、OCR、PDF 导出或桌面页面渲染。
 
 转换逻辑来自 PPT Master v6.8.0 的选定子集，不能将上游完整产品能力视为本 Skill 的能力。源码虽然包含形状和 SVG 辅助模块，公开入口仍只有 `check`、`create`、`inspect`、`validate`。
 
@@ -36,8 +36,8 @@ flowchart TD
     K --> L["新 PPTX 与 JSON 回执"]
     M["已有受支持 PPTX"] --> B
     C --> N["validation.py：inspect 或 validate"]
-    N -->|"inspect"| O["全包校验后按需投影：概况、选页、备注"]
-    O --> P["整页 UTF-8 分页、源与选项绑定游标；不渲染"]
+    N -->|"inspect"| O["全包校验、表格与图表保存值提取；按需投影"]
+    O --> P["整页或显式页内分片；源与选项绑定游标；不渲染"]
 ```
 
 `runtime.render_deck()` 为整稿共享 `PackagePartRegistry`，按页调用 `convert_svg_to_slide_shapes()`，再将转换结果交给 `build_presentation()`。转换中的诊断重定向到 stderr，避免污染 JSON stdout。随包的 pptx_core、_engine 与静态度量资源组成自包含运行时，不依赖相邻 Skill 或上游源码仓库；最终归档使用本包受追踪归档运行时，不依赖外部技能。SVG 以字符串在内存传递，创建、读取和转换不落业务中间文件；没有旧稿编辑入口。归档暂存先在进程内登记名称，再独占创建于任务根目录；写入探针也在根目录，归档目录不建立临时文件。清理前核对身份，变化或失败时保留并报告；强杀后内存登记丢失，核对与删除之间不具备原子绑定，不能保证抵抗任务目录中的恶意并发修改。外部工具的临时文件不受本包控制。
@@ -54,6 +54,8 @@ flowchart TD
 | [_engine/svg_to_pptx/native_objects](../../skills/pptx/scripts/_engine/svg_to_pptx/native_objects/) | 原生图表/表格、嵌入数据工作簿和有限公式转换 |
 | [_engine/pptx_ooxml/package.py](../../skills/pptx/scripts/_engine/pptx_ooxml/package.py) | `PackagePartRegistry`，在整稿分配不冲突的图表等部件名 |
 | [pptx_core/package.py](../../skills/pptx/scripts/pptx_core/package.py) | 幻灯片、母版、主题、备注、内容类型与关系的内存组包 |
+| [pptx_core/content.py](../../skills/pptx/scripts/pptx_core/content.py) | 原生表格网格/合并、经典图表 XML 保存缓存及内容缺口；全稿共享资源预算 |
+| [pptx_core/inspection_fragments.py](../../skills/pptx/scripts/pptx_core/inspection_fragments.py) | 显式页内 JSON 文本片段、Unicode 码点续读与独立游标 |
 | [pptx_core/inspection.py](../../skills/pptx/scripts/pptx_core/inspection.py) | 全包验证后的返回投影、整页 UTF-8 预算、源/选项绑定续读与 coverage |
 | [pptx_core/validation.py](../../skills/pptx/scripts/pptx_core/validation.py) | ZIP/XML、媒体、关系、内嵌工作簿和受支持 PPTX 结构校验；MCE 分支选择及内容摘要 |
 
@@ -78,11 +80,11 @@ flowchart TD
     D -->|"读取"| K["inspect 或 validate"]
     K --> L{"全包结构与安全检查结果"}
     L -->|"拒绝"| Y["明确失败，不返回假空内容"]
-    L -->|"通过或显式有限 PNG partial"| M["保留诊断与退出码；inspect 可按整页预算返回"]
+    L -->|"通过或显式有限 PNG partial"| M["保留结构/内容诊断与退出码；整页或显式页内预算"]
     M --> O{"inspect 的 pagination.next_cursor 是否非空"}
     O -->|"是"| P["同路径及相同选项续读，重新验证全包"]
     P --> K
-    O -->|"否"| Q["核对已收集所选页面；不是视觉验收"]
+    O -->|"否"| Q["重建并核对所选页面；不是视觉验收"]
 ```
 
 自检通过后仍需对实际最终文件验收。布局修订从原始内容创建不同输出文件，不能称作任意原 PPTX 编辑。文件哈希与创建回执不一致时停止交付并调查变化，不用对象数量代替数据与文本核对。
@@ -92,12 +94,12 @@ flowchart TD
 命令中的 `<skill-root>` 从本轮实际读取 PPTX `SKILL.md` 的真实路径确定；相对路径先按宿主确认的读取基准解析，再去掉文件名并整体替换。业务工作目录始终是宿主确认的任务目录；无法定位安装根时停止，不猜路径。
 
 ```console
-python -I -S -B "<skill-root>/scripts/pptx.py" check
-python -I -S -B "<skill-root>/scripts/pptx.py" create presentation.json report.pptx
-python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx
-python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --summary
-python -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --slides 1-3,5 --notes omit --max-output-bytes 12000
-python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/pptx.py" check
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/pptx.py" create presentation.json report.pptx
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --summary
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/pptx.py" inspect report.pptx --slides 1-3,5 --notes omit --max-output-bytes 12000
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 ```
 
 配置也可通过 `create - report.pptx` 的实际进程 stdin 传入。创建配置与读取 PPTX 是不同输入，现有 PPTX 不能当作创建配置或可编辑模板。
@@ -133,26 +135,35 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 
 创建回执包含 `output`、`bytes`、`sha256`、`slide_count` 和 `structural_validation=passed`；`visual_validation=not_run` 与 `temporary_files` 报告的未清理暂存数量必须保留；强杀后状态未知不能据此断言无残留。创建入口自动调用随包归档运行时；归档状态与业务验收分别核对。
 
-`inspect` 已执行结构验证，额外返回标题及逐页 `text`、`notes`、`objects`；只需要结构结论时使用 `validate`，无需为同一结论重复执行两种读取。二者均返回页数、部件数、画布及哈希，不渲染页面，不验证全部 OOXML 语义。
+`inspect` 已执行结构验证，额外返回标题及逐页 `text`、`notes`、`objects` 和非空的 `tables/charts/notes_tables/notes_charts`；只需要结构结论时使用 `validate`，无需为同一结论重复执行两种读取。二者均返回页数、部件数、画布及哈希，不渲染页面，不验证全部 OOXML 语义。
 
 读取有以下重要限制：
 
-1. 文本包括支持的段落、表格单元格和数学文本，但不返回完整图表数据、表格维度或数学树。分式 `12/15` 的拼接可能成为 `1215`，不能据摘要证明数学结构正确。
+1. 文本包括支持的段落、表格单元格和数学文本；默认另返回结构化表格及经典图表保存缓存，不返回完整工作簿或数学树。分式 `12/15` 的拼接可能成为 `1215`，不能据摘要证明数学结构正确。
 2. 对 MCE `AlternateContent` 只读取首个支持的 Choice，否则读取 Fallback，避免重复文本/计数；所有分支仍接受安全与关系检查。没有可读分支则失败，不是完整 MCE 解释器。
 3. 宏、ActiveX、OLE、非 XLSX 嵌入对象、不支持的媒体、危险外部数据关系、损坏引用和资源超限明确失败。
 4. `inspect --allow-png-zero-padding` 只容许每张 PNG 的 IEND 后至多 1024 个零字节，仍校验数据与 CRC，并返回 `structural_validation=partial`、逐文件 diagnostics 和退出码 3。非零尾随、超限或损坏仍拒绝。`create` 与 `validate` 保持严格；这不是通用错误恢复，也不证明非标准 PNG 可在客户端显示。
 
-### inspect 的有界输出与整页续读
+### inspect 的内容与有界续读
 
-- 无新参数保持原完整结果。`--summary` 保留标题、包摘要及各页 `number/objects/text_paragraphs/notes_paragraphs`，不返回正文或备注原文。`--notes omit` 删除 notes 字段，不用空数组伪装不存在。
+结构化表格返回保存的行列、逐格文字及合并标记，空格与覆盖格保留，不补造网格。经典图表返回标题、类型、系列、分类、数值/XY/气泡缓存、可用单位及格式；值保留原始字符串/索引和来源。ChartEx、缺失/稀疏缓存及未解释扩展明确诊断；不访问外链、不读工作簿补值、不重算。新增内容全稿共享 100000 项和 4 Mi Unicode 字符预算，超限保留已读内容并报告缺口；诊断有上限和遗漏数，具体以内容契约为准。
+
+页级 `content_assessment.status=partial` 与结构状态及退出码独立，summary、notes omit、选页/续读仍保留。不能以结构通过或退出 0 掩盖内容缺口，也不以缺少诊断证明所有可见内容均支持。
+
+
+- 默认保留原 text/notes/objects，并新增非空表格/图表内容及缺口；详情见 [内容字段契约](../../skills/pptx/references/reading-content.md)。结构化表格与原段落文字有重叠，不重复计数；保存缓存不等于最新数据。`--summary` 保留标题、包摘要及各页 `number/objects/text_paragraphs/notes_paragraphs`，不返回正文或备注原文，保留 text_assessment/content_assessment。`--notes omit` 删除 notes、notes_tables、notes_charts 字段，不用空数组伪装不存在。
 - `--slides` 使用 1 起算、两端包含、升序无重叠的页号/范围（如 `1-3,5`），拒绝重复、倒序、越界与空选择。选择只控制返回，**所有模式仍验证全包**，包括未选页、关系、媒体、内嵌工作簿及 MCE 分支；不承诺降低解析内存。
-- `--max-output-bytes` 范围 512–67,108,864，计算整个 stdout JSON、外壳、诊断、游标和末尾换行的 UTF-8 字节。未设预算不保证输出大小；每次只返回完整幻灯片，不截断单页正文或长备注。
+- `--max-output-bytes` 范围 512–67,108,864，计算整个 stdout JSON、外壳、诊断、游标和末尾换行的 UTF-8 字节。未设预算不保证输出大小；默认每次只返回完整幻灯片。显式 `--within-slide` 才使用下述单页无损 JSON 分片。
 - `pagination.start/end` 是所选页列表的零起算半开位置，`total` 是所选页数；`complete` 只表示到达所选结果末尾，不是全演示文稿完整或结构完全通过。保留 `coverage.validation=all_package_parts`、所选页、内容及备注返回范围。
 - 将 `pagination.next_cursor` 原样传给 `--cursor`，重复相同路径、summary、slides、notes、**相同预算**和 PNG 容错选项；每次重新读取并验证全包。源变化、选项变化、损坏游标拒绝。按位置拼接 slides，核对 sha256 一致，不把最后一页当全文。
-- 单页、标题或完整诊断放不下则 `output_budget_too_small`、退出 2；移除 cursor 后提高预算重新开始，或缩小范围、省略备注、改用 summary。不得省略 partial 诊断来凑预算。
+- 默认整页模式下单页、标题或完整诊断放不下则 `output_budget_too_small`、退出 2；移除 cursor 后提高预算重新开始，或缩小范围、省略备注、改用 summary。不得省略 partial 诊断来凑预算。
 - 合法预算也限制错误 JSON：过长消息用 `message_truncated` 标记，完整诊断留在 stderr。非法预算或参数尚未解析完成不承诺预算。游标不是访问授权；宿主自身截断不等于合法分页。
 
-详见 [有界读取契约](../../skills/pptx/references/bounded-reading.md)、[分页实现](../../skills/pptx/scripts/pptx_core/inspection.py) 和 [有界读取测试](../../skills/pptx/scripts/test/test_bounded_inspection.py)。测试源码覆盖整页拼接、源/选项变化拒绝、中文预算、未选页面安全校验和 partial 诊断，本轮实际执行范围见 [核验记录](../skill-docs-validation-20261107.json)，不代表全量回归或真实业务验收。
+显式 `--within-slide --max-output-bytes 12000` 保留顶层结果 schema，另附 `fragment_schema=psl.pptx.fragments.v1`，不返回 slides 数组。每次 fragments 仅一个片段，path=["slides",所选页零起算索引]、source_slide 为原 1 起算页号，text 为整页 JSON 的 Unicode 码点半开区间 start/end/total。片段可能切开转义，不能独立解析；按相同 path、哈希及连续偏移拼齐后 JSON 解码一次恢复单页。
+
+页内 pagination 含 mode、selected_index、total_slides、slide_complete、complete、next_cursor，不能套用默认 start/end 字段。每次重复完整包元数据/诊断和当前 slide_assessments，coverage 标明 json_text_fragments；不足以容纳必要诊断与最小推进片段仍失败。独立 v2 游标绑定源、路径、选项、预算和位置，不与整页游标混用；其校验不是访问授权。分页未完成不是结构 partial，也不能凭最后一片宣称全文已读。
+
+详见 [有界读取契约](../../skills/pptx/references/bounded-reading.md)、[分页实现](../../skills/pptx/scripts/pptx_core/inspection.py) 和 [有界读取测试](../../skills/pptx/scripts/test/test_bounded_inspection.py)。测试源码覆盖整页拼接、源/选项变化拒绝、中文预算、未选页面安全校验和 partial 诊断，2026-11-07 历史执行范围见 [核验记录](../skill-docs-validation-20261107.json)，不代表全量回归或真实业务验收。
 
 主要预算：配置 32 MiB、单页 SVG 8 MiB、全稿展开/原生预留保守预算 128 MiB；预计展开节点每页 20000、深度 128。单图 32 MiB、最大单边 32768 px、总像素 6400 万。读取 ZIP 上限 128 MiB、单成员 64 MiB；外层及内嵌包共用 256 MiB 展开和 5000 成员预算，单 XML 16 MiB、深度 128、节点 100000。预算是安全上限，不是进程峰值内存承诺；以源码和输入契约中的各阶段限制共同约束。
 
@@ -167,7 +178,7 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 - [来源记录](../../skills/pptx/references/provenance.md) 固定 PPT Master v6.8.0 来源提交 `5e8856be0da8e6bc85c4aa28acc614478f7b7137`，记录保留的标准库适配、静态数据与 MIT/Apache 等许可。没有移植上游完整工作流、浏览器审查、渲染、任意模板导入或媒体流程。
 - [源码测试](../../skills/pptx/scripts/test/) 不随业务运行包分发；它与仓库级来源清单属于维护证据。结构、合成对象、独立内容预期、真实业务样本、PowerPoint/WPS 显示、只读安装及宿主触发验收必须分别报告，不能相互替代。
 
-本文按固定基线入口、核心实现及引用契约编写；本轮已执行的有界读取合成回归与限制见 [核验记录](../skill-docs-validation-20261107.json)。未对真实用户演示文稿执行创建/读取、全量回归或桌面视觉验收；源码中的步骤不等于全部已执行。
+本文当前能力按本轮入口、实现及契约核对；2026-11-07 已执行的历史有界读取合成回归与限制见 [核验记录](../skill-docs-validation-20261107.json)。历史结果不自动代表当前全量重测；本轮未对真实用户文件、Linux、Office/WPS 或 DeepAgents 执行验收。源码中的步骤不等于全部已执行。
 
 ## 归档结果与用户提示
 
@@ -183,3 +194,11 @@ python -I -S -B "<skill-root>/scripts/pptx.py" validate report.pptx
 当前变更基于 `65bff45`；本轮实际验证与未验证范围见 [维护记录](../maintenance/skill-review/optimization-451-20261110.md)。上文日期化记录继续代表各自历史基线。
 
 本轮统一归档回复边界：完整/精简回执只供内部核验，正文及链接目标均不得暴露归档路径或任务 ID；保留主文件真实引用与失败/部分结果说明。能力范围、CLI 与内部机器字段未改；本轮核验见 [归档展示复核](../maintenance/artifact-lifecycle/archive-reply-privacy-20261112.md)。
+
+## 2026-11-17 任务直达与默认内容
+
+入口保留常用读取闭环及始终适用的环境、安全、数学损失、结果回传与归档隐私要求；创建流程独立为随包参考，表格/图表字段和页内续读只在需要时加载。链接不要求递归预读，也不保证宿主缓存、模型路由或 token 节省。description 按当前能力同步；新增文件随独立包分发，不依赖仓库 docs 或相邻 Skill。历史测试数量不变成本轮结论；本轮验证由维护记录报告，未宣称真实用户文件、Linux、Office/WPS 或 DeepAgents 已验收。
+
+## 2026-11-17 本轮验证证据
+
+结构化内容与显式页内续读已实现。本轮 Mac PPTX 源码 148 项通过、适配器 3 项通过、通用打包安全 11 项通过、PPTX 定向独立包 3 项通过；全技能包集成仍有 TL-DOCX 范围外失败及依赖缺失跳过，不称全量通过。Pylint 未安装，目标 Linux、真实业务文件、Office/WPS 与真实宿主链路未验证。详见 [本轮核验记录](../maintenance/pptx/reading-20261117.md)。

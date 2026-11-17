@@ -1,4 +1,4 @@
-"""Opt-in content selection and whole-slide, byte-bounded inspection pages."""
+"""Opt-in selection and byte-bounded whole-slide or within-slide inspection."""
 from __future__ import annotations
 
 import hashlib
@@ -28,7 +28,8 @@ def select_pages(spec: str | None, count: int) -> list[int]:
 
 
 def bounded_result(value: dict, source: bytes, *, summary: bool = False, slides: str | None = None,
-                   notes: str = "include", allow_png_zero_padding: bool = False, max_output_bytes: int | None = None, cursor: str | None = None) -> dict:
+                   notes: str = "include", allow_png_zero_padding: bool = False, max_output_bytes: int | None = None,
+                   cursor: str | None = None, within_slide: bool = False) -> dict:
     # Validation has already inspected EVERY package part. Selection never alters that boundary.
     from .runtime import RESULT_SCHEMA, TaskError
     selected = select_pages(slides, value["slide_count"])
@@ -36,17 +37,21 @@ def bounded_result(value: dict, source: bytes, *, summary: bool = False, slides:
         raise TaskError("max-output-bytes must be between 512 and 67108864; rejected budgets do not bound error JSON", "invalid_budget")
     if cursor and max_output_bytes is None:
         raise TaskError("cursor requires max-output-bytes and the original selection parameters", "invalid_cursor")
+    if within_slide and max_output_bytes is None:
+        raise TaskError("within-slide requires max-output-bytes", "invalid_budget")
     chosen = []
     for number in selected:
         slide = dict(value["slides"][number - 1])
         if summary:
             summary_slide = {"number": number, "objects": slide["objects"], "text_paragraphs": len(slide["text"]),
                              "notes_paragraphs": len(slide["notes"])}
-            if "text_assessment" in slide:
-                summary_slide["text_assessment"] = slide["text_assessment"]
+            for name in ("text_assessment", "content_assessment"):
+                if name in slide:
+                    summary_slide[name] = slide[name]
             slide = summary_slide
         elif notes == "omit":
-            slide.pop("notes")
+            for name in ("notes", "notes_tables", "notes_charts"):
+                slide.pop(name, None)
         chosen.append(slide)
     binding = encoded({"version": 1, "slides": selected, "summary": summary, "notes": notes,
                        "budget": max_output_bytes, "input": value["input"],
@@ -59,6 +64,13 @@ def bounded_result(value: dict, source: bytes, *, summary: bool = False, slides:
         signature = hmac.new(key, binding + str(position).encode("ascii"), hashlib.sha256).hexdigest()
         return str(position) + "." + signature
 
+    if within_slide:
+        from .inspection_fragments import fragment_result
+        base = {name: item for name, item in value.items() if name != "slides"}
+        base["coverage"] = {"validation": "all_package_parts", "content": "summary" if summary else "selected_slides",
+                            "selected_slides": selected, "notes": "counts_only" if summary else notes,
+                            "not_returned_is_missing": False, "representation": "json_text_fragments"}
+        return fragment_result(base, chosen, source, binding, max_output_bytes, cursor)
     start = 0
     if cursor is not None:
         if not re.fullmatch(r"[0-9]{1,8}\.[0-9a-f]{64}", cursor):

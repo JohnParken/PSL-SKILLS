@@ -18,6 +18,7 @@ from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree as ET
 
 from .images import ImageValidationError, inspect_image
+from .content import ContentReader
 
 
 MAX_ZIP_BYTES = 128 * 1024 * 1024
@@ -631,7 +632,7 @@ def _master_roster(package: _Package, main_name: str) -> tuple[set[str], set[str
     return master_targets, note_targets
 
 
-def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
+def _inspect(data: bytes, *, allow_png_zero_padding: bool = False, include_content: bool = True) -> dict:
     budget = _Budget()
     diagnostics: list = []
     package = _load_package(data, "PPTX", budget, allow_png_zero_padding=allow_png_zero_padding,
@@ -654,6 +655,7 @@ def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
     slide_targets: set[str] = set()
     relationships = package.relationships.get(main_name, {})
     inspected_slides = []
+    content_reader = ContentReader(package, _semantic_elements, _alternate_content_branch) if include_content else None
     for number, entry in enumerate(rosters[0], 1):
         if entry.tag != "{" + P_NS + "}sldId":
             raise ValidationError("PPTX: unsupported slide roster entry")
@@ -676,6 +678,7 @@ def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
         _typed_root(package, master.target, "sldMaster", "presentationml.slideMaster+xml")
         note_relation = _find_relationship(package, relation.target, REL_BASE + "notesSlide", required=False)
         notes = []
+        note_root = None
         notes_math = 0
         if note_relation is not None:
             note_root = _typed_root(package, note_relation.target, "notes", "presentationml.notesSlide+xml")
@@ -704,6 +707,23 @@ def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
             "notes": notes,
             "objects": counts,
         }
+        if content_reader is not None:
+            content, content_diagnostics = content_reader.extract(root, relation.target, 'slide')
+            for field, records in content.items():
+                if records:
+                    slide[field] = records
+            if note_root is not None and note_relation is not None:
+                note_content, note_diagnostics = content_reader.extract(note_root, note_relation.target, 'notes')
+                for field, records in note_content.items():
+                    if records:
+                        slide['notes_' + field] = records
+                content_diagnostics.extend(note_diagnostics)
+            if content_diagnostics:
+                slide['content_assessment'] = {
+                    'status': 'partial',
+                    'scope': 'slide_and_notes_before_projection',
+                    'diagnostics': content_diagnostics,
+                }
         if text_math or notes_math:
             slide["text_assessment"] = {
                 "status": "math_structure_not_preserved",
@@ -740,7 +760,7 @@ def _inspect(data: bytes, *, allow_png_zero_padding: bool = False) -> dict:
 
 def validate_presentation(data: bytes) -> dict:
     """Validate the supported structural contract without returning deck text."""
-    result = _inspect(data)
+    result = _inspect(data, include_content=False)
     result.pop("title")
     result.pop("slides")
     return result

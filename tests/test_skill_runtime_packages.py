@@ -501,13 +501,65 @@ class SkillRuntimePackages(unittest.TestCase):
                 package.writestr(member, data)
         full = json.loads(self.invoke('pptx', 'pptx.py', 'inspect', 'notes-math.pptx').stdout)
         self.assertEqual(full['slides'][0]['notes'], ['验收备注', '1215'])
-        for options in (('--summary',), ('--notes', 'omit', '--max-output-bytes', '1500')):
+        # Additive content diagnostics require 1535 bytes for this fixture; retain them rather than truncating.
+        for options in (('--summary',), ('--notes', 'omit', '--max-output-bytes', '2000')):
             result = json.loads(self.invoke('pptx', 'pptx.py', 'inspect', 'notes-math.pptx', *options).stdout)
             self.assertEqual(result['structural_validation'], 'passed')
             assessment = result['slides'][0]['text_assessment']
             self.assertEqual(assessment, full['slides'][0]['text_assessment'])
             self.assertEqual(assessment['status'], 'math_structure_not_preserved')
             self.assertEqual(assessment['math_paragraphs'], {'text': 0, 'notes': 1})
+            self.assertEqual(result['slides'][0]['content_assessment'], full['slides'][0]['content_assessment'])
+
+    def test_pptx_structured_content_and_fragment_reassembly(self):
+        # Runtime reads only the standalone package; fixtures contain no user data.
+        payload = json.loads((self.installs['pptx'] / 'assets/example.json').read_text(encoding='utf-8'))
+        payload['slides'] = payload['slides'][1:3]
+        payload['slides'][0]['notes'] = '长备注中文🙂"\\' * 160
+        self.invoke('pptx', 'pptx.py', 'create', '-', 'structured.pptx', payload=payload)
+        full = json.loads(self.invoke('pptx', 'pptx.py', 'inspect', 'structured.pptx').stdout)
+        chart = full['slides'][0]['charts'][0]
+        self.assertEqual(chart['data_policy'], 'saved_xml_only_not_recalculated')
+        series = chart['series'][0]
+        self.assertEqual(series['values']['source'], 'saved_cache')
+        self.assertEqual([point['value'] for point in series['values']['points']], ['18', '24', '29', '36'])
+        self.assertEqual([point['value'] for point in series['categories']['points']], ['Q1', 'Q2', 'Q3', 'Q4'])
+        table = full['slides'][1]['tables'][0]
+        self.assertEqual((table['row_count'], table['column_count']), (4, 3))
+        self.assertEqual([cell['text'] for cell in table['rows'][0]['cells']], ['能力', '输出', '边界'])
+        chunks, totals, assembled = {}, {}, []
+        cursor = None
+        pages = 0
+        while True:
+            args = ['inspect', 'structured.pptx', '--within-slide', '--max-output-bytes', '2400']
+            if cursor:
+                args.extend(['--cursor', cursor])
+            response = self.invoke('pptx', 'pptx.py', *args)
+            self.assertLessEqual(len(response.stdout.encode('utf-8')), 2400)
+            page = json.loads(response.stdout)
+            self.assertEqual(page['fragment_schema'], 'psl.pptx.fragments.v1')
+            self.assertEqual(page['sha256'], full['sha256'])
+            self.assertEqual(page['coverage']['validation'], 'all_package_parts')
+            for fragment in page['fragments']:
+                index = fragment['path'][1]
+                self.assertEqual(fragment['path'][0], 'slides')
+                self.assertEqual(fragment['source_slide'], full['slides'][index]['number'])
+                prior = chunks.get(index, '')
+                self.assertEqual(fragment['start'], len(prior))
+                self.assertEqual(fragment['end'] - fragment['start'], len(fragment['text']))
+                self.assertEqual(totals.setdefault(index, fragment['total']), fragment['total'])
+                chunks[index] = prior + fragment['text']
+            pages += 1
+            self.assertLess(pages, 100)
+            cursor = page['pagination']['next_cursor']
+            if not cursor:
+                self.assertTrue(page['pagination']['complete'])
+                break
+        for index in range(len(full['slides'])):
+            self.assertEqual(len(chunks[index]), totals[index])
+            assembled.append(json.loads(chunks[index]))
+        self.assertGreater(pages, 2)
+        self.assertEqual(assembled, full['slides'])
 
     def test_artifact_archive_and_registered_cleanup(self):
         self.invoke('artifact-lifecycle', 'lifecycle.py', 'check')

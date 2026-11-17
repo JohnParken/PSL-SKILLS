@@ -41,6 +41,8 @@ def parser() -> argparse.ArgumentParser:
             command_parser.add_argument("--notes", choices=("include", "omit"), default="include")
             command_parser.add_argument("--max-output-bytes", type=int, help="Whole JSON UTF-8 budget including newline (512..67108864)")
             command_parser.add_argument("--cursor", help="Opaque continuation; repeat all original options")
+            command_parser.add_argument("--within-slide", action="store_true",
+                                        help="Opt in to lossless JSON-text fragments within a slide; requires max-output-bytes")
             command_parser.add_argument("--allow-png-zero-padding", action="store_true",
                                         help="Inspect with bounded non-standard PNG zero padding; report partial")
     return result
@@ -60,8 +62,8 @@ def main(argv: list[str] | None = None) -> int:
         else:
             options = None
             if command == "inspect" and (args.summary or args.slides is not None or args.notes != "include"
-                                         or args.max_output_bytes is not None or args.cursor is not None):
-                options = {key: getattr(args, key) for key in ("summary", "slides", "notes", "max_output_bytes", "cursor")}
+                                         or args.max_output_bytes is not None or args.cursor is not None or args.within_slide):
+                options = {key: getattr(args, key) for key in ("summary", "slides", "notes", "max_output_bytes", "cursor", "within_slide")}
             value = read_presentation(args.input, inspect=command == "inspect",
                                       allow_png_zero_padding=getattr(args, 'allow_png_zero_padding', False),
                                       inspection_options=options)
