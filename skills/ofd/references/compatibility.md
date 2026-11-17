@@ -16,11 +16,11 @@
 | 2.x、畸形版本、其他命名空间或未知 DocType | unsupported/4 | 仍拒绝 |
 | Version 或 DocType 缺失 | 保留原默认值但明确 partial 诊断 | 相同 |
 
-在宿主确认的任务目录执行：
+在默认任务目录 `./`执行：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --version-policy compatible")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --version-policy compatible")
 ```
 
 compatible 是用户理解缺口后显式选择的未知小版本存储结构试读，不是完整支持未知版本。不在失败后自动切换策略、伪造版本属性或尝试替换 XML 命名空间。更高版本的安全、结构或资源校验失败仍拒绝，不输出积累中的正文。

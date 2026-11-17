@@ -2,10 +2,10 @@
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-先完成主入口的任务目录、路径与读取边界核对；使用已确认 Python 3.9+、-I -S -B，仅标准库、离线、不调用办公软件。输入使用已确认任务目录内相对路径，确认可读，不改原件。首次分析执行以下自检，要求退出0且 environment-ok；OOXML 另需 ooxml-sheet=available，自检失败停止依赖操作：
+先完成主入口的任务目录、路径与读取边界核对；使用已确认 Python 3.9+、-I -S -B，仅标准库、离线、不调用办公软件。输入使用默认任务目录内相对路径，确认可读，不改原件。首次分析执行以下自检，要求退出0且 environment-ok；OOXML 另需 ooxml-sheet=available，自检失败停止依赖操作：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
 ```
 
 默认容错解析；旧 `--compatibility` / `--salvage-unknown-metadata` 仅为 no-op。非值元数据与可恢复结构降级为 partial 并附 issue，未知容器、加密、记录帧无法继续、ZIP/XML 安全和资源耗尽仍拒绝。仅读 stdout 无需写探针/清单；确需保存查询/输出时先核对写权限，并按主入口的生命周期规则保护输入及收尾。只读取本页即可处理此分支，不预读复杂 query。
@@ -15,7 +15,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check"
 ## 最小操作与口径
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D100 --header-rows 1")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D100 --header-rows 1")
 ```
 
 工作表、矩形和表头由任务明确；`--header-rows` 指原物理行号或行号范围（如3:5），不是数量；无 --header-rows 时首行也是数据。默认不填充合并、不自动应用隐藏/筛选，不识别小计/总计。先确认金额单位、日期意义、统计期间和分母；不能把明细和合计同时求和。需要非连续 exclude_rows、筛选/分组/去重/排序/fill_text 或 API 时改读 `<skill-root>/references/table-analysis.md`；只查看表头改读 `<skill-root>/references/table-preview.md`。

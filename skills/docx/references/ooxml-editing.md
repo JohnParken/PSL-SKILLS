@@ -1,6 +1,6 @@
 # 受控替换、批注与修订的 OOXML 编辑规则
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -28,10 +28,10 @@
 {"operations":[{"type":"format_run","paragraph_index":0,"expected_text":"现有正文","run_index":0,"expected_run_text":"现有正文","format":{"font_east_asia":"黑体"}}]}
 ```
 
-在已确认的任务目录执行（候选、原件和规格均为任务内相对路径，最终输出仅裸文件名）：
+在默认任务目录执行（候选、原件和规格均为任务内相对路径，最终输出仅裸文件名）：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" format-checked ./原文档.docx 字体修订版.docx --candidate ./字体候选.docx < ./operations.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" format-checked ./原文档.docx 字体修订版.docx --candidate ./字体候选.docx < ./operations.json")
 ```
 
 该模式保护原件和候选，只在差异核验通过后将同一内存候选快照发布为新主文件，再自动归档并清理 runner 自建配置。核验失败不发布最终文件、不归档已有输出；按失败回执收尾，不用 `package.py pack` 或显式归档绕过检查。原件、用户提供候选/规格不作为 runner 可清理项；自行生成的候选/规格继续按创建前登记的本轮清单收尾，不扫描删除。
@@ -39,7 +39,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" forma
 只读排查可单独运行以下命令，退出 0 仅证明该时刻指定文件和规格通过检查，不发布或归档；最终交付仍走上面的受控模式，不能检查后另读、替换候选再直接交付：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/format_guard.py\" ./原文档.docx ./字体候选.docx ./operations.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/format_guard.py\" ./原文档.docx ./字体候选.docx ./operations.json")
 ```
 
 保护范围与拒绝条件：
@@ -67,7 +67,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/format_guard.py\" ./原�
 ```
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/edit_docx.py\" ./采购申请模板.docx ./replacements.json 采购申请.docx --require-no-placeholders")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/edit_docx.py\" ./采购申请模板.docx ./replacements.json 采购申请.docx --require-no-placeholders")
 ```
 
 - 使用输出新文件；禁止输入输出指向同一文件或通过链接指向同一文件。
@@ -122,7 +122,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/edit_docx.py\" ./采购�
 
 不要自动处理删除的段落标记、移动修订或格式修订；保留已有结构并报告超出支持范围。禁止仅清空文字而声称段落已被删除。
 
-使用文末修订对比命令检查遗漏的未追踪正文文字修改。以主入口定义的 `<skill-root>` 定位脚本，将文件放在宿主确认的任务工作目录，使用相对文件参数；不要声称该检查覆盖全部部件、格式变更或段落合并语义。
+使用文末修订对比命令检查遗漏的未追踪正文文字修改。以主入口定义的 `<skill-root>` 定位脚本，将文件放在默认任务工作目录 `./`，使用相对文件参数；不要声称该检查覆盖全部部件、格式变更或段落合并语义。
 
 保留原作者的修订内容和元数据；对其他作者的插入做删除时，在其 `w:ins` 内嵌套自己的 `w:del`。恢复其删除时，在原 `w:del` 后添加自己的 `w:ins`；不要直接重写其他作者的修订历史。
 
@@ -130,14 +130,14 @@ execute(command="python -I -S -B \"<skill-root>/scripts/edit_docx.py\" ./采购�
 
 ## 使用低层辅助工具
 
-先按 执行环境约束（`<skill-root>/SKILL.md#执行环境约束与首步自检`） 完成定位及自检，再从宿主确认的任务工作目录调用脚本。下文 `<skill-root>` 须替换为已确认的真实目录；修改前保留源文件，完成后执行基础检查，禁止为照抄示例切换目录：
+先按 执行环境约束（`<skill-root>/SKILL.md#执行环境约束与首步自检`） 完成定位及自检，再从默认任务工作目录 `./`调用脚本。下文 `<skill-root>` 须替换为已确认的真实目录；修改前保留源文件，完成后执行基础检查，禁止为照抄示例切换目录：
 
 压缩文档输入必须显式指定 `-o` 输出新文件；禁止与输入同路径或通过符号链接、硬链接指向输入。目录入口仍就地修改工作副本，且不接受 `-o`；先保留原目录再操作。`<skill-root>/scripts/comment.py` 默认作者为 `Editor`、缩写为 `E`，按需用 `--author` 和 `--initials` 指定真实作者。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/comment.py\" ./采购管理办法.docx \"核对费用上限\" -o annotated.docx")
-execute(command="python -I -S -B \"<skill-root>/scripts/merge_runs.py\" ./采购管理办法.docx -o merged.docx")
-execute(command="python -I -S -B \"<skill-root>/scripts/office/validate.py\" ./采购管理办法_修订版.docx --original ./采购管理办法.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/comment.py\" ./采购管理办法.docx \"核对费用上限\" -o annotated.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/merge_runs.py\" ./采购管理办法.docx -o merged.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/office/validate.py\" ./采购管理办法_修订版.docx --original ./采购管理办法.docx")
 ```
 
 添加批注定义后，先补正文锚点再验收。当前基础检查仅支持有起点、终点和引用的范围批注，不支持无范围的点批注，也不验证完整线程回复语义；不要把生成批注部件声称为已验证阅读器中的显示效果。

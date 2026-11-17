@@ -21,7 +21,7 @@ Create task-local `stats.json`:
 ```
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_advanced.py\" describe report.xlsx --sheet Sales --header-rows 3:5 --query stats.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_advanced.py\" describe report.xlsx --sheet Sales --header-rows 3:5 --query stats.json")
 ```
 
 Columns accept letters, col: IDs or exact typed paths; selectors must resolve uniquely.

@@ -265,8 +265,8 @@ For an existing workbook, follow Edit existing cells (`<skill-root>/references/e
 Standard-library calculation and file contract (`<skill-root>/references/python-calculation.md`):
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read input.xlsx")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" edit input.xlsx patch.json output.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read input.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" edit input.xlsx patch.json output.xlsx")
 ```
 
 Inspect the target cell's value or formula and the workbook's existing style indices.

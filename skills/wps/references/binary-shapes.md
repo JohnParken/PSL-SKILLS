@@ -25,13 +25,13 @@
 MS-DOC 最大模式在 `binary_images.images` 返回可验证的 PNG。浮动图片依据唯一形状及其 BStore 索引定位内嵌或延迟存储的 BLIP，组内图片保留组合路径。行内图片仅在输出的 U+0001 占位符有单字符直接 CHPX 及有效 Data/PICF 引用时读取。读取校验记录范围、PNG 分块、校验和及尺寸。字段指令、外链、非 PNG 和 OLE 对象不在此范围。
 
 - 每份图片按 PNG 字节的 `sha256` 去重。`width`、`height`、`byte_count` 和 `source` 描述原始载荷，`references` 保留每处的 `kind`、故事、全局 UTF-16 `anchor_cp`、原始记录来源及适用的 `shape_path`。
-- 需要字节时，在任务目录调用 `python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --reading-mode maximum --include-image-bytes`。返回 `data_base64` 和 `bytes_status=included`。默认 `bytes_status=not_requested`。超过 4 MiB 总原始字节配额的图片保留元数据，标为 `omitted_budget`。`images_omitted_by_byte_budget` 与诊断给出遗漏量。整个 JSON 仍受 16 MiB 上限约束。
+- 需要字节时，在任务目录调用 `"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --reading-mode maximum --include-image-bytes`。返回 `data_base64` 和 `bytes_status=included`。默认 `bytes_status=not_requested`。超过 4 MiB 总原始字节配额的图片保留元数据，标为 `omitted_budget`。`images_omitted_by_byte_budget` 与诊断给出遗漏量。整个 JSON 仍受 16 MiB 上限约束。
 - `reference_count`、`unresolved_reference_count` 统计已检查的链接。`binary_images.status=extracted` 仅描述已检查链接和当前字节请求。已识别的坏记录或不支持的记录保留 `binary_image_record_unread`，关联不明时保留占位。无该字段不表示不存在图片。
 - 行内 PNG 可用时，诊断位置含 `stored_image_status=png_available`。所有对应位置均已读取时，返回 `inline_png_placeholder_not_rendered`。正文仍使用占位。PNG 字节读取不涉及像素解压、图形渲染或 OCR。
 
 ## 存储图表缓存
 
-在任务目录使用 `python -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --reading-mode maximum`。此路径适用于内容为 MS-DOC 的输入，解析图表兼容记录需 Expat >= 2.6。浮动图表使用正文或页眉页脚的已确认 U+0008 锚点及唯一形状路径。行内图表使用正文或已读取故事的 U+0001、直接 CHPX 和内嵌 PICF，图表缓存可独立于预览 PNG 读取。仅解析两条路径的直接形状三级 FOPT 中的 `metroBlob`（0x03A9），沿 OPC 的 Graphic Frame 与内部 Chart 关系验证部件类型。此路径不扫描流中的 ZIP 签名。
+在任务目录使用 `"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/read_wps.py" ./input.wps --reading-mode maximum`。此路径适用于内容为 MS-DOC 的输入，解析图表兼容记录需 Expat >= 2.6。浮动图表使用正文或页眉页脚的已确认 U+0008 锚点及唯一形状路径。行内图表使用正文或已读取故事的 U+0001、直接 CHPX 和内嵌 PICF，图表缓存可独立于预览 PNG 读取。仅解析两条路径的直接形状三级 FOPT 中的 `metroBlob`（0x03A9），沿 OPC 的 Graphic Frame 与内部 Chart 关系验证部件类型。此路径不扫描流中的 ZIP 签名。
 
 - `binary_charts.charts[].references` 指出正文故事、UTF-16 `anchor_cp`、`kind`（`floating` 或 `inline`）和形状编号。级联组合另带 `shape_path`，行内另带字符属性和 PICF 来源。`source` 给出二进制流及偏移，`graphic_frame_part` 和 `chart_part` 给出包内来源。
 - 每个系列保留图表类型、存储 `index`、`order`、可用的系列名，以及 `categories`、`values` 两组点。用各自的 `points[].index` 对齐分类和值，数值以原始字符串返回，保留小数精度。支持经典饼图、环形图、柱状图、折线图和面积图等分类/值结构中的字符串、数值缓存及直接存储点。

@@ -1,6 +1,6 @@
 # 当轮交付物与统一归档
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 最终回复先遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检` 中的归档展示边界：完整或精简机器回执均不整段转贴；`archive_output` 和 `files[].archive_output` 不能作为下载地址。正文、链接文字与链接目标均不得带出归档路径、目录或任务 ID；异常仅概括实际影响，主文件链接只使用宿主确认的真实主文件引用。
 
@@ -53,7 +53,7 @@
 
 归档结果返回后仍需完成任务收尾：最终内容已验收时，按清理清单流程（`<skill-root>/references/task-cleanup.md`） seal/clean，归档 partial/failed 也执行。这里的交付 API 不会删除调用方JSON、脚本或中间文档；标准新建由自动任务入口（`<skill-root>/references/task-cleanup.md#自动新建任务入口`）包裹，自动管理其创建的helper，其他任务仍显式登记并收尾。清理结果与主文件成功状态分开报告，不能因清理失败重跑生成或把有残留说成已全部清理。
 
-从已确认的 `<skill-root>/scripts/` 加载下列模块。在宿主确认的任务目录中调用；各类路径基准统一见 文件定位与读取规则（`<skill-root>/SKILL.md#文件定位与读取规则`）；文件命名、环境自检和归档读取边界与 CLI 相同。所有交付 API 均返回字典，主操作失败会抛出异常且不归档旧输出；主操作成功后自动调用统一归档入口，归档异常转换为 `archive_status=failed` 和 `warnings`，不抛出为主操作失败。API 不自动打印结果，调用方须记录返回摘要；CLI 将摘要写入 stdout，并把失败警告写入 stderr。
+从已确认的 `<skill-root>/scripts/` 加载下列模块。在默认任务目录 `./`中调用；各类路径基准统一见 文件定位与读取规则（`<skill-root>/SKILL.md#文件定位与读取规则`）；文件命名、环境自检和归档读取边界与 CLI 相同。所有交付 API 均返回字典，主操作失败会抛出异常且不归档旧输出；主操作成功后自动调用统一归档入口，归档异常转换为 `archive_status=failed` 和 `warnings`，不抛出为主操作失败。API 不自动打印结果，调用方须记录返回摘要；CLI 将摘要写入 stdout，并把失败警告写入 stderr。
 
 新建交付验收产生的静态排版提示也保留在 `warnings`，以 `layout-warning:` 区别于归档诊断；最多保留 100 条及明确的省略数量。标准 runner 的完整和精简回执均回传，不影响 `archive_status`，不自动修改用户显式分页。只读审计和低层 Path 返回接口的诊断范围见 `<skill-root>/references/typography.md#静态排版检查`。
 
@@ -118,7 +118,7 @@ result = replace_text_delivery(
 先按 主入口（`<skill-root>/SKILL.md#执行环境约束与首步自检`） 确认任务目录、解释器及 `<skill-root>`。用实际 Skill 目录替换占位符，不切换到源码目录：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/archive_delivery.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/archive_delivery.py\" --check")
 ```
 
 统一归档 --check 实际检查运行能力与任务目录，不验证业务内容、归档配置或云上传；只在任务根目录独占创建并清理探针，不在归档目录放探针。核对退出状态与完整 JSON；自检不能替代实际归档。
@@ -126,7 +126,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_delivery.py\" --
 本轮生成多个已验收交付文件后，显式列出文件和所有需要保护的输入原件/操作文件/图片：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/archive_delivery.py\" 采购管理办法_修订版.docx 采购管理办法_修改说明.txt --protect-input ./采购管理办法.docx --protect-input ./操作.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/archive_delivery.py\" 采购管理办法_修订版.docx 采购管理办法_修改说明.txt --protect-input ./采购管理办法.docx --protect-input ./操作.json")
 ```
 
 不传通配符或目录，只传任务根目录的裸文件名。助手负责核实清单属于本轮产物，脚本不会根据修改时间猜测。重复或大小写折叠后同名的交付清单整体拒绝，避免归档互相覆盖。单独调用或使用低层 API 时，调用方须列全 `--protect-input`；编辑 CLI 自动传入源文档及操作/替换图片等输入。
@@ -155,7 +155,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_delivery.py\" �
 以上模块均随本技能完整分发，仅依赖标准库；公共artifact-lifecycle与XLSX使用受追踪副本，不依赖仓库公共目录。迁移时须带齐模块及其同级依赖，保留本轮所有权、输入保护、任务目录和失败语义，不能仅复制函数后移除检查。归档成功的用户提示按本页“用户展示与机器元信息”映射；内部路径和警告保留于机器结果。模块拆分不提升原有并发写者隔离保证，也不把单文件原子替换变成整批事务。
 
 
-归档增强：复制后以 SHA-256 核对主文件及副本，匹配后 files 项返回 archive_verified=true；不匹配报告失败并保留文件供排查。跨文件系统、权限不足及空间不足分别返回 archive_cross_device、archive_permission_denied、archive_storage_full。完整回执保留实际相对 archive_output；精简回执仅在归档 success 时使用，partial/failed 保留完整原因和文件明细。实际目录仍以宿主确认的任务工作目录为基准加 output/{questionId}，不得切换到输入或 Skill 目录执行，也不根据对话猜测其他目录。
+归档增强：复制后以 SHA-256 核对主文件及副本，匹配后 files 项返回 archive_verified=true；不匹配报告失败并保留文件供排查。跨文件系统、权限不足及空间不足分别返回 archive_cross_device、archive_permission_denied、archive_storage_full。完整回执保留实际相对 archive_output；精简回执仅在归档 success 时使用，partial/failed 保留完整原因和文件明细。实际目录仍以默认任务工作目录 `./`为基准加 output/{questionId}，不得切换到输入或 Skill 目录执行，也不根据对话猜测其他目录。
 
 宿主须在本轮执行环境提供最新 questionId；不能从历史回执或聊天猜测。归档单独重试重新读取当次宿主配置。脚本不能证明合法 ID 的时效，宿主负责更新。
 

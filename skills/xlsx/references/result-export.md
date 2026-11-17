@@ -15,7 +15,7 @@ Resolve `<skill-root>` from the actual SKILL.md path; replace it in commands and
 relative task data paths. Python 3.9+, standard library only; no upload or application use.
 
 ```python
-execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" source.xlsx --sheet Sales --query rows.json > selected.json\npython3 -I -S -B \"<skill-root>/scripts/xlsx_result_export.py\" selected.json readable.xlsx\n)")
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" source.xlsx --sheet Sales --query rows.json > selected.json\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_result_export.py\" selected.json readable.xlsx\n)")
 ```
 
 The accepted native statuses are selected, summarized, described and management_wide

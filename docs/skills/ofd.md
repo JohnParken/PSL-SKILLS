@@ -1,6 +1,6 @@
 # OFD：默认文本读取
 
-文档核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.1353.3706`。业务执行以本轮所需 Skill 及参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
+文档核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261118.0325.5874`。业务执行以本轮所需 Skill 及参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
 
 读取脚本只向 stdout 返回结果，不创建 OFD 或磁盘结果。若需要保存 JSON，由宿主在已确认任务根目录安全创建新文件，不覆盖已有文件。输入路径、内部归档与受控临时工作区按原规则处理。
 
@@ -71,11 +71,11 @@ flowchart TD
 命令中的 `<skill-root>` 必须从本次实际读取 OFD `SKILL.md` 的真实路径确定，相对路径先按确认的读取基准解析，再去掉文件名并整体替换。数据路径相对宿主任务目录，不相对参考文件目录；无法定位时停止。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" --check")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --page 2")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_ofd.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd'")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --page 2")
 # 仅明确要求结构时
-execute(command="python -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view full")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_ofd.py\" './input.ofd' --view full")
 ```
 
 读取结果写入 stdout，不产生磁盘结果或解包文件；参数错误等诊断仍按入口契约使用 stderr。输入必须是任务目录内普通文件，拒绝绝对路径、父目录段和所有层级符号链接，通过目录描述符逐级读取并核对变化。Python API 默认允许调用方已授权的绝对路径；显式 `task_root` 才启用同类边界，不能利用默认 API 绕过宿主限制。

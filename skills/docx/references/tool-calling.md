@@ -1,6 +1,6 @@
 # 工具调用故障与宿主接入
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -25,7 +25,7 @@
 用户确认当前平台推荐`execute(command=命令字符串)`；本技能主入口与业务参考中的Bash执行示例统一采用这一形态。参数名command不加引号，每次传一个完整非空字符串；原生工具接口按真实schema提交参数。下例包含POSIX here-document，字符串解码后由命令入口处理；不把整个execute表示式再放进command，不自行发明多层包装或手工拼接JSON；复杂规格使用Python调用模板（`<skill-root>/references/complex-json.md`），仍只提交一个完整command。JSON数据与明确的Python API源码示例不属于Bash调用，保留原格式。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'DOCX_SPEC'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程。\"}]}\nDOCX_SPEC\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_docx_task.py\" create \"客户服务改进方案.docx\" <<'DOCX_SPEC'\n{\"theme\":\"official\",\"blocks\":[{\"type\":\"title\",\"text\":\"客户服务改进方案\"},{\"type\":\"paragraph\",\"text\":\"完善服务流程。\"}]}\nDOCX_SPEC\n")
 ```
 
 执行前替换真实`<skill-root>`、本次文件名与完整正文。检查正文字符串、各块对象、blocks数组、顶层JSON、独立的`DOCX_SPEC`结束行及外层command字符串均已闭合。多层嵌套引号须按调用接口编码；不要混用日志转义后的文本与已经解码的真实换行。当前宿主的执行示例统一使用上面的`execute(command=...)`形态，不另列独立的command参数对象作为执行步骤，不额外执行第二次。

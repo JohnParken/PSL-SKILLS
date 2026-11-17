@@ -1,12 +1,14 @@
 ---
 name: wps
-version: "20261116.1522.4948"
+version: "20261118.0325.5874"
 description: 读取 .wps、.rtf 和旧版 .doc 的全文、表格、文本框及可提取对象文字，报告遗漏与修订边界。默认回传有用内容及可读取图表保存值，图片和排版证据按需读取。按明确要求创建 RTF 内容的 .wps/.rtf 文档或重排副本。原生 DOCX 优先使用 docx。
 ---
 
 # WPS 文字读取、RTF 创建与受控重排
 
 ## 执行环境约束与首步自检
+
+**部署运行与本地测试：** DeepAgents 通过宿主的 `execute(command=完整命令字符串)` 执行业务命令。使用本 Skill 部署方预置的 `"<skill-root>/scripts/.venv/bin/python"`，缺失或不可执行时停止，不自动安装、不回退到 PATH；在命令字符串内按外层语法转义引号。生产保留 `-I -S -B`，仅使用标准库。仓库本地实际测试使用默认 `python3`；不满足版本或依赖时报告，不将本地结果视作部署验收。
 
 **最小必要检查：** 仅读任务只做本入口指定的读取自检；任务 `./` 顶层目标可读且必要自检通过后直接读取，不先测试写入。不得主动运行全量 `mount`、`findmnt`、`df`、`env` 或读取 `/proc/mounts` 做系统侦察，不把根挂载 `/` 的 `ro` 推断为任务目录不可读/不可写。只有实际需要生成、编辑、导出、缓存或受控临时文件时，才按对应流程验证所需写入能力；安全、输入保护和解析检查不省略。失败仅针对实际错误做一次有界定位，输出失败项及必要摘要，不倾倒系统日志；条件未改变不重复自检。
 
@@ -24,15 +26,15 @@ description: 读取 .wps、.rtf 和旧版 .doc 的全文、表格、文本框及
 
 路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-宿主路径与执行器：使用宿主已提供的真实入口位置和任务目录；入口路径可被执行器访问时，以本节指定自检确认可运行，不另做系统探测。宿主明确提供不同路径空间时仅使用其映射；没有可用位置或实际访问失败时报告具体缺口，不猜测映射、不换目录。读取工具可读不等于执行器已可运行，仍核对实际自检结果和任务输入可读性。
+宿主路径与执行器：使用宿主提供的真实入口位置，在默认任务目录 `./` 执行；入口路径可被执行器访问时，以本节指定自检确认可运行，不另做系统探测。宿主明确提供不同路径空间时仅使用其映射；没有可用位置或实际访问失败时报告具体缺口，不猜测映射、不换目录。读取工具可读不等于执行器已可运行，仍核对实际自检结果和任务输入可读性。
 
-1. **任务目录与输入。** `./` 为宿主确认的任务工作目录；在该目录运行并保持不变，该目录不是 Skill 源码目录；若仍在源码目录，先确认任务目录。输入及受控临时文件沿用该目录内相对路径规则。交付输出只传裸文件名（例如 `报告.wps`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。优先本轮附件映射与用户指定路径；唯一可访问候选直接处理，多候选无法消歧才询问。没有映射时只列出 `./` 顶层候选，不递归搜索或读取历史归档；无可访问文件如实报告，不要求用户重复已知文件名。
+1. **任务目录与输入。** 任务工作目录固定为 `./`，不询问用户，也不另建或切换工作目录。上传文件、交付物和普通中间文件均在 `./` 顶层定位；通常不创建临时子目录。在该目录运行并保持不变，若当前目录与 Skill 安装目录冲突，停止相关写入并报告。输入及受控临时文件沿用该目录内相对路径规则。交付输出只传裸文件名（例如 `报告.wps`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。优先本轮附件映射与用户指定路径；唯一可访问候选直接处理，多候选无法消歧才询问。没有映射时只列出 `./` 顶层候选，不递归搜索或读取历史归档；无可访问文件如实报告，不要求用户重复已知文件名。
 2. **定位与环境。** 按上述真实 `file_path` 定位脚本，不为调用切换安装目录。使用宿主确认的 Python 3.10+、保留 `-I -S -B`；仅标准库（`<skill-root>/requirements.txt`），禁止安装包或运行时联网。OOXML 和二进制图表缓存另需 Expat >=2.6；二进制导出需预装 LibreOffice。
 3. **首次操作前仅自检相关分支。** 读取用第一条，创建用第二条；编辑先完成两者，导出按专项参考自检。均要求退出 0 且输出 `environment-ok`，不只看无报错：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" --check")
-execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_wps.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_wps_task.py\" check")
 ```
 
 4. **读写与失败。** 输入须为可读普通文件。仅读无需写探针；写任务在任务目录以独占探针实际写入、读回并只清理本次探针。自检失败、缺标记、输入缺失、解析/生成失败或结果不明时停止依赖操作，报告具体失败；不原样重试掩盖问题，环境修复后再验。环境自检不是产物验收。压缩后约束缺失时重新读取本入口，保留已确认的目录与文件名。
@@ -56,14 +58,14 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" check"
 
 ```python
 # 默认 content：正文、表格、图表保存值与附加区域，精简内容 JSON
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps")
 # 完整结果过长时无损分片，不改成摘要或仅主文
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 8000 --max-output-bytes 12000")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 8000 --max-output-bytes 12000")
 # 明确需要 PNG 证据或段落布局属性时才升级
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode maximum")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode maximum")
 # 只有用户明确只需概况或这段主文时才用 standard
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --summary")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --paragraph-range 1:20")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --summary")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --reading-mode standard --paragraph-range 1:20")
 ```
 
 CLI 默认 `--profile content` 返回 `wps_content_v1`：正文、保留分组/合并的精简表格、可确认父子单元格的 `nested_content`、附加区域、图表保存值与归并遗漏提示，不倾倒关系ID、XML路径、二进制记录及密集诊断。OOXML 含表格时用 `body` 顺序引用 `tables`，表格文字不再重复进入正文 `text`；嵌套单元格的 `content` 保留段落/子表顺序，同文但独立段落不会删除。`--profile full` 返回原详细结构；显式 standard/maximum 未指定 profile 时保持原详细输出。API `read()`、`read_bytes()` schema 不变。分页对所选 profile 的完整结果无损分片，游标不能跨 profile 复用。
@@ -81,7 +83,7 @@ OOXML 的 content/maximum 同时返回 `ooxml_charts` 中原生图表的标题�
 ### 创建：标题、正文、基础表格
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create \"通知.wps\" --compact-receipt <<'JSON'\n{\"theme\":\"official\",\"blocks\":[\n  {\"type\":\"title\",\"text\":\"工作情况通报\"},\n  {\"type\":\"heading\",\"level\":1,\"text\":\"一、总体情况\"},\n  {\"type\":\"paragraph\",\"text\":\"本阶段工作已完成。\"},\n  {\"type\":\"table\",\"rows\":[[\"事项\",\"状态\"],[\"联调\",\"通过\"]]}\n]}\nJSON\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create \"通知.wps\" --compact-receipt <<'JSON'\n{\"theme\":\"official\",\"blocks\":[\n  {\"type\":\"title\",\"text\":\"工作情况通报\"},\n  {\"type\":\"heading\",\"level\":1,\"text\":\"一、总体情况\"},\n  {\"type\":\"paragraph\",\"text\":\"本阶段工作已完成。\"},\n  {\"type\":\"table\",\"rows\":[[\"事项\",\"状态\"],[\"联调\",\"通过\"]]}\n]}\nJSON\n")
 ```
 
 默认 official 公文预设，用户明确格式优先，不凭标题切换主题。默认自然分页，不擅自加 `page_break` / `page_break_before`；标题默认与下文同页。显式新页只选一种分页机制；不以分页符冒充分节。预设不等于GB/T认证，字体只写名称，不安装/嵌入或保证可用；回读不等于视觉分页验收。其他主题、页眉页脚、列表或自定义版式再读生成参考。

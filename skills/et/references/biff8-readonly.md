@@ -51,7 +51,7 @@ parser code or binary samples were incorporated. All tests are synthetic MS-XLS 
 fixtures, with manual typed expectations and container fixtures; they are not WPS files.
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --profile full")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --profile full")
 ```
 
 The file must pass the CFB container reader (`<skill-root>/references/et-ett-readonly.md`) and expose at least one
@@ -338,7 +338,7 @@ within A1:F20. Select the actual sheet/range for the task; error cells cannot fo
 header paths, and formula headers require the explicit cache policy described below.
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_biff8.py\" input.xls --sheet Data --range A1:F20 --header-rows 1:3")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/wps_biff8.py\" input.xls --sheet Data --range A1:F20 --header-rows 1:3")
 ```
 
 Explicit header reconstruction reuses the explicit merge-only header rules in `<skill-root>/scripts/wps_biff8_headers.py`,

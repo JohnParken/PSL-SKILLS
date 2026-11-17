@@ -1,6 +1,6 @@
 # 复杂JSON的Python调用模板
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -47,10 +47,10 @@ raise SystemExit(result.returncode)
 
 ## 完整调用表示
 
-下例与上述源码是同一个模板，只执行一次。将`<skill-root>`替换为实际读取主入口确定的真实目录，使用宿主确认的Python解释器；输出参数按实际名称替换。quoted heredoc结束行必须独立且不能与源码完整行冲突。它承载Python源码，不直接承载手写复杂JSON。外层工具参数仍须按真实schema完整编码，不能传空command或把execute表示式嵌套进command。
+下例与上述源码是同一个模板，只执行一次。将`<skill-root>`替换为实际读取主入口确定的真实目录，使用本 Skill 预置的部署解释器；输出参数按实际名称替换。quoted heredoc结束行必须独立且不能与源码完整行冲突。它承载Python源码，不直接承载手写复杂JSON。外层工具参数仍须按真实schema完整编码，不能传空command或把execute表示式嵌套进command。
 
 ```python
-execute(command="python -I -S -B - \"<skill-root>\" \"报告.docx\" <<'PY_SPEC'\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\n\nroot = Path(sys.argv[1])\noutput = sys.argv[2]\nspec = {\n    \"theme\": \"official\",\n    \"blocks\": [\n        {\"type\": \"paragraph\", \"text\": '说明：客户说\"已确认\"；字面文本 C:\\\\资料 与 $(echo 未执行)。'},\n        {\"type\": \"list\", \"ordered\": False, \"items\": [\"完成复核\", \"安排交付\"]},\n    ]\n}\nrequest = spec\ncommand = [sys.executable, \"-I\", \"-S\", \"-B\", str(root / \"scripts/run_docx_task.py\"), \"create\", output]\n\ntry:\n    payload = json.dumps(request, ensure_ascii=False, allow_nan=False).encode(\"utf-8\")\nexcept (TypeError, ValueError, OverflowError):\n    print(\"spec_serialization_failed: correct the Python data structure\", file=sys.stderr)\n    raise SystemExit(2)\ntry:\n    result = subprocess.run(command, input=payload, check=False)\nexcept OSError:\n    print(\"runner_not_started: check the confirmed interpreter and Skill path\", file=sys.stderr)\n    raise SystemExit(1)\nraise SystemExit(result.returncode)\nPY_SPEC\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B - \"<skill-root>\" \"报告.docx\" <<'PY_SPEC'\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\n\nroot = Path(sys.argv[1])\noutput = sys.argv[2]\nspec = {\n    \"theme\": \"official\",\n    \"blocks\": [\n        {\"type\": \"paragraph\", \"text\": '说明：客户说\"已确认\"；字面文本 C:\\\\资料 与 $(echo 未执行)。'},\n        {\"type\": \"list\", \"ordered\": False, \"items\": [\"完成复核\", \"安排交付\"]},\n    ]\n}\nrequest = spec\ncommand = [sys.executable, \"-I\", \"-S\", \"-B\", str(root / \"scripts/run_docx_task.py\"), \"create\", output]\n\ntry:\n    payload = json.dumps(request, ensure_ascii=False, allow_nan=False).encode(\"utf-8\")\nexcept (TypeError, ValueError, OverflowError):\n    print(\"spec_serialization_failed: correct the Python data structure\", file=sys.stderr)\n    raise SystemExit(2)\ntry:\n    result = subprocess.run(command, input=payload, check=False)\nexcept OSError:\n    print(\"runner_not_started: check the confirmed interpreter and Skill path\", file=sys.stderr)\n    raise SystemExit(1)\nraise SystemExit(result.returncode)\nPY_SPEC\n")
 ```
 
 Python通过sys.executable启动现有runner，subprocess参数使用列表，未启用shell=True、不设置cwd，也不另设更短的外层超时。JSON只通过input字节传stdin，不写临时JSON、不打印正文调试信息。子进程stdout/stderr直接透传，真实退出码原样返回，包括1、2、3；不要用check=True异常掩盖返回摘要。宿主可能分流或合流回传；按实际可见结果保留正文和诊断，核对真实退出状态及截断，无法确认完整时不得当成功。

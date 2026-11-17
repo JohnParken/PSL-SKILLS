@@ -109,7 +109,7 @@ class RepositoryDeliveryExamples(unittest.TestCase):
                 commands = [
                     shlex.split(line)
                     for line in (root / relative).read_text(encoding='utf-8').splitlines()
-                    if line.startswith(('python ', 'python3 '))
+                    if line.startswith('"<skill-root>/scripts/.venv/bin/python" ')
                     and f'/scripts/{script}" {operation} ' in line
                 ]
                 self.assertEqual(len(commands), 1)

@@ -14,8 +14,8 @@ commands from the confirmed task directory. Inputs and outputs are task-relative
 ## Import a table
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" import input.csv imported.xlsx --sheet Sales")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" import input.tsv typed.xlsx --sheet Sales --numeric-columns B C --header-rows 1 --encoding gbk")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" import input.csv imported.xlsx --sheet Sales")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" import input.tsv typed.xlsx --sheet Sales --numeric-columns B C --header-rows 1 --encoding gbk")
 ```
 
 The default encoding is UTF-8 with optional BOM. Delimiter comes from `.csv` or `.tsv`;
@@ -49,8 +49,8 @@ physical rows are not silently discarded.
 ## Export one sheet or rectangle
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" export imported.xlsx values.csv --sheet Sales")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" export imported.xlsx region.tsv --sheet Sales --range A1:C20")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" export imported.xlsx values.csv --sheet Sales")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" export imported.xlsx region.tsv --sheet Sales --range A1:C20")
 ```
 
 Select the exact sheet name. Without a range, export A1 through the maximum stored

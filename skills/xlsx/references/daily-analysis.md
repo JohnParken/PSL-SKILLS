@@ -27,8 +27,8 @@ average facts spec (`<skill-root>/assets/fictional_daily_average_facts.json`) in
 `./daily.json` and `./daily-facts.json`, respectively, using exclusive creation. Then run:
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create ./daily-facts.json daily.xlsx")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_daily.py\" average daily.xlsx --sheet DailyFacts --query daily.json --xlsx average_report.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create ./daily-facts.json daily.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_daily.py\" average daily.xlsx --sheet DailyFacts --query daily.json --xlsx average_report.xlsx")
 ```
 
 Daily-flow config (`<skill-root>/assets/fictional_daily_flow_config.json`) and
@@ -36,8 +36,8 @@ flow facts spec (`<skill-root>/assets/fictional_daily_flow_facts.json`) illustra
 Copy them exclusively to new task files `./flow.json` and `./flow-facts.json`, respectively:
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create ./flow-facts.json flow.xlsx")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_daily.py\" accumulate flow.xlsx --sheet DailyFacts --query flow.json --xlsx flow_report.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create ./flow-facts.json flow.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_daily.py\" accumulate flow.xlsx --sheet DailyFacts --query flow.json --xlsx flow_report.xlsx")
 ```
 
 All examples are fictional and contain no real customer or bank records. The ordinary

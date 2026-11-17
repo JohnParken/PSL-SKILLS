@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 当前 Skill 版本为 `20261116.1522.4948`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
+> 当前 Skill 版本为 `20261118.0325.5874`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -127,7 +127,7 @@ flowchart TD
 下例是调用形态而非本次执行记录。`<skill-root>` 须由本轮实际读取的主入口路径确定并整体替换；数据路径相对宿主确认的任务目录。
 
 ```sh
-python -I -S -B "<skill-root>/scripts/run_wps_task.py" create "工作汇报.wps" --compact-receipt <<'JSON'
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/run_wps_task.py" create "工作汇报.wps" --compact-receipt <<'JSON'
 {"theme":"official","blocks":[{"type":"title","text":"工作汇报"},{"type":"paragraph","text":"本期工作有序开展。"}]}
 JSON
 ```

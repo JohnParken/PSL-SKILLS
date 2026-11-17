@@ -17,7 +17,7 @@
 先按主入口完成定位与读取自检；始终留在任务目录，输入只使用原本获准的文件：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 8000 --max-output-chars 12000 --max-output-bytes 12000")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_wps.py\" ./input.wps --page-size 8000 --max-output-chars 12000 --max-output-bytes 12000")
 ```
 
 读取返回的 `next_cursor`，下一次原样传入 `--cursor`，保持输入、读取选项与 page-size 相同。可以调整字符/字节预算，但不能手改游标或把其他文件的游标复用。游标很长，不逐字重写；按宿主安全参数传递能力原样引用。例中省略 reading-mode 即默认 content；显式 maximum 保留高级证据。跨模式或profile续读拒绝，必须从头开始。

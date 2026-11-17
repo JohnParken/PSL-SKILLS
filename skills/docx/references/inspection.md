@@ -1,6 +1,6 @@
 # 结构读取与进阶检查
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -57,11 +57,11 @@
 以上参数在输入路径之后使用，例如：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --summary")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --heading-only")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --paragraph-range 1:20 --max-output-chars 4000")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --section '总体情况'")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-chars 4000 --start-block 0")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --summary")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --heading-only")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --paragraph-range 1:20 --max-output-chars 4000")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --section '总体情况'")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-chars 4000 --start-block 0")
 ```
 
 - 章节标题去掉首尾空白后要求**完整精确匹配**正文标题文字。重复标题用 `--section-occurrence 2` 选择第二处。缺失、歧义或越界时报错。标题层级依据显式 `outlineLvl`、样式及有限的 `basedOn` 关系。用标题的存储文本匹配，自动编号另列。
@@ -78,8 +78,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.d
 字符预算和 UTF-8 字节预算分别计算。旧 `--start-block` 数字索引缺少源和选项核对。需要按完整块可靠续读时使用字节预算：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-bytes 4000")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-bytes 6000 --cursor '上次返回的next_cursor原值'")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-bytes 4000")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --compact-json --tables rows --max-output-bytes 6000 --cursor '上次返回的next_cursor原值'")
 ```
 
 - `--max-output-bytes` 为 128～2,000,000，计**实际 UTF-8 JSON、全部元数据与末尾换行**。按完整块分页，不截断 Unicode 或诊断；元数据/单块放不下就失败，stdout 为空、完整错误在 stderr，需增大预算或缩小选择范围。预算不限制错误诊断，也不保证宿主不截断回传。
@@ -107,11 +107,11 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.d
 从任务工作目录执行，先按主入口通过只读自检。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --section '总体情况'")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --max-output-bytes 12000")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --section '总体情况' --max-output-bytes 12000")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --section '总体情况' --cursor '上页next_cursor原值'")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --section '总体情况'")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --max-output-bytes 12000")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --section '总体情况' --max-output-bytes 12000")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" 月报.docx --section '总体情况' --cursor '上页next_cursor原值'")
 ```
 
 仅传文件名返回上述可读内容；显式 `--report` 返回版本 1 的 `docx-report` JSON，并默认按12,000字节分页。`--report --section` 返回同一 JSON 格式，范围从指定标题到下一个同级或更高层级标题之前，包含下级章节及其对象。`scope` 给出章节名、出现序号、标题层级和正文段落编号。段落、表格、图表等沿用全量编号。`stats` 和业务缺项按所选范围统计，正文兼容分支缺失仍提示，因为可能影响章节边界。章节包含正文中的脚注、尾注和批注引用，关联部件正文可用全量视图读取。ZIP/XML 与关系检查沿用全量路径。
@@ -122,7 +122,7 @@ Python 调用 `read_docx_report(path, max_output_bytes=None)` 获取全量，可
 
 报告分页有下一页时，在任务目录保存一份仅当前用户可读写的解析结果。首个保存成功的响应含 `page_cache=stored`，复用时为 `page_cache=reused`。继续传原文件名和同一组选项，脚本核对源 SHA-256、游标和缓存身份后直接切页。缓存缺失、目录只读或预算容不下缓存游标时按原路径重新解析。缓存内容或身份不匹配时明确失败并保留该文件。精简视图和概览沿用无缓存分页。
 
-末页读取成功后清理该游标的缓存。提前结束或源变更后放弃本轮时，在同一任务目录执行 `python -I -S -B "<skill-root>/scripts/read_docx.py" --release-cursor '本轮next_cursor原值'`。结果为 `released`、`already_absent` 或 `not_required`，分别表示已清理、已不存在或原游标无缓存。源文件、交付物和其他游标的缓存不参与清理。只读报告缓存不进入归档。
+末页读取成功后清理该游标的缓存。提前结束或源变更后放弃本轮时，在同一任务目录执行 `"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/read_docx.py" --release-cursor '本轮next_cursor原值'`。结果为 `released`、`already_absent` 或 `not_required`，分别表示已清理、已不存在或原游标无缓存。源文件、交付物和其他游标的缓存不参与清理。只读报告缓存不进入归档。
 
 已通过归属及内容校验的缓存发生分页失败时立即清理；CLI 首次/续页序列化、落盘、stdout 写入或刷新失败（含可捕获中断）同样释放本轮游标。成功输出非末页时保留缓存供续读，不将正常待续读视为残留。源或选项检查尚未通过时不认领缓存；改动、替换、链接或无法核实的缓存保留并报告 cleanup incomplete，不扫描同名前缀历史文件。已释放缓存的原游标可从未变化的输入重新解析。SIGKILL、宿主崩溃及用户停止继续调用时不能保证自动收尾，应以原游标显式释放；不删除用户保存的 `-o` 结果。
 
@@ -150,10 +150,10 @@ Python 调用 `read_docx_report(path, max_output_bytes=None)` 获取全量，可
 
 ## 结构化 JSON
 
-先用 `"<skill-root>/scripts/read_docx.py" --check` 完成只读运行条件自检；仅写 stdout 不需输出目录写入探针。保存 `-o` 结果时只传裸文件名，先核对任务根目录的写入能力。从宿主确认的任务工作目录执行；将示例 `<skill-root>` 替换为主入口定义的真实目录：
+先用 `"<skill-root>/scripts/read_docx.py" --check` 完成只读运行条件自检；仅写 stdout 不需输出目录写入探针。保存 `-o` 结果时只传裸文件名，先核对任务根目录的写入能力。从默认任务工作目录 `./`执行；将示例 `<skill-root>` 替换为主入口定义的真实目录：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --format json --revisions all --include-related -o structure.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./input.docx --format json --revisions all --include-related -o structure.json")
 ```
 
 使用 Python API `read_docx_structure(path, revisions="accepted", include_related=False)` 获取字典。CLI 的 `--format json` 选择此原始结构视图，`--format text` 和 Python 的 `read_docx()` 返回纯文本。
@@ -184,7 +184,7 @@ JSON 顶层契约为 `schema_version: 1`、`format: "docx-structure"`：
 ## 进阶检查范围
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/office/validate.py\" ./input.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/office/validate.py\" ./input.docx")
 ```
 
 同一校验入口执行基础规则和以下显式结构约束；错误报告部件、表格/行/单元格或编号 ID/层级位置：

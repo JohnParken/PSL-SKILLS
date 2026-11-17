@@ -1,6 +1,6 @@
 # 确定性流程与安全下一步
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -15,7 +15,7 @@ retry/resume仅保留为历史或强杀遗留任务的兼容接口，必须有�
 ## 五类编辑统一入口
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" text ./原件.docx 修订版.docx <<'JSON'\n{\"replacements\":[{\"old\":\"原文\",\"new\":\"新文\",\"count\":1}]}\nJSON\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_docx_edit.py\" text ./原件.docx 修订版.docx <<'JSON'\n{\"replacements\":[{\"old\":\"原文\",\"new\":\"新文\",\"count\":1}]}\nJSON\n")
 ```
 
 operation为text、structure、tables、image、comments，另提供format-checked候选格式发布；前五类stdin规格与原API相同，image另传 `--replacement ./替换.png`。format-checked传 `--candidate ./候选.docx`，stdin仅接受format_run规格，先独立核对原件/候选的目标值与非目标差异，再发布同一候选快照；拒绝不产生主文件或归档。范围和命令见 `<skill-root>/references/ooxml-editing.md#字体修改与候选文件保护`。comments list继续原只读入口，不创建无用临时文件。入口只调用固定的编辑/核验API，不执行输入脚本。
@@ -27,7 +27,7 @@ operation为text、structure、tables、image、comments，另提供format-check
 ## 读取结果显式交付
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_docx.py\" ./原件.docx --format json -o 提取.json --delivery")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_docx.py\" ./原件.docx --format json -o 提取.json --delivery")
 ```
 
 仅--delivery改变保存后的行为：要求-o且禁止--check，拒绝既存输出及输入别名，写入成功后调用统一归档并向stdout输出read_exported摘要。提取文件仍按原--format保存；不加--delivery时保持旧文本/JSON stdout和-o行为。没有临时文件就不建立清理清单。归档失败不回滚提取文件；用户提示按用户展示规则（`<skill-root>/references/delivery.md#用户展示与机器元信息`）映射，正常主文件链接保留，不展示内部路径、ID或原始日志。

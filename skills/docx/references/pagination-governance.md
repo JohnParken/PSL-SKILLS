@@ -1,6 +1,6 @@
 # 分页策略治理（2026-10-31，P3 稳定版增量）
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 本版维持已通过 Word/WPS 实机验收的 P3 **生成行为不变**，不自动插入、删除或合并分页符、不自动换页、不默认给一级标题增加 `page_break_before`。所有新增风险规则是纯 Python 标准库的 **OOXML 静态检查**；警告不是 Word/WPS 真实页码或空白页事实。原 `page_break` / `section_break` / `format.page_break_before` 输入仍可使用。
 
@@ -35,10 +35,10 @@
 ## 只读分页风险审计
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx")
 # 仅在 CI/实机验收门禁中按需使用：有分页警告退出 2（结构错误退出 1）
-execute(command="python -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx --strict-pagination")
-execute(command="python -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx -o 分页诊断.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx --strict-pagination")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/validate_layout.py\" 文件.docx -o 分页诊断.json")
 ```
 
 结果为 JSON：`structure_valid` 仅代表当前已覆盖的 OPC 与静态布局规则，无论是否含分页警告均不因此变为 false；`issues` 数组显示 `{level:"warning", code, location, message}`。`location` 中 `body[N]` 表示文档 `w:body` 下的 **0 基序号**，不等于原始 `blocks[N]`（某些 block 可以生成多段落）。默认 CLI 退出码 0 表示结构检查成功，**不会把分页警告当成生成失败**。指定 `--strict-pagination` 后，只要出现分页风险或标题孤立风险就退出 2；结构错误仍退出 1。审计完全只读，不改变源 DOCX。

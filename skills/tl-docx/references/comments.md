@@ -2,7 +2,7 @@
 
 路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
 
-在已确认的任务目录运行 `comments`，输入为 DOCX 或 DOTX。写入只发布同扩展名的副本。通过 stdin 提交单个 UTF-8 JSON 对象；按 `<skill-root>/references/writing.md` 核对输出名、归档及恢复状态。
+在默认任务目录运行 `comments`，输入为 DOCX 或 DOTX。写入只发布同扩展名的副本。通过 stdin 提交单个 UTF-8 JSON 对象；按 `<skill-root>/references/writing.md` 核对输出名、归档及恢复状态。
 
 ```sh
 "<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" comments "报告.docx" <<'JSON'

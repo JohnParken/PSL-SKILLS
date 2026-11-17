@@ -22,8 +22,8 @@ The commands read workbook contents and emit JSON; they do not write or alter th
 ## Declare the header rows
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_headers.py\" report.xlsx --sheet 经营表 --header-rows 3:5")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile report.xlsx --sheet 经营表 --header-rows 3:5")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_headers.py\" report.xlsx --sheet 经营表 --header-rows 3:5")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile report.xlsx --sheet 经营表 --header-rows 3:5")
 ```
 
 `--header-rows 3:5` is an inclusive worksheet row range, not a count. It must lie fully
@@ -80,8 +80,8 @@ Example task-local `groups.json`:
 ```
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize report.xlsx --sheet 经营表 --header-rows 3:5 --query groups.json")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" report.xlsx --sheet 经营表 --header-rows 3:5 --query rows.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize report.xlsx --sheet 经营表 --header-rows 3:5 --query groups.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_rows.py\" report.xlsx --sheet 经营表 --header-rows 3:5 --query rows.json")
 ```
 
 For `rows.json`, use e.g. `{"deduplicate":{"columns":[{"path":["部门"]}]},

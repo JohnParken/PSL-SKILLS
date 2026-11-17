@@ -20,7 +20,7 @@
 环境读取保留 `DOCX_DEBUG_ROUTER_CONFIG` 开关，默认关闭。显式设为1时，stderr只输出configured和values_redacted两个布尔字段，不输出配置原文、参数值、ID或目录；不要为排错回显环境变量。程序接口 `read_environment_parameter` 保持无日志返回原值。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/archive_delivery.py\" 报告.txt --protect-input ./用户原件.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/archive_delivery.py\" 报告.txt --protect-input ./用户原件.json")
 ```
 
 
@@ -48,14 +48,14 @@ execute(command="python -I -S -B \"<skill-root>/scripts/archive_delivery.py\" �
 先在任务目录确认输入/产物清单，且即将创建的临时路径不存在，再执行：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/lifecycle.py\" plan task.cleanup.json --file worker.py --file spec.json --protect 用户原件.json --deliverable 报告.txt")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/lifecycle.py\" plan task.cleanup.json --file worker.py --file spec.json --protect 用户原件.json --deliverable 报告.txt")
 ```
 
 业务技能创建/运行worker和spec、发布并验收报告、archive返回后，才可执行：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/lifecycle.py\" seal task.cleanup.json --outcome success --verified --archive-status success")
-execute(command="python -I -S -B \"<skill-root>/scripts/lifecycle.py\" clean task.cleanup.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/lifecycle.py\" seal task.cleanup.json --outcome success --verified --archive-status success")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/lifecycle.py\" clean task.cleanup.json")
 ```
 
 上例success仅适用于刚取得完整成功；实际partial/failed/not_required须如实传入，不伪造。成功封存要求非空主交付物、verified声明及有效归档结果，但不验证声明真实性，调用方必须可信。清理核对任务根身份、受保护输入、交付物及临时项指纹；修改、链接、多硬链接或非空目录等保守保留/失败，先删除登记项，再核对并删除manifest回执，返回manifest_removed=true、manifest_retained=null。`plan/seal/clean` 退出0成功，3保留，1失败/阻止/错误，2参数错误；结果JSON不能仅靠退出0断言业务成功。

@@ -28,7 +28,7 @@ configuration (`<skill-root>/assets/fictional_customer_config.json`) as customer
 directory. These examples contain fictional identifiers and are not bank customer data.
 
 ```python
-execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create left.json left.xlsx\npython3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create right.json right.xlsx\npython3 -I -S -B \"<skill-root>/scripts/xlsx_customers.py\" left.xlsx right.xlsx --query customers.json --xlsx customers.xlsx > customer-result.json\n)")
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create left.json left.xlsx\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create right.json right.xlsx\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_customers.py\" left.xlsx right.xlsx --query customers.json --xlsx customers.xlsx > customer-result.json\n)")
 ```
 
 Use --plain to disable the readable appearance preset. All outputs must be new files.

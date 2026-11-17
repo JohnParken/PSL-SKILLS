@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261116.1353.3706"
+version: "20261118.0325.5874"
 description: 读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，适合区域统计、分组汇总、表间核对与公式子集计算。保留原件并报告缓存和未计算项；不做任意结构编辑或直接处理 XLS/XLSB、ET；多源填入既有模板交给 table-workflow。
 license: MIT
 ---
@@ -8,6 +8,8 @@ license: MIT
 # XLSX — Python Standard Library
 
 ## 执行环境约束与首步自检
+
+**部署运行与本地测试：** DeepAgents 通过宿主的 `execute(command=完整命令字符串)` 执行业务命令。使用本 Skill 部署方预置的 `"<skill-root>/scripts/.venv/bin/python"`，缺失或不可执行时停止，不自动安装、不回退到 PATH；在命令字符串内按外层语法转义引号。生产保留 `-I -S -B`，仅使用标准库。仓库本地实际测试使用默认 `python3`；不满足版本或依赖时报告，不将本地结果视作部署验收。
 
 **最小必要检查：** 仅读任务只做本入口指定的读取自检；任务 `./` 顶层目标可读且必要自检通过后直接读取，不先测试写入。不得主动运行全量 `mount`、`findmnt`、`df`、`env` 或读取 `/proc/mounts` 做系统侦察，不把根挂载 `/` 的 `ro` 推断为任务目录不可读/不可写。只有实际需要生成、编辑、导出、缓存或受控临时文件时，才按对应流程验证所需写入能力；安全、输入保护和解析检查不省略。失败仅针对实际错误做一次有界定位，输出失败项及必要摘要，不倾倒系统日志；条件未改变不重复自检。
 
@@ -25,14 +27,14 @@ license: MIT
 
 路径占位符说明：`<skill-root>` 指本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path` 去掉文件名所得目录；相对路径先按本次已确认的读取基准解析。它不是 Shell 变量，也不是当前参考文档目录。使用前整体替换为真实根目录，并将替换后的完整路径作为一个参数正确引用；无法定位时停止，不猜工作目录、环境变量、其他会话路径或宿主掩码。脚本、参考、模板及依赖清单均从该根目录定位。
 
-宿主路径与执行器：使用宿主已提供的真实入口位置和任务目录；入口路径可被执行器访问时，以本节指定自检确认可运行，不另做系统探测。宿主明确提供不同路径空间时仅使用其映射；没有可用位置或实际访问失败时报告具体缺口，不猜测映射、不换目录。读取工具可读不等于执行器已可运行，仍核对实际自检结果和任务输入可读性。
+宿主路径与执行器：使用宿主提供的真实入口位置，在默认任务目录 `./` 执行；入口路径可被执行器访问时，以本节指定自检确认可运行，不另做系统探测。宿主明确提供不同路径空间时仅使用其映射；没有可用位置或实际访问失败时报告具体缺口，不猜测映射、不换目录。读取工具可读不等于执行器已可运行，仍核对实际自检结果和任务输入可读性。
 
-1. `./` 为宿主确认的任务工作目录；在该目录执行并保持不变。输入、配置和受控临时文件沿用任务目录内相对路径规则。交付输出只传裸文件名（例如 `报告.xlsx`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。用户文件按上述顶层规则定位，不搜索历史归档；输入缺失时报告。当前目录若是 Skill 源码，先由宿主确认任务目录。
+1. 任务工作目录固定为 `./`，不询问用户，也不另建或切换工作目录。上传文件、交付物和普通中间文件均在 `./` 顶层定位；通常不创建临时子目录。在该目录执行并保持不变。输入、配置和受控临时文件沿用任务目录内相对路径规则。交付输出只传裸文件名（例如 `报告.xlsx`），由脚本固定写入任务根目录 `./`；不接收 `./文件名`、子目录、绝对路径、父目录或 Windows 路径，不截取 basename 静默改写非法参数。不用绝对数据路径、父目录或切换挂载绕过边界。用户文件按上述顶层规则定位，不搜索历史归档；输入缺失时报告。若当前目录与 Skill 安装目录冲突，停止相关写入并报告。
 2. 按上方规则定位并替换 `<skill-root>`；脚本可用已确认的绝对路径，任务数据不可。不得切到安装目录运行示例或向安装目录写业务文件。使用宿主确认的 Python 3.9+，保留 `-I -S -B`；仅标准库，依赖见 `<skill-root>/requirements.txt`。禁止安装包、联网或用 Office/LibreOffice、legacy 工具回退。
 3. 首次操作运行以下命令，须退出 0 且 JSON `status=ready`。它检查运行时、模板和计算基础，不证明输入、权限、业务结果或 Excel 兼容性。
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run check")
 ```
 
 4. 确认输入可读；写文件前在任务根目录独占创建探针，实际写入、读回、仅清理本次探针，配置和重定向报告也适用。仅读 stdout 不需探针。不覆盖已有文件，不在系统临时目录做业务探针。
@@ -49,13 +51,13 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run check
 把下面短 JSON 作为 stdin 交给标准 runner；裸文件名在 `arguments` 与 `output` 中完全一致，不加额外临时脚本或配置。`@spec` 引用 `configs.spec`，不是已有文件。每格恰有 `value`，可为字符串、数值、布尔或 null；前导零编号必须字符串，开头 `=` 的字符串仍是文字。默认不填 `style`；工作表名/地址须有效且唯一，不传未知字段。
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/run_xlsx_task.py\" <<'JSON'\n{\"script\":\"stdlib_xlsx.py\",\"arguments\":[\"create\",\"@spec\",\"清单.xlsx\"],\"output\":\"清单.xlsx\",\"configs\":{\"spec\":{\"sheets\":[{\"name\":\"清单\",\"cells\":{\"A1\":{\"value\":\"编号\"},\"B1\":{\"value\":\"数量\"},\"A2\":{\"value\":\"001\"},\"B2\":{\"value\":12}}}]}}}\nJSON\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_xlsx_task.py\" <<'JSON'\n{\"script\":\"stdlib_xlsx.py\",\"arguments\":[\"create\",\"@spec\",\"清单.xlsx\"],\"output\":\"清单.xlsx\",\"configs\":{\"spec\":{\"sheets\":[{\"name\":\"清单\",\"cells\":{\"A1\":{\"value\":\"编号\"},\"B1\":{\"value\":\"数量\"},\"A2\":{\"value\":\"001\"},\"B2\":{\"value\":12}}}]}}}\nJSON\n")
 ```
 
 本例预期 `status=calculated_subset`、`formula_count=0`、`issues=[]`、`output_written=true`，退出 0；并按末节独立核对归档/清理。它是静态表，不会自动更新。使用回执实际 `output` 回读（示例仅在它仍为 `清单.xlsx` 时成立），核对表名、单元格类型和值与上面的独立预期一致；完整小表读取比逐页遍历更直接：
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read ./清单.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read ./清单.xlsx")
 ```
 
 ## 按需加载与任务路由
@@ -90,7 +92,7 @@ execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read 
 
 ## 读取与输出选择
 
-首次普通读取：`execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read ./input.xlsx")`。大表只选结构时可直接用 `execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read ./input.xlsx --summary")`；概况没有单元格值，不能替代数据验收。有界读取的覆盖、truncated、next_cursor 及诊断必须保留；需要局部值或续读时才加载有界参考。全量统计直接用 profile/summarize 的明确区域，不先逐页搬整表；必要全量数据仍读取完整结果，不为省输出丢弃内容。
+首次普通读取：`execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_cli.py\" run read ./input.xlsx")`。大表只选结构时可直接用 `execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" read ./input.xlsx --summary")`；概况没有单元格值，不能替代数据验收。有界读取的覆盖、truncated、next_cursor 及诊断必须保留；需要局部值或续读时才加载有界参考。全量统计直接用 profile/summarize 的明确区域，不先逐页搬整表；必要全量数据仍读取完整结果，不为省输出丢弃内容。
 
 工具调用前核对真实 schema、完整非空命令与 JSON。复杂规格用 Python dict/list 和 JSON 序列化（走 stdin），不手拼长 JSON。每次执行后按三层判读：
 

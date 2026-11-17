@@ -10,7 +10,7 @@ BIFF Row 与 ColInfo 保留保存的隐藏位和尺寸。`hidden_cause` 为 `unk
 
 BIFF8 的 AutoFilterInfo 记录号为 `0x009D`，AutoFilter 为 `0x009E`。FilterMode、AutoFilterInfo和AutoFilter保留范围内的原始记录，条件未解释、不重新执行筛选，明确partial。AutoFilterInfo必须1至256列。保存行状态不证明筛选条件仍与数据一致。
 
-默认输出所有单元格。若显式选择保存可见行，在已确认的任务目录使用包内模块（仅Python标准库）：
+默认输出所有单元格。若显式选择保存可见行，在默认任务目录使用包内模块（仅Python标准库）：
 
 ```python
 from wps_visibility import select_rows

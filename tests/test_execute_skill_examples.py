@@ -26,6 +26,23 @@ class ExecuteExampleTests(unittest.TestCase):
                                             capture_output=True, check=False)
                     self.assertEqual(result.returncode, 0, f'{path}: {result.stderr}')
 
+    def test_production_python_uses_own_deployment_slot(self):
+        """Check shell payloads and inline examples; maintenance commands use the local Python."""
+        slot = '"<skill-root>/scripts/.venv/bin/python"'
+        for name in (*BUSINESS, 'tl-docx', 'tl-pptx'):
+            directory = SKILLS / name
+            flags = ' -I -B' if name.startswith('tl-') else ' -I -S -B'
+            seen = 0
+            for path in directory.rglob('*.md'):
+                text = path.read_text(encoding='utf-8').replace('\\"', '"')
+                for line in text.splitlines():
+                    self.assertNotRegex(line, r'\bpython3?\s+-I[^"`]*"<skill-root>/scripts/[^"]+\.py"', str(path))
+                    for match in re.finditer(re.escape(slot) + r'( -[A-Z](?: -[A-Z])*) (- )?"<skill-root>/([^"]+)"', line):
+                        self.assertEqual(match[1], flags, str(path))
+                        self.assertTrue((directory / match[3]).exists(), f'{path}: {match[3]}')
+                        seen += 1
+            self.assertGreater(seen, 0, name)
+
     def test_complete_stdin_and_safe_subshell(self):
         main = (SKILLS / 'table-workflow/SKILL.md').read_text(encoding='utf-8')
         self.assertIn('inspect --xlsx-root', main)

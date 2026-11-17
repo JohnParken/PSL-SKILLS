@@ -58,7 +58,7 @@ MS-XLS 规范依据（只用于维护研究，运行时不联网）：`Lbl`（�
 
 ## 使用与限制
 
-仍按主入口 `<skill-root>/SKILL.md#执行环境约束与首步自检` 确认 Linux/Python 标准库、真实目录、输入来源和 `environment-ok`。用户只读 ET 业务任务执行 `execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --profile full")`，允许返回 `partial` /退出码 3，并保留 `issues` 与 `reading_assessment`。完整文档、样式、命名公式求值、复杂外链和宏仍不支持。失败停止依赖操作，禁止把未知名称忽略后声称单元格完整。
+仍按主入口 `<skill-root>/SKILL.md#执行环境约束与首步自检` 确认 Linux/Python 标准库、真实目录、输入来源和 `environment-ok`。用户只读 ET 业务任务执行 `execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --profile full")`，允许返回 `partial` /退出码 3，并保留 `issues` 与 `reading_assessment`。完整文档、样式、命名公式求值、复杂外链和宏仍不支持。失败停止依赖操作，禁止把未知名称忽略后声称单元格完整。
 
 ## 格式依据
 

@@ -21,7 +21,7 @@ the task directory as policy.json. Supply a source wide.json containing the sele
 January–March institution observations. The sample plan values are explicitly non-linear.
 
 ```python
-execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_management_policy.py\" wide.json --query policy.json --xlsx progress.xlsx > progress.json\n)")
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_management_policy.py\" wide.json --query policy.json --xlsx progress.xlsx > progress.json\n)")
 ```
 
 `scope` declares reporting level, currency, source version, definition version, unit,

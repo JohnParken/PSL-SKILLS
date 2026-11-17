@@ -43,13 +43,13 @@ partial结果可归档其已明确验收的可用子集，但原partial、源诊
 先自检，要求退出0、JSON status=environment-ok、task_writable=true；探针实际写入、读回并仅清理本次探针：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_job.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_wps_job.py\" --check")
 ```
 
 示例：由job在创建前登记自己的配置文件，子进程结束且取得归档结果后清理配置及清单：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_job.py\" <<'JSON'\n{\"script\":\"run_wps_task.py\",\"arguments\":[\"create\",\"工作汇报.wps\",\"--spec\",\"@spec\"],\"output\":\"工作汇报.wps\",\"configs\":{\"spec\":{\"blocks\":[{\"type\":\"paragraph\",\"text\":\"已确认的正文。\"}]}}}\nJSON\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_wps_job.py\" <<'JSON'\n{\"script\":\"run_wps_task.py\",\"arguments\":[\"create\",\"工作汇报.wps\",\"--spec\",\"@spec\"],\"output\":\"工作汇报.wps\",\"configs\":{\"spec\":{\"blocks\":[{\"type\":\"paragraph\",\"text\":\"已确认的正文。\"}]}}}\nJSON\n")
 ```
 
 编辑可使用script=run_wps_edit.py及batch参数，将--spec对应值设为@ops，configs.ops给出操作列表；源文件自动保护。导出script=export_wps.py只接受convert并要求单独且唯一的--output参数，纯标准库任务使用--backend rtf；导出不需要配置时直接用CLI即可，不为归档套job。inputs可补充需保护的任务文件。output与子命令实际输出必须为完全一致的裸文件名，不带 `./` 或任何目录；输入路径仍相对任务目录；configs只允许最多8个命名JSON，@引用须与configs完全一致。
@@ -60,6 +60,6 @@ execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_job.py\" <<'JSON
 
 ## 独立分发与维护
 
-公共实现随本包位于 `<skill-root>/scripts/_wps_artifact_runtime/`，来源及哈希见 `<skill-root>/references/lifecycle-upstream.json`。变换仅增加延迟注解及包内相对导入，不从仓库或相邻Skill运行时导入。仓库维护时从仓库根运行 `python -I -S -B -m unittest discover -s tests -p test_wps_lifecycle_parity.py`，审阅公共来源与副本差异并同步哈希，不能只改记录通过检查。该仓库测试不随独立包运行；源码测试 `skills/wps/scripts/test/test_wps_delivery.py`验证只读安装、三入口和受控job，无需其他Skill。
+公共实现随本包位于 `<skill-root>/scripts/_wps_artifact_runtime/`，来源及哈希见 `<skill-root>/references/lifecycle-upstream.json`。变换仅增加延迟注解及包内相对导入，不从仓库或相邻Skill运行时导入。仓库维护时从仓库根运行 `python3 -I -S -B -m unittest discover -s tests -p test_wps_lifecycle_parity.py`，审阅公共来源与副本差异并同步哈希，不能只改记录通过检查。该仓库测试不随独立包运行；源码测试 `skills/wps/scripts/test/test_wps_delivery.py`验证只读安装、三入口和受控job，无需其他Skill。
 
-仅Python标准库，不安装软件。受控文件操作依赖真实dir_fd/不跟随链接能力，不可用时停止，不降级删除。需宿主已确认的任务目录；Linux容器、macOS、Windows及真实宿主验收分别记录，不能将本机结果当作跨平台或云空间证明。
+仅Python标准库，不安装软件。受控文件操作依赖真实dir_fd/不跟随链接能力，不可用时停止，不降级删除。需宿主默认任务目录；Linux容器、macOS、Windows及真实宿主验收分别记录，不能将本机结果当作跨平台或云空间证明。

@@ -24,8 +24,8 @@ directory of the actual SKILL.md read by the harness.
 ## Explicit policy
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" ./Schedule.ett --profile full")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_biff8.py\" ./Schedule.ett")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" ./Schedule.ett --profile full")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/wps_biff8.py\" ./Schedule.ett")
 ```
 
 The tolerant reader always retains supported chart bytes as bounded opaque evidence;

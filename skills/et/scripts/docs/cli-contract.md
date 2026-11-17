@@ -9,9 +9,9 @@
 标准读取与外部编排共用 `<skill-root>/scripts/et_cli.py`；实际解析仍由原read_et实现，旧read_et API保留；run/read_et.py CLI 默认改为有界内容页，完整内容显式使用 --all-content，原输出显式使用 --profile full。先按主入口完成环境自检；原生XLSX交给对应技能。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" capabilities")
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check")
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./明细.et")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" capabilities")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./明细.et")
 ```
 
 capabilities为普通JSON：skill=et、interface_version=1、operations=[read,metadata]；不代表OOXML环境或文件验收。run原样调用 read_et.py 主入口并保留其参数、JSON、分页、stderr和退出码；除原有查看参数外，完整读取支持 `--max-json-bytes`（1–256 MiB）、`--compact` 与 `--output <裸文件名>`。read仅供程序编排，从stdin读取一个完整协议请求，不是Shell路径参数或分页接口。

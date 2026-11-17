@@ -1,12 +1,14 @@
 ---
 name: et
-version: "20261116.2139.1284"
+version: "20261118.0325.5874"
 description: 读取金山 WPS 表格（.et/.ett）的文字、保存值、公式缓存及可提取图表，适合查看表头、筛选排序、去重及指定范围统计。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
 # WPS 表格（ET/ETT）只读提取与统计
 
 ## 执行环境约束与首步自检
+
+**部署运行与本地测试：** DeepAgents 通过宿主的 `execute(command=完整命令字符串)` 执行业务命令。使用本 Skill 部署方预置的 `"<skill-root>/scripts/.venv/bin/python"`，缺失或不可执行时停止，不自动安装、不回退到 PATH；在命令字符串内按外层语法转义引号。生产保留 `-I -S -B`，仅使用标准库。仓库本地实际测试使用默认 `python3`；不满足版本或依赖时报告，不将本地结果视作部署验收。
 
 **最小必要检查：** 仅读任务只做本入口指定的读取自检；任务 `./` 顶层目标可读且必要自检通过后直接读取，不先测试写入。不得主动运行全量 `mount`、`findmnt`、`df`、`env` 或读取 `/proc/mounts` 做系统侦察，不把根挂载 `/` 的 `ro` 推断为任务目录不可读/不可写。只有实际需要生成、编辑、导出、缓存或受控临时文件时，才按对应流程验证所需写入能力；安全、输入保护和解析检查不省略。失败仅针对实际错误做一次有界定位，输出失败项及必要摘要，不倾倒系统日志；条件未改变不重复自检。
 
@@ -22,23 +24,23 @@ description: 读取金山 WPS 表格（.et/.ett）的文字、保存值、公式
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-宿主路径与执行器：使用宿主已提供的真实入口位置和任务目录；入口路径可被执行器访问时，以本节指定自检确认可运行，不另做系统探测。宿主明确提供不同路径空间时仅使用其映射；没有可用位置或实际访问失败时报告具体缺口，不猜测映射、不换目录。读取工具可读不等于执行器已可运行，仍核对实际自检结果和任务输入可读性。
+宿主路径与执行器：使用宿主提供的真实入口位置，在默认任务目录 `./` 执行；入口路径可被执行器访问时，以本节指定自检确认可运行，不另做系统探测。宿主明确提供不同路径空间时仅使用其映射；没有可用位置或实际访问失败时报告具体缺口，不猜测映射、不换目录。读取工具可读不等于执行器已可运行，仍核对实际自检结果和任务输入可读性。
 
 **用户文件定位：** 优先附件映射和用户指定文件名。上传文件和待查交付物只定位任务 `./` 顶层，不递归或到子目录查找；无映射仅列顶层候选，歧义询问，无候选或指定位置不在顶层时报告。内部归档、Skill 资源与程序输入安全契约不变。
 
-1. **确认任务工作目录。** `./` 为宿主确认的任务工作目录；在该目录运行，保持不变。优先用本轮上传附件及宿主提供的文件映射确定输入，不要求用户在问题中重复文件名；用户指定文件名时按 `./文件名` 定位；若映射或指定路径不在顶层，报告限制。未指定文件名且本轮只有一个可访问的候选附件时，直接处理该附件；多个附件时结合用户指代和任务类型选择，仍有歧义才列出候选名称并询问。没有附件映射时，只列出 `./` 顶层的候选文档：唯一候选直接处理，多个且无法判定才询问，没有候选则说明未找到可访问文件。不自动递归搜索或到其他目录寻找，不将历史文件优先于本轮附件。CLI 仍须传入解析出的具体文件路径；CLI 的必填参数不构成要求用户手动提供文件名的理由。其他程序输入与受控临时文件沿用该目录内相对路径契约。默认只回传有界内容首屏；显式 `--all-content` 才将完整内容写 stdout。需要把完整 JSON 留作后续处理时可显式使用 `--output <裸文件名>`，由脚本在任务根目录独占创建文件，拒绝目录、绝对路径、父目录和已存在文件，stdout 只返回小清单。不使用绝对数据路径、父目录或切换挂载绕过边界。宿主附件尚未映射到允许的任务目录时先报告访问缺口，不猜路径。若当前目录是 Skill 源码目录，先由 harness 明确任务目录，不直接生成任务文件。
+1. **默认任务工作目录。** 任务工作目录固定为 `./`，不询问用户，也不另建或切换工作目录。上传文件、交付物和普通中间文件均在 `./` 顶层定位；通常不创建临时子目录。在该目录运行，保持不变。优先用本轮上传附件及宿主提供的文件映射确定输入，不要求用户在问题中重复文件名；用户指定文件名时按 `./文件名` 定位；若映射或指定路径不在顶层，报告限制。未指定文件名且本轮只有一个可访问的候选附件时，直接处理该附件；多个附件时结合用户指代和任务类型选择，仍有歧义才列出候选名称并询问。没有附件映射时，只列出 `./` 顶层的候选文档：唯一候选直接处理，多个且无法判定才询问，没有候选则说明未找到可访问文件。不自动递归搜索或到其他目录寻找，不将历史文件优先于本轮附件。CLI 仍须传入解析出的具体文件路径；CLI 的必填参数不构成要求用户手动提供文件名的理由。其他程序输入与受控临时文件沿用该目录内相对路径契约。默认只回传有界内容首屏；显式 `--all-content` 才将完整内容写 stdout。需要把完整 JSON 留作后续处理时可显式使用 `--output <裸文件名>`，由脚本在任务根目录独占创建文件，拒绝目录、绝对路径、父目录和已存在文件，stdout 只返回小清单。不使用绝对数据路径、父目录或切换挂载绕过边界。宿主附件尚未映射到允许的任务目录时先报告访问缺口，不猜路径。若当前目录与 Skill 安装目录冲突，停止相关写入并报告。
 2. **确定 Skill 真实位置。** 由实际读取本文件的 `file_path` 去掉 `SKILL.md` 确定 `<skill-root>`；内部脚本和资源以它为基准，Markdown 内部引用统一使用以 `<skill-root>` 为根目录的完整路径。执行前替换占位符并正确引用完整路径，不猜测其他会话或掩码路径，不为调用脚本切换到安装目录。
 3. **核对真实运行条件。** 使用宿主确认可用的 Python 3.9+，按 requirements.txt（`<skill-root>/requirements.txt`）核对仅需标准库；禁止安装包、运行时联网或调用外部办公软件。保留 `-I -S -B`，首次读取前运行环境自检：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check")
 ```
 
 4. **首次操作前完成自检。** 要求退出 0 且输出 `environment-ok`。OOXML 电子表格分支另需 Expat >=2.6；自检的 `ooxml-sheet=available` 表示此条件满足，`unavailable` 时仅可读取二进制 BIFF8 子集，不尝试 OOXML 解析。自检仅检查基础入口和依赖可用性，不代表任务文件已验收。
 5. **按任务需要检查读写。** 确认输入为可读普通文件。仅读取无需写探针；使用 `--output` 或保存分析结果时，在任务目录以独占新文件实际写入、读回并清理/核对，避免覆盖已有文件。自检失败、缺少成功标记或结果不明时停止依赖操作，环境修复后再验，不降低要求。
 6. **失败停止依赖操作。** 自检失败、输入文件缺失或读取返回失败时，停止依赖该结果的后续流程，如实报告具体失败项与诊断位置。不得原样反复重试相同命令，不通过轮换参数掩盖错误。
 7. **区分自检与交付验收。** 环境可用不代表输入文件格式合法或数据正确提取。交付前仍需核对实际提取结果、退出码、覆盖标记与诊断缺口。
-8. **压缩后恢复约束。** 会话上下文若被压缩导致指令不全，重新读取真实 `SKILL.md` 后继续，保留已确认的任务目录与文件路径。
+8. **压缩后恢复约束。** 会话上下文若被压缩导致指令不全，重新读取真实 `SKILL.md` 后继续，保留默认任务目录与文件路径。
 
 **自检与回传：**`--check` 的成功 stdout 保留 `environment-ok` 和 OOXML 可用性标记，并补充 `check_kind=environment artifact_validation=not_run`；依赖检查失败在 stderr 输出 `environment-failed`，依赖错误退出 1、Python 版本不足退出 2。
 
@@ -73,7 +75,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run --check"
 在任务工作目录运行，将文件名换成实际输入。读取一律使用内容优先的容错策略，不再需要 `--compatibility strict` 等选项；旧参数仅为兼容而接受，会被忽略并记录 `compatibility_option_ignored`。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et")
 ```
 
 默认页最多 100 条内容记录，同时受 32768 字符与 32768 UTF-8 字节约束（均含末尾换行）。保留源状态/缺口、全部工作表概况和首批内容；概况中的 `stored_cells` 包含压缩的显式 blank，不等于本页返回条数。记录包括工作表信息、图表语义碎片、批注/链接、合并、显式 blank 区间和单元格，不把隐藏表/行误称为客户端可见范围。
@@ -110,12 +112,12 @@ BIFF 内容路径在解析时不生成一般不透明元数据的十六进制副
 
 ## 统计与结果表处理
 
-在已确认任务目录执行；分析入口先自检，要求退出 0 且 `environment-ok`，OOXML 仍需可用标记。工作表、矩形区域和表头行由任务确定，不猜测标题或合计行：
+在默认任务目录执行；分析入口先自检，要求退出 0 且 `environment-ok`，OOXML 仍需可用标记。工作表、矩形区域和表头行由任务确定，不猜测标题或合计行：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
-execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D8 --preview")
-execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D100 --header-rows 1")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D8 --preview")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D100 --header-rows 1")
 ```
 
 已知表名、区域、物理表头行及口径时直接分析；尚不确定表头时，先用 `--preview` 查看明确矩形内的物理位置、空白/缺失、保存缓存与合并锚点，再确定表头和数据范围。可用时，预览另附 `display_text` 和 `formula_text`，公式文字来自 OOXML 保存文本或可完整转写的 BIFF8 公式。预览不推断表头、不计算统计、不填充内容；不得将预览 schema 当完整读取结果消费。分页、覆盖和遗漏说明见 `<skill-root>/references/table-preview.md`。
@@ -156,6 +158,6 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 
 验收用户明确要求的结果文件后，用宿主 execute 调用本包 `"<skill-root>/scripts/archive_delivery.py" 读取结果.json --protect-input 用户原件.et`，参数应替换为本轮实际文件名。批次状态 success/partial/failed/not_required，归档 CLI 分别退出 0/3/1/0，参数错误退出 2；单项 copied/already_archived/failed。仅分析用 JSON 不执行归档。
 
-显式最终导出优先直接调用 `execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --output 读取结果.json --delivery")`（归档需 Python 3.10+）。`--delivery` 必须与 `--output` 同用，不接受概况/分页或自检；写后核对文件字节数和 SHA-256，再保护原件并归档。stdout 清单包含 `final_deliverables`、`output_written` 和 `delivery`；读取 partial/退出 3 保留，归档状态独立检查。缺失 questionId 或归档失败仍保留已写 JSON，不重跑读取覆盖文件，改用显式归档入口重试。未加 `--delivery` 的 `--output` 仅为内部交接文件，不能把它交给用户后省略归档。分析器 stdout 另存最终文件也须验收后显式归档。
+显式最终导出优先直接调用 `execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --output 读取结果.json --delivery")`（归档需 Python 3.10+）。`--delivery` 必须与 `--output` 同用，不接受概况/分页或自检；写后核对文件字节数和 SHA-256，再保护原件并归档。stdout 清单包含 `final_deliverables`、`output_written` 和 `delivery`；读取 partial/退出 3 保留，归档状态独立检查。缺失 questionId 或归档失败仍保留已写 JSON，不重跑读取覆盖文件，改用显式归档入口重试。未加 `--delivery` 的 `--output` 仅为内部交接文件，不能把它交给用户后省略归档。分析器 stdout 另存最终文件也须验收后显式归档。
 
 默认内容中的无公式纯 blank 格以 `stored_blank_cells.count/ranges` 无损合并坐标区间，保留已读显式空白与未读/缺失的区别；非空保存值、空文本、缺缓存公式和合并范围不改。不能把区间外未返回坐标推成空白；如需逐格原结构使用 full。

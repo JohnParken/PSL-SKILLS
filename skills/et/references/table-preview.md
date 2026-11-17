@@ -2,10 +2,10 @@
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
-先完成主入口的任务目录、路径与读取边界核对；使用已确认 Python 3.9+、-I -S -B，仅标准库、离线、不调用办公软件。输入使用已确认任务目录内相对路径，确认可读，不改原件。首次分析执行以下自检，要求退出0且 environment-ok；OOXML 另需 ooxml-sheet=available，自检失败停止依赖操作：
+先完成主入口的任务目录、路径与读取边界核对；使用已确认 Python 3.9+、-I -S -B，仅标准库、离线、不调用办公软件。输入使用默认任务目录内相对路径，确认可读，不改原件。首次分析执行以下自检，要求退出0且 environment-ok；OOXML 另需 ooxml-sheet=available，自检失败停止依赖操作：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check")
 ```
 
 默认容错解析；旧 `--compatibility` / `--salvage-unknown-metadata` 仅为 no-op。非值元数据与可恢复结构降级为 partial 并附 issue，未知容器、加密、记录帧无法继续、ZIP/XML 安全和资源耗尽仍拒绝。仅读 stdout 无需写探针/清单；确需保存查询/输出时先核对写权限，并按主入口的生命周期规则保护输入及收尾。只读取本页即可处理此分支，不预读复杂 query。
@@ -17,7 +17,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check"
 先选择较小的明确矩形，查看原始位置和合并关系后再确定表头；`--preview` 不需要声明表头，不自动寻找标题或合计行：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.ett --sheet \"数据\" --range A1:G8 --preview")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.ett --sheet \"数据\" --range A1:G8 --preview")
 ```
 
 返回 `et_table_preview_v1`，按物理行列列出矩形内保存值、类型、公式存在标记与缓存状态。`value` 保持原精度，blank 与 missing 保持不同。若已有可用的数字显示文本，预览附带 `display_text`。`formula_text` 来自 OOXML 的非空 `<f>` 或受支持的 BIFF8 独立表达式转写。没有可读公式文本的单元格仍展示自身缓存。`merges` 包含整个所选矩形相交的合并范围、锚点、是否被选区裁切及 `anchor_in_page`；锚点不在当前页时不读取或复制其值。预览可说明被裁切的合并，而后续正式表头重建仍拒绝裁切或跨越声明表头边界的合并。

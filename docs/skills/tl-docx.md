@@ -2,7 +2,7 @@
 
 本 Skill 属于允许按需使用第三方组件的 `tl-` 系列，不受“仅 Python 标准库”限制；当前实际依赖仍以下方说明及 `requirements.txt` 为准。本次政策调整未新增组件，不扩大已实现能力，路径、安全与归档清理约束不变。
 
-当前 Skill 版本 `20261117.1327.0512`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，所有XML解析要求解释器内置 Expat ≥2.6.0，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
+当前 Skill 版本 `20261118.0325.5874`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，所有XML解析要求解释器内置 Expat ≥2.6.0，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
 
 ## 与 docx 的能力对照
 
@@ -32,7 +32,7 @@
 
 ## 构建和使用
 
-从仓库根执行 `python -I -S -B tools/package_skills.py tl-docx` 构建 ZIP。按 [白名单](../../packaging/runtime-manifests/tl-docx.json) 分发，保留必要运行文件，安装后从宿主确认的任务目录使用。所有运行命令显式使用 `"<skill-root>/scripts/.venv/bin/python" -I -B`，不使用裸 Python、不加 `-S`。从本次真实读取 `SKILL.md` 的 file_path 定位并替换 `<skill-root>`，完整路径须引用。部署方预先配置该解释器及依赖，路径缺失、不可执行或自检失败即停止，不回退全局或其他 Skill 环境、不自动安装。虚拟环境不随源码或运行 ZIP 分发；上面的标准库打包工具不是 TL 业务运行入口，保留原启动约束。合成测试、真实附件和维护验收材料各自独立，附件不纳入运行包。
+从仓库根执行 `python3 -I -S -B tools/package_skills.py tl-docx` 构建 ZIP。按 [白名单](../../packaging/runtime-manifests/tl-docx.json) 分发，保留必要运行文件，安装后从宿主确认的任务目录使用。所有运行命令显式使用 `"<skill-root>/scripts/.venv/bin/python" -I -B`，不使用裸 Python、不加 `-S`。从本次真实读取 `SKILL.md` 的 file_path 定位并替换 `<skill-root>`，完整路径须引用。部署方预先配置该解释器及依赖，路径缺失、不可执行或自检失败即停止，不回退全局或其他 Skill 环境、不自动安装。虚拟环境不随源码或运行 ZIP 分发；上面的标准库打包工具不是 TL 业务运行入口，保留原启动约束。合成测试、真实附件和维护验收材料各自独立，附件不纳入运行包。
 
 本轮差距补齐、测试结果与验收边界见 [维护记录](../maintenance/tl-docx/gap-fill-20261113.md)。
 
@@ -77,4 +77,4 @@
 
 ## 显式解释器验证
 
-在已确认任务目录运行 `"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" check`；要求退出 0 且 `status=environment-ok`。维护时以同一解释器运行 `-I -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_*.py' -q`。测试子进程的 `sys.executable` 继承此入口，不另寻解释器。当前路径约定与本机验证限制见[维护记录](../maintenance/tl-docx/explicit-python-20261117.md)。
+在已确认任务目录运行 `"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" check`；要求退出 0 且 `status=environment-ok`。本地维护测试使用默认解释器运行 `python3 -I -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_*.py' -q`。测试子进程的 `sys.executable` 继承此入口，不另寻解释器。当前路径约定与本机验证限制见[维护记录](../maintenance/tl-docx/explicit-python-20261117.md)。

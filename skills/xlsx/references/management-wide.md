@@ -25,8 +25,8 @@ Read each linked asset and write its task copy with exclusive creation; preserve
 existing file and choose a distinct task filename instead of overwriting it:
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create facts.json fictional_facts.xlsx")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_management.py\" fictional_facts.xlsx --sheet Facts --query management.json --xlsx fictional_management.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create facts.json fictional_facts.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_management.py\" fictional_facts.xlsx --sheet Facts --query management.json --xlsx fictional_management.xlsx")
 ```
 
 Without --xlsx the command emits native management_wide_v1 JSON only. That saved JSON

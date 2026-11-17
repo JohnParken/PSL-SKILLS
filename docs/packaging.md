@@ -34,12 +34,12 @@ OFD 写入服务暂停：新运行包排除生成器、生成参考、字体和�
 使用已确认满足环境要求的 Python，从仓库根执行：
 
 ```console
-python -I -S -B tools/package_skills.py
-python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/review
-python -I -S -B tools/package_skills.py document-navigation
-python -I -S -B tools/package_skills.py tl-docx
-python -I -S -B tools/package_docx_runtime.py --output dist/runtime/docx-review.zip
-python -I -S -B tools/package_ofd.py dist/runtime/ofd-review.zip
+python3 -I -S -B tools/package_skills.py
+python3 -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/review
+python3 -I -S -B tools/package_skills.py document-navigation
+python3 -I -S -B tools/package_skills.py tl-docx
+python3 -I -S -B tools/package_docx_runtime.py --output dist/runtime/docx-review.zip
+python3 -I -S -B tools/package_ofd.py dist/runtime/ofd-review.zip
 ```
 
 输出名为 `<name>-runtime-<Skill version>.zip`，顶层为对应 Skill 名称。目标必须不存在，禁止覆盖旧包；默认统一工具会创建输出目录。兼容OFD命令的输出父目录需已存在。安装时完整解压对应顶层目录，不混入另一个版本或将维护测试复制进去。
@@ -51,11 +51,11 @@ python -I -S -B tools/package_ofd.py dist/runtime/ofd-review.zip
 ## 验证与维护
 
 ```console
-python -I -S -B tools/run_all_tests.py --report-dir docs/validation/new-test-run
-python -I -S -B tools/run_skill_tests.py tests -p test_runtime_packager.py
-python -I -S -B tools/run_skill_tests.py tests -p test_skill_runtime_packages.py
-python -I -S -B tools/run_skill_tests.py tests -p test_docx_runtime_package.py
-python -I -S -B tools/check_project_docs.py
+python3 -I -S -B tools/run_all_tests.py --report-dir docs/validation/new-test-run
+python3 -I -S -B tools/run_skill_tests.py tests -p test_runtime_packager.py
+python3 -I -S -B tools/run_skill_tests.py tests -p test_skill_runtime_packages.py
+python3 -I -S -B tools/run_skill_tests.py tests -p test_docx_runtime_package.py
+python3 -I -S -B tools/check_project_docs.py
 ```
 
 全量回归按 Skill 分进程，另跑仓库跨技能套件与PPTX适配器；报告目录必须是新目录。零发现、导入错误和测试失败不得算通过，跳过数单独记录。受影响源码测试仍可用 `tools/run_skill_tests.py skills/<name>/scripts/test` 运行。

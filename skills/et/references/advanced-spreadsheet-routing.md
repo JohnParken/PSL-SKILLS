@@ -36,7 +36,7 @@ Globals 首位空负载 `WriteProtect` 和 Worksheet 首位零保留字段 `Unca
 
 ## BIFF8 额外审计（可选，不影响文字读取）
 
-需要核对 ET/ETT 中富字符串 FormatRun 位置、公式保存缓存风险、原始 XF 格式证据时，可以在完成上述自检后，使用**独立入口** `execute(command="python -I -S -B \"<skill-root>/scripts/wps_biff8_audit.py\" ./input.et")`。它只接受经当前读取器确认的 `biff8_readonly_v1`，默认正常 `read_et.py` 输出与 Word/MS-DOC 文字读取器均不变；新增可选的 Font 原始记录引用、CalcMode/CalcSaveRecalc/RecalcId 保存值和 XF 父样式直接来源观察，**不计算字体效果、样式级联或公式缓存的最新性**，绝不执行公式。详情、范围、退出码和上限见 BIFF8 保存证据审计（`<skill-root>/references/biff8-stored-audit.md`）。本次为合成及格式证据验证，未证明新审计结果在 WPS Office 原生富文本/公式文档上的完整语义兼容。
+需要核对 ET/ETT 中富字符串 FormatRun 位置、公式保存缓存风险、原始 XF 格式证据时，可以在完成上述自检后，使用**独立入口** `execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/wps_biff8_audit.py\" ./input.et")`。它只接受经当前读取器确认的 `biff8_readonly_v1`，默认正常 `read_et.py` 输出与 Word/MS-DOC 文字读取器均不变；新增可选的 Font 原始记录引用、CalcMode/CalcSaveRecalc/RecalcId 保存值和 XF 父样式直接来源观察，**不计算字体效果、样式级联或公式缓存的最新性**，绝不执行公式。详情、范围、退出码和上限见 BIFF8 保存证据审计（`<skill-root>/references/biff8-stored-audit.md`）。本次为合成及格式证据验证，未证明新审计结果在 WPS Office 原生富文本/公式文档上的完整语义兼容。
 
 
 ## 默认读取诊断与容器恢复

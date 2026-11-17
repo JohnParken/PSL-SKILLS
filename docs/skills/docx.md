@@ -1,6 +1,6 @@
 # DOCX：标准库文档生成、读取与受控编辑
 
-> 文档核对日期为 2026-11-16，源码基线为 `afe3bf0` 加本轮工作区变更，Skill 版本为 `20261116.1501.5700`。运行约束见 [SKILL.md](../../skills/docx/SKILL.md)。
+> 文档核对日期为 2026-11-16，源码基线为 `afe3bf0` 加本轮工作区变更，Skill 版本为 `20261118.0325.5874`。运行约束见 [SKILL.md](../../skills/docx/SKILL.md)。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -22,11 +22,11 @@ Python 模块拆分及文件行数规则见 [行数规范与重构记录](../pyt
 维护者在已确认的仓库根目录，使用满足 Python/Expat 约束的解释器：
 
 ```sh
-python -I -S -B tools/package_docx_runtime.py
-python -I -S -B tools/run_skill_tests.py skills/docx/scripts/test
-python -I -S -B -m unittest discover -s tests -p 'test_docx_runtime_package.py' -v
-python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict
-python -I -S -B tools/check_project_docs.py
+python3 -I -S -B tools/package_docx_runtime.py
+python3 -I -S -B tools/run_skill_tests.py skills/docx/scripts/test
+python3 -I -S -B -m unittest discover -s tests -p 'test_docx_runtime_package.py' -v
+python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/docx --strict
+python3 -I -S -B tools/check_project_docs.py
 ```
 
 默认生成 `dist/runtime/docx-runtime-<version>.zip`；可通过 `--output` 指定尚不存在的维护包路径。解压后安装完整 `docx/` 目录，不把源码测试复制到生产安装中。解压包仍须通过独立业务验收；打包成功只证明清单/字节完整性，不代表已通过功能测试或 Word/WPS 视觉验收。
@@ -120,7 +120,7 @@ flowchart TD
 常用创建只需主入口，不重复预跑 preflight；单独读取先做只读自检。调用始终在宿主确认的任务目录中，执行前确认执行器当前目录为任务目录且输入可见，无法确认时停止，不猜路径或切换目录；脚本位置由本轮实际读取 `SKILL.md` 的路径确定，不能把当前工作目录当成 Skill 安装目录。下例只说明调用形态，`<skill-root>` 必须替换为真实根目录；本次文档工作未执行该示例。
 
 ```sh
-python -I -S -B "<skill-root>/scripts/run_docx_task.py" create "工作情况说明.docx" --compact-receipt <<'JSON'
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/run_docx_task.py" create "工作情况说明.docx" --compact-receipt <<'JSON'
 {"theme":"official","blocks":[{"type":"title","text":"工作情况说明"},{"type":"paragraph","text":"本期工作有序开展。"}]}
 JSON
 ```
@@ -171,8 +171,8 @@ JSON
 ### UTF-8 有界输出与源绑定续读
 
 ```console
-python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --tables rows --max-output-bytes 4000
-python -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --tables rows --max-output-bytes 6000 --cursor '上次next_cursor原值'
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --tables rows --max-output-bytes 4000
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/read_docx.py" input.docx --compact-json --tables rows --max-output-bytes 6000 --cursor '上次next_cursor原值'
 ```
 
 - 字节分页适用于默认要素、`--compact-json` 和 `--summary`，预算 128–2,000,000 **UTF-8 字节**，包含元数据、诊断及末尾换行。兼容参数 `--report` 和单独的 `--cursor` 使用 12,000 字节默认页预算。分页与 `--max-output-chars`、`--start-block`（包括 0）、`--delivery` 互斥。

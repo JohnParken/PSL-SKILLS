@@ -48,7 +48,7 @@ UTF-8 JSON；进程流每行一个完整报文，不将大数据打印到模型�
 
 ## 维护验证
 
-从已确认仓库根目录运行 python -I -S -B -m unittest discover -s tests -p 'test_table_workflow*.py'；python 指宿主确认的兼容解释器。测试不属于普通业务必读材料，不预读全部测试或本文件。独立复制Skill目录后验证只读安装、无相邻模块及空外部程序PATH；跨表仍显式依赖已确认的XLSX/ET能力入口，不承诺单独复制跨表目录即可获得依赖。真实样本、合成测试、平台和宿主验收分别报告。
+从已确认仓库根目录运行 python3 -I -S -B -m unittest discover -s tests -p 'test_table_workflow*.py'；本地测试使用默认 python3，版本或依赖不足时报告。测试不属于普通业务必读材料，不预读全部测试或本文件。独立复制Skill目录后验证只读安装、无相邻模块及空外部程序PATH；跨表仍显式依赖已确认的XLSX/ET能力入口，不承诺单独复制跨表目录即可获得依赖。真实样本、合成测试、平台和宿主验收分别报告。
 
 ## Measured maintenance evidence
 

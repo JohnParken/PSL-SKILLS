@@ -1,6 +1,6 @@
 # 批注事务管理
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -10,10 +10,10 @@
 交付归档：编辑 CLI 和 公开交付 API（`<skill-root>/references/delivery.md#公开交付-api`） 的写操作成功后由代码自动归档本次输出；只读操作不归档。低层 API 或读取保存等其他方式生成的最终交付文件，按 当轮统一归档（`<skill-root>/references/delivery.md`） 显式列出本轮文件归档；不把验收中间文件或历史产物加入清单。
 
 
-先执行技能入口要求的自检。从宿主确认的任务工作目录调用；将 `<skill-root>` 替换为主入口定义的真实目录。本入口不依赖旧 `<skill-root>/scripts/comment.py` 的手工补锚点流程，每次只接受一个动作。
+先执行技能入口要求的自检。从默认任务工作目录 `./`调用；将 `<skill-root>` 替换为主入口定义的真实目录。本入口不依赖旧 `<skill-root>/scripts/comment.py` 的手工补锚点流程，每次只接受一个动作。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/manage_comments.py\" ./采购管理办法.docx ./action.json 采购管理办法_修订版.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/manage_comments.py\" ./采购管理办法.docx ./action.json 采购管理办法_修订版.docx")
 ```
 
 使用 `manage_comments(source, specification, destination=None)` 获取动作结果字典。变更必须输出同扩展名的新 DOCX/DOTX，禁止输入别名、链接输出或数字签名包；先在副本中规划，检查结构、线程元数据和 XML 值保真后原子打包。失败保留源及已有输出。
@@ -29,7 +29,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/manage_comments.py\" ./�
 查询不提供输出文档参数，结果写到标准输出：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/manage_comments.py\" ./采购管理办法.docx ./action.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/manage_comments.py\" ./采购管理办法.docx ./action.json")
 ```
 
 返回 `mode`（`none/classic/modern`）、`mutable`、`diagnostics` 及已读取批注的 `id/text/author/parent_id/paragraph_index`。`mutable` 仅说明支持的修改子集可用，不表示所有动作均可执行。审阅诊断；未知或损坏元数据不等于完整查询成功，无法安全解析的 XML 会直接失败。

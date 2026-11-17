@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.2139.1284`（默认有界内容页，完整内容与证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261118.0325.5874`（默认有界内容页，完整内容与证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 默认只向 stdout 输出结果；完整读取可用 `--output <裸文件名>` 在任务根目录独占创建 JSON 文件并只在 stdout 返回 `et_output_manifest_v1` 清单。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -131,13 +131,13 @@ BIFF8 和 OOXML 完整读取的 `sheets[].views` 按保存窗口报告冻结行�
 以下 `<skill-root>` 须由本轮实际读取 ET `SKILL.md` 的路径定位；执行前确认读取后端与执行器的路径映射，并以执行器可访问的路径整体替换；无法确认映射或任务工作目录时停止。相对读取路径先按宿主确认的基准解析。脚本路径使用已确认的安装根，数据路径相对宿主任务工作目录。无法定位时停止，不切换到 Skill 安装目录执行。
 
 ```console
-python -I -S -B "<skill-root>/scripts/et_cli.py" run --check
-python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et
-python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et --profile full --max-json-bytes 134217728 --compact
-python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et --output result.json
-python -I -S -B "<skill-root>/scripts/analyze_et.py" --check
-python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D8 --preview
-python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1 --query ./query.json
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/et_cli.py" run --check
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et --profile full --max-json-bytes 134217728 --compact
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et --output result.json
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/analyze_et.py" --check
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D8 --preview
+"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1 --query ./query.json
 ```
 
 以上 run 默认返回有界内容页（完整内容用 `--all-content`），`--output result.json` 也不改变 profile。向 XLSX 原 schema 分析器交接须显式 `--profile full`；`--compact` 仅压缩 full 原始证据，content 已是独立投影。公开 `et_cli.py read/metadata` 与分析 API 保持 full，不改成普通 run。
@@ -300,7 +300,7 @@ BIFF8 单元格值文字与展示文字改为独立预算：值上限 8Mi UTF-16
 
 ### 最终交付入口边界
 
-显式最终导出优先直接调用 `execute(command="python -I -S -B \"该 Skill 根目录/scripts/et_cli.py\" run ./input.et --output 读取结果.json --delivery")`（归档需 Python 3.10+）。`--delivery` 必须与 `--output` 同用，不接受概况/分页或自检；写后核对文件字节数和 SHA-256，再保护原件并归档。stdout 清单包含 `final_deliverables`、`output_written` 和 `delivery`；读取 partial/退出 3 保留，归档状态独立检查。缺失 questionId 或归档失败仍保留已写 JSON，不重跑读取覆盖文件，改用显式归档入口重试。未加 `--delivery` 的 `--output` 仅为内部交接文件，不能把它交给用户后省略归档。分析器 stdout 另存最终文件也须验收后显式归档。
+显式最终导出优先直接调用 `execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --output 读取结果.json --delivery")`（归档需 Python 3.10+）。`--delivery` 必须与 `--output` 同用，不接受概况/分页或自检；写后核对文件字节数和 SHA-256，再保护原件并归档。stdout 清单包含 `final_deliverables`、`output_written` 和 `delivery`；读取 partial/退出 3 保留，归档状态独立检查。缺失 questionId 或归档失败仍保留已写 JSON，不重跑读取覆盖文件，改用显式归档入口重试。未加 `--delivery` 的 `--output` 仅为内部交接文件，不能把它交给用户后省略归档。分析器 stdout 另存最终文件也须验收后显式归档。
 
 ## 公式缓存容错补充（2026-11-14）
 

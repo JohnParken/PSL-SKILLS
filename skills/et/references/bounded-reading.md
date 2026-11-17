@@ -24,10 +24,10 @@
 图表按 `sheet + chart_index` 归属，`path` 为图表内容对象内的语义路径（字符串键/整数列表位置），不是XML路径；将各片段的 `data` 放回对应路径可重组内容投影。空数组/对象显式保留，点的原始 `index` 和原字符串值不变，不填补稀疏点、不重算、不跟随外链。单个图表可跨页，不能只见标题或部分系列即称读完。页面只表示内容投影的交付进度，图表提取限制见 `<skill-root>/references/embedded-charts.md`。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et")
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --content-page --cursor \"完整next_cursor\"")
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --content-page --sheet \"Data\" --page-size 100 --max-output-chars 65536 --max-output-bytes 65536")
-execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --all-content")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --content-page --cursor \"完整next_cursor\"")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --content-page --sheet \"Data\" --page-size 100 --max-output-chars 65536 --max-output-bytes 65536")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --all-content")
 ```
 
 CLI页内 `continuation_entrypoint=read_et.py` 和 `next_arguments` 数组给出完整续读参数，末页数组为null；参数含content-page/profile/sheet/page-size/双预算和cursor，不含输入路径、不拼Shell命令，字段本身计入预算。逐参数安全传给已定位的read_et.py及同一input；使用et_cli.py时保留run前缀。若漏开关/高预算，按原完整数组补齐即可续读；scope或数组已丢失则重取必要结果，不猜参数。三个结果族（内容页、旧单元格视图、预览/分析）的游标不能混用，preview与analysis模式也不可互换。宿主截断JSON先恢复完整页，partial3有可靠数据可继续，不能用&&/check=True无条件截断链路。
@@ -45,8 +45,8 @@ CLI页内 `continuation_entrypoint=read_et.py` 和 `next_arguments` 数组给出
 大 ET/ETT 只需结构时先概况，逐格任务按需分页。本入口仅处理电子表格，拒绝 WPS 文字内容。以下旧 read_et.py 视图均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不自动归档、不执行公式、宏或外链。
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --summary")
-execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --sheet \"Data\" --page-size 100 --max-output-chars 65536")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --summary")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et --sheet \"Data\" --page-size 100 --max-output-chars 65536")
 ```
 
 新输出使用 `schema_version=wps_read_view_v1`，原schema另存于 `source_schema_version`。保留原status/partial、issues、diagnostics、reading_assessment及已有coverage字段；源partial仍退出3，源ok退出0，失败退出1，参数错误退出2。视图省略的全局与工作表元数据逐项列于 `metadata_omitted`；未返回不表示不存在。样式、合并、超链接、批注、附加区域等完整证据仍需 `--profile full` 完整读取。不得把投影交给只接受原schema的XLSX分析器；本 Skill 区域统计直接使用 analyze_et.py；外部原 schema 消费时保留完整提取 JSON。
@@ -104,10 +104,10 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 
 ## 可选 OOXML 解析期分页（独立接口）
 
-对 OOXML 容器的 ET/ETT，可使用 `<skill-root>/scripts/et_parse_page.py`。先执行主入口环境自检并确认 `ooxml-sheet=available`，再在已确认任务目录运行：
+对 OOXML 容器的 ET/ETT，可使用 `<skill-root>/scripts/et_parse_page.py`。先执行主入口环境自检并确认 `ooxml-sheet=available`，再在默认任务目录运行：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/et_parse_page.py\" ./input.et --page-size 100 --max-output-bytes 1048576")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/et_parse_page.py\" ./input.et --page-size 100 --max-output-bytes 1048576")
 ```
 
 本入口提供 `--capabilities`，当前接口 `et_parse_page_v1`、`revision=1`，不替换原完整读取、分析或 `wps_read_view_v1`。只支持 OOXML 表格；BIFF5/7、BIFF8、文本容器使用原入口，不伪装为空页。

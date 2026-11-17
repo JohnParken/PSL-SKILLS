@@ -1,6 +1,6 @@
 # 任务清单清理工具
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 路径定位与任务目录边界统一遵守 `<skill-root>/SKILL.md#执行环境约束与首步自检`；占位符必须用宿主本次已确认的真实目录替换，禁止猜测路径。
 
@@ -69,12 +69,12 @@ API为 `create_task(spec, output, protected_inputs=(), workspace=None)`、`retry
 
 ## 三阶段命令
 
-以下均在同一宿主确认的任务目录执行，替换 `<skill-root>` 为实际读取主入口确定的真实目录。数据参数使用规范化相对路径，不含开头 `./`、`..`、绝对路径或符号链接。清单文件的父目录须已存在；工具不创建业务目录、不扫描文件树。选择本次独占的清单名和临时文件名，不能照抄后覆盖旧任务。
+以下均在同一默认任务目录 `./`执行，替换 `<skill-root>` 为实际读取主入口确定的真实目录。数据参数使用规范化相对路径，不含开头 `./`、`..`、绝对路径或符号链接。清单文件的父目录须已存在；工具不创建业务目录、不扫描文件树。选择本次独占的清单名和临时文件名，不能照抄后覆盖旧任务。
 
 **创建辅助文件前登记：**
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" plan cleanup-task.json --file docx-work.spec.json --file docx-work.build.py --file docx-work.intermediate.docx --protect 用户原件.docx --deliverable 客户服务改进方案.docx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/cleanup_task.py\" plan cleanup-task.json --file docx-work.spec.json --file docx-work.build.py --file docx-work.intermediate.docx --protect 用户原件.docx --deliverable 客户服务改进方案.docx")
 ```
 
 `--file`、`--protect`、`--deliverable` 可重复。新plan的清单及临时文件必须是 `./` 下的单一文件名；`--directory` 仅保留参数兼容，传入会拒绝。历史清单仍可seal/clean目录项，但不能新登记临时目录或嵌套临时文件。保护路径可为输入目录；候选与受保护路径、最终文件或清单重叠时拒绝整个 plan。plan 不创建候选文件，已存在的候选和清单均拒绝。生成期间新增未规划的辅助文件时，先为它们建立另一份不重叠清单；不得改写旧清单来伪造所有权。把用户要求保留的辅助产物作为交付物或保护项，不登记为临时项。
@@ -82,7 +82,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" plan c
 **成功完成验收和归档后记录状态：**
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome success --verified --archive-status success")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome success --verified --archive-status success")
 ```
 
 `--archive-status` 必须使用本轮实际返回结果；有多个交付物时先逐项确认归档步骤完成，任何失败使用 failed，全部完成的批量结果可使用 completed。主文件缺失、为空或不安全时不能 seal success。seal 记录当前文件身份、大小、修改时间和 SHA-256；目录仅记录身份，不读取目录内容。最终文件之后若变化，需重新验收，不得手改指纹以跳过检查。
@@ -90,8 +90,8 @@ execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" seal c
 失败收尾示例（确认执行已结束后依次执行）：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome failed")
-execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" clean cleanup-task.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/cleanup_task.py\" seal cleanup-task.json --outcome failed")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/cleanup_task.py\" clean cleanup-task.json")
 ```
 
 核对seal成功后执行clean；无论业务失败原因是否已定位，都不使用retry或--retain主动留下本轮中间文件。下方clean示例是同一清理步骤，不再重复执行。历史retry状态只用于兼容已有清单；最终sealed清单不会重新采集变化后的候选来扩大删除范围。
@@ -99,7 +99,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" clean 
 **执行清理并核对：**
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/cleanup_task.py\" clean cleanup-task.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/cleanup_task.py\" clean cleanup-task.json")
 ```
 
 仅删除身份和指纹匹配的登记普通文件；所有文件先处理，目录按从深到浅用 rmdir 删除，仅空目录可移除。未知文件混入目录时保留该目录，不扫描、不递归删除。当前文件或父目录是链接、类型改变、文件变化、身份与输入/交付物重合或存在硬链接时保留并报告。清理前后均核对已记录的最终文件；前置核对失败则不开始删除，后置失败则报告失败，不声称交付完整。

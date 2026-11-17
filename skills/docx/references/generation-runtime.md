@@ -1,6 +1,6 @@
 # 生成器执行、文件命名与归档详细契约
 
-路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主已确认的任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
+路径占位符说明：`<skill-root>` 是本 DOCX Skill 根目录的文档占位符，不是 Shell 变量。取得宿主本次实际读取主入口 `SKILL.md` 的真实 `file_path`；若为相对路径，先按本次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名，所得目录才是根目录，不能使用参考文档所在目录。读取资源或执行命令前，将 `<skill-root>` 整体替换为该真实目录，保留资源后缀，将完整路径作为一个参数正确引用；嵌入 execute 字符串时按其语法转义。无法确认主入口真实路径时停止依赖操作并报告，禁止猜测路径。示例的工作目录为宿主默认任务目录 `./`，任务输入和受控临时文件沿用该目录内相对路径规则；交付输出只传裸文件名，由脚本固定写入任务根目录 `./`，不写入 Skill 安装目录。
 
 本页仅供对应任务按需加载。定位 `<skill-root>` 与任务目录、执行限制以主入口 `<skill-root>/SKILL.md` 为准；本页提供完整原始字段契约。
 
@@ -20,10 +20,10 @@
 
 ## 路径解析示例
 
-本例工作目录固定为宿主已确认的 `./`。先确认本次实际输入为 `./document.json`、图片为 `./logo.png`，JSON 内图片字段为 `"path": "logo.png"`；这些是示例文件名，使用时替换为宿主确认的真实名称，不据此创建输入子目录。完成自检后，从同一 `./` 调用兼容入口：
+本例工作目录固定为当前目录 `./`。先确认本次实际输入为 `./document.json`、图片为 `./logo.png`，JSON 内图片字段为 `"path": "logo.png"`；这些是示例文件名，使用时替换为宿主确认的真实名称，不据此创建输入子目录。完成自检后，从同一 `./` 调用兼容入口：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
 ```
 
 读取 `./logo.png`，主文件为 `./客户服务改进方案.docx`。有效配置下归档副本由程序写入 `./output/{questionId}/客户服务改进方案.docx`；该归档目录不是工作目录，不进入其中执行命令。若自行读取同一 JSON 后调用字典 API，仍从 `./` 执行并保护原始输入：
@@ -47,8 +47,8 @@ result = create_document_delivery(
 先按主入口执行环境自检。以下命令中的 `<skill-root>` 替换为已确认的真实目录；输入输出位于任务工作目录：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json --preflight")
-execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json --preflight")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/create_docx.py\" ./document.json \"客户服务改进方案.docx\" --verify --require-no-placeholders")
 ```
 
 `--preflight` 只接受输入路径，检查字段、图片引用、生成 XML 和共享预算，不写文档或执行写入探针；不是结构或视觉验收。以上两条仅用于前述兼容/定制调用，按需选择，不串行执行预检与生成；标准新建直接用 `"<skill-root>/scripts/run_docx_task.py" create`（已集成必要环境自检，不另调用check），不再执行这里的第二条生成命令。`--verify` 在临时 ZIP 写完后读取全部成员并检查 CRC、结构及正文文字序列、表格/图片数量、页眉页脚文字，再按输入核对排版意图：块顺序与分页符、标题样式与大纲、列表实例/层级/编号定义、样式及显式文字格式、页面尺寸/边距、表格行列/网格宽度/单元格内容归属/边框/留白/跨页标记、图片显示尺寸/替代文字及引用媒体的 SHA-256。通过后原子发布输出，失败保留已有输出。`--require-no-placeholders` 隐含开启验收，检查跨 run 的双花括号标记；正文需要字面花括号时省略该参数。验收遇到未验证警告同样拒绝发布。成功摘要增加 `layout_intent: true`；`--verify` 还检查排版属性的静态 OOXML 次序与重复风险；这是生成子集的输入与 XML 对照，不计算页码，不做 XSD、字体可用性或视觉验证。
@@ -82,7 +82,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/create_docx.py\" ./docum
 
 归档目录默认只保存副本，不作为输入来源或主动检索范围；必要的同名、输入同源及本次副本检查按 归档目录使用边界（`<skill-root>/references/delivery.md#归档目录使用边界`） 执行，默认不读取历史文档内容；用户明确授权的指定归档输入按该边界处理。
 
-命令行第二个参数是单个 DOCX 文件名，不接受 `./output.docx`、目录或完整路径。新建主文件始终生成到宿主确认的任务工作目录 `./`，不是脚本安装目录。生成器在每次写入自检或生成时读取 `ROUTER_CONFIG_VARIABLES`，不在导入时缓存；自检与生成须使用同一任务目录和配置。
+命令行第二个参数是单个 DOCX 文件名，不接受 `./output.docx`、目录或完整路径。新建主文件始终生成到任务工作目录 `./`，不是脚本安装目录。生成器在每次写入自检或生成时读取 `ROUTER_CONFIG_VARIABLES`，不在导入时缓存；自检与生成须使用同一任务目录和配置。
 
 | 配置结果 | 主文件 | 生成成功后的归档副本 |
 |---|---|---|

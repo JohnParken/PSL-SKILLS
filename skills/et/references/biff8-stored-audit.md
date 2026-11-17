@@ -34,11 +34,11 @@
 
 ## 操作步骤
 
-先从任务工作目录执行目标 Skill 的自检，并核对 `environment-ok`。由实际读取 `SKILL.md` 的 `file_path` 计算 `<skill-root>` 并替换为真实目录；输入仍使用宿主确认的任务目录相对路径，不切换到源码目录：
+先从任务工作目录执行目标 Skill 的自检，并核对 `environment-ok`。由实际读取 `SKILL.md` 的 `file_path` 计算 `<skill-root>` 并替换为真实目录；输入仍使用默认任务目录 `./`相对路径，不切换到源码目录：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" --check")
-execute(command="python -I -S -B \"<skill-root>/scripts/wps_biff8_audit.py\" ./input.et")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" --check")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/wps_biff8_audit.py\" ./input.et")
 ```
 
 入口输出单份独立 JSON，`schema_version=biff8_stored_evidence_audit_v1`，只包含证据索引、CP 区间、公式状态计数和原始 XF 元数据，**不回传工作表文本或公式计算结果**。若上游 `read_wps.read` 返回 `ok` 则退出 0、`partial` 则退出 3；上游不支持、校验失败或输入不是 BIFF8 子集则退出 1，按 `source_status` 说明，不改变或重试读取策略；上游 partial 结果可被审计。输入原件不会被修改。
@@ -66,9 +66,9 @@ execute(command="python -I -S -B \"<skill-root>/scripts/wps_biff8_audit.py\" ./i
 本工作线的验证应包含以下命令（按真实已确认的仓库路径或 Skill 实际根目录执行）。严格 Skill 检查的脚本是**仓库维护入口**，不是分发 Skill 的运行时依赖：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" --check")
-execute(command="python -I -S -B -m unittest discover -s skills/et/scripts/test -p 'test_*.py' -v")
-execute(command="python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" --check")
+execute(command="python3 -I -S -B -m unittest discover -s skills/et/scripts/test -p 'test_*.py' -v")
+execute(command="python3 -I -S -B skills/skill-development-standards/scripts/check_skill.py skills/et --strict")
 ```
 
 执行前从 harness 确认是否在仓库维护工作目录；后两条命令所用路径以仓库根目录为基准，不能在普通用户任务中照抄并假定存在。

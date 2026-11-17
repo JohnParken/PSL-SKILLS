@@ -23,7 +23,7 @@ Copy the fictional configuration (`<skill-root>/assets/fictional_reconciliation_
 task directory as reconcile.json. Provide left.json and right.json for January/February:
 
 ```python
-execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_reconcile.py\" left.json right.json --query reconcile.json --xlsx reconciliation.xlsx > reconciliation.json\n)")
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_reconcile.py\" left.json right.json --query reconcile.json --xlsx reconciliation.xlsx > reconciliation.json\n)")
 ```
 
 `keys` must explicitly retain all native dimensions except period and institution_name.

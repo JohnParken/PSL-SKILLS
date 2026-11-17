@@ -34,8 +34,8 @@ Create task-local `appearance.json`:
 ```
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create sales.json sales.xlsx --appearance appearance.json")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" import sales.csv imported.xlsx --sheet Sales --numeric-columns B --header-rows 2 --appearance appearance.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create sales.json sales.xlsx --appearance appearance.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_tabular.py\" import sales.csv imported.xlsx --sheet Sales --numeric-columns B --header-rows 2 --appearance appearance.json")
 ```
 
 The appearance file is separate from the unchanged sheet/cell JSON schema. Sheet names

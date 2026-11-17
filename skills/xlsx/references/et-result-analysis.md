@@ -16,8 +16,8 @@ This validates schema/budgets and restores explicitly tagged numeric values as D
 text remains text, date serials remain numbers, and no XLSX file is created.
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile result.json --sheet Data")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize result.json --sheet Data --query query.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" profile result.json --sheet Data")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_analysis.py\" summarize result.json --sheet Data --query query.json")
 ```
 
 Extraction diagnostics are included as `source_issues` and `source_status`. When supplied,

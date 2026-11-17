@@ -100,8 +100,10 @@ class ComplexJsonTemplatesTests(unittest.TestCase):
                 document = (ROOT / name / 'references/complex-json.md').read_text()
                 expression = re.findall(r'```python\n(.*?)\n```', document, re.S)[1]
                 command = ast.literal_eval(ast.parse(expression).body[0].value.keywords[0].value)
-                self.assertTrue(command.startswith('python '))
-                command = shlex.quote(sys.executable) + command[len('python'):]
+                deployed = '"<skill-root>/scripts/.venv/bin/python"'
+                self.assertTrue(command.startswith(deployed + ' -I -S -B '))
+                # Local tests deliberately inherit the default test interpreter.
+                command = shlex.quote(sys.executable) + command[len(deployed):]
                 command = command.replace('<skill-root>', str(ROOT / name)).replace('报告.' + name, 'result.' + name)
                 env = dict(os.environ)
                 env.pop('ROUTER_CONFIG_VARIABLES', None)

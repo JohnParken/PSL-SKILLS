@@ -21,7 +21,7 @@ Task-local `periods.json`:
 ```
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_advanced.py\" compare history.xlsx --sheet Sales --query periods.json")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_advanced.py\" compare history.xlsx --sheet Sales --query periods.json")
 ```
 
 Entity, period and metric selectors accept column letters, col: IDs or exact paths under

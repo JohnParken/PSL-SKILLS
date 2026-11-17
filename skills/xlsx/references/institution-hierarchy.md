@@ -70,8 +70,8 @@ respectively. Use exclusive creation for these copies; do not overwrite existing
 files. Create the workbook and then run the rollup:
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create ./hierarchy-facts.json fictional_hierarchy.xlsx")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_management.py\" fictional_hierarchy.xlsx --sheet Facts --query hierarchy.json --xlsx hierarchy_report.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/stdlib_xlsx.py\" create ./hierarchy-facts.json fictional_hierarchy.xlsx")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_management.py\" fictional_hierarchy.xlsx --sheet Facts --query hierarchy.json --xlsx hierarchy_report.xlsx")
 ```
 
 The generated XLSX reuses Wide/Definitions/Validation/Lineage and readable appearance.

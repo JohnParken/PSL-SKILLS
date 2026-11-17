@@ -62,8 +62,8 @@ Renamed XLS/XLSX or simulated containers are never counted as real ET/ETT accept
 ## CLI and support levels
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/read_et.py\" input.et --profile full")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/wps_cfb.py\" input.et")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/read_et.py\" input.et --profile full")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/wps_cfb.py\" input.et")
 ```
 
 Content, not extension, selects the container probe. Non-CFB data is rejected by wps_cfb;

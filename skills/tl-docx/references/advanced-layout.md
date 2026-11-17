@@ -2,7 +2,7 @@
 
 路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
 
-在已确认的任务目录运行 `<skill-root>/scripts/tl_docx.py` 的 `create`，仅用于新建 `.docx`，不是现有文档的编辑协议。已有文件按 `<skill-root>/references/writing.md#修改副本` 判断是否支持，不以重建替代受控编辑。普通段落、字段与分节参数见 `<skill-root>/references/writing.md`。下列设置产生 Word 原生标记；实际编号显示、分页和字段值在阅读器中核对。
+在默认任务目录运行 `<skill-root>/scripts/tl_docx.py` 的 `create`，仅用于新建 `.docx`，不是现有文档的编辑协议。已有文件按 `<skill-root>/references/writing.md#修改副本` 判断是否支持，不以重建替代受控编辑。普通段落、字段与分节参数见 `<skill-root>/references/writing.md`。下列设置产生 Word 原生标记；实际编号显示、分页和字段值在阅读器中核对。
 
 ## 多级编号
 

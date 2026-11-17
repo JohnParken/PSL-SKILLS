@@ -13,8 +13,8 @@ from the actual SKILL.md path, replace it in commands and use task-relative inpu
 Python 3.9+, standard library only. Inputs are not changed; JSON is written to stdout.
 
 ```python
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_header_candidates.py\" report.xlsx --sheet Sales")
-execute(command="python3 -I -S -B \"<skill-root>/scripts/xlsx_header_candidates.py\" report.xlsx --sheet Sales --scan-rows 64 --scan-columns 32 --max-depth 4")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_header_candidates.py\" report.xlsx --sheet Sales")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_header_candidates.py\" report.xlsx --sheet Sales --scan-rows 64 --scan-columns 32 --max-depth 4")
 ```
 
 The default scan is A1 through at most row 32/column 32. Allowed bounds are 2..64 rows,

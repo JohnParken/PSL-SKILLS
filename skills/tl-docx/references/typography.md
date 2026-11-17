@@ -1,6 +1,6 @@
 # 创建样式与页面
 
-路径占位符说明：从宿主实际读取主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`；相对路径按宿主确认的读取基准解析。使用前替换并引用完整路径，无法定位则停止。以下 JSON 通过已确认任务目录内的 `execute` 调用 `<skill-root>/scripts/tl_docx.py` 的 `create`，不是已有文件的编辑格式。
+路径占位符说明：从宿主实际读取主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`；相对路径按宿主确认的读取基准解析。使用前替换并引用完整路径，无法定位则停止。以下 JSON 通过默认任务目录内的 `execute` 调用 `<skill-root>/scripts/tl_docx.py` 的 `create`，不是已有文件的编辑格式。
 
 ## Profile 与角色样式
 

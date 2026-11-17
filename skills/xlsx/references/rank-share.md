@@ -23,7 +23,7 @@ Task-local `ranking.json`:
 ```
 
 ```python
-execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\npython3 -I -S -B \"<skill-root>/scripts/xlsx_rank_share.py\" source.xlsx --sheet Sales --query ranking.json > ranked.json\npython3 -I -S -B \"<skill-root>/scripts/xlsx_result_export.py\" ranked.json ranked.xlsx\n)")
+execute(command="(\nset -eC  # stop on failure; refuse to overwrite existing report files\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_rank_share.py\" source.xlsx --sheet Sales --query ranking.json > ranked.json\n\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/xlsx_result_export.py\" ranked.json ranked.xlsx\n)")
 ```
 
 group_by and measure accept letters, col: IDs or exact multi-level paths. Pass explicit

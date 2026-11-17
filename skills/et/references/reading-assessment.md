@@ -47,5 +47,5 @@ CFB 尾缀不再要求全零：完整扇区前缀通过分配链、目录及声�
 以下将 API 示例作为完整 stdin 执行；先替换已确认的 Skill 真实目录，并使用任务顶层的实际输入。
 
 ```python
-execute(command="python -I -S -B - \"<skill-root>\" <<'PY'\nimport sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(sys.argv[1]) / 'scripts'))\nfrom read_et import read, read_bytes, check_environment\n\n# 环境自检\nassert check_environment() == 0\n\n# 读取示例\nresult = read('./sample.et')\nif result['status'] in ('ok', 'partial'):\n    print(f\"提取成功，工作表数量: {len(result.get('sheets', []))}\")\n    if result['status'] == 'partial':\n        print(f\"已知缺口: {len(result.get('issues', []))}\")\nPY\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B - \"<skill-root>\" <<'PY'\nimport sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(sys.argv[1]) / 'scripts'))\nfrom read_et import read, read_bytes, check_environment\n\n# 环境自检\nassert check_environment() == 0\n\n# 读取示例\nresult = read('./sample.et')\nif result['status'] in ('ok', 'partial'):\n    print(f\"提取成功，工作表数量: {len(result.get('sheets', []))}\")\n    if result['status'] == 'partial':\n        print(f\"已知缺口: {len(result.get('issues', []))}\")\nPY\n")
 ```

@@ -4,7 +4,7 @@
 
 ## 概述
 
-`<skill-root>/scripts/run_wps_task.py` 生成 RTF 流（默认 `.wps` 后缀，显式请求 `.rtf` 时保留），默认公文参数参照项目 DOCX 公文模式；不是金山原生二进制，不承诺跨阅读器完全一致。无运行时 DOCX Skill 依赖。以下输入输出均位于宿主确认的任务工作目录。
+`<skill-root>/scripts/run_wps_task.py` 生成 RTF 流（默认 `.wps` 后缀，显式请求 `.rtf` 时保留），默认公文参数参照项目 DOCX 公文模式；不是金山原生二进制，不承诺跨阅读器完全一致。无运行时 DOCX Skill 依赖。以下输入输出均位于默认任务工作目录 `./`。
 
 ## 目录
 
@@ -20,7 +20,7 @@
 通过管道传入 JSON 规范：
 
 ```python
-execute(command="python -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create \"通知.wps\" --compact-receipt <<'JSON'\n{\n  \"theme\": \"official\",\n  \"header\": \"内部公文\",\n  \"footer\": \"机密\",\n  \"blocks\": [\n    {\"type\": \"title\", \"text\": \"关于推进业务系统升级的通知\"},\n    {\"type\": \"heading\", \"level\": 1, \"text\": \"一、工作目标\"},\n    {\"type\": \"paragraph\", \"text\": \"确保核心业务链路平稳运行与高效协同。\"},\n    {\"type\": \"list\", \"ordered\": true, \"items\": [\"基础环境升级\", \"数据架构迁移\"]},\n    {\"type\": \"table\", \"rows\": [[\"阶段\", \"负责人\"], [\"第一阶段\", \"张三\"]]}\n  ]\n}\nJSON\n")
+execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-root>/scripts/run_wps_task.py\" create \"通知.wps\" --compact-receipt <<'JSON'\n{\n  \"theme\": \"official\",\n  \"header\": \"内部公文\",\n  \"footer\": \"机密\",\n  \"blocks\": [\n    {\"type\": \"title\", \"text\": \"关于推进业务系统升级的通知\"},\n    {\"type\": \"heading\", \"level\": 1, \"text\": \"一、工作目标\"},\n    {\"type\": \"paragraph\", \"text\": \"确保核心业务链路平稳运行与高效协同。\"},\n    {\"type\": \"list\", \"ordered\": true, \"items\": [\"基础环境升级\", \"数据架构迁移\"]},\n    {\"type\": \"table\", \"rows\": [[\"阶段\", \"负责人\"], [\"第一阶段\", \"张三\"]]}\n  ]\n}\nJSON\n")
 ```
 
 ## 主题系统与公文规范
