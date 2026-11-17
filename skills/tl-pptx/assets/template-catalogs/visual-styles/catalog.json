@@ -1,0 +1,20 @@
+{
+  "blueprint": "blueprint.txt",
+  "brutalist": "brutalist.txt",
+  "chalkboard": "chalkboard.txt",
+  "dark-tech": "dark-tech.txt",
+  "data-journalism": "data-journalism.txt",
+  "editorial": "editorial.txt",
+  "glassmorphism": "glassmorphism.txt",
+  "ink-notes": "ink-notes.txt",
+  "ink-wash": "ink-wash.txt",
+  "memphis": "memphis.txt",
+  "paper-cut": "paper-cut.txt",
+  "photo-editorial": "photo-editorial.txt",
+  "pixel-art": "pixel-art.txt",
+  "sketch-notes": "sketch-notes.txt",
+  "soft-rounded": "soft-rounded.txt",
+  "swiss-minimal": "swiss-minimal.txt",
+  "vintage-poster": "vintage-poster.txt",
+  "zine": "zine.txt"
+}

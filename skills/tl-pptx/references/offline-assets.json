@@ -1,0 +1,171 @@
+{
+  "schema": "tl-pptx.offline-assets.v1",
+  "upstream_repository": "https://github.com/hugohe3/ppt-master",
+  "upstream_commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
+  "deployment": "Optional offline data packs; never auto-installed or fetched. Select explicit canonical IDs and materialize only their closure in a task workspace.",
+  "source_file_count": 12397,
+  "source_payload_bytes": 25190343,
+  "usage_reference": "references/offline-assets.md",
+  "packs": [
+    {
+      "pack_id": "brands",
+      "filename": "tl-pptx-assets-brands-7e0df670-20261117.zip",
+      "sha256": "cc19b457fa06c7443fb7a570d20fd8706c8ad2ff6a8a70b285522e549fce95eb",
+      "archive_bytes": 1448311,
+      "members": 47,
+      "assets": 21,
+      "source_files": 44,
+      "source_payload_bytes": 1533208,
+      "rights": {
+        "license": "PPT Master project MIT",
+        "brand_logo_font_rights": "not_individually_cleared; project MIT does not establish trademark or font embedding permission"
+      },
+      "source_notice": "LICENSE"
+    },
+    {
+      "pack_id": "styles",
+      "filename": "tl-pptx-assets-styles-7e0df670-20261117.zip",
+      "sha256": "de24a193f2d551b102c191c65743ae4d3689a452df51b37b4cfd00b429248a3c",
+      "archive_bytes": 76205,
+      "members": 19,
+      "assets": 14,
+      "source_files": 16,
+      "source_payload_bytes": 159655,
+      "rights": {
+        "license": "PPT Master project MIT",
+        "brand_logo_font_rights": "not_individually_cleared; project MIT does not establish trademark or font embedding permission"
+      },
+      "source_notice": "LICENSE"
+    },
+    {
+      "pack_id": "layouts",
+      "filename": "tl-pptx-assets-layouts-7e0df670-20261117.zip",
+      "sha256": "dccae5359dca7a49c93fc602b1bff84b2c253ca0b11ebcce068a3095d641d975",
+      "archive_bytes": 115378,
+      "members": 98,
+      "assets": 7,
+      "source_files": 95,
+      "source_payload_bytes": 254664,
+      "rights": {
+        "license": "PPT Master project MIT",
+        "brand_logo_font_rights": "not_individually_cleared; project MIT does not establish trademark or font embedding permission"
+      },
+      "source_notice": "LICENSE"
+    },
+    {
+      "pack_id": "decks",
+      "filename": "tl-pptx-assets-decks-7e0df670-20261117.zip",
+      "sha256": "98761b4f49dc6eecf109b465d34a533ac41be38b8e82469366414e5759a55345",
+      "archive_bytes": 484825,
+      "members": 25,
+      "assets": 2,
+      "source_files": 22,
+      "source_payload_bytes": 517494,
+      "rights": {
+        "license": "PPT Master project MIT",
+        "brand_logo_font_rights": "not_individually_cleared; project MIT does not establish trademark or font embedding permission"
+      },
+      "source_notice": "LICENSE"
+    },
+    {
+      "pack_id": "icons-chunk-filled",
+      "filename": "tl-pptx-assets-icons-chunk-filled-7e0df670-20261117.zip",
+      "sha256": "48a69a1fcd89a4b15edf230ecaf43e7bc518ad9c53b8752677454dd44c4f0640",
+      "archive_bytes": 366648,
+      "members": 646,
+      "assets": 641,
+      "source_files": 643,
+      "source_payload_bytes": 282125,
+      "rights": {
+        "license": "CC-BY-4.0",
+        "creator": "Noah Jacobus",
+        "attribution_required": true,
+        "trademark_clearance": "not_granted"
+      },
+      "source_notice": "templates/icons/THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "pack_id": "icons-phosphor-duotone",
+      "filename": "tl-pptx-assets-icons-phosphor-duotone-7e0df670-20261117.zip",
+      "sha256": "64ee98b8ac78cf3d229dbe8da2ce9f890ccfcdd1fdac8f6ac8d1614943c6f167",
+      "archive_bytes": 983890,
+      "members": 1522,
+      "assets": 1518,
+      "source_files": 1520,
+      "source_payload_bytes": 954758,
+      "rights": {
+        "license": "MIT",
+        "creator": "Phosphor Icons",
+        "notice_required": true
+      },
+      "source_notice": "templates/icons/THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "pack_id": "icons-simple-icons",
+      "filename": "tl-pptx-assets-icons-simple-icons-7e0df670-20261117.zip",
+      "sha256": "bda14158722f8bbf806766afc92c70db6c8c0621a0970a3305ba551b6be4e7d5",
+      "archive_bytes": 3730491,
+      "members": 3682,
+      "assets": 3675,
+      "source_files": 3677,
+      "source_payload_bytes": 5323045,
+      "rights": {
+        "license": "CC0-1.0 at project level; individual brand terms may differ",
+        "trademark_clearance": "not_granted",
+        "individual_brand_review": "required_for_actual_use"
+      },
+      "source_notice": "templates/icons/THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "pack_id": "icons-tabler-filled",
+      "filename": "tl-pptx-assets-icons-tabler-filled-7e0df670-20261117.zip",
+      "sha256": "32d2e7095c23c93187fca97892cfeb051da55d2b4b6a679fe92618f9442f8aa6",
+      "archive_bytes": 681260,
+      "members": 1060,
+      "assets": 1055,
+      "source_files": 1057,
+      "source_payload_bytes": 671285,
+      "rights": {
+        "license": "MIT",
+        "creator": "Paweł Kuna",
+        "notice_required": true
+      },
+      "source_notice": "templates/icons/THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "pack_id": "icons-tabler-outline",
+      "filename": "tl-pptx-assets-icons-tabler-outline-7e0df670-20261117.zip",
+      "sha256": "6c7e5376895644b06054be516b3b46f65eb94ac736cd5fe12844dc944f2db752",
+      "archive_bytes": 3285472,
+      "members": 5140,
+      "assets": 5138,
+      "source_files": 5140,
+      "source_payload_bytes": 2997835,
+      "rights": {
+        "license": "MIT",
+        "creator": "Paweł Kuna",
+        "notice_required": true
+      },
+      "source_notice": "templates/icons/THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "pack_id": "sounds",
+      "filename": "tl-pptx-assets-sounds-7e0df670-20261117.zip",
+      "sha256": "d9d1cd98ae80a29edcbe0167638a65e64f2cf5c06d882d795dbb91ebac5df826",
+      "archive_bytes": 7055990,
+      "members": 196,
+      "assets": 186,
+      "source_files": 191,
+      "source_payload_bytes": 12543374,
+      "rights": {
+        "license": "CC0-1.0",
+        "creators": [
+          "Kenney",
+          "Joseph Sardin / BigSoundBank"
+        ],
+        "snapshot_originals": "PPT Master normalized WAV bytes; no additional changes"
+      },
+      "source_notice": "templates/sounds/THIRD_PARTY_NOTICES.md"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "upstream_commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
+  "license": "MIT; references/LICENSE-PPT-MASTER.txt",
+  "files": [
+    {
+      "upstream": "svg_to_pptx/shape_boolean.py",
+      "upstream_sha256": "a60c958ea93bec08a83da3ae0d2ea41a60df65248fabf2c59b54425876e00bed",
+      "destination": "svg_to_pptx/shape_boolean.py",
+      "symbols": "original module minus moved symbols",
+      "change": "AST-preserving responsibility split; original names re-exported",
+      "destination_sha256": "ed653f8bb71e3934ef9691a2e0292829545d85511767851c3182612dd385bc96"
+    },
+    {
+      "upstream": "svg_to_pptx/shape_boolean.py",
+      "upstream_sha256": "a60c958ea93bec08a83da3ae0d2ea41a60df65248fabf2c59b54425876e00bed",
+      "destination": "svg_to_pptx/shape_boolean_paths.py",
+      "symbols": [
+        "_close_filled_commands",
+        "_require_closed_commands",
+        "_commands_to_pathops",
+        "_merge_paths",
+        "_path_op",
+        "_simplify_path",
+        "_fragment_paths",
+        "_connected_components",
+        "_bounds_contain",
+        "_contour_depth",
+        "_path_is_empty",
+        "_path_sort_key",
+        "_serialize_result_path",
+        "_pathops_to_svg_path",
+        "_format_point",
+        "_format_number"
+      ],
+      "change": "AST-preserving responsibility split; original names re-exported; extract quadratic first-control calculation unchanged into typed helper to resolve Pylint inference error",
+      "destination_sha256": "74b04e426cbec9f7ba821baca3548834459efaac5c6389501d9658c1c3ac49b2"
+    },
+    {
+      "upstream": "svg_to_pptx/text_outline.py",
+      "upstream_sha256": "9c5d73707391be3f219c2d99954fbda08db6d82d7f93f9bbff791d8f76550014",
+      "destination": "svg_to_pptx/text_outline.py",
+      "symbols": "original module minus moved symbols",
+      "change": "AST-preserving responsibility split; original names re-exported; explicit font roots exclusive; default system roots omit home/environment user dirs",
+      "destination_sha256": "62d05e8289a370b8da2b411de27d2829c3a51626a35cf88379d49a7fd0571579"
+    },
+    {
+      "upstream": "svg_to_pptx/text_outline.py",
+      "upstream_sha256": "9c5d73707391be3f219c2d99954fbda08db6d82d7f93f9bbff791d8f76550014",
+      "destination": "svg_to_pptx/text_outline_glyphs.py",
+      "symbols": [
+        "_FontFace",
+        "_TextStyle",
+        "_FontRun",
+        "_ShapedRun",
+        "_DrawState",
+        "_draw_functions",
+        "_cluster_offsets",
+        "_required_codepoints",
+        "_is_default_ignorable",
+        "_cluster_may_have_no_outline",
+        "_family_key"
+      ],
+      "change": "AST-preserving responsibility split; original names re-exported",
+      "destination_sha256": "50470898ca38f21879a186cc16fbfaa512442197f51b5c687e62aa93c4f0566a"
+    },
+    {
+      "upstream": "shape_boolean_svg.py",
+      "upstream_sha256": "0674cf29f3757323f774984d78040a98d7fa65c662102444e02897dd9d39da39",
+      "destination": "shape_boolean_svg.py",
+      "change": "Remove brand/transcript console side effects; explicit own module path for -I startup.",
+      "destination_sha256": "e283a6d77be2a05d826a38254e3c6213bbde9ec6889a8b995e2cef4f0273284e"
+    }
+  ]
+}

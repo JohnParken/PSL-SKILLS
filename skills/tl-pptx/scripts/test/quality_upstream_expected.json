@@ -1,0 +1,343 @@
+{
+  "normal": {
+    "file": "normal.svg",
+    "exists": true,
+    "errors": [],
+    "warnings": [
+      "Reference SVG: detected 1 visible root-level <g> module(s) without explicit data-pptx-bounds (<g id=\"content\">); every final-page/template root <g> other than a compact authored-preset atom declares its root-coordinate layout subcanvas even when it also carries native coordinates"
+    ],
+    "info": {
+      "viewbox": "0 0 1280 720",
+      "carrier_receipt": {
+        "text_elements": 0,
+        "images": {
+          "placements": 0,
+          "files": [],
+          "max_frame_share": 0.0
+        },
+        "icons": 0,
+        "effects": {
+          "inline_emphasis_runs": 0,
+          "gradient_uses": 0,
+          "filter_uses": 0,
+          "text_effects": 0
+        },
+        "geometry": {
+          "svg_elements": {
+            "rect": 1,
+            "circle": 0,
+            "ellipse": 0,
+            "line": 0,
+            "polyline": 0,
+            "polygon": 0,
+            "path": 0
+          },
+          "preset_shapes": 0,
+          "preset_names": {},
+          "page_frame_elements": 0,
+          "marker_uses": {
+            "start": 0,
+            "mid": 0,
+            "end": 0
+          }
+        },
+        "native_objects": {
+          "chart": 0,
+          "table": 0,
+          "formula_block": 0,
+          "formula_inline": 0,
+          "other": 0
+        }
+      },
+      "text_elements": 0,
+      "tspan_elements": 0
+    },
+    "passed": true,
+    "source_sha256": "19285024c4b1cf5e5ca7c95c77440069ec04599baf8827c394fa65888eaec58f"
+  },
+  "badpaint": {
+    "file": "badpaint.svg",
+    "exists": true,
+    "errors": [
+      "<rect> attribute fill='not-a-color': must be a supported color, none, or an exact local url(#id) reference"
+    ],
+    "warnings": [
+      "Reference SVG: detected 1 visible root-level <g> module(s) without explicit data-pptx-bounds (<g id=\"content\">); every final-page/template root <g> other than a compact authored-preset atom declares its root-coordinate layout subcanvas even when it also carries native coordinates"
+    ],
+    "info": {
+      "viewbox": "0 0 1280 720",
+      "carrier_receipt": {
+        "text_elements": 0,
+        "images": {
+          "placements": 0,
+          "files": [],
+          "max_frame_share": 0.0
+        },
+        "icons": 0,
+        "effects": {
+          "inline_emphasis_runs": 0,
+          "gradient_uses": 0,
+          "filter_uses": 0,
+          "text_effects": 0
+        },
+        "geometry": {
+          "svg_elements": {
+            "rect": 1,
+            "circle": 0,
+            "ellipse": 0,
+            "line": 0,
+            "polyline": 0,
+            "polygon": 0,
+            "path": 0
+          },
+          "preset_shapes": 0,
+          "preset_names": {},
+          "page_frame_elements": 0,
+          "marker_uses": {
+            "start": 0,
+            "mid": 0,
+            "end": 0
+          }
+        },
+        "native_objects": {
+          "chart": 0,
+          "table": 0,
+          "formula_block": 0,
+          "formula_inline": 0,
+          "other": 0
+        }
+      },
+      "text_elements": 0,
+      "tspan_elements": 0
+    },
+    "passed": false,
+    "source_sha256": "2d8316b571a6080b303c944723ecb638e45ec021c3fdb4414344aacf67757225"
+  },
+  "unsupported": {
+    "file": "unsupported.svg",
+    "exists": true,
+    "errors": [
+      "Detected forbidden <foreignObject> element (use <tspan> for manual line breaks)",
+      "Unsupported visual SVG element(s) for native PPTX export: /svg[1]/foreignObject; /svg[1]/foreignObject[1]/div"
+    ],
+    "warnings": [],
+    "info": {
+      "viewbox": "0 0 1280 720",
+      "carrier_receipt": {
+        "text_elements": 0,
+        "images": {
+          "placements": 0,
+          "files": [],
+          "max_frame_share": 0.0
+        },
+        "icons": 0,
+        "effects": {
+          "inline_emphasis_runs": 0,
+          "gradient_uses": 0,
+          "filter_uses": 0,
+          "text_effects": 0
+        },
+        "geometry": {
+          "svg_elements": {
+            "rect": 0,
+            "circle": 0,
+            "ellipse": 0,
+            "line": 0,
+            "polyline": 0,
+            "polygon": 0,
+            "path": 0
+          },
+          "preset_shapes": 0,
+          "preset_names": {},
+          "page_frame_elements": 0,
+          "marker_uses": {
+            "start": 0,
+            "mid": 0,
+            "end": 0
+          }
+        },
+        "native_objects": {
+          "chart": 0,
+          "table": 0,
+          "formula_block": 0,
+          "formula_inline": 0,
+          "other": 0
+        }
+      },
+      "text_elements": 0,
+      "tspan_elements": 0
+    },
+    "passed": false,
+    "source_sha256": "449c5dc05b8769f2323566702e59a29858a34a577858152d81b9b293e6980537"
+  },
+  "hidden": {
+    "file": "hidden.svg",
+    "exists": true,
+    "errors": [],
+    "warnings": [
+      "Hidden element <rect> will not be exported (display:none, including inherited state); advisory only",
+      "Hidden element <g id=\"content\"> will not be exported (display:none, including inherited state); advisory only"
+    ],
+    "info": {
+      "viewbox": "0 0 1280 720",
+      "carrier_receipt": {
+        "text_elements": 0,
+        "images": {
+          "placements": 0,
+          "files": [],
+          "max_frame_share": 0.0
+        },
+        "icons": 0,
+        "effects": {
+          "inline_emphasis_runs": 0,
+          "gradient_uses": 0,
+          "filter_uses": 0,
+          "text_effects": 0
+        },
+        "geometry": {
+          "svg_elements": {
+            "rect": 0,
+            "circle": 0,
+            "ellipse": 0,
+            "line": 0,
+            "polyline": 0,
+            "polygon": 0,
+            "path": 0
+          },
+          "preset_shapes": 0,
+          "preset_names": {},
+          "page_frame_elements": 0,
+          "marker_uses": {
+            "start": 0,
+            "mid": 0,
+            "end": 0
+          }
+        },
+        "native_objects": {
+          "chart": 0,
+          "table": 0,
+          "formula_block": 0,
+          "formula_inline": 0,
+          "other": 0
+        }
+      },
+      "text_elements": 0,
+      "tspan_elements": 0
+    },
+    "passed": true,
+    "source_sha256": "b1c1e5a8817071e8ef2e3ac94ad2f75c64574c889f61b4bea3eaae54abf9f669"
+  },
+  "opacity": {
+    "file": "opacity.svg",
+    "exists": true,
+    "errors": [],
+    "warnings": [
+      "Recommendation: opacity='5' is converter-compatible in 1 location(s) (<rect> attribute); generated SVG should prefer opacity=\"1\". No change is required for export.",
+      "Reference SVG: detected 1 visible root-level <g> module(s) without explicit data-pptx-bounds (<g id=\"content\">); every final-page/template root <g> other than a compact authored-preset atom declares its root-coordinate layout subcanvas even when it also carries native coordinates"
+    ],
+    "info": {
+      "viewbox": "0 0 1280 720",
+      "carrier_receipt": {
+        "text_elements": 0,
+        "images": {
+          "placements": 0,
+          "files": [],
+          "max_frame_share": 0.0
+        },
+        "icons": 0,
+        "effects": {
+          "inline_emphasis_runs": 0,
+          "gradient_uses": 0,
+          "filter_uses": 0,
+          "text_effects": 0
+        },
+        "geometry": {
+          "svg_elements": {
+            "rect": 1,
+            "circle": 0,
+            "ellipse": 0,
+            "line": 0,
+            "polyline": 0,
+            "polygon": 0,
+            "path": 0
+          },
+          "preset_shapes": 0,
+          "preset_names": {},
+          "page_frame_elements": 0,
+          "marker_uses": {
+            "start": 0,
+            "mid": 0,
+            "end": 0
+          }
+        },
+        "native_objects": {
+          "chart": 0,
+          "table": 0,
+          "formula_block": 0,
+          "formula_inline": 0,
+          "other": 0
+        }
+      },
+      "text_elements": 0,
+      "tspan_elements": 0
+    },
+    "passed": true,
+    "source_sha256": "e7a9486ae88acd59843584c2e4b16cb6f06f56ba60f9d94b3a7218868d01f14c"
+  },
+  "text": {
+    "file": "text.svg",
+    "exists": true,
+    "errors": [],
+    "warnings": [
+      "Reference SVG: detected 1 visible root-level <g> module(s) without explicit data-pptx-bounds (<g id=\"content\">); every final-page/template root <g> other than a compact authored-preset atom declares its root-coordinate layout subcanvas even when it also carries native coordinates"
+    ],
+    "info": {
+      "viewbox": "0 0 1280 720",
+      "carrier_receipt": {
+        "text_elements": 1,
+        "images": {
+          "placements": 0,
+          "files": [],
+          "max_frame_share": 0.0
+        },
+        "icons": 0,
+        "effects": {
+          "inline_emphasis_runs": 0,
+          "gradient_uses": 0,
+          "filter_uses": 0,
+          "text_effects": 0
+        },
+        "geometry": {
+          "svg_elements": {
+            "rect": 0,
+            "circle": 0,
+            "ellipse": 0,
+            "line": 0,
+            "polyline": 0,
+            "polygon": 0,
+            "path": 0
+          },
+          "preset_shapes": 0,
+          "preset_names": {},
+          "page_frame_elements": 0,
+          "marker_uses": {
+            "start": 0,
+            "mid": 0,
+            "end": 0
+          }
+        },
+        "native_objects": {
+          "chart": 0,
+          "table": 0,
+          "formula_block": 0,
+          "formula_inline": 0,
+          "other": 0
+        }
+      },
+      "text_elements": 1,
+      "tspan_elements": 0
+    },
+    "passed": true,
+    "source_sha256": "248f87f48c60965a57d5eac81c090b76cb0d8a819457e4c6a0cecef8742ed323"
+  }
+}

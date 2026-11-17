@@ -1,0 +1,22 @@
+{
+  "3d-isometric": "resource_3d-isometric.txt",
+  "blueprint": "blueprint.txt",
+  "chalkboard": "chalkboard.txt",
+  "corporate-photo": "corporate-photo.txt",
+  "digital-dashboard": "digital-dashboard.txt",
+  "editorial": "editorial.txt",
+  "fantasy-animation": "fantasy-animation.txt",
+  "flat": "flat.txt",
+  "glassmorphism": "glassmorphism.txt",
+  "ink-notes": "ink-notes.txt",
+  "minimalist-swiss": "minimalist-swiss.txt",
+  "nature": "nature.txt",
+  "paper-cut": "paper-cut.txt",
+  "pixel-art": "pixel-art.txt",
+  "screen-print": "screen-print.txt",
+  "sketch-notes": "sketch-notes.txt",
+  "vector-illustration": "vector-illustration.txt",
+  "vintage-poster": "vintage-poster.txt",
+  "warm-scene": "warm-scene.txt",
+  "watercolor": "watercolor.txt"
+}

@@ -1,0 +1,51 @@
+{
+  "upstream_commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
+  "license": "MIT; references/LICENSE-PPT-MASTER.txt",
+  "files": [
+    {
+      "upstream": "pptx_embedded_fonts.py",
+      "upstream_sha256": "e5c6912654a97d6100103faa13a7263da022053f4792c7a78acf4d8fa064dbd2",
+      "destination": "pptx_embedded_fonts.py",
+      "destination_sha256": "e5c6912654a97d6100103faa13a7263da022053f4792c7a78acf4d8fa064dbd2",
+      "change": "unchanged"
+    },
+    {
+      "upstream": "pptx_workspace.py",
+      "destination": "pptx_workspace_formats.py",
+      "source_lines": [
+        273,
+        378
+      ],
+      "destination_sha256": "07e723cb588be22016e4dad1dd1f90c14d049c76c32af29827fb3d4ae56bae48",
+      "change": "Pure byte-format functions moved unchanged; explicit imports retain original API names."
+    },
+    {
+      "upstream": "pptx_workspace.py",
+      "upstream_sha256": "51cd518a9567441ef5588384ce641fb4372e34ec405a5d0498bfaa07d2301ee1",
+      "destination": "pptx_workspace.py",
+      "destination_sha256": "045c602ebfee15692664a6defe10470b98bb231081be454d75100d6d73d77152",
+      "change": "Extract pure format sniffers; all function/class ASTs preserved."
+    },
+    {
+      "upstream": "pptx_ooxml/clone.py",
+      "upstream_sha256": "ea716ac677dfdb4d0b49f73328b0b33aa122e2f2b57f54165fc3519b4742b4e2",
+      "destination": "pptx_ooxml/clone.py",
+      "destination_sha256": "ea716ac677dfdb4d0b49f73328b0b33aa122e2f2b57f54165fc3519b4742b4e2",
+      "change": "unchanged"
+    },
+    {
+      "upstream": "pptx_opc_validation.py",
+      "upstream_sha256": "4b209dc4741b35314ecc4b8279c92c734aac79e9aa25e96c2911d231c67d7e4c",
+      "destination": "pptx_opc_validation.py",
+      "destination_sha256": "4b209dc4741b35314ecc4b8279c92c734aac79e9aa25e96c2911d231c67d7e4c",
+      "change": "unchanged"
+    },
+    {
+      "upstream": "pptx_ooxml/slideshow.py",
+      "upstream_sha256": "75b9af5211afd3ccde628e8a176ce3a2cc5ca19563d8308177aa0d187821e8a6",
+      "destination": "pptx_ooxml/slideshow.py",
+      "destination_sha256": "75b9af5211afd3ccde628e8a176ce3a2cc5ca19563d8308177aa0d187821e8a6",
+      "change": "unchanged"
+    }
+  ]
+}

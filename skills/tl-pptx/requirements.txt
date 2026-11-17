@@ -1,0 +1,9 @@
+# Python >=3.10; bundled Expat >=2.6.0. Deployment creates scripts/.venv/bin/python.
+# Base native package runtime; optional capability groups are in references/dependency-groups.json.
+# Missing optional groups must stop that selected operation, not silently remove its capability.
+python-pptx==1.0.2
+lxml>=6.0,<7
+Pillow>=12,<14
+XlsxWriter>=3,<4
+# python-pptx additionally requires typing-extensions>=4.9.0 (transitive).
+# Pylint is a maintenance tool, not a runtime dependency.

@@ -1,0 +1,17 @@
+{
+  "schema": "tl-pptx.dependencies.v1",
+  "base": ["python-pptx==1.0.2", "lxml>=6.0,<7", "Pillow>=12,<14", "XlsxWriter>=3,<4"],
+  "optional": {
+    "template_yaml": {"python": ["PyYAML>=6.0.2,<7"], "condition": "YAML template specifications"},
+    "shape_boolean": {"python": ["skia-pathops>=0.9.2"], "condition": "Shape boolean operations"},
+    "text_outline": {"python": ["uharfbuzz>=0.50.0"], "condition": "Text operands in boolean operations; authorized readable fonts also required"},
+    "edge_tts": {"python": ["edge-tts>=7.2.8"], "condition": "Explicitly authorized network narration request to selected provider"},
+    "openai_tts": {"python": ["aiohttp"], "condition": "Selected OpenAI backend, authorized credentials/content/charges"},
+    "video_mix": {"python": ["numpy"], "executables": ["ffmpeg", "ffprobe"], "condition": "Native video sound postprocessing"},
+    "video_subtitles": {"python": ["stable-ts"], "executables": ["ffmpeg"], "condition": "Explicitly provisioned model/runtime; never auto-download at skill invocation"},
+    "powerpoint_video": {"python": [], "platform": "Windows", "applications": ["Microsoft PowerPoint 2016+", "PowerShell"], "condition": "Native PowerPoint video export; not available merely because PPTX generation works"},
+    "svg_preview": {"alternatives": [["CairoSVG", "system Cairo"], ["svglib", "reportlab with working renderPM"]], "condition": "Optional preview only, never substitutes for native editable objects"},
+    "pdf_input": {"python": ["PyMuPDF"], "license": "AGPL-3.0 or commercial license, independent of ppt-master MIT", "condition": "PDF-source input adapter only; deployment must resolve applicable license before installation/use"}
+  },
+  "missing_behavior": "Fail only the selected operation with a concrete missing dependency; never auto-install, silently drop a capability, choose a paid provider or substitute raster output."
+}
