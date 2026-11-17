@@ -36,7 +36,9 @@ class MinimalRuntimeChecks(unittest.TestCase):
         for name in READERS:
             with self.subTest(skill=name):
                 text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
-                section = text.split("**最小必要检查：**", 1)[1].split("\n", 1)[0]
+                marker = "**最小必要检查：**"
+                self.assertIn(marker, text, f"{name}: 缺少最小必要检查段落标题")
+                section = text.split(marker, 1)[1].split("\n", 1)[0]
                 for phrase in ("不先测试写入", "`mount`", "`ro`", "安全", "实际", "不倾倒系统日志"):
                     self.assertIn(phrase, section)
                 self.assertIn("顶层", section)
@@ -46,7 +48,11 @@ class MinimalRuntimeChecks(unittest.TestCase):
         bank = (ROOT / "skills/bank-writing/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("纯对话写作无需目录探针或执行环境自检", bank)
         navigation = (ROOT / "skills/document-navigation/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("本技能无脚本，不运行环境命令或写入探针", navigation)
+        self.assertIn("导航无脚本，不创建文件或写入探针", navigation)
+        self.assertLess(navigation.index("`ls -la`"), navigation.index("禁止用 `read_file`"))
+        for route in ("DOCX/DOTX", "ET/ETT", "PDF → 宿主已安装", "不递归", "不保证宿主的实际加载顺序"):
+            self.assertIn(route, navigation)
+        self.assertIn("不用通用读取工具回退", navigation)
         lifecycle = (ROOT / "skills/artifact-lifecycle/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("继续执行下述写入自检", lifecycle)
         self.assertIn("纯对话和仅读任务不调用本技能", lifecycle)
