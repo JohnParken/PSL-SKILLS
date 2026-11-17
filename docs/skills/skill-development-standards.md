@@ -1,6 +1,6 @@
 # skill-development-standards：开发规范与只读结构检查
 
-> 文档核对日期：2026-11-14；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261114.2127.4001`。本文说明规范、工具及其边界，不修改或替代原规范。
+> 文档核对日期：2026-11-14；历史源码参考基线：[`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261118.0341.5875`。本文说明规范、工具及其边界，不修改或替代原规范。
 
 本 Skill 本身无业务文件输出。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -49,7 +49,7 @@ flowchart TD
 | `check_skill.py: _frontmatter` | 精确 YAML 分隔行、必要字符串字段、重复键、简单依赖声明、版本格式/日期和 description 长度 |
 | `check_skill.py: _walk` | 递归收集普通文件，报告内部符号链接、命名问题、空文件/目录和可疑临时项 |
 | `check_skill.py: is_test_script` | 按常见 test/spec 名称及脚本后缀识别测试脚本，不把普通 check/validate 命令当作测试 |
-| `check_skill.py: _root_resources` | 检查每个被选中 Markdown 的定位说明、旧根别名、字面量根路径、存在性、越界和章节锚点 |
+| `check_skill.py: _root_resources` | 检查每个被选中 Markdown 的定位说明、旧根别名、字面量根路径、存在性、越界和章节锚点；精确的部署解释器引用允许缺席，不免除部署自检 |
 | `check_skill.py: _markdown_links` | 检查 Markdown 链接，拒绝 Skill 内部本地 Markdown 链接写法，对外部/绝对资源链接给出建议 |
 | `check_skill.py: check_skill` | 汇总单个 Skill 的结构、元信息、Python 物理行数/语法、测试布局与资源问题，返回 `list[Issue]` |
 | `check_skill.py: main` | 接收一个或多个目录及 `--strict`，输出诊断并汇总退出状态 |
@@ -93,7 +93,7 @@ python -I -S -B skills/skill-development-standards/scripts/check_skill.py skills
 维护检查器本身时，相关测试入口为：
 
 ```console
-python -I -S -B -m unittest discover -s skills/skill-development-standards/scripts/test -p 'test_check_skill.py' -v
+python3 -I -S -B -m unittest discover -s skills/skill-development-standards/scripts/test -p 'test_*.py' -v
 ```
 
 这两条是使用方法，不表示本轮文档编写已执行。

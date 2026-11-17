@@ -4,7 +4,8 @@
     "SKILL.md",
     "requirements.txt",
     "scripts/check_skill.py",
-    "scripts/test/test_check_skill.py"
+    "scripts/test/test_check_skill.py",
+    "scripts/test/test_deployment_interpreter.py"
   ],
   "exclude_prefixes": [],
   "exclude_files": {}

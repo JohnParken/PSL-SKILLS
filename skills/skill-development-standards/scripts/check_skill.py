@@ -27,6 +27,7 @@ ALLOWED_ROOT = {"SKILL.md", "requirements.txt", "scripts", "references", "assets
 SUSPICIOUS = {"readme", "readme.md", "cache", "__pycache__", "log", "logs", "tmp", "temp"}
 DIRECTORY_NAME = re.compile(r"[A-Za-z_](?:[A-Za-z_-]*[A-Za-z_])?")
 FILE_NAME_START = re.compile(r"[A-Za-z_]")
+DEPLOYMENT_INTERPRETER = "<skill-root>/scripts/.venv/bin/python"
 MAX_PYTHON_FILE_LINES = 1000
 TEMP_SUFFIXES = {".pyc", ".pyo", ".log", ".tmp", ".bak"}
 TEST_SCRIPT_SUFFIXES = {".py", ".sh", ".bash", ".ps1", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
@@ -304,6 +305,16 @@ def _root_resources(text: str, rel: str, skill: Path, issues: list[Issue], execu
                 current = current / part
                 if current.is_symlink():
                     raise ValueError("symlink resource")
+            # Only absence of this exact deployment-supplied executable is expected.
+            # Keep containment and symlink checks above; do not exempt its directory.
+            if target == DEPLOYMENT_INTERPRETER:
+                try:
+                    resolved.stat()
+                except FileNotFoundError:
+                    continue
+                if not resolved.is_file():
+                    issues.append(Issue("error", "broken-link", rel, "Expected an interpreter file: " + target))
+                    continue
             if not resolved.exists() or (path.endswith("/") and not resolved.is_dir()):
                 issues.append(Issue("error", "broken-link", rel, "Missing root resource: " + target))
                 continue

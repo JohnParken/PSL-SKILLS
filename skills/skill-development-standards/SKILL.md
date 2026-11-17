@@ -1,6 +1,6 @@
 ---
 name: skill-development-standards
-version: "20261114.2127.4001"
+version: "20261118.0341.5875"
 description: 用于本项目 Skill 的新建、修改、导入、迁移、审查与发布，帮助检查说明是否清楚、文件是否齐全、使用方法是否一致，以及结果是否经过验证。修改附带工具、参考资料或模板时同样适用；普通文档生成、表格处理等仅使用现有 Skill 的任务不适用。
 ---
 
@@ -208,7 +208,7 @@ dependency:
 
 ```console
 python -I -S -B "<skill-root>/scripts/check_skill.py" "<skill-root>" --strict
-python -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_check_skill.py' -v
+python3 -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_*.py' -v
 ```
 
 - 将上述目标目录替换为本次实际新建或修改的 Skill；可以一次传入多个目录。不要因示例包含 DOCX 就检查所有无关 Skill。
@@ -222,6 +222,8 @@ python -I -S -B -m unittest discover -s "<skill-root>/scripts/test" -p 'test_che
 - 修改本检查器时，同时运行检查器测试（`<skill-root>/scripts/test/test_check_skill.py`）。普通说明调整仅执行受影响的检查，避免无意义重复全量测试。
 
 交付时简要列出修改内容、实际检查及结果、剩余限制或例外。禁止将“检查器通过”表述为所有业务功能可用，也不要把未运行项目标记为通过。
+
+部署依赖例外：源码或运行包内可以没有精确路径 `<skill-root>/scripts/.venv/bin/python`；这是部署方供应的解释器，不是随包资源。此例外不覆盖整棵目录、变体、锚点、其他缺失文件、符号链接或越界路径。静态检查不执行该解释器；部署验收仍须核实可执行性、版本、依赖及目标 Skill 自检。回归覆盖见 `<skill-root>/scripts/test/test_deployment_interpreter.py`。
 
 路径检查范围：检查器对执行型Skill逐Markdown检查占位符说明，对纯指导仅检查入口集中资源说明；所有类型继续检查旧根别名和资源安全。完整执行说明须包含主入口、file_path、相对读取基准、去掉文件名、替换完整路径及无法定位时停止等必要文字，拒绝本地Markdown链接；验证字面量根路径的存在性、目录、章节锚点及越界/符号链接。支持代码引用、引号路径与命令示例（含execute引号转义）；不执行示例或推断动态拼接。任务数据、ZIP成员、外部API标识与明确仓库维护路径保留自身基准。外部URL继续使用既有规则；这些为必要文字检查，不能证明说明语义正确；维护者仍须人工复核真实路径来源及替换步骤，结构检查不证明模型实际替换或业务验收。
 
