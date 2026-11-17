@@ -88,3 +88,11 @@ XLSX纯概况after使用入口完整命令，不预读bounded-reading；baseline
 人工复核31个选择案例及57个读取计划，入口调整未改变技能的任务、格式边界与按需参考；保留各技能自己的依赖和自检。更新前的当前选择与加载快照分别保存在 `skill_selection_current_cases_before_environment_alignment_20261109.json` 与 `runtime_loading_profiles_before_environment_alignment_20261109.json`。新快照由 macOS / Python 3.12.12 重算，只反映静态计划读取的字符、字节与哈希，不代表真实模型选路、宿主 usage 或业务验收。
 
 本轮人工复核31项选择期望与57个计划读取范围：仅调整结果判读和大结果续读，业务 description 与选择边界不变。更新前保留本地快照；新快照仍是静态字符/字节，不代表真实宿主读取、模型选路或 token usage。
+
+## ET默认有界内容页（2026-11-16）
+
+独立人工复核12项ET相关选择期望，保留全部79项case及原格式、只读、缓存和partial边界；默认内容页、显式完整content仍不能冒充原工作簿schema。静态读取计划仍按入口与任务参考整文件计量，没有因分页输出而删除必须参考。只更新ET入口指纹并重算当前加载快照；前版逐字保存在 skill_selection_current_cases_before_et_default_page_20261116.json 和 runtime_loading_profiles_before_et_default_page_20261116.json。这不是模型选路、DeepAgents真实加载或token节省实测。
+
+## ET连续读取链（2026-11-16）
+
+独立复核12项ET相关选择期望，保留79项case及原计划读取范围。新增结构化续读参数、同源SHA与partial处理引导，不改变原格式/只读/缓存和跨表原schema契约。刷新ET入口指纹与当前加载快照；前版逐字保存为 skill_selection_current_cases_before_et_read_chain_20261116.json 和 runtime_loading_profiles_before_et_read_chain_20261116.json。CLI链及当前Dot一次模型可见串联不等于DeepAgents自主选路、可靠上下文恢复或token收益验收。

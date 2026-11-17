@@ -26,10 +26,10 @@
 | [文档任务导航（document-navigation）](skills/document-navigation/SKILL.md) | 独立纯指导文档 | 20261114.2127.4001 | 查看、整理、修改、生成等文档处理请求即可匹配，无需预先知道格式；确认附件与目录、定位顶层候选并加载所需技能，不解析文件或配置宿主 |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261115.2044.5320 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
 | [docx](skills/docx/SKILL.md) | `skills/docx` | 20261116.1501.5700 | DOCX 生成、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
-| [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261116.1511.1996 | 基于 python-docx 按关系读取内容、公式片段与图表缓存，默认省略内部结构，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
+| [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261117.1327.0512 | 基于 python-docx 按关系读取内容、公式片段与图表缓存，默认省略内部结构，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
 | [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261116.1353.3706 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
 | [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261116.1522.4948 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；显式 maximum 读取内嵌 PNG 及布局证据，--profile full保留原结构；内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261116.1514.5688 | 离线读取 .et/.ett 的 BIFF5/7核心、BIFF8/OOXML 保存值与公式缓存；CLI 默认可读 content（含支持的 OOXML 图表保存值），完整原 schema 与行列/绘图证据用 --profile full；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261116.2139.1284 | 离线读取 .et/.ett 的 BIFF5/7核心、BIFF8/OOXML 保存值与公式缓存；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），完整原 schema 与行列/绘图证据用 --profile full；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261116.1353.3706 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261116.1353.3706 | 受限 SVG 创建原生 PPTX，支持 PNG/JPEG、图表、表格与基础公式；文本/备注、概况和选页有界读取；数学结构丢失按页诊断；JSON字节预算与续读仍全包验证；无任意编辑或视觉验收 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261116.1353.3706 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
@@ -84,7 +84,7 @@ python -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/revi
 - **document-navigation**：只有 `SKILL.md`；使用宿主已有的上下文、技能目录和读取/列目录能力，无脚本及 Python 依赖。所选格式 Skill 的执行条件另行自检。
 - **bank-writing**：主要面向云端 Linux 容器的对话式文本写作，开发可用 macOS、Windows 或 Linux；包内无脚本、第三方包或办公软件依赖。按任务读取参考，精确长度用宿主已有能力只读计数，不能核验时如实说明。
 - **docx**：Python 3.10 及以上标准库（包含 zlib，Expat >=2.6.0，需支持 POSIX 锁与文件描述符操作）；零第三方包依赖。
-- **tl-docx**：Python 3.10 及以上、`python-docx==1.2.0`（唯一直接依赖）及任务目录的安全文件操作。部署时提供该组件的上游依赖。
+- **tl-docx**：Python 3.10 及以上、`python-docx==1.2.0`（唯一直接依赖）及任务目录的安全文件操作。部署时提供该组件的上游依赖，所有 TL-DOCX Python 命令显式使用 `"<skill-root>/scripts/.venv/bin/python" -I -B`；该路径由真实入口定位，缺失则停止，不回退全局 Python、不自动安装。
 - **xlsx**：Python 3.9 及以上；维护中的主流程与生命周期 runner 仅依赖标准库。
 - **wps**：Python 3.10 及以上，纯 Python 创建、读取、编辑与 RTF 导出仅用标准库；OOXML 读取另需 Expat >=2.6；二进制导出可选系统 LibreOffice。
 - **table-workflow**：Python >=3.12（维护基线3.12.11），仅标准库；单独安装完整 xlsx，含ET来源时再安装完整 et，通过实际读取主入口所得绝对根路径传参，不猜相邻位置。
@@ -222,7 +222,7 @@ WPS新建默认公文参照当前DOCX：上下25.4mm、左右31.8mm，仿宋16pt
 
 ### WPS 表格（.et/.ett）
 
-CLI 默认内容读取 `et_content_v1`，保留文字、保存值、缓存状态、数值含义、合并、批注/超链接和覆盖诊断，省略样式/绘图/原始二进制证据。需要原始完整 schema 时用 `--profile full`；Python API、分析与跨技能协议仍默认原 schema，不将内容投影作为原工作簿交接。BIFF 内容路径不构造不必要元数据 hex，安全扫描与预算不省略；其余路径仍完整解析后投影，不承诺普遍降低解析内存。
+CLI 默认有界内容读取 `et_content_page_v1`（100条记录，字符/UTF-8字节均32768），显式 `--all-content` 才返回完整 `et_content_v1`；默认页及可续读记录保留文字、保存值、缓存状态、数值含义、合并、批注/超链接和覆盖诊断，省略样式/绘图/原始二进制证据。需要原始完整 schema 时用 `--profile full`；Python API、分析与跨技能协议仍默认原 schema，不将内容投影作为原工作簿交接。BIFF 内容路径不构造不必要元数据 hex，安全扫描与预算不省略；其余路径仍完整解析后投影；默认分页每页仍重扫，不承诺普遍降低解析内存或时间。续读优先安全逐参数使用页内 `next_arguments`（同一原输入，保留entrypoint/mode/范围/预算），手动时显式使用 `--content-page --cursor`；旧视图参数未带 `--content-page` 时保留原 `wps_read_view_v1`。
 
 真实扩样（2026-11-12）：通过 Edge 新下载五个政府发布方的 8 份 ET 原件，599 个非空保存值（含 83 个缓存）、712 个空白及 102 处合并核对一致；发现并修复一处共享公式 cUse=0 的兼容性缺口，保存值未丢失。详见 [本轮审计与限制](docs/maintenance/et/edge-real-samples-20261112.md) 与 [专项修复](docs/maintenance/et/shared-formula-zero-use-20261112.md)；这不是完整格式或 WPS 版本认证。
 

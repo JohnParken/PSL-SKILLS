@@ -365,7 +365,11 @@ class SkillRuntimePackages(unittest.TestCase):
         (self.work / 'synthetic.et').write_bytes(source)
         read = self.invoke('et', 'et_cli.py', 'run', 'synthetic.et', expected=(0, 3))
         self.assertIn('000123', read.stdout)
-        content = json.loads(read.stdout)
+        page = json.loads(read.stdout)
+        self.assertEqual(page['schema_version'], 'et_content_page_v1')
+        self.assertLessEqual(len(read.stdout.encode('utf-8')), 32768)
+        self.assertFalse(page['has_more'])
+        content = json.loads(self.invoke('et', 'et_cli.py', 'run', 'synthetic.et', '--all-content', expected=(0, 3)).stdout)
         self.assertEqual(content['schema_version'], 'et_content_v1')
         full = json.loads(self.invoke('et', 'et_cli.py', 'run', 'synthetic.et', '--profile', 'full', expected=(0, 3)).stdout)
         self.assertEqual(content['source_schema_version'], full['schema_version'])
@@ -395,10 +399,12 @@ class SkillRuntimePackages(unittest.TestCase):
                        cwd=self.work, env=self.env, check=True, capture_output=True, text=True)
         before = (self.work / 'chart.et').read_bytes()
         result = json.loads(self.invoke('et', 'read_et.py', 'chart.et', expected=3).stdout)
-        chart = result['sheets'][0]['charts'][0]
-        self.assertEqual(chart['title']['text'], '收入')
-        self.assertEqual(chart['series'][0]['val']['points'][0]['value'], '1.2500')
-        self.assertEqual(chart['series'][0]['cat']['cache_status'], 'incomplete')
+        self.assertEqual(result['schema_version'], 'et_content_page_v1')
+        self.assertFalse(result['has_more'])
+        fragments = {tuple(item['path']): item['data'] for item in result['items'] if item['kind'] == 'chart_fragment'}
+        self.assertEqual(fragments[('title',)]['text'], '收入')
+        self.assertEqual(fragments[('series', 0, 'val', 'points', 0)]['value'], '1.2500')
+        self.assertEqual(fragments[('series', 0, 'cat', 'cache_status')], 'incomplete')
         self.assertNotIn('xl/charts/', json.dumps(result))
         self.assertEqual((self.work / 'chart.et').read_bytes(), before)
 
@@ -419,15 +425,17 @@ class SkillRuntimePackages(unittest.TestCase):
         path.write_bytes(source)
         response = self.invoke('et', 'et_cli.py', 'run', path.name, expected=3)
         result = json.loads(response.stdout)
-        self.assertEqual(result['schema_version'], 'et_content_v1')
+        self.assertEqual(result['schema_version'], 'et_content_page_v1')
+        self.assertFalse(result['has_more'])
+        self.assertLessEqual(len(response.stdout.encode('utf-8')), 32768)
         self.assertNotIn('uninterpreted_metadata', result)
         full = json.loads(self.invoke('et', 'et_cli.py', 'run', path.name, '--profile', 'full', expected=3).stdout)
         self.assertEqual(full['schema_version'], 'biff8_readonly_v1')
         self.assertIn('uninterpreted_metadata', full)
         self.assertEqual({i['code'] for i in result['issues']}, {i['code'] for i in full['issues']})
         self.assertEqual(sum(i['count'] for i in result['issues']), sum(i.get('count', 1) for i in full['issues']))
-        self.assertEqual(result['sheets'][0]['cells']['A2']['value'], full['sheets'][0]['cells']['A2']['value'])
-        cell_result = result['sheets'][0]['cells']['A2']
+        cell_result = next(item['data'] for item in result['items'] if item['kind'] == 'cell' and item['cell'] == 'A2')
+        self.assertEqual(cell_result['value'], full['sheets'][0]['cells']['A2']['value'])
         self.assertEqual((cell_result['type'], cell_result['value']), ('number', '42'))
         self.assertEqual(result['cell_value_coverage'], 'complete_within_declared_sheets')
         codes = {item['code'] for item in result['issues']}
@@ -563,12 +571,132 @@ class SkillRuntimePackages(unittest.TestCase):
             'blocks': [{'type': 'heading', 'level': 1, 'text': 'Styled section'},
                        {'type': 'paragraph', 'text': 'Styled content'}]})
         self.assertEqual('verified', styled['status'])
+        self.assertEqual('verified', styled['result']['content_verification']['status'])
         summary = call('read', 'styled.docx', '--summary')
         self.assertEqual('Styled section', summary['records'][0]['text'])
         created = call('create', 'source.docx', payload={'blocks': [{'type': 'paragraph', 'text': '月报原文'}]})
         self.assertEqual('verified', created['status'])
         self.assertEqual('success', created['archive_status'])
         original = (self.work / 'source.docx').read_bytes()
+        formatted = call('edit', 'source.docx', 'formatted.docx', payload={'operations': [
+            {'type': 'format_run', 'paragraph_index': 0, 'run_index': 0,
+             'expected_text': '月报原文', 'expected_run_text': '月报原文',
+             'format': {'font_ascii': 'Arial', 'font_east_asia': '黑体', 'bold': True}}]})
+        self.assertEqual('edited', formatted['status'])
+        self.assertEqual(original, (self.work / 'source.docx').read_bytes())
+        check_request = {'operations': [{'type': 'format_run', 'paragraph_index': 0, 'run_index': 0,
+                         'expected_text': '月报原文', 'expected_run_text': '月报原文',
+                         'format': {'font_ascii': 'Arial', 'font_east_asia': '黑体', 'bold': True}}]}
+        task_before = fingerprints(self.work)
+        checked = call('verify-format', 'source.docx', 'formatted.docx', payload=check_request)
+        self.assertEqual('format_checked', checked['status'])
+        self.assertEqual('captured_input_bytes', checked['scope'])
+        self.assertEqual(task_before, fingerprints(self.work))
+        same = call('verify-format', 'source.docx', 'source.docx', payload=check_request, expected=1)
+        self.assertEqual('format_check_inputs_not_distinct', same['error_code'])
+        from docx import Document  # Synthetic multi-paragraph, multi-run cell fixture.
+        cell_document = Document()
+        cell = cell_document.add_table(rows=1, cols=1).cell(0, 0)
+        cell.paragraphs[0].add_run('left')
+        cell.paragraphs[0].add_run('right')
+        cell.add_paragraph('second')
+        cell_document.save(self.work / 'cells.docx')
+        cell_source = (self.work / 'cells.docx').read_bytes()
+        anchor = {'table_index': 0, 'row_index': 0, 'cell_index': 0, 'paragraph_index': 0,
+                  'run_index': 0, 'expected_text': 'leftright', 'expected_run_text': 'left'}
+        cell_edited = call('edit', 'cells.docx', 'cells-edited.docx', payload={'operations': [
+            dict(anchor, type='format_cell_run', format={'bold': True}),
+            dict(anchor, type='replace_cell_run_text', text='updated')]})
+        self.assertEqual('edited', cell_edited['status'])
+        self.assertEqual(cell_source, (self.work / 'cells.docx').read_bytes())
+        cell_result = Document(self.work / 'cells-edited.docx').tables[0].cell(0, 0)
+        self.assertEqual(['updatedright', 'second'], [paragraph.text for paragraph in cell_result.paragraphs])
+        self.assertTrue(cell_result.paragraphs[0].runs[0].bold)
+        merged_document = Document()
+        merged_cell = merged_document.add_table(rows=2, cols=2).cell(0, 0)
+        merged_cell.merge(merged_document.tables[0].cell(1, 1)).text = 'Merged origin'
+        merged_document.save(self.work / 'merged.docx')
+        merge_request = {'operations': [{'type': 'format_cell_run', 'table_index': 0, 'row_index': 0,
+                         'cell_index': 0, 'paragraph_index': 0, 'run_index': 0,
+                         'expected_text': 'Merged origin', 'expected_run_text': 'Merged origin',
+                         'expected_merge': {'grid_column': 0, 'colspan': 2, 'rowspan': 2},
+                         'format': {'bold': True}}]}
+        self.assertEqual('edited', call('edit', 'merged.docx', 'merged-formatted.docx', payload=merge_request)['status'])
+        self.assertEqual('format_checked', call('verify-format', 'merged.docx', 'merged-formatted.docx',
+                                               payload=merge_request)['status'])
+        unsafe_xml = ('<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                      '<w:body>' + '<w:sdt>' * 260 + '<w:p/>' + '</w:sdt>' * 260 + '</w:body></w:document>')
+        with zipfile.ZipFile(BytesIO(original)) as before, zipfile.ZipFile(self.work / 'deep.docx', 'w') as after:
+            for member in before.namelist():
+                after.writestr(member, unsafe_xml.encode() if member == 'word/document.xml' else before.read(member))
+        deep = call('read', 'deep.docx', '--max-output-bytes', '12000', expected=1)
+        self.assertEqual('resource_limit_exceeded', deep['error_code'])
+        self.assertFalse(deep['retryable'])
+        story_document = Document()
+        story_document.add_paragraph('Body')
+        story_header = story_document.sections[0].header
+        story_footer = story_document.sections[0].footer
+        story_header.paragraphs[0].text = 'Header'
+        story_footer.paragraphs[0].text = 'Footer'
+        story_part = str(story_header.part.partname).lstrip('/')
+        footer_part = str(story_footer.part.partname).lstrip('/')
+        story_document.save(self.work / 'stories.docx')
+        story_source = (self.work / 'stories.docx').read_bytes()
+        story_anchor = {'part': story_part, 'paragraph_index': 0, 'run_index': 0,
+                        'expected_text': 'Header', 'expected_run_text': 'Header'}
+        story_edited = call('edit', 'stories.docx', 'stories-edited.docx', payload={'operations': [
+            dict(story_anchor, type='format_story_run', format={'bold': True}),
+            dict(story_anchor, type='replace_story_run_text', text='Updated header'),
+            dict(story_anchor, type='replace_story_run_text', part=footer_part,
+                 expected_text='Footer', expected_run_text='Footer', text='Updated footer')]})
+        self.assertEqual('edited', story_edited['status'])
+        self.assertEqual(story_source, (self.work / 'stories.docx').read_bytes())
+        story_result = Document(self.work / 'stories-edited.docx')
+        self.assertEqual('Updated header', story_result.sections[0].header.paragraphs[0].text)
+        self.assertTrue(story_result.sections[0].header.paragraphs[0].runs[0].bold)
+        self.assertEqual('Updated footer', story_result.sections[0].footer.paragraphs[0].text)
+        with zipfile.ZipFile(BytesIO(story_source)) as before, zipfile.ZipFile(self.work / 'stories-edited.docx') as after:
+            self.assertEqual(before.namelist(), after.namelist())
+            self.assertEqual({story_part, footer_part}, {name for name in before.namelist() if before.read(name) != after.read(name)})
+        call('edit', 'stories.docx', 'story-refused.docx', payload={'operations': [
+            dict(story_anchor, type='format_story_run', format={'bold': True}),
+            {'type': 'format_run', 'paragraph_index': 0, 'run_index': 0,
+             'expected_text': 'Body', 'expected_run_text': 'Body', 'format': {'bold': True}}]}, expected=1)
+        self.assertFalse((self.work / 'story-refused.docx').exists())
+        paragraphs = ['Page row ' + str(index) + ' ' + 'x' * 80 for index in range(24)]
+        call('create', 'paged report.docx', payload={'blocks': [{'type': 'paragraph', 'text': text} for text in paragraphs]})
+        response = self.invoke('tl-docx', entry, 'read', 'paged report.docx', '--cache', '--max-output-bytes', '2500', site_packages=True)
+        collected = []
+        for _ in range(100):
+            self.assertLessEqual(len(response.stdout.encode('utf-8')), 2500)
+            page = json.loads(response.stdout)
+            collected.extend(record['text'] for record in page['records'] if record['type'] == 'paragraph')
+            if not page['has_more']:
+                self.assertNotIn('continuation', page)
+                self.assertEqual('released', page['cache']['status'])
+                break
+            request = page['continuation']
+            argv = [request['action']]
+            for key, value in request['parameters'].items():
+                if key == 'include_related':
+                    argv.append('--include-related' if value else '--body-only')
+                elif isinstance(value, bool):
+                    if value:
+                        argv.append('--' + key.replace('_', '-'))
+                else:
+                    for item in value if isinstance(value, list) else [value]:
+                        argv.append('--' + key.replace('_', '-') + '=' + str(item))
+            response = self.invoke('tl-docx', entry, *argv, '--', request['source'], site_packages=True)
+        else:
+            self.fail('Continuation did not terminate')
+        self.assertEqual(paragraphs, collected)
+        self.assertFalse(list(self.work.glob('.tl-docx-read-*.cache')))
+        small = call('read', 'paged report.docx', '--max-output-bytes', '512', expected=1)
+        self.assertEqual('output_budget_exceeded', small['error_code'])
+        self.assertTrue(small['retryable'])
+        self.assertIn('action', small['next_action'])
+        usage = call('read', 'source.docx', '--content', '--full', expected=2)
+        self.assertEqual('invalid_arguments', usage['error_code'])
         result = call('read', 'source.docx')
         self.assertEqual('content', result['view'])
         self.assertIn('月报原文', [item.get('text') for item in result['records']])

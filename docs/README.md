@@ -12,7 +12,7 @@
 
 ## 组件依赖政策
 
-项目中以 `tl-` 开头的 Skill 允许按需使用第三方组件，不限于 Python 标准库；实际使用范围、版本、部署与自检条件以各 Skill 当前声明为准。非 `tl-` Skill 的原有依赖限制不变；独立运行、路径和交付约束仍适用。当前 `tl-docx` 使用 `python-docx==1.2.0`，这不是所有 TL 技能的统一依赖。详见 [项目约定](../AGENTS.md#tl-系列-skill-的组件依赖) 与 [运行包说明](packaging.md)。
+项目中以 `tl-` 开头的 Skill 允许按需使用第三方组件，不限于 Python 标准库；实际使用范围、版本、部署与自检条件以各 Skill 当前声明为准。非 `tl-` Skill 的原有依赖限制不变；独立运行、路径和交付约束仍适用。当前 `tl-docx` 使用 `python-docx==1.2.0`，这不是所有 TL 技能的统一依赖。依赖第三方组件的 TL 技能统一显式调用 `"<skill-root>/scripts/.venv/bin/python"`，部署方预先配置，缺失即停止且不自动安装；启动参数仍按各技能自检约定。详见 [项目约定](../AGENTS.md#tl-系列-skill-的组件依赖) 与 [运行包说明](packaging.md)。
 
 ## 阅读基线
 
@@ -35,10 +35,10 @@
 | [document-navigation](skills/document-navigation.md) | 20261114.2127.4001 | 通用文档处理意图即可匹配，无需先说明格式；确认附件和目录，再选择工具技能。无脚本，不能保证先加载或创造宿主映射。 |
 | [bank-writing](skills/bank-writing.md) | 20261115.2044.5320 | 银行材料写作、月报与跨期经营分析；讲话、客户投诉及公关，邮件短结构与可选合成示例；仅交付文本，表格计算按需交接。 |
 | [docx](skills/docx.md) | 20261116.1501.5700 | DOCX 创建、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、文本框、合并表格、图表缓存及图片引用。显式 --report 保留结构JSON，续读复用解析结果。 |
-| [tl-docx](skills/tl-docx.md) | 20261116.1511.1996 | 基于 python-docx 的独立 Word 入口。普通读取默认有用内容与图表，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
+| [tl-docx](skills/tl-docx.md) | 20261117.1327.0512 | 基于 python-docx 的独立 Word 入口。普通读取默认有用内容与图表，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
 | [xlsx](skills/xlsx.md) | 20261116.1353.3706 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
 | [wps](skills/wps.md) | 20261116.1522.4948 | 默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；PNG和布局证据显式 maximum，原结构显式 --profile full；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
-| [et](skills/et.md) | 20261116.1514.5688 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认可读 content（含支持的 OOXML 图表保存值），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
+| [et](skills/et.md) | 20261116.2139.1284 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
 | [ofd](skills/ofd.md) | 20261116.1353.3706 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
 | [pptx](skills/pptx.md) | 20261116.1353.3706 | 受限 SVG 到原生 PPTX、文本/备注读取及结构验证，数学结构丢失按页诊断；不任意编辑现有演示文稿。 |
 | [table-workflow](skills/table-workflow.md) | 20261116.1353.3706 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
