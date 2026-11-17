@@ -180,12 +180,15 @@ class PureTableTests(unittest.TestCase):
             command = [sys.executable, '-I', '-S', '-B', str((Path(__file__).resolve().parents[1] / 'read_wps.py')), str(path)]
             result = subprocess.run(command, capture_output=True, text=True, encoding='utf8')
             self.assertEqual(result.returncode, 3, result.stderr)
-            self.assertEqual(json.loads(result.stdout)['sheets'][0]['cells']['A1']['value'], '中文')
+            page = json.loads(result.stdout)
+            self.assertFalse(page['has_more'])
+            self.assertEqual(next(item['data']['value'] for item in page['items'] if item['kind'] == 'cell' and item['cell'] == 'A1'), '中文')
             result = subprocess.run(command + ['--compatibility', 'strict'], capture_output=True, text=True, encoding='utf8')
             self.assertEqual(result.returncode, 3)
             strict = json.loads(result.stdout)
             self.assertEqual(strict['status'], 'partial')
-            self.assertEqual(strict['sheets'][0]['cells']['A1']['value'], '中文')
+            self.assertFalse(strict['has_more'])
+            self.assertEqual(next(item['data']['value'] for item in strict['items'] if item['kind'] == 'cell' and item['cell'] == 'A1'), '中文')
             self.assertEqual(path.read_bytes(), data)
 
 

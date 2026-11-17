@@ -184,7 +184,11 @@ class DataPolicyTests(unittest.TestCase):
                 strict = json.loads(process.stdout)
                 self.assertEqual(strict['status'], 'partial')
                 self.assertIn('compatibility_option_ignored', issue_codes(strict))
-                self.assertEqual(strict['sheets'][0]['cells']['A1']['value'], '部门')
+                if name == 'read_wps.py':
+                    self.assertFalse(strict['has_more'])
+                    self.assertEqual(next(item['data']['value'] for item in strict['items'] if item['kind'] == 'cell' and item['cell'] == 'A1'), '部门')
+                else:
+                    self.assertEqual(strict['sheets'][0]['cells']['A1']['value'], '部门')
             self.assertEqual(path.read_bytes(), data)
 
     def test_missing_formula_cache_never_claims_complete_values(self):

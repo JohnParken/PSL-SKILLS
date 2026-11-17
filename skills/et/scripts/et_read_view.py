@@ -11,8 +11,14 @@ def project(result, data, options, **view_options):
         result['issues'] = [*result.get('issues', []), {
             'code': 'content_profile_projection',
             'source_schema_version': result.get('source_schema_version'),
-            'omitted': 'layout_parser_structure_binary_and_full_diagnostics; charts_require_nonpaged_content_read',
+            'omitted': 'layout_parser_structure_binary_and_full_diagnostics; charts_require_content_page_or_all_content',
             'saved_values_unchanged': True, 'retrieve_full': '--profile full'}]
+    if view_options.get('summary') and result.get('schema_version') == 'et_content_v1':
+        # Shared summary reads only len(cells); a range carries the exact count
+        # without allocating or inventing individual compressed blank cells.
+        result = dict(result)
+        result['sheets'] = [{**item, 'cells': range(len(item['cells']) + item.get('stored_blank_cells', {}).get('count', 0))}
+                            for item in result.get('sheets', [])]
     try:
         return shared_project(result, data, options, **view_options)
     except ParseError as exc:

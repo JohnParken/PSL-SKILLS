@@ -72,8 +72,13 @@ class DxfIntegrationTests(unittest.TestCase):
                     capture_output=True, text=True, timeout=5, env={'PATH': ''})
                 self.assertEqual(process.returncode, 3, process.stderr)
                 result = json.loads(process.stdout)
-                self.assertEqual(result['sheets'][0]['cells']['A1']['value'], '部门')
-                self.assertEqual(result['sheets'][0]['cells']['C4']['value'], '缓存中文')
+                if script == 'read_wps.py':
+                    self.assertFalse(result['has_more'])
+                    cells = {item['cell']: item['data'] for item in result['items'] if item['kind'] == 'cell'}
+                else:
+                    cells = result['sheets'][0]['cells']
+                self.assertEqual(cells['A1']['value'], '部门')
+                self.assertEqual(cells['C4']['value'], '缓存中文')
             self.assertEqual(path.read_bytes(), data)
 
     def test_malformed_or_wrong_scope_record_is_retained(self):

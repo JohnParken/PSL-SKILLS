@@ -354,7 +354,8 @@ class SheetTests(unittest.TestCase):
                 capture_output=True, text=True, env={'PATH': ''}, timeout=10)
             self.assertIn(process.returncode, (0, 3), process.stderr)
             output = json.loads(process.stdout)
-            self.assertEqual(output['sheets'][0]['cells']['A1']['value'],
+            self.assertFalse(output['has_more'])
+            self.assertEqual(next(item['data']['value'] for item in output['items'] if item['kind'] == 'cell' and item['cell'] == 'A1'),
                              '0.1234567890123456789')
 
     def test_template_main_type_is_accepted_as_spreadsheet(self):

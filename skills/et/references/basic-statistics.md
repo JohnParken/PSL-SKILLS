@@ -18,7 +18,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" --check"
 execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.et --sheet \"数据\" --range A1:D100 --header-rows 1")
 ```
 
-工作表、矩形和表头由任务明确；无 --header-rows 时首行也是数据。默认不填充合并、不自动应用隐藏/筛选，不识别小计/总计。先确认金额单位、日期意义、统计期间和分母；不能把明细和合计同时求和。需要非连续 exclude_rows、筛选/分组/去重/排序/fill_text 或 API 时改读 `<skill-root>/references/table-analysis.md`；只查看表头改读 `<skill-root>/references/table-preview.md`。
+工作表、矩形和表头由任务明确；`--header-rows` 指原物理行号或行号范围（如3:5），不是数量；无 --header-rows 时首行也是数据。默认不填充合并、不自动应用隐藏/筛选，不识别小计/总计。先确认金额单位、日期意义、统计期间和分母；不能把明细和合计同时求和。需要非连续 exclude_rows、筛选/分组/去重/排序/fill_text 或 API 时改读 `<skill-root>/references/table-analysis.md`；只查看表头改读 `<skill-root>/references/table-preview.md`。
 
 默认返回列 profiles 与前100行。只要统计时，可在新建任务查询 JSON 中写 {"limit":0}，以 --query ./query.json 调用，省略行预览不缩小统计。明确接受缓存才用 {"formula_policy":"cached","limit":0}，不猜选缓存。查询必须有效 UTF-8 JSON，未知/重复键拒绝，不执行表达式。区域内的表头合并不得裁切或跨越声明边界；数据合并保持原保存位置，不复制数值锚点。
 
@@ -62,13 +62,15 @@ execute(command="python -I -S -B \"<skill-root>/scripts/analyze_et.py\" ./input.
 | 统计质量位置样本 | 每列每类默认 5，最多 20；可设 0，计数仍完整 |
 | 独立矩形预览 | 默认 10 行，最多 50 行/10000 位置；不计算统计 |
 | 数值分析 | 系数最多 1100 位、指数绝对值最多 2200、adjusted 指数绝对值最多 1100；覆盖本次验证的读值范围，不扩展源读取器 |
-| 输出 JSON | 完整读取与分析结果默认 64 MiB（`--max-json-bytes` 1–256 MiB，完整读取可用 `--output` 写文件）；超出时输出失败，收窄预览/选择范围或改用文件输出后重做，不能截取输出继续分析 |
+| 输出 JSON | 本分析入口完整JSON固定64 MiB字节上限，不提供 `--max-json-bytes` 或 `--output`；超出明确失败。可用字节分页、减少展示列/行预览，不为凑预算改变统计口径，不截取输出继续分析 |
 
 原容器、单元格、文字及元数据预算不变。此入口不计算新公式、不联表、不重建透视表、不推断小计，不编辑、导出或写回办公文件；需要这些能力时另行明确交接及验证。
 
 ## 可选字节预算与续读
 
-在原命令添加 `--max-output-bytes 24000`，可对 `--preview` 或分析结果按 UTF-8 字节预算分页；512..67108864，包含真实紧凑 JSON 的全部字段、转义与末尾换行。仅传游标时分析分页预算默认12000；完整读取视图默认字符预算65536，完整 JSON 默认64MiB（`--max-json-bytes` 1–256 MiB）。预算不是token数。
+CLI字节分页另返回 `continuation_entrypoint=analyze_et.py` 和 `next_arguments` 数组，末页数组为null。数组含range/sheet、原query文件参数、header-rows或preview模式、预算与游标，不含输入路径或可执行Shell字符串。将其逐参数安全传给已定位的同一脚本和同一原始输入；保持query内容和source_sha256不变。预算可提高，但不要省略原已提高预算而回落默认12000。缺参数可按仍完整的原页数组补齐续读；scope/数组已丢失则重新读取必要结果，不猜游标。默认内容页、旧单元格视图与本入口游标不能混用，preview与analysis模式也不能交换。宿主截断须先取回完整JSON再续读；partial/退出3保留可靠结果并按缺口继续，不用 `&&` 或 `check=True` 无条件丢弃。每页仍完整解析原文件，无持久化快照。
+
+在原命令添加 `--max-output-bytes 24000`，可对 `--preview` 或分析结果按 UTF-8 字节预算分页；512..67108864，包含真实紧凑 JSON 的全部字段、转义与末尾换行。仅传游标时分析分页预算默认12000；本分析入口非分页完整JSON固定64MiB字节上限，没有字符预算参数。预算不是token数。
 
 新模式保留原 schema、partial、源诊断、统计质量报告和分母，另加 `output_page_revision=1`、`has_more`、`coverage` 与 `next_cursor`。`row_page`/`group_page` 另加 `has_more`、`next_offset`；旧 total/offset/returned/truncated 含义保留。`coverage` 对每条结果流声明是否请求、初始 offset 和覆盖范围；偏移之前的行不属于本次输出覆盖，不能据末页声称已经返回整个结果表。`limit=0` 或 `group_limit=0` 表示不请求对应结果流，仍完整计算统计，不产生该流的续读；独立预览仍要求limit为1..50。
 

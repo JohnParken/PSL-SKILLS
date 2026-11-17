@@ -27,7 +27,7 @@ def _binding(query, is_preview):
     return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
 
 
-def page(source, data, query, *, is_preview=False, max_bytes=12000, cursor=None):
+def page(source, data, query, *, is_preview=False, max_bytes=12000, cursor=None, continuation_args=None):
     """Recalculate the full selection each call, then page rows and groups only.
 
     The original offset is the beginning of requested output coverage. Limits are
@@ -93,6 +93,9 @@ def page(source, data, query, *, is_preview=False, max_bytes=12000, cursor=None)
         if more:
             token = {'source': digest, 'scope': binding, 'revision': PAGE_REVISION, 'offsets': offsets}
             output['next_cursor'] = base64.urlsafe_b64encode(encoded(token).encode('utf-8')).decode('ascii')
+        if continuation_args is not None:
+            output['continuation_entrypoint'] = 'analyze_et.py'
+            output['next_arguments'] = [*continuation_args, '--cursor', output['next_cursor']] if more else None
         if is_preview:
             coordinates = {cell['coordinate'] for row in output['rows'] for cell in row['cells'].values()}
             for merge in output['merges']:

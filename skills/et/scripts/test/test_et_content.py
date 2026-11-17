@@ -155,7 +155,7 @@ class ContentProfileTests(unittest.TestCase):
                 run = subprocess.run(command + list(args), cwd=task, capture_output=True, text=True, check=False)
                 self.assertIn(run.returncode, (0, 1, 3), run.stderr)
                 return json.loads(run.stdout)
-            self.assertEqual(invoke()['schema_version'], 'et_content_v1')
+            self.assertEqual(invoke()['schema_version'], 'et_content_page_v1')
             self.assertEqual(invoke('--profile', 'full')['schema_version'], 'biff8_readonly_v1')
             manifest = invoke('--output', 'content.json')
             self.assertEqual(manifest['output_projection']['kind'], 'stored_table_content')

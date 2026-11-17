@@ -7,7 +7,7 @@
 Follow the path and first-operation rules (`<skill-root>/SKILL.md#执行环境约束与首步自检`)
 before using this reference; internal resources and task data have different path bases.
 
-当前内容/证据区分：常用 CLI 默认 `et_content_v1` 内容投影。本参考涉及的原工作簿 schema、样式、绘图及二进制证据，使用 `--profile full` 获取；省略不表示不存在。Python API、独立审计入口与公开 read/metadata 协议仍默认完整提取，安全、缓存、partial 和覆盖规则不变。
+当前内容/证据区分：常用 CLI 默认 `et_content_page_v1` 有界内容页；显式 `--all-content` 返回完整 `et_content_v1` 内容投影。本参考涉及的原工作簿 schema、样式、绘图及二进制证据，使用 `--profile full` 获取；省略不表示不存在。Python API、独立审计入口与公开 read/metadata 协议仍默认完整提取，安全、缓存、partial 和覆盖规则不变。
 
 ## Contents
 

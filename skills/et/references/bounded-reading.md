@@ -2,6 +2,46 @@
 
 路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
 
+## 目录
+
+- 默认有界内容页
+- 原概况与单元格视图
+- 完整 JSON 的预算、精简与文件输出
+- 宿主大结果与业务分页分开处理
+- 任务分流与累计成本
+- 游标投影版本
+- 可选 UTF-8 字节预算
+- 可选 OOXML 解析期分页（独立接口）
+
+## 默认有界内容页
+
+裸 `et_cli.py run ./input.et` 或 `read_et.py ./input.et` 默认返回 `et_content_page_v1`（projection_revision=1）：100条内容记录，32768字符与32768 UTF-8字节双预算，均含JSON末尾换行。保留 content 投影的源状态、诊断、缺口和缓存风险；`source_schema_version=et_content_v1`，`original_schema_version` 为原解析schema。它不是原工作簿schema，也不等于客户端渲染结果。隐藏表/行的保存值仍包含，源格式未支持的对象仍明确报告。
+
+`sheets` 每页给出全工作簿概况，`stored_cells` 为非压缩格数加显式blank数量；`returned_cell_records` 是完整内容投影中的非压缩格记录数，不是当前页条数；`stored_blank_cells` 为压缩blank数量。概况不含全部值，选择某表也不抹去其他表的存在。`scope.sheet` 决定本次实际分页内容，`total_items/start/returned_items` 的单位是内容记录，不是单元格数。
+
+记录按工作表原序，各表先 `worksheet` 信息，再图表、合并/批注/链接、blank区间及行列排序的单元格。`items[].kind` 为 `worksheet`、`chart_fragment`、`merge`、`comment`、`hyperlink`、`blank_range` 或 `cell`，都保留 sheet 归属。worksheet 的 `content_counts` 给出对象数量，`stored_blank_count` 保留blank总数。blank_range.data是保存显式空白区间，不能推断区间外缺失坐标为空白；cell保留坐标、保存值、类型和缓存状态。
+
+图表按 `sheet + chart_index` 归属，`path` 为图表内容对象内的语义路径（字符串键/整数列表位置），不是XML路径；将各片段的 `data` 放回对应路径可重组内容投影。空数组/对象显式保留，点的原始 `index` 和原字符串值不变，不填补稀疏点、不重算、不跟随外链。单个图表可跨页，不能只见标题或部分系列即称读完。页面只表示内容投影的交付进度，图表提取限制见 `<skill-root>/references/embedded-charts.md`。
+
+```python
+execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et")
+execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --content-page --cursor \"完整next_cursor\"")
+execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --content-page --sheet \"Data\" --page-size 100 --max-output-chars 65536 --max-output-bytes 65536")
+execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" run ./input.et --all-content")
+```
+
+CLI页内 `continuation_entrypoint=read_et.py` 和 `next_arguments` 数组给出完整续读参数，末页数组为null；参数含content-page/profile/sheet/page-size/双预算和cursor，不含输入路径、不拼Shell命令，字段本身计入预算。逐参数安全传给已定位的read_et.py及同一input；使用et_cli.py时保留run前缀。若漏开关/高预算，按原完整数组补齐即可续读；scope或数组已丢失则重取必要结果，不猜参数。三个结果族（内容页、旧单元格视图、预览/分析）的游标不能混用，preview与analysis模式也不可互换。宿主截断JSON先恢复完整页，partial3有可靠数据可继续，不能用&&/check=True无条件截断链路。
+
+手动续读显式带 `--content-page`，保持输入、sheet、page-size、解析参数不变，允许调整预算；page-size为1..10000，字符512..2097152，字节512..67108864。游标绑定输入SHA256、选择条件和独立投影版本，旧视图游标拒绝混用；损坏、文件/选项改变时重新开始，不手改游标。只有完整页连续覆盖且next_cursor=null，才取完所选内容记录；has_more/truncated不改变源partial，末页不消除源遗漏或未选表。
+
+固定的全部工作表概况和全部源诊断也受同一预算约束，不能保证任意输入都能成功返回首屏。单记录或共同概况/诊断放不下时明确 `output_view_error`，不裁字段、不返回不前进的空续页。提高字符与字节预算，或改用 `--output <裸文件名>` 完整文件；不能把失败当空表。完整读取仍受独立JSON/输入/解析预算约束。源ok/partial分别退出0/3，视图失败退出1，参数错误退出2；宿主截断仍另行核对。
+
+**兼容分流：** `--all-content` 恢复完整 `et_content_v1` stdout；`--output` 依旧写完整content（或显式full）。`--profile full`、Python `read/read_bytes` 和公开read/metadata协议不变。为保护旧接口，没有 `--content-page` 的旧 `--summary/--sheet/--page-size/--cursor/--max-output-*` 仍选择下节 `wps_read_view_v1`。完整JSON预算/compact不能隐式取消默认页，应配合 `--all-content`、full或output；新内容页不可同时summary/full/output。
+
+**资源口径：** `parse_mode=full_parse_then_output_page`，先完整解析再分页；每次续读重扫输入，无跨调用缓存，不宣称恒定内存、解析加速或毫秒概况。首屏字节减少不等于总体token节省，小文件包装可能比原内容更大。全量统计直接用区域分析器，不遍历所有页。
+
+## 原概况与单元格视图
+
 大 ET/ETT 只需结构时先概况，逐格任务按需分页。本入口仅处理电子表格，拒绝 WPS 文字内容。以下旧 read_et.py 视图均是**解析后的输出投影**，仍完整解析输入，不降低安全资源上限，不代表减少底层内存或时间。不自动归档、不执行公式、宏或外链。
 
 ```python
@@ -11,7 +51,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 
 新输出使用 `schema_version=wps_read_view_v1`，原schema另存于 `source_schema_version`。保留原status/partial、issues、diagnostics、reading_assessment及已有coverage字段；源partial仍退出3，源ok退出0，失败退出1，参数错误退出2。视图省略的全局与工作表元数据逐项列于 `metadata_omitted`；未返回不表示不存在。样式、合并、超链接、批注、附加区域等完整证据仍需 `--profile full` 完整读取。不得把投影交给只接受原schema的XLSX分析器；本 Skill 区域统计直接使用 analyze_et.py；外部原 schema 消费时保留完整提取 JSON。
 
-概况只返回表名与存储单元格数，不含单元格值，`coverage=overview_only_no_values_or_text`。单元格模式保留 `items[].sheet/cell/data` 的原始值、类型、数字解释、公式及cache_status，不丢精度或把文本编号转数值；只按表原顺序及行列顺序取已存单元格，不填空白。`--sheet` 按精确名称选表，不提供range参数。
+概况只返回表名与存储单元格数（含content压缩的显式blank），不含单元格值，`coverage=overview_only_no_values_or_text`。单元格模式保留 `items[].sheet/cell/data` 的原始值、类型、数字解释、公式及cache_status，不丢精度或把文本编号转数值；只按表原顺序及行列顺序取已存单元格，不填空白。`--sheet` 按精确名称选表，不提供range参数。
 
 需要按明确矩形检查候选表头、空位与合并锚点时，使用 `<skill-root>/scripts/analyze_et.py` 的 `--preview --sheet "数据" --range A1:G8`；先完成主入口自检，输入仍为任务目录相对路径。它返回独立 `et_table_preview_v1`，不自动识别表头、不填值、不计算统计，也不替代完整读取 schema。参数、分页、覆盖和遗漏详见 `<skill-root>/references/table-analysis.md#表头区域预览`；不要为定位小块表头逐页取完整工作表。
 
@@ -19,7 +59,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 
 分页返回total_items/start/returned_items、truncated、next_cursor。truncated只表示当前视图还有后续，不改变源status；概况truncated=false也不表示数据已完整交付。保持文件、所有解析参数、sheet、page-size不变，将完整next_cursor作为正确引用的 `--cursor` 参数续读；允许调整字符预算。只有next_cursor=null才取完所选范围。源字节SHA256或选项变化、游标损坏会拒绝续读；从头重读，不混拼两版数据。游标不是授权或签名。
 
-当前 CLI 默认 `--profile content`：有界视图的 `source_schema_version=et_content_v1`，原解析 schema 和投影遗漏在 `content_profile_projection` 诊断中说明；诊断概况 fallback 仍明确省略详情。保存值与缓存保留，二进制/版式证据不随默认页回传；默认诊断为代码/次数与有界定位，完整诊断或原格证据加 `--profile full`。摘要和逐格分页不返回图表，图表内容须使用不带 --summary/--page-size 的默认内容读取。游标绑定 profile，不能混用或手改，旧游标重新开始。
+当前 CLI 默认 `--profile content`：有界视图的 `source_schema_version=et_content_v1`，原解析 schema 和投影遗漏在 `content_profile_projection` 诊断中说明；诊断概况 fallback 仍明确省略详情。保存值与缓存保留，二进制/版式证据不随默认页回传；默认诊断为代码/次数与有界定位，完整诊断或原格证据加 `--profile full`。摘要和逐格分页不返回图表，图表内容使用默认内容页并以 --content-page 续读，或显式 --all-content。游标绑定 profile，不能混用或手改，旧游标重新开始。
 
 ## 完整 JSON 的预算、精简与文件输出
 
@@ -46,7 +86,7 @@ execute(command="python -I -S -B \"<skill-root>/scripts/read_et.py\" ./input.et 
 
 概况用于确定所需表或内容，分页用于抽查或精确局部核对；页越小，工具调用、游标和共同诊断的累计回传可能越多。若必须取完全部内容，不据首屏较小就宣称整个任务节省token。每次CLI续读仍读取并解析完整输入，再生成输出视图；没有跨调用快照缓存，也没有降低解析资源或安全校验。
 
-本 Skill 指定区域统计直接调用 `<skill-root>/scripts/analyze_et.py`，无需先输出完整 JSON 或拼接分页。仅外部分析器需要原 schema 时，按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）取得同一个原完整提取JSON，交给实际可用的分析器；不拼造原schema、不省略partial/源诊断，不推测相邻技能目录。按需落盘的原结果仍只是本轮受控中间数据，不自动当最终交付物归档。单独概况仅统计输出层单元格数量，不再排序，但格式验证和诊断仍来自完整解析。
+本 Skill 指定区域统计直接调用 `<skill-root>/scripts/analyze_et.py`，无需先输出完整 JSON 或拼接分页。仅外部分析器需要原 schema 时，按电子表格消费（`<skill-root>/references/spreadsheet-consumption.md`）取得同一个原完整提取JSON，交给实际可用的分析器；不拼造原schema、不省略partial/源诊断，不推测相邻技能目录。按需落盘的原结果仍只是本轮受控中间数据，不自动当最终交付物归档。单独概况统计已读保存单元格数量（计入压缩blank），不排序或展开blank，但格式验证和诊断仍来自完整解析。
 
 ## 游标投影版本
 

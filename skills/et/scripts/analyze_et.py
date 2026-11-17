@@ -38,6 +38,18 @@ def load_query(path):
     return result
 
 
+def _continuation_arguments(args, budget):
+    """Keep query/mode and budget as argument values, not executable shell text."""
+    values = ['--sheet=' + args.sheet, '--range', args.cell_range, '--max-output-bytes', str(budget)]
+    if args.preview:
+        values.append('--preview')
+    if args.header_rows is not None:
+        values.extend(['--header-rows', args.header_rows])
+    if args.query is not None:
+        values.append('--query=' + args.query)
+    return values
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
@@ -70,8 +82,9 @@ def main(argv=None):
         if args.max_output_bytes is not None or args.cursor is not None:
             from et_output_page import page
             from wps_read_view import encoded as encode_page
-            result = page(source, data, query, is_preview=args.preview,
-                          max_bytes=12000 if args.max_output_bytes is None else args.max_output_bytes, cursor=args.cursor)
+            budget = 12000 if args.max_output_bytes is None else args.max_output_bytes
+            result = page(source, data, query, is_preview=args.preview, max_bytes=budget, cursor=args.cursor,
+                          continuation_args=_continuation_arguments(args, budget))
             encoded = encode_page(result)
         else:
             result = preview(source, query) if args.preview else analyze(source, query)

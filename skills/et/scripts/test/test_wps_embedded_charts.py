@@ -161,7 +161,8 @@ class EmbeddedChartTests(unittest.TestCase):
             self.assertEqual(process.returncode, 3, process.stdout + process.stderr)
             result = json.loads(process.stdout)
             self.assertEqual(result['status'], 'partial')
-            self.assertEqual(result['sheets'][0]['cells']['A2']['value'], '42')
+            self.assertFalse(result['has_more'])
+            self.assertEqual(next(item['data']['value'] for item in result['items'] if item['kind'] == 'cell' and item['cell'] == 'A2'), '42')
             self.assertEqual(path.read_bytes(), data)
 
 

@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.1514.5688`（默认内容 profile，完整证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261116.2139.1284`（默认有界内容页，完整内容与证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 本 Skill 默认只向 stdout 输出结果；完整读取可用 `--output <裸文件名>` 在任务根目录独占创建 JSON 文件并只在 stdout 返回 `et_output_manifest_v1` 清单。授权交接或另存结果时只指定裸文件名，交付文件固定在任务根目录 `./`；输入与仓库维护目标路径保持原规则。
 
@@ -14,7 +14,7 @@ ET Skill 离线读取 `.et/.ett` 中的工作表、单元格保存值和公式�
 
 - 二进制分支：读取 CFB 容器内的 `Workbook` / `Book` 流（多个候选时选首条通过 BIFF8 globals BOF 校验者并记 issue），在统一容错策略下解析受支持的 BIFF8 记录子集。
 - ZIP 分支：按安全 OPC 关系识别并读取受支持的 OOXML 电子表格子集；未知关系只记录不读取，外部目标不跟随。原生 XLSX 业务任务仍按入口约定交给 XLSX Skill。
-- 输出分支：run 默认 `et_content_v1` 保存表格内容，`--profile full` 才返回原完整提取；默认 64 MiB JSON（`--max-json-bytes` 1–256 MiB），可用 `--compact` 精简、`--output` 写文件清单；有界视图/预览/分析另走投影契约。
+- 输出分支：run 默认 `et_content_page_v1` 有界内容页（100条记录，字符/UTF-8字节均32768），`--content-page --cursor` 续读；`--all-content` 返回完整 `et_content_v1`，`--profile full` 返回原完整提取。仅显式完整 JSON 默认64 MiB，可用 `--output` 写完整文件清单；旧视图/预览/分析契约不变。
 - 分析分支：使用已读取的类型化保存值生成派生 JSON，不修改原表或输入提取对象。
 - 跨表计算后填入另一份 XLSX 模板由 `table-workflow` 编排；ET 只提供原始完整提取结果及诊断；名称发现可使用仅元数据接口。
 
@@ -48,7 +48,10 @@ flowchart TD
     F --> G["wps_ooxml.py：ZIP 与 XML 安全原语"]
     E --> H["wps_diagnostics.py：范围与缺口诊断"]
     F --> H
-    H --> I["原始完整提取 JSON（默认64MiB）"]
+    H --> I["原始完整提取对象"]
+    I --> CP["et_content.py：保存内容投影"]
+    CP --> PG["et_content_page.py：默认32KiB内容页/可续读"]
+    CP --> O2
     I --> O2["wps_result.py：预算/精简/文件清单"]
     I --> J["et_read_view.py：ET 概况降级"]
     J --> JV["wps_read_view.py：公共概况与分页投影"]
@@ -85,6 +88,7 @@ flowchart TD
 | [wps_ooxml_text.py](../../skills/et/scripts/wps_ooxml_text.py)、[wps_ooxml_escape.py](../../skills/et/scripts/wps_ooxml_escape.py) | OOXML 保存文本的 `_xHHHH_` 单次解码、字面保护、编码证据与统一保留文字预算 |
 | [wps_result.py](../../skills/et/scripts/wps_result.py) | 完整 JSON 预算（默认64 MiB/上限256 MiB）、一次自动精简、`--output` 清单写入 |
 | [wps_diagnostics.py](../../skills/et/scripts/wps_diagnostics.py)、[wps_read_view.py](../../skills/et/scripts/wps_read_view.py) | 提取评估、遗漏诊断、绑定来源的有界输出 |
+| [et_content_page.py](../../skills/et/scripts/et_content_page.py) | 默认有界内容页：全表概况、单元格/blank/图表语义碎片与游标；完整解析后投影 |
 | [et_read_view.py](../../skills/et/scripts/et_read_view.py) | ET 概况超预算时显式汇总诊断；组合公共投影，逐格分页不降级诊断 |
 | [analyze_et.py](../../skills/et/scripts/analyze_et.py) | 分析或预览 CLI；查询文件读取和源文件 SHA-256 |
 | [et_output_page.py](../../skills/et/scripts/et_output_page.py) | 预览/分析结果的可选 UTF-8 字节预算分页；保留完整统计和源诊断 |
@@ -105,7 +109,7 @@ flowchart TD
     D --> E{"解析状态"}
     E -->|"失败"| Y["报告错误，不当作空表"]
     E -->|"ok 或 partial"| F{"任务需要"}
-    F -->|"读取或抽查"| G["完整结果或明确的有界投影"]
+    F -->|"读取或抽查"| G["默认有界内容页/按需续读，完整结果须显式请求"]
     F -->|"统计"| H["明确工作表、矩形、表头与缓存政策"]
     H --> I["排除指定行、可选文本填充、筛选、去重、排序"]
     I --> J["全体匹配行统计与分组，再按可选字节预算分页"]
@@ -129,14 +133,14 @@ BIFF8 和 OOXML 完整读取的 `sheets[].views` 按保存窗口报告冻结行�
 ```console
 python -I -S -B "<skill-root>/scripts/et_cli.py" run --check
 python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et
-python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et --max-json-bytes 134217728 --compact
+python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et --profile full --max-json-bytes 134217728 --compact
 python -I -S -B "<skill-root>/scripts/et_cli.py" run ./input.et --output result.json
 python -I -S -B "<skill-root>/scripts/analyze_et.py" --check
 python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D8 --preview
 python -I -S -B "<skill-root>/scripts/analyze_et.py" ./input.et --sheet "数据" --range A1:D100 --header-rows 1 --query ./query.json
 ```
 
-以上 run 默认返回内容投影，`--output result.json` 也不改变 profile。向 XLSX 原 schema 分析器交接须显式 `--profile full`；`--compact` 仅压缩 full 原始证据，content 已是独立投影。公开 `et_cli.py read/metadata` 与分析 API 保持 full，不改成普通 run。
+以上 run 默认返回有界内容页（完整内容用 `--all-content`），`--output result.json` 也不改变 profile。向 XLSX 原 schema 分析器交接须显式 `--profile full`；`--compact` 仅压缩 full 原始证据，content 已是独立投影。公开 `et_cli.py read/metadata` 与分析 API 保持 full，不改成普通 run。
 
 CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各入口契约使用 stderr。它不写回 ET。run 完整读取默认 JSON 上限 64 MiB，可用 `--max-json-bytes`（1–256 MiB）调整、`--compact` 精简；需要完整逐格 JSON 时用 `--output <裸文件名>`，脚本在任务根目录独占创建新文件并在 stdout 只返回 `et_output_manifest_v1` 清单。有界视图与 `--output` 不能同时使用；纯 stdout 任务不建立无用归档清单。
 
@@ -147,6 +151,7 @@ CLI 的读取和分析结果默认写入 stdout；参数错误及诊断仍按各
 | BIFF8 原始完整提取 | `biff8_readonly_v1` | 按 `type` 使用 `value`，保留缓存、覆盖、诊断 |
 | OOXML 原始完整提取 | `ooxml_spreadsheet_readonly_v1` | 同上；不能据读取成功推断完整格式支持 |
 | 完整 JSON 文件输出清单 | `et_output_manifest_v1` | 仅清单（文件名、字节数、SHA-256、状态），完整 JSON 在任务根目录新文件中；不能把清单当数据 |
+| 默认可续读内容页 | `et_content_page_v1` | 完整解析后分页，含图表语义碎片和显式blank；不冒充完整投影或原schema |
 | 概况或单元格分页 | `wps_read_view_v1` | 输出投影；保留原 schema、遗漏字段和源状态，不能代替原始提取 |
 | 矩形物理网格预览 | `et_table_preview_v1` | 含空位、保存值与合并锚点，可选数字显示文本和 OOXML 原公式文本 |
 | 统计结果 | `et_table_analysis_v1` | 派生结果；`rows`、`groups` 是预览，统计覆盖全部匹配行 |
@@ -186,7 +191,7 @@ CFB 文件头 FAT 数量为 0 时，可从 DIFAT 明确列出的 FAT 扇区推�
 
 对受支持的静态内部 `NAME` 容忍隐藏位以及规范要求读取时忽略的保留字段，保留原始记录及 `defined_name_passive_header_fields_ignored` 并返回 `partial`；已识别名称继续校验作用域和重复。不受支持的名称表达式、宏标志名称及不可解释的调色板保留原始记录，覆盖不确定。宏存储只读不加载、宏/图表/对话框子表跳过并附 issue，不执行宏。外部工作簿与加载项的链接记录按原 SupBook/XTI 顺序保留，仅验证并解析内部引用；外部缓存不参与单元格赋值，公式继续使用 Workbook 内未核验的保存缓存。条件格式、数据验证及嵌入图表保留有界语义证据并降级为 partial。
 
-关键预算包括：输入文件 32 MiB、CFB 用户流 32 MiB、CFB 聚合 32 MiB；完整 JSON 默认 64 MiB（`--max-json-bytes` 1–256 MiB）、协议帧 128 MiB、raw 传输 64 MiB；查询 64 KiB；分析矩形最多 200000 个位置、256 列；最多 10000 组；读取视图默认字符预算 65536、`--max-output-bytes` 512..64 MiB。分析行/组预览默认各 100，物理网格预览默认 10 行、最多 50 行及 10000 个位置。完整边界以 [格式边界](../../skills/et/references/format.md#预算与输出)、[表格分析](../../skills/et/references/table-analysis.md) 和源码常量为准。
+关键预算包括：默认内容页100条记录、32768字符和32768 UTF-8字节（均含末尾换行）；输入文件 32 MiB、CFB 用户流 32 MiB、CFB 聚合 32 MiB；完整 JSON 默认 64 MiB（`--max-json-bytes` 1–256 MiB）、协议帧 128 MiB、raw 传输 64 MiB；查询 64 KiB；分析矩形最多 200000 个位置、256 列；最多 10000 组；读取视图默认字符预算 65536、`--max-output-bytes` 512..64 MiB。分析行/组预览默认各 100，物理网格预览默认 10 行、最多 50 行及 10000 个位置。完整边界以 [格式边界](../../skills/et/references/format.md#预算与输出)、[表格分析](../../skills/et/references/table-analysis.md) 和源码常量为准。
 
 [有界读取](../../skills/et/references/bounded-reading.md) 在完整解析后投影，每页都会重新读取和解析输入，不是底层流式读取或缓存快照。游标绑定来源 SHA-256、选项和投影修订；源变化须重启。截断 JSON、单元格或诊断超预算均不能假报完整成功。旧矩形预览采用 offset，须核对各页 `source_sha256` 一致；新增游标模式进一步绑定来源及查询。
 
@@ -366,6 +371,8 @@ BIFF5/7 globals 仍要求 8 字节、0x0500。工作表 BOF 可兼容同为 8 �
 
 ## 2026-11-16 默认内容读取
 
+以下保留该轮历史基线；当前默认已改为 `et_content_page_v1`，完整 `et_content_v1` 用 `--all-content`，见后文“默认有界读取优化”。
+
 常用 `read_et.py`/`et_cli.py run` 默认 `--profile content`：保留文字、类型化保存值、公式缓存风险、数字解释、合并、引用图表内容及诊断摘要/覆盖；省略内部结构、版式、富文本格式及非必要二进制证据。新 schema 为 `et_content_v1`，`source_schema_version` 和 `output_projection` 明示来源与遗漏，不得当原工作簿 schema。`--profile full` 是旧 CLI 与高级证据的迁移入口；Python API、公开 read/metadata、区域分析的原契约不变。文件清单也标记投影。
 
 BIFF 内容路径在解析时免生成一般 opaque payload_hex，Font 暂保留给已有富文本校验；字节/记录预算、未知记录诊断和安全扫描不变。尚未完全跳过绘图/样式解码，OOXML/文本主要为输出减少，不声称全解析内存或运行时间已优化。图片及绘图文字不在内容覆盖保证内。具体实测与限制见 [内容读取验收](../maintenance/et/content-profile-20261116.md)。
@@ -374,8 +381,22 @@ BIFF 内容路径在解析时免生成一般 opaque payload_hex，Font 暂保留
 
 默认 content 的投影 revision 2 去掉逐格样式/来源/偏移和重复 assessment，只保留类型化保存值、数值/日期含义、公式缓存风险、批注/链接、合并及必要定位。诊断以代码/次数和最多两处表格位置汇总；所有完整诊断与内部结构仍由 --profile full 显式获取，不静默改变程序 full 协议。
 
-新增 OOXML 工作表引用链图表的标题、轴标题、系列名、分类和保存点；隐藏对象/孤立部件/外链不读，工作表隐藏状态保留。缺缓存/稀疏点不补值、不重算。BIFF图表、独立图表表、图片内/一般绘图文字和版式仍明确未覆盖。常规内容含所有已读保存单元格，包括隐藏行/表，不冒充屏幕渲染。摘要与单元格分页不附图表，须不分页内容读取。
+新增 OOXML 工作表引用链图表的标题、轴标题、系列名、分类和保存点；隐藏对象/孤立部件/外链不读，工作表隐藏状态保留。缺缓存/稀疏点不补值、不重算。BIFF图表、独立图表表、图片内/一般绘图文字和版式仍明确未覆盖。常规内容含所有已读保存单元格，包括隐藏行/表，不冒充屏幕渲染。该轮旧摘要与单元格分页不附图表；当前默认内容页及 `--content-page` 可续读图表，完整内容使用 `--all-content`。
 
 本轮证据与平台边界见 [内容与图表验收](../maintenance/et/visible-content-20261116.md)。
 
 默认内容中的无公式纯 blank 格以 `stored_blank_cells.count/ranges` 无损合并坐标区间，保留已读显式空白与未读/缺失的区别；非空保存值、空文本、缺缓存公式和合并范围不改。不能把区间外未返回坐标推成空白；如需逐格原结构使用 full。
+
+## 2026-11-16 默认有界读取优化
+
+裸 `run` 首屏改为 `et_content_page_v1`，`--content-page` 显式续读/选表/调整页长及字符与字节预算。旧视图参数不带该开关仍保留 `wps_read_view_v1`；`--summary` 的存储格数计入压缩显式blank。完整内容用 `--all-content` 或 `--output`，full/Python/read/metadata不变。历史默认内容验收记录保留其当时基线，不作为本次分页验收结果。
+
+默认页含全部表概况，所选内容按表序分页；单元格、blank区间、合并、批注/链接、图表标题/系列/分类/保存点可续读。图表片段以同表chart_index及语义path归属重组，空容器和稀疏点索引保留。source partial和缺口不由页面结束消除；隐藏表/行仍在保存内容中，不等同客户端视觉范围。单记录或共同诊断超预算明确失败，可提高预算或写完整文件，不静默裁值。
+
+所有默认页仍完整解析输入，每页重扫，无跨调用缓存；此优化限制输出与模型首屏加载，不证明解析内存或耗时下降，不将概况/预览称为毫秒能力。运行参数、迁移和覆盖核对见 [有界输出](../../skills/et/references/bounded-reading.md#默认有界内容页)。实际平台、公开样本、性能和未验范围见 [默认有界读取验收](../maintenance/et/bounded-default-20261116.md)。
+
+## 2026-11-16 连续执行与续读参数
+
+默认内容页和分析/预览字节分页CLI新增continuation_entrypoint与next_arguments数组，在当前预算内返回完整续读参数，不含输入路径、不拼Shell，末页null。范围明确直接调用，不强制先概况后预览；确需选表/定表头时三步都读取同一原文件并核对source_sha256，不将投影传给分析。表头是物理行号/范围，不是数量。partial3可靠结果继续保留，宿主截断先恢复完整页；无持久化状态，不猜游标。
+
+本轮独立于上轮首屏性能测量，真实公开CLI链路与未验边界见 [连续执行记录](../maintenance/et/read-chain-20261116.md)。

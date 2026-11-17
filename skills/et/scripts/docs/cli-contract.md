@@ -6,7 +6,7 @@
 
 ## 入口
 
-标准读取与外部编排共用 `<skill-root>/scripts/et_cli.py`；实际解析仍由原read_et实现，旧read_et API保留；run/read_et.py CLI 默认改为内容 profile，原输出显式使用 --profile full。先按主入口完成环境自检；原生XLSX交给对应技能。
+标准读取与外部编排共用 `<skill-root>/scripts/et_cli.py`；实际解析仍由原read_et实现，旧read_et API保留；run/read_et.py CLI 默认改为有界内容页，完整内容显式使用 --all-content，原输出显式使用 --profile full。先按主入口完成环境自检；原生XLSX交给对应技能。
 
 ```python
 execute(command="python -I -S -B \"<skill-root>/scripts/et_cli.py\" capabilities")
@@ -18,9 +18,13 @@ capabilities为普通JSON：skill=et、interface_version=1、operations=[read,me
 
 ## 内容 profile 与迁移
 
-`run`/`read_et.py` 默认 `--profile content`，返回 `et_content_v1` 和 `source_schema_version`，不冒充原工作簿 schema。投影 revision 2 保留保存值/类型/缓存风险、数字解释、合并、批注/链接文字、OOXML工作表引用图表的标题/系列/保存点和源覆盖。诊断按代码/次数及最多两处表格位置汇总，full 保留原始诊断；内部样式/偏移/重复assessment省略。图表缓存不重算、不填缺点，不读取隐藏图表对象或孤立部件；隐藏工作表状态仍返回。BIFF图表语义、独立图表表、图片/一般绘图文字未提取，见 content_scope。完整证据和旧 CLI 消费者加 `--profile full`；程序 API 与下述 read/metadata 协议仍默认 full，不改变 v1 提供方契约。
+`run`/`read_et.py` 默认 `--profile content`，返回 `et_content_page_v1` 有界页；显式 `--all-content` 或 `--output` 才返回/写入完整 `et_content_v1` 和 `source_schema_version`，不冒充原工作簿 schema。投影 revision 2 保留保存值/类型/缓存风险、数字解释、合并、批注/链接文字、OOXML工作表引用图表的标题/系列/保存点和源覆盖。诊断按代码/次数及最多两处表格位置汇总，full 保留原始诊断；内部样式/偏移/重复assessment省略。图表缓存不重算、不填缺点，不读取隐藏图表对象或孤立部件；隐藏工作表状态仍返回。BIFF图表语义、独立图表表、图片/一般绘图文字未提取，见 content_scope。完整证据和旧 CLI 消费者加 `--profile full`；程序 API 与下述 read/metadata 协议仍默认 full，不改变 v1 提供方契约。
 
-BIFF content 在解析阶段不生成一般元数据 payload_hex，Font 仍供内部富文本校验；预算按原字节计算，安全扫描与诊断不变。它不是完全省去绘图/样式解码；OOXML/文本主要是输出投影，未声明解析峰值内存改进。内容投影不可交给原 schema 消费方。`--compact` 对 content 无额外改变，full 保留旧精简/预算降级；content 超预算直接失败。`--output` 清单附 `output_projection`，文件可含 content 或 full，按文件 schema 判读。
+BIFF content 在解析阶段不生成一般元数据 payload_hex，Font 仍供内部富文本校验；预算按原字节计算，安全扫描与诊断不变。它不是完全省去绘图/样式解码；OOXML/文本主要是输出投影，未声明解析峰值内存改进。内容投影不可交给原 schema 消费方。`--all-content --compact` 对 content 无额外改变，full 保留旧精简/预算降级；content 超预算直接失败。`--output` 清单附 `output_projection`，文件可含 content 或 full，按文件 schema 判读。
+
+## CLI 连续执行提示
+
+默认内容页及analyze_et的字节分页CLI在原schema上新增 `continuation_entrypoint` 和 `next_arguments` 数组；原Python API/非分页不变。数组完整保留本次模式、sheet/range/query/header-rows、页长及预算等适用参数，附原next_cursor，末页为null；字段在序列化预算内。数组不是Shell命令且不含input/source路径，必须安全逐参数传给已确认入口及同一输入；保留 `--sheet=VALUE` / `--query=VALUE` 单元素形式，不能拆开以--开头的合法值。优先argv；宿主只收命令字符串时逐元素引用，禁止空格join后执行，et_cli另保留run前缀。查询内容和源SHA不得变化，预算可提高但不要遗漏而回落默认。无持久化会话/快照；上下文缺失时重读必要信息，不猜scope或游标。三类游标不能混用，预览和分析模式也不能混用。可靠partial3应保留JSON和缺口，不用&&/check=True机械中止；未知退出/宿主截断须先恢复完整可信结果。
 
 ## read 输入输出
 
@@ -51,7 +55,7 @@ full profile 的 run 入口默认 JSON 上限 64 MiB；超预算时先自动精�
 - `--output <裸文件名>`：只有 run（read_et.py）提供；独占创建任务根目录新文件，禁止目录、绝对路径、父目录和已存在文件，stdout 只返回 `et_output_manifest_v1`（status、partial、source_schema_version、cell_value_coverage、omissions_affect_cell_values、compacted、output.{file,bytes,sha256}、note），不返回完整 JSON。与有界视图参数不能同时使用。
 - 超预算且未使用 `--output` 时返回明确的 `resource_limit` 失败，不静默截断。
 
-有界视图另见 `bounded-reading.md`：默认字符预算 65536、`--max-output-bytes` 512..64 MiB、游标绑定来源与选项。
+默认有界内容页另见 `<skill-root>/references/bounded-reading.md#默认有界内容页`：100条记录，字符和UTF-8字节默认均32768。显式 `--content-page` 允许调节 sheet/page-size/cursor/预算；不带该开关的旧视图参数仍选 `wps_read_view_v1`（默认字符预算65536）。两种游标不混用。完整 JSON 的预算/compact 参数须配合 `--all-content`、`--profile full` 或 `--output`，不能用它们隐式取消默认分页。
 
 ## 报文编码
 

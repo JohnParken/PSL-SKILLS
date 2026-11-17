@@ -52,7 +52,9 @@ class UnknownDrawingTests(unittest.TestCase):
                                       str(Path(__file__).resolve().parents[1] / 'read_et.py'), 'input.et'],
                                      cwd=directory, capture_output=True, text=True, check=False)
             self.assertEqual(process.returncode, 3)
-            self.assertEqual(json.loads(process.stdout)['sheets'][0]['cells']['A2']['value'], '42')
+            page = json.loads(process.stdout)
+            self.assertFalse(page['has_more'])
+            self.assertEqual(next(item['data']['value'] for item in page['items'] if item['kind'] == 'cell' and item['cell'] == 'A2'), '42')
         with patch('wps_biff8.MAX_METADATA_BYTES', 10):
             result = read_bytes(data)
             self.assertEqual(result['status'], 'partial')

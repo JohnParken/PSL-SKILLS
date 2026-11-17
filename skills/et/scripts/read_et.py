@@ -269,6 +269,21 @@ def _verify_exported_json(name, facts):
         raise ValueError('Published JSON changed before final delivery')
 
 
+def _continuation_arguments(args):
+    """CLI arguments only, never a shell command or an input/source path."""
+    from et_content_page import DEFAULT_PAGE_SIZE, DEFAULT_OUTPUT_BUDGET
+    values = ['--content-page', '--page-size', str(DEFAULT_PAGE_SIZE if args.page_size is None else args.page_size),
+              '--max-output-chars', str(DEFAULT_OUTPUT_BUDGET if args.max_output_chars is None else args.max_output_chars),
+              '--max-output-bytes', str(args.max_output_bytes), '--profile', 'content', '--compatibility', args.compatibility]
+    if args.sheet is not None:
+        values.append('--sheet=' + args.sheet)
+    if args.chart_policy is not None:
+        values.extend(['--chart-policy', args.chart_policy])
+    if args.salvage_unknown_metadata:
+        values.append('--salvage-unknown-metadata')
+    return values
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?')
@@ -280,7 +295,9 @@ def main():
     parser.add_argument('--chart-policy', choices=('reject', 'opaque'), default=None,
                         help='Deprecated no-op; charts are always retained as bounded opaque bytes')
     parser.add_argument('--profile', choices=('content', 'full'),
-                        help='Default: content (stored tables and referenced OOXML chart caches); full restores original diagnostics/evidence')
+                        help='Default: bounded content page; full restores original diagnostics/evidence')
+    parser.add_argument('--content-page', action='store_true', help='Page all content, including charts and explicit blanks; use for default-page continuation')
+    parser.add_argument('--all-content', action='store_true', help='Explicit complete et_content_v1 stdout (not bounded pages)')
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--include-related', action='store_true')
     parser.add_argument('--summary', action='store_true')
@@ -301,7 +318,8 @@ def main():
     if args.check:
         if any((args.summary, args.sheet is not None, args.page_size is not None,
                 args.cursor is not None, args.max_output_chars is not None, args.max_output_bytes is not None,
-                args.max_json_bytes is not None, args.compact, args.output is not None, args.delivery, args.profile is not None)):
+                args.max_json_bytes is not None, args.compact, args.output is not None, args.delivery, args.profile is not None,
+                args.content_page, args.all_content)):
             parser.error('--check does not accept read/output options')
         return check_environment()
 
@@ -316,6 +334,13 @@ def main():
 
     view_requested = any((args.summary, args.sheet is not None, args.page_size is not None,
                          args.cursor is not None, args.max_output_chars is not None, args.max_output_bytes is not None))
+    if args.all_content and (view_requested or args.content_page or args.profile == 'full' or args.output):
+        parser.error('--all-content cannot be combined with views, full profile or file output')
+    if args.content_page and (args.summary or args.profile == 'full' or args.output):
+        parser.error('--content-page cannot be combined with summary, full profile or file output')
+    content_page = args.content_page or (not view_requested and not args.all_content and not args.output and args.profile != 'full')
+    if content_page and (args.compact or args.max_json_bytes is not None):
+        parser.error('Content pages use --max-output-chars/--max-output-bytes with --content-page; use --all-content for complete JSON options')
     if view_requested and (args.format != 'json' or args.include_related):
         parser.error('Read views require JSON and main content only; use full reading for related stories')
     if view_requested and args.output:
@@ -328,15 +353,24 @@ def main():
     options = dict(profile=args.profile or 'content', compatibility=args.compatibility, chart_policy=args.chart_policy,
                    salvage_unknown_metadata=args.salvage_unknown_metadata)
 
-    if view_requested:
+    if view_requested or content_page:
         from et_read_view import project
+        if content_page:
+            from et_content_page import project as project_content_page, DEFAULT_PAGE_SIZE, DEFAULT_OUTPUT_BUDGET
+            args.max_output_bytes = DEFAULT_OUTPUT_BUDGET if args.max_output_bytes is None else args.max_output_bytes
         try:
             data = read_input(args.input)
             result = read_bytes(data, source=str(args.input), **options)
-            result = project(result, data, options, summary=args.summary, sheet=args.sheet,
-                             page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
-                             max_chars=65536 if args.max_output_chars is None else args.max_output_chars,
-                             max_bytes=args.max_output_bytes)
+            if content_page:
+                result = project_content_page(result, data, options, sheet=args.sheet,
+                                              page_size=DEFAULT_PAGE_SIZE if args.page_size is None else args.page_size, cursor=args.cursor,
+                                              max_chars=DEFAULT_OUTPUT_BUDGET if args.max_output_chars is None else args.max_output_chars,
+                                              max_bytes=args.max_output_bytes, continuation_args=_continuation_arguments(args))
+            else:
+                result = project(result, data, options, summary=args.summary, sheet=args.sheet,
+                                 page_size=200 if args.page_size is None else args.page_size, cursor=args.cursor,
+                                 max_chars=65536 if args.max_output_chars is None else args.max_output_chars,
+                                 max_bytes=args.max_output_bytes)
         except (ParseError, OSError) as exc:
             result = failure(getattr(exc, 'status', 'io_error'),
                              getattr(exc, 'location', {'stage': 'input'}), str(exc))

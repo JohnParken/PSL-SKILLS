@@ -51,7 +51,7 @@ BIFF8 单元格值文字上限 8Mi UTF-16 单位；自定义格式、批注和�
 
 BIFF 记录 100000、单元格 200000、工作表 1024、合并 65536、共享字符串 200000、XF 4096、原始元数据 8MiB/65536 条、结构化 Row 65536、结构化字节 8MiB、诊断 1000 条（超出记 `issues_truncated`）、重复单元格文字及格式文本累计 8Mi UTF-16 单位；公式组 1024、图表 128、Continue 链 256。日期保留原始数值及 date_system/XF/format，另有直接格式白名单 numeric_interpretation；复杂格式 unknown。公式 tokens 及已有缓存分开保留，未重算且可能过时；共享/数组支持与拒绝条件统一见公式组边界 (`<skill-root>/references/formula-groups.md`)，字符串续段见富文本续段 (`<skill-root>/references/biff-rich-continuation.md`)。其他记录范围详见 BIFF 参考 (`<skill-root>/references/biff8-readonly.md`)。
 
-完整 JSON 默认上限 64MiB；`--max-json-bytes` 接受 1MiB 到 256MiB，超预算时先自动精简一次（去重原始字节证据，保存值/类型/缓存/合并/诊断保留）再决定成功或明确失败。`--compact` 主动选择精简输出；`--output <裸文件名>` 将完整 JSON 流式写入任务根目录的新文件，stdout 仅返回 `et_output_manifest_v1`（文件名、字节数、SHA-256、状态），从不输出截断 JSON。读取视图默认 `max-output-chars=65536`（512 到 2097152），`--max-output-bytes` 接受 512 到 64MiB。
+默认内容页为100记录、32768字符与32768 UTF-8字节（均含换行），用 `--content-page` 续读；仍完整解析输入，不保证解析资源下降。显式 `--all-content` 或 `--profile full` 的完整 JSON 默认上限 64MiB；`--max-json-bytes` 接受 1MiB 到 256MiB，超预算时先自动精简一次（去重原始字节证据，保存值/类型/缓存/合并/诊断保留）再决定成功或明确失败。`--compact` 主动选择精简输出；`--output <裸文件名>` 将完整 JSON 流式写入任务根目录的新文件，stdout 仅返回 `et_output_manifest_v1`（文件名、字节数、SHA-256、状态），从不输出截断 JSON。读取视图默认 `max-output-chars=65536`（512 到 2097152），`--max-output-bytes` 接受 512 到 64MiB。
 
 ## 数字解释与保存可见性
 
