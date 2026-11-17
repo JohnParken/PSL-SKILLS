@@ -5,7 +5,7 @@
 在已确认的任务目录运行 `comments`，输入为 DOCX 或 DOTX。写入只发布同扩展名的副本。通过 stdin 提交单个 UTF-8 JSON 对象；按 `<skill-root>/references/writing.md` 核对输出名、归档及恢复状态。
 
 ```sh
-python -I -B "<skill-root>/scripts/tl_docx.py" comments "报告.docx" <<'JSON'
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" comments "报告.docx" <<'JSON'
 {"action":"list"}
 JSON
 ```
@@ -20,7 +20,7 @@ JSON
 | `delete` | `id`、`expected_text`。删除单项及其对应锚点，父批注有回复时先逐条处理回复。 |
 
 ```sh
-python -I -B "<skill-root>/scripts/tl_docx.py" comments "报告.docx" "报告批注.docx" <<'JSON'
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" comments "报告.docx" "报告批注.docx" <<'JSON'
 {"action":"add","paragraph_index":0,"expected_text":"需核实费用上限","anchor_text":"需核实费用上限","text":"请补充依据。","author":"复核人"}
 JSON
 ```

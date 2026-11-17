@@ -69,7 +69,7 @@ def fingerprint(info):
     return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
 
 
-def read_task(root, value, limit=MAX_INPUT):
+def read_task(root, value, limit=MAX_INPUT, *, with_identity=False):
     """Read one bounded regular file without following links or blocking on FIFOs."""
     parts = path_parts(value)
     folder = os.dup(root)
@@ -87,6 +87,6 @@ def read_task(root, value, limit=MAX_INPUT):
             after = os.fstat(stream.fileno())
             if len(data) > limit or fingerprint(before) != fingerprint(after) or len(data) != before.st_size:
                 raise ValueError('Input changed during the read or exceeds the size limit')
-            return data
+            return (data, fingerprint(after)) if with_identity else data
     finally:
         os.close(folder)

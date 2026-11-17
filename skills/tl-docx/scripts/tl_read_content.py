@@ -12,7 +12,6 @@ def content_records(records, *, details=False):
     Identity is a source part/path or a specific table cell, never text equality
     across unrelated locations. All projection happens before pagination.
     """
-    records = deepcopy(records)
     containers = {(item.get('part'), item.get('path')): item for item in records if item['type'] in ('paragraph', 'textbox')}
     cells = {}
     paragraphs = {}
@@ -26,19 +25,11 @@ def content_records(records, *, details=False):
             paragraphs.setdefault(key, []).append(item)
     nested_cells = {(item.get('part'), item.get('parent_table_index'), item.get('parent_row'), item.get('parent_column'))
                     for item in records if item['type'] == 'table' and 'parent_table_index' in item}
-    for key in nested_cells:
-        direct = paragraphs.get(key, [])
-        if key in cells and direct:
-            prefix = direct[0].get('path', '').rsplit('/', 1)[0] + '/'
-            descendants = [item.get('text', '') for item in records if item['type'] == 'paragraph'
-                           and item.get('part') == key[0] and item.get('path', '').startswith(prefix)]
-            if cells[key].get('text', '') == '\n'.join(descendants):
-                cells[key]['text'] = ''
-                cells[key]['content_in_following_records'] = True
+    following_cells = _following_cells(records, nested_cells, cells, paragraphs)
     duplicate_paragraphs = set()
     for key, values in paragraphs.items():
         cell = cells.get(key)
-        if cell is None or cell.get('content_in_following_records'):
+        if cell is None or id(cell) in following_cells or cell.get('content_in_following_records'):
             continue
         texts = [item.get('text', '') for item in values]
         if cell.get('text', '') in (''.join(texts), '\n'.join(texts)):
@@ -63,12 +54,47 @@ def content_records(records, *, details=False):
         if duplicate:
             continue
         projected = deepcopy(item)
-        if kind == 'image' and details:
-            projected['notice'] = 'Image present; text inside the image has not been read by OCR.'
         if not details:
             projected = visible_record(projected)
+        if kind == 'image' and details:
+            projected['notice'] = 'Image present; text inside the image has not been read by OCR.'
+        if kind == 'table_row':
+            for original, cell in zip(item.get('cells', []), projected.get('cells', [])):
+                if id(original) in following_cells:
+                    cell['text'] = ''
+                    cell['content_in_following_records'] = True
         result.append(projected)
     return result
+
+
+def _following_cells(records, nested_cells, cells, paragraphs):
+    """Index only requested nested-cell prefixes, retaining source record order."""
+    targets = {}
+    for key in nested_cells:
+        direct = paragraphs.get(key, [])
+        if key in cells and direct:
+            prefix = direct[0].get('path', '').rsplit('/', 1)[0] + '/'
+            targets.setdefault((key[0], prefix), []).append(cells[key])
+    if not targets:
+        return set()
+    descendants = {key: [] for key in targets}
+    for item in records:
+        if item['type'] != 'paragraph':
+            continue
+        path = item.get('path', '')
+        boundary = path.find('/')
+        while boundary >= 0:
+            values = descendants.get((item.get('part'), path[:boundary + 1]))
+            if values is not None:
+                values.append(item.get('text', ''))
+            boundary = path.find('/', boundary + 1)
+    following = set()
+    for key, target_cells in targets.items():
+        combined = '\n'.join(descendants[key])
+        for cell in target_cells:
+            if cell.get('text', '') == combined:
+                following.add(id(cell))
+    return following
 
 
 def diagnostic_summary(issues):
@@ -92,7 +118,7 @@ INTERNAL_KEYS = LAYOUT_KEYS | {
 
 
 def visible_record(item):
-    """Keep stored visible values and meaningful context, without OPC internals."""
+    """Prune an already-owned record without allocating another container tree."""
     kind = item.get('type')
     for key in INTERNAL_KEYS:
         item.pop(key, None)
@@ -144,7 +170,21 @@ def visible_record(item):
                 display.pop('text', None)
         if not item.get('display'):
             item.pop('display', None)
-    return visible_fields(item)
+    return _strip_visible_fields(item)
+
+
+def _strip_visible_fields(value):
+    """Remove internal keys in owned containers, preserving record-specific order."""
+    if isinstance(value, list):
+        for item in value:
+            _strip_visible_fields(item)
+    elif isinstance(value, dict):
+        for key in list(value):
+            if key in INTERNAL_KEYS:
+                del value[key]
+            else:
+                _strip_visible_fields(value[key])
+    return value
 
 
 def visible_fields(value):

@@ -3,6 +3,7 @@
 from collections import Counter
 from hashlib import sha256
 
+from tl_resource_limits import check_count, validate_report
 from tl_read_numbering import NumberingReader
 from tl_read_parts import PartCatalog, STORIES, section_references
 from tl_read_styles import read_styles, heading_outline
@@ -57,14 +58,26 @@ def _qname(node):
     return prefix + ":" + local
 
 
-def _path(node):
+def _path(node, sibling_indexes=None):
+    """Return exact QName locations; optional indexes require an immutable tree."""
     parts = []
     current = node
     while current is not None:
         if not isinstance(current.tag, str):
             return "/"
         parent = current.getparent()
-        index = 1 + sum(1 for _ in current.itersiblings(current.tag, preceding=True)) if parent is not None else 1
+        if parent is None:
+            index = 1
+        elif sibling_indexes is None:
+            index = 1 + sum(1 for _ in current.itersiblings(current.tag, preceding=True))
+        else:
+            if current not in sibling_indexes:
+                counts = Counter()
+                for child in parent:
+                    if isinstance(child.tag, str):
+                        counts[child.tag] += 1
+                        sibling_indexes[child] = counts[child.tag]
+            index = sibling_indexes[current]
         parts.append(_qname(current) + "[" + str(index) + "]")
         current = parent
     return "/" + "/".join(reversed(parts))
@@ -90,6 +103,9 @@ class ReportReader:
     """Build bounded, location-addressed records using the package interface."""
 
     def __init__(self, package, revisions=None, include_related=True):
+        # Trees are immutable during a read. Strong element keys avoid id reuse;
+        # scan original siblings, not revision/AlternateContent-selected nodes.
+        self._path_indexes = {}
         self.package = package
         self.revisions = revisions
         self.include_related = include_related
@@ -116,6 +132,7 @@ class ReportReader:
         self.catalog = PartCatalog(package, self._issue)
 
     def _issue(self, code, part, path=None, **identifiers):
+        check_count("report_issues", len(self.issues) + 1)
         issue = {"code": code, "part": part}
         if path is not None:
             issue["path"] = path
@@ -123,13 +140,14 @@ class ReportReader:
         self.issues.append(issue)
 
     def _path(self, node):
-        return _path(node)
+        return _path(node, self._path_indexes)
 
     def _record(self, record_type, part, node, **fields):
+        check_count("report_records", len(self.records) + 1)
         record = {
             "type": record_type,
             "part": part,
-            "path": _path(node) if not isinstance(node, str) else node,
+            "path": self._path(node) if not isinstance(node, str) else node,
         }
         record.update(fields)
         self.records.append(record)
@@ -155,7 +173,7 @@ class ReportReader:
                     return branch
         if fallback is not None:
             return fallback
-        self._issue("alternate_content_branch_unavailable", part, _path(node))
+        self._issue("alternate_content_branch_unavailable", part, self._path(node))
         return None
 
     def _text(self, node, deleted_only=False):
@@ -178,13 +196,13 @@ class ReportReader:
                         "kind": "simple",
                         "instruction": child.get("{" + W_NS + "}instr", ""),
                         "text": self._text(child),
-                        "path": _path(child),
+                        "path": self._path(child),
                     })
                     continue
                 if _is_word(child, "fldChar"):
                     field_type = child.get("{" + W_NS + "}fldCharType")
                     if field_type == "begin":
-                        stack.append({"instruction": [], "result": [], "phase": "instruction", "path": _path(child)})
+                        stack.append({"instruction": [], "result": [], "phase": "instruction", "path": self._path(child)})
                     elif field_type == "separate" and stack:
                         stack[-1]["phase"] = "result"
                     elif field_type == "end" and stack:
@@ -278,7 +296,7 @@ class ReportReader:
         if outline is None:
             outline, issue = heading_outline(self.styles, style_id)
             if issue:
-                self._issue(issue, self.current_part, _path(paragraph))
+                self._issue(issue, self.current_part, self._path(paragraph))
         if outline is not None:
             info["outline_level"] = outline
             try:
@@ -286,13 +304,13 @@ class ReportReader:
                 if 1 <= heading_level <= 9:
                     info["heading_level"] = heading_level
             except ValueError:
-                self._issue("paragraph_outline_level_invalid", self.current_part, _path(paragraph))
+                self._issue("paragraph_outline_level_invalid", self.current_part, self._path(paragraph))
 
         numbering, issues = self.numbering_reader.paragraph_info(paragraph, self.current_part)
         if numbering is not None:
             info['numbering'] = numbering
         for code in issues:
-            self._issue(code, self.current_part, _path(paragraph))
+            self._issue(code, self.current_part, self._path(paragraph))
         return info
 
     def _paragraph(self, paragraph, part, context):
@@ -335,11 +353,11 @@ class ReportReader:
                 elif _is_word(child, "sectPr"):
                     self._section(child, part)
                 elif _is_word(child, "altChunk"):
-                    self._issue("alternate_document_content_not_read", part, _path(child))
+                    self._issue("alternate_document_content_not_read", part, self._path(child))
                 elif _is_word(child, "object") or _is_word(child, "control"):
-                    self._issue("embedded_object_not_decoded", part, _path(child))
+                    self._issue("embedded_object_not_decoded", part, self._path(child))
                 elif _is_word(child, "sym"):
-                    self._issue("symbol_glyph_mapping_not_resolved", part, _path(child))
+                    self._issue("symbol_glyph_mapping_not_resolved", part, self._path(child))
                 else:
                     visit(child)
 
@@ -349,7 +367,7 @@ class ReportReader:
         from tl_read_math import math_expression  # pylint: disable=import-outside-toplevel
         result = math_expression(node)
         for issue in result['issues']:
-            self._issue(issue['code'], self.current_part, _path(node), element=issue.get('element'))
+            self._issue(issue['code'], self.current_part, self._path(node), element=issue.get('element'))
         return result['text']
 
     def _hyperlink(self, node, part, context):
@@ -367,7 +385,7 @@ class ReportReader:
         fields.update(context)
         self._record("hyperlink", part, node, **fields)
         if relation_id and relation is None:
-            self._issue("hyperlink_relationship_unavailable", part, _path(node), relationship_id=relation_id)
+            self._issue("hyperlink_relationship_unavailable", part, self._path(node), relationship_id=relation_id)
 
     def _relation(self, part, relation_id, expected):
         try:
@@ -410,14 +428,14 @@ class ReportReader:
             for child in self._selected_children(current, part):
                 namespace, local = _name(child.tag)
                 if (namespace == WPS_NS and local == 'wsp') or (namespace == V_NS and local in {'shape', 'rect', 'oval', 'line', 'polyline', 'roundrect', 'arc', 'curve'}):
-                    self._issue('drawing_geometry_not_rendered', part, _path(child),
+                    self._issue('drawing_geometry_not_rendered', part, self._path(child),
                                 available_content='supported_text_and_image_references_only')
                 if local == 'relIds' and namespace == 'http://schemas.openxmlformats.org/drawingml/2006/diagram':
-                    self._issue('smartart_content_not_decoded', part, _path(child))
+                    self._issue('smartart_content_not_decoded', part, self._path(child))
                 if _is_ns(child, A_NS, 'graphicData'):
                     uri = child.get('uri')
                     if uri and uri not in (C_NS, PIC_NS, WPS_NS, WPG_NS):
-                        self._issue('drawing_graphic_data_unsupported', part, _path(child), namespace=uri)
+                        self._issue('drawing_graphic_data_unsupported', part, self._path(child), namespace=uri)
                 if _is_word(child, "txbxContent"):
                     self._textbox(child, part, context)
                     continue
@@ -434,7 +452,7 @@ class ReportReader:
 
         visit(node)
         if len(self.records) == before_records and len(self.issues) == before_issues:
-            self._issue('drawing_content_not_read', part, _path(node))
+            self._issue('drawing_content_not_read', part, self._path(node))
 
     def _textbox(self, node, part, context):
         paragraphs = self._find_wrapped(node, "p", stop={"tbl", "txbxContent"})
@@ -491,7 +509,7 @@ class ReportReader:
             self.image_targets.add(resource_part)
         elif relation is not None and not external:
             self._issue(
-                "image_part_missing", part, _path(node), relationship_id=relationship_id,
+                "image_part_missing", part, self._path(node), relationship_id=relationship_id,
                 target=target,
             )
         fields = {
@@ -509,7 +527,7 @@ class ReportReader:
             fields["resource_sha256"] = self.image_hashes[resource_part]
         self._record("image", part, node, **fields)
         if relationship_id is None or relationship_id == "" or relation is None:
-            self._issue("image_relationship_unavailable", part, _path(node), relationship_id=relationship_id)
+            self._issue("image_relationship_unavailable", part, self._path(node), relationship_id=relationship_id)
 
     def _chart(self, node, part, context):
         relationship_id = node.get("{" + R_NS + "}id")
@@ -544,7 +562,7 @@ class ReportReader:
                 chart_data["issues"].append("chart_workbook_relationship_unavailable")
             elif not workbook.get("type", "").endswith(("/package", "/oleObject")):
                 self._issue(
-                    "relationship_type_unexpected", target, _path(node),
+                    "relationship_type_unexpected", target, self._path(node),
                     relationship_id=external_id,
                     expected=["package", "oleObject"],
                     actual=workbook.get("type"),
@@ -571,7 +589,7 @@ class ReportReader:
         )
         chart_record.update(context)
         for code in chart_record["issues"]:
-            self._issue(code, target or part, _path(node), chart_index=chart_index)
+            self._issue(code, target or part, self._path(node), chart_index=chart_index)
         for series in chart_data.get("series", []):
             self._chart_series(chart_index, target or part, series)
 
@@ -669,7 +687,7 @@ class ReportReader:
                 before = 0 if before_node is None else int(before_node.get("{" + W_NS + "}val", "0"), 10)
             except ValueError:
                 before = 0
-                self._issue("table_grid_before_invalid", part, _path(row), table_index=table_index)
+                self._issue("table_grid_before_invalid", part, self._path(row), table_index=table_index)
             column = max(0, before) + 1
             cells = self._find_wrapped(row, "tc", stop={"tbl", "tr"})
             cell_records = []
@@ -687,7 +705,7 @@ class ReportReader:
                     self.vmerge_continuations += 1
                     if origin is None:
                         self._issue(
-                            "vertical_merge_origin_unavailable", part, _path(cell),
+                            "vertical_merge_origin_unavailable", part, self._path(cell),
                             table_index=table_index, row=row_index, column=column,
                         )
                     else:
@@ -805,7 +823,7 @@ class ReportReader:
             elif _name(child.tag)[1] in WRAPPERS:
                 self._process_blocks(child, part, context)
             elif _is_word(child, "altChunk"):
-                self._issue("alternate_document_content_not_read", part, _path(child))
+                self._issue("alternate_document_content_not_read", part, self._path(child))
             elif _is_word(child, "footnote") or _is_word(child, "endnote") or _is_word(child, "comment"):
                 identifier = child.get("{" + W_NS + "}id")
                 note_type = child.get("{" + W_NS + "}type")
@@ -831,13 +849,13 @@ class ReportReader:
         if kind == "main":
             body = next((item for item in _children(root) if _is_word(item, "body")), None)
             if body is None:
-                self._issue("document_body_missing", part, _path(root))
+                self._issue("document_body_missing", part, self._path(root))
                 return
             self._process_blocks(body, part, {"story_kind": "main"})
             return
         expected = STORY_ROOTS[kind]
         if not _is_word(root, expected):
-            self._issue("story_root_unexpected", part, _path(root), expected=expected)
+            self._issue("story_root_unexpected", part, self._path(root), expected=expected)
             return
         self._process_blocks(root, part, context)
 
@@ -962,4 +980,6 @@ def report(package, *, revisions=None, include_related=True, cache_root=None, ca
         if cached is not None:
             return cached
     reader = ReportReader(package, revisions=revisions, include_related=include_related)
-    return reader.read()
+    result = reader.read()
+    validate_report(result)
+    return result

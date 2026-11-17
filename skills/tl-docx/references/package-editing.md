@@ -5,8 +5,8 @@
 本能力用于明确要求的部件级维护，不作为日常改字或改字体的默认方式。使用已确认任务目录的 `execute`，不切换目录、不向安装目录写入。
 
 ```console
-python -I -B "<skill-root>/scripts/tl_docx.py" unpack 原件.docx -o 部件包.json
-python -I -B "<skill-root>/scripts/tl_docx.py" repack 原件.docx 副本.docx < 部件包.json
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" unpack 原件.docx -o 部件包.json
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" repack 原件.docx 副本.docx < 部件包.json
 ```
 
 `unpack` 返回顶层 JSON 部件包，不展开目录树。UTF-8 XML 为可编辑文本，其他内容为 base64；保留 source_sha256、extension、每个部件的 member 和原 sha256。只修改明确目标的 content，不修改源摘要或原摘要，不增删部件。包总 JSON 限 16 MiB，超限使用定点读取/编辑，不输出半份包。无 `-o` 时 stdout 即完整包；导出默认维护材料，不归档，明确需要交付才加 `--delivery`。

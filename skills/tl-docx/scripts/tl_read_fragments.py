@@ -5,7 +5,7 @@ import json
 
 
 def _encode(value):
-    return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(',', ':')).encode('utf-8')
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False, separators=(',', ':')).encode('utf-8')
 
 
 def fragment_records(records, metadata, budget):

@@ -11,6 +11,8 @@ from docx import Document
 from docx.oxml import parse_xml
 from docx.oxml.ns import qn
 
+from tl_resource_limits import XMLBudget
+
 MAX_INPUT = 64 * 1024 * 1024
 MAX_UNCOMPRESSED = 192 * 1024 * 1024
 MAX_PART = 32 * 1024 * 1024
@@ -25,8 +27,9 @@ MAIN_TYPES = {
 }
 
 
-def parse(data):
+def parse(data, budget=None):
     """Use the component's XML parser and refuse DTDs in input parts."""
+    (budget if budget is not None else XMLBudget()).screen(data)
     try:
         root = parse_xml(data)
     except (SyntaxError, ValueError) as exc:
@@ -76,6 +79,7 @@ class Package:
         self.sha256 = sha256(data).hexdigest()
         self._zip = ZipFile(BytesIO(data))
         self._xml = {}
+        self._xml_budget = XMLBudget()
         self._rels = {}
         self.names = self._inspect_members()
         self.types = self._content_types()
@@ -140,7 +144,7 @@ class Package:
     def xml(self, name):
         """Return the cached parsed OOXML part."""
         if name not in self._xml:
-            self._xml[name] = parse(self.read(name))
+            self._xml[name] = parse(self.read(name), self._xml_budget)
         return self._xml[name]
 
     def relations(self, source):

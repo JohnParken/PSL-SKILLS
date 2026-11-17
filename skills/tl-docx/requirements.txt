@@ -1,2 +1,2 @@
-# Python >=3.10. The environment resolves python-docx's upstream dependencies.
+# Python >=3.10 with bundled Expat >=2.6.0 for every XML parse. The environment resolves python-docx's upstream dependencies.
 python-docx==1.2.0

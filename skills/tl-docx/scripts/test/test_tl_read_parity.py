@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tl_docx import arguments, read_result, encode
+from tl_contract import ContractError
 from tl_read import report
 from tl_read_selection import selected_issues, select_body
 from test_tl_read import MemoryPackage
@@ -90,12 +91,23 @@ class ReadParityTests(unittest.TestCase):
 
     def test_summary_paging_is_complete_and_binds_view(self):
         package = fixture()
+        short = read(package, '--summary')
+        # The continuation itself is charged: saving one short record may not
+        # leave enough room for its complete next request.
+        with self.assertRaises(ContractError) as caught:
+            read(package, '--summary', '--max-output-bytes', str(len(encode(short)) - 1))
+        self.assertEqual('output_budget_exceeded', caught.exception.code)
+        package._parts['word/document.xml'] = package._parts['word/document.xml'].replace(
+            b'>Second</w:t>', b'>' + b'S' * 500 + b'</w:t>')
         full = read(package, '--summary')
-        # Pick a budget between one and two headings rather than hard-code field sizes.
+        # Now one long omitted heading makes room for a bounded next request.
         budget = len(encode(full)) - 1
         first = read(package, '--summary', '--max-output-bytes', str(budget))
         self.assertTrue(first['has_more'])
-        last = read(package, '--summary', '--cursor', first['next_cursor'])
+        self.assertLessEqual(len(encode(first)), budget)
+        self.assertIn('continuation', first)
+        last = read(package, '--summary', '--cursor', first['next_cursor'], '--max-output-bytes', str(budget))
+        self.assertLessEqual(len(encode(last)), budget)
         self.assertEqual(full['records'], first['records'] + last['records'])
         self.assertFalse(last['has_more'])
         with self.assertRaisesRegex(ValueError, 'another document or view'):

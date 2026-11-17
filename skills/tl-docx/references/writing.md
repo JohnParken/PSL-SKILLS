@@ -2,7 +2,7 @@
 
 路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
 
-从已确认的任务目录执行。输出参数只接收 DOCX 裸文件名。stdin 是单个 UTF-8 JSON，对象键不得重复，上限 16 MiB。用能够保证原样传输的 JSON 序列化方式提交，不把文档文字拼成命令。示例使用带单引号的 here-document。
+从已确认的任务目录执行。输出参数只接收任务根目录下的新裸文件名：`create` 和 `edit` 输出 `.docx`；`replace`、批注写入和 `repack` 保留输入的 `.docx` / `.dotx` 扩展名，不执行类型转换。stdin 是单个 UTF-8 JSON，对象键不得重复，上限 16 MiB。用能够保证原样传输的 JSON 序列化方式提交，不把文档文字拼成命令。示例使用带单引号的 here-document。
 
 ## 命名与同名处理
 
@@ -10,7 +10,7 @@
 
 ## 新建
 
-简单新建的最短完整 JSON 和执行命令见主入口 `<skill-root>/SKILL.md#简单新建`，仅需标题、正文和规则表格时不用预读本参考。本页用于入口示例之外的参数、编辑与恢复。
+简单新建的最短完整 JSON 和执行命令见主入口 `<skill-root>/SKILL.md#简单新建`，仅需标题、正文和规则表格时不用预读本参考。本页用于入口示例之外的参数、编辑与恢复。以下 `blocks`、Profile 和页面设置属于 `create`；已有文档只走下方 `edit` 的明确 `operations`，不可把创建格式当编辑格式，也不可用重建替代未支持的保真编辑。
 
 详细 Profile、角色样式和毫米页面参数见 `<skill-root>/references/typography.md`。顶层必需 `blocks`；可选 `theme`（`official`、`business`、`academic`）、`page`（`orientation`、`margins_cm`）、`metadata`、`header`、`footer`。页边距键为 `top`、`bottom`、`left`、`right`，单位 cm。公文正文默认仿宋和 Times New Roman 16 pt、固定行距 28 pt、首行 2 字。正文自然分页，明确需要时才加分页块或分节块。
 
@@ -30,12 +30,12 @@
 ## 修改副本
 
 ```sh
-python -I -B "<skill-root>/scripts/tl_docx.py" edit "原报告.docx" "修订版.docx" <<'JSON'
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" edit "原报告.docx" "修订版.docx" <<'JSON'
 {"operations":[{"type":"format_run","paragraph_index":0,"expected_text":"原文标题","run_index":0,"expected_run_text":"原文标题","format":{"font_east_asia":"黑体","size_pt":18}}]}
 JSON
 ```
 
-`operations` 按顺序应用，索引从零开始，按每步当时的位置核对。段落和表格索引取正文直属元素，run 索引取段落直属 run。错误会使整个批次停止发布。
+`operations` 按顺序应用，索引从零开始，按每步当时的位置核对。未另述时段落和表格索引取正文直属元素，run 索引取段落直属 run。错误会使整个批次停止发布。
 
 | 操作 | 定位和允许的修改 |
 | --- | --- |
@@ -45,17 +45,29 @@ JSON
 | `merge_runs` | `paragraph_index`、`expected_text`、`start_run` 及至少两个 `expected_runs` 文本。只合并连续、显式格式及属性相同的纯文本 run，保留原文字节点与空白；有字段、书签、批注范围、修订或分节的段落拒绝，不能跨不同格式合并。 |
 | `insert_paragraph` | `paragraph_index`、`expected_text`、`text`，可选 `style` 和 `position`（`before`、`after`）。 |
 | `replace_cell_text` | `table_index`、`row_index`、物理 `cell_index`、`expected_text`、`text`。目标为未合并的单段单 run 单元格。 |
+| `format_cell_run`、`replace_cell_run_text` | `table_index`、`row_index`、物理 `cell_index`，再用该单元格内的 `paragraph_index`、`run_index`、段落 `expected_text` 和 `expected_run_text` 定位。前者传与 `format_run` 相同的 `format`，后者传新 `text`；支持未合并单元格的多个普通段落和多个普通 run；合并原点另须传下述 `expected_merge`，只改所选 run。 |
+| `format_story_run`、`replace_story_run_text` | 实际 `part`，以及该部件直属 `paragraph_index`、`run_index`、段落 `expected_text` 和 `expected_run_text`。前者传 `format`，后者传新 `text`。仅支持下述单节、明确引用的现存纯文本默认页眉/页脚，必须作为独立批次提交。 |
 | `insert_row`、`delete_row` | `table_index`、`row_index`、`expected_rows`、目标行文本数组 `expected_text`。插入另需 `position` 和新行 `cells`。限未合并的规则表格，保留重复表头及至少一个数据行。 |
 | `replace_image` | 包内 `part`、原图二进制的 `expected_sha256` 和新图相对 `path`。保留媒体类型和现有布局，`allow_shared=true` 才能替换被多处引用的图片。 |
 | `add_comment` | 段落和 run 同 `format_run` 定位，加 `text`、`author`，可选 `initials`。 |
 | `update_comment`、`delete_comment` | `comment_id`、`expected_text`，更新再传 `text`。限简单经典批注，涉及更新或删除时单独提交新增批注。 |
 
-受控编辑支持 DOCX，复杂单元格、数字签名文档和未支持的对象拒绝修改。线程批注通过 `<skill-root>/references/comments.md` 中的独立入口处理。写回时校验目标部件并逐字节保护其他部件的解压内容。实际页数、行折叠和字体显示由阅读器决定。
+`format_run` 每步使用独立差异守卫：先核对源正文 XML 与组件加载结果，再以本步编辑前快照核对整个正文树；序列化后的正文还须等于已验收快照。只允许指定 run 的对应属性变化，以及必要的新建 `w:rPr` / 属性节点。解析后既存节点的顺序、文本、空白、命名空间绑定、未请求属性、其他 run、段落、表格、字段、锚点和分节均须保持；重复的目标属性或其他超范围变化使整个批次在发布前失败。混合批次逐步保护 `format_run`，其他操作仍按各自边界执行，不宣称它们获得同等差异守卫。
+
+字体只改指定通道，移除该通道 theme 引用，保留其他字体通道。显式 RGB 同时清除 `themeColor`、`themeTint`、`themeShade`，保留其他属性；下划线只改 `val`，保留颜色等属性。字号保持既有量化：普通字号截取到半磅，已存在的复杂文字字号按 Python `round(size_pt * 2)` 取半磅整数，不新增原本没有的 `szCs`；避免不必要差异时使用整数或半磅值。守卫验证 XML 结构和属性，不承诺修改部件的 XML 字节、格式化缩进、声明或属性排列不变，也不代替完整 OOXML schema 或阅读器视觉验收。
+
+表格 run 编辑只定位正文直属表格的物理行/单元格，不把合并后的视觉列当物理索引。目标单元格须仅含普通段落和文本 run，允许空段、空 run、制表符与普通换行；默认拒绝合并；始终拒绝嵌套表格、内容控件、字段、超链接、范围锚点和修订，以及目标行/表格的修订属性。不重建整格，不增删段落，不扩大旧 `replace_cell_text` 和行增删的单段单 run 限制。`format_cell_run` 复用独立属性差异守卫；`replace_cell_run_text` 独立核对新文字对应的文本/制表/换行节点序列，保留 run 属性、原 `rPr` 与其余整棵正文树。两者均核对源树加载与最终序列化读回；文字替换可以重建目标 run 的文字载荷及必要 `xml:space`，不承诺原文字节点拆分不变。不将表格定位用于其他部件。
+
+
+合并原点编辑必须显式加 `expected_merge`，例如 `{"grid_column":1,"colspan":2,"rowspan":2}`：`grid_column` 是零基视觉网格起列，`colspan`、`rowspan` 是预期完整矩形跨度；三项必须为整数，不接受布尔值，且实际至少一项跨度大于 1。原 `row_index`、`cell_index` 仍指物理 XML 行/格，不是视觉列；不自动把续格映射回原点。只支持有明确 `tblGrid`、每行完整覆盖同一网格的标准 `gridSpan` 横向原点、`vMerge restart` 竖向原点及两者组合；纵向链必须逐行同列同宽，所有续格必须为简单空段，不能有隐藏文字、字段或编号。缺少或错误的几何声明、续格目标、旧式 `hMerge`、缺格/行偏移、网格歧义、宽度不一致、孤立续格或相关修订均拒绝。先完整证明物理拓扑，再由独立差异守卫复核原点和跨度；合并属性、续格及其他非目标节点保持不变。不传 `expected_merge` 时保留此前合并格拒绝行为；旧整格替换和行增删仍不支持合并格。此能力不增删、重组或修复合并，不保证非规范来源文档或阅读器视觉结果。
+
+页眉页脚 run 编辑仅限单节文档：正文末尾必须有唯一、无修订的 `sectPr`，目标必须是已有 header/footer 类型部件，并由本节唯一 `default` 引用明确指向，关系入边和实际引用都唯一。按真实 `part` 定位，不猜 `header1.xml`，不自动创建、解除链接或改变继承；拒绝多节、共享、继承、孤立部件、外部关系、重复/歧义引用以及 `first`/`even` 目标。所选整个部件须仅含普通文本段落/run；含 PAGE 等字段、图片、表格、超链接、范围锚点或修订均拒绝，不改字段指令或页码。支持多段、多 run 与逐步预期核对，可在同批次编辑多个明确页眉/页脚或同部件多次，但不能与正文、表格、图片、批注等操作混批。独立差异守卫保护目标之外的整棵部件树，并核对序列化读回；正文、节引用、关系、样式及所有其他部件的解压字节保持。以上是有限纯文本编辑，不是任意页眉页脚编辑或视觉版式保证。
+受控编辑支持 DOCX，超出上述边界的复杂单元格、数字签名文档和未支持的对象拒绝修改。线程批注通过 `<skill-root>/references/comments.md` 中的独立入口处理。写回时校验目标部件并逐字节保护其他部件的解压内容。实际页数、行折叠和字体显示由阅读器决定。
 
 ## 批量填充模板
 
 ```sh
-python -I -B "<skill-root>/scripts/tl_docx.py" replace 模板.docx 已填充.docx --require-no-placeholders <<'JSON'
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" replace 模板.docx 已填充.docx --require-no-placeholders <<'JSON'
 {"parts":["word/document.xml","word/header1.xml"],"replacements":[{"old":"{{ 公司 }}","new":"星河科技","count":2},{"old":"{{ 标题 }}","new":"月报"}]}
 JSON
 ```
@@ -73,7 +85,7 @@ JSON
 调用方需要在强制中断后能直接定位清单时，可预先提供唯一的 `--task-id`（32 位小写十六进制）。该任务的原清单名为 `.tl-docx-<标识>.cleanup.json`。常规调用可省略此参数，由运行时分配，收尾未完成时以 `task_manifest` 回传。正常清理后删除清单。
 
 ```console
-python -I -B "<skill-root>/scripts/tl_docx.py" resume .tl-docx-0123456789abcdef0123456789abcdef.cleanup.json
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" resume .tl-docx-0123456789abcdef0123456789abcdef.cleanup.json
 ```
 
 保持原任务目录。`resume` 只接受原任务的清单，核对目录、清单和暂存文件身份、发布证据、内容摘要及已提交的归档状态。主文件存在且证据吻合时只收尾，归档状态缺失时返回 `unknown`。未发布时只清理归属明确的暂存。文件或清单被替换、锁正占用、记录不完整或状态不明时返回 `recovery_pending`，保留证据，禁止扫描认领或重新生成。恢复成功返回 `status=recovered`，用 `task_status` 区分 `completed` 和 `failed_cleaned`。需要重试生成时，从原输入另开新任务。现有 docx Skill 的清单继续由其原入口处理。公共归档运行时若报告未知残留，需按其实际诊断核对。

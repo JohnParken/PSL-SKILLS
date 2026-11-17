@@ -1,9 +1,9 @@
 """Read, create, edit and validate DOCX with python-docx."""
 
-import argparse
 import base64
 import binascii
 from collections import Counter
+from copy import deepcopy
 from hashlib import sha256
 from io import BytesIO
 import json
@@ -16,6 +16,8 @@ from zipfile import BadZipFile
 if __name__ == '__main__' and sys.flags.isolated:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from tl_contract import ContractError, ContractParser, UsageError, continuation_frame, failure, read_continuation
+
 API_VERSION = 1
 MAX_SPEC = 16 * 1024 * 1024
 MIN_BUDGET = 512
@@ -23,7 +25,9 @@ CAPABILITIES = ['read-docx', 'read-dotx', 'source-bound-pages', 'create-docx', '
                 'threaded-comments', 'versioned-output', 'resume-cleanup', 'pagination-audit',
                 'raw-ooxml', 'revision-views', 'report-export', 'table-header-mapping', 'template-replacement',
                 'native-role-styles', 'parse-cache', 'tracked-text-replacement', 'part-bundle-roundtrip', 'layout-audit', 'lossless-record-fragments', 'content-first-read',
-                'default-content-read', 'full-record-read', 'visible-content-v2', 'stored-chart-annotations']
+                'default-content-read', 'full-record-read', 'visible-content-v2', 'stored-chart-annotations',
+                'creation-content-verification', 'format-run-preservation-guard', 'cache-output-handoff', 'addressed-cell-run-edit',
+                'addressed-header-footer-run-edit', 'structured-errors', 'complete-read-continuation', 'external-format-check', 'guarded-merged-cell-origin-edit', 'bounded-resource-screening']
 
 
 
@@ -62,38 +66,51 @@ def cursor_start(cursor, binding):
                 and type(value[1]) is int and value[1] >= 0):
             return value[1]
     except (ValueError, binascii.Error) as exc:
-        raise ValueError('Invalid read cursor') from exc
-    raise ValueError('Read cursor belongs to another document or view')
+        raise ContractError('invalid_cursor', 'Invalid read cursor.', {'action': 'restart_read'}) from exc
+    raise ContractError('cursor_mismatch', 'Read cursor belongs to another document or view.',
+                        {'action': 'restore_original_read_options'})
 
 
-def page(meta, records, budget, cursor, binding):
+def page(meta, records, budget, cursor, binding, continuation=None):
     """Produce the largest contiguous page that fits the UTF-8 byte budget."""
     start = cursor_start(cursor, binding)
     if start and start >= len(records):
-        raise ValueError('Read cursor is outside the selected records')
+        raise ContractError('cursor_out_of_range', 'Read cursor is outside the selected records.',
+                            {'action': 'restart_read'})
 
-    def frame(end):
+    def frame(end, include_records=True):
         more = end < len(records)
         token = base64.urlsafe_b64encode(encode([binding, end])).decode('ascii') if more else None
-        return {**meta, 'start': start, 'end': end, 'total': len(records), 'has_more': more,
-                'next_cursor': token, 'records': records[start:end]}
+        result = {**meta, 'start': start, 'end': end, 'total': len(records), 'has_more': more,
+                  'next_cursor': token, 'records': records[start:end] if include_records else []}
+        if continuation is not None and more:
+            result['continuation'] = continuation_frame(continuation, token)
+        return result
 
-    complete = frame(len(records))
-    if budget is None or len(encode(complete)) <= budget:
-        return complete
-    low, high = start + 1, len(records) - 1
-    best = None
-    while low <= high:
-        middle = (low + high) // 2
-        candidate = frame(middle)
-        if len(encode(candidate)) <= budget:
-            best = candidate
-            low = middle + 1
-        else:
-            high = middle - 1
-    if best is None:
-        raise ValueError('Byte budget cannot hold response metadata and the next complete record')
-    return best
+    if budget is None:
+        return frame(len(records))
+    if not records:
+        complete = frame(0)
+        if len(encode(complete)) <= budget:
+            return complete
+    # The caller validates the complete report before pagination. Size only the
+    # candidate prefix here, rather than serializing the complete remaining list
+    # and repeatedly serializing large binary-search candidates. encode adds a
+    # newline, which is not part of a record inside the enclosing JSON array.
+    record_bytes = 0
+    best_end = None
+    for end in range(start + 1, len(records) + 1):
+        record_bytes += len(encode(records[end - 1])) - 1 + (end > start + 1)
+        if record_bytes > budget:
+            break  # Even an empty metadata frame cannot fit this prefix.
+        if len(encode(frame(end, include_records=False))) + record_bytes <= budget:
+            best_end = end
+        # Do not stop at the first non-fitting frame: the terminal frame removes
+        # the cursor/continuation and can be smaller despite one more record.
+    if best_end is None:
+        raise ContractError('output_budget_exceeded', 'Byte budget cannot hold metadata and the next complete record.',
+                            {'action': 'increase_budget_or_fragment', 'restart_required_for_fragments': True}, retryable=True)
+    return frame(best_end)
 
 
 def read_result(package, args, raw_report=None, cache_meta=None):
@@ -108,6 +125,10 @@ def read_result(package, args, raw_report=None, cache_meta=None):
     else:
         records, issues, coverage = raw_report if raw_report is not None else report(
             package, revisions=args.revisions, include_related=args.include_related is not False)
+    from tl_resource_limits import validate_report, validate_value  # pylint: disable=import-outside-toplevel
+    # Injected/cached reports and structure extraction receive the same limits.
+    if raw_report is not None or args.format == 'structure':
+        validate_report((records, issues, coverage))
     enhanced = args.report or args.compact_json or args.table_header or getattr(args, 'content', False)
     if enhanced:
         from tl_read_tables import enrich_tables, table_header_arg  # pylint: disable=import-outside-toplevel
@@ -175,21 +196,43 @@ def read_result(package, args, raw_report=None, cache_meta=None):
         meta['table_rows_omitted'] = sum(item['row_count'] for item in records if item['type'] == 'table') - counts.get('table_row', 0)
     if cache_meta is not None:
         meta['cache'] = cache_meta
+    validate_report((records, issues, coverage))
+    validate_value(meta)
+    budget = args.max_output_bytes if args.max_output_bytes is not None or args.cursor is None else 12_000
+    continuation = read_continuation(args, budget, cache_meta)
     if getattr(args, 'fragment_records', False):
         from tl_read_fragments import fragment_records  # pylint: disable=import-outside-toplevel
         meta.update(fragment_mode='json-record-v1', source_record_total=len(records))
-        records, _ = fragment_records(records, meta, args.max_output_bytes)
-        binding_fields.extend(['json-record-v1', args.max_output_bytes])
+        # Account for the extra request in every page; exclude changing cache
+        # status, while keeping the fixed-size token so rebuilt caches stay bound.
+        fragment_request = continuation_frame(continuation, 'x' * 256)
+        # Reserve the same token width without caching as with it. Cursors can
+        # switch between stateless and cached reads without shifting fragments.
+        fragment_request['parameters']['cache_token'] = 'x' * 232
+        fragment_meta = {**meta, 'continuation': fragment_request}
+        try:
+            records, _ = fragment_records(records, fragment_meta, args.max_output_bytes)
+        except ContractError:
+            raise
+        except ValueError as exc:
+            raise ContractError('output_budget_exceeded', 'Byte budget cannot hold fragment metadata.',
+                                {'action': 'increase_budget', 'restart_required': True}, retryable=True) from exc
+        binding_fields.extend(['json-record-v1', args.max_output_bytes, 'continuation-v1', args.source])
+    if getattr(args, 'fragment_records', False):
+        validate_report((records, issues, coverage))
     binding = sha256(encode(binding_fields)).hexdigest()
-    budget = args.max_output_bytes if args.max_output_bytes is not None or args.cursor is None else 12_000
-    return page(meta, records, budget, args.cursor, binding)
+    return page(meta, records, budget, args.cursor, binding, continuation)
 
 
-def cached_read(root, package, args):
+def cached_read(root, package, args, delivery=None):
     """Cache only when explicitly requested, preserving default read-only behavior."""
     from tl_read_cache import cached_report, release  # pylint: disable=import-outside-toplevel
+    if delivery is not None:
+        delivery.prepare(root)
     raw, cache = cached_report(root, package, revisions=args.revisions,
                                include_related=args.include_related is not False, token=args.cache_token)
+    if delivery is not None:
+        delivery.track(cache)
     try:
         result = read_result(package, args, raw_report=raw, cache_meta=cache)
     except Exception:
@@ -374,7 +417,7 @@ def read_xml_bytes(package, names):
     return {'status': 'ok', 'view': 'xml', 'part': part, 'data': package.read(part)}
 
 
-def execute(args):
+def execute(args, cache_delivery=None):
     """Run one command after importing the only direct third-party component."""
     from docx import Document, __version__ as version  # pylint: disable=import-outside-toplevel
     from tl_io import output_name, read_task, task_root  # pylint: disable=import-outside-toplevel
@@ -401,13 +444,36 @@ def execute(args):
         if args.action == 'archive' and Path(args.source).suffix.lower() in ('.json', '.txt', '.xml'):
             return archive_report(root, args)
         package = None
-        if args.action != 'create':
+        if args.action not in ('create', 'verify-format'):
             package = Package(read_task(root, args.source))
             if not args.source.lower().endswith(package.extension):
                 raise ValueError('Document extension does not match its package content type')
+        if args.action == 'verify-format':
+            from tl_format_check import check_format  # pylint: disable=import-outside-toplevel
+            try:
+                source_data, source_identity = read_task(root, args.source, with_identity=True)
+                candidate_data, candidate_identity = read_task(root, args.candidate, with_identity=True)
+                if source_identity[:2] == candidate_identity[:2]:
+                    raise ContractError('format_check_inputs_not_distinct', 'Original and candidate must be different regular files.',
+                                        {'action': 'provide_separate_candidate'})
+                package, candidate = Package(source_data), Package(candidate_data)
+                if package.sha256 == candidate.sha256:
+                    raise ContractError('format_check_no_change', 'The candidate has identical bytes; no external format change was checked.',
+                                        {'action': 'review_candidate_and_request'})
+                if not args.source.lower().endswith(package.extension) or not args.candidate.lower().endswith(candidate.extension):
+                    raise ValueError('Document extension mismatch')
+                payload = sys.stdin.buffer.read(MAX_SPEC + 1)
+                if len(payload) > MAX_SPEC:
+                    raise ValueError('Specification is too large')
+                return check_format(package, candidate, decode(payload)), 0
+            except ContractError:
+                raise
+            except (ValueError, TypeError, KeyError, IndexError, RuntimeError, SyntaxError, OverflowError, BadZipFile) as exc:
+                raise ContractError('format_check_failed', 'The candidate did not pass the single-operation format check.',
+                                    {'action': 'review_candidate_and_request'}) from exc
         if args.action == 'read':
             if args.cache or args.cache_token:
-                result = cached_read(root, package, args)
+                result = cached_read(root, package, args, delivery=cache_delivery)
             else:
                 result = read_xml_bytes(package, args.xml_part) if args.format == 'xml' else read_result(package, args)
             return export_report(root, args, result) if args.output else (result, 0)
@@ -446,6 +512,35 @@ def archive_report(root, args):
         raise ValueError('Archive retry requires the exact exported report')
     result = archive_delivery([name])
     return result, archive_exit_code(result)
+
+
+def create_verified_bytes(specification, read_image):
+    """Snapshot input independently, generate, then verify content before publish."""
+    from tl_create import _validate_spec, build_document  # pylint: disable=import-outside-toplevel
+    from tl_create_styles import normalize_spec  # pylint: disable=import-outside-toplevel
+    from tl_create_verify import verify_created  # pylint: disable=import-outside-toplevel
+    from tl_package import Package  # pylint: disable=import-outside-toplevel
+
+    expected = deepcopy(normalize_spec(specification))
+    _validate_spec(deepcopy(expected))
+    images = {}
+    for block in expected['blocks']:
+        references = [block] if block['type'] == 'image' else []
+        if block['type'] == 'table':
+            references.extend(cell['image'] for row in block['rows'] for cell in row
+                              if isinstance(cell, dict) and 'image' in cell)
+        for reference in references:
+            path = reference['path']
+            if path not in images:
+                images[path] = read_image(path)
+    document = build_document(deepcopy(expected), images.__getitem__)
+    stream = BytesIO()
+    document.save(stream)
+    data = stream.getvalue()
+    candidate = Package(data)
+    candidate.document()
+    checked = verify_created(candidate, expected, images)
+    return data, {'blocks': len(expected['blocks']), 'content_verification': checked}
 
 
 def write_document(root, args, package):
@@ -492,12 +587,7 @@ def write_document(root, args, package):
         if data is None:
             return {'status': 'partial' if details['diagnostics'] else 'ok', **details}, 0
     else:
-        from tl_create import build_document  # pylint: disable=import-outside-toplevel
-        document = build_document(specification, read_image)
-        stream = BytesIO()
-        document.save(stream)
-        data, details = stream.getvalue(), {'blocks': len(specification['blocks'])}
-        Package(data).document()
+        data, details = create_verified_bytes(specification, read_image)
     if name is None:
         if package is None:
             title = specification.get('metadata', {}).get('title') or next(
@@ -531,14 +621,15 @@ def self_check(args, constructor, package_type, version):
             os.fsync(root)
     return {'status': 'environment-ok', 'api_version': API_VERSION, 'python_docx': version,
             'check_kind': 'environment', 'artifact_validation': 'not_run',
-            'expat': '.'.join(map(str, expat_version)), 'template_dom_available': expat_version >= (2, 6, 0),
+            'expat': '.'.join(map(str, expat_version)), 'xml_resource_budget_available': expat_version >= (2, 6, 0),
+            'template_dom_available': expat_version >= (2, 6, 0),
             'structure_available': expat_version >= (2, 6, 0),
             'task_write_check': 'passed' if args.write else 'not_requested'}
 
 
 def arguments(argv):
     """Parse the public command-line interface."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = ContractParser(description=__doc__)
     actions = parser.add_subparsers(dest='action', required=True)
     actions.add_parser('check').add_argument('--write', action='store_true')
     actions.add_parser('capabilities')
@@ -574,6 +665,9 @@ def arguments(argv):
     cache.add_argument('--cache', action='store_true')
     cache.add_argument('--cache-token')
     actions.add_parser('release-cache').add_argument('token')
+    format_checker = actions.add_parser('verify-format')
+    format_checker.add_argument('source')
+    format_checker.add_argument('candidate')
     validator = actions.add_parser('validate')
     validator.add_argument('source')
     validator.add_argument('--strict-pagination', action='store_true')
@@ -639,23 +733,70 @@ def arguments(argv):
     return args
 
 
+def write_stdout(output):
+    """One complete byte write plus flush; never append JSON after a failure."""
+    if sys.stdout.buffer.write(output) != len(output):
+        raise OSError('Incomplete stdout write')
+    sys.stdout.buffer.flush()
+
+
+def delivery_diagnostic(action, *, cleanup=False):
+    """After a failed handoff, report stable fields on stderr only."""
+    code = 'cache_cleanup_incomplete' if cleanup else 'output_delivery_failed'
+    message = 'cache cleanup incomplete' if cleanup else 'output delivery failed'
+    next_action = 'retain_unverified_files' if cleanup else 'inspect_received_bytes_before_retry'
+    print(encode(failure(ContractError(code, message, {'action': next_action}), action)).decode('utf-8'),
+          end='', file=sys.stderr)
+
+
 def main(argv=None):
-    """Emit exactly one business result and separate error diagnostics."""
-    args = arguments(argv)
+    """Emit one business result; a new cache is handed off only after flush."""
+    from tl_read_cache import CacheDelivery  # pylint: disable=import-outside-toplevel
+
     try:
-        payload, status = execute(args)
-    except (ImportError, OSError, ValueError, TypeError, KeyError, IndexError, RuntimeError, SyntaxError, OverflowError, BadZipFile) as exc:
-        print(f'tl-docx {args.action}: {exc}', file=sys.stderr)
-        payload = {'status': 'error', 'action': args.action, 'error': str(exc)}
+        args = arguments(argv)
+    except UsageError as exc:
+        payload = failure(exc, 'arguments')
+        print(payload['error'], file=sys.stderr)
+        try:
+            write_stdout(encode(payload))
+        except (OSError, ValueError, TypeError, OverflowError):
+            delivery_diagnostic('arguments')
+        return 2
+    delivery = CacheDelivery()
+    status = 1
+    try:
+        try:
+            payload, status = execute(args, cache_delivery=delivery)
+        except (ImportError, OSError, ValueError, TypeError, KeyError, IndexError, RuntimeError, SyntaxError, OverflowError, BadZipFile) as exc:
+            payload = failure(exc, args.action)
+            print(f"tl-docx {args.action}: {payload['error']}", file=sys.stderr)
+            status = 1
+        if isinstance(payload, dict) and payload.get('status') == 'error' and 'error_code' not in payload:
+            defaults = failure(RuntimeError(), args.action)
+            for key in ('error_code', 'retryable', 'next_action'):
+                payload.setdefault(key, defaults[key])
+        if args.action == 'read' and args.format == 'text' and not args.output and status == 0:
+            if payload['issues']:
+                print('Partial read: ' + ', '.join(sorted({issue['code'] for issue in payload['issues']})), file=sys.stderr)
+            output = plain_report(payload)
+        elif args.action == 'read' and args.format == 'xml' and not args.output and status == 0:
+            output = payload['data']
+        else:
+            output = encode(payload)
+        write_stdout(output)
+        if status == 0:
+            delivery.handoff()
+    except (OSError, ValueError, TypeError, OverflowError):
+        # A prefix may already have reached the consumer: never append error JSON.
+        delivery_diagnostic(args.action)
         status = 1
-    if args.action == 'read' and args.format == 'text' and not args.output and status == 0:
-        if payload['issues']:
-            print('Partial read: ' + ', '.join(sorted({issue['code'] for issue in payload['issues']})), file=sys.stderr)
-        sys.stdout.buffer.write(plain_report(payload))
-    elif args.action == 'read' and args.format == 'xml' and not args.output and status == 0:
-        sys.stdout.buffer.write(payload['data'])
-    else:
-        sys.stdout.buffer.write(encode(payload))
+    finally:
+        try:
+            delivery.close()
+        except (OSError, ValueError, RuntimeError):
+            delivery_diagnostic(args.action, cleanup=True)
+            status = 1
     return status
 
 

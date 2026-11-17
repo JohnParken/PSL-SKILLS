@@ -11,6 +11,8 @@ import re
 import stat
 from secrets import token_hex
 
+from tl_resource_limits import policy, screen_json, validate_report
+
 PARSER_VERSION = 'tl-report-6'
 MAX_BYTES = 64 * 1024 * 1024
 TOKEN_PATTERN = re.compile(r'tlc1\.([0-9a-f]{32})\.([0-9a-f]{64})\.([0-9a-f]{64})\.([0-9a-f]{64})\Z')
@@ -21,7 +23,7 @@ def _encode(value):
 
 
 def _options(options):
-    return sha256(_encode([PARSER_VERSION, options])).hexdigest()
+    return sha256(_encode([PARSER_VERSION, policy(), options])).hexdigest()
 
 
 def _identity(info):
@@ -58,12 +60,14 @@ def _registration(root, name, info, source, option_hash):
             'source': source, 'options': option_hash, 'absent_at_plan': True}
 
 
-def _validate_report(data):
+def _validate_report(data, *, resources=True):
     if (not isinstance(data, (list, tuple)) or len(data) != 3
             or not isinstance(data[0], list) or not isinstance(data[1], list)
             or not isinstance(data[2], dict)
             or not all(isinstance(item, dict) for item in data[0] + data[1])):
         raise ValueError('Invalid TL read cache report schema')
+    if resources:
+        validate_report(data)
     return tuple(data)
 
 
@@ -104,6 +108,9 @@ def store(root, source_sha256, options, report_data):
         raw = _encode({'registration': registration, 'report': report_data})
         if len(raw) > MAX_BYTES:
             raise ValueError('Parsed read cache exceeds the 64 MiB cache limit')
+        # Registration/envelope add depth and values beyond the report itself.
+        # Screen the exact bytes readers accept before writing or handing off.
+        screen_json(raw)
         with os.fdopen(descriptor, 'wb', closefd=False) as stream:
             stream.write(raw)
             stream.flush()
@@ -118,7 +125,7 @@ def store(root, source_sha256, options, report_data):
         os.close(descriptor)
 
 
-def _read(root, token):
+def _read(root, token, *, resources=True):
     _supported()
     name, digest, source, option_hash = _reference(token)
     try:
@@ -133,6 +140,8 @@ def _read(root, token):
         if (_fingerprint(info) != _fingerprint(os.fstat(descriptor)) or len(raw) != info.st_size
                 or sha256(raw).hexdigest() != digest):
             raise ValueError('Read cache content or identity changed; cache retained')
+    # Cleanup ignores mutable report policy, not fixed JSON allocation safety.
+    screen_json(raw, hard_limits=None if resources else (2_000_000, 128))
     try:
         payload = json.loads(raw)
     except (ValueError, RecursionError) as exc:
@@ -140,7 +149,7 @@ def _read(root, token):
     expected = _registration(root, name, info, source, option_hash)
     if not isinstance(payload, dict) or payload.get('registration') != expected:
         raise ValueError('Read cache task, parser version or ownership does not match; cache retained')
-    return name, info, _validate_report(payload.get('report'))
+    return name, info, _validate_report(payload.get('report'), resources=resources)
 
 
 def load(root, token, source_sha256, options):
@@ -159,7 +168,7 @@ def load(root, token, source_sha256, options):
 
 def release(root, token):
     """Remove only the token's validated private cache, never source/output files."""
-    cached = _read(root, token)
+    cached = _read(root, token, resources=False)
     removed = cached is not None and _remove(root, cached[0], cached[1])
     return {'status': 'released' if removed else 'already_absent', 'archive_status': 'not_required'}
 
@@ -181,3 +190,41 @@ def cached_report(root, package, *, revisions=None, include_related=True, token=
     data = report(package, revisions=revisions, include_related=include_related)
     saved = store(root, package.sha256, options, data)
     return data, {'status': 'rebuilt_missing' if token is not None else 'stored', 'token': saved}
+
+
+class CacheDelivery:
+    """Own a newly created cache until stdout has accepted and flushed its token.
+
+    The pinned root outlives execute(). Never adopt a caller's existing cache,
+    and use the same token/identity validation as explicit release on failure.
+    """
+
+    def __init__(self):
+        self.root = None
+        self.token = None
+
+    def prepare(self, root):
+        """Pin the task directory before any cache can be created."""
+        if self.root is not None:
+            raise RuntimeError('A cache delivery can only own one read')
+        self.root = os.dup(root)
+
+    def track(self, metadata):
+        """Track only this invocation's fresh or rebuilt cache."""
+        if metadata['status'] in ('stored', 'rebuilt_missing'):
+            self.token = metadata['token']
+
+    def handoff(self):
+        """Transfer continuation ownership after successful stdout flush."""
+        self.token = None
+
+    def close(self):
+        """Release an undelivered owned cache, retaining changed/unknown files."""
+        if self.root is None:
+            return
+        root, self.root = self.root, None
+        try:
+            if self.token is not None:
+                release(root, self.token)
+        finally:
+            os.close(root)
