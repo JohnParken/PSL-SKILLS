@@ -1,0 +1,24 @@
+# Repository maintenance only. These groups do not change independent skill packages.
+[project]
+name = "psl-skills-regression"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = []  # WPS, XLSX and OFD regressions use only the standard library.
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+# Optional: mirrors of each TL skill's direct runtime requirements for local tests.
+tl-docx = [
+    "python-docx==1.2.0",
+]
+tl-pptx = [
+    "pillow==12.2.0",
+    "xlsxwriter==3.2.9",
+    "typing-extensions==4.14.0",
+    "lxml==6.0.4",
+    "pyyaml==6.0.2",
+    "pymupdf==1.24.2",
+    "python-pptx==1.0.2",
+]

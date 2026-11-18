@@ -90,6 +90,15 @@
 
 - **DeepAgents 生产命令（所有执行型业务 Skill）。** 由本次真实入口定位并替换 `<skill-root>`，以宿主 `execute(command=完整非空命令字符串)` 执行。解释器和脚本路径分别完整引用：标准库使用 `"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/入口.py"`；依赖第三方组件时保留 `-I -B`，不用屏蔽 site-packages 的 `-S`。命令内有 stdin 时一次提供完整内容。部署方预置该解释器，缺失、不可执行或依赖不符时停止，不激活、不回退 PATH、不自动创建或安装。该部署位置不随源码或运行 ZIP 打包；受控子进程可用 `sys.executable` 继承解释器。无脚本指导 Skill 不新增命令。
 - **本地实际测试与仓库维护。** 从默认 `python3` 启动，保留测试要求的隔离选项；先报告实际版本及所需依赖。条件不足则如实报告跳过或受阻，不换解释器以制造通过结果。测试进程可用 `sys.executable` 继承默认解释器。部署路径专项验收与普通本地回归分开记录；历史命令和结果保留原环境。本地通过不等于部署验收通过。
+- **可选的 uv 项目回归（仓库根目录）。** 普通本地测试仍报告默认 `python3` 结果；明确使用 uv 时另记项目环境结果，不代替默认解释器或 Linux 部署验收。`pyproject.toml` 与 `uv.lock` 只用于开发；不提交 `.venv/`，不随 Skill 分发，不改系统默认解释器。默认组没有第三方依赖。下列命令在项目目录执行，选择已安装的 Python 3.12；需复现具体补丁版本时将 `3.12` 替换为该版本（本轮为 `3.12.12`）：
+  ```sh
+  uv sync --locked --no-default-groups --no-python-downloads --python 3.12
+  uv run --locked --no-default-groups --no-python-downloads --python 3.12 python -I -S -B -c "import sys, pyexpat; print(sys.version, pyexpat.EXPAT_VERSION); assert pyexpat.version_info >= (2, 6, 0)"
+  # 每个套件独立运行；将 wps 替换为 xlsx、ofd 可分别复验。
+  uv run --locked --no-default-groups --no-python-downloads --python 3.12 python -I -S -B tools/run_skill_tests.py skills/wps/scripts/test
+  uv run --locked --no-default-groups --no-python-downloads --python 3.12 python -I -S -B tools/run_skill_tests.py tests -p test_skill_loading_benchmark.py
+  ```
+  TL 套件按需用独立组，如 `uv run --locked --group tl-docx --python 3.12 python -I -B tools/run_skill_tests.py skills/tl-docx/scripts/test`；TL-PPTX 同理选 `tl-pptx`，专项独立安装验收仍按其要求预置环境。不要在需导入第三方包的路径加 `-S`，也不要为标准库 Skill 移除 `-S`。更新任一 TL Skill 的直接依赖时，同步根配置的对应组并运行 `uv lock`；生产依赖仍以该 Skill 的 requirements.txt 为准。
 - 使用独立部署解释器不改变非 `tl-` Skill 原有的标准库、外部软件或安装限制，也不放宽独立运行、路径、输入保护、归档清理、代码质量和测试验收要求。组件依赖与维护工具分开管理；随包公共运行时仍遵守其来源契约。
 
 ## 更新时的依赖与说明一致性

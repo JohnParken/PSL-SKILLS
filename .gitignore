@@ -12,3 +12,6 @@ __pycache__/
 
 # Reproducible local release artifacts; manifests and evidence remain versioned.
 /dist/
+
+# Local uv regression environment, never part of a runtime skill.
+/.venv/
