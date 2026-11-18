@@ -4,8 +4,8 @@
   "method": "planned reference read events, not observed model routing",
   "baseline_commit": "4b5a61f51d12d2a9d293898c2f862cbf7271dc8d",
   "after_source": "working tree; per-file SHA256 recorded",
-  "platform": "linux",
-  "python": "3.12.14",
+  "platform": "darwin",
+  "python": "3.12.12",
   "tokenizer": {
     "status": "not_measured",
     "reason": "No tokenizer requested; characters and bytes are not tokens."
@@ -39,21 +39,21 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4961,
-            "bytes": 7988,
-            "sha256": "e624b5fbfa1b7a54fb6dad5c33083dfdbd39befd457a93eecf4bd4ab9494575d",
+            "chars": 4962,
+            "bytes": 7991,
+            "sha256": "dbf0a4c8fba86cf1cdc361a390069eb367ad04741db80b1a6458a42c595e070a",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 4961,
-        "bytes": 7988,
+        "chars": 4962,
+        "bytes": 7991,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 581,
-        "bytes": 993,
+        "chars": 582,
+        "bytes": 996,
         "tokens": null,
         "read_events": 0
       }
@@ -1140,9 +1140,9 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4961,
-            "bytes": 7988,
-            "sha256": "e624b5fbfa1b7a54fb6dad5c33083dfdbd39befd457a93eecf4bd4ab9494575d",
+            "chars": 4962,
+            "bytes": 7991,
+            "sha256": "dbf0a4c8fba86cf1cdc361a390069eb367ad04741db80b1a6458a42c595e070a",
             "tokens": null
           },
           {
@@ -1155,13 +1155,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 17023,
-        "bytes": 32315,
+        "chars": 17024,
+        "bytes": 32318,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 997,
-        "bytes": 1687,
+        "chars": 998,
+        "bytes": 1690,
         "tokens": null,
         "read_events": 0
       }
@@ -1197,9 +1197,9 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4961,
-            "bytes": 7988,
-            "sha256": "e624b5fbfa1b7a54fb6dad5c33083dfdbd39befd457a93eecf4bd4ab9494575d",
+            "chars": 4962,
+            "bytes": 7991,
+            "sha256": "dbf0a4c8fba86cf1cdc361a390069eb367ad04741db80b1a6458a42c595e070a",
             "tokens": null
           },
           {
@@ -1212,13 +1212,13 @@
         ],
         "read_events": 2,
         "unique_files": 2,
-        "chars": 15344,
-        "bytes": 29097,
+        "chars": 15345,
+        "bytes": 29100,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 771,
-        "bytes": 1215,
+        "chars": 772,
+        "bytes": 1218,
         "tokens": null,
         "read_events": 0
       }
@@ -1511,21 +1511,21 @@
         "files": [
           {
             "path": "docx/SKILL.md",
-            "chars": 4961,
-            "bytes": 7988,
-            "sha256": "e624b5fbfa1b7a54fb6dad5c33083dfdbd39befd457a93eecf4bd4ab9494575d",
+            "chars": 4962,
+            "bytes": 7991,
+            "sha256": "dbf0a4c8fba86cf1cdc361a390069eb367ad04741db80b1a6458a42c595e070a",
             "tokens": null
           }
         ],
         "read_events": 1,
         "unique_files": 1,
-        "chars": 4961,
-        "bytes": 7988,
+        "chars": 4962,
+        "bytes": 7991,
         "tokens": null
       },
       "delta_after_minus_before": {
-        "chars": 581,
-        "bytes": 993,
+        "chars": 582,
+        "bytes": 996,
         "tokens": null,
         "read_events": 0
       }
