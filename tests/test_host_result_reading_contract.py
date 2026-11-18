@@ -40,7 +40,8 @@ def contract_issues(text, *, navigation=False, writing=False):
 class HostResultReadingContractTests(unittest.TestCase):
     def test_all_current_entries_have_independent_contract(self):
         entries = sorted((ROOT / 'skills').glob('*/SKILL.md'))
-        self.assertEqual(len(entries), 12)
+        manifests = (ROOT / 'packaging/runtime-manifests').glob('*.json')
+        self.assertEqual({entry.parent.name for entry in entries}, {manifest.stem for manifest in manifests})
         for entry in entries:
             with self.subTest(skill=entry.parent.name):
                 self.assertEqual(contract_issues(entry.read_text(encoding='utf-8'),

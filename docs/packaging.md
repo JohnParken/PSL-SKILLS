@@ -7,7 +7,7 @@
 - `skills/<name>/`：唯一业务源码、运行参考、模板和许可；测试依规范保留 `scripts/test/`。
 - `docs/maintenance/<name>/`：历史样本证据、维护审计与测试报告。运行说明保留必要的当前能力/限制，维护文件不变成必需运行依赖。
 - `tests/fixtures/docx/`：跨 Skill 使用的七个既有 DOCX 样本，原字节不变。ET 来源清单和固定预期移至 `docs/maintenance/et/`，维护脚本及 CI 同步定位。
-- `packaging/runtime-manifests/`：12 份审阅后的显式发布文件清单；不自动吸入新文件。
+- `packaging/runtime-manifests/`：13 份审阅后的显式发布文件清单；不自动吸入新文件。
 - `tools/`：统一构建、自检和回归工具。DOCX、OFD旧打包命令是兼容入口，复用同一构建实现。
 - `dist/runtime/`：本地已生成的 ZIP 与发布清单；`dist/archive/`：保留历史 ZIP，不覆盖原字节。整个 `dist/` 不纳入 Git；包文件名中的版本须与当前 `SKILL.md` 分别核对，已有包不必然对应当前源码。
 - `docs/validation/`：重组基线、历史包指纹和当前验收记录。旧证据保留原日期/版本结论，不伪装为本轮重跑。
@@ -47,6 +47,8 @@ python3 -I -S -B tools/package_ofd.py dist/runtime/ofd-review.zip
 构建拒绝未分类源码、缺失清单成员、路径越界、符号链接运行文件、重复成员和私有字体发布；缓存不进入包。输出固定ZIP元数据、排序和压缩级别，同环境同源码可重现；构建后核对CRC、成员清单及源码快照逐字节一致。ZIP压缩字节可能随Python/zlib版本变化，不把跨环境压缩哈希视为业务差异。
 
 构建不执行业务验收，成功不代表所有功能或视觉效果已验证。默认全量构建先检查所有输入/已有输出，再逐包发布；发生磁盘错误时已成功发布的包保留，不谎称整批原子成功。
+
+维护 TL-PPTX 发行文件时，先审阅实际变更及来源记录，再同步 `references/tl-release-integrity.json` 的成员哈希和 `scripts/tl_release_integrity.py` 的清单固定摘要。验证器自身条目按固定摘要归零的规则计算。重建后用独立安装测试验证原包可通过门禁，以及增删或修改发行文件会被拒绝。
 
 ## 验证与维护
 

@@ -4,7 +4,6 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
-import platform
 import resource
 import statistics
 import subprocess
@@ -101,7 +100,7 @@ def main():
                 raise AssertionError('Projection is not deterministic')
             results.append({**runs[0], 'seconds': statistics.median(run['seconds'] for run in runs),
                             'peak_rss_kib': statistics.median(run['peak_rss_kib'] for run in runs)})
-    print(json.dumps({'platform': platform.platform(), 'python': sys.version, 'repeats': 3,
+    print(json.dumps({'platform': sys.platform, 'python': sys.version, 'repeats': 3,
                       'scope': 'projection only, immutable synthetic input, process peak RSS', 'results': results}, indent=2))
 
 

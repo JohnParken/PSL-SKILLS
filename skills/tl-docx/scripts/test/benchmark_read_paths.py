@@ -10,7 +10,6 @@ from io import BytesIO
 import json
 import os
 from pathlib import Path
-import platform
 import resource
 import statistics
 import subprocess
@@ -106,7 +105,7 @@ def main():
                 name: statistics.median(row[name] for row in selected)
                 for name in ('report_seconds', 'process_seconds', 'peak_rss_kib', 'report_bytes')
             }})
-    print(json.dumps({'platform': platform.platform(), 'python': sys.version,
+    print(json.dumps({'platform': sys.platform, 'python': sys.version,
                       'scope': 'report API, not CLI pagination or cache; synthetic only',
                       'summary': summary, 'runs': rows}, indent=2))
 

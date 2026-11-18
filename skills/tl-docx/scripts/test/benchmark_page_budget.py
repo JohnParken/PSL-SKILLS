@@ -11,7 +11,6 @@ import base64
 import importlib.util
 import json
 from pathlib import Path
-import platform
 import statistics
 import sys
 import time
@@ -100,7 +99,7 @@ def main():
     actual = optimized()
     if actual != expected or module.encode(actual) != module.encode(expected):
         raise AssertionError('Benchmark refused: baseline and optimized outputs differ')
-    result = {'python': sys.version, 'platform': platform.platform(), 'record_count': args.records,
+    result = {'python': sys.version, 'platform': sys.platform, 'record_count': args.records,
               'budget': args.budget, 'repeats': args.repeats, 'outputs_identical': True,
               'page_records': actual['end'] - actual['start'], 'output_bytes': len(module.encode(actual)),
               'scope': 'page() only; excludes parsing, allocated records, final stdout encoding and I/O',

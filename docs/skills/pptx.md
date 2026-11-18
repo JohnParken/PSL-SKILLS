@@ -1,6 +1,6 @@
 # PPTX：受限 SVG 到可编辑演示文稿
 
-当前能力核对日期：2026-11-17；本轮基于 `f9dfab7` 加工作区变更。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261118.0325.5874`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时读取 [创建参考](../../skills/pptx/references/creation.md) 与 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。2026-11-10 备注读取修复的历史结果和未验证范围见 [核验记录](../maintenance/pptx/reading-20261110.md)。
+当前能力核对日期：2026-11-17；本轮基于 `f9dfab7` 加工作区变更。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261118.1520.5095`。这是仓库级实现说明，实际业务先读取 [SKILL.md](../../skills/pptx/SKILL.md)，创建时读取 [创建参考](../../skills/pptx/references/creation.md) 与 [输入契约](../../skills/pptx/references/input-contract.md)，读取分页时使用 [有界读取契约](../../skills/pptx/references/bounded-reading.md)。2026-11-10 备注读取修复的历史结果和未验证范围见 [核验记录](../maintenance/pptx/reading-20261110.md)。
 
 用户上传文件和待查交付物只在任务目录顶层发现；配置明确引用的 SVG 和图片可使用安全的任务相对路径。执行器可直接访问主入口真实路径时无需臆造路径映射；文件名含空格或中文须作为完整参数引用。
 
