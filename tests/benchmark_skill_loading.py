@@ -143,6 +143,7 @@ CAPABILITY_CHANGES = {
 
 # Final entry routes: a plan, not evidence of actual host selection or caching.
 PROFILES['xlsx-summary'] = (PROFILES['xlsx-summary'][0], ['xlsx/SKILL.md'])
+PROFILES['et-overview'] = (PROFILES['et-overview'][0], ['et/SKILL.md'])
 PROFILES['mixed-format-read'] = (PROFILES['mixed-format-read'][0],
                                   ['xlsx/SKILL.md', 'et/SKILL.md', 'et/references/bounded-reading.md', 'wps/SKILL.md'])
 SCENARIOS['xlsx-summary'] = 'Structure-only native XLSX summary using the complete entry command; no cell values or pagination.'
@@ -182,6 +183,65 @@ CAPABILITY_CHANGES.update({
     'et-direct-statistics': 'Baseline supports regional statistics, but not the new bounded output cursor/budget; statistics correctness is tested separately.',
     'et-complex-query': 'Baseline supports queries, but not the new bounded output cursor/budget.',
 })
+
+
+
+# WPS/XLSX/OFD prompt-only iteration: preserve historical before sets.
+# Advanced XLSX tasks now traverse the small task router; count that extra read.
+for _name in ('xlsx-formula-partial',):
+    _before, _after = PROFILES[_name]
+    PROFILES[_name] = (_before, [_after[0], 'xlsx/references/task-routes.md'] + _after[1:])
+for _name in tuple(PROFILES):
+    if _name.startswith('xlsx-specialized-'):
+        _before, _after = PROFILES[_name]
+        PROFILES[_name] = (_before, [_after[0], 'xlsx/references/task-routes.md'] + _after[1:])
+# OFD summary remains an explicit output-view task, not ordinary content reading.
+# Partial page diagnosis still reads output-views and boundaries when needed.
+
+
+# Separate same-capability pilot baseline; never replace the historical baseline.
+ET_PILOT_BASELINE = '6d5b8ef2f77e2d9b17b72a479c71d72f41fffeca'
+ET_PILOT_PROFILES = {
+    'default-read': (['et/SKILL.md'], ['et/SKILL.md']),
+    'default-continuation': (['et/SKILL.md'], ['et/SKILL.md']),
+    'overview': (['et/SKILL.md'], ['et/SKILL.md']),
+    'header-preview': (['et/SKILL.md', 'et/references/table-preview.md'],
+                       ['et/SKILL.md', 'et/references/table-preview.md']),
+    'direct-statistics': (['et/SKILL.md', 'et/references/basic-statistics.md'],
+                          ['et/SKILL.md', 'et/references/basic-statistics.md']),
+    'complex-query': (['et/SKILL.md', 'et/references/table-analysis.md'],
+                      ['et/SKILL.md', 'et/references/table-analysis.md']),
+    'full-evidence': (['et/SKILL.md', 'et/references/spreadsheet-consumption.md'],
+                      ['et/SKILL.md', 'et/references/spreadsheet-consumption.md']),
+    'partial-investigation': (['et/SKILL.md', 'et/references/reading-assessment.md'],
+                              ['et/SKILL.md', 'et/references/reading-assessment.md']),
+    'file-delivery': (['et/SKILL.md'], ['et/SKILL.md', 'et/references/result-delivery.md']),
+    'mixed-et-wps-read': (['et/SKILL.md', 'wps/SKILL.md'], ['et/SKILL.md', 'wps/SKILL.md']),
+}
+
+
+def build_et_pilot_report():
+    """Measure frozen ET pilot plans against the actual pre-pilot main commit."""
+    profiles = {}
+    for name, (before_paths, after_paths) in ET_PILOT_PROFILES.items():
+        before = measure(before_paths, ET_PILOT_BASELINE)
+        after = measure(after_paths)
+        profiles[name] = dict(before=before, after=after,
+                              delta_after_minus_before={unit: after[unit] - before[unit]
+                                                        for unit in ('chars', 'bytes', 'read_events')})
+    return dict(schema_version=1, baseline_commit=ET_PILOT_BASELINE,
+                benchmark_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                method='planned whole-file read events, not observed model routing',
+                after_source='working tree; per-file SHA256 recorded', platform=sys.platform,
+                python='.'.join(map(str, sys.version_info[:3])), profiles=profiles,
+                tokenizer=dict(status='not_measured'), host_usage=dict(status='not_measured'),
+                behavior_validation='not_measured_by_loading_benchmark',
+                limitations=['Default continuation assumes unchanged scope and complete next_arguments; no complex reconstruction.',
+                             'Partial investigation means deeper diagnosis, not every partial result.',
+                             'File delivery is an explicit ordinary output request, not custom budgets or evidence reconstruction.',
+                             'Mixed read counts provider entries only, not document-navigation or host overhead.',
+                             'Advanced or mixed requests must union every actually required reference.',
+                             'Characters and bytes are not token usage, execution accuracy or latency.'])
 
 
 def validate_name(name):
@@ -319,11 +379,17 @@ def check_snapshot(snapshot, baseline=BASELINE, encoder=None, tokenizer=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', default=BASELINE)
+    parser.add_argument('--et-read-pilot', action='store_true', help='Separate ET pilot plans against pre-pilot main; no tokenizer')
     parser.add_argument('--check-snapshot', type=Path, help='Validate saved evidence against current plans and files; stale exits 1')
     parser.add_argument('--encoding', help='Optional installed tiktoken encoding; exact file token counts only')
     parser.add_argument('--tokenizer-cache', help='Existing offline tiktoken cache; never downloaded or modified')
     args = parser.parse_args()
     try:
+        if args.et_read_pilot:
+            if args.check_snapshot or args.encoding or args.tokenizer_cache or args.baseline != BASELINE:
+                raise ValueError('--et-read-pilot has a fixed separate baseline and cannot combine with other report options')
+            print(json.dumps(build_et_pilot_report(), ensure_ascii=False, indent=2))
+            return 0
         encoder, metadata = load_tokenizer(args.encoding, args.tokenizer_cache)
         if args.check_snapshot:
             snapshot = json.loads(args.check_snapshot.read_text(encoding='utf-8'))

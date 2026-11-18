@@ -96,3 +96,26 @@ XLSX纯概况after使用入口完整命令，不预读bounded-reading；baseline
 ## ET连续读取链（2026-11-16）
 
 独立复核12项ET相关选择期望，保留79项case及原计划读取范围。新增结构化续读参数、同源SHA与partial处理引导，不改变原格式/只读/缓存和跨表原schema契约。刷新ET入口指纹与当前加载快照；前版逐字保存为 skill_selection_current_cases_before_et_read_chain_20261116.json 和 runtime_loading_profiles_before_et_read_chain_20261116.json。CLI链及当前Dot一次模型可见串联不等于DeepAgents自主选路、可靠上下文恢复或token收益验收。
+
+## ET 高频读取入口试点（2026-11-18）
+
+本轮保留全局历史基线 `4b5a61f`，仅把已有 `et-overview` 的 after 计划改为按当前入口完整命令独立完成；其它既有计划不因瘦身自动删参考。旧全局快照逐字保存在 `runtime_loading_profiles_before_et_read_pilot_20261118.json`。
+
+为避免混用旧基线，单独提供 `et_read_pilot_loading_20261118.json`，固定比较本轮前 main `6d5b8ef2f77e2d9b17b72a479c71d72f41fffeca` 与工作树，记录 10 项明确的整文件读取计划、顺序、字符/字节、每文件 SHA256 及读取次数。重现：
+
+```console
+python3 -I -S -B tests/benchmark_skill_loading.py --et-read-pilot
+python3 -I -S -B -m unittest discover -s tests -p 'test_skill_loading_benchmark.py' -v
+```
+
+默认读取、普通续读和概况：14,995 → 5,267 字符（-64.9%，两侧各一次入口读取）。表头预览：19,028 → 9,300（-51.1%）；基础统计：21,601 → 11,873（-45.0%）；复杂查询：26,440 → 16,712（-36.8%）；原 schema 证据：19,698 → 9,970（-49.4%）；深入 partial 诊断：19,520 → 9,792（-49.8%）；显式结果交付：14,995 → 7,050（-53.0%，读取次数从 1 增至 2）；ET/WPS 混合读取：26,749 → 17,021（-36.4%）。报告不把所有复杂任务都归为默认入口的64.9%降幅。
+
+普通续读假定原 scope 和完整 next_arguments 仍在；深入诊断不代表每个 partial 都必须加载参考；显式交付不包含自定义预算或原始证据重组。超出这些条件时取实际必需参考的并集。混合场景不计导航入口和宿主开销。本轮未测 tokenizer、真实模型加载、DeepAgents/provider usage 或性能，不能将字符差换算成 token 节省、延迟或成功率。
+
+人工复核 12 项涉及 ET 的选择期望，保留所有 prompt/include/exclude/case，只有 ET 入口指纹与维护说明更新。前版逐字保存在 `skill_selection_current_cases_before_et_read_pilot_20261118.json`。当前全仓选择测试仍发现 TL-DOCX/TL-PPTX 原有指纹过期，不在 ET 试点中刷新无关指纹掩盖问题。
+
+本轮统计测试：Linux Python 3.12.14，loading 27 项通过；selection 5 项通过、1 项因上述非 ET 指纹失败。Pylint 4.1.4 完整检查已执行，两个既有 E0401 来自未安装可选维护依赖 tiktoken，另外存在既有文档字符串/风格提示；没有将维护依赖加到 Skill 或禁用错误规则，不能称 Pylint 全通过。业务、宿主和独立包验收由对应回归另行记录。
+
+## WPS/XLSX/OFD 提示精简整合（2026-11-18）
+
+三技能入口与任务加载比较、保存的前版证据和验证限制见 [整合验收](../docs/maintenance/prompt-loading/validation-20261118.md)。高级 XLSX 公式及专项任务计入 task-routes；基础区域统计和已有 ET 完整 JSON 消费保持入口直达。当前 ET 混合报告重算受 WPS 文本变化影响，历史 ET 试点数字不覆盖。实际 token、模型选路与宿主行为仍未测。

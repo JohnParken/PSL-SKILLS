@@ -43,8 +43,9 @@ class LoadingBenchmarkTests(unittest.TestCase):
     def test_changed_read_sets_follow_documented_routes(self):
         allowed = {'xlsx-static-create', 'repeated-create-cold',
                    'repeated-create-retained', 'repeated-create-compacted', 'pptx-notes-pagination',
-                   'et-header-preview', 'et-direct-statistics', 'mixed-pptx-et-read', 'xlsx-summary', 'mixed-format-read',
-                   'xlsx-et-analysis', 'xlsx-wps-analysis', 'ofd-basic-create'}
+                   'et-overview', 'et-header-preview', 'et-direct-statistics', 'mixed-pptx-et-read', 'xlsx-summary', 'mixed-format-read',
+                   'xlsx-et-analysis', 'xlsx-wps-analysis', 'ofd-basic-create',
+                   'xlsx-formula-partial', 'xlsx-basic-region-analysis'}
         for name, (before, after) in BENCH.PROFILES.items():
             if name not in allowed and not name.startswith('xlsx-specialized-'):
                 self.assertEqual(before, after, name)
@@ -57,6 +58,39 @@ class LoadingBenchmarkTests(unittest.TestCase):
             self.assertIn('xlsx/references/et-result-analysis.md', paths)
             self.assertIn('xlsx/references/data-analysis.md', paths)
             self.assertFalse(any(path.startswith('wps/') for path in paths))
+
+    def test_trio_prompt_routes_keep_common_tasks_direct(self):
+        entry = BENCH.read_resource('xlsx/SKILL.md').decode('utf-8')
+        self.assertIn('普通 XLSX/XLSM 完整读取只需本入口', entry)
+        self.assertIn('| 原生 XLSX/XLSM 的 profile/summarize 基础区域统计 |', entry)
+        self.assertIn('| 消费已有 ET 完整提取 JSON 并统计 |', entry)
+        for name in ('xlsx-basic-region-analysis', 'xlsx-et-analysis', 'xlsx-wps-analysis'):
+            self.assertNotIn('xlsx/references/task-routes.md', BENCH.PROFILES[name][1])
+        for name in ('xlsx-formula-partial', 'xlsx-specialized-maturity-distribution'):
+            self.assertIn('xlsx/references/task-routes.md', BENCH.PROFILES[name][1])
+        for name in ('wps-text-read', 'wps-static-create'):
+            self.assertEqual(BENCH.PROFILES[name][1], ['wps/SKILL.md'])
+
+    def test_et_pilot_hot_paths_and_delivery_are_separate(self):
+        for name in ('default-read', 'default-continuation', 'overview'):
+            self.assertEqual(BENCH.ET_PILOT_PROFILES[name], (['et/SKILL.md'], ['et/SKILL.md']))
+        self.assertEqual(BENCH.PROFILES['et-overview'][1], ['et/SKILL.md'])
+        before, after = BENCH.ET_PILOT_PROFILES['file-delivery']
+        self.assertEqual(before, ['et/SKILL.md'])
+        self.assertEqual(after, ['et/SKILL.md', 'et/references/result-delivery.md'])
+        self.assertNotEqual(BENCH.ET_PILOT_BASELINE, BENCH.BASELINE)
+
+    def test_et_pilot_snapshot_matches_actual_resources(self):
+        saved = json.loads(Path(__file__).with_name('et_read_pilot_loading_20261118.json').read_text(encoding='utf-8'))
+        current = BENCH.build_et_pilot_report()
+        for key in ('platform', 'python'):
+            saved.pop(key)
+            current.pop(key)
+        self.assertEqual(saved, current)
+        self.assertEqual(current['host_usage']['status'], 'not_measured')
+        for profile in current['profiles'].values():
+            self.assertIsNone(profile['before']['tokens'])
+            self.assertIsNone(profile['after']['tokens'])
 
     def test_all_planned_resources_exist_on_both_sides(self):
         for before, after in BENCH.PROFILES.values():

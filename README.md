@@ -1,3 +1,5 @@
+普通读取与同页游标续读由 OFD 主入口自包含指导；结构、复杂来源/故障处理按任务加载，只有明确保存并交付 JSON 时才读取 task-delivery 参考。字符统计与本轮验证见 [OFD 提示词精简记录](docs/maintenance/ofd/prompt-loading-20261118.md)，不代表真实宿主 Token 实测。
+
 # PSL-SKILLS
 
 2026-11-16：移除脚本对 uname 的直接及已确认间接依赖，修复旧版 Python 在 Linux 分支导入 uuid 的阻断；[根因与验证边界](docs/validation/uname-sandbox-20261116.md)。
@@ -26,13 +28,13 @@
 | --- | --- | --- | --- |
 | [文档任务导航（document-navigation）](skills/document-navigation/SKILL.md) | 独立纯指导文档 | 20261118.0614.2170 | 上传文档优先导航：在 `./` 用 `ls -la` 查看本轮候选，再加载格式专用技能。 |
 | [银行专业写作（bank-writing）](skills/bank-writing/SKILL.md) | 用户附件 `bank-material-writing-enhanced(2).zip` | 20261118.0245.5046 | 银行材料起草、改写、摘要、仿写与审校；独立月报分析、比较、创建/续写与增长机会验证，区分事实与假设；仅交付文本，表格计算按需交接，明确需要 DOCX 时由 docx 制作 |
-| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261118.0325.5874 | DOCX 生成、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
+| [docx](skills/docx/SKILL.md) | `skills/docx` | 20261118.1520.5095 | DOCX 生成、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、表头与合并行、文本框、图表保存值及缺值范围。提供静态排版诊断、自动命名与交付收尾。旧版 WPS 文字交给 wps，ET/ETT 交给 et。 |
 | [tl-docx](skills/tl-docx/SKILL.md) | `skills/tl-docx` | 20261118.1622.2299 | 基于 python-docx 按关系读取内容、公式片段与图表缓存，默认省略内部结构，局部失败明确 partial，支持报告和无损分片；支持 Profile、角色及表格文字样式、分节尺寸、多级编号、模板填充、线程批注与受控 run 合并。 |
-| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261118.0325.5874 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
-| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261118.0325.5874 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；显式 maximum 读取内嵌 PNG 及布局证据，--profile full保留原结构；内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
-| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261118.0325.5874 | 离线读取 .et/.ett 的 BIFF5/7核心、BIFF8/OOXML 保存值与公式缓存；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），完整原 schema 与行列/绘图证据用 --profile full；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
-| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261118.0325.5874 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
-| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261118.0325.5874 | 受限 SVG 创建原生 PPTX；默认读取文字/备注、结构化表格与图表保存值，保留内容缺口与数学有损诊断；全包验证、整页及显式页内有界续读；按任务直达创建/读取参考，无任意编辑或视觉验收 |
+| [xlsx](skills/xlsx/SKILL.md) | `minimax-skills/skills/minimax-xlsx` | 20261119.0242.1442 | XLSX/XLSM 原生读取、XLSX 创建和受控编辑、CSV/TSV 与分析；标准任务入口自动检测同名并递增版本命名，失败立即清理中间文件；支持公式子集计算与复杂 JSON 模板；可消费 et 技能提取的受支持电子表格 JSON；不直接读取 WPS 专有格式 |
+| [wps](skills/wps/SKILL.md) | 本地限定实现；WPS 文字处理 | 20261119.0243.0560 | 标准库生成RTF（默认.wps后缀，显式.rtf保留，非金山原生格式），公文默认参数参照DOCX；默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；显式 maximum 读取内嵌 PNG 及布局证据，--profile full保留原结构；内容重排编辑及DOCX兼容导出；发布前核对规范化文字/块顺序/单元格及支持的合并标记；CLI自动归档与受控配置清理；保留partial诊断，不承诺无损或视觉分页；导出可选LibreOffice；ET/ETT使用et、原生XLSX/XLSM使用xlsx，不自动转换 |
+| [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261119.0122.3304 | 离线读取 .et/.ett 的 BIFF5/7核心、BIFF8/OOXML 保存值与公式缓存；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），完整原 schema 与行列/绘图证据用 --profile full；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
+| [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261119.0242.5751 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
+| [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261118.1520.5095 | 受限 SVG 创建原生 PPTX；默认读取文字/备注、结构化表格与图表保存值，保留内容缺口与数学有损诊断；全包验证、整页及显式页内有界续读；按任务直达创建/读取参考，无任意编辑或视觉验收 |
 | [tl-pptx](skills/tl-pptx/SKILL.md) | ppt-master main `7e0df6705de0` 核心移植与独立适配 | 20261118.2015.1010 | 完整原生能力迁移中；公开安全SVG新建、完整builder、结构分析、导入及重建；已验 Style 模板创建/注册/应用与离线 Deck 预览生成；固定七项直接依赖，移除旁白、字幕和视频处理。 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261118.0325.5874 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261118.0325.5874 | 本轮临时文件登记、最终交付物清单归档（无覆盖、安全幂等重试）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
@@ -70,7 +72,7 @@ PSL-SKILLS/
 
 ## 精简运行包与维护源码
 
-全 12 个 Skill 使用 [统一打包器](tools/package_skills.py) 与 [发布说明](docs/packaging.md)。排除测试、缓存、历史验收和维护工具；OFD 写入服务暂停并排除写入资源，运行脚本与静态资源按显式清单逐字节发布，新增未分类文件使构建失败。OFD 源码内置字体及许可保留供恢复；PPTX引擎数据、XLSX模板、生命周期副本来源信息必须保留。
+全 13 个 Skill 使用 [统一打包器](tools/package_skills.py) 与 [发布说明](docs/packaging.md)。排除测试、缓存、历史验收和维护工具；OFD 写入服务暂停并排除写入资源，运行脚本与静态资源按显式清单逐字节发布，新增未分类文件使构建失败。OFD 源码内置字体及许可保留供恢复；PPTX引擎数据、XLSX模板、生命周期副本来源信息必须保留。
 
 ```console
 python3 -I -S -B tools/package_skills.py
@@ -78,6 +80,8 @@ python3 -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/rev
 ```
 
 输出目录必须未含同名包，工具不覆盖。旧 ZIP 已保留在 `dist/archive/`；不要用运行时归档清理器删除发布历史。`bank-writing` 已全部是业务参考，保留完整内容；`skill-development-standards` 的自测是其维护功能的一部分，随包保留。其他业务包不含 `scripts/test`。`table-workflow` 仍显式依赖已定位并验证的 XLSX/ET 公开接口，不伪装成无依赖基础技能。
+
+TL-PPTX 完整性、DOCX 入口预算和 WPS 临时文件保护的相关回归、打包及独立安装结果见 [Box Linux 复验](docs/validation/box-linux-repairs-20261118.md)。
 
 ## 环境要求
 
@@ -141,6 +145,8 @@ python3 -I -S -B tools/package_skills.py docx xlsx --output-dir dist/runtime/rev
 合成集成回归见 [测试](tests/test_table_workflow.py)，环境、端到端结果、输出规模与未验证项见 [初次验证记录](tests/table_workflow_validation.json)，后续公式策略隔离、计划重放、状态与保护验证见 [针对性复核](tests/table_workflow_review.json)，维表关联、勾稽与真实公开样本验收见 [本轮增强记录](tests/table_workflow_quality_validation.json)。仅本机 macOS/Python3.12.11 验证，含明确标注的公开 XLSX 样本；不代表 Linux、Windows、WPS/Excel 软件视觉或宿主 token 节省验收。没有修改已有发布ZIP。
 
 ### XLSX
+
+普通 XLSX/XLSM 读取现在仅需主入口，包含类型、公式缓存、日期和完整性解释；CSV/TSV、局部值与分页仍按任务加载参考。公式、统计与业务汇总的低频细分路由移至 `references/task-routes.md`，不预读全部分支。此次为提示组织调整，不更改运行时接口；字符代理与验证范围见 [XLSX 提示精简验证](docs/maintenance/xlsx/prompt-loading-20261118.md)。
 
 首次操作前运行自检，要求退出码为 0 且 JSON 中 `status` 为 `ready`：
 

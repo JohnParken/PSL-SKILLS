@@ -1,0 +1,261 @@
+{
+  "evidence": "planned whole-file reads; not observed routing or tokens",
+  "baseline": "et-read-merged-validation filesystem snapshot including prior ET and concurrent changes, not clean HEAD",
+  "host_usage": "not_measured",
+  "profiles": {
+    "wps-read": {
+      "before": {
+        "files": [
+          {
+            "path": "wps/SKILL.md",
+            "chars": 11754,
+            "bytes": 23615,
+            "sha256": "ff64443dc3228a255250ad9c3e0f18f8e547fd144a2b12523d29f42ac727157e"
+          }
+        ],
+        "chars": 11754,
+        "bytes": 23615,
+        "read_events": 1
+      },
+      "after": {
+        "files": [
+          {
+            "path": "wps/SKILL.md",
+            "chars": 7228,
+            "bytes": 14143,
+            "sha256": "ed3023033b84821459d95d1de5b656f49034162e1fe2dd67548afe3b6ec76c71"
+          }
+        ],
+        "chars": 7228,
+        "bytes": 14143,
+        "read_events": 1
+      }
+    },
+    "wps-create": {
+      "before": {
+        "files": [
+          {
+            "path": "wps/SKILL.md",
+            "chars": 11754,
+            "bytes": 23615,
+            "sha256": "ff64443dc3228a255250ad9c3e0f18f8e547fd144a2b12523d29f42ac727157e"
+          }
+        ],
+        "chars": 11754,
+        "bytes": 23615,
+        "read_events": 1
+      },
+      "after": {
+        "files": [
+          {
+            "path": "wps/SKILL.md",
+            "chars": 7228,
+            "bytes": 14143,
+            "sha256": "ed3023033b84821459d95d1de5b656f49034162e1fe2dd67548afe3b6ec76c71"
+          }
+        ],
+        "chars": 7228,
+        "bytes": 14143,
+        "read_events": 1
+      }
+    },
+    "wps-detailed-content": {
+      "before": {
+        "files": [
+          {
+            "path": "wps/SKILL.md",
+            "chars": 11754,
+            "bytes": 23615,
+            "sha256": "ff64443dc3228a255250ad9c3e0f18f8e547fd144a2b12523d29f42ac727157e"
+          }
+        ],
+        "chars": 11754,
+        "bytes": 23615,
+        "read_events": 1
+      },
+      "after": {
+        "files": [
+          {
+            "path": "wps/SKILL.md",
+            "chars": 7228,
+            "bytes": 14143,
+            "sha256": "ed3023033b84821459d95d1de5b656f49034162e1fe2dd67548afe3b6ec76c71"
+          },
+          {
+            "path": "wps/references/content-reading.md",
+            "chars": 2863,
+            "bytes": 5583,
+            "sha256": "8dab76de6e2a7a55f9b3591d9850b64a9593b408c5f35e337e60cd201eee2680"
+          }
+        ],
+        "chars": 10091,
+        "bytes": 19726,
+        "read_events": 2
+      }
+    },
+    "xlsx-complete-read": {
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10809,
+            "bytes": 21050,
+            "sha256": "eb8f3ce346cb3ba6380ccc1fb76fe1971be9bfab0a95c32cb3aa84263b74b298"
+          },
+          {
+            "path": "xlsx/references/read-analyze.md",
+            "chars": 3179,
+            "bytes": 3777,
+            "sha256": "a4be3fa8b638532ad71972cface676f23e840309c4a9472f1aad90e7fadbe385"
+          }
+        ],
+        "chars": 13988,
+        "bytes": 24827,
+        "read_events": 2
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7606,
+            "bytes": 15213,
+            "sha256": "b0c51ab06405df46d9d4de41dbcf1c1bb614add29ddb7c5390ca782f7eed1bf4"
+          }
+        ],
+        "chars": 7606,
+        "bytes": 15213,
+        "read_events": 1
+      }
+    },
+    "xlsx-static-create": {
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10809,
+            "bytes": 21050,
+            "sha256": "eb8f3ce346cb3ba6380ccc1fb76fe1971be9bfab0a95c32cb3aa84263b74b298"
+          }
+        ],
+        "chars": 10809,
+        "bytes": 21050,
+        "read_events": 1
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7606,
+            "bytes": 15213,
+            "sha256": "b0c51ab06405df46d9d4de41dbcf1c1bb614add29ddb7c5390ca782f7eed1bf4"
+          }
+        ],
+        "chars": 7606,
+        "bytes": 15213,
+        "read_events": 1
+      }
+    },
+    "xlsx-basic-statistics": {
+      "before": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 10809,
+            "bytes": 21050,
+            "sha256": "eb8f3ce346cb3ba6380ccc1fb76fe1971be9bfab0a95c32cb3aa84263b74b298"
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 9834,
+            "bytes": 10698,
+            "sha256": "94f5a5fac0d99ff5d0bd8e1fdc6555c486303e12b3bf2a25374ab81eb2b97de4"
+          }
+        ],
+        "chars": 20643,
+        "bytes": 31748,
+        "read_events": 2
+      },
+      "after": {
+        "files": [
+          {
+            "path": "xlsx/SKILL.md",
+            "chars": 7606,
+            "bytes": 15213,
+            "sha256": "b0c51ab06405df46d9d4de41dbcf1c1bb614add29ddb7c5390ca782f7eed1bf4"
+          },
+          {
+            "path": "xlsx/references/data-analysis.md",
+            "chars": 9834,
+            "bytes": 10698,
+            "sha256": "94f5a5fac0d99ff5d0bd8e1fdc6555c486303e12b3bf2a25374ab81eb2b97de4"
+          }
+        ],
+        "chars": 17440,
+        "bytes": 25911,
+        "read_events": 2
+      }
+    },
+    "ofd-read": {
+      "before": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 9295,
+            "bytes": 20607,
+            "sha256": "804dcec898f9b7bf9e440543d26e3c53e15c7d2a7a06e50b793d003e039a4651"
+          }
+        ],
+        "chars": 9295,
+        "bytes": 20607,
+        "read_events": 1
+      },
+      "after": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 4955,
+            "bytes": 10269,
+            "sha256": "9889fbdd7fa45d5049e380ec64d59ef6cea0d6d0e9d80d1864ef4a79df38de9d"
+          }
+        ],
+        "chars": 4955,
+        "bytes": 10269,
+        "read_events": 1
+      }
+    },
+    "ofd-json-delivery": {
+      "before": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 9295,
+            "bytes": 20607,
+            "sha256": "804dcec898f9b7bf9e440543d26e3c53e15c7d2a7a06e50b793d003e039a4651"
+          }
+        ],
+        "chars": 9295,
+        "bytes": 20607,
+        "read_events": 1
+      },
+      "after": {
+        "files": [
+          {
+            "path": "ofd/SKILL.md",
+            "chars": 4955,
+            "bytes": 10269,
+            "sha256": "9889fbdd7fa45d5049e380ec64d59ef6cea0d6d0e9d80d1864ef4a79df38de9d"
+          },
+          {
+            "path": "ofd/references/task-delivery.md",
+            "chars": 1397,
+            "bytes": 3188,
+            "sha256": "903bd7350dd7e5b02c99005420305aa6950add702ad3e76b32cb78ed90c5e52c"
+          }
+        ],
+        "chars": 6352,
+        "bytes": 13457,
+        "read_events": 2
+      }
+    }
+  }
+}

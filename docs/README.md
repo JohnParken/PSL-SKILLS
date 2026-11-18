@@ -19,7 +19,8 @@
 - 2026-11-12 新增纯指导 `document-navigation`，保留其他 Skill 独立入口；[本轮记录](maintenance/document-navigation/validation-20261112.md) 单列实际测试与真实 DeepAgents 宿主尚未验证的条件，不改写以下历史基线。
 - 同日按用户建议将导航选择条件扩为通用文档处理意图，无需格式或位置已知；[更新验证](maintenance/document-navigation/intent-trigger-20261112.md) 保留前版记录。
 - 仓库：[JohnParken/PSL-SKILLS](https://github.com/JohnParken/PSL-SKILLS)。
-- 当前源码基线：`fb6cdff0161a137ebb0e64ebc64d09d11534d6d2` 加本轮工作区变更，核对日期 2026-11-12（UTC）；本轮整理 ET 容错读取、文档导航与归档展示契约，实际核验见 [分批提交记录](maintenance/commit-preparation/validation-20261112.md)。历史裸文件名迁移验证见 [当时记录](output-filenames-validation.json)，不代表当前版本的全量重测。
+- 当前相关复验基线为 `7b505998d2be1db7a91ecb43813c9ad3926e858c` 加本轮工作区变更，见 [Box Linux 复验](validation/box-linux-repairs-20261118.md)。
+- 2026-11-12 的 ET 容错读取、文档导航与归档展示证据见 [分批提交记录](maintenance/commit-preparation/validation-20261112.md)。裸文件名迁移结果见 [当时记录](output-filenames-validation.json)。
 - 此前对全部 10 个 Skill 进行运行包与维护材料分离；当时验收基于 `e86522e` 加当时变更，记录于分批提交前。当前源码版本以表中为准，历史包与验收以各自记录和 Git 历史为准；详情见 [项目结构和运行包](packaging.md)。
 - DOCX 字体编辑路由、独立差异保护与相关历史回归见 [DOCX 说明](skills/docx.md#已有文档字体修改与格式保留)；历史记录的基线、平台和范围不能自动推广到当前版本。
 - 覆盖依据：当前工作树中所有 `skills/*/SKILL.md`，不将历史分发 ZIP、测试夹具或参考文件当作额外 Skill。
@@ -34,13 +35,13 @@
 | --- | --- | --- |
 | [document-navigation](skills/document-navigation.md) | 20261118.0614.2170 | 上传文档优先导航：在 `./` 用 `ls -la` 查看本轮候选，再加载格式专用技能。 |
 | [bank-writing](skills/bank-writing.md) | 20261118.0245.5046 | 银行材料写作、月报与跨期经营分析；讲话、客户投诉及公关，邮件短结构与可选合成示例；仅交付文本，表格计算按需交接。 |
-| [docx](skills/docx.md) | 20261118.0325.5874 | DOCX 创建、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、文本框、合并表格、图表缓存及图片引用。显式 --report 保留结构JSON，续读复用解析结果。 |
+| [docx](skills/docx.md) | 20261118.1520.5095 | DOCX 创建、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、文本框、合并表格、图表缓存及图片引用。显式 --report 保留结构JSON，续读复用解析结果。 |
 | [tl-docx](skills/tl-docx.md) | 20261118.1622.2299 | 基于 python-docx 的独立 Word 入口。普通读取默认有用内容与图表，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
-| [xlsx](skills/xlsx.md) | 20261118.0325.5874 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
-| [wps](skills/wps.md) | 20261118.0325.5874 | 默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；PNG和布局证据显式 maximum，原结构显式 --profile full；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
-| [et](skills/et.md) | 20261118.0325.5874 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261118.0325.5874 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
-| [pptx](skills/pptx.md) | 20261118.0325.5874 | 受限 SVG 创建；默认文字/备注、结构化表格和图表保存值，内容/数学缺口诊断；整页或显式页内续读，按需加载参考；不任意编辑。 |
+| [xlsx](skills/xlsx.md) | 20261119.0242.1442 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [wps](skills/wps.md) | 20261119.0243.0560 | 默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；PNG和布局证据显式 maximum，原结构显式 --profile full；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
+| [et](skills/et.md) | 20261119.0122.3304 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261119.0242.5751 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
+| [pptx](skills/pptx.md) | 20261118.1520.5095 | 受限 SVG 创建；默认文字/备注、结构化表格和图表保存值，内容/数学缺口诊断；整页或显式页内续读，按需加载参考；不任意编辑。 |
 | [tl-pptx](skills/tl-pptx.md) | 20261118.2015.1010 | 完整原生能力与安全入口迁移；支持SVG新建/完整builder/导入重建，保留模板和普通备注，移除旁白/字幕/视频处理。 |
 | [table-workflow](skills/table-workflow.md) | 20261118.0325.5874 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
 | [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261118.0325.5874 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
