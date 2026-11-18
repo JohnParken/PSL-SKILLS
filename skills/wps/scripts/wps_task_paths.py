@@ -1,5 +1,5 @@
 """Task-root access and public delivery filename validation."""
-from contextlib import contextmanager, nullcontext
+from contextlib import ExitStack, contextmanager, nullcontext
 from contextvars import ContextVar
 from functools import wraps
 import json
@@ -199,7 +199,7 @@ def output_candidate(target, *, prefix='.tmp_wps_', exclusive=False):
     else:
         write_capabilities()
         parent_context = access.parent(target, create=True)
-    with parent_context as (parent, target_name):
+    with parent_context as (parent, target_name), ExitStack() as resources:
         parent_identity = None
         if parent is None:
             parent_path = Path(target).parent
@@ -212,10 +212,10 @@ def output_candidate(target, *, prefix='.tmp_wps_', exclusive=False):
             temporary = prefix + secrets.token_hex(16) + '.rtf'
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
             candidate = Path(target).parent / temporary
-        try:
-            owned = os.fstat(descriptor)
-        finally:
-            os.close(descriptor)
+        # Keep the original inode allocated until cleanup finishes, even if
+        # another writer unlinks the candidate and recreates its name.
+        resources.callback(os.close, descriptor)
+        owned = os.fstat(descriptor)
         identity = (owned.st_dev, owned.st_ino)
         key = str(candidate.absolute())
         registration = {'identity': identity, 'expected': None}

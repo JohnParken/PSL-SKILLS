@@ -191,9 +191,11 @@ class TaskPathTests(unittest.TestCase):
                 Path(path).unlink()
                 Path(path).write_bytes(b'unknown replacement')
                 candidates.append(Path(path))
-            with patch('wps_task_paths.write_candidate', side_effect=replaced), self.assertRaises(ValueError):
+            with patch('wps_task_paths.write_candidate', side_effect=replaced), self.assertRaises(ValueError) as blocked:
                 create_document({'blocks': [{'type': 'paragraph', 'text': 'X'}]}, Path('new.wps'))
             self.assertEqual(candidates[0].read_bytes(), b'unknown replacement')
+            self.assertFalse(blocked.exception.publication['cleanup_complete'])
+            self.assertIn('unknown file retained', blocked.exception.publication['cleanup_issues'][0]['reason'])
         self.assertFalse((self.task / 'new.wps').exists())
 
     def test_candidate_byte_change_after_validation_is_not_published(self):
