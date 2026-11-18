@@ -312,29 +312,8 @@ def _validate_result_id_collision(
 
 
 def _load_pathops() -> Any:
-    try:
-        import pathops
-    except ImportError as exc:
-        raise RuntimeError(
-            "Shape Boolean operations require skia-pathops. Install the "
-            "project requirements, or run: pip install skia-pathops"
-        ) from exc
-    required = (
-        "FillType",
-        "Path",
-        "PathOp",
-        "PathOpsError",
-        "PathVerb",
-        "op",
-        "simplify",
-    )
-    missing = [name for name in required if not hasattr(pathops, name)]
-    if missing:
-        raise RuntimeError(
-            "Installed skia-pathops is incompatible; missing: "
-            + ", ".join(missing)
-        )
-    return pathops
+    """Reject excluded runtime backends without importing or probing them."""
+    raise RuntimeError("Shape Boolean is unavailable in the declared dependency set; no geometry was substituted")
 
 
 def _element_to_pathops(

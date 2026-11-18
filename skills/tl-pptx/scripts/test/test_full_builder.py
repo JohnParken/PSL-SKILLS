@@ -10,7 +10,6 @@ import posixpath
 import hashlib
 import tempfile
 import unittest
-from unittest.mock import patch
 import wave
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
@@ -21,7 +20,6 @@ if str(SCRIPTS) not in sys.path:
 
 from svg_to_pptx.drawingml.theme_fonts import MasterTextStyleSpec
 from svg_to_pptx.pptx_package.builder import create_pptx_with_native_svg
-from svg_to_pptx.pptx_package import builder_export_slides, narration
 from svg_to_pptx.pptx_package.template_structure import (
     NativeLayoutSpec, NativeSlideSpec, NativeStructureContract,
 )
@@ -118,24 +116,20 @@ class FullBuilderTests(unittest.TestCase):
         self.assertEqual(transition.get('advTm'), '3000')
         self.assertIsNotNone(transition.find('p:push', NS))
 
-    def test_narration_audio_and_recorded_timing(self):
-        """Embed actual audio bytes; isolate only the optional ffprobe process."""
+    def test_narration_audio_is_refused_without_publication(self):
+        """The old builder keyword must not silently produce a deck missing narration."""
         audio = self.audio()
-        with patch.object(builder_export_slides, 'probe_audio_duration', return_value=0.1):
-            parts = self.export(self.svg(), narration_audio={'page': audio}, use_narration_timings=True)
-        self.assertIn(audio.read_bytes(), parts.values())
-        slide = ET.fromstring(parts['ppt/slides/slide1.xml'])
-        self.assertEqual(len(slide.findall('.//p:audio', NS)), 1)
-        self.assertEqual(slide.find('p:transition', NS).get('advClick'), '0')
-        self.assertIn(b'/audio', parts['ppt/slides/_rels/slide1.xml.rels'])
-
-    def test_unreadable_recorded_duration_fails_and_cleans(self):
-        """Missing ffprobe duration must not silently omit requested timings."""
-        with patch.object(builder_export_slides, 'probe_audio_duration', return_value=None):
-            with self.assertRaisesRegex(RuntimeError, 'ffprobe'):
-                self.export(self.svg(), narration_audio={'page': self.audio()}, use_narration_timings=True)
+        before = audio.read_bytes()
+        with self.assertRaisesRegex(ValueError, 'removed'):
+            self.export(self.svg(), narration_audio={'page': audio})
         self.assertFalse(self.output.exists())
-        self.assertFalse(list(self.root.glob('.pptx-build-*')))
+        self.assertEqual(audio.read_bytes(), before)
+
+    def test_recorded_timing_is_refused_before_probing(self):
+        """Do not invoke a media process to calculate recorded timings."""
+        with self.assertRaisesRegex(ValueError, 'removed'):
+            self.export(self.svg(), use_narration_timings=True)
+        self.assertFalse(self.output.exists())
 
     def preserved_source(self):
         """Build a valid local source package and explicit preservation contract."""
@@ -182,20 +176,6 @@ class FullBuilderTests(unittest.TestCase):
             self.assertEqual(archive.read('ppt/slides/slide1.xml'), original['ppt/slides/slide1.xml'])
             self.assertEqual(archive.read('ppt/slides/slide2.xml'), original['ppt/slides/slide1.xml'])
         self.assertEqual(source.read_bytes(), before)
-
-    def test_upstream_repeated_narration_replaces_owned_audio_only(self):
-        """Adapted from upstream test_edit_native_batch_a test_a6."""
-        parts = self.export(self.svg())
-        xml = parts['ppt/slides/slide1.xml'].decode('utf-8')
-        for number in (1, 2):
-            xml = narration.inject_narration(
-                xml, shape_id=narration.next_shape_id(xml), shape_name='narration1.wav',
-                audio_rid=f'rId{number * 3}', media_rid=f'rId{number * 3 + 1}',
-                poster_rid=f'rId{number * 3 + 2}', start_delay=0.8,
-            )
-        final = ET.fromstring(xml)
-        self.assertEqual(len(final.findall('.//p:pic', NS)), 1)
-        self.assertEqual(len(final.findall('.//p:audio', NS)), 1)
 
 
 if __name__ == '__main__':

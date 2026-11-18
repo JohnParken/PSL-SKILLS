@@ -39,10 +39,6 @@ import hashlib
 import io
 import math
 import mimetypes
-import shutil
-import subprocess
-import os
-from tl_workspace import private_workspace
 from dataclasses import dataclass, field
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -347,7 +343,6 @@ def _unsupported_blip_effect_diagnostics(
         )
     return tuple(diagnostics)
 
-_OFFICE_VECTOR_EXTS = {".emf", ".wmf"}
 
 
 def _is_valid_svg_media(data: bytes) -> bool:
@@ -360,47 +355,14 @@ def _is_valid_svg_media(data: bytes) -> bool:
 
 
 def _normalize_office_media(filename: str, img_bytes: bytes) -> tuple[str, bytes]:
-    """Convert Office-only vector image formats to browser-renderable PNG.
-
-    PPTX can contain EMF/WMF assets that PowerPoint renders natively but SVG
-    viewers generally do not. Keep the original asset in the manifest layer;
-    the SVG view uses a PNG preview when the local system can make one.
-    """
-    suffix = Path(filename).suffix.lower()
-    if suffix not in _OFFICE_VECTOR_EXTS:
-        return filename, img_bytes
-
-    converted = _convert_office_vector_to_png(filename, img_bytes)
-    if converted is None:
-        return filename, img_bytes
-    stem = Path(filename).stem
-    return f"{stem}_preview.png", converted
+    """Keep original Office vector bytes; this runtime never shells out to rasterize."""
+    return filename, img_bytes
 
 
 def _convert_office_vector_to_png(filename: str, img_bytes: bytes) -> bytes | None:
-    magick = shutil.which("magick")
-    if not magick:
-        return None
-    suffix = Path(filename).suffix.lower() or ".bin"
-    with private_workspace(prefix='tl-pptx-vector-') as tmp:
-        tmp_dir = Path(tmp).resolve()
-        src = tmp_dir / f"source{suffix}"
-        dst = tmp_dir / "preview.png"
-        src.write_bytes(img_bytes)
-        try:
-            subprocess.run(
-                [magick, str(src), str(dst)],
-                cwd=tmp_dir,
-                env={**os.environ, "TMPDIR": str(tmp_dir), "MAGICK_TEMPORARY_PATH": str(tmp_dir)},
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except (OSError, subprocess.CalledProcessError):
-            return None
-        if not dst.exists():
-            return None
-        return dst.read_bytes()
+    """Do not run excluded external tools; keep the source vector without a PNG proxy."""
+    return None
+
 
 def _parse_src_rect(elem: ET.Element | None) -> tuple[float, float, float, float] | None:
     """Convert <a:srcRect l t r b="1/100000"/> to (x, y, w, h) in unit space."""

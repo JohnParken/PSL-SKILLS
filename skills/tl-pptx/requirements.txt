@@ -1,9 +1,10 @@
-# Python >=3.10; bundled Expat >=2.6.0. Deployment creates scripts/.venv/bin/python.
-# Base native package runtime; optional capability groups are in references/dependency-groups.json.
-# Missing optional groups must stop that selected operation, not silently remove its capability.
+# Seven direct runtime requirements. No dev tools, credentialed services or media processors.
+# For split PyMuPDF 1.24.2 wheels pip resolves its native companion PyMuPDFb==1.24.1.
+# PyMuPDF/MuPDF licensing is separate from the MIT PPT code: AGPL or commercial.
+pillow==12.2.0
+xlsxwriter==3.2.9
+typing-extensions==4.14.0
+lxml==6.0.4
+pyyaml==6.0.2
+pymupdf==1.24.2
 python-pptx==1.0.2
-lxml>=6.0,<7
-Pillow>=12,<14
-XlsxWriter>=3,<4
-# python-pptx additionally requires typing-extensions>=4.9.0 (transitive).
-# Pylint is a maintenance tool, not a runtime dependency.

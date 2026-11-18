@@ -68,6 +68,18 @@ class RoundtripAdapterTests(unittest.TestCase):
         self.assertEqual([slide.shapes[0].text for slide in deck.slides], ['Second slide', 'First slide', 'Second slide'])
         self.assertEqual(evidence['passthrough_pages'], [1, 2, 3])
 
+    def test_explicit_sound_edit_is_rejected_but_notes_remain(self):
+        config = json.loads(inspect_workspace_zip(self.bundle)['entries']['animations.json'])
+        config.setdefault('slides', {}).setdefault('slide_01', {})['transition'] = {
+            'effect': 'fade', 'duration': 0.5, 'sound': 'voice.wav'}
+        with self.assertRaisesRegex(ContractError, 'removed'):
+            rebuild_workspace('workspace.zip', animation_config=config)
+        output, _evidence = rebuild_workspace('workspace.zip', notes={'slide_01': '普通演讲者备注'})
+        rebuilt = Presentation(io.BytesIO(output))
+        self.assertIn('普通演讲者备注', rebuilt.slides[0].notes_slide.notes_text_frame.text)
+        self.assertIn('Note Second slide', rebuilt.slides[1].notes_slide.notes_text_frame.text)
+        self.assertEqual(Path('source.pptx').read_bytes(), self.original)
+
     def test_notes_overlay(self):
         output, evidence = rebuild_workspace('workspace.zip', notes={'slide_01': 'Changed notes'})
         deck = Presentation(io.BytesIO(output))

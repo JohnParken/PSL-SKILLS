@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from tl_guard import ContractError, bare_name
-from tl_build import _sound_references
+from tl_build import reject_sound_options
 from tl_roundtrip_notes import find_notes_files
 from tl_roundtrip_classify import (
     _roundtrip_animation_config_for_pages, _roundtrip_passthrough_candidates,
@@ -40,12 +40,7 @@ def build_roundtrip(workspace, materialized, *, notes=None, animation_config=Non
         errors = validate_animation_config_errors(animation_config)
         if errors:
             raise ContractError('Invalid animation configuration: ' + '; '.join(map(str, errors)))
-        for sound in _sound_references(animation_config):
-            if not isinstance(sound, str) or '\\' in sound or ':' in sound:
-                raise ContractError('Animation sound must be an existing local workspace resource')
-            path = (workspace / sound).resolve()
-            if not path.is_relative_to(workspace) or not path.is_file():
-                raise ContractError('Animation sound is outside the regenerated resource inventory')
+        reject_sound_options(animation_config)
         motion_path.write_text(json.dumps(animation_config), encoding='utf-8')
     motion = json.loads(motion_path.read_text())
     passthrough = _roundtrip_passthrough_candidates(

@@ -3,7 +3,6 @@
 # MIT; Copyright (c) 2025-2026 Hugo He. See references/LICENSE-PPT-MASTER.txt and references/upstream.md.
 
 from __future__ import annotations
-import uuid
 from pathlib import (
     Path,
 )
@@ -26,6 +25,7 @@ def _placeholder_text_body(
         PML_NS,
         _TEMPLATE_PLACEHOLDER_PROMPTS,
         _layout_level_one_paragraph_properties,
+        _new_field_guid,
         _normalize_placeholder_body_properties,
         _set_layout_level_one_default_size,
         _set_no_bullet_paragraph_properties,
@@ -106,7 +106,7 @@ def _placeholder_text_body(
         field = ET.SubElement(
             paragraph,
             f"{{{DML_NS}}}fld",
-            {"id": f"{{{str(uuid.uuid4()).upper()}}}", "type": field_type},
+            {"id": _new_field_guid(), "type": field_type},
         )
         if source_run_pr is not None:
             field.append(ET.fromstring(ET.tostring(source_run_pr, encoding="utf-8")))

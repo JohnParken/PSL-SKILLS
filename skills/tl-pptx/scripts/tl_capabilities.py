@@ -1,35 +1,34 @@
-"""Read-only capability inventory; no imports, installs, network or credentials."""
+"""Read-only declared capability inventory, without probing excluded components."""
 from __future__ import annotations
 
 import importlib.metadata
-import platform
-import shutil
+
+DECLARED = ("python-pptx", "Pillow", "XlsxWriter", "typing-extensions",
+            "lxml", "PyYAML", "PyMuPDF")
 
 
 def _distribution(name):
+    """Read installed metadata only; this is not functional verification."""
     try:
-        return {'installed': True, 'version': importlib.metadata.version(name)}
+        return {"installed": True, "version": importlib.metadata.version(name)}
     except importlib.metadata.PackageNotFoundError:
-        return {'installed': False, 'version': None}
+        return {"installed": False, "version": None}
 
 
 def capability_status():
-    """Report prerequisites separately from execution or Office validation."""
-    packages = {name: _distribution(name) for name in (
-        'PyYAML', 'skia-pathops', 'uharfbuzz', 'edge-tts', 'aiohttp', 'numpy',
-        'stable-ts', 'CairoSVG', 'svglib', 'reportlab', 'PyMuPDF',
-    )}
-    executables = {name: bool(shutil.which(name))
-                   for name in ('ffmpeg', 'ffprobe', 'powershell', 'pwsh')}
+    """Do not import, discover or activate undeclared optional libraries."""
     return {
-        'optional_python_distributions': packages,
-        'optional_executables': executables,
-        'native_video_platform': platform.system(),
-        'native_video_platform_supported': platform.system() == 'Windows',
-        'powerpoint_installation_and_license': 'not_verified',
-        'font_licenses_and_readability': 'operation_specific',
-        'service_credentials_content_and_cost_authorization': 'operation_specific_not_inspected',
-        'pdf_input_license': 'AGPL-3.0_or_commercial_approval_required',
-        'optional_imports_and_functional_validation': 'not_run',
-        'automatic_installation_or_model_download': False,
+        "declared_python_distributions": {name: _distribution(name) for name in DECLARED},
+        "optional_python_distributions": {},
+        "optional_executables": {},
+        "shape_boolean": "limited_axis_aligned_solid_rectangles",
+        "text_outline": "explicit_static_font_simple_ascii_basic_cjk_paths",
+        "svg_png_compatibility": "unavailable_no_equivalent_renderer_verified",
+        "office_vector_preview": "unavailable_original_vector_preserved",
+        "narration_subtitles_video": "removed",
+        "speaker_notes": "retained",
+        "pdf_input_license": "AGPL-3.0_or_commercial_approval_required",
+        "pdf_binary_dependency": "PyMuPDFb==1.24.1_for_split_PyMuPDF_1.24.2_wheels",
+        "optional_imports_and_functional_validation": "not_run",
+        "automatic_installation_or_model_download": False,
     }

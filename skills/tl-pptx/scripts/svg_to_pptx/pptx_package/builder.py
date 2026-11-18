@@ -15,7 +15,7 @@ import stat
 import subprocess
 import sys
 import tempfile
-import uuid
+import secrets
 import zipfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
@@ -177,6 +177,13 @@ THEME_REL_TYPE = (
 
 
 THEME_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.theme+xml"
+
+
+def _new_field_guid() -> str:
+    """Generate a braced RFC 4122 version-4 identifier for DrawingML fields."""
+    value = secrets.token_hex(16).upper()
+    variant = "89AB"[int(value[16], 16) & 3]
+    return f"{{{value[:8]}-{value[8:12]}-4{value[13:16]}-{variant}{value[17:20]}-{value[20:]}}}"
 
 
 PML_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"

@@ -10,7 +10,7 @@
 
 - 模板按四类分别选包。一个模板由完整工作区组成，不能只复制 design_spec 而漏掉其图形、图片或图标。
 - 图标按精确 `library/name` 选择；canonical ID 区分大小写。单个演示文稿通常选择一套主要样式库，真实品牌图标可按需并用；跨任务素材包可保留多套，仅提示风格一致性，不拒绝选择。不要因找不到一个名字就静默切库。
-- 声音按精确 namespace/name 选择，默认不启用声音。选择和复制资源不等于授权调用 TTS、发送备注或产生服务费用。
+- 声音按精确 namespace/name 选择，默认不启用声音。历史声音包仅是离线数据；本版不处理、嵌入或播放声音，不调用 TTS 或发送备注。
 
 ## 包和输入保护
 
@@ -18,7 +18,7 @@ ZIP 内使用合规内容寻址成员，manifest 将 canonical ID、原始路径
 
 构建结果已验证 CRC、逐 blob 原字节、许可哈希和条目数量；这不代表用户取得的每份副本自动可信。使用时仍须核对清单中的整包 SHA-256、schema、成员预算、无符号链接/重复成员和每个选中条目的哈希；原子预检整批 ID 后才准备新资源，未知 ID 或冲突不能静默跳过。
 
-选择器实现位于 `<skill-root>/scripts/tl_assetpacks.py`：查询支持有界分页，选择接收明确包名及 canonical IDs，返回工作区 ZIP bytes，由主入口统一发布归档。完整模板根保留在 template-workspaces/kind/id，图标与声音分别保留在 icons/library/name.svg 和 sounds/namespace/name.wav。公开选择/导入命令以主入口实际提供的接口为准。仅拥有 ZIP 不意味着模板应用、图标展开或视频编码已经可用；完整性、资源安全、质量门禁及平台条件仍分别核对，不绕过缺失门禁。
+选择器实现位于 `<skill-root>/scripts/tl_assetpacks.py`：查询支持有界分页，选择接收明确包名及 canonical IDs，返回工作区 ZIP bytes，由主入口统一发布归档。完整模板根保留在 template-workspaces/kind/id，图标与声音分别保留在 icons/library/name.svg 和 sounds/namespace/name.wav。公开选择/导入命令以主入口实际提供的接口为准。仅拥有 ZIP 不意味着模板应用或图标展开已经可用；完整性、资源安全、质量门禁及平台条件仍分别核对，不绕过缺失门禁。
 
 ## 许可与输出署名
 

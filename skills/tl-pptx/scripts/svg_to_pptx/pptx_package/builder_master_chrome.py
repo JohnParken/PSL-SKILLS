@@ -3,7 +3,6 @@
 # MIT; Copyright (c) 2025-2026 Hugo He. See references/LICENSE-PPT-MASTER.txt and references/upstream.md.
 
 from __future__ import annotations
-import uuid
 from pathlib import (
     Path,
 )
@@ -351,6 +350,7 @@ def _convert_page_number_texts_to_fields(
     """
     from .builder import (
         _PAGE_NUMBER_TOKENS,
+        _new_field_guid,
         _trace_chrome_shape_ids,
         _write_xml_tree,
     )
@@ -362,7 +362,7 @@ def _convert_page_number_texts_to_fields(
         if trace.get("slide_num") is not None
     }
     first_slide_number = _first_slide_number(extract_dir)
-    field_guid = f"{{{str(uuid.uuid4()).upper()}}}"
+    field_guid = _new_field_guid()
 
     converted = 0
     for slide_num in range(1, slide_count + 1):

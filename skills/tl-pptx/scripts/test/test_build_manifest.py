@@ -43,6 +43,35 @@ class BuildManifestTests(unittest.TestCase):
         self.assertEqual(Path('page.svg').read_text(), SVG)
         self.assertEqual(sorted(path.name for path in Path('.').iterdir()), ['page.svg'])
 
+    def test_removed_media_inputs_fail_before_reading_sources(self):
+        removed = (
+            {'slides': [{'svg': 'missing.svg', 'audio': 'voice.wav'}]},
+            {'slides': [{'svg': 'missing.svg'}], 'transition_sound': 'sound.wav'},
+            {'slides': [{'svg': 'missing.svg'}], 'options': {'use_narration_timings': False}},
+            {'slides': [{'svg': 'missing.svg'}], 'options': {'narration_padding': 0}},
+            {'slides': [{'svg': 'missing.svg'}], 'options': {'narration_start_floor': 0}},
+            {'slides': [{'svg': 'missing.svg'}], 'options': {'animation_config': {'slides': [
+                {'transition': {'sound': 'sound.wav'}}]}}},
+            {'slides': [{'svg': 'missing.svg'}], 'options': {'animation_cli_overrides': {'sound': 'sound.wav'}}},
+        )
+        for manifest in removed:
+            with self.subTest(manifest=manifest):
+                with patch('tl_build.read_local') as reader:
+                    with self.assertRaisesRegex(ContractError, 'removed'):
+                        prepare_build(manifest)
+                    reader.assert_not_called()
+        self.assertEqual(list(Path('.').iterdir()), [Path('page.svg')])
+
+    def test_narration_processing_cannot_call_external_probe(self):
+        from svg_to_pptx.pptx_package.narration import probe_audio_duration
+        from svg_to_pptx.pptx_package.builder import create_pptx_with_native_svg
+        with patch('subprocess.run') as external:
+            with self.assertRaisesRegex(ValueError, 'removed'):
+                probe_audio_duration(Path('voice.wav'))
+            with self.assertRaisesRegex(ValueError, 'removed'):
+                create_pptx_with_native_svg([], Path('output.pptx'), resource_root=Path('.'), narration_audio={'page': Path('voice.wav')})
+            external.assert_not_called()
+
     def test_unsafe_paths_and_private_options_rejected(self):
         for manifest in ({'slides': [{'svg': '../page.svg'}]},
                          {'slides': [{'svg': 'page.svg'}], 'options': {'cache_dir': '/tmp'}},

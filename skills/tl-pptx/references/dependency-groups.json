@@ -1,17 +1,45 @@
 {
   "schema": "tl-pptx.dependencies.v1",
-  "base": ["python-pptx==1.0.2", "lxml>=6.0,<7", "Pillow>=12,<14", "XlsxWriter>=3,<4"],
-  "optional": {
-    "template_yaml": {"python": ["PyYAML>=6.0.2,<7"], "condition": "YAML template specifications"},
-    "shape_boolean": {"python": ["skia-pathops>=0.9.2"], "condition": "Shape boolean operations"},
-    "text_outline": {"python": ["uharfbuzz>=0.50.0"], "condition": "Text operands in boolean operations; authorized readable fonts also required"},
-    "edge_tts": {"python": ["edge-tts>=7.2.8"], "condition": "Explicitly authorized network narration request to selected provider"},
-    "openai_tts": {"python": ["aiohttp"], "condition": "Selected OpenAI backend, authorized credentials/content/charges"},
-    "video_mix": {"python": ["numpy"], "executables": ["ffmpeg", "ffprobe"], "condition": "Native video sound postprocessing"},
-    "video_subtitles": {"python": ["stable-ts"], "executables": ["ffmpeg"], "condition": "Explicitly provisioned model/runtime; never auto-download at skill invocation"},
-    "powerpoint_video": {"python": [], "platform": "Windows", "applications": ["Microsoft PowerPoint 2016+", "PowerShell"], "condition": "Native PowerPoint video export; not available merely because PPTX generation works"},
-    "svg_preview": {"alternatives": [["CairoSVG", "system Cairo"], ["svglib", "reportlab with working renderPM"]], "condition": "Optional preview only, never substitutes for native editable objects"},
-    "pdf_input": {"python": ["PyMuPDF"], "license": "AGPL-3.0 or commercial license, independent of ppt-master MIT", "condition": "PDF-source input adapter only; deployment must resolve applicable license before installation/use"}
+  "base": [
+    "python-pptx==1.0.2",
+    "Pillow==12.2.0",
+    "XlsxWriter==3.2.9",
+    "typing-extensions==4.14.0",
+    "lxml==6.0.4",
+    "PyYAML==6.0.2",
+    "PyMuPDF==1.24.2"
+  ],
+  "optional": {},
+  "transitive": {
+    "PyMuPDFb==1.24.1": {
+      "condition": "Required by the split PyMuPDF 1.24.2 binary distribution; deployment must disclose and provision the matching library.",
+      "source": "https://github.com/pymupdf/PyMuPDF/blob/1.24.2/setup.py"
+    }
   },
-  "missing_behavior": "Fail only the selected operation with a concrete missing dependency; never auto-install, silently drop a capability, choose a paid provider or substitute raster output."
+  "unavailable": {
+    "svg_png_compatibility": "No equivalent renderer verified within declared libraries; do not substitute raster output.",
+    "office_vector_preview": "No external ImageMagick invocation; preserve original vectors and report browser-preview limits.",
+    "general_shape_boolean": "Requires excluded skia-pathops; existing algorithms retained but not executed.",
+    "complex_text_shaping": "Requires excluded uharfbuzz; ordinary native editable text remains supported."
+  },
+  "removed": [
+    "narration synthesis",
+    "subtitle processing",
+    "video processing"
+  ],
+  "retained": [
+    "speaker notes",
+    "native editable shapes",
+    "native charts and tables",
+    "PPTX import and controlled rebuild"
+  ],
+  "pdf_input": {
+    "license": "AGPL-3.0 or commercial license, independently of PPT Master MIT",
+    "condition": "PDF-source adapter requires deployment license compliance; declaring the package does not add a public PDF command."
+  },
+  "missing_behavior": "Refuse unavailable selected operation; never auto-install or silently replace geometry or rendering.",
+  "limited": {
+    "text-outline": "Explicit authorized single static local TTF/OTF; ASCII and basic CJK single line, editable shape paths not text; no complex shaping, font fallback or kerning.",
+    "boolean": "Axis-aligned solid rectangles only; no general curve intersections, arbitrary shapes or text Boolean."
+  }
 }

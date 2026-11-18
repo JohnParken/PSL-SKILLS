@@ -16,6 +16,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import posixpath
 from pathlib import Path, PurePosixPath
 import stat
 import subprocess
@@ -23,6 +24,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
+from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'skills' / 'tl-pptx'
@@ -235,15 +237,57 @@ class TlPptxRuntimeAcceptance(unittest.TestCase):
         analysis = json.loads((self.task / 'analysis.json').read_text(encoding='utf-8'))
         self.assertEqual(analysis['slide_count'], 1)
         self.assertIn('Original source text', json.dumps(analysis['content']))
+        self.assertIn('Native note', json.dumps(analysis['notes']))
         self.invoke('import', 'workspace.zip', 'built.pptx')
         (self.task / 'rebuild.json').write_text(json.dumps({'workspace': 'workspace.zip'}), encoding='utf-8')
         rebuilt = self.invoke('rebuild', 'rebuilt.pptx', 'rebuild.json')
         self.assertTrue(rebuilt['publication']['published'])
         with zipfile.ZipFile(self.task / 'built.pptx') as source, zipfile.ZipFile(self.task / 'rebuilt.pptx') as target:
             self.assertEqual(source.read('ppt/slides/slide1.xml'), target.read('ppt/slides/slide1.xml'))
+            def linked_note(package):
+                # Preserve mode may rename copied parts to avoid collisions.
+                # Resolve the slide's real notes relationship, never guess a filename.
+                relationships = ET.fromstring(package.read('ppt/slides/_rels/slide1.xml.rels'))
+                notes = [node for node in relationships
+                         if node.get('Type') == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide']
+                self.assertEqual(len(notes), 1, 'Slide must retain exactly one notes relationship')
+                self.assertNotEqual(notes[0].get('TargetMode'), 'External')
+                target_name = notes[0].get('Target')
+                self.assertTrue(target_name)
+                resolved = (posixpath.normpath(target_name.lstrip('/')) if target_name.startswith('/')
+                            else posixpath.normpath(posixpath.join('ppt/slides', target_name)))
+                self.assertIn(resolved, package.namelist(), 'Notes relationship must resolve to an existing part')
+                payload = package.read(resolved)
+                note_xml = ET.fromstring(payload)
+                texts = note_xml.findall('.//{http://schemas.openxmlformats.org/drawingml/2006/main}t')
+                self.assertIn('Native note', ''.join(node.text or '' for node in texts))
+                return payload
+            self.assertEqual(linked_note(source), linked_note(target))
+        self.invoke('analyze', 'rebuilt-analysis.json', 'rebuilt.pptx')
+        rebuilt_analysis = json.loads((self.task / 'rebuilt-analysis.json').read_text(encoding='utf-8'))
+        self.assertIn('Native note', json.dumps(rebuilt_analysis['notes']))
         self.assertEqual((self.task / 'page.svg').read_bytes(), original)
         for prefix in ('tl-pptx-build-', 'tl-pptx-analysis-', 'tl-pptx-import-', 'tl-pptx-roundtrip-'):
             self.assertFalse(list(self.task.glob(prefix + '*')))
+
+    def test_explicit_text_outline_publishes_real_shapes_not_pictures(self):
+        """Use library-supplied sample font bytes only; no installed-font discovery."""
+        import fitz
+        data = fitz.Font('china-s').buffer
+        (self.task / 'sample.ttf').write_bytes(data)
+        spec = {'text': 'OB8', 'font': 'sample.ttf', 'font_authorized': True}
+        (self.task / 'letters.json').write_text(json.dumps(spec), encoding='utf-8')
+        self.invoke('text-outline', 'letters.svg', 'letters.json')
+        self.invoke('convert', 'letters.pptx', 'letters.svg')
+        with zipfile.ZipFile(self.task / 'letters.pptx') as package:
+            slide = package.read('ppt/slides/slide1.xml')
+            self.assertEqual(slide.count(b'<a:custGeom'), 3)
+            self.assertNotIn(b'<p:pic', slide)
+        self.assertEqual((self.task / 'sample.ttf').read_bytes(), data)
+        spec['text'] = 'a' + chr(0x0301)
+        (self.task / 'unsupported.json').write_text(json.dumps(spec), encoding='utf-8')
+        self.invoke('text-outline', 'refused.svg', 'unsupported.json', expected=1)
+        self.assertFalse((self.task / 'refused.svg').exists())
 
     def test_template_import_is_not_an_authored_template(self):
         """Imported reference material alone must not qualify for registration."""

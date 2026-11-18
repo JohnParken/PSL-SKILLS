@@ -304,21 +304,8 @@ def text_element_to_path_commands(
 
 @lru_cache(maxsize=1)
 def _load_harfbuzz() -> Any:
-    try:
-        import uharfbuzz
-    except ImportError as exc:
-        raise RuntimeError(
-            "Text operands in Shape Boolean require uharfbuzz. Install the "
-            "project requirements, or run: pip install uharfbuzz"
-        ) from exc
-    required = ("Blob", "Buffer", "DrawFuncs", "Face", "Font", "StyleTag", "shape")
-    missing = [name for name in required if not hasattr(uharfbuzz, name)]
-    if missing:
-        raise RuntimeError(
-            "Installed uharfbuzz is incompatible; missing: "
-            + ", ".join(missing)
-        )
-    return uharfbuzz
+    """Reject excluded runtime backends without importing or probing them."""
+    raise RuntimeError("Text outline is unavailable in the declared dependency set; native editable text remains supported")
 
 
 def _element_chain(

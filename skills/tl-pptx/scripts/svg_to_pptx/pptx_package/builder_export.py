@@ -235,6 +235,8 @@ def create_pptx_with_native_svg(
     Returns:
         Whether all slides were successfully created.
     """
+    if narration_audio or use_narration_timings:
+        raise ValueError('Narration audio and timing generation have been removed from tl-pptx')
     state = BuildState()
     state.svg_files = svg_files
     state.output_path = output_path
@@ -508,10 +510,8 @@ def create_pptx_with_native_svg(
     # Check compatibility mode dependencies
     state.renderer_name, state.renderer_status, state.renderer_hint = get_png_renderer_info()
     if not state.use_native_shapes and state.use_compat_mode and PNG_RENDERER is None:
-        print("Warning: No PNG rendering library installed, cannot use compatibility mode")
-        print(f"  {state.renderer_hint}")
-        print("  Will use pure SVG mode (may not display in Office LTSC 2021 and similar versions)")
-        state.use_compat_mode = False
+        raise ValueError("SVG PNG compatibility mode is unavailable in the declared dependency set; "
+                         "no silent fallback was performed")
 
     state.width_emu, state.height_emu = state.canvas.emu_dimensions
     state.pixel_width, state.pixel_height = state.canvas.pixel_dimensions

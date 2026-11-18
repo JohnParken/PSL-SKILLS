@@ -10,7 +10,7 @@ import shutil
 import stat
 import subprocess
 import tempfile
-import uuid
+import secrets
 from pathlib import (
     Path,
     PurePosixPath,
@@ -276,7 +276,7 @@ def _create_writable_work_dir(output_path: Path) -> Path:
             continue
 
         for _ in range(3):
-            work_dir = parent / f".pptx-build-{os.getpid()}-{uuid.uuid4().hex}"
+            work_dir = parent / f".pptx-build-{os.getpid()}-{secrets.token_hex(16)}"
             try:
                 work_dir.mkdir(mode=0o700)
                 probe_path = work_dir / ".write-probe"

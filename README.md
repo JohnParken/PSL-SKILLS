@@ -11,7 +11,7 @@
 - [裸文件名输出契约与迁移](docs/output-filenames.md)：全 Skill 输出范围、接口版本与兼容边界。
 - [架构与功能文档](docs/README.md)：13 个独立 Skill 的模块、架构图、流程图和输入输出边界。
 - [tl-docx](docs/skills/tl-docx.md) 提供独立的 `python-docx` 路线，普通 `read` 默认以内容优先视图 聚焦复杂报告的正文、表格与图表保存值；原完整记录通过 `--full` 获取，也支持创建和受控编辑及文字修订副本。
-- [tl-pptx](docs/skills/tl-pptx.md) 基于固定最新核对的 ppt-master 完整原生能力迁移，提供安全新建/导入/重建入口；模板和音视频按门禁与依赖分层启用，不替换既有 `pptx`。
+- [tl-pptx](docs/skills/tl-pptx.md) 基于固定最新核对的 ppt-master 完整原生能力迁移，提供安全新建/导入/重建入口；保留模板与普通备注，移除旁白、字幕和视频处理，不替换既有 `pptx`。
 - [文档任务导航](docs/skills/document-navigation.md)：上传文档优先列出本轮附件，再交给格式专用技能；导航不直接读取文档内容。
 - 当前导读以 2026-11-12（UTC）的源码 `fb6cdff0161a137ebb0e64ebc64d09d11534d6d2` 加本轮工作区变更为基线，涵盖 ET 容错读取、文档导航与归档展示契约，Skill 版本以各自 `SKILL.md` 为准。[分批提交核验](docs/maintenance/commit-preparation/validation-20261112.md) 记录本轮实际检查；下文日期化验收记录只代表当时基线，不自动成为当前全量重测。
 - [历史文档核验](docs/skill-docs-validation-20261107.json) 与 [文档防漂移检查](tools/check_project_docs.py) 分别记录实际检查结果和可重复检查入口。
@@ -33,7 +33,7 @@
 | [et](skills/et/SKILL.md) | 本地限定实现；从原 WPS 家族读取实现拆分 | 20261118.0325.5874 | 离线读取 .et/.ett 的 BIFF5/7核心、BIFF8/OOXML 保存值与公式缓存；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），完整原 schema 与行列/绘图证据用 --profile full；有限解释数字格式、样式继承与富文本；支持表头区域预览（含 OOXML 保存公式与可转写的 BIFF8 公式）、按物理行号排除行、区域筛选、排序、去重、统计及分组汇总，返回统计质量报告并可追溯地填充合并文本标签；非单元格元数据有界保留并报告 partial；BIFF8 Note 批注与 HLink 超链接只读元数据分别返回 comments/hyperlinks；不重算公式、不写回或转换办公文件 |
 | [ofd](skills/ofd/SKILL.md) | 独立标准库限定实现 | 20261118.0325.5874 | 默认按页读取标题、文字和页码，明确要求时读取完整结构；支持分层筛选及续读长文本；范围不等于整份XML已验证；不提供创建、编辑、OCR、验签、转换或渲染 |
 | [pptx](skills/pptx/SKILL.md) | ppt-master v6.8.0 转换子集与标准库入口 | 20261118.0325.5874 | 受限 SVG 创建原生 PPTX；默认读取文字/备注、结构化表格与图表保存值，保留内容缺口与数学有损诊断；全包验证、整页及显式页内有界续读；按任务直达创建/读取参考，无任意编辑或视觉验收 |
-| [tl-pptx](skills/tl-pptx/SKILL.md) | ppt-master main `7e0df6705de0` 核心移植与独立适配 | 20261118.0325.5874 | 完整原生能力迁移中；公开安全SVG新建、完整builder、结构分析、导入及重建；已验 Style 模板创建/注册/应用与离线 Deck 预览生成；音视频仍按平台、服务和授权条件启用。 |
+| [tl-pptx](skills/tl-pptx/SKILL.md) | ppt-master main `7e0df6705de0` 核心移植与独立适配 | 20261118.2015.1010 | 完整原生能力迁移中；公开安全SVG新建、完整builder、结构分析、导入及重建；已验 Style 模板创建/注册/应用与离线 Deck 预览生成；固定七项直接依赖，移除旁白、字幕和视频处理。 |
 | [table-workflow](skills/table-workflow/SKILL.md) | 独立轻量编排；通过版本化CLI显式依赖 xlsx，ET 来源另依赖 et | 20261118.0325.5874 | 多个 XLSX/ET 来源按明确口径聚合匹配，计算后填入既有 XLSX 模板副本；有界结构摘要、名称续读、公开批量地址解析与舍入、公式预检及逐格溯源；不支持 ET 写回或任意明细连接 |
 | [artifact-lifecycle](skills/artifact-lifecycle/SKILL.md) | DOCX已验证模块的显式自包含提取 | 20261118.0325.5874 | 本轮临时文件登记、最终交付物清单归档（无覆盖、安全幂等重试）、封存与受控清理；失败立即清理中间文件与清单；不生成或验收业务内容、不清理历史发布 ZIP |
 | [skill-development-standards](skills/skill-development-standards/SKILL.md) | 本地规范定义与质量控制工具 | 20261118.0341.5875 | Skill 新建、修改、导入、迁移、审查与发布质量规范；`<skill-root>` 资源路径与文档契约检查器、结构回归测试与环境自检基准 |

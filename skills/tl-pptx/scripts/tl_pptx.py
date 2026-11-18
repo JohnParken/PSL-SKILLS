@@ -9,10 +9,9 @@ import io
 import json
 import os
 from pathlib import Path
-import re
 import stat
 import sys
-import uuid
+import secrets
 from xml.parsers import expat
 
 SCRIPT_ROOT = Path(__file__).resolve().parent
@@ -35,6 +34,23 @@ class JsonArgumentParser(argparse.ArgumentParser):
         raise ArgumentError(message)
 
 
+def deployment_versions():
+    """Verify the seven approved direct distributions against their exact pins."""
+    pins = {
+        'Pillow': '12.2.0', 'XlsxWriter': '3.2.9', 'typing-extensions': '4.14.0',
+        'lxml': '6.0.4', 'PyYAML': '6.0.2', 'PyMuPDF': '1.24.2', 'python-pptx': '1.0.2',
+    }
+    actual = {}
+    for name, expected in pins.items():
+        try:
+            actual[name] = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            raise ContractError(f'{name}=={expected} is required but not installed') from None
+        if actual[name] != expected:
+            raise ContractError(f'{name}=={expected} is required; installed {actual[name]}')
+    return actual
+
+
 def environment_check(write=False, require_deployment=True):
     """Check only actual dependencies and optionally task-root write access."""
     from tl_workspace import check_task_root
@@ -47,16 +63,7 @@ def environment_check(write=False, require_deployment=True):
         raise ContractError('Use the deployment-provided scripts/.venv/bin/python; no fallback is permitted')
     if expat.version_info < (2, 6, 0):
         raise ContractError('Bundled Expat >=2.6.0 is required')
-    versions = {name: importlib.metadata.version(name)
-                for name in ('python-pptx', 'lxml', 'Pillow', 'XlsxWriter', 'typing-extensions')}
-    for name, minimum, maximum in (('lxml', (6, 0), (7, 0)), ('Pillow', (12, 0), (14, 0)),
-                                   ('XlsxWriter', (3, 0), (4, 0)), ('typing-extensions', (4, 9), None)):
-        match = re.match(r'^(\d+)\.(\d+)', versions[name])
-        release = tuple(map(int, match.groups())) if match else (0, 0)
-        if release < minimum or (maximum is not None and release >= maximum):
-            raise ContractError(f'{name} version does not satisfy requirements.txt')
-    if versions['python-pptx'] != '1.0.2':
-        raise ContractError('python-pptx==1.0.2 is required')
+    versions = deployment_versions()
     if not hasattr(os, 'O_NOFOLLOW'):
         raise ContractError('No-follow file operations are required')
     from tl_capabilities import capability_status
@@ -65,7 +72,7 @@ def environment_check(write=False, require_deployment=True):
               'dependencies': versions, 'task_write_check': 'not_requested',
               'artifact_validation': 'not_run'}
     if write:
-        name = f'tl-pptx-probe-{uuid.uuid4().hex}.tmp'
+        name = f'tl-pptx-probe-{secrets.token_hex(16)}.tmp'
         descriptor = os.open(name, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         identity = os.fstat(descriptor)
         try:
@@ -117,7 +124,7 @@ def convert(inputs, output, notes=None):
     try:
         for data in sources:
             # Register a unique, not-yet-existing path before creating it.
-            name = f'tl-pptx-source-{uuid.uuid4().hex}.svg'
+            name = f'tl-pptx-source-{secrets.token_hex(16)}.svg'
             record = {'name': name, 'identity': None}
             staged.append(record)
             descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
@@ -265,6 +272,22 @@ def select_assets(manifest_name, output):
                         lambda: select_asset_packs(requests))
 
 
+def text_outline_operation(manifest_name, output):
+    """Turn explicitly requested, authorized simple text into native shape paths."""
+    from tl_build import load_manifest
+    from tl_text_outline import outline_text
+    spec = load_manifest(manifest_name)
+    if not isinstance(spec, dict) or not isinstance(spec.get('font'), str):
+        raise ContractError('text-outline requires a JSON object and explicit authorized font')
+    def produce():
+        payload = outline_text(spec)
+        validate_svg(payload)
+        return payload, {'representation': 'editable_shape_paths_not_text',
+                         'typography': 'simple_per_glyph_no_shaping',
+                         'font_license_verification': 'operator_attestation'}
+    return run_artifact(output, '.svg', [manifest_name, spec['font']], produce)
+
+
 def boolean_operation(svg_name, manifest_name, output):
     """Publish standalone root-coordinate Boolean paths, never replace source."""
     from tl_build import load_manifest
@@ -315,6 +338,9 @@ def main(argv=None):
     selection = sub.add_parser('asset-select')
     selection.add_argument('output')
     selection.add_argument('manifest')
+    letters = sub.add_parser('text-outline')
+    letters.add_argument('output')
+    letters.add_argument('manifest')
     geometry = sub.add_parser('boolean')
     geometry.add_argument('output')
     geometry.add_argument('input')
@@ -331,7 +357,9 @@ def main(argv=None):
             code = 0
         else:
             environment_check(write=True)
-            if args.command == 'boolean':
+            if args.command == 'text-outline':
+                result, code = text_outline_operation(args.manifest, args.output)
+            elif args.command == 'boolean':
                 result, code = boolean_operation(args.input, args.manifest, args.output)
             elif args.command == 'asset-select':
                 result, code = select_assets(args.manifest, args.output)

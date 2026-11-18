@@ -5,7 +5,7 @@
 from __future__ import annotations
 import posixpath
 import re
-import uuid
+import secrets
 from pathlib import (
     Path,
 )
@@ -274,7 +274,7 @@ def _reseed_p14_creation_id(root: ET.Element) -> None:
     for creation_id in creation_ids:
         value = 0
         while value == 0:
-            value = uuid.uuid4().int & OOXML_UINT32_MAX
+            value = secrets.randbits(32)
         creation_id.set("val", str(value))
 
 

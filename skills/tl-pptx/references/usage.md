@@ -21,7 +21,7 @@
 "<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" check --write
 ```
 
-`optional_capabilities` 仅盘点已安装包与可执行文件，不导入可选模块、不验证服务凭据、Office 许可证或字体可读性，不下载模型。全部写产物命令还会进行写入自检。受保护操作验证独立发行完整性及各自部署条件，不直接调用内部脚本绕过。
+`optional_capabilities` 只报告当前依赖与功能边界，不验证 Office 许可证或字体可读性，不安装其他组件。全部写产物命令还会进行写入自检。受保护操作验证独立发行完整性及各自部署条件，不直接调用内部脚本绕过。
 
 ## convert 与 build
 
@@ -54,13 +54,13 @@
 "<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" build "汇报.pptx" "build.json"
 ```
 
-`slides` 每项为 `svg`、可选字符串 `notes`、可选已授权音频裸文件名 `audio`。`audio` 支持 WAV/MP3/M4A，只嵌入现有音频，不调用 TTS。先检查真实容器及本地资源引用，再以固定 demuxer/格式白名单、仅 file/pipe 协议调用 ffprobe，单次超时 30 秒；需要部署 ffprobe，拒绝伪装音频的 playlist，不按扩展名直接信任内容。`layouts` 为明确列出的布局定义 SVG 名单，不根据外观自动升级 Master/Layout。`transition_sound` 为明确提供的 WAV。`options` 接受受控 builder 参数，例如 transition、auto_advance、animation、animation_duration、animation_trigger、animation_config、doc_metadata、image_quality、text_flow、primary_language。结构/动画仍须满足上游契约；不能凭字段名称猜造复杂配置。未知键、类型错误和 filesystem-valued 参数拒绝，不能传 cache_dir、resource_root、危险兼容开关或任意 source_package。
+`slides` 每项为 `svg` 与可选字符串 `notes`。notes 是普通演讲者备注，不是旁白音轨。`audio`、`transition_sound`、旁白时间及动画声音配置不再支持，输入须明确失败，不能静默忽略。`layouts` 为明确列出的布局定义 SVG 名单，不根据外观自动升级 Master/Layout。`options` 接受受控 builder 参数，例如 transition、auto_advance、animation、animation_duration、animation_trigger、animation_config、doc_metadata、image_quality、text_flow、primary_language。结构/动画仍须满足上游契约；未知键、类型错误和 filesystem-valued 参数拒绝，不能传 cache_dir、resource_root、危险兼容开关或任意 source_package。
 
 可选顶层 `spec_lock` 指定任务根目录已有的 UTF-8 `.md` 裸文件名，最多 1 MiB，例如在 `build.json` 添加 `"spec_lock":"design.md"`。按上游规范编写字体、母版文字样式和主题颜色；由原 `load_theme_font_spec`、`load_master_text_style_spec`、`load_theme_color_spec` 解析，不是任意 Markdown 自动设计。未指定时不扫描其他目录或读取隐含规范。主题记录中的字体名不证明字体已安装、许可允许嵌入或客户端显示相同。
 
 可选顶层 `resources` 是最多 1,000 项的逻辑路径→任务裸文件名映射，例如 `"resources":{"images/photo.png":"photo.png","icons/tabler/home.svg":"home.svg"}`。SVG 的 `image href="images/photo.png"` 或 `use data-icon="tabler/home"` 只从该名单和已列页面快照解析；资源限 PNG/JPEG/SVG，不访问实际逻辑目录、URL 或未列文件。逻辑名禁止绝对/父目录/歧义路径；循环、缺项、冲突及累计展开预算超限失败。展开写入私有副本，源 SVG 不改。外置 native payload 仍不开放。
 
-默认使用原生形状、native_objects=true、flat 结构和单 worker。只有显式结构契约与完整布局定义才能请求 structured；模板应用尚阻塞时不凭空生成隐式模板配置。完整选项白名单以 `<skill-root>/scripts/tl_build.py` 为准，仅维护或确需高级参数时读取。
+默认使用原生形状、native_objects=true、flat 结构和单 worker。只有显式结构契约与完整布局定义才能请求 structured；不能凭空生成隐式模板配置。完整选项白名单以 `<skill-root>/scripts/tl_build.py` 为准，仅维护或确需高级参数时读取。
 
 ## analyze、import 与 rebuild
 
@@ -93,19 +93,36 @@
 
 ## 布尔与文字轮廓
 
-保存 `boolean.json`：
+普通原生形状、已有 SVG path 和普通可编辑文字保留，不默认转换文字。原通用几何布尔/文字排版后端不启用，也不自动安装额外组件或以栅格图片冒充可编辑结果。
 
-```json
-{"operation":"union","source_ids":["shape_a","shape_b"],"output_id":"merged","fonts":[]}
-```
+显式文字轮廓入口：
 
 ```console
-"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" boolean "合并结果.svg" "原图.svg" "boolean.json"
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" text-outline "轮廓.svg" "轮廓.json"
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" convert "轮廓.pptx" "轮廓.svg"
 ```
 
-操作为 union/combine/fragment/intersect/subtract；source_ids 必须真实存在且互异，2–32 个，fragment 最多 8 个。依赖 skia-pathops；文字轮廓另需 fontTools/uharfbuzz 和获准使用的字体。可选 style 为最多 16 个有界字符串属性，仍通过 SVG 安全检查。全部文本最多 5,000 字符。fonts 可明确列任务裸 TTF/OTF/TTC/OTC（最多 32 个，单个 16 MiB、合计 64 MiB）；显式空名单禁用隐式字体回退，省略时只查平台系统字体根、不查 home。
+`轮廓.json` 示例（字体必须由用户提供并授权，示例名称不是随包字体）：
 
-结果是独立 SVG-root 坐标文档，原件不改。保留结果实际引用的原 defs 绘制资源闭包，不要求以纯色覆盖渐变等原绘制资源；未知、循环、歧义或超预算定义引用明确失败，不复制无关源绘图。fragment 保留独立 sibling paths。回执 placement 说明如何在原操作数 z-order 和最终语义父级放置；不要再次套旧变换祖先，不自动替换或删除源对象，仍需按授权核对编辑与视觉结果。
+```json
+{"text":"Hello 中文","font":"已授权字体.ttf","font_authorized":true,"font_size":32,"color":"#000000"}
+```
+
+`text`、`font`、`font_authorized:true` 必填；font 为当前 `./` 中裸文件名，仅静态 TTF/OTF，最多 16 MiB，不使用系统字体名或替代字体。授权字段是用户声明，不是自动许可判断。文字为 1–512 字符且含可见内容，仅单行可打印 ASCII 与基本汉字 U+4E00–U+9FFF；字体须实际包含每个字形。拒绝组合字符、复杂脚本、其他非 ASCII 字符、可变/彩色/集合字体。`font_size` 默认 32 点、范围 1–256；`color` 默认 `#000000`，格式 `#RRGGBB`。按字形 advance 横排，不做 kerning、连字或复杂 shaping。此入口只生成 SVG 路径；再 convert 才成为原生可编辑形状，结果不再是可编辑文字，不等价任意字体/文字轮廓后端。
+
+`boolean OUTPUT.svg INPUT.svg MANIFEST.json` 保留原命令格式，仅支持 SVG 根元素直接子级、轴对齐、无圆角、无描边、不透明实心 `#RRGGBB` 矩形，不支持通用任意曲线布尔或文字布尔。
+
+```console
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" boolean "布尔结果.svg" "矩形.svg" "布尔.json"
+```
+
+`布尔.json` 示例：
+
+```json
+{"operation":"subtract","source_ids":["rect_a","rect_b"],"output_id":"result","style":{"fill":"#336699","stroke":"none"}}
+```
+
+`source_ids` 必须为 2–32 个互异矩形 ID；`operation` 支持 union（并集）、intersect（交集）、subtract（首个减去其余）、combine（奇偶/XOR），不支持 fragment。`output_id` 为 SVG 标识符。可选 style 仅 fill/stroke；不同输入颜色须显式指定输出 fill，stroke 只能为 none。不得传 fonts。坐标必须为无单位有限十进制，整数部分最多九位、小数最多六位，宽高为正；拒绝变换、圆角、CSS、继承样式、透明度、渐变、遮罩、效果及组内操作数。精确有理数网格运算生成独立复合路径，不改源 SVG；空结果或仅点接触形成的歧义轮廓拒绝，不做近似或调用外部后端。结果 SVG 可再 convert 为原生可编辑形状。
 
 ## 离线素材查询与选择
 

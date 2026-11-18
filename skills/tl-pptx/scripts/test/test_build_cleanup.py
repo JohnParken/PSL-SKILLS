@@ -59,7 +59,7 @@ class BuildCleanupTests(unittest.TestCase):
     def test_linked_audio_is_rejected_before_private_build(self):
         """Explicit names do not authorize following a filesystem link."""
         Path('voice.wav').symlink_to('unrelated/keep.txt')
-        with self.assertRaises(OSError):
+        with self.assertRaisesRegex(ContractError, 'audio processing has been removed'):
             prepare_build({'slides': [{'svg': 'page.svg', 'audio': 'voice.wav'}]})
         self.assertEqual(Path('unrelated/keep.txt').read_text(encoding='utf-8'), 'keep me')
         self.assertFalse(list(Path('.').glob('tl-pptx-build-*')))

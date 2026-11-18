@@ -6,7 +6,6 @@ import base64
 import json
 import posixpath
 import re
-import subprocess
 import zipfile
 from collections.abc import Iterable
 from pathlib import Path
@@ -256,27 +255,8 @@ def remove_narration(slide_xml: str) -> tuple[str, set[str]]:
 
 
 def probe_audio_duration(audio_path: Path) -> float | None:
-    """Return duration using a bounded local-only, format-constrained ffprobe."""
-    from tl_audio_guard import probe_options
-    try:
-        result = subprocess.run(
-            [
-                "ffprobe", "-v", "error", *probe_options(audio_path),
-                "-show_entries", "format=duration",
-                "-of", "json",
-                str(audio_path),
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            timeout=30,
-        )
-        data = json.loads(result.stdout or "{}")
-        duration = float(data.get("format", {}).get("duration", 0))
-        return duration if duration > 0 else None
-    except Exception:
-        return None
+    """Reject removed media processing; retain the structural import API only."""
+    raise ValueError('Audio probing and narration timing have been removed from tl-pptx')
 
 
 def next_shape_id(slide_xml: str) -> int:

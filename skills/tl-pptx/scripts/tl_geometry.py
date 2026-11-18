@@ -1,6 +1,6 @@
 """Controlled Boolean SVG document adapter; never rewrites source geometry.
 
-Uses the pinned upstream merge-shapes algorithms. Publication is the caller's
+Uses an exact bounded rectangle subset without optional geometry dependencies. Publication is the caller's
 responsibility. Temporary snapshots live only under the confirmed task cwd.
 """
 from __future__ import annotations
@@ -9,11 +9,11 @@ import copy
 import hashlib
 import re
 from pathlib import Path
-from tl_workspace import private_workspace
 from xml.etree import ElementTree as ET
 
 from tl_guard import ContractError, bare_name, read_local, validate_svg
 from tl_svg_resources import materialize_svg_resources
+from tl_workspace import check_task_root
 
 FONT_SUFFIXES = {'.ttf', '.otf', '.ttc', '.otc'}
 OPERATIONS = {'union', 'combine', 'fragment', 'intersect', 'subtract'}
@@ -140,14 +140,18 @@ def boolean_document(svg_name, manifest):
     """Return a standalone result SVG and evidence, without publishing files.
 
     The manifest contains operation, source_ids, output_id, optional style and
-    optional fonts (bare task-root filenames). Fragment produces separately
-    named sibling paths, not a union. No z-order placement is guessed.
+    optional solid fill override. Only plain direct-root rectangles are
+    supported; fonts and fragment are rejected. No z-order placement is guessed.
     """
-    from svg_to_pptx.shape_boolean import render_boolean_svg_fragments
+    from tl_rect_boolean import rectangle_fragment
+
+    check_task_root()
 
     operation, sources, output_id, style, font_names = _configuration(manifest)
     bare_name(svg_name, '.svg')
     original = read_local(svg_name, '.svg')
+    if b'<?xml-stylesheet' in original:
+        raise ContractError('Rectangle Boolean rejects external stylesheet instructions')
     budget = {}
     svg = materialize_svg_resources(svg_name, {svg_name: original}, budget)
     validate_svg(svg)
@@ -155,26 +159,14 @@ def boolean_document(svg_name, manifest):
     text_characters = sum(len(node.text or '') + len(node.tail or '') for node in root.iter())
     if text_characters > 5000:
         raise ContractError('Boolean text execution budget exceeds five thousand characters')
-    fonts = _font_snapshots(font_names)
-    with private_workspace(prefix='tl-geometry-') as directory:
-        workspace = Path(directory)
-        source = workspace / 'source.svg'
-        source.write_bytes(svg)
-        font_dirs = []
-        if 'fonts' in manifest:
-            font_root = workspace / 'fonts'
-            font_root.mkdir()
-            for name, data in fonts.items():
-                (font_root / name).write_bytes(data)
-            # Even an explicitly empty roster disables implicit fallback.
-            font_dirs = [font_root]
-        fragment = render_boolean_svg_fragments(
-            source, operation=operation, source_ids=sources, output_id=output_id,
-            style=style, font_dirs=font_dirs,
-        )
+    # This subset deliberately rejects rather than approximates unsupported input.
+    # Validate original XML too: resource expansion must not hide <use> operands.
+    fragment = rectangle_fragment(ET.fromstring(original), operation, sources,
+                                  output_id, style, font_names)
+    fonts = {}
     # Only viewport attributes belong to the result: old transforms/opacity
     # would be applied twice and unrelated ids/resources must not be copied.
-    result = ET.Element('svg', {'xmlns': SVG_NS})
+    result = ET.Element('{' + SVG_NS + '}svg')
     for name in ('viewBox', 'width', 'height', 'preserveAspectRatio'):
         if name in root.attrib:
             result.set(name, root.attrib[name])
@@ -188,12 +180,12 @@ def boolean_document(svg_name, manifest):
     document = ET.tostring(result, encoding='utf-8', xml_declaration=True)
     validate_svg(document)
     evidence = {
-        'operation': operation, 'source_ids': sources, 'source_sha256': hashlib.sha256(original).hexdigest(),
+        'engine': 'exact-axis-aligned-rectangles', 'operation': operation, 'source_ids': sources, 'source_sha256': hashlib.sha256(original).hexdigest(),
         'source_unchanged': True, 'result_ids': [node.get('id') for node in fragments],
         'coordinate_space': 'SVG-root', 'viewBox': root.get('viewBox'),
         'placement': 'Place at original operands z-order under final semantic parent; never under old transformed ancestor.',
         'fragment_order': 'top-to-bottom, left-to-right sibling paths' if operation == 'fragment' else None,
-        'font_policy': 'explicit snapshots only' if 'fonts' in manifest else 'platform system font roots only; no home fonts',
+        'font_policy': 'not applicable: rectangles only',
         'fonts': [{'file': name, 'sha256': hashlib.sha256(data).hexdigest()} for name, data in fonts.items()],
         'resource_budget': budget,
         'execution_limits': {'text_characters': 5000, 'font_files': 32, 'font_bytes': 67108864,

@@ -17,14 +17,13 @@ from tl_package_guard import MAX_MEMBER_BYTES, inspect_package
 SCALAR_OPTIONS = {
     'canvas_format', 'transition', 'transition_duration', 'auto_advance', 'kiosk',
     'enable_notes', 'animation', 'animation_duration', 'animation_stagger',
-    'animation_trigger', 'use_narration_timings', 'narration_padding',
+    'animation_trigger',
     'merge_paragraphs', 'image_optimize', 'image_max_dimension', 'image_sizing',
     'image_scale', 'image_quality', 'native_objects', 'structure_name',
     'pptx_structure', 'use_layout_placeholder_frames', 'structured_baseline',
-    'expected_viewbox', 'text_flow', 'primary_language', 'narration_start_floor',
+    'expected_viewbox', 'text_flow', 'primary_language',
 }
 OBJECT_OPTIONS = {'animation_config', 'animation_cli_overrides', 'doc_metadata', 'transition_effect_options'}
-AUDIO_SUFFIXES = {'.wav', '.mp3', '.m4a'}
 
 
 def _constant_error(value):
@@ -71,36 +70,47 @@ def _snapshot(name, suffixes, snapshots, limit=MAX_MEMBER_BYTES):
     bare_name(name, Path(name).suffix.lower())
     if name not in snapshots:
         snapshots[name] = read_local(name, Path(name).suffix.lower(), limit)
-        if Path(name).suffix.lower() in AUDIO_SUFFIXES:
-            from tl_audio_guard import validate_audio
-            validate_audio(snapshots[name], Path(name).suffix)
         if sum(map(len, snapshots.values())) > 128 * 1024 * 1024:
             raise ContractError('Combined build input resource budget exceeded')
     return name
 
 
-def _sound_references(config):
-    """Find explicit sound values before any upstream path interpretation."""
+def reject_media_options(manifest):
+    """Reject removed media requests before reading any input; keep text notes."""
+    if 'transition_sound' in manifest:
+        raise ContractError('Audio, narration, subtitle and video processing have been removed')
+    options = manifest.get('options', {})
+    if isinstance(options, dict):
+        removed = {'use_narration_timings', 'narration_padding', 'narration_start_floor'}
+        if removed.intersection(options):
+            raise ContractError('Narration timing options have been removed; text notes remain supported')
+        reject_sound_options(options)
+    slides = manifest.get('slides', [])
+    if isinstance(slides, list) and any(isinstance(slide, dict) and 'audio' in slide for slide in slides):
+        raise ContractError('Slide audio processing has been removed; use text notes instead')
+
+
+def reject_sound_options(config):
+    """Reject explicit sound editing, not opaque media retained from source PPTX."""
     pending = [config]
     while pending:
         value = pending.pop()
         if isinstance(value, dict):
             for key, child in value.items():
-                if key == 'sound' and child is not None and child != '':
-                    yield child
+                if key == 'sound' and child not in (None, ''):
+                    raise ContractError('Animation and transition sound processing have been removed')
                 pending.append(child)
         elif isinstance(value, list):
             pending.extend(value)
 
 
 BOOL_OPTIONS = {
-    'kiosk', 'enable_notes', 'use_narration_timings', 'merge_paragraphs',
+    'kiosk', 'enable_notes', 'merge_paragraphs',
     'image_optimize', 'native_objects', 'use_layout_placeholder_frames', 'structured_baseline',
 }
 NUMERIC_OPTIONS = {
     'transition_duration': (0, 4294967), 'auto_advance': (0, 4294967),
     'animation_duration': (0, 4294967), 'animation_stagger': (0, 4294967),
-    'narration_padding': (0, 4294967), 'narration_start_floor': (0, 4294967),
     'image_max_dimension': (1, 16384), 'image_scale': (0.01, 16), 'image_quality': (1, 100),
 }
 NULLABLE_OPTIONS = {
@@ -131,7 +141,8 @@ def _validate_options(options):
 
 def prepare_build(manifest):
     """Snapshot explicitly listed inputs; never scan task/user directories."""
-    if set(manifest) - {'slides', 'layouts', 'options', 'transition_sound', 'spec_lock', 'resources'}:
+    reject_media_options(manifest)
+    if set(manifest) - {'slides', 'layouts', 'options', 'spec_lock', 'resources'}:
         raise ContractError('Unknown build manifest field')
     slides = manifest.get('slides')
     if not isinstance(slides, list) or not 1 <= len(slides) <= MAX_SLIDES:
@@ -140,9 +151,9 @@ def prepare_build(manifest):
     if not isinstance(options, dict) or set(options) - SCALAR_OPTIONS - OBJECT_OPTIONS:
         raise ContractError('Unknown or filesystem-valued builder option')
     _validate_options(options)
-    snapshots, notes, audio, names = {}, {}, {}, []
+    snapshots, notes, names = {}, {}, []
     for slide in slides:
-        if not isinstance(slide, dict) or set(slide) - {'svg', 'notes', 'audio'}:
+        if not isinstance(slide, dict) or set(slide) - {'svg', 'notes'}:
             raise ContractError('Invalid slide declaration')
         name = _snapshot(slide.get('svg'), {'.svg'}, snapshots, 4 * 1024 * 1024)
         if name in names:
@@ -152,18 +163,11 @@ def prepare_build(manifest):
             if not isinstance(slide['notes'], str) or len(slide['notes']) > 100000:
                 raise ContractError('Slide notes must be bounded text')
             notes[Path(name).stem] = slide['notes']
-        if 'audio' in slide:
-            audio[Path(name).stem] = _snapshot(slide['audio'], AUDIO_SUFFIXES, snapshots)
     layouts = manifest.get('layouts', [])
     if not isinstance(layouts, list) or len(layouts) > MAX_SLIDES:
         raise ContractError('Layouts must be a bounded filename list')
     for name in layouts:
         _snapshot(name, {'.svg'}, snapshots, 4 * 1024 * 1024)
-    for name in _sound_references(options.get('animation_config', {})):
-        _snapshot(name, AUDIO_SUFFIXES, snapshots)
-    sound = manifest.get('transition_sound')
-    if sound is not None:
-        _snapshot(sound, {'.wav'}, snapshots)
     specification = manifest.get('spec_lock')
     if specification is not None:
         _snapshot(specification, {'.md'}, snapshots, 1024 * 1024)
@@ -192,7 +196,7 @@ def prepare_build(manifest):
     if sum(item['resource_bytes'] for item in checks) > MAX_TOTAL_BYTES:
         raise ContractError('Combined SVG decoded resource budget exceeded')
     return {'snapshots': snapshots, 'slides': names, 'layouts': layouts, 'notes': notes,
-            'audio': audio, 'options': dict(options), 'transition_sound': sound, 'spec_lock': specification}
+            'options': dict(options), 'spec_lock': specification}
 
 
 def build_package(prepared):
@@ -222,9 +226,8 @@ def build_package(prepared):
             resource_root=root, verbose=False, use_native_shapes=True,
             workers=1, cache_dir=None, dangerous_nonconforming_export=False,
             notes=prepared['notes'],
-            narration_audio={name: root / audio for name, audio in prepared['audio'].items()},
             layout_definition_files=[root / name for name in prepared['layouts']] or None,
-            animation_resource_root=root, transition_sound=prepared['transition_sound'],
+            animation_resource_root=root,
             **options,
         )
         if not succeeded or not output.is_file() or output.is_symlink():
