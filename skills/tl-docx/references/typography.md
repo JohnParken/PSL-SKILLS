@@ -4,6 +4,8 @@
 
 ## Profile 与角色样式
 
+未指定主题时，公文正文使用仿宋 / Times New Roman 16 pt、固定行距 28 pt、首行原生缩进 2 字（不是固定 32 pt）。仅改正文字号仍保留字符缩进。A4 纵向，上下边距 25.4 mm、左右 31.8 mm。主、副标题均用方正小标宋简体居中，分别为 22 / 14 pt、段后 12 / 8 pt；一、二、三四级标题分别用黑体、楷体、仿宋，均为 16 pt。以上是项目默认值，不替代单位模板；字体实际显示取决于客户端。
+
 `profile` 可选 `official-basic`、`business-report`、`academic`、`presentation-material`。省略时不改变已有默认公文行为。Profile 仅是排版预设，不表示公文标准认证；明确 `theme` 可覆盖 Profile 主题。
 
 `styles` 接受 `body`、`title`、`subtitle`、`heading1`–`heading4`、`table_body`、`table_header`。每项为部分格式对象；普通段落和标题还可使用 `format`，块级 `align` 单独覆盖对齐。

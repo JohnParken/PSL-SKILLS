@@ -8,6 +8,7 @@ import re
 import unicodedata
 from collections.abc import Callable
 
+from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.image.exceptions import InvalidImageStreamError, UnexpectedEndOfFileError, UnrecognizedImageError
@@ -15,7 +16,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
-from tl_create_layout import apply_paragraph_defaults, apply_run_format
+from tl_create_layout import apply_paragraph_defaults, apply_run_format, sync_complex_size
 from tl_create_styles import validate_format
 
 
@@ -707,6 +708,19 @@ def _set_repeat_header(row) -> None:
 
 
 def _add_caption(document, caption: str, theme: str) -> None:
+    if theme == "official":
+        name = "Table Caption"
+        if name not in document.styles:
+            style = document.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
+            style.base_style = document.styles["Normal"]
+            style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            style.paragraph_format.keep_with_next = True
+            style.paragraph_format.space_after = Pt(6)
+            style.font.size = Pt(12)
+            style.font.bold = False
+            sync_complex_size(style.element.rPr)
+        document.add_paragraph(caption, style=name)
+        return
     paragraph = document.add_paragraph()
     apply_paragraph_defaults(paragraph, theme, "caption")
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER

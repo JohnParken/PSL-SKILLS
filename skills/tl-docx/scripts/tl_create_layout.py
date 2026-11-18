@@ -17,7 +17,7 @@ THEME_DEFAULTS = {
         "size_pt": 16,
         "line_spacing_pt": 28,
         "line_spacing_multiple": 1.15,
-        "first_indent_pt": 32,
+        "first_indent_chars": 2,
         "space_after_pt": 0,
         "margins_cm": {"top": 2.54, "bottom": 2.54, "left": 3.18, "right": 3.18},
     },
@@ -47,6 +47,17 @@ _OTHER_TITLE_SIZES = {"title": 22, "subtitle": 12}
 _BUSINESS_COLOR = "1A365D"
 
 
+def sync_complex_size(properties) -> None:
+    """Use the same declared half-point size for complex-script text."""
+    size = properties.find(qn("w:sz"))
+    if size is not None:
+        complex_size = properties.find(qn("w:szCs"))
+        if complex_size is None:
+            complex_size = OxmlElement("w:szCs")
+            size.addnext(complex_size)
+        complex_size.set(qn("w:val"), size.get(qn("w:val")))
+
+
 def _set_run_font(run, east_asia: str, latin: str, size_pt: float) -> None:
     run.font.name = latin
     run.font.size = Pt(size_pt)
@@ -62,11 +73,20 @@ def apply_theme(document, theme: str) -> None:
     normal = document.styles["Normal"]
     normal.font.name = defaults["latin"]
     normal.font.size = Pt(defaults["size_pt"])
+    if theme == "official":
+        normal.font.bold = False
+        normal.paragraph_format.space_before = Pt(0)
+        normal.paragraph_format.space_after = Pt(0)
+        normal.paragraph_format.line_spacing = defaults["line_spacing_multiple"]
+        normal.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
     normal_properties = normal._element.get_or_add_rPr()
     normal_fonts = normal_properties.get_or_add_rFonts()
     normal_fonts.set(qn("w:eastAsia"), defaults["east_asia"])
     normal_fonts.set(qn("w:ascii"), defaults["latin"])
     normal_fonts.set(qn("w:hAnsi"), defaults["latin"])
+    if theme == "official":
+        normal_fonts.set(qn("w:cs"), defaults["latin"])
+        sync_complex_size(normal_properties)
     for level in range(1, 10):
         style = document.styles[f"Heading {level}"]
         font_name = _heading_font(theme, level)
@@ -228,7 +248,11 @@ def apply_paragraph_defaults(paragraph, theme: str, kind: str) -> None:
     paragraph.paragraph_format.space_after = Pt(_space_after(theme, kind))
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER if kind in {"title", "subtitle"} else WD_ALIGN_PARAGRAPH.LEFT
     if kind == "body":
-        paragraph.paragraph_format.first_line_indent = Pt(defaults["first_indent_pt"])
+        if "first_indent_chars" in defaults:
+            indent = paragraph._p.get_or_add_pPr().get_or_add_ind()
+            indent.set(qn("w:firstLineChars"), str(defaults["first_indent_chars"] * 100))
+        else:
+            paragraph.paragraph_format.first_line_indent = Pt(defaults["first_indent_pt"])
         paragraph.paragraph_format.line_spacing = _line_spacing(defaults, body=True)
         return
     paragraph.paragraph_format.first_line_indent = Pt(0)
@@ -303,11 +327,13 @@ def apply_run_overrides(run, item: dict) -> None:
         run.font.color.rgb = RGBColor.from_string(item["color"])
 
 
-def insert_field(paragraph, instruction: str, display: str | None = None) -> None:
+def insert_field(paragraph, instruction: str, display: str | None = None, *, dirty: bool = False) -> None:
     """Insert a standard complex field, with an optional cached display value."""
     begin_run = OxmlElement("w:r")
     begin = OxmlElement("w:fldChar")
     begin.set(qn("w:fldCharType"), "begin")
+    if dirty:
+        begin.set(qn("w:dirty"), "true")
     begin_run.append(begin)
     paragraph._p.append(begin_run)
 
@@ -486,9 +512,9 @@ def set_header_footer(
     elif value is not None:
         append_rich_runs(paragraph, value, theme, "body", None)
     if page_number:
-        if paragraph.runs and paragraph.text:
+        if theme == "official" or (paragraph.runs and paragraph.text):
             paragraph.add_run(" ")
-        insert_field(paragraph, "PAGE")
+        insert_field(paragraph, "PAGE", "1" if theme == "official" else None, dirty=theme == "official")
 
 
 class HeaderFooterController:

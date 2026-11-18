@@ -230,9 +230,12 @@ class AdvancedTableTests(unittest.TestCase):
         )
         document_xml = xml_part(parts, "word/document.xml")
         caption, table = elements(document_xml, "p")[0], elements(document_xml, "tbl")[0]
-        self.assertIsNotNone(caption.find(f"{W}pPr/{W}keepNext"))
+        self.assertEqual(caption.find(f"{W}pPr/{W}pStyle").get(W + "val"), "TableCaption")
+        styles = xml_part(parts, "word/styles.xml")
+        caption_style = next(s for s in elements(styles, "style") if s.get(W + "styleId") == "TableCaption")
+        self.assertIsNotNone(caption_style.find(f"{W}pPr/{W}keepNext"))
         self.assertEqual("".join(node.text or "" for node in elements(caption, "t")), "表 1：经营指标")
-        self.assertEqual(caption.find(f"{W}pPr/{W}jc").get(W + "val"), "center")
+        self.assertEqual(caption_style.find(f"{W}pPr/{W}jc").get(W + "val"), "center")
 
         rows = elements(table, "tr")
         self.assertEqual(len(rows), 3)

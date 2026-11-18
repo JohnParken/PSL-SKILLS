@@ -2,7 +2,9 @@
 
 本 Skill 属于允许按需使用第三方组件的 `tl-` 系列，不受“仅 Python 标准库”限制；当前实际依赖仍以下方说明及 `requirements.txt` 为准。本次政策调整未新增组件，不扩大已实现能力，路径、安全与归档清理约束不变。
 
-当前 Skill 版本 `20261118.0325.5874`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，所有XML解析要求解释器内置 Expat ≥2.6.0，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
+当前 Skill 版本 `20261118.1622.2299`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，所有XML解析要求解释器内置 Expat ≥2.6.0，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
+
+普通读、简单新建、编辑副本分别只取对应参考；长文仅在有续页时加载续读契约。
 
 ## 与 docx 的能力对照
 

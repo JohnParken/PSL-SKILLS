@@ -11,7 +11,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Pt
 
-from tl_create_layout import apply_run_overrides, apply_paragraph_defaults, apply_run_format
+from tl_create_layout import sync_complex_size, apply_run_overrides, apply_paragraph_defaults, apply_run_format
 
 STYLE_NAMES = {'body', 'title', 'subtitle', 'heading1', 'heading2', 'heading3', 'heading4', 'table_body', 'table_header'}
 ALIGNMENTS = {'left': WD_ALIGN_PARAGRAPH.LEFT, 'center': WD_ALIGN_PARAGRAPH.CENTER,
@@ -208,6 +208,15 @@ def install_role_styles(document, theme, styles):
         kind = 'heading' if role.startswith('heading') else role
         level = int(role[-1]) if kind == 'heading' else None
         apply_paragraph_defaults(paragraph, theme, kind)
+        official_role = theme == 'official' and (level is None or level <= 4)
+        if official_role:
+            # Start from the reference role, not Word's decorative template.
+            if kind in {'heading', 'title', 'subtitle'}:
+                paragraph.paragraph_format.keep_with_next = True
+                paragraph.paragraph_format.keep_together = None
+                paragraph.paragraph_format.widow_control = None
+                paragraph.paragraph_format.line_spacing = None  # inherits Normal
+            style.next_paragraph_style = document.styles['Body Text' if role in {'body', 'title', 'subtitle'} else 'Normal']
         run = paragraph.add_run()
         apply_run_format(run, theme, kind, level)
         if kind in {'heading', 'title', 'subtitle'}:
@@ -219,7 +228,7 @@ def install_role_styles(document, theme, styles):
         element = style.element
         for tag, generated in (('pPr', paragraph._p.pPr), ('rPr', run._r.rPr)):  # pylint: disable=protected-access
             old = element.find(qn('w:' + tag))
-            replacement = deepcopy(old) if old is not None else OxmlElement('w:' + tag)
+            replacement = deepcopy(old) if old is not None and not official_role else OxmlElement('w:' + tag)
             # Keep unmanaged native properties in their original order. Generated
             # managed properties use python-docx's schema-aware insertion helpers.
             if generated is not None:
@@ -233,6 +242,8 @@ def install_role_styles(document, theme, styles):
             if old is not None:
                 element.remove(old)
             element.append(replacement)
+        if official_role:
+            sync_complex_size(element.get_or_add_rPr())
         if level is not None:
             element.get_or_add_pPr().get_or_add_outlineLvl().val = level - 1
 

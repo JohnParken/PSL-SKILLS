@@ -263,9 +263,10 @@ def _header_expectations(spec):
                 tokens = _rich(value)
                 automatic = part == 'footer' and modes['first_page_numbers' if variant == 'first' else 'page_numbers']
                 if automatic:
-                    if any(token[0] in {'text', 'tab'} or token[0] == 'field' and token[2] for token in tokens):
+                    official = spec.get('theme', 'official') == 'official'
+                    if official or any(token[0] in {'text', 'tab'} or token[0] == 'field' and token[2] for token in tokens):
                         tokens.append(('text', ' '))
-                    tokens.append(('field', 'PAGE', ''))
+                    tokens.append(('field', 'PAGE', '1' if official else ''))
                 rendered[part, variant] = _compact(tokens)
         output.append(dict(rendered))
     return output

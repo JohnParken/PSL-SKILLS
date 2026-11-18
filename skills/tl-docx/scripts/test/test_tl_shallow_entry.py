@@ -57,9 +57,29 @@ class ShallowEntryTests(unittest.TestCase):
     def create_example(self):
         """Ensure the tested specification is the actual documented short example."""
         text = SKILL.read_text(encoding='utf-8')
+        self.assertIn('<skill-root>/references/create-basic.md', text)
+        self.assertNotIn("<<'JSON'", text)
+        guide = SKILL.parent / 'references' / 'create-basic.md'
+        text = guide.read_text(encoding='utf-8')
         examples = [json.loads(value) for value in re.findall(r"<<'JSON'\s*\n(.*?)\nJSON", text, re.DOTALL)]
         self.assertIn(EXPECTED_SPEC, examples, 'Shortest Skill JSON example changed; update its independent contract test.')
         return self.invoke('create', '报告.docx', payload=EXPECTED_SPEC)
+
+    def test_cold_routes_are_disjoint(self):
+        """Check installed instructions, not a live agent execution trace."""
+        entry = SKILL.read_text(encoding='utf-8')
+        cases = [('阅读、总结、问答', 'read-basic'), ('简单新建报告', 'create-basic'),
+                 ('编辑已有 DOCX 副本', 'edit-copy'), ('DOCX/DOTX 占位文字替换', 'fill-template')]
+        for label, branch in cases:
+            row = next(line for line in entry.splitlines() if line.startswith('| ' + label + ' |'))
+            self.assertEqual([branch], re.findall(r'references/([a-z-]+)\.md', row))
+            guide = (SKILL.parent / 'references' / (branch + '.md')).read_text(encoding='utf-8')
+            if branch == 'read-basic':
+                self.assertIn('references/continuation.md', guide)
+                self.assertNotIn(' create "', guide)
+            else:
+                self.assertNotIn('references/continuation.md', guide)
+        self.assertNotIn('--max-output-bytes 12000', entry)
 
     def test_short_example_creates_archives_and_uses_natural_pagination(self):
         """Check actual publication bytes and absence of forced document breaks."""

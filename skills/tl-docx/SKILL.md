@@ -1,6 +1,6 @@
 ---
 name: tl-docx
-version: "20261118.0325.5874"
+version: "20261118.1622.2299"
 description: 使用 python-docx 读取 DOCX 或 DOTX 月报和复杂文档，提取正文、合并表格和图表保存值，按需核对结构与修订，支持导出报告。也可创建带多级编号和分节版式的 Word 文档，按明确目标填充模板、编辑副本或处理线程批注。
 dependency:
   python:
@@ -29,49 +29,23 @@ dependency:
 
 ## 先选择任务
 
-完成上方自检后，按操作选择入口。普通读取和简单新建直接按下文完成；高级需求只读对应参考的必要章节，混合任务取必要分支的并集，不沿链接递归预读。创建参数不能用于编辑现有文档；编辑未支持的操作应报告边界，不能改走重建来冒充保真编辑。
+先判定实际操作，再打开表中的对应文件。普通读取、简单新建和编辑副本各只读一份参考；读取结果确有续页时才读续读说明。混合任务取必要分支的并集，不沿链接递归预读。上下文压缩后只恢复本入口和当前分支。创建参数不能用于编辑现有文档，不能用重建冒充保真编辑。
 
 | 任务 | 直接入口或一跳参考 |
 | --- | --- |
-| 阅读、总结、问答 | 下方“普通读取”，默认内容优先 |
-| 简单新建报告 | 下方“简单新建”，标题、正文和规则表格即可闭环 |
+| 阅读、总结、问答 | `<skill-root>/references/read-basic.md` |
+| 简单新建报告 | `<skill-root>/references/create-basic.md` |
 | 新建：字体、Profile、页面尺寸 | `<skill-root>/references/typography.md` |
 | 新建：多级编号、复杂表格、分节页眉页脚 | `<skill-root>/references/advanced-layout.md` |
-| 编辑已有 DOCX 副本 | `<skill-root>/references/writing.md#修改副本`，只用列出的 `operations` |
-| DOCX/DOTX 占位文字替换 | `<skill-root>/references/writing.md#批量填充模板` |
+| 编辑已有 DOCX 副本 | `<skill-root>/references/edit-copy.md`，只用列出的 `operations` |
+| DOCX/DOTX 占位文字替换 | `<skill-root>/references/fill-template.md` |
 | 写入中断后的收尾 | `<skill-root>/references/writing.md#原清单恢复`，不重跑生成 |
 | 外部单操作格式候选只读核验 | `<skill-root>/references/external-format-check.md` |
 | 线程批注 | `<skill-root>/references/comments.md` |
 | 读取定位、修订、导出、缓存、结构或静态排版检查 | `<skill-root>/references/reading.md` |
 | 部件级解包和重包 | `<skill-root>/references/package-editing.md` |
 
-## 普通读取
-
-```console
-"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --max-output-bytes 12000
-```
-
-默认返回内容优先 JSON，聚焦正文、表格文字和图表保存值，隐藏纯结构定义、文档属性、嵌套来源定位、字段指令及重复表示。保留编号、表格合并关系与表头确定性，图表包括保存的标题、轴标题、自定义标签和系列数值；不将保存值冒充实时值或完整渲染标签。看 `status`、`issues`、`coverage`、`has_more`：partial 时先提供可靠内容并明确遗漏，不把未知形状、图片未做 OCR、图表缓存缺失当作已完整读取。诊断默认按代码汇总，`--details` 可查看完整定位和诊断；原完整记录用 `--full`，不作为普通阅读前置步骤。显式选择 `--summary`、`--report` 或其他输出格式会切换专项视图，不同时传 `--content` / `--full`。
-
-普通任务从首批显式使用 12,000 字节预算（含 JSON 和末尾换行），不是先取全文再判断大小；底层无预算调用仍保留原兼容行为。`has_more=true` 时按 `<skill-root>/references/reading.md#结构化续读与稳定错误` 将 `continuation.action`、`source` 和全部 `parameters` 安全映射到 CLI；它们是数据而非 Shell 命令。不要只复制游标而漏掉视图、范围或缓存参数。逐批核对 `start` 接前批 `end`、源及选项不变，直到 `has_more=false`；这仅证明所选视图收齐，仍须检查 coverage/partial。续读提示计入预算，末页不再返回 `continuation`。失败看 `error_code`、`retryable` 和 `next_action`；允许按提示修正后重试不等于允许自动重复写入。不能拼接被宿主截断的 JSON 或以首批代替全文。单记录超限、导出、其他格式和专项报告按读取参考处理。该视图调整不等于流式解析，也不承诺固定 token 降幅。
-
-对用户回答文档内容与具体缺口，不堆砌部件路径、XML 或格式内部信息；需要来源追溯时再取详细视图。局部非关键部件损坏可以保留其他可读内容，DTD、危险关系、加密及资源安全失败仍阻断。
-
-## 简单新建
-
-先运行前述 `check --write`，再将以下完整命令作为 `execute` 的 command 执行。将示例文字替换为任务内容；通过安全 JSON 序列化提交，不把文档文字拼成 Shell 命令。stdin 接收一个完整 JSON，输出只传新文件裸文件名。
-
-```sh
-"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" create "报告.docx" <<'JSON'
-{"blocks":[{"type":"title","text":"工作报告"},{"type":"heading","level":1,"text":"工作概况"},{"type":"paragraph","text":"在这里填写正文。"},{"type":"table","header":true,"rows":[["项目","结果"],["示例项目","已完成"]]}]}
-JSON
-```
-
-`blocks` 按顺序组成文档；普通段落使用 `paragraph`，小节标题使用 `heading` 和 1–9 的 `level`，规则表格使用等长字符串行及 `header`。不需要表格时删除该块。默认公文样式和自然分页，不自动添加分页块；其他格式需求按路由读取一份相关参考。用户给出名称时优先使用，未给名称时可省略输出名由标题拟定；同名自动递增，明确要求精确同名才用 `--exact-name`，不能覆盖原件。完成后按下方回执核验交付，不再重复生成或归档。
-
-## 结果核验与交付
-
-创建检查 `status=verified` 与 `result.content_verification.status=verified`，编辑和批注写入检查 `status=edited`。创建的输入内容门禁独立核对文字顺序、表格合并、图片、字段和分节页眉页脚，不代表视觉排版、编号标签或字段重算通过。核对 `publication.published`、`cleanup.cleanup_complete`、`cleanup.manifest_removed` 和实际主文件引用。归档独立核对 `archive_status`，只有 `success` 且非空清单全部 copied/already_archived 才显示“🎉 文件归档成功，请到云空间查看。 ☁️✨”。保留 `archive_message`，按实际结果展示 `archive_user_notice`，不向用户显示内部归档位置或诊断。缺少当前宿主归档信息时保留主文件；需重试时仅处理归档。只用宿主确认的主文件链接交付，禁止以归档副本替代。
+写入、导出或恢复时按相应流程核验真实回执；需要发布及归档核验的其他分支见 `<skill-root>/references/delivery.md`。纯读取不走写入、发布或归档流程。
 
 禁止在普通 Word 任务中修改此 Skill。
 <!-- SKILL_DEFINITION_END -->

@@ -62,6 +62,41 @@ class CreationStylesTests(unittest.TestCase):
         self.assertEqual(paragraph.style.font.size.pt, 14)
 
 
+    def test_official_indent_tracks_font_size_and_allows_local_override(self):
+        for options in ({}, {'theme': 'official'}, {'profile': 'official-basic'}):
+            with self.subTest(options=options):
+                document = build(**options, styles={'body': {'size_pt': 20}}, blocks=[
+                    {'type': 'paragraph', 'text': '大号正文'},
+                    {'type': 'paragraph', 'text': '明确磅值', 'format': {'first_line_indent_pt': 18}},
+                ])
+                stream = BytesIO()
+                document.save(stream)
+                first, local = Document(BytesIO(stream.getvalue())).paragraphs
+                self.assertEqual(first.style.element.pPr.ind.get(qn('w:firstLineChars')), '200')
+                self.assertIsNone(first.style.element.pPr.ind.get(qn('w:firstLine')))
+                self.assertEqual(first.style.font.size.pt, 20)
+                self.assertEqual(local._p.pPr.ind.get(qn('w:firstLine')), '360')
+
+    def test_official_titles_have_no_template_decoration_and_keep_next(self):
+        document = build(blocks=[{'type': 'title', 'text': '标题'}])
+        for name in ('Title', 'Subtitle'):
+            style = document.styles[name]
+            self.assertEqual(style.next_paragraph_style.style_id, 'BodyText')
+            self.assertTrue(style.paragraph_format.keep_with_next)
+            self.assertIsNone(style.element.pPr.find(qn('w:pBdr')))
+            for tag in ('i', 'iCs', 'spacing', 'kern'):
+                self.assertIsNone(style.element.rPr.find(qn('w:' + tag)))
+        for level in range(1, 5):
+            style = document.styles[f'Heading {level}']
+            self.assertTrue(style.paragraph_format.keep_with_next)
+            self.assertIsNone(style.paragraph_format.keep_together)
+            self.assertIsNone(style.paragraph_format.widow_control)
+            self.assertEqual(style.element.pPr.outlineLvl.val, level - 1)
+        self.assertTrue(build(profile='official-basic', blocks=[{'type': 'paragraph', 'text': '正文'}])
+                        .styles['Heading 1'].paragraph_format.keep_together)
+        self.assertFalse(build(styles={'title': {'keep_with_next': False}}, blocks=[
+            {'type': 'title', 'text': '标题'}]).styles['Title'].paragraph_format.keep_with_next)
+
     def test_profile_body_and_explicit_overrides(self):
         spec = {'profile': 'academic', 'styles': {'body': {'size_pt': 13}},
                 'blocks': [{'type': 'paragraph', 'text': '正文', 'format': {'space_after_pt': 7}}]}

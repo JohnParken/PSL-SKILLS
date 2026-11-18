@@ -83,7 +83,8 @@ class BuildDocumentTests(unittest.TestCase):
         self.assertEqual(subtitle_size.get(W + "val"), "28")
         body_props = body_style.find(W + "pPr")
         self.assertEqual(body_props.find(W + "spacing").get(W + "line"), "560")
-        self.assertEqual(body_props.find(W + "ind").get(W + "firstLine"), "640")
+        self.assertEqual(body_props.find(W + "ind").get(W + "firstLineChars"), "200")
+        self.assertIsNone(body_props.find(W + "ind").get(W + "firstLine"))
         self.assertIsNotNone(next(node for node in elements(styles, "style") if node.get(W + "styleId") == "Heading1").find(f"{W}pPr/{W}keepNext"))
         self.assertIsNone(body_paragraphs[2].find(f"{W}pPr/{W}pageBreakBefore"))
         page_breaks = [node for node in elements(document_xml, "br") if node.get(W + "type") == "page"]
