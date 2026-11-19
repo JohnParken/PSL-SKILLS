@@ -1,10 +1,10 @@
 # document-navigation：上传文档先导航
 
-Skill 版本：`20261118.0614.2170`。正式入口为 [SKILL.md](../../skills/document-navigation/SKILL.md)。[运行包清单](../../packaging/runtime-manifests/document-navigation.json) 只分发这份指引，没有解析器或调度程序。
+Skill 版本：`20261119.0634.2207`。正式入口为 [SKILL.md](../../skills/document-navigation/SKILL.md)。[运行包清单](../../packaging/runtime-manifests/document-navigation.json) 只分发这份指引，没有解析器或调度程序。
 
 ## 三步流程
 
-1. 用户上传办公文档时优先选择导航，先在当前 `./` 执行 `ls -la`，用附件映射区分本轮上传与已有文件。没有附件的新建任务不列目录。
+1. 用户上传办公文档时优先选择导航，先在当前 `./` 执行 `ls -la`，以本轮附件映射和指定文件名核对目标。上传和待查交付物只查顶层，不从内部归档找替代品；歧义询问，缺失报告。无附件且无需查找已有文件的新建任务不列目录。业务入口仅保留顶层定位的兜底边界。
 2. 按实际格式和任务加载专业 Skill，再读取或操作；不用 `read_file` 打开 DOCX、ET、PDF 等文档本体。PPTX 的普通内容读取与基础新建选 `pptx`；原生导入、受控编辑、重建或可复用模板选 `tl-pptx`。PDF 需要宿主另有相应技能；没有专业支持时报告缺口，不猜格式或自动转换。
 3. 只上传而没有说明目的时，确认附件后询问用户。不为导航创建任何文件。目录列表不是内容读取，静态路由测试也不是宿主触发测试。
 

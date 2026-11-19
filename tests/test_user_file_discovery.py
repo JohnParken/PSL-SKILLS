@@ -3,18 +3,31 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ("bank-writing", "docx", "et", "ofd", "pptx", "table-workflow", "wps", "xlsx")
+SKILLS = ("bank-writing", "docx", "et", "ofd", "pptx", "table-workflow", "tl-docx", "tl-pptx", "wps", "xlsx")
 
 
 class UserFileDiscoveryTests(unittest.TestCase):
-    def test_user_file_discovery_in_business_entries(self):
+    def test_navigation_owns_full_discovery(self):
+        text = (ROOT / "skills/document-navigation/SKILL.md").read_text(encoding="utf-8")
+        for fragment in (
+            "`ls -la`", "附件映射", "指定的文件名", "待查交付物", "顶层", "不递归",
+            "不查子目录", "历史文件", "歧义", "报告", "不猜路径", "跳过此步",
+            "禁止用 `read_file`", "核实的文件名", "`/large_tool_results/`",
+        ):
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, text)
+
+    def test_business_entries_keep_direct_call_boundary(self):
         for name in SKILLS:
             with self.subTest(skill=name):
                 text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
-                self.assertIn("**用户文件定位：**", text)
-                section = text.split("**用户文件定位：**", 1)[1].split("\n", 1)[0]
-                for fragment in ("附件映射", "文件名", "交付物", "`./` 顶层", "不递归", "子目录", "歧义", "报告"):
-                    self.assertIn(fragment, section)
+                self.assertTrue(any(
+                    all(fragment in line for fragment in (
+                        "上传文件", "待查交付物", "`./` 顶层", "不递归", "不查子目录", "澄清", "不猜路径",
+                    ))
+                    for line in text.splitlines()
+                ))
+                self.assertNotIn("**用户文件定位：**", text)
 
     def test_other_paths_keep_their_own_contracts(self):
         text = (ROOT / "skills/docx/references/controlled-flow.md").read_text(encoding="utf-8")

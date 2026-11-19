@@ -1,7 +1,7 @@
 {
   "distribution": "tl-pptx (unofficial MIT derivative)",
   "sha256": {
-    "SKILL.md": "be1ef0cbdc3fa285defa90d232a69a8c458c28596e53321e7b51ab0c4b5f642b",
+    "SKILL.md": "74e5ec1ff44bcf5041ba7ce683d3be9150a135a11c6336768760587a0e6be07b",
     "assets/project-specs/scaffolds/design_spec.txt": "199ca11a9eae950a63b790090ebaf8b2942807d34f8b154cf09aa270fdb61587",
     "assets/project-specs/scaffolds/spec_lock.txt": "b04def0962247560e74eb57b26daed65aab64566c71ecc43ad9ab44fcdd80194",
     "assets/project-specs/schemas/design_spec.schema.json": "160f60b255bc326038992c150aa5a2e9400b2072b3ad0b099f60ac541e053248",
