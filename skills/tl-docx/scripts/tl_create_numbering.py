@@ -56,18 +56,19 @@ def _new_abstract(numbering, *, ordered: bool, levels: int, heading_mode: str | 
         justification.set(qn("w:val"), "left")
         level.append(justification)
 
-        paragraph_properties = OxmlElement("w:pPr")
-        tabs = OxmlElement("w:tabs")
-        tab = OxmlElement("w:tab")
-        tab.set(qn("w:val"), "num")
-        tab.set(qn("w:pos"), str(720 * (level_index + 1)))
-        tabs.append(tab)
-        paragraph_properties.append(tabs)
-        indent = OxmlElement("w:ind")
-        indent.set(qn("w:left"), str(720 * (level_index + 1)))
-        indent.set(qn("w:hanging"), "360")
-        paragraph_properties.append(indent)
-        level.append(paragraph_properties)
+        if heading_mode is None:
+            paragraph_properties = OxmlElement("w:pPr")
+            tabs = OxmlElement("w:tabs")
+            tab = OxmlElement("w:tab")
+            tab.set(qn("w:val"), "num")
+            tab.set(qn("w:pos"), str(720 * (level_index + 1)))
+            tabs.append(tab)
+            paragraph_properties.append(tabs)
+            indent = OxmlElement("w:ind")
+            indent.set(qn("w:left"), str(720 * (level_index + 1)))
+            indent.set(qn("w:hanging"), "360")
+            paragraph_properties.append(indent)
+            level.append(paragraph_properties)
 
         if not ordered and heading_mode is None:
             run_properties = OxmlElement("w:rPr")
@@ -97,13 +98,20 @@ def _level_text(level_index: int, ordered: bool, heading_mode: str | None) -> st
     return ".".join(f"%{index + 1}" for index in range(level_index + 1)) + "."
 
 
-def _new_number_instance(numbering, abstract_id: int) -> int:
+def _new_number_instance(numbering, abstract_id: int, *, start: int = 1) -> int:
     number_id = _next_id(numbering, "w:numId", "w:num")
     number = OxmlElement("w:num")
     number.set(qn("w:numId"), str(number_id))
     abstract_reference = OxmlElement("w:abstractNumId")
     abstract_reference.set(qn("w:val"), str(abstract_id))
     number.append(abstract_reference)
+    if start != 1:
+        override = OxmlElement("w:lvlOverride")
+        override.set(qn("w:ilvl"), "0")
+        start_override = OxmlElement("w:startOverride")
+        start_override.set(qn("w:val"), str(start))
+        override.append(start_override)
+        number.append(override)
     numbering.append(number)
     return number_id
 
@@ -122,23 +130,22 @@ def create_heading_numbering(document, mode: str) -> int | None:
     return _new_number_instance(numbering, abstract_id)
 
 
-def create_multilevel_list_numbering(document, ordered: bool) -> int:
-    """Create one independent nine-level list instance."""
+def create_multilevel_list_numbering(document, ordered: bool, *, start: int = 1) -> int:
+    """Create one independent nine-level list instance with a level-0 start."""
+    if type(start) is not int or not 1 <= start <= 2147483647 or (not ordered and start != 1):
+        raise ValueError("list start must be a positive bounded integer for ordered numbering")
     numbering = document.part.numbering_part.element
     abstract_id = _new_abstract(numbering, ordered=ordered, levels=9)
-    return _new_number_instance(numbering, abstract_id)
+    return _new_number_instance(numbering, abstract_id, start=start)
 
 
 def set_paragraph_numbering(paragraph, number_id: int, level: int = 0) -> None:
     """Attach a native numbering instance and zero-based level to a paragraph."""
     properties = paragraph._p.get_or_add_pPr()
-    number_properties = properties.find(qn("w:numPr"))
-    if number_properties is None:
-        number_properties = OxmlElement("w:numPr")
-        properties.append(number_properties)
-    else:
-        for child in list(number_properties):
-            number_properties.remove(child)
+    # Insert before spacing/indent/alignment, not at the end of a styled pPr.
+    number_properties = properties.get_or_add_numPr()
+    for child in list(number_properties):
+        number_properties.remove(child)
     level_element = OxmlElement("w:ilvl")
     level_element.set(qn("w:val"), str(level))
     number_element = OxmlElement("w:numId")

@@ -290,7 +290,7 @@ class ContractUnitTests(unittest.TestCase):
         encoder = tl_docx.encode
 
         def capture(value):
-            if isinstance(value, list) and len(value) > 1 and value[1] == 'read-view-v6':
+            if isinstance(value, list) and len(value) > 1 and value[1] == 'read-view-v7':
                 bindings.append(value)
             return encoder(value)
 

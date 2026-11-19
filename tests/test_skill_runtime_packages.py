@@ -776,6 +776,25 @@ class SkillRuntimePackages(unittest.TestCase):
         listed = call('comments', annotated['output'], payload={'action': 'list'})
         self.assertEqual('modern', listed['mode'])
         self.assertEqual('请核对', listed['comments'][0]['text'])
+        # Exercise the three parity paths together through the installed public CLI.
+        official = call('create', 'notice.docx', payload={'profile': 'official-basic', 'heading_numbering': 'chinese',
+            'blocks': [{'type': 'heading', 'level': 1, 'text': '办理事项'},
+                       {'type': 'list', 'ordered': True, 'list_id': 'steps', 'start': 3, 'items': ['复核']},
+                       {'type': 'official_signature', 'issuer': '办公室', 'date': '2026年11月19日'},
+                       {'type': 'section_break', 'break_type': 'next_page', 'page': {'orientation': 'landscape'}},
+                       {'type': 'paragraph', 'text': '附件'}]})
+        self.assertEqual('verified', official['status'])
+        rows = call('read', 'notice.docx', '--full')['records']
+        labels = {r['text']: r['numbering']['label'] for r in rows if r.get('type') == 'paragraph'
+                  and 'label' in r.get('numbering', {})}
+        self.assertEqual({'办理事项': '一、', '复核': '3.'}, labels)
+        for word in ('办公室', '2026年11月19日', '附件'):
+            self.assertTrue(any(r.get('text') == word for r in rows))
+        state_request = {'id': listed['comments'][0]['id'], 'expected_text': '请核对'}
+        closed = call('comments', annotated['output'], 'closed.docx', payload=dict(state_request, action='resolve'))
+        self.assertTrue(call('comments', closed['output'], payload={'action': 'list'})['comments'][0]['resolved'])
+        opened = call('comments', closed['output'], 'reopened.docx', payload=dict(state_request, action='reopen'))
+        self.assertFalse(call('comments', opened['output'], payload={'action': 'list'})['comments'][0]['resolved'])
         risk = call('create', 'risks.docx', payload={'blocks': [{'type': 'page_break'}]})
         self.assertEqual('verified', risk['status'])
         audit = call('validate', 'risks.docx', '--strict-pagination', expected=2)

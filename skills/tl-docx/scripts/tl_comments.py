@@ -574,12 +574,12 @@ def _specification(spec):
         _identifier(spec["id"])
         _text(spec["expected_text"], "expected_text", empty=True)
         _text(spec["text"], "text")
-    elif action == "delete":
+    elif action in ("delete", "resolve", "reopen"):
         _fields(spec, ("action", "id", "expected_text"))
         _identifier(spec["id"])
         _text(spec["expected_text"], "expected_text", empty=True)
     else:
-        raise ValueError("Expected list, add, reply, update or delete")
+        raise ValueError("Expected list, add, reply, update, delete, resolve or reopen")
     return action
 
 
@@ -713,18 +713,21 @@ def _allocate_comment(state, roots, text_value, author, initials, parent_id=None
     _identifier(identifier)
     used_para = {record.get("para_id") for record in records.values()}
     used_durable = {record.get("durable_id") for record in records.values()}
-    para_id = _next_hex(used_para)
-    durable_id = _next_hex(used_durable)
+    modern = state["mode"] != "classic"
+    para_id = _next_hex(used_para) if modern else None
+    durable_id = _next_hex(used_durable) if modern else None
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     comments = roots[state["names"]["comments.xml"]]
     comment = _append(comments, W, "comment", (
         (qn("w:id"), identifier), (qn("w:author"), author), (qn("w:initials"), initials),
         (qn("w:date"), now),
     ))
-    paragraph = _append(comment, W, "p", (("{%s}paraId" % W14, para_id),))
+    paragraph = _append(comment, W, "p", (("{%s}paraId" % W14, para_id),) if modern else ())
     run = _append(paragraph, W, "r")
     text_node = _append(run, W, "t", ((XML_SPACE, "preserve"),))
     text_node.text = text_value
+    if not modern:
+        return identifier
     extension_attrs = [("{%s}paraId" % W15, para_id), ("{%s}done" % W15, "0")]
     if parent_id is not None:
         extension_attrs.append(("{%s}paraIdParent" % W15, records[parent_id]["para_id"]))
@@ -835,6 +838,8 @@ def _mutation_roots(package, state, action):
         targets.add(package.main)
     if action in ("add", "reply", "delete") and state["mode"] == "modern":
         targets.update(state["names"][name] for name, *_ in COMMENT_SPECS[1:])
+    if action in ("resolve", "reopen"):
+        targets = {state["names"]["commentsExtended.xml"]}
     if action == "add" and state["mode"] == "none":
         targets.update(state["names"].values())
         targets.update((TYPES, rels_member(package.main)))
@@ -859,15 +864,17 @@ def manage_comments(package: Package, spec: dict) -> tuple[bytes | None, dict]:
         return None, _public_result(state, action)
     if state["diagnostics"]:
         raise ValueError("Comment mutation is unsupported: " + "; ".join(state["diagnostics"]))
-    if action == "add" and state["mode"] == "classic":
-        raise ValueError("Adding comments to classic comments requires an unsupported metadata upgrade")
+    if action in ("resolve", "reopen") and state["mode"] != "modern":
+        raise ValueError("Thread state changes require complete modern comment metadata")
     if action == "reply" and state["mode"] != "modern":
         raise ValueError("Replies require complete modern comment metadata")
     record = None
-    if action in ("update", "delete", "reply"):
+    if action in ("update", "delete", "reply", "resolve", "reopen"):
         record = _guard_record(state, spec)
         if not record["editable"]:
             raise ValueError("Only simple single-run comments can be changed")
+    if action in ("resolve", "reopen") and record["parent_id"] is not None:
+        raise ValueError("Thread state changes require a root comment")
     if action == "reply" and (record["parent_id"] is not None or record.get("resolved", False)):
         raise ValueError("Replies require unresolved root comments")
     if (action == "delete"
@@ -902,6 +909,12 @@ def manage_comments(package: Package, spec: dict) -> tuple[bytes | None, dict]:
         text_node.text = spec["text"]
         text_node.set(XML_SPACE, "preserve")
         identifier = spec["id"]
+    elif action in ("resolve", "reopen"):
+        identifier = spec["id"]
+        member = state["names"]["commentsExtended.xml"]
+        para_attr = "{%s}paraId" % W15
+        entry = next(node for node in roots[member] if _hex_id(node.get(para_attr)) == record["para_id"])
+        entry.set("{%s}done" % W15, "1" if action == "resolve" else "0")
     else:
         identifier = spec["id"]
         _remove_comment(state, roots, identifier)
@@ -922,6 +935,10 @@ def manage_comments(package: Package, spec: dict) -> tuple[bytes | None, dict]:
     elif action == "update":
         if checked_state["records"].get(identifier, {}).get("text") != spec["text"]:
             raise ValueError("Updated comment failed verification")
+    elif action in ("resolve", "reopen"):
+        verified_record = checked_state["records"].get(identifier, {})
+        if verified_record.get("resolved") is not (action == "resolve"):
+            raise ValueError("Thread state change failed verification")
     elif identifier in checked_state["records"]:
         raise ValueError("Deleted comment remains in the verified package")
     preserved = Package(candidate)

@@ -389,7 +389,7 @@ def _validate_block(block, path: str, bookmarks: set[str], bookmark_references: 
         _expect_object(
             block,
             path,
-            {"type", "items", "ordered", "list_id", "level"},
+            {"type", "items", "ordered", "list_id", "level", "start"},
             {"type", "items"},
         )
         items = block["items"]
@@ -400,6 +400,10 @@ def _validate_block(block, path: str, bookmarks: set[str], bookmark_references: 
         if "ordered" in block:
             _boolean(block["ordered"], f"{path}.ordered")
         level = _integer(block.get("level", 0), f"{path}.level", minimum=0, maximum=8)
+        if "start" in block:
+            _integer(block["start"], f"{path}.start", minimum=1, maximum=2147483647)
+            if not block.get("ordered") or "list_id" not in block or level != 0:
+                raise ValueError(f"{path}.start requires a named ordered list starting at level 0")
         if "list_id" in block:
             list_id = _text(block["list_id"], f"{path}.list_id", allow_empty=False)
             if len(list_id) > 64 or list_id != list_id.strip():
@@ -616,6 +620,8 @@ def _validate_spec(spec) -> tuple[str, dict, dict, set[str], list[dict], str, di
                     raise ValueError(f"{block_path}.level must start at 0 for a new list_id")
                 list_instances[list_id] = {"ordered": ordered, "level": level}
             else:
+                if "start" in block:
+                    raise ValueError(f"{block_path}.start is only valid on the first block of a list_id")
                 if previous["ordered"] != ordered:
                     raise ValueError(f"{block_path}.ordered conflicts with earlier list_id {list_id!r}")
                 if level > previous["level"] + 1:
@@ -794,7 +800,7 @@ def build_document(spec: dict, read_image: Callable[[str], bytes]):
             if list_id is not None:
                 if list_id not in list_number_ids:
                     list_number_ids[list_id] = create_multilevel_list_numbering(
-                        document, block.get("ordered", False)
+                        document, block.get("ordered", False), start=block.get("start", 1)
                     )
                 number_id = list_number_ids[list_id]
                 level = block.get("level", 0)

@@ -3,7 +3,7 @@
 import re
 
 W = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
-SUPPORTED = {'decimal', 'decimalZero', 'upperLetter', 'lowerLetter', 'upperRoman', 'lowerRoman', 'bullet', 'none'}
+SUPPORTED = {'decimal', 'decimalZero', 'upperLetter', 'lowerLetter', 'upperRoman', 'lowerRoman', 'bullet', 'none', 'chineseCounting'}
 
 
 def value(node, tag, default=None):
@@ -54,6 +54,15 @@ def formatted(number, fmt):
     """Format a counter for the explicitly supported high-value format subset."""
     if fmt in ('decimal', 'decimalZero'):
         return str(number).zfill(2 if fmt == 'decimalZero' else 1)
+    if fmt == 'chineseCounting':
+        # Keep this to the common counting range; do not infer higher glyph conventions.
+        if not 1 <= number <= 99:
+            raise ValueError('numbering_counter_range_unsupported')
+        digits = '零一二三四五六七八九'
+        tens, units = divmod(number, 10)
+        if not tens:
+            return digits[units]
+        return (digits[tens] if tens > 1 else '') + '十' + (digits[units] if units else '')
     if not 1 <= number <= 3999:
         raise ValueError('numbering_counter_range_unsupported')
     if fmt in ('upperLetter', 'lowerLetter'):

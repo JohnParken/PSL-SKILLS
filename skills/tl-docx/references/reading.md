@@ -70,7 +70,7 @@
 
 用 `-o` 保存本次输出到新文件，JSON 用 `.json`、纯文字用 `.txt`、原始 XML 用 `.xml`。排版检查也可导出 JSON。文件与同参数 stdout 内容一致，保存时 stdout 返回回执，含 `result.read_status` 和可用分页信息；分页输出仅保存当前一批。`--delivery` 与 `-o` 合用，独立报告归档状态。报告导出最多 64 MiB，不覆盖已有文件；归档失败按回执摘要重试。文件和报告均保留缺失诊断。
 
-`read` 退出 0 时，`status=ok` 或 `partial`，后者带 `issues`，保留已读记录。分页时每批都带全局覆盖、`start`、`end`、`total`、`has_more`。`end` 为排他索引。默认返回整个选定视图；加 `--max-output-bytes 12000` 限制 JSON UTF-8 字节数（含末尾换行）。本轮游标视图更新为 `read-view-v6`，缓存解析版本为 `tl-report-6`；旧游标须从首批重新开始，旧缓存不可混用。`next_cursor` 与源文件 SHA-256、API 版本及视图绑定，单传游标时预算为 12,000 字节。预算放不下下一完整记录时退出 1，增加预算再读取；不拼接被截断的工具文本。
+`read` 退出 0 时，`status=ok` 或 `partial`，后者带 `issues`，保留已读记录。分页时每批都带全局覆盖、`start`、`end`、`total`、`has_more`。`end` 为排他索引。默认返回整个选定视图；加 `--max-output-bytes 12000` 限制 JSON UTF-8 字节数（含末尾换行）。升级前用原版本和原 token 释放已有缓存。本轮游标视图更新为 `read-view-v7`，缓存解析版本为 `tl-report-7`；旧游标须从首批重新开始，旧缓存不可混用。`next_cursor` 与源文件 SHA-256、API 版本及视图绑定，单传游标时预算为 12,000 字节。预算放不下下一完整记录时退出 1，增加预算再读取；不拼接被截断的工具文本。
 
 ```console
 "<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" read "月报.docx" --max-output-bytes 12000

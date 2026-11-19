@@ -22,7 +22,7 @@ API_VERSION = 1
 MAX_SPEC = 16 * 1024 * 1024
 MIN_BUDGET = 512
 CAPABILITIES = ['read-docx', 'read-dotx', 'source-bound-pages', 'create-docx', 'edit-docx', 'validate', 'archive',
-                'threaded-comments', 'versioned-output', 'resume-cleanup', 'pagination-audit',
+                'threaded-comments', 'official-signature', 'nested-section-page', 'classic-comment-add', 'modern-thread-status', 'named-list-start', 'versioned-output', 'resume-cleanup', 'pagination-audit',
                 'raw-ooxml', 'revision-views', 'report-export', 'table-header-mapping', 'template-replacement',
                 'native-role-styles', 'parse-cache', 'tracked-text-replacement', 'part-bundle-roundtrip', 'layout-audit', 'lossless-record-fragments', 'content-first-read',
                 'default-content-read', 'full-record-read', 'visible-content-v2', 'stored-chart-annotations',
@@ -160,7 +160,7 @@ def read_result(package, args, raw_report=None, cache_meta=None):
         meta.update(document_coverage=document_coverage, document_issues=document_issues)
     if args.summary:
         meta['summary'] = {'heading_count': len(records), 'content_records_included': False}
-    binding_fields = [API_VERSION, 'read-view-v6', package.sha256, args.headings, args.summary, args.paragraph_range,
+    binding_fields = [API_VERSION, 'read-view-v7', package.sha256, args.headings, args.summary, args.paragraph_range,
                       args.section.strip() if args.section else None]
     if enhanced or args.revisions or args.include_related is not None or args.format == 'structure' or args.section_occurrence:
         options = {'format': args.format, 'revisions': args.revisions, 'include_related': args.include_related,

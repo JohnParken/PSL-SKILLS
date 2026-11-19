@@ -1,6 +1,6 @@
 ---
 name: tl-docx
-version: "20261119.0634.2207"
+version: "20261119.0718.5532"
 description: 使用 python-docx 读取 DOCX 或 DOTX 月报和复杂文档，提取正文、合并表格和图表保存值，按需核对结构与修订，支持导出报告。也可创建带多级编号和分节版式的 Word 文档，按明确目标填充模板、编辑副本或处理线程批注。
 dependency:
   python:
@@ -35,13 +35,14 @@ dependency:
 | --- | --- |
 | 阅读、总结、问答 | `<skill-root>/references/read-basic.md` |
 | 简单新建报告 | `<skill-root>/references/create-basic.md` |
+| 新建：公文署名、成文日期、横向附件分节 | `<skill-root>/references/writing.md` |
 | 新建：字体、Profile、页面尺寸 | `<skill-root>/references/typography.md` |
-| 新建：多级编号、复杂表格、分节页眉页脚 | `<skill-root>/references/advanced-layout.md` |
+| 新建：复杂公文分节、多级原生编号与起号、复杂表格及页眉页脚 | `<skill-root>/references/advanced-layout.md` |
 | 编辑已有 DOCX 副本 | `<skill-root>/references/edit-copy.md`，只用列出的 `operations` |
 | DOCX/DOTX 占位文字替换 | `<skill-root>/references/fill-template.md` |
 | 写入中断后的收尾 | `<skill-root>/references/writing.md#原清单恢复`，不重跑生成 |
 | 外部单操作格式候选只读核验 | `<skill-root>/references/external-format-check.md` |
-| 线程批注 | `<skill-root>/references/comments.md` |
+| 经典批注、现代线程批注与解决状态 | `<skill-root>/references/comments.md` |
 | 读取定位、修订、导出、缓存、结构或静态排版检查 | `<skill-root>/references/reading.md` |
 | 部件级解包和重包 | `<skill-root>/references/package-editing.md` |
 

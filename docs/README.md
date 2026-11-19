@@ -36,7 +36,7 @@
 | [document-navigation](skills/document-navigation.md) | 20261119.0634.2207 | 上传文档优先导航：在 `./` 用 `ls -la` 查看本轮候选，再加载格式专用技能。 |
 | [bank-writing](skills/bank-writing.md) | 20261119.0634.2207 | 银行材料写作、月报与跨期经营分析；讲话、客户投诉及公关，邮件短结构与可选合成示例；仅交付文本，表格计算按需交接。 |
 | [docx](skills/docx.md) | 20261119.0634.2207 | DOCX 创建、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、文本框、合并表格、图表缓存及图片引用。显式 --report 保留结构JSON，续读复用解析结果。 |
-| [tl-docx](skills/tl-docx.md) | 20261119.0634.2207 | 基于 python-docx 的独立 Word 入口。普通读取默认有用内容与图表，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
+| [tl-docx](skills/tl-docx.md) | 20261119.0718.5532 | 基于 python-docx 的独立 Word 入口。普通读取默认有用内容与图表，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
 | [xlsx](skills/xlsx.md) | 20261119.0634.2207 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
 | [wps](skills/wps.md) | 20261119.0634.2207 | 默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；PNG和布局证据显式 maximum，原结构显式 --profile full；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
 | [et](skills/et.md) | 20261119.0634.2207 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |

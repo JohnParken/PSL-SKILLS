@@ -13,7 +13,7 @@ from secrets import token_hex
 
 from tl_resource_limits import policy, screen_json, validate_report
 
-PARSER_VERSION = 'tl-report-6'
+PARSER_VERSION = 'tl-report-7'
 MAX_BYTES = 64 * 1024 * 1024
 TOKEN_PATTERN = re.compile(r'tlc1\.([0-9a-f]{32})\.([0-9a-f]{64})\.([0-9a-f]{64})\.([0-9a-f]{64})\Z')
 

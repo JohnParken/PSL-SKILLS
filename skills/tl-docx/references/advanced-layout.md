@@ -6,7 +6,9 @@
 
 ## 多级编号
 
-顶层 `heading_numbering` 为 `none`、`chinese` 或 `decimal`，只作用于 1–4 级标题。标题文字无需手工再加编号。普通列表使用单独的编号实例。`list_id` 指定续号实例，`level` 从 0 到 8，首次必须从 0 开始，后续不能跳过父层级。一个实例内保持 `ordered` 一致。省略 `list_id` 时各块继续独立编号。
+顶层 `heading_numbering` 为 `none`、`chinese` 或 `decimal`，只作用于 1–4 级标题。标题文字无需手工再加编号。普通列表使用单独的编号实例。`list_id` 指定续号实例，`level` 从 0 到 8，首次必须从 0 开始，后续不能跳过父层级。一个实例内保持 `ordered` 一致。省略 `list_id` 时各块继续独立编号。只在 `ordered:true` 的显式 `list_id` 第一个 0 级块设置 `start`（整数 1 至 2147483647）。后续同 ID 续号，不再传 `start`；新 ID 可独立起号。非默认起号写入原生 `w:startOverride`，不写入段落文字。
+
+`read` 的 `numbering.label` 支持重建 1–99 的 `chineseCounting`，包括 `heading_numbering:chinese` 中的一、（一）级标题和混用十进制的下级标题。超出该范围保留诊断，不推测实际标签。
 
 ```json
 {"heading_numbering":"chinese","blocks":[{"type":"heading","level":1,"text":"工作计划"},{"type":"list","list_id":"事项","ordered":true,"items":["第一项"]},{"type":"paragraph","text":"补充说明"},{"type":"list","list_id":"事项","level":1,"ordered":true,"items":["子项"]}]}

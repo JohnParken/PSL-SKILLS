@@ -2,7 +2,7 @@
 
 本 Skill 属于允许按需使用第三方组件的 `tl-` 系列，不受“仅 Python 标准库”限制；当前实际依赖仍以下方说明及 `requirements.txt` 为准。本次政策调整未新增组件，不扩大已实现能力，路径、安全与归档清理约束不变。
 
-当前 Skill 版本 `20261119.0634.2207`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，所有XML解析要求解释器内置 Expat ≥2.6.0，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
+当前 Skill 版本 `20261119.0718.5532`。项目源码在 [Skill 入口](../../skills/tl-docx/SKILL.md)。Python ≥3.10，所有XML解析要求解释器内置 Expat ≥2.6.0，唯一直接依赖 `python-docx==1.2.0`。使用其文档对象及 XML 验证，标准库处理包边界、原始 XML 结构、续读、模板替换、发布和归档。`lxml`、`typing_extensions` 由上游组件传递安装。 [python-docx 1.2.0 依赖声明](https://github.com/python-openxml/python-docx/blob/v1.2.0/pyproject.toml)
 
 普通读、简单新建、编辑副本分别只取对应参考；长文仅在有续页时加载续读契约。
 
@@ -12,8 +12,16 @@
 | --- | --- |
 | 读取报告 | 普通阅读默认内容优先，聚焦正文、表格与图表缓存，`--full` 获取完整报告。标题支持有界样式继承，保留正文脚注/尾注/批注引用锚点，概要包含标题，章节统计与全篇诊断分列。支持原始 XML、节点树、三个修订视图、精细表头与合并定位、图形偏移、图表点分批、精简表格和重复章节消歧。`-o` 保存 JSON、文本或 XML，归档可显式开启。见 [本轮月报与安装验收](../maintenance/tl-docx/read-write-20261113.md)、[前轮回归](../maintenance/tl-docx/parity-20261113.md) 和 [首版验收](../maintenance/tl-docx/validation.md)。 |
 | 创建 | 支持公文、商务、学术主题、四种 Profile、角色样式和局部格式覆盖、中西文字体、多级编号、复杂表格与表头正文格式、毫米页面/分节尺寸、首页和奇偶页眉页脚、分节页码及独立交叉引用块。 |
-| 编辑及批注 | `edit` 支持定点文字和 run 格式、同格式纯文本 run 受控合并、段落插入、规则表格行和简单单元格、同类型图片；另有 `format_cell_run` / `replace_cell_run_text`，按物理单元格、段落和 run 精确定位未合并单元格，或显式expected_merge且拓扑证明通过的合并原点中的多段/多 run，保留其他文字与格式。 `format_story_run` / `replace_story_run_text` 另支持单节、显式唯一 default 引用的现存纯文本页眉页脚；拒绝共享、继承、多节、复杂内容及与正文操作混批。`replace` 按预期次数批量填充正文、指定页眉页脚的普通文字。`comments` 支持 DOCX/DOTX 的现代四部件批注查询、增加、一级回复、更新及删除，经典简单批注支持查询、更新、删除。格式参考 [Microsoft Word 扩展规范](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/b839fe1f-e1ca-4fa6-8c26-5954d0abbccd)。 |
+| 编辑及批注 | `edit` 支持定点文字和 run 格式、同格式纯文本 run 受控合并、段落插入、规则表格行和简单单元格、同类型图片；另有 `format_cell_run` / `replace_cell_run_text`，按物理单元格、段落和 run 精确定位未合并单元格，或显式expected_merge且拓扑证明通过的合并原点中的多段/多 run，保留其他文字与格式。 `format_story_run` / `replace_story_run_text` 另支持单节、显式唯一 default 引用的现存纯文本页眉页脚；拒绝共享、继承、多节、复杂内容及与正文操作混批。`replace` 按预期次数批量填充正文、指定页眉页脚的普通文字。`comments` 支持 DOCX/DOTX 的现代四部件批注查询、增加、一级回复、更新、删除及根线程解决/重开；经典简单批注可在原格式内新增、查询、更新、删除，不升级。格式参考 [Microsoft Word 扩展规范](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/b839fe1f-e1ca-4fa6-8c26-5954d0abbccd)。 |
 | 分页、命名及交付 | `validate --strict-pagination` 可将 12 类静态分页警告作为质量门禁。创建与编辑可自动命名，同名递增，发布时记录原清单。`resume` 只恢复该任务的收尾，`archive` 可按已核对的 SHA-256 重试归档。 |
+
+## 复杂公文、编号和批注的使用边界
+
+正文后可插入 `{"type":"official_signature","issuer":"办公室","date":"2026年11月19日"}`；生成两个可编辑的右对齐段落，署名与日期尽量同页，不插入硬分页。横向附件可用 `{"type":"section_break","break_type":"next_page","page":{"orientation":"landscape"}}`；原平铺字段仍支持，两种写法冲突时报错。这里不自动填日期或排印章、版记，不认证终稿版式。
+
+`heading_numbering:"chinese"` 的四级标题使用原生编号且不注入普通列表悬挂缩进；可读回常用中文序号（1–99），超出支持范围显式诊断。有序列表首个具名零级块可设 `start`，同一 `list_id` 跨段续号，独立实例互不影响；不重复手打标签。现代根批注的 `resolve` / `reopen` 用 ID 和原文校验，仅改解决状态，保留锚点和回复，不将经典批注升级为现代线程。
+
+[本轮验收记录与未验证范围](../maintenance/tl-docx/official-numbering-comments-20261119.md)。
 
 ## 剩余读写差距
 
@@ -53,7 +61,7 @@
 
 单元格文字保留段落边界和空段，避免不同段落粘连。图表显示包内保存的系列数据，缺失或稀疏缓存不补值，不读取外部工作簿或重新计算。形状与绘图存在未处理内容时明确诊断，视觉渲染及 OCR 未执行。`header.status` 区分 confirmed/candidate/none，confirmed 只说明显式范围或文档标记依据，不等于业务含义核验。表头候选不是用户确认的列含义，跨行或合并不明时不猜测。内容视图只接受 JSON，保留诊断/覆盖和分页；`--details` 可保留记录定位，其他结构与显式表头任务使用完整报告。
 
-默认内容投影 `content-v2` 进一步移除文档属性、字段指令和嵌套内部定位，保留表头确定性、合并关系、保存的图表轴标题与自定义数据标签。诊断与完整记录仍按需使用 `--details` / `--full`；图表数据不代表工作簿实时值或完整视觉渲染。游标 `read-view-v6`、缓存 `tl-report-6` 不与旧版本混用。
+默认内容投影 `content-v2` 进一步移除文档属性、字段指令和嵌套内部定位，保留表头确定性、合并关系、保存的图表轴标题与自定义数据标签。诊断与完整记录仍按需使用 `--details` / `--full`；图表数据不代表工作簿实时值或完整视觉渲染。游标 `read-view-v7`、缓存 `tl-report-7` 不与旧版本混用。
 
 本轮精简投影、完整续读及授权真实样本的范围与缺口见 [默认可见内容验收](../maintenance/tl-docx/visible-content-20261116.md)。
 

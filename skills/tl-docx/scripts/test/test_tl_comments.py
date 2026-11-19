@@ -138,8 +138,13 @@ class ThreadCommentTests(unittest.TestCase):
         self.assertEqual("classic", listed["mode"])
         self.assertTrue(listed["mutable"], listed["diagnostics"])
         self.assertEqual("classic note", listed["comments"][0]["text"])
-        with self.assertRaisesRegex(ValueError, "classic comments"):
-            manage_comments(package, add_spec())
+        added, result = manage_comments(package, add_spec(index=1, expected="second paragraph", anchor="second paragraph"))
+        self.assertEqual("classic", result["mode"])
+        self.assertEqual([0, 1], [comment["id"] for comment in result["comments"]])
+        self.assertEqual({"word/document.xml", "word/comments.xml"}, set(result["changed_parts"]))
+        self.assertEqual(package.names, Package(added).names)
+        with self.assertRaisesRegex(ValueError, "complete modern"):
+            manage_comments(Package(added), {"action": "resolve", "id": 1, "expected_text": "Check the cap."})
         with self.assertRaisesRegex(ValueError, "complete modern"):
             manage_comments(package, {
                 "action": "reply", "id": 0, "expected_text": "classic note",
@@ -155,6 +160,30 @@ class ThreadCommentTests(unittest.TestCase):
         self.assertEqual([], result["comments"])
         self.assertEqual("classic", result["mode"])
         self.assertEqual(".docx", Package(deleted).extension)
+
+    def test_resolve_reopen_guarded_thread_preserves_anchor_and_reply(self):
+        first, initial = manage_comments(base_package(), add_spec())
+        root_id = initial["comment_id"]
+        replied, reply = manage_comments(Package(first), {
+            "action": "reply", "id": root_id, "expected_text": "Check the cap.",
+            "text": "Reply", "author": "Owner",
+        })
+        request = {"action": "resolve", "id": root_id, "expected_text": "Check the cap."}
+        with self.assertRaisesRegex(ValueError, "guard mismatch"):
+            manage_comments(Package(replied), {**request, "expected_text": "stale"})
+        with self.assertRaisesRegex(ValueError, "root comment"):
+            manage_comments(Package(replied), {**request, "id": reply["comment_id"], "expected_text": "Reply"})
+        resolved, result = manage_comments(Package(replied), request)
+        self.assertEqual(["word/commentsExtended.xml"], result["changed_parts"])
+        self.assertTrue(result["comments"][0]["resolved"])
+        self.assertEqual(root_id, result["comments"][1]["parent_id"])
+        with self.assertRaisesRegex(ValueError, "unresolved root"):
+            manage_comments(Package(resolved), {**request, "action": "reply", "text": "No", "author": "Owner"})
+        reopened, result = manage_comments(Package(resolved), {**request, "action": "reopen"})
+        self.assertFalse(result["comments"][0]["resolved"])
+        for member in Package(replied).names:
+            if member != "word/commentsExtended.xml":
+                self.assertEqual(Package(replied).read(member), Package(reopened).read(member), member)
 
     def test_incomplete_modern_metadata_is_listed_with_diagnostic_and_rejected(self):
         package = base_package()

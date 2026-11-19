@@ -17,7 +17,7 @@
 | 块类型 | 参数 |
 | --- | --- |
 | `title`、`subtitle`、`paragraph`、`heading` | 二选一传 `text` 或 `runs`，标题另传 1–9 的 `level`。可选 `page_break_before`、`keep_with_next`、`keep_together`、`widow_control`、`tab_stops`。正文与标题可加唯一 ASCII `bookmark`。 |
-| `list` | `items` 为字符串数组，`ordered` 为布尔值，使用独立原生编号。 |
+| `list` | `items` 为字符串数组，`ordered` 为布尔值；具名有序列表的首个零级块可用 `start`，同一 `list_id` 跨块续号。 |
 | `table` | `rows` 为规则二维数组，`header` 设置表头样式，`repeat_header` 控制首行跨页重复。可选 `col_widths_cm` 和 `merges`，每项提供零基 `row`、`col` 及 `rowspan`、`colspan`，合并覆盖的非起点单元格留空。 |
 | `image` | `path` 为任务内相对路径，可选 `width_cm` 和替代文字 `alt`。 |
 | `page_break` | 在指定位置显式分页。 |
@@ -25,7 +25,15 @@
 | `reference` | `bookmark` 指向本次已定义书签；`kind` 为 `text` 或 `page`，可选 `prefix`、`suffix`，生成 REF/PAGEREF 字段，不计算页码。 |
 | `toc` | 可选 `levels` 和 `title`，插入原生目录字段，实际页码和目录由阅读器更新。 |
 
-`runs` 可含 `{"text":"重点","bold":true}`，可选 `italic`、`underline`、`font`、`size_pt`、六位 RGB `color`。`{"tab":true}` 配合 `tab_stops`（`position_cm`、`alignment`、`leader`）。`{"field":"PAGE","display":"1"}` 支持 `PAGE`、`NUMPAGES`、`REF 书签名`、`PAGEREF 书签名`，`display` 是可选保存文字。`header`、`footer` 使用字符串或同格式 `runs` 数组。`metadata` 支持 `title`、`subject`、`author`、`keywords`、`comments`、`category`、`identifier`、`language`、`last_modified_by`。
+`runs` 可含 `{"text":"重点","bold":true}`，可选 `italic`、`underline`、`font`、`font_east_asia`、`font_latin`、`size_pt`、六位 RGB `color`。`{"tab":true}` 配合 `tab_stops`（`position_cm`、`alignment`、`leader`）。`{"field":"PAGE","display":"1"}` 支持 `PAGE`、`NUMPAGES`、`REF 书签名`、`PAGEREF 书签名`，`display` 是可选保存文字。`header`、`footer` 使用字符串或同格式 `runs` 数组。`metadata` 支持 `title`、`subject`、`author`、`keywords`、`comments`、`category`、`identifier`、`language`、`last_modified_by`。
+
+### 跨节纸型与边距
+
+可沿用 DOCX 的嵌套写法，例如 `{"type":"section_break","break_type":"next_page","page":{"orientation":"landscape","margin_mm":20,"margin_left_mm":25}}`，适合在纵向公文中插入横向附件或宽表。首节使用顶层 `page`，后续分节只修改明确设置的字段，未设置则沿用上一节的页面配置。嵌套 `page` 只接收页面几何参数：`orientation`、`width_mm`、`height_mm`、`margin_mm`、四侧 `margin_{top,bottom,left,right}_mm` 或 `margins_cm`。页眉页脚、页码起始和格式仍放在分节块外层。旧版平铺写法和 `start_type` 继续可用；混用时同一属性必须一致，不允许互相覆盖。跨节改变纸型或方向时建议使用 `next_page`，无需追加手动分页。Word/WPS 的实际分页和横向附件呈现需在客户端验收。
+
+### 发文机关署名与成文日期
+
+用 `{"type":"official_signature","issuer":"某某机构","date":"2026年11月19日"}` 在当前位置插入两段可编辑正文，分别为署名和成文日期。两段右对齐、取消首行缩进，署名与日期设置同页意图，不强插分页，也不绑定后续附件。两个值都必须为非空单行，最多 256 字符；日期按原文写入，不推算、不自动生成。交付回执中的块数按展开后的两段计算。不插印章、不做精确公文版记或实测落款定位；有此要求时须另做版式验收。
 
 ## 修改副本
 

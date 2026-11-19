@@ -127,6 +127,66 @@ def normalize_page(page, defaults=None):
     return result
 
 
+def normalize_section_break(block):
+    """Accept the shared DOCX page shape without breaking legacy flat fields."""
+    options = dict(block)
+    if 'break_type' in options:
+        start = options.pop('break_type')
+        if 'start_type' in options and options['start_type'] != start:
+            raise ValueError('section_break.break_type and start_type conflict')
+        options['start_type'] = start
+    if 'page' in options:
+        page = options.pop('page')
+        page_fields = PAGE_MM | {'orientation', 'margins_cm'}
+        if not isinstance(page, dict) or page.keys() - page_fields:
+            raise ValueError('section_break.page contains unsupported fields or is not an object')
+        nested = normalize_page(page)
+        flat = normalize_page({key: value for key, value in options.items() if key in page_fields})
+        for key in (flat.keys() & nested.keys()) - {'margins_cm'}:
+            if flat[key] != nested[key]:
+                raise ValueError(f'section_break.page.{key} conflicts with the flat section option')
+        flat_margins = flat.pop('margins_cm', {})
+        nested_margins = nested.pop('margins_cm', {})
+        for side in flat_margins.keys() & nested_margins.keys():
+            # Validate both spellings before merging: JSON true compares equal to 1.
+            number(flat_margins[side], f'section_break.margins_cm.{side}', 0, 50)
+            number(nested_margins[side], f'section_break.page.margins_cm.{side}', 0, 50)
+            if flat_margins[side] != nested_margins[side]:
+                raise ValueError(f'section_break.page margin {side} conflicts with the flat section option')
+        for key in page_fields:
+            options.pop(key, None)
+        options.update(flat)
+        options.update(nested)
+        if flat_margins or nested_margins:
+            options['margins_cm'] = dict(flat_margins, **nested_margins)
+        return options
+    return normalize_page(options)
+
+
+def _normalize_blocks(blocks):
+    normalized = []
+    for index, block in enumerate(blocks):
+        if isinstance(block, dict) and block.get('type') == 'section_break':
+            normalized.append(normalize_section_break(block))
+        elif isinstance(block, dict) and block.get('type') == 'official_signature':
+            if block.keys() != {'type', 'issuer', 'date'}:
+                raise ValueError(f'spec.blocks[{index}].official_signature requires exactly issuer and date')
+            for name in ('issuer', 'date'):
+                text = block[name]
+                if not isinstance(text, str) or not text.strip() or len(text) > 256 or any(
+                    ord(char) < 32 or char in '\x85\u2028\u2029' for char in text
+                ):
+                    raise ValueError(f'spec.blocks[{index}].official_signature.{name} must be a non-empty single line (max 256 characters)')
+                normalized.append({
+                    'type': 'paragraph', 'text': text, 'align': 'right',
+                    'keep_with_next': name == 'issuer', 'keep_together': True,
+                    'page_break_before': False, 'format': {'first_line_chars': 0},
+                })
+        else:
+            normalized.append(block)
+    return normalized
+
+
 def normalize_spec(spec):
     """Resolve preset layers without changing caller input or legacy defaults."""
     if not isinstance(spec, dict):
@@ -152,8 +212,7 @@ def normalize_spec(spec):
             raise ValueError('table_format must be an object')
         result['table_format'] = dict(preset['table_format'], **given)
     if isinstance(result.get('blocks'), list):
-        result['blocks'] = [normalize_page(block) if isinstance(block, dict) and block.get('type') == 'section_break' else block
-                            for block in result['blocks']]
+        result['blocks'] = _normalize_blocks(result['blocks'])
     return result
 
 
