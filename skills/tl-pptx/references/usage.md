@@ -8,6 +8,7 @@
 - convert 与 build
 - analyze、import 与 rebuild
 - 布尔与文字轮廓
+- 离线文本测量与 SVG 预检
 - 离线素材查询与选择
 - 模板公开诊断入口
 - 预算、回执与恢复
@@ -93,7 +94,7 @@
 
 ## 布尔与文字轮廓
 
-普通原生形状、已有 SVG path 和普通可编辑文字保留，不默认转换文字。原通用几何布尔/文字排版后端不启用，也不自动安装额外组件或以栅格图片冒充可编辑结果。
+普通原生形状、已有 SVG path 和普通可编辑文字保留，不默认转换文字。本离线精简版仅保留内置轴对齐实心矩形布尔与基于 PyMuPDF 的显式静态字体单行文字轮廓，已移除原 `skia-pathops`/`uharfbuzz` 后端，也不自动安装额外组件或以栅格图片冒充可编辑结果。
 
 显式文字轮廓入口：
 
@@ -124,9 +125,23 @@
 
 `source_ids` 必须为 2–32 个互异矩形 ID；`operation` 支持 union（并集）、intersect（交集）、subtract（首个减去其余）、combine（奇偶/XOR），不支持 fragment。`output_id` 为 SVG 标识符。可选 style 仅 fill/stroke；不同输入颜色须显式指定输出 fill，stroke 只能为 none。不得传 fonts。坐标必须为无单位有限十进制，整数部分最多九位、小数最多六位，宽高为正；拒绝变换、圆角、CSS、继承样式、透明度、渐变、遮罩、效果及组内操作数。精确有理数网格运算生成独立复合路径，不改源 SVG；空结果或仅点接触形成的歧义轮廓拒绝，不做近似或调用外部后端。结果 SVG 可再 convert 为原生可编辑形状。
 
+## 离线文本测量与 SVG 预检
+
+在无无头浏览器的离线环境中，导出前可用 `text-measure` 估算文本宽度、自动换行与边界框（支持单条参数或 `--manifest` 批量最多 500 项），并用 `svg-check` 检查单页或批量多页（1–50 页）SVG 的结构、字体栈、属性兼容性与跨页 `viewBox` 一致性（均不修改用户输入文件）：
+
+```console
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" text-measure "需要换行的长段说明文字" --size 20 --max-width 480 --family "Microsoft YaHei" --x 80 --y 200
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" text-measure --manifest "measure.json"
+"<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_pptx.py" svg-check "page_01.svg" "page_02.svg" --quick
+```
+
+`measure.json` 可选 `defaults` 与必填 `items`（1–500 项对象，支持 `id`、`text`、`size`、`max_width`、`family`、`weight`、`letter_spacing`、`include_headroom`、`x`、`y`、`dy`、`anchor`）；`--size` 范围 1–512，`--x` 与 `--y` 须成对提供。`svg-check` 在独占私有目录中检查全部输入，返回 `validation.passed`、`cross_page_viewbox_consistent`、`cross_page_errors` 与逐页 `pages` 报告。
+
 ## 离线素材查询与选择
 
-只读查询返回 stdout JSON，不创建归档文件；选择才发布新 ZIP。真实包名、精确 canonical ID、分页及署名规则见 `<skill-root>/references/offline-assets.md`。以 `catalog.next_offset` 续读，truncated 不冒充全量。大型包可选部署且不嵌入主运行包，不自动下载；模板包可查询/选择不表示模板应用门禁解除。
+只读查询返回 stdout JSON，不创建归档文件；选择才发布新 ZIP。真实包名、精确 canonical ID、分页及署名规则见 `<skill-root>/references/offline-assets.md`。以 `catalog.next_offset` 续读，truncated 不冒充全量。大型包可选部署且不嵌入主运行包，不自动下载；离线环境未附带这些数据包时跳过本入口。模板包可查询/选择不表示模板应用门禁解除。
+
+此外，PPTX 内的超链接写入纯 XML 关系字符串（不发起网络请求）；但在离线环境中外链 `https://...` 在客户端打开时无法访问外网，同演示文稿跳转建议优先使用 `#slide-N`。
 
 ## 模板公开诊断入口
 

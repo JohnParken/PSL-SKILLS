@@ -1,5 +1,6 @@
 """Independent regressions for the SVG boundary and runner failure receipts."""
 import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -109,6 +110,87 @@ class CliRegressionTests(unittest.TestCase):
             self.assertEqual(result['status'], 'error')
             self.assertTrue(result['cleanup']['cleanup_complete'])
             self.assertEqual({item.name for item in workspace.iterdir()}, {'input.svg'})
+
+    def test_svg_check_and_text_measure_return_structured_json(self):
+        """Offline SVG preflight and text measurement leave no residue in task root."""
+        with task_directory() as workspace:
+            page = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">'
+                    '<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>'
+                    '<text x="80" y="120" font-family="Arial" font-size="36" fill="#172554">标题</text></svg>')
+            Path('page.svg').write_text(page, encoding='utf-8')
+            result, code = tl_pptx.svg_check_operation('page.svg', quick=True)
+            self.assertEqual(code, 0)
+            self.assertEqual(result['status'], 'verified')
+            self.assertTrue(result['validation']['passed'])
+            self.assertEqual(result['validation']['file'], 'page.svg')
+            self.assertNotIn('path', result['validation'])
+            self.assertTrue(result['cleanup']['cleanup_complete'])
+            self.assertEqual({item.name for item in workspace.iterdir()}, {'page.svg'})
+
+            bad = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><script/></svg>'
+            Path('bad.svg').write_text(bad, encoding='utf-8')
+            with self.assertRaises(ContractError):
+                tl_pptx.svg_check_operation('bad.svg')
+
+            out = io.StringIO()
+            with patch.object(tl_pptx, 'environment_check'), contextlib.redirect_stdout(out):
+                measure_code = tl_pptx.main([
+                    'text-measure', '测试文字溢出估算 Hello World',
+                    '--size', '24', '--max-width', '140', '--family', 'Arial',
+                    '--x', '80', '--y', '120',
+                ])
+            parser_result = json.loads(out.getvalue())
+            self.assertEqual(measure_code, 0)
+            self.assertEqual(parser_result['status'], 'verified')
+            self.assertGreater(len(parser_result['measurement']['lines']), 1)
+            self.assertIn('bounds', parser_result['measurement'])
+
+            # Batch svg-check: matching and mismatched viewBox across pages
+            page2 = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">'
+                     '<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/></svg>')
+            Path('page2.svg').write_text(page2, encoding='utf-8')
+            batch_ok, batch_code = tl_pptx.svg_check_operation(['page.svg', 'page2.svg'], quick=True)
+            self.assertEqual(batch_code, 0)
+            self.assertTrue(batch_ok['validation']['passed'])
+            self.assertEqual(batch_ok['validation']['page_count'], 2)
+            self.assertTrue(batch_ok['validation']['cross_page_viewbox_consistent'])
+
+            page_odd = page2.replace('0 0 1280 720', '0 0 1024 768')
+            Path('odd.svg').write_text(page_odd, encoding='utf-8')
+            batch_bad, _ = tl_pptx.svg_check_operation(['page.svg', 'odd.svg'])
+            self.assertFalse(batch_bad['validation']['passed'])
+            self.assertFalse(batch_bad['validation']['cross_page_viewbox_consistent'])
+            self.assertTrue(batch_bad['validation']['cross_page_errors'])
+
+            # Batch text-measure manifest
+            manifest = {
+                'defaults': {'family': 'Arial', 'size': 20, 'max_width': 200},
+                'items': [
+                    {'id': 'title', 'text': '季度总结', 'size': 32},
+                    {'id': 'body', 'text': '这是一段较长的离线排版测量文字', 'x': 60, 'y': 160},
+                ],
+            }
+            Path('measure.json').write_text(json.dumps(manifest, ensure_ascii=False), encoding='utf-8')
+            out = io.StringIO()
+            with patch.object(tl_pptx, 'environment_check'), contextlib.redirect_stdout(out):
+                batch_m_code = tl_pptx.main(['text-measure', '--manifest', 'measure.json'])
+            batch_m = json.loads(out.getvalue())
+            self.assertEqual(batch_m_code, 0)
+            self.assertEqual(batch_m['count'], 2)
+            self.assertEqual([item['id'] for item in batch_m['measurements']], ['title', 'body'])
+            self.assertIn('bounds', batch_m['measurements'][1])
+            with patch.object(tl_pptx, 'environment_check'), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(tl_pptx.main(['text-measure', 'hi', '--manifest', 'measure.json']), 2)
+            self.assertEqual({item.name for item in workspace.iterdir()},
+                             {'page.svg', 'bad.svg', 'page2.svg', 'odd.svg', 'measure.json'})
+
+    def test_attribution_guard_supports_isolated_python(self):
+        """Integrity gate can be invoked directly with python -I -B."""
+        completed = subprocess.run(
+            [sys.executable, '-I', '-B', str(SCRIPT_ROOT / 'attribution_guard.py')],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
 
 
 if __name__ == '__main__':

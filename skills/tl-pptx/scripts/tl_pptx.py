@@ -7,9 +7,9 @@ import hashlib
 import importlib.metadata
 import io
 import json
+import math
 import os
 from pathlib import Path
-import stat
 import sys
 import secrets
 from xml.parsers import expat
@@ -101,10 +101,10 @@ def delivery_notice(result, outputs=None):
 
 
 def convert(inputs, output, notes=None):
-    """Validate inputs, snapshot, assemble, publish and archive without overwrites."""
+    """Validate inputs, snapshot privately, assemble, publish and archive without overwrites."""
     from archive_delivery import archive_delivery
     from tl_assemble import assemble_pptx
-    from tl_workspace import check_task_root
+    from tl_workspace import check_task_root, lifecycle, private_workspace, receipt
     check_task_root()
     bare_name(output, '.pptx')
     if not 1 <= len(inputs) <= MAX_SLIDES or len(set(inputs)) != len(inputs):
@@ -117,61 +117,40 @@ def convert(inputs, output, notes=None):
     checks = [validate_svg(data) for data in sources]
     if sum(item['resource_bytes'] for item in checks) > MAX_TOTAL_BYTES:
         raise ContractError('Combined decoded resource budget exceeded')
-    staged = []
-    cleanup = {'status': 'completed', 'cleanup_complete': True, 'retained': []}
-    result = None
-    failure = None
-    try:
-        for data in sources:
-            # Register a unique, not-yet-existing path before creating it.
-            name = f'tl-pptx-source-{secrets.token_hex(16)}.svg'
-            record = {'name': name, 'identity': None}
-            staged.append(record)
-            descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
-            identity = os.fstat(descriptor)
-            record['identity'] = (identity.st_dev, identity.st_ino)
-            with os.fdopen(descriptor, 'wb') as handle:
-                handle.write(data)
-        # Upstream diagnostics cannot pollute the single JSON stdout contract.
-        diagnostic_stream = io.StringIO()
-        with redirect_stdout(diagnostic_stream):
-            payload, verification = assemble_pptx([Path(item['name']) for item in staged],
-                                                 resource_root=Path.cwd(), notes=notes)
-        verification.pop('conversion_trace', None)
-        publication = publish_exclusive(output, payload)
-        result = {'status': 'verified', 'api_version': API_VERSION,
-                  'publication': publication, 'validation': verification,
-                  'source_count': len(inputs), 'sha256': hashlib.sha256(payload).hexdigest(),
-                  'upstream_diagnostics_present': bool(diagnostic_stream.getvalue())}
+    with lifecycle() as journal:
         try:
-            result['archive'] = archive_delivery([output], protected_inputs=inputs)
-            result['archive']['archive_user_notice'] = delivery_notice(result['archive'], [output])
-        except Exception as exc:  # Archive errors never erase a verified publication receipt.
-            result['archive'] = {'archive_status': 'failed', 'files': [],
-                                 'reason_code': 'archive_exception', 'error_type': type(exc).__name__}
-    except Exception as exc:  # Preserve cleanup information for every failed conversion.
-        failure = exc
-    finally:
-        for item in staged:
-            if item['identity'] is None:
-                continue
+            with private_workspace(prefix='tl-pptx-convert-') as workspace:
+                root = workspace.resolve()
+                staged = []
+                for index, data in enumerate(sources, 1):
+                    target = root / f'slide_{index:02d}.svg'
+                    descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                    with os.fdopen(descriptor, 'wb') as handle:
+                        handle.write(data)
+                    staged.append(target)
+                # Upstream diagnostics cannot pollute the single JSON stdout contract.
+                diagnostic_stream = io.StringIO()
+                with redirect_stdout(diagnostic_stream):
+                    payload, verification = assemble_pptx(staged, resource_root=Path.cwd(), notes=notes)
+            verification.pop('conversion_trace', None)
+            publication = publish_exclusive(output, payload)
+            result = {'status': 'verified', 'api_version': API_VERSION,
+                      'publication': publication, 'validation': verification,
+                      'source_count': len(inputs), 'sha256': hashlib.sha256(payload).hexdigest(),
+                      'upstream_diagnostics_present': bool(diagnostic_stream.getvalue()),
+                      'cleanup': receipt(journal)}
             try:
-                current = os.stat(item['name'], follow_symlinks=False)
-                if not stat.S_ISREG(current.st_mode) or (current.st_dev, current.st_ino) != item['identity']:
-                    raise ContractError('Staged input identity changed')
-                os.unlink(item['name'])
-            except OSError:
-                cleanup['retained'].append(item['name'])
-            except ContractError:
-                cleanup['retained'].append(item['name'])
-        cleanup['cleanup_complete'] = not cleanup['retained']
-        cleanup['status'] = 'completed' if cleanup['cleanup_complete'] else 'incomplete'
-    if failure is not None:
-        return {'status': 'error', 'error_type': type(failure).__name__,
-                'message': str(failure)[:1000], 'cleanup': cleanup, 'api_version': API_VERSION}, 1
-    result['cleanup'] = cleanup
-    complete = cleanup['cleanup_complete'] and delivery_notice(result['archive'], [output]) == '归档完成'
-    return result, 0 if complete else 3
+                result['archive'] = archive_delivery([output], protected_inputs=inputs)
+                result['archive']['archive_user_notice'] = delivery_notice(result['archive'], [output])
+            except Exception as exc:  # Archive errors never erase a verified publication receipt.
+                result['archive'] = {'archive_status': 'failed', 'files': [],
+                                     'reason_code': 'archive_exception', 'error_type': type(exc).__name__}
+            complete = result['cleanup']['cleanup_complete'] and delivery_notice(result['archive'], [output]) == '归档完成'
+            return result, 0 if complete else 3
+        except Exception as exc:  # Preserve cleanup information for every failed conversion.
+            return {'status': 'error', 'error_type': type(exc).__name__,
+                    'message': str(exc)[:1000], 'cleanup': receipt(journal),
+                    'api_version': API_VERSION}, 1
 
 
 def run_artifact(output, suffix, protected, producer):
@@ -300,6 +279,166 @@ def boolean_operation(svg_name, manifest_name, output):
                         lambda: boolean_document(svg_name, manifest))
 
 
+def _finite_number(value, flag, *, low=None, high=None):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ArgumentError(f'{flag} must be a finite number')
+    if (low is not None and value < low) or (high is not None and value > high):
+        raise ArgumentError(f'{flag} must be between {low} and {high}')
+    return float(value)
+
+
+def svg_check_operation(inputs, *, quick=False):
+    """Run bounded read-only SVG quality inspection for 1..50 pages inside one private workspace."""
+    from xml.etree import ElementTree as ET
+    from svg_quality.checker import SVGQualityChecker
+    from tl_workspace import check_task_root, lifecycle, private_workspace, receipt
+    if isinstance(inputs, str):
+        inputs = [inputs]
+    if not 1 <= len(inputs) <= MAX_SLIDES or len(set(inputs)) != len(inputs):
+        raise ContractError('Provide one to fifty distinct SVG files in slide order')
+    check_task_root()
+    sources = [read_local(name, '.svg') for name in inputs]
+    if sum(map(len, sources)) > MAX_TOTAL_BYTES:
+        raise ContractError('Combined SVG byte budget exceeded')
+    checks = [validate_svg(data) for data in sources]
+    if sum(item['resource_bytes'] for item in checks) > MAX_TOTAL_BYTES:
+        raise ContractError('Combined decoded resource budget exceeded')
+    viewboxes = [' '.join((ET.fromstring(data).get('viewBox') or '').split()) for data in sources]
+    cross_errors = []
+    if len(inputs) > 1 and any(vb != viewboxes[0] for vb in viewboxes[1:]):
+        cross_errors.append(f'SVG viewBox mismatch across pages: expected {viewboxes[0]!r}')
+    pages = []
+    with lifecycle() as journal:
+        with private_workspace(prefix='tl-pptx-svgcheck-') as workspace:
+            root = workspace.resolve()
+            staged = []
+            for name, data in zip(inputs, sources):
+                target = root / name
+                descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                with os.fdopen(descriptor, 'wb') as handle:
+                    handle.write(data)
+                staged.append((name, target))
+            with redirect_stdout(io.StringIO()):
+                checker = SVGQualityChecker(quick_generate=quick)
+                for name, target in staged:
+                    report = checker.check_file(str(target))
+                    report.pop('path', None)
+                    report['file'] = name
+                    pages.append(report)
+    validation = {
+        'passed': all(page['passed'] for page in pages) and not cross_errors,
+        'page_count': len(pages),
+        'cross_page_viewbox_consistent': not cross_errors,
+        'cross_page_errors': cross_errors,
+        'pages': pages,
+    }
+    if len(pages) == 1:
+        validation.update(pages[0])
+    return {'status': 'verified', 'api_version': API_VERSION,
+            'validation': validation, 'cleanup': receipt(journal)}, 0
+
+
+_MEASURE_FIELDS = frozenset({
+    'id', 'text', 'size', 'max_width', 'family', 'weight',
+    'letter_spacing', 'include_headroom', 'x', 'y', 'dy', 'anchor',
+})
+_MEASURE_WEIGHTS = frozenset({
+    'normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900',
+})
+
+
+def _measure_one(spec, *, measure_text, text_box, wrap_text):
+    unknown = set(spec) - _MEASURE_FIELDS
+    if unknown:
+        raise ArgumentError(f'Unknown text-measure field: {", ".join(sorted(unknown))}')
+    text = spec.get('text')
+    if not isinstance(text, str) or not text or len(text) > 100000:
+        raise ArgumentError('TEXT must contain 1 to 100000 characters')
+    size = _finite_number(spec.get('size'), 'size', low=1, high=512)
+    family = spec.get('family', 'Calibri')
+    if not isinstance(family, str) or not family or len(family) > 256:
+        raise ArgumentError('family must be a non-empty bounded string')
+    weight = spec.get('weight', 'normal')
+    if not isinstance(weight, str) or weight not in _MEASURE_WEIGHTS:
+        raise ArgumentError('Unsupported font weight')
+    spacing = _finite_number(spec.get('letter_spacing', 0.0), 'letter_spacing', low=-100, high=500)
+    include_headroom = spec.get('include_headroom', True)
+    if type(include_headroom) is not bool:
+        raise ArgumentError('include_headroom must be a boolean')
+    x_raw, y_raw = spec.get('x'), spec.get('y')
+    if (x_raw is None) != (y_raw is None):
+        raise ArgumentError('x and y must be supplied together')
+    anchor = spec.get('anchor', 'start')
+    if anchor not in {'start', 'middle', 'end'}:
+        raise ArgumentError('anchor must be start, middle or end')
+    style = dict(size=size, family=family, weight=weight,
+                 letter_spacing=spacing, include_headroom=include_headroom)
+    single_width = round(measure_text(text, **style), 2)
+    measurement = {'single_line_width': single_width, 'size': size, 'family': family,
+                   'weight': weight, 'include_headroom': include_headroom}
+    if 'id' in spec:
+        ident = spec['id']
+        if not isinstance(ident, str) or not ident or len(ident) > 128:
+            raise ArgumentError('id must be bounded non-empty text')
+        measurement['id'] = ident
+    dy_raw = spec.get('dy')
+    dy_value = _finite_number(dy_raw, 'dy', low=1, high=2000) if dy_raw is not None else round(size * 1.35, 2)
+    max_width_raw = spec.get('max_width')
+    if max_width_raw is not None:
+        max_width = _finite_number(max_width_raw, 'max_width', low=1, high=100000)
+        lines, widths, oversized = wrap_text(text, max_width=max_width, **style)
+        measurement.update({
+            'max_width': max_width, 'dy': dy_value, 'lines': lines,
+            'line_widths': [round(value, 2) for value in widths],
+            'line_count': len(lines),
+            'estimated_height': round((len(lines) - 1) * dy_value + 1.2 * size, 2),
+            'oversized_tokens': [{'token': token, 'width': round(width, 2)} for token, width in oversized],
+        })
+        box_width = max(widths) if widths else 0.0
+        line_count = len(lines)
+    else:
+        box_width = single_width
+        line_count = 1
+    if x_raw is not None:
+        x_val = _finite_number(x_raw, 'x', low=-100000, high=100000)
+        y_val = _finite_number(y_raw, 'y', low=-100000, high=100000)
+        bounds = text_box(x=x_val, baseline_y=y_val, size=size, lines=line_count,
+                          dy=dy_value, width=box_width, anchor=anchor)
+        measurement['bounds'] = {key: round(value, 2) for key, value in bounds.items()}
+    return measurement
+
+
+def text_measure_operation(args):
+    """Estimate offline text width, greedy wrapping and bounds for one string or batch manifest."""
+    from text_measure import measure_text, text_box, wrap_text
+    helpers = dict(measure_text=measure_text, text_box=text_box, wrap_text=wrap_text)
+    if args.manifest is not None:
+        if args.text is not None or args.size is not None:
+            raise ArgumentError('--manifest cannot be combined with positional TEXT or --size')
+        from tl_build import load_manifest
+        manifest = load_manifest(args.manifest)
+        if set(manifest) - {'defaults', 'items'} or not isinstance(manifest.get('items'), list):
+            raise ArgumentError('text-measure manifest requires an items list and optional defaults')
+        defaults = manifest.get('defaults', {})
+        if not isinstance(defaults, dict) or 'id' in defaults or 'text' in defaults:
+            raise ArgumentError('text-measure defaults must be an object without id/text')
+        items = manifest['items']
+        if not 1 <= len(items) <= 500 or any(not isinstance(item, dict) for item in items):
+            raise ArgumentError('text-measure manifest requires 1 to 500 item objects')
+        results = [_measure_one({**defaults, **item}, **helpers) for item in items]
+        return {'status': 'verified', 'api_version': API_VERSION,
+                'count': len(results), 'measurements': results}, 0
+    if args.text is None or args.size is None:
+        raise ArgumentError('Provide TEXT with --size, or pass --manifest MANIFEST.json')
+    spec = {
+        'text': args.text, 'size': args.size, 'family': args.family, 'weight': args.weight,
+        'letter_spacing': args.letter_spacing, 'include_headroom': not args.no_headroom,
+        'max_width': args.max_width, 'x': args.x, 'y': args.y, 'dy': args.dy, 'anchor': args.anchor,
+    }
+    return {'status': 'verified', 'api_version': API_VERSION,
+            'measurement': _measure_one(spec, **helpers)}, 0
+
+
 def main(argv=None):
     """Return one JSON result for success, controlled failure and argument errors."""
     parser = JsonArgumentParser(description='Create editable PPTX from validated SVG pages')
@@ -345,10 +484,30 @@ def main(argv=None):
     geometry.add_argument('output')
     geometry.add_argument('input')
     geometry.add_argument('manifest')
+    svg_check = sub.add_parser('svg-check')
+    svg_check.add_argument('inputs', nargs='+')
+    svg_check.add_argument('--quick', action='store_true')
+    measure = sub.add_parser('text-measure')
+    measure.add_argument('text', nargs='?', default=None)
+    measure.add_argument('--manifest', default=None)
+    measure.add_argument('--size', type=float, default=None)
+    measure.add_argument('--max-width', type=float, default=None)
+    measure.add_argument('--family', default='Calibri')
+    measure.add_argument('--weight', default='normal',
+                         choices=('normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900'))
+    measure.add_argument('--letter-spacing', type=float, default=0.0)
+    measure.add_argument('--no-headroom', action='store_true')
+    measure.add_argument('--x', type=float, default=None)
+    measure.add_argument('--y', type=float, default=None)
+    measure.add_argument('--dy', type=float, default=None)
+    measure.add_argument('--anchor', choices=('start', 'middle', 'end'), default='start')
     try:
         args = parser.parse_args(argv)
         if args.command == 'check':
             result, code = environment_check(args.write), 0
+        elif args.command == 'text-measure':
+            environment_check(write=False)
+            result, code = text_measure_operation(args)
         elif args.command == 'asset-query':
             from tl_assetpacks import query_asset_pack
             environment_check(write=False)
@@ -357,7 +516,9 @@ def main(argv=None):
             code = 0
         else:
             environment_check(write=True)
-            if args.command == 'text-outline':
+            if args.command == 'svg-check':
+                result, code = svg_check_operation(args.inputs, quick=args.quick)
+            elif args.command == 'text-outline':
                 result, code = text_outline_operation(args.manifest, args.output)
             elif args.command == 'boolean':
                 result, code = boolean_operation(args.input, args.manifest, args.output)

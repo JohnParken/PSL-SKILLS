@@ -1,12 +1,12 @@
 # TL PPTX：完整原生能力迁移与安全入口
 
-Skill 版本：`20261119.0634.2207`。第二阶段可复核检查点，已改为独立发行完整性核验；不是宣称所有条件能力已可用的最终发布，阶段1包亦不代表本页能力。本页以仓库根目录为维护基准；运行请读 [SKILL.md](../../skills/tl-pptx/SKILL.md)。
+Skill 版本：`20261120.1814.3037`。第二阶段离线精简版，已改为独立发行完整性核验；纯离线本地运行、无无头浏览器/视觉渲染预览，开放离线批量 `text-measure`/`svg-check` 预检并清理了未启用的旧 `skia-pathops`/`uharfbuzz` 布尔/轮廓脚本、`sound_sync.py` 及空 `tts_backends/` 目录。本页以仓库根目录为维护基准；运行请读 [SKILL.md](../../skills/tl-pptx/SKILL.md)。
 
 ## 目标和当前能力
 
 基于 [ppt-master](https://github.com/hugohe3/ppt-master) 默认 main 在 2026-11-17 固定的 `7e0df6705de0cd24345210d31f07fcb5a32b6900`，保留原生生成、模板、往返编辑、普通文本备注与无声动画；移除旁白、字幕和视频处理，使用七项精确直接依赖，不替换既有 pptx Skill。
 
-当前公开入口为 `check`、`convert`、`build`、`analyze`、`import`、`rebuild`，`boolean`、`text-outline`、`asset-query/select`，以及 `template-import/create/register/apply/preview`。template-import 提取参考事实和authoring材料，后四分别检查独立发行完整性、模板质量及输入。build 调完整原生 builder，import/rebuild 支持安全原生工作区；analyze 输出支持的逐页文本/表格/图表/SmartArt及主题/备注/诊断，不宣称任意对象全覆盖。模板不再证明上游官方发行身份；服务、授权与平台另验。不能因代码已迁入或依赖存在就声称这些 CLI 可用，也不能绕过门禁。
+当前公开入口为 `check`、`text-measure`、`svg-check`、`convert`、`build`、`analyze`、`import`、`rebuild`，`boolean`、`text-outline`、`asset-query/select`，以及 `template-import/create/register/apply/preview`。template-import 提取参考事实和authoring材料，后四分别检查独立发行完整性、模板质量及输入。build 调完整原生 builder，import/rebuild 支持安全原生工作区；analyze 输出支持的逐页文本/表格/图表/SmartArt及主题/备注/诊断，不宣称任意对象全覆盖。模板不再证明上游官方发行身份；服务、授权与平台另验。不能因代码已迁入或依赖存在就声称这些 CLI 可用，也不能绕过门禁。
 
 ## 路由与组件
 
@@ -60,4 +60,4 @@ SVG、manifest和压缩包各有独立累计预算，详见usage；超限/不支
 
 七项直接依赖为 python-pptx==1.0.2、Pillow==12.2.0、XlsxWriter==3.2.9、typing-extensions==4.14.0、lxml==6.0.4、PyYAML==6.0.2、PyMuPDF==1.24.2。PyMuPDF 标准拆分 wheel 另需 PyMuPDFb==1.24.1；其 AGPL-3.0/商业许可与上游 MIT 分开核对，不隐瞒传递依赖或自动安装额外业务组件。
 
-测试维护：已删除取消的旧 pathops/glyph 引擎成功用例及旁白注入成功用例；保留当前几何、文字轮廓、普通备注、安全拒绝和可选离线素材测试。历史验收数字仅代表其原始快照。
+测试维护：已删除取消的旧 pathops/glyph 引擎模块与用例及旁白注入成功用例；保留当前矩形布尔、PyMuPDF 受限文字轮廓、普通备注、安全拒绝和可选离线素材测试。历史验收数字仅代表其原始快照。

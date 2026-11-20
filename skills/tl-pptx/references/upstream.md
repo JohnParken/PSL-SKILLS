@@ -7,7 +7,7 @@
 - 项目：`https://github.com/hugohe3/ppt-master`。
 - 2026-11-17 核对默认分支 `main`，固定提交 `7e0df6705de0cd24345210d31f07fcb5a32b6900`。这是本次导入时的最新默认分支，不是对未来最新状态的承诺。
 - 上游许可：MIT，Copyright (c) 2025-2026 Hugo He；完整上游原文为 `<skill-root>/references/LICENSE-PPT-MASTER.txt`，仅改变保存位置/文件名，不改许可内容。预设形状数据许可原文随包保留于 `<skill-root>/scripts/pptx_shapes/data/LICENSE-APACHE-2.0.txt`、`<skill-root>/scripts/pptx_shapes/data/LICENSE-OPEN-XML-SDK-MIT.txt`；通知原文为 `<skill-root>/scripts/pptx_shapes/data/NOTICE.txt`（从 NOTICE.md 改名，原字节保留）。不能仅凭主项目 MIT 推断所有素材许可相同。
-- 来源覆盖 DrawingML/native_objects、完整 pptx_package builder、PPTX→SVG、authoring_roundtrip、Master/Layout 模板、动画/转场、布尔/文字轮廓、素材与质量工具，本版已移除旁白/字幕/视频处理后端。长文件按职责拆分至每文件 1000 行以内，保留 API 和可追踪的算法，不是把少数基础 SVG 功能重写后称完整移植。
+- 来源覆盖 DrawingML/native_objects、完整 pptx_package builder、PPTX→SVG、authoring_roundtrip、Master/Layout 模板、动画/转场、受限布尔/文字轮廓、素材与质量工具；本版已移除旁白/字幕/视频处理后端，并清理了依赖 `skia-pathops`/`uharfbuzz` 的旧布尔/文字轮廓脚本、`sound_sync.py` 及空的 `tts_backends/` 目录。长文件按职责拆分至每文件 1000 行以内，保留 API 和可追踪的算法，不是把少数基础 SVG 功能重写后称完整移植。
 - TL 新增公开安全入口对输入做快照、预算与路径校验，在私有任务工作区调用上游核心，再独占发布与归档。保留 `convert` 快捷组包与 `build` 完整 builder 两条明确用途；import/rebuild 从验证后的源 PPTX 重建可信基线。公共生命周期副本自包含，不依赖相邻 Skill。
 - 完整迁移目标与当前可调用入口分开。非官方衍生版核验自身运行清单及 SHA-256，当前七项依赖之外的工具或服务不自动启用；未开放的 CLI 不可绕过。部分支持代码或工作流文档存在不代表部署/服务/视觉验收完成。
 

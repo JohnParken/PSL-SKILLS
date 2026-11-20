@@ -6,6 +6,11 @@ mapping are distributed in references. This does not certify upstream identity.
 import sys
 from pathlib import Path
 
+_SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(_SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_ROOT))
+
+
 def require_skill_integrity():
     """Stop the active command unless all independent release checks pass."""
     from tl_release_integrity import verify

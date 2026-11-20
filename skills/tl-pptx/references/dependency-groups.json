@@ -18,9 +18,9 @@
   },
   "unavailable": {
     "svg_png_compatibility": "No equivalent renderer verified within declared libraries; do not substitute raster output.",
-    "office_vector_preview": "No external ImageMagick invocation; preserve original vectors and report browser-preview limits.",
-    "general_shape_boolean": "Requires excluded skia-pathops; existing algorithms retained but not executed.",
-    "complex_text_shaping": "Requires excluded uharfbuzz; ordinary native editable text remains supported."
+    "office_vector_preview": "No headless browser, Office renderer or ImageMagick invocation; preserve original vectors and report visual_validation=not_run.",
+    "general_shape_boolean": "Removed upstream skia-pathops backend; only bounded axis-aligned solid rectangle Boolean is supported.",
+    "complex_text_shaping": "Removed upstream uharfbuzz backend; ordinary native editable text and limited PyMuPDF static-font text-outline remain supported."
   },
   "removed": [
     "narration synthesis",

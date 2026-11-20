@@ -42,7 +42,7 @@
 | [et](skills/et.md) | 20261119.0634.2207 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
 | [ofd](skills/ofd.md) | 20261119.0634.2207 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
 | [pptx](skills/pptx.md) | 20261119.0634.2207 | 受限 SVG 创建；默认文字/备注、结构化表格和图表保存值，内容/数学缺口诊断；整页或显式页内续读，按需加载参考；不任意编辑。 |
-| [tl-pptx](skills/tl-pptx.md) | 20261119.0634.2207 | 完整原生能力与安全入口迁移；支持SVG新建/完整builder/导入重建，保留模板和普通备注，移除旁白/字幕/视频处理。 |
+| [tl-pptx](skills/tl-pptx.md) | 20261120.1814.3037 | 完整原生能力与安全入口迁移；纯离线本地执行且无浏览器渲染预览，支持批量文本测量/SVG 预检、SVG 新建/完整 builder/导入重建，保留模板和普通备注，移除旁白/字幕/视频及旧布尔轮廓残留。 |
 | [table-workflow](skills/table-workflow.md) | 20261119.0634.2207 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
 | [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261118.0325.5874 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
 | [skill-development-standards](skills/skill-development-standards.md) | 20261118.0341.5875 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |

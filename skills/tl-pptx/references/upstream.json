@@ -3151,8 +3151,8 @@
     },
     {
       "target": "scripts/attribution_guard.py",
-      "sha256": "4a185c2d4a9faccedf858a2a9f2f94801305d4d39328263e433c50c1efda0fa4",
-      "bytes": 795,
+      "sha256": "550915dd02ca7c010490d4a8f62bb63bc69deafcd2dec98e335879a1b1e76702",
+      "bytes": 924,
       "sources": [
         {
           "repository": "https://github.com/hugohe3/ppt-master",
@@ -3562,8 +3562,8 @@
     },
     {
       "target": "scripts/config.py",
-      "sha256": "d93725239a8665453cff80b2a29b022bacb3ae68f48516cd561141741c83b201",
-      "bytes": 18000,
+      "sha256": "6e3c14127b97a816c3835e6b4d3d1e94c9cf4543369e3c2d793a953b0964c20e",
+      "bytes": 17884,
       "sources": [
         {
           "repository": "https://github.com/hugohe3/ppt-master",
@@ -9568,40 +9568,6 @@
       "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
     },
     {
-      "target": "scripts/shape_boolean_svg.py",
-      "sha256": "e283a6d77be2a05d826a38254e3c6213bbde9ec6889a8b995e2cef4f0273284e",
-      "bytes": 6464,
-      "sources": [
-        {
-          "repository": "https://github.com/hugohe3/ppt-master",
-          "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-          "path": "skills/ppt-master/scripts/shape_boolean_svg.py",
-          "sha256": "0674cf29f3757323f774984d78040a98d7fa65c662102444e02897dd9d39da39",
-          "git_blob": "f8ac8ee77e92d3ced9ea0f7dfc48578150606b78"
-        }
-      ],
-      "origin": {
-        "repository": "https://github.com/hugohe3/ppt-master",
-        "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-        "path": "skills/ppt-master/scripts/shape_boolean_svg.py",
-        "sha256": "0674cf29f3757323f774984d78040a98d7fa65c662102444e02897dd9d39da39",
-        "git_blob": "f8ac8ee77e92d3ced9ea0f7dfc48578150606b78"
-      },
-      "classification": "upstream_adapted_or_split",
-      "changes": [
-        "Historical mapping note: Remove brand/transcript console side effects; explicit own module path for -I startup.",
-        "Current target bytes differ from the pinned source; source/symbol split evidence is preserved below. No blanket byte-equivalence claim."
-      ],
-      "mapping_evidence": [
-        {
-          "source": "skills/ppt-master/scripts/shape_boolean_svg.py",
-          "map": "boolean-source-map-20261117.json",
-          "full_record": "references/upstream-splits.json"
-        }
-      ],
-      "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
-    },
-    {
       "target": "scripts/slide_roster.py",
       "sha256": "8bdfb9e431eccb785a17a8f825fe82cde9d054a5b04ce122b23735b3e4cd0fa3",
       "bytes": 1261,
@@ -9643,39 +9609,6 @@
         {
           "source": "skills/ppt-master/scripts/slide_roster.py",
           "map": "stage1-upstream.json",
-          "full_record": "references/upstream-splits.json"
-        }
-      ],
-      "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
-    },
-    {
-      "target": "scripts/sound_sync.py",
-      "sha256": "ad9b37987e60ea9734f4e923d6831e27528ae4310f384db3fe1e96cfd45b526c",
-      "bytes": 10956,
-      "sources": [
-        {
-          "repository": "https://github.com/hugohe3/ppt-master",
-          "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-          "path": "skills/ppt-master/scripts/sound_sync.py",
-          "sha256": "ad9b37987e60ea9734f4e923d6831e27528ae4310f384db3fe1e96cfd45b526c",
-          "git_blob": "370b5f6b5d10d97c6d669f02e4cf5d8fb1174b0e"
-        }
-      ],
-      "origin": {
-        "repository": "https://github.com/hugohe3/ppt-master",
-        "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-        "path": "skills/ppt-master/scripts/sound_sync.py",
-        "sha256": "ad9b37987e60ea9734f4e923d6831e27528ae4310f384db3fe1e96cfd45b526c",
-        "git_blob": "370b5f6b5d10d97c6d669f02e4cf5d8fb1174b0e"
-      },
-      "classification": "upstream_byte_identical",
-      "changes": [
-        "Historical mapping note: Unchanged upstream source; no service or credential access performed."
-      ],
-      "mapping_evidence": [
-        {
-          "source": "skills/ppt-master/scripts/sound_sync.py",
-          "map": "media-source-map-20261117.json",
           "full_record": "references/upstream-splits.json"
         }
       ],
@@ -17922,8 +17855,8 @@
     },
     {
       "target": "scripts/svg_to_pptx/pptx_package/builder.py",
-      "sha256": "fc75914e6030a03dfaf1c706235a311e209bf15a5765cd971d51861b24c58e6f",
-      "bytes": 17638,
+      "sha256": "41d4733d786060479f0708e815115d433318b359365bb6d77bc3469fa50a87a4",
+      "bytes": 17620,
       "sources": [
         {
           "repository": "https://github.com/hugohe3/ppt-master",
@@ -20031,144 +19964,6 @@
       "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
     },
     {
-      "target": "scripts/svg_to_pptx/shape_boolean.py",
-      "sha256": "e447382d8626a853a53fd2ecfabd1eed7362782823a3ba8f5b2aa3a5be26c6ec",
-      "bytes": 29796,
-      "sources": [
-        {
-          "repository": "https://github.com/hugohe3/ppt-master",
-          "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-          "path": "skills/ppt-master/scripts/svg_to_pptx/shape_boolean.py",
-          "sha256": "a60c958ea93bec08a83da3ae0d2ea41a60df65248fabf2c59b54425876e00bed",
-          "git_blob": "8cd7cab047cc1c9f1c761d4079d2d3d9d991baa8"
-        }
-      ],
-      "origin": {
-        "repository": "https://github.com/hugohe3/ppt-master",
-        "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-        "path": "skills/ppt-master/scripts/svg_to_pptx/shape_boolean.py",
-        "sha256": "a60c958ea93bec08a83da3ae0d2ea41a60df65248fabf2c59b54425876e00bed",
-        "git_blob": "8cd7cab047cc1c9f1c761d4079d2d3d9d991baa8"
-      },
-      "classification": "upstream_adapted_or_split",
-      "changes": [
-        "Historical mapping note: AST-preserving responsibility split; original names re-exported",
-        "Current target bytes differ from the pinned source; source/symbol split evidence is preserved below. No blanket byte-equivalence claim.",
-        "Seven-dependency and native-object release; see current contract and tests."
-      ],
-      "mapping_evidence": [
-        {
-          "source": "skills/ppt-master/scripts/svg_to_pptx/shape_boolean.py",
-          "map": "boolean-source-map-20261117.json",
-          "full_record": "references/upstream-splits.json"
-        }
-      ],
-      "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
-    },
-    {
-      "target": "scripts/svg_to_pptx/shape_boolean_paths.py",
-      "sha256": "74b04e426cbec9f7ba821baca3548834459efaac5c6389501d9658c1c3ac49b2",
-      "bytes": 13596,
-      "sources": [
-        {
-          "repository": "https://github.com/hugohe3/ppt-master",
-          "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-          "path": "skills/ppt-master/scripts/svg_to_pptx/shape_boolean.py",
-          "sha256": "a60c958ea93bec08a83da3ae0d2ea41a60df65248fabf2c59b54425876e00bed",
-          "git_blob": "8cd7cab047cc1c9f1c761d4079d2d3d9d991baa8"
-        }
-      ],
-      "origin": {
-        "repository": "https://github.com/hugohe3/ppt-master",
-        "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-        "path": "skills/ppt-master/scripts/svg_to_pptx/shape_boolean.py",
-        "sha256": "a60c958ea93bec08a83da3ae0d2ea41a60df65248fabf2c59b54425876e00bed",
-        "git_blob": "8cd7cab047cc1c9f1c761d4079d2d3d9d991baa8"
-      },
-      "classification": "upstream_adapted_or_split",
-      "changes": [
-        "Historical mapping note: AST-preserving responsibility split; original names re-exported; extract quadratic first-control calculation unchanged into typed helper to resolve Pylint inference error",
-        "Current target bytes differ from the pinned source; source/symbol split evidence is preserved below. No blanket byte-equivalence claim."
-      ],
-      "mapping_evidence": [
-        {
-          "source": "skills/ppt-master/scripts/svg_to_pptx/shape_boolean.py",
-          "map": "boolean-source-map-20261117.json",
-          "full_record": "references/upstream-splits.json"
-        }
-      ],
-      "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
-    },
-    {
-      "target": "scripts/svg_to_pptx/text_outline.py",
-      "sha256": "c447c55aaaf1aec436358e45f5cb463b0f38da43cf7a548c820cbb68076d9328",
-      "bytes": 29687,
-      "sources": [
-        {
-          "repository": "https://github.com/hugohe3/ppt-master",
-          "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-          "path": "skills/ppt-master/scripts/svg_to_pptx/text_outline.py",
-          "sha256": "9c5d73707391be3f219c2d99954fbda08db6d82d7f93f9bbff791d8f76550014",
-          "git_blob": "fe6d923b19d7fb75ccdb00b0f23522805538eaf7"
-        }
-      ],
-      "origin": {
-        "repository": "https://github.com/hugohe3/ppt-master",
-        "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-        "path": "skills/ppt-master/scripts/svg_to_pptx/text_outline.py",
-        "sha256": "9c5d73707391be3f219c2d99954fbda08db6d82d7f93f9bbff791d8f76550014",
-        "git_blob": "fe6d923b19d7fb75ccdb00b0f23522805538eaf7"
-      },
-      "classification": "upstream_adapted_or_split",
-      "changes": [
-        "Historical mapping note: AST-preserving responsibility split; original names re-exported; explicit font roots exclusive; default system roots omit home/environment user dirs",
-        "Current target bytes differ from the pinned source; source/symbol split evidence is preserved below. No blanket byte-equivalence claim.",
-        "Seven-dependency and native-object release; see current contract and tests."
-      ],
-      "mapping_evidence": [
-        {
-          "source": "skills/ppt-master/scripts/svg_to_pptx/text_outline.py",
-          "map": "boolean-source-map-20261117.json",
-          "full_record": "references/upstream-splits.json"
-        }
-      ],
-      "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
-    },
-    {
-      "target": "scripts/svg_to_pptx/text_outline_glyphs.py",
-      "sha256": "50470898ca38f21879a186cc16fbfaa512442197f51b5c687e62aa93c4f0566a",
-      "bytes": 4239,
-      "sources": [
-        {
-          "repository": "https://github.com/hugohe3/ppt-master",
-          "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-          "path": "skills/ppt-master/scripts/svg_to_pptx/text_outline.py",
-          "sha256": "9c5d73707391be3f219c2d99954fbda08db6d82d7f93f9bbff791d8f76550014",
-          "git_blob": "fe6d923b19d7fb75ccdb00b0f23522805538eaf7"
-        }
-      ],
-      "origin": {
-        "repository": "https://github.com/hugohe3/ppt-master",
-        "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
-        "path": "skills/ppt-master/scripts/svg_to_pptx/text_outline.py",
-        "sha256": "9c5d73707391be3f219c2d99954fbda08db6d82d7f93f9bbff791d8f76550014",
-        "git_blob": "fe6d923b19d7fb75ccdb00b0f23522805538eaf7"
-      },
-      "classification": "upstream_adapted_or_split",
-      "changes": [
-        "Historical mapping note: AST-preserving responsibility split; original names re-exported",
-        "Current target bytes differ from the pinned source; source/symbol split evidence is preserved below. No blanket byte-equivalence claim."
-      ],
-      "mapping_evidence": [
-        {
-          "source": "skills/ppt-master/scripts/svg_to_pptx/text_outline.py",
-          "map": "boolean-source-map-20261117.json",
-          "full_record": "references/upstream-splits.json"
-        }
-      ],
-      "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
-    },
-    {
       "target": "scripts/svg_to_pptx/tspan_flattener.py",
       "sha256": "3dfa78ef67e42e80b9ac06dba3985212fc5d4e7c56a039091d046e6de66f884d",
       "bytes": 3007,
@@ -20630,8 +20425,8 @@
     },
     {
       "target": "scripts/tl_pptx.py",
-      "sha256": "dd5d262fa942f41165dc4c2931b78aac7831764c9babd44dfdedac79e6bc312a",
-      "bytes": 19636,
+      "sha256": "654b29e5b619b1a75c792d635485e457ae141098e65f764f5d1aff93693d0ced",
+      "bytes": 28711,
       "stage1_record": {
         "target": "scripts/tl_pptx.py",
         "sha256": "b1862790ff189114bce4f154cd1d1412955e24c89114de004cb535ae524090fa",
@@ -20919,18 +20714,18 @@
     "verifier": "scripts/tl_release_integrity.py"
   },
   "coverage": {
-    "runtime_resource_license_targets": 524,
+    "runtime_resource_license_targets": 518,
     "unknown_targets": [],
     "classifications": {
-      "upstream_byte_identical": 191,
+      "upstream_byte_identical": 190,
       "new_local_asset_index": 3,
-      "upstream_adapted_or_split": 306,
+      "upstream_adapted_or_split": 301,
       "shared_lifecycle_unchanged": 4,
       "adapted": 1,
       "new_local_adapter_or_guard": 19
     }
   },
-  "skill_version": "20261118.1410.0071",
+  "skill_version": "20261120.1814.3037",
   "removed_from_runtime": [
     {
       "target": "scripts/narration_sync.py",
@@ -21031,6 +20826,36 @@
       "target": "scripts/video_subtitles.py",
       "prior_sha256": "602b3c22aa76da6191db0d4d538415d4348af1483a2c18bace1fc43044f1ed6c",
       "reason": "User-directed removal of narration, subtitles and video processing"
+    },
+    {
+      "target": "scripts/shape_boolean_svg.py",
+      "prior_sha256": "e283a6d77be2a05d826a38254e3c6213bbde9ec6889a8b995e2cef4f0273284e",
+      "reason": "Removed dead upstream shape_boolean CLI requiring excluded skia-pathops"
+    },
+    {
+      "target": "scripts/sound_sync.py",
+      "prior_sha256": "ad9b37987e60ea9734f4e923d6831e27528ae4310f384db3fe1e96cfd45b526c",
+      "reason": "Removed unreferenced sound_sync CLI referencing excluded templates/sounds"
+    },
+    {
+      "target": "scripts/svg_to_pptx/shape_boolean.py",
+      "prior_sha256": "e447382d8626a853a53fd2ecfabd1eed7362782823a3ba8f5b2aa3a5be26c6ec",
+      "reason": "Removed dead upstream shape_boolean module requiring excluded skia-pathops"
+    },
+    {
+      "target": "scripts/svg_to_pptx/shape_boolean_paths.py",
+      "prior_sha256": "74b04e426cbec9f7ba821baca3548834459efaac5c6389501d9658c1c3ac49b2",
+      "reason": "Removed dead upstream shape_boolean_paths module requiring excluded skia-pathops"
+    },
+    {
+      "target": "scripts/svg_to_pptx/text_outline.py",
+      "prior_sha256": "c447c55aaaf1aec436358e45f5cb463b0f38da43cf7a548c820cbb68076d9328",
+      "reason": "Removed dead upstream text_outline module requiring excluded uharfbuzz"
+    },
+    {
+      "target": "scripts/svg_to_pptx/text_outline_glyphs.py",
+      "prior_sha256": "50470898ca38f21879a186cc16fbfaa512442197f51b5c687e62aa93c4f0566a",
+      "reason": "Removed dead upstream text_outline_glyphs module requiring excluded uharfbuzz"
     }
   ]
 }
