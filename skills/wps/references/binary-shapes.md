@@ -1,7 +1,5 @@
 # 二进制 MS-DOC 的绘图对象 U+0008 锚点（只读）
 
-路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
-
 ## 能力范围
 
 实际文件内容识别为 CFB+MS-DOC 时，统一入口 data 默认启用 recover 和对象占位。strict/legacy 兼容或显式 text_policy=strict 保留原文字策略。对象占位时，按 `FibRgFcLcb97.fcPlcSpaMom/lcbPlcSpaMom` 验证主正文中的 `U+0008` 锚点和 `PlcfSpa` 来源，并在可输出的位置用 `U+FFFC` 表示对象。返回 `partial`，保留源流偏移、原始 CP、形状索引与 SPA 偏移。文字策略见 `<skill-root>/references/format.md#fib与正文规则`。

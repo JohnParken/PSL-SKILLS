@@ -1,9 +1,11 @@
 """Bounded PAPX evidence for rows, supported cell layouts and paragraph marks."""
 from bisect import bisect_right
-from itertools import accumulate
+from dataclasses import dataclass
+from typing import Any, Optional
 
+from wps_binary_table_fkp import FkpPropertyReader, init_bte
 from wps_binary_table_groups import (
-    FRAME_PROPERTY_WIDTHS, PARAGRAPH_POSITION_CODE, ROW_GROUP_PROPERTIES, TABLE_POSITION_CODE, TABLE_STYLE_PROPERTY,
+    ROW_GROUP_PROPERTIES, TABLE_POSITION_CODE, TABLE_STYLE_PROPERTY,
     group_tables, has_table_boundary_bookmarks, row_identity,
 )
 
@@ -261,432 +263,209 @@ def observe_table_operand(props, sprm, raw):
         props['grouping_unknown'] = True
 
 
+@dataclass(frozen=True)
+class TableScanOptions:
+    """Optional ranges, flags, and budgets passed to inspect_tables."""
+
+    table_ranges: tuple = ()
+    word_ranges: tuple = ()
+    piece_properties: bool = False
+    data_region: Any = None
+    piece_prms: Any = None
+    field_spans: tuple = ()
+    marker_replacements: Optional[dict] = None
+    data_ownership: Optional[set] = None
+    include_layout: bool = True
+
+
+def _crosses_field(field_spans, left, right):
+    index = bisect_right(field_spans, (right,))
+    return index > 0 and field_spans[index - 1][1] > left
+
+
+def _record_unresolved(result, enhanced, cp, reason, cp_start=None):
+    record = {'cp': cp, 'stream': 'WordDocument'}
+    if enhanced:
+        record['reason'] = reason
+        if cp_start is not None:
+            record['cp_start'] = cp_start
+            record['cp_end'] = cp + 1
+        result['unresolved_marker_count'] = result.get('unresolved_marker_count', 0) + 1
+        if len(result['unresolved_markers']) >= MAX_UNRESOLVED_MARKERS:
+            return
+    result['unresolved_markers'].append(record)
+
+
+def _build_table_row_record(cells, row_start, cp, props, enhanced):
+    row = {
+        'cells': cells,
+        'source': {'stream': 'WordDocument', 'cp_start': row_start, 'cp_end': cp + 1, 'row_mark_cp': cp},
+        'row_properties_source': props['source'],
+        'merges': 'unknown',
+        'external_properties_source': props.get('external_properties_source'),
+        'initial_definition': props.get('initial_definition'),
+        'uninterpreted_table_modifiers': props.get('uninterpreted_table_modifiers', 0),
+        'uninterpreted_table_modifier_ids': props.get('uninterpreted_table_modifier_ids', {}),
+        'uninterpreted_table_modifier_ids_omitted': props.get('uninterpreted_table_modifier_ids_omitted', 0),
+        'local_width_operands': props.get('local_width_operands', []),
+        'local_width_operands_omitted': props.get('local_width_operands_omitted', 0),
+    }
+    if enhanced:
+        row['stored_cell_layout'] = row_definition(props, len(cells))
+    return row
+
+
+def _scan_text_marks(text, cp_start, word, opts, fkp, nested, state, require):
+    enhanced = opts.piece_prms is not None
+    result = state['result']
+    has_cell_marks = state['has_cell_marks']
+    cp = cp_start
+    segment_start = cp_start
+    chunks = []
+    cells = []
+    paragraph = []
+    row_start = None
+    first_paragraph = None
+    cell_start = cp_start
+    tainted = False
+    total_cells = 0
+
+    for char in text:
+        width = 2 if ord(char) > 0xFFFF else 1
+        if char in ('\r', '\x07'):
+            segment_has_field = _crosses_field(opts.field_spans, segment_start, cp + 1)
+            props = fkp.properties(cp, segment_start)
+            if nested is not None and has_cell_marks:
+                nested.feed(''.join(paragraph), char, segment_start, cp + width, props, segment_has_field)
+            if enhanced and props and props.get('layout_modifier_count') and not segment_has_field:
+                state['layout_seen'] += props['layout_modifier_count']
+                modifiers = props.get('layout_modifiers', ())[:MAX_LAYOUT_MODIFIERS - state['layout_retained']]
+                if modifiers:
+                    state['layout_paragraphs'].append({
+                        'stream': 'WordDocument', 'mark_cp': cp,
+                        'modifiers': modifiers, 'papx_group_complete': not props['structure_unknown'],
+                        'modifier_count': props['layout_modifier_count'],
+                    })
+                    state['layout_retained'] += len(modifiers)
+            outside_table = (enhanced and char == '\r' and props and not props['structure_unknown']
+                             and not props.get('in_table') and not props.get('depth') and not props.get('row_end'))
+            if enhanced and has_cell_marks:
+                if char == '\x07':
+                    state['cell_marks'].append(cp)
+                elif outside_table and not segment_has_field:
+                    state['outside_paragraphs'].append(cp)
+            if not has_cell_marks or (props and (props.get('structure_unknown')
+                                                or props.get('in_table') != 1 or props.get('depth') != 1)):
+                props = None
+            if segment_has_field:
+                tainted = True
+                if not props or not props.get('row_end') or _crosses_field(opts.field_spans, cp, cp + 1):
+                    props = None
+            if props is None:
+                tainted = (tainted or bool(cells or chunks) or char == '\x07') and not outside_table
+                if char == '\x07':
+                    _record_unresolved(result, enhanced, cp,
+                                       'field_overlap' if segment_has_field else 'unverified_paragraph_properties')
+                chunks, cells, row_start = [], [], None
+                first_paragraph = None
+            elif props.get('row_end', 0):
+                if (char == '\x07' and not paragraph and not chunks and cells and not tainted
+                        and not _crosses_field(opts.field_spans, row_start, cp + 1)):
+                    row = _build_table_row_record(cells, row_start, cp, props, enhanced)
+                    if enhanced:
+                        state['row_identities'].append(row_identity(props, first_paragraph))
+                    result['rows'].append(row)
+                else:
+                    _record_unresolved(result, enhanced, cp, 'row_boundary_incomplete', row_start)
+                chunks, cells, row_start = [], [], None
+                first_paragraph = None
+                tainted = enhanced and char != '\x07'
+            else:
+                if row_start is None:
+                    row_start = segment_start
+                    cell_start = segment_start
+                    first_paragraph = props if enhanced else None
+                chunks.append(''.join(paragraph).replace('\x0b', '\n'))
+                if char == '\x07':
+                    require(len(cells) < 63, word.location(76), 'Too many cells in observed row')
+                    require(total_cells < MAX_CELLS,
+                            word.location(76), 'Binary table cell budget exceeded', 'resource_limit')
+                    cells.append({
+                        'index': len(cells), 'text': '\n'.join(chunks),
+                        'source': {'stream': 'WordDocument', 'cp_start': cell_start, 'cp_end': cp + 1},
+                        'properties_source': props['source'],
+                        'external_properties_source': props.get('external_properties_source'),
+                    })
+                    total_cells += 1
+                    chunks = []
+                    cell_start = cp + 1
+            paragraph = []
+            segment_start = cp + width
+        elif has_cell_marks:
+            paragraph.append(opts.marker_replacements.get(cp, char) if opts.marker_replacements else char)
+        cp += width
+    if cells or chunks:
+        result['issues'].append({'code': 'binary_table_unterminated_row', 'stream': 'WordDocument',
+                                 'cp_start': row_start, 'cp_end': cp})
+    result['status'] = ('rows_partial' if result['rows'] else 'unresolved') if has_cell_marks else 'no_cell_markers'
+    state['end_cp'] = cp
+
+
 def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
-                   table_ranges=(), word_ranges=(), piece_properties=False, data_region=None,
-                   piece_prms=None, field_spans=(), marker_replacements=None, data_ownership=None, include_layout=True):
+                   options: Optional[TableScanOptions] = None, **legacy_kwargs):
     """Read evidenced rows and, in maximum mode, direct PAPX layout operands."""
     from read_wps import ParseError, require
     from wps_nested_tables import NestedRows
-    enhanced = piece_prms is not None
+    opts = options if options is not None else TableScanOptions(**legacy_kwargs)
+    enhanced = opts.piece_prms is not None
     nested = NestedRows(bookmarks=has_table_boundary_bookmarks(word)) if enhanced else None
     overlap_location = {'reason_code': 'overlapping_decoded_metadata'} if enhanced else {}
-    result = {'schema_version': 'ms_doc_table_rows_v1', 'status': 'unresolved',
-              'rows': [], 'unresolved_markers': [], 'table_grouping': 'unknown',
-              'grid_and_merges': 'unknown', 'source': {'stream': 'WordDocument'},
-              'issues': []}
-    result['layout_properties_not_rendered'] = []
-    result['unresolved_properties'] = []
-    result['layout_property_count'] = 0
-    if not include_layout:
+    result = {
+        'schema_version': 'ms_doc_table_rows_v1', 'status': 'unresolved',
+        'rows': [], 'unresolved_markers': [], 'table_grouping': 'unknown',
+        'grid_and_merges': 'unknown', 'source': {'stream': 'WordDocument'},
+        'issues': [],
+        'layout_properties_not_rendered': [], 'unresolved_properties': [],
+        'layout_property_count': 0, 'unresolved_property_count': 0,
+        'external_property_references': [],
+    }
+    if not opts.include_layout:
         result['layout_metadata_requested'] = False
-    result['unresolved_property_count'] = 0
-    result['external_property_references'] = []
-    external_reference_count = 0
-    external_ranges = []
     marker_count = text.count('\x07')
     has_cell_marks = bool(marker_count)
     if not has_cell_marks and not enhanced:
         result['status'] = 'no_cell_markers'
         return result
-    pair = 154 + 13 * 8
-    start, length = word.number(pair), word.number(pair + 4)
     require(marker_count <= MAX_MARKS, word.location(76),
             'Binary table marker budget exceeded', 'resource_limit')
     result['marker_count'] = marker_count
-    pages = {}
-    fc_limits = []
-    bte = None
-    property_bytes = 0
-    layout_paragraphs = []
-    layout_seen = 0
-    layout_retained = 0
-    occupied_pages = []
-    row_identities = []
-    outside_paragraphs = []
-    cell_marks = []
-    physical = sorted(pieces)
-    physical_starts = [piece[0] for piece in physical]
-    prm_counts = tuple(accumulate(map(bool, piece_prms), initial=0)) if enhanced and length else ()
-
-    def unresolved(cp, reason, cp_start=None):
-        record = {'cp': cp, 'stream': 'WordDocument'}
-        if enhanced:
-            record['reason'] = reason
-            if cp_start is not None:
-                record['cp_start'] = cp_start
-                record['cp_end'] = cp + 1
-            result['unresolved_marker_count'] = result.get('unresolved_marker_count', 0) + 1
-            if len(result['unresolved_markers']) >= MAX_UNRESOLVED_MARKERS:
-                return
-        result['unresolved_markers'].append(record)
-
-    def crosses_field(left, right):
-        # (right,) sorts before any span that starts at the exclusive end.
-        index = bisect_right(field_spans, (right,))
-        return index > 0 and field_spans[index - 1][1] > left
-
-    def properties(cp, segment_start):
-        nonlocal property_bytes, external_reference_count
-        if not length or (piece_properties and not enhanced):
-            return None
-        index = bisect_right(positions, cp) - 1
-        if enhanced:
-            first_piece = bisect_right(positions, segment_start) - 1
-            if prm_counts[index + 1] != prm_counts[first_piece]:
-                return None
-        offset, _, stride, _ = pieces[index]
-        fc = offset + (cp - positions[index]) * stride
-        page_index = bisect_right(fc_limits, fc) - 1
-        if not 0 <= page_index < len(fc_limits) - 1:
-            return None
-        page_offset = (bte.number(4 * len(fc_limits) + page_index * 4) & 0x3FFFFF) * 512
-        if page_offset not in pages:
-            require(len(pages) < MAX_PAGES, word.location(page_offset),
-                    'Paragraph FKP page budget exceeded', 'resource_limit')
-            require(page_offset >= fib_end, word.location(page_offset), 'Paragraph FKP overlaps FIB')
-            for left, right in word_ranges:
-                require(page_offset + 512 <= left or right <= page_offset,
-                        word.location(page_offset, **overlap_location),
-                        'Paragraph FKP overlaps decoded metadata')
-            first = max(0, bisect_right(physical_starts, page_offset) - 1)
-            last = bisect_right(physical_starts, page_offset + 511)
-            for left, right, _, _ in physical[first:last]:
-                require(page_offset + 512 <= left or right <= page_offset,
-                        word.location(page_offset), 'Paragraph FKP overlaps text')
-            page = word.region(page_offset, 512)
-            count = page.number(511, 1)
-            require(1 <= count <= 29, page.location(511), 'Invalid paragraph FKP count')
-            offsets = [page.number(i * 4) for i in range(count + 1)]
-            require(all(a < b for a, b in zip(offsets, offsets[1:])),
-                    page.location(), 'Paragraph FKP offsets not increasing')
-            require(offsets[0] == fc_limits[page_index] and offsets[-1] == fc_limits[page_index + 1],
-                    page.location(), 'Paragraph BTE/FKP range mismatch')
-            groups = []
-            spans = []
-            header_end = 4 * (count + 1) + 13 * count
-            for run in range(count):
-                pointer = page.number(4 * (count + 1) + 13 * run, 1) * 2
-                if not pointer:
-                    groups.append(None)
-                    continue
-                require(header_end <= pointer < 511, page.location(pointer), 'Paragraph property pointer overlaps arrays')
-                size = page.number(pointer, 1)
-                cursor = pointer + 1
-                if size:
-                    size = 2 * size - 1
-                else:
-                    size = 2 * page.number(cursor, 1)
-                    cursor += 1
-                stop = cursor + size
-                require(size >= 2 and stop <= 511, page.location(pointer), 'Invalid paragraph property length')
-                require(all((pointer, stop) == span or stop <= span[0] or span[1] <= pointer for span in spans),
-                        page.location(pointer), 'Overlapping paragraph property groups')
-                spans.append((pointer, stop))
-                property_bytes += size
-                require(property_bytes <= MAX_PROPERTY_BYTES, page.location(pointer),
-                        'Paragraph property budget exceeded', 'resource_limit')
-                style = page.number(cursor, 2)
-                cursor += 2
-                props = {'source': page.location(pointer), 'istd': style}
-                valid = True
-                properties_region = page
-                array_start = cursor
-                visited_external = set()
-                while cursor < stop:
-                    require(stop - cursor >= 2, properties_region.location(cursor), 'Truncated paragraph SPRM')
-                    sprm = properties_region.number(cursor, 2)
-                    cursor += 2
-                    if sprm in (0x6646, 0x646B):
-                        require(cursor + 4 <= stop, properties_region.location(cursor), 'Truncated external paragraph property reference')
-                        external_offset = properties_region.number(cursor, 4)
-                        if sprm == 0x6646 and cursor - 2 != array_start:
-                            # The specification explicitly ignores non-first HugePapx.
-                            cursor += 4
-                            continue
-                        if properties_region is page and sprm == 0x6646:
-                            require(style == 0 and cursor + 4 == stop, properties_region.location(cursor),
-                                    'Inline HugePapx requires zero style and a sole PRL')
-                        require(data_region is not None, properties_region.location(cursor), 'External paragraph Data stream missing')
-                        require(external_offset not in visited_external, data_region.location(external_offset),
-                                'External paragraph property reference cycle')
-                        require(len(visited_external) < 32 and external_reference_count < 4096,
-                                data_region.location(external_offset), 'External paragraph reference budget exceeded', 'resource_limit')
-                        visited_external.add(external_offset)
-                        external_reference_count += 1
-                        size = data_region.number(external_offset, 2)
-                        require(10 <= size <= 0x3FA2, data_region.location(external_offset), 'Invalid external paragraph property length')
-                        external_end = external_offset + 2 + size
-                        data_region.view(external_offset + 2, size)
-                        require(all((external_offset, external_end) == span or external_end <= span[0] or span[1] <= external_offset
-                                    for span in external_ranges), data_region.location(external_offset),
-                                'Overlapping external paragraph property arrays')
-                        if (external_offset, external_end) not in external_ranges:
-                            external_ranges.append((external_offset, external_end))
-                        if data_ownership is not None:
-                            data_ownership.add((external_offset, external_end))
-                        property_bytes += size
-                        require(property_bytes <= MAX_PROPERTY_BYTES, data_region.location(external_offset),
-                                'Paragraph property budget exceeded', 'resource_limit')
-                        if len(result['external_property_references']) < 100:
-                            result['external_property_references'].append({
-                                'sprm': hex(sprm), 'source': properties_region.location(cursor - 2),
-                                'target': data_region.location(external_offset), 'property_bytes': size})
-                        props['external_properties_source'] = data_region.location(external_offset + 2)
-                        # Process the referenced array, never the original array suffix.
-                        properties_region = data_region
-                        cursor = external_offset + 2
-                        stop = external_end
-                        array_start = cursor
-                        continue
-                    if sprm in LAYOUT_PROPERTIES:
-                        name, width = LAYOUT_PROPERTIES[sprm]
-                        require(cursor + width <= stop, properties_region.location(cursor), 'Truncated known paragraph layout property')
-                        if enhanced and sprm in FRAME_PROPERTY_WIDTHS:
-                            value = properties_region.number(cursor, width)
-                            props.setdefault('frame', {})[sprm] = value & 0xF0 if sprm == PARAGRAPH_POSITION_CODE else value
-                        result['layout_property_count'] += 1
-                        if enhanced and include_layout:
-                            props['layout_modifier_count'] = props.get('layout_modifier_count', 0) + 1
-                        keep_raw = include_layout and len(result['layout_properties_not_rendered']) < 100
-                        keep_typed = include_layout and enhanced and result['layout_property_count'] <= MAX_LAYOUT_MODIFIERS
-                        if keep_raw or keep_typed:
-                            raw = properties_region.view(cursor, width)
-                            modifier = {'sprm': hex(sprm), 'name': name, 'operand_hex': bytes(raw).hex(),
-                                        'source': properties_region.location(cursor)}
-                            if keep_raw:
-                                result['layout_properties_not_rendered'].append({**modifier, 'effect': 'layout_not_rendered'})
-                            if keep_typed:
-                                props.setdefault('layout_modifiers', []).append({**modifier, **layout_operand(sprm, raw)})
-                        cursor += width
-                        continue
-                    if enhanced and sprm in FRAME_PROPERTY_WIDTHS:
-                        width = FRAME_PROPERTY_WIDTHS[sprm]
-                        require(cursor + width <= stop, properties_region.location(cursor), 'Truncated paragraph frame property')
-                        props.setdefault('frame', {})[sprm] = properties_region.number(cursor, width)
-                        cursor += width
-                        continue
-                    if enhanced and sprm in TABLE_NEUTRAL_PARAGRAPH_WIDTHS:
-                        width = TABLE_NEUTRAL_PARAGRAPH_WIDTHS[sprm]
-                        require(cursor + width <= stop, properties_region.location(cursor),
-                                'Truncated fixed-width paragraph property')
-                        cursor += width
-                        continue
-                    if enhanced and sprm == 0x4600:
-                        # PIstd can reset formatting, but preserves the explicit
-                        # in-table, depth and table-termination properties.
-                        require(cursor + 2 <= stop, properties_region.location(cursor), 'Truncated paragraph style operand')
-                        if 'initial_definition' in props:
-                            props['unsupported_cell_layout'] = True
-                        props['istd'] = properties_region.number(cursor, 2)
-                        props.pop('frame', None)
-                        cursor += 2
-                        continue
-                    if enhanced and sprm == 0x664A:
-                        require(cursor + 4 <= stop, properties_region.location(cursor), 'Truncated relative table depth')
-                        delta = int.from_bytes(properties_region.view(cursor, 4), 'little', signed=True)
-                        depth = props.get('depth', 0) + delta
-                        require(0 <= depth <= 0x7FFFFFFF, properties_region.location(cursor), 'Invalid resulting table depth')
-                        props['depth'] = depth
-                        cursor += 4
-                        continue
-                    # Handle exceptional table lengths before the generic SPRM path.
-                    # Never scan operand bytes for apparent table flags.
-                    if sprm == 0xD608:  # TDefTable's exceptional two-byte length
-                        require(cursor + 2 <= stop, properties_region.location(cursor), 'Truncated table definition length')
-                        definition_end = cursor + properties_region.number(cursor, 2) + 1
-                        cursor += 2
-                        require(cursor < definition_end <= stop, properties_region.location(cursor), 'Invalid table definition extent')
-                        columns = properties_region.number(cursor, 1)
-                        require(columns <= 63 and cursor + 1 + 2 * (columns + 1) <= definition_end,
-                                properties_region.location(cursor), 'Invalid table definition columns')
-                        edges = [int.from_bytes(properties_region.view(cursor + 1 + 2 * i, 2), 'little', signed=True)
-                                 for i in range(columns + 1)]
-                        require(all(a <= b for a, b in zip(edges, edges[1:])),
-                                properties_region.location(cursor), 'Table definition edges not ordered')
-                        # The initial records remain available even when later
-                        # operands make the supported stored grid indeterminate.
-                        tc_start = cursor + 1 + 2 * (columns + 1)
-                        tc_bytes = properties_region.view(tc_start, definition_end - tc_start)
-                        if enhanced and 'initial_definition' in props:
-                            props['unsupported_cell_layout'] = True
-                        props['initial_definition'] = {'column_count': columns, 'edges_twips': edges,
-                            'remaining_property_bytes': len(tc_bytes),
-                            'initial_cell_properties': initial_cell_properties(tc_bytes, columns)}
-                        cursor = definition_end
-                        continue
-                    if sprm not in TABLE_PROPERTIES:
-                        if (sprm >> 10) & 7 == 5:
-                            width = (1, 1, 2, 4, 2, 2, None, 3)[sprm >> 13]
-                            if width is None:
-                                require(cursor < stop, properties_region.location(cursor), 'Missing table property length')
-                                width = properties_region.number(cursor, 1)
-                                cursor += 1
-                            require(cursor + width <= stop, properties_region.location(cursor), 'Truncated table property')
-                            if enhanced:
-                                observe_table_operand(props, sprm, properties_region.view(cursor, width))
-                            if sprm in (0xD634, 0xD635):
-                                operands = props.setdefault('local_width_operands', [])
-                                if len(operands) < 128:
-                                    operands.append(table_width_operand(sprm, properties_region.view(cursor, width),
-                                                                        properties_region.location(cursor)))
-                                else:
-                                    props['local_width_operands_omitted'] = props.get('local_width_operands_omitted', 0) + 1
-                            cursor += width
-                            props['uninterpreted_table_modifiers'] = props.get('uninterpreted_table_modifiers', 0) + 1
-                            kinds = props.setdefault('uninterpreted_table_modifier_ids', {})
-                            key = hex(sprm)
-                            if key in kinds or len(kinds) < 64:
-                                kinds[key] = kinds.get(key, 0) + 1
-                            else:
-                                props['uninterpreted_table_modifier_ids_omitted'] = props.get(
-                                    'uninterpreted_table_modifier_ids_omitted', 0) + 1
-                            continue
-                        operand_end = skipped_operand_end(sprm, properties_region, cursor, stop) if enhanced else None
-                        result['unresolved_property_count'] += 1
-                        if len(result['unresolved_properties']) < 100:
-                            result['unresolved_properties'].append({
-                                'sprm': hex(sprm), 'source': properties_region.location(cursor - 2),
-                                'reason': 'unknown_property_skipped_semantics_unverified' if enhanced else 'unknown_property_not_skipped'})
-                        if enhanced:
-                            # Reading later explicit boundaries is not proof of effective
-                            # formatting. Do not certify layout after opaque modifiers.
-                            props['unsupported_cell_layout'] = True
-                            props.pop('frame', None)
-                            cursor = operand_end
-                            continue
-                        valid = False
-                        break
-                    width = 4 if sprm == 0x6649 else 1
-                    require(cursor + width <= stop, properties_region.location(cursor), 'Truncated table SPRM')
-                    value = properties_region.number(cursor, width)
-                    if width == 1:
-                        require(value in (0, 1), properties_region.location(cursor), 'Invalid table boolean')
-                    elif enhanced:
-                        require(value <= 0x7FFFFFFF, properties_region.location(cursor), 'Invalid absolute table depth')
-                    props[TABLE_PROPERTIES[sprm]] = value
-                    cursor += width
-                if enhanced:
-                    props['structure_unknown'] = not valid
-                groups.append(props if valid or enhanced else None)
-            pages[page_offset] = (offsets, groups)
-            occupied_pages.append((page_offset, page_offset + 512))
-        offsets, groups = pages[page_offset]
-        run = bisect_right(offsets, fc) - 1
-        if not 0 <= run < len(groups) or offsets[run + 1] != fc + stride:
-            return None
-        return groups[run]
-
+    state = {
+        'result': result, 'has_cell_marks': has_cell_marks,
+        'layout_paragraphs': [], 'layout_seen': 0, 'layout_retained': 0,
+        'row_identities': [], 'outside_paragraphs': [], 'cell_marks': [], 'end_cp': cp_start,
+    }
+    fkp = None
     try:
-        if length and (enhanced or not piece_properties):
-            require(start > 0 and length >= 12 and (length - 4) % 8 == 0,
-                    word.location(pair), 'Invalid paragraph BTE')
-            require((length - 4) // 8 <= MAX_PAGES, word.location(pair),
-                    'Paragraph BTE page budget exceeded', 'resource_limit')
-            bte = table.region(start, length)
-            require(all(start + length <= left or right <= start for left, right in table_ranges),
-                    bte.location(**overlap_location), 'Paragraph BTE overlaps decoded table')
-            fc_limits = [bte.number(i * 4) for i in range((length - 4) // 8 + 1)]
-            require(all(a < b for a, b in zip(fc_limits, fc_limits[1:])),
-                    bte.location(), 'Paragraph BTE offsets not increasing')
-            require(fc_limits[-1] <= len(word.data), bte.location(), 'Paragraph BTE outside WordDocument')
-            page_numbers = [bte.number(4 * len(fc_limits) + i * 4) & 0x3FFFFF
-                            for i in range(len(fc_limits) - 1)]
-            require(len(set(page_numbers)) == len(page_numbers), bte.location(), 'Aliased paragraph FKP')
-        cp = cp_start
-        segment_start = cp_start
-        chunks = []
-        cells = []
-        paragraph = []
-        row_start = None
-        first_paragraph = None
-        cell_start = cp_start
-        tainted = False
-        total_cells = 0
-        for char in text:
-            width = 2 if ord(char) > 0xFFFF else 1
-            if char in ('\r', '\x07'):
-                segment_has_field = crosses_field(segment_start, cp + 1)
-                props = properties(cp, segment_start)
-                if nested is not None and has_cell_marks:
-                    nested.feed(''.join(paragraph), char, segment_start, cp + width, props, segment_has_field)
-                if enhanced and props and props.get('layout_modifier_count') and not segment_has_field:
-                    layout_seen += props['layout_modifier_count']
-                    modifiers = props.get('layout_modifiers', ())[:MAX_LAYOUT_MODIFIERS - layout_retained]
-                    if modifiers:
-                        layout_paragraphs.append({'stream': 'WordDocument', 'mark_cp': cp,
-                                                  'modifiers': modifiers, 'papx_group_complete': not props['structure_unknown'],
-                                                  'modifier_count': props['layout_modifier_count']})
-                        layout_retained += len(modifiers)
-                outside_table = (enhanced and char == '\r' and props and not props['structure_unknown']
-                                 and not props.get('in_table') and not props.get('depth') and not props.get('row_end'))
-                if enhanced and has_cell_marks:
-                    if char == '\x07':
-                        cell_marks.append(cp)
-                    elif outside_table and not segment_has_field:
-                        outside_paragraphs.append(cp)
-                # PFTtp defaults to false. Only the explicit value 1 ends a row.
-                if not has_cell_marks or (props and (props.get('structure_unknown')
-                                                    or props.get('in_table') != 1 or props.get('depth') != 1)):
-                    props = None
-                if segment_has_field:
-                    tainted = True
-                    # A row boundary can be trusted only outside the field.
-                    if not props or not props.get('row_end') or crosses_field(cp, cp + 1):
-                        props = None
-                if props is None:
-                    tainted = (tainted or bool(cells or chunks) or char == '\x07') and not outside_table
-                    if char == '\x07':
-                        unresolved(cp, 'field_overlap' if segment_has_field else 'unverified_paragraph_properties')
-                    chunks, cells, row_start = [], [], None
-                    first_paragraph = None
-                elif props.get('row_end', 0):
-                    if (char == '\x07' and not paragraph and not chunks and cells and not tainted
-                            and not crosses_field(row_start, cp + 1)):
-                        row = {'cells': cells, 'source': {'stream': 'WordDocument',
-                            'cp_start': row_start, 'cp_end': cp + 1, 'row_mark_cp': cp},
-                            'row_properties_source': props['source'], 'merges': 'unknown',
-                            'external_properties_source': props.get('external_properties_source'),
-                            'initial_definition': props.get('initial_definition'),
-                            'uninterpreted_table_modifiers': props.get('uninterpreted_table_modifiers', 0),
-                            'uninterpreted_table_modifier_ids': props.get('uninterpreted_table_modifier_ids', {}),
-                            'uninterpreted_table_modifier_ids_omitted': props.get('uninterpreted_table_modifier_ids_omitted', 0),
-                            'local_width_operands': props.get('local_width_operands', []),
-                            'local_width_operands_omitted': props.get('local_width_operands_omitted', 0)}
-                        if enhanced:
-                            row['stored_cell_layout'] = row_definition(props, len(cells))
-                            row_identities.append(row_identity(props, first_paragraph))
-                        result['rows'].append(row)
-                    else:
-                        unresolved(cp, 'row_boundary_incomplete', row_start)
-                    chunks, cells, row_start = [], [], None
-                    first_paragraph = None
-                    tainted = enhanced and char != '\x07'
-                else:
-                    if row_start is None:
-                        row_start = segment_start
-                        cell_start = segment_start
-                        first_paragraph = props if enhanced else None
-                    chunks.append(''.join(paragraph).replace('\x0b', '\n'))
-                    if char == '\x07':
-                        require(len(cells) < 63, word.location(76), 'Too many cells in observed row')
-                        require(total_cells < MAX_CELLS,
-                                word.location(76), 'Binary table cell budget exceeded', 'resource_limit')
-                        cells.append({'index': len(cells), 'text': '\n'.join(chunks),
-                            'source': {'stream': 'WordDocument', 'cp_start': cell_start,
-                                       'cp_end': cp + 1}, 'properties_source': props['source'],
-                                      'external_properties_source': props.get('external_properties_source')})
-                        total_cells += 1
-                        chunks = []
-                        cell_start = cp + 1
-                paragraph = []
-                segment_start = cp + width
-            elif has_cell_marks:
-                paragraph.append(marker_replacements.get(cp, char) if marker_replacements else char)
-            cp += width
-        if cells or chunks:
-            result['issues'].append({'code': 'binary_table_unterminated_row', 'stream': 'WordDocument',
-                                     'cp_start': row_start, 'cp_end': cp})
-        result['status'] = ('rows_partial' if result['rows'] else 'unresolved') if has_cell_marks else 'no_cell_markers'
+        length, bte, fc_limits = init_bte(
+            word, table, opts.table_ranges, enhanced, opts.piece_properties, overlap_location, require)
+        fkp = FkpPropertyReader(
+            word=word, bte=bte, fc_limits=fc_limits, length=length,
+            pieces=pieces, positions=positions, fib_end=fib_end, options=opts,
+            limits={'max_property_bytes': MAX_PROPERTY_BYTES, 'max_layout_modifiers': MAX_LAYOUT_MODIFIERS},
+            helpers={
+                'require': require, 'layout_operand': layout_operand,
+                'initial_cell_properties': initial_cell_properties,
+                'observe_table_operand': observe_table_operand,
+                'table_width_operand': table_width_operand, 'skipped_operand_end': skipped_operand_end,
+                'constants': {
+                    'LAYOUT_PROPERTIES': LAYOUT_PROPERTIES,
+                    'TABLE_NEUTRAL_PARAGRAPH_WIDTHS': TABLE_NEUTRAL_PARAGRAPH_WIDTHS,
+                    'TABLE_PROPERTIES': TABLE_PROPERTIES,
+                },
+            },
+            result=result,
+        )
+        _scan_text_marks(text, cp_start, word, opts, fkp, nested, state, require)
     except ParseError as exc:
         if exc.status == 'resource_limit':
             raise
@@ -697,36 +476,43 @@ def inspect_tables(text, cp_start, word, table, pieces, positions, fib_end,
             nested.rows.clear()
             nested.reject(cp_start, 'invalid_paragraph_metadata')
         result['status'] = 'unresolved'
-        layout_paragraphs, layout_seen, layout_retained = [], 0, 0
+        state['layout_paragraphs'], state['layout_seen'], state['layout_retained'] = [], 0, 0
         code = 'binary_table_metadata_invalid' if has_cell_marks else 'binary_paragraph_metadata_invalid'
         result['issues'].append({'code': code, **exc.location,
                                  'metadata_status': exc.status, 'message': str(exc)})
+    text_units = cp_start + len(text.encode('utf-16le')) // 2
     if nested is not None and has_cell_marks:
-        evidence = nested.finish(cp_start + len(text.encode('utf-16le')) // 2)
+        evidence = nested.finish(text_units)
         if evidence['rows'] or evidence['issue_count']:
             result['nested_row_evidence'] = evidence
-    result['fkp_ranges'] = occupied_pages
-    result['external_reference_count'] = external_reference_count
-    result['external_references_truncated'] = max(0, external_reference_count - len(result['external_property_references']))
+    result['fkp_ranges'] = fkp.occupied_pages if fkp is not None else []
+    ext_count = fkp.external_reference_count if fkp is not None else 0
+    result['external_reference_count'] = ext_count
+    result['external_references_truncated'] = max(0, ext_count - len(result['external_property_references']))
     result['layout_properties_truncated'] = max(0, result['layout_property_count'] - len(result['layout_properties_not_rendered']))
     result['unresolved_properties_truncated'] = max(0, result['unresolved_property_count'] - len(result['unresolved_properties']))
     if enhanced:
         if has_cell_marks:
             result['contiguous_row_runs'] = contiguous_row_runs(result['rows'])
-        if include_layout:
-            result['paragraph_layout'] = {'scope': 'direct_papx_operands', 'effective_layout': 'unknown',
-                                          'paragraphs': layout_paragraphs, 'modifier_count': layout_seen,
-                                          'modifiers_omitted': layout_seen - layout_retained}
+        if opts.include_layout:
+            result['paragraph_layout'] = {
+                'scope': 'direct_papx_operands', 'effective_layout': 'unknown',
+                'paragraphs': state['layout_paragraphs'], 'modifier_count': state['layout_seen'],
+                'modifiers_omitted': state['layout_seen'] - state['layout_retained'],
+            }
         result['unresolved_marker_count'] = result.get('unresolved_marker_count', 0)
         result['unresolved_markers_omitted'] = result['unresolved_marker_count'] - len(result['unresolved_markers'])
         if has_cell_marks:
-            group_tables(result, row_identities, (cp_start, cp), outside_paragraphs, cell_marks,
+            group_tables(result, state['row_identities'], (cp_start, state['end_cp']),
+                         state['outside_paragraphs'], state['cell_marks'],
                          bookmarks=has_table_boundary_bookmarks(word))
     if has_cell_marks:
-        result['issues'].append({'code': 'binary_table_structure_incomplete', 'stream': 'WordDocument',
-                                'cp_start': cp_start, 'cp_end': cp_start + len(text.encode('utf-16le')) // 2,
-                                'message': ('Stored depth-one table evidence only; check grouping/merge coverage. '
-                                            'Complete nested grouping, styles and visual layout remain unverified' if enhanced else
-                                            'Only explicit depth-one PAPX row/cell boundaries; grouping, merges, '
-                                            'styles and unsupported properties remain unknown')})
+        result['issues'].append({
+            'code': 'binary_table_structure_incomplete', 'stream': 'WordDocument',
+            'cp_start': cp_start, 'cp_end': text_units,
+            'message': ('Stored depth-one table evidence only; check grouping/merge coverage. '
+                        'Complete nested grouping, styles and visual layout remain unverified' if enhanced else
+                        'Only explicit depth-one PAPX row/cell boundaries; grouping, merges, '
+                        'styles and unsupported properties remain unknown'),
+        })
     return result

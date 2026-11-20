@@ -1,6 +1,6 @@
 # WPS：有限文字读取、RTF 创建与内容重排
 
-> 当前 Skill 版本为 `20261119.0634.2207`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
+> 当前 Skill 版本为 `20261120.2147.0000`。历史源码参考基线为 [9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)。运行约束见 [SKILL.md](../../skills/wps/SKILL.md)，指定版本 WPS Office 12.1.0.26899 的生产者身份和客户端显示仍待验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -84,13 +84,13 @@ RTF 创建和重排共用构建器及内容账本。导出器具有自己的候�
 
 | 入口或模块 | 主要职责 |
 | --- | --- |
-| [read_wps.py](../../skills/wps/scripts/read_wps.py) | 统一 CLI 及 `read(path)`、`read_bytes(data)`；格式分支路由、策略兼容检查、状态及通道输出。 |
-| [wps_cfb.py](../../skills/wps/scripts/wps_cfb.py)、[wps_ooxml.py](../../skills/wps/scripts/wps_ooxml.py)、[wps_ooxml_textboxes.py](../../skills/wps/scripts/wps_ooxml_textboxes.py)、[wps_rtf_read.py](../../skills/wps/scripts/wps_rtf_read.py) | CFB 结构与流边界、OOXML 受限 ZIP/XML、maximum 文本框独立故事、RTF token/目标组和有限结构读取。MS-DOC 正文及附加区域通过入口和专门模块组合解析。 |
-| [wps_binary_tables.py](../../skills/wps/scripts/wps_binary_tables.py)、[wps_binary_officeart.py](../../skills/wps/scripts/wps_binary_officeart.py)、[wps_binary_images.py](../../skills/wps/scripts/wps_binary_images.py) | 校验表格行和单元格，关联组合图形、文本框和图片，按请求返回有界 PNG 字节。 |
+| [read_wps.py](../../skills/wps/scripts/read_wps.py) | 统一 CLI 及 `read(path)`、`read_bytes(data)`；格式分支路由、策略兼容检查、状态及通道输出；内部拆分二进制 FIB/目录流解析至 [wps_binary_fib.py](../../skills/wps/scripts/wps_binary_fib.py) 与 [wps_binary_doc.py](../../skills/wps/scripts/wps_binary_doc.py)。 |
+| [wps_cfb.py](../../skills/wps/scripts/wps_cfb.py)、[wps_ooxml.py](../../skills/wps/scripts/wps_ooxml.py)、[wps_ooxml_textboxes.py](../../skills/wps/scripts/wps_ooxml_textboxes.py)、[wps_rtf_read.py](../../skills/wps/scripts/wps_rtf_read.py)、[wps_rtf_parser.py](../../skills/wps/scripts/wps_rtf_parser.py) | CFB 结构与流边界、OOXML 受限 ZIP/XML、maximum 文本框独立故事、RTF token/目标组和流式状态机解析读取。MS-DOC 正文及附加区域通过入口和专门模块组合解析。 |
+| [wps_binary_tables.py](../../skills/wps/scripts/wps_binary_tables.py)、[wps_binary_table_fkp.py](../../skills/wps/scripts/wps_binary_table_fkp.py)、[wps_binary_officeart.py](../../skills/wps/scripts/wps_binary_officeart.py)、[wps_binary_images.py](../../skills/wps/scripts/wps_binary_images.py) | 校验表格 FKP 与单元格，关联组合图形、文本框和图片，按请求返回有界 PNG 字节。 |
 | [wps_binary_charts.py](../../skills/wps/scripts/wps_binary_charts.py)、[wps_binary_chart_cache.py](../../skills/wps/scripts/wps_binary_chart_cache.py) | 从已验证的锚点关系读取图表部件、系列缓存和缺值范围。 |
 | [wps_diagnostics.py](../../skills/wps/scripts/wps_diagnostics.py)、[wps_selective.py](../../skills/wps/scripts/wps_selective.py)、[wps_read_view.py](../../skills/wps/scripts/wps_read_view.py) | 读取评估、标题/范围/章节投影、与原字节和选项绑定的分页游标；不把投影结果伪装为完整格式数据。 |
 | [run_wps_task.py](../../skills/wps/scripts/run_wps_task.py) | `check/create`；接收 stdin 或 `--spec`，规范化生成、候选回读、发布并输出回执。 |
-| [wps_rtf_builder.py](../../skills/wps/scripts/wps_rtf_builder.py) | `RtfRun/Paragraph/Table/Document` 与 `build_document_from_spec()`；文本转义、UTF-16 代理对、页面/段落控制与有限表格合并。 |
+| [wps_rtf_builder.py](../../skills/wps/scripts/wps_rtf_builder.py)、[wps_rtf_doc_builder.py](../../skills/wps/scripts/wps_rtf_doc_builder.py) | `RtfRun/Paragraph/Table/Document` 与 `build_document_from_spec()`；文本转义、UTF-16 代理对、页面/段落控制与有限表格合并。 |
 | [run_wps_edit.py](../../skills/wps/scripts/run_wps_edit.py) | `text/structure/table/batch`；`execute_edit_task()` 读取原件、应用操作、按新主题重建 RTF，并核对源文件在发布前未变化。 |
 | [export_wps.py](../../skills/wps/scripts/export_wps.py)、[docx_to_wps_rtf.py](../../skills/wps/scripts/docx_to_wps_rtf.py) | `check/inspect/convert`；RTF 映射与可选 LibreOffice 导出，保留来源/候选 partial 和 fallback 诊断。 |
 | [wps_content_validation.py](../../skills/wps/scripts/wps_content_validation.py)、[wps_output_contract.py](../../skills/wps/scripts/wps_output_contract.py) | 前者核对规范化计划与候选文字、块顺序、物理单元格及有限控制；后者约束后缀/真实格式、转换候选及读取状态。 |

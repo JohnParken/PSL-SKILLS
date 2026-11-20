@@ -2,8 +2,6 @@
 
 维护资源说明：文中 `docs/maintenance/wps/` 与 `skills/wps/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
-路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
-
 显式 include-related 时，主 text/paragraphs 仍只包含正文，附加区域置于 related_stories，不再拼接标签和部件文字。附加内容不拼接主正文；显式 standard 未请求附加内容且发现引用时以 partial 和 related_content_not_requested 明确告知未读取范围。source 保留部件、定义 ID、关系 ID；references 保留正文 Word 元素序号、引用种类和 ID。元素序号不是字符 CP 或页码，页码/CP 映射均未知。
 
 页眉页脚由正文 sectPr 中 headerReference/footerReference 的 r:id 定位实际主部件所属的关系文件，检查内部关系类型和部件内容类型/根元素。按显式分节引用提取，不计算前节继承、奇偶页或首页显示。相同部件的同一关系可供多节引用；不同关系别名指向同一部件当前明确 unsupported。合法自定义部件名按关系支持，不按 header1.xml 等文件名枚举。

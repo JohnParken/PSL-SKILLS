@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Standard-library RTF builder; controls are tested, office rendering is not certified."""
 
+from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple, Any
 
 FONT_SIMSUN = 0
@@ -136,44 +137,49 @@ class RtfRun:
         return "{" + rendered + "}" if self.latin_font is not None else rendered
 
 
+@dataclass
+class ParagraphStyle:
+    """Formatting configuration for an RTF paragraph."""
+
+    align: str = "justify"
+    space_before_pt: float = 0.0
+    space_after_pt: float = 0.0
+    line_spacing_mult: Optional[float] = None
+    line_spacing_exact_pt: Optional[float] = None
+    first_line_indent_chars: float = 2.0
+    left_indent_pt: float = 0.0
+    right_indent_pt: float = 0.0
+    keep_with_next: bool = False
+    widow_control: Optional[bool] = True
+    page_break_before: bool = False
+    keep_together: bool = False
+    first_line_indent_pt: Optional[float] = None
+    tabs_pt: List[float] = field(default_factory=list)
+    outline_level: Optional[int] = None
+    character_indent: bool = False
+
+
 class RtfParagraph:
     """A paragraph consisting of formatting properties and runs."""
 
-    def __init__(
-        self,
-        align: str = "justify",
-        space_before_pt: float = 0.0,
-        space_after_pt: float = 0.0,
-        line_spacing_mult: Optional[float] = None,
-        line_spacing_exact_pt: Optional[float] = None,
-        first_line_indent_chars: float = 2.0,
-        left_indent_pt: float = 0.0,
-        right_indent_pt: float = 0.0,
-        keep_with_next: bool = False,
-        widow_control: Optional[bool] = True,
-        page_break_before: bool = False,
-        keep_together: bool = False,
-        first_line_indent_pt: Optional[float] = None,
-        tabs_pt: Optional[List[float]] = None,
-        outline_level: Optional[int] = None,
-        character_indent: bool = False,
-    ):
-        self.align = align
-        self.space_before_pt = space_before_pt
-        self.space_after_pt = space_after_pt
-        self.line_spacing_mult = line_spacing_mult
-        self.line_spacing_exact_pt = line_spacing_exact_pt
-        self.first_line_indent_chars = first_line_indent_chars
-        self.left_indent_pt = left_indent_pt
-        self.right_indent_pt = right_indent_pt
-        self.keep_with_next = keep_with_next
-        self.widow_control = widow_control
-        self.page_break_before = page_break_before
-        self.keep_together = keep_together
-        self.first_line_indent_pt = first_line_indent_pt
-        self.tabs_pt = tabs_pt or []
-        self.outline_level = outline_level
-        self.character_indent = character_indent
+    def __init__(self, style: Optional[ParagraphStyle] = None, **kwargs):
+        resolved = style if style is not None else ParagraphStyle(**kwargs)
+        self.align = resolved.align
+        self.space_before_pt = resolved.space_before_pt
+        self.space_after_pt = resolved.space_after_pt
+        self.line_spacing_mult = resolved.line_spacing_mult
+        self.line_spacing_exact_pt = resolved.line_spacing_exact_pt
+        self.first_line_indent_chars = resolved.first_line_indent_chars
+        self.left_indent_pt = resolved.left_indent_pt
+        self.right_indent_pt = resolved.right_indent_pt
+        self.keep_with_next = resolved.keep_with_next
+        self.widow_control = resolved.widow_control
+        self.page_break_before = resolved.page_break_before
+        self.keep_together = resolved.keep_together
+        self.first_line_indent_pt = resolved.first_line_indent_pt
+        self.tabs_pt = list(resolved.tabs_pt or [])
+        self.outline_level = resolved.outline_level
+        self.character_indent = resolved.character_indent
         self.runs: List[RtfRun] = []
 
     def add_run(self, run: RtfRun) -> "RtfParagraph":
@@ -555,371 +561,5 @@ class RtfDocument:
 
 def build_document_from_spec(spec: Dict[str, Any]) -> RtfDocument:
     """Build an RtfDocument instance from a declarative document specification."""
-    import math
-    if not isinstance(spec, dict) or not isinstance(spec.get("blocks"), list) or not spec["blocks"]:
-        raise ValueError("A nonempty blocks array is required")
-    if spec.get("theme", "official") not in ("official", "business", "general"):
-        raise ValueError("Unsupported theme")
-    if "page_numbering" in spec and type(spec["page_numbering"]) is not bool:
-        raise ValueError("page_numbering must be boolean")
-    for block in spec["blocks"]:
-        if not isinstance(block, dict) or block.get("type") not in ("title", "subtitle", "heading", "paragraph", "list", "table", "callout", "page_break"):
-            raise ValueError("Unsupported block")
-        if "text" in block and not isinstance(block["text"], str):
-            raise ValueError("Block text must be a string")
-        if block.get("type") == "table":
-            rows = block.get("rows")
-            if not isinstance(rows, list) or not rows or not all(isinstance(row, list) and row for row in rows) or len({len(row) for row in rows}) != 1:
-                raise ValueError("Tables require nonempty rectangular rows")
-        if "align" in block and block["align"] not in ("left", "right", "center", "justify"):
-            raise ValueError("Unsupported alignment")
-        if block.get("type") == "heading" and (type(block.get("level", 1)) is not int or not 1 <= block.get("level", 1) <= 9):
-            raise ValueError("heading level must be 1..9")
-        tabs = block.get("tabs_pt", [])
-        if not isinstance(tabs, list) or len(tabs) > 64:
-            raise ValueError("tabs_pt must be a list of at most 64 left-tab positions")
-        if any(type(t) not in (int, float) or not math.isfinite(t) or not 0 < t <= 1000 for t in tabs):
-            raise ValueError("Tab positions must be finite positive points")
-        if any(a >= b for a, b in zip(tabs, tabs[1:])):
-            raise ValueError("Tab positions must be strictly increasing")
-        if any(key in block for key in ("list_style", "list_level", "numbering")):
-            raise ValueError("Native multilevel/automatic list numbering is unsupported; use literal lists")
-        if block.get("type") == "list" and (type(block.get("start", 1)) is not int or not 1 <= block.get("start", 1) <= 1000000):
-            raise ValueError("List start must be an integer from 1 to 1000000")
-        for key in ("row_keep_together", "repeat_header", "header", "ordered", "widow_control", "keep_with_next", "keep_together", "page_break_before"):
-            if key in block and type(block[key]) is not bool:
-                raise ValueError("Expected boolean paragraph/table option")
-        for run in block.get("runs", []):
-            if not isinstance(run, dict) or not isinstance(run.get("text", ""), str):
-                raise ValueError("Invalid text run")
-            size = run.get("size_pt", 14)
-            if type(size) not in (int, float) or not math.isfinite(size) or not 1 <= size <= 200:
-                raise ValueError("Invalid run font size")
-        for key in ("space_before_pt", "space_after_pt", "indent_chars", "line_spacing_exact_pt", "line_spacing_mult", "left_indent_pt", "right_indent_pt", "first_line_indent_pt"):
-            if key in ("line_spacing_exact_pt", "line_spacing_mult") and block.get(key, 0) is None:
-                continue
-            if key in block and (type(block[key]) not in (int, float) or not math.isfinite(block[key]) or abs(block[key]) > 1000):
-                raise ValueError("Invalid paragraph measurement")
-            if key in block and key not in ("indent_chars", "first_line_indent_pt") and block[key] < 0:
-                raise ValueError("Spacing must be nonnegative")
-    theme = spec.get("theme", "official")
-    header_text = spec.get("header_text") or spec.get("header")
-    footer_text = spec.get("footer_text") or spec.get("footer")
-    page_numbering = spec.get("page_numbering", theme != "official")
-    latin_font = FONT_TIMES if theme == "official" else None
-
-    if theme == "official":
-        # Match the DOCX official preset (not a claim of national-standard compliance).
-        # 31.8 mm rounded to whole twips is 1803; top/bottom are 25.4 mm.
-        doc = RtfDocument(
-            margin_top_pt=72.0,
-            margin_bottom_pt=72.0,
-            margin_left_pt=90.15,
-            margin_right_pt=90.15,
-            header_text=spec.get("header_text") if spec.get("header_text") is not None else spec.get("header"),
-            footer_text=spec.get("footer_text") if spec.get("footer_text") is not None else spec.get("footer"),
-            page_numbering=page_numbering,
-            official_typography=True,
-        )
-        title_font = FONT_XIAOBIAOSONG
-        title_size = 22.0
-        h1_font, h1_size = FONT_SIMHEI, 16.0
-        h2_font, h2_size = FONT_KAITI, 16.0
-        h3_font, h3_size = FONT_FANGSONG, 16.0
-        body_font, body_size = FONT_FANGSONG, 16.0
-        body_indent = 2.0
-        line_spacing_exact = 28.0
-        line_spacing_mult = None
-    elif theme == "business":
-        doc = RtfDocument(
-            margin_top_pt=72.0,
-            margin_bottom_pt=72.0,
-            margin_left_pt=72.0,
-            margin_right_pt=72.0,
-            header_text=header_text,
-            footer_text=footer_text,
-            page_numbering=page_numbering,
-        )
-        title_font = FONT_YAHEI
-        title_size = 22.0
-        h1_font, h1_size = FONT_YAHEI, 16.0
-        h2_font, h2_size = FONT_YAHEI, 14.0
-        h3_font, h3_size = FONT_YAHEI, 12.0
-        body_font, body_size = FONT_YAHEI, 11.0
-        body_indent = 0.0
-        line_spacing_exact = None
-        line_spacing_mult = 1.25
-    else:  # general
-        doc = RtfDocument(
-            margin_top_pt=56.7,
-            margin_bottom_pt=56.7,
-            margin_left_pt=56.7,
-            margin_right_pt=56.7,
-            header_text=header_text,
-            footer_text=footer_text,
-            page_numbering=page_numbering,
-        )
-        title_font = FONT_SIMHEI
-        title_size = 20.0
-        h1_font, h1_size = FONT_SIMHEI, 15.0
-        h2_font, h2_size = FONT_KAITI, 13.0
-        h3_font, h3_size = FONT_SIMSUN, 12.0
-        body_font, body_size = FONT_SIMSUN, 12.0
-        body_indent = 2.0
-        line_spacing_exact = None
-        line_spacing_mult = 1.2
-
-    def warn_unknown(value, supported, path):
-        for key in value:
-            if key not in supported:
-                doc.spec_warning_count += 1
-                if len(doc.spec_warnings) < 100:
-                    doc.spec_warnings.append({"code": "unsupported_option_ignored", "path": path + str(key)})
-    warn_unknown(spec, {"theme", "header_text", "header", "footer_text", "footer", "page_numbering", "blocks", "page"}, "")
-    page = spec.get("page", {})
-    if not isinstance(page, dict):
-        raise ValueError("page must be an object")
-    warn_unknown(page, {"width_pt", "height_pt", "margin_left_pt", "margin_right_pt", "margin_top_pt", "margin_bottom_pt"}, "page.")
-    for key, attribute in {"width_pt": "page_width_twips", "height_pt": "page_height_twips",
-                           "margin_left_pt": "margin_left_twips", "margin_right_pt": "margin_right_twips",
-                           "margin_top_pt": "margin_top_twips", "margin_bottom_pt": "margin_bottom_twips"}.items():
-        if key in page:
-            value = page[key]
-            if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 2000:
-                raise ValueError("Invalid page measurement")
-            setattr(doc, attribute, int(value * 20))
-    if (doc.page_width_twips <= doc.margin_left_twips + doc.margin_right_twips
-            or doc.page_height_twips <= doc.margin_top_twips + doc.margin_bottom_twips):
-        raise ValueError("Page margins leave no printable area")
-    blocks = spec.get("blocks", [])
-    paragraph_options = {
-        "align": "align", "space_before_pt": "space_before_pt", "space_after_pt": "space_after_pt",
-        "indent_chars": "first_line_indent_chars", "line_spacing_exact_pt": "line_spacing_exact_pt",
-        "line_spacing_mult": "line_spacing_mult", "widow_control": "widow_control", "keep_with_next": "keep_with_next",
-        "keep_together": "keep_together", "page_break_before": "page_break_before", "left_indent_pt": "left_indent_pt",
-        "right_indent_pt": "right_indent_pt", "first_line_indent_pt": "first_line_indent_pt", "tabs_pt": "tabs_pt",
-    }
-
-    def apply_heading_options(paragraph, block):
-        for option, attribute in paragraph_options.items():
-            if option in block:
-                setattr(paragraph, attribute, block[option])
-
-    def resolve_run_font(name, path):
-        if name is not None and not isinstance(name, str):
-            raise ValueError("Run font must be a string")
-        if name and name.strip().lower() not in FONT_MAP:
-            doc.spec_warning_count += 1
-            if len(doc.spec_warnings) < 100:
-                doc.spec_warnings.append({"code": "unsupported_font_substituted", "path": path, "replacement": "SimSun"})
-        return resolve_font_index(name)
-
-    block_options = {
-        "title": {"type", "text"} | set(paragraph_options), "subtitle": {"type", "text"} | set(paragraph_options),
-        "heading": {"type", "text", "level"} | set(paragraph_options),
-        "paragraph": {"type", "text", "runs", "align", "space_before_pt", "space_after_pt", "indent_chars",
-                      "line_spacing_exact_pt", "line_spacing_mult", "widow_control", "keep_with_next", "keep_together",
-                      "page_break_before", "left_indent_pt", "right_indent_pt", "first_line_indent_pt", "tabs_pt"},
-        "list": {"type", "items", "ordered", "start"},
-        "table": {"type", "rows", "header", "col_widths", "col_alignments", "repeat_header", "row_keep_together", "merges", "borders", "border_width_pt"},
-        "callout": {"type", "text"}, "page_break": {"type"},
-    }
-    for block_index, block in enumerate(blocks):
-        warn_unknown(block, block_options[block["type"]], "blocks[{}].".format(block_index))
-        b_type = block.get("type", "paragraph")
-        if b_type == "title":
-            text = block.get("text", "")
-            p = RtfParagraph(
-                align="center",
-                space_before_pt=0.0 if theme == "official" else 14.0,
-                space_after_pt=12.0,
-                first_line_indent_chars=0.0,
-                keep_with_next=True,
-                line_spacing_mult=1.15 if theme == "official" else None,
-                widow_control=None if theme == "official" else True,
-            )
-            apply_heading_options(p, block)
-            p.add_text(text, font=title_font, size_pt=title_size, bold=theme != "official", latin_font=latin_font)
-            doc.add_paragraph(p)
-        elif b_type == "subtitle":
-            text = block.get("text", "")
-            p = RtfParagraph(
-                align="center",
-                space_before_pt=0.0,
-                space_after_pt=8.0 if theme == "official" else 12.0,
-                first_line_indent_chars=0.0,
-                keep_with_next=True,
-                line_spacing_mult=1.15 if theme == "official" else None,
-                widow_control=None if theme == "official" else True,
-            )
-            apply_heading_options(p, block)
-            p.add_text(text, font=FONT_XIAOBIAOSONG if theme == "official" else FONT_KAITI,
-                       size_pt=14.0 if theme == "official" else 16.0, bold=False, latin_font=latin_font)
-            doc.add_paragraph(p)
-        elif b_type == "heading":
-            level = int(block.get("level", 1))
-            text = block.get("text", "")
-            if theme == "official":
-                font, size = {1: (h1_font, h1_size), 2: (h2_font, h2_size), 3: (h3_font, h3_size)}.get(level, (FONT_FANGSONG, 16.0))
-                p = RtfParagraph(align="left", first_line_indent_chars=0,
-                                 line_spacing_mult=1.15, keep_with_next=True, widow_control=None)
-                p.add_text(text, font=font, size_pt=size, bold=False, latin_font=latin_font)
-            elif level == 1:
-                p = RtfParagraph(
-                    align="left",
-                    space_before_pt=10.0,
-                    space_after_pt=4.0,
-                    first_line_indent_chars=0.0,
-                    keep_with_next=True,
-                )
-                p.add_text(text, font=h1_font, size_pt=h1_size, bold=True)
-            elif level == 2:
-                p = RtfParagraph(
-                    align="left",
-                    space_before_pt=8.0,
-                    space_after_pt=3.0,
-                    first_line_indent_chars=0.0,
-                    keep_with_next=True,
-                )
-                p.add_text(text, font=h2_font, size_pt=h2_size, bold=True)
-            else:
-                p = RtfParagraph(
-                    align="left",
-                    space_before_pt=6.0,
-                    space_after_pt=2.0,
-                    first_line_indent_chars=0.0,
-                    keep_with_next=True,
-                )
-                p.add_text(text, font=h3_font, size_pt=h3_size, bold=True)
-            p.outline_level = level - 1
-            apply_heading_options(p, block)
-            doc.add_paragraph(p)
-        elif b_type == "paragraph":
-            text = block.get("text", "")
-            runs_data = block.get("runs")
-            p = RtfParagraph(
-                align=block.get("align", "left" if theme == "official" else "justify"),
-                space_before_pt=block.get("space_before_pt", 0.0),
-                space_after_pt=block.get("space_after_pt", 0.0 if theme == "official" else 4.0),
-                first_line_indent_chars=block.get("indent_chars", body_indent),
-                line_spacing_exact_pt=block.get("line_spacing_exact_pt", None if "line_spacing_mult" in block else line_spacing_exact),
-                line_spacing_mult=block.get("line_spacing_mult", line_spacing_mult),
-                widow_control=block.get("widow_control", None if theme == "official" else True),
-                keep_with_next=block.get("keep_with_next", False),
-                keep_together=block.get("keep_together", False),
-                page_break_before=block.get("page_break_before", False),
-                left_indent_pt=block.get("left_indent_pt", 0),
-                right_indent_pt=block.get("right_indent_pt", 0),
-                first_line_indent_pt=block.get("first_line_indent_pt"),
-                tabs_pt=block.get("tabs_pt", []),
-                character_indent=theme == "official",
-            )
-            if runs_data and isinstance(runs_data, list):
-                for run_index, r in enumerate(runs_data):
-                    p.add_text(
-                        r.get("text", ""),
-                        font=resolve_run_font(r.get("font"), f"blocks[{block_index}].runs[{run_index}].font"),
-                        size_pt=r.get("size_pt", body_size),
-                        bold=bool(r.get("bold", False)),
-                        italic=bool(r.get("italic", False)),
-                        underline=bool(r.get("underline", False)),
-                        color_idx=int(r.get("color_idx", 0)),
-                        latin_font=latin_font if not r.get("font") else None,
-                    )
-            else:
-                p.add_text(text, font=body_font, size_pt=body_size, latin_font=latin_font)
-            doc.add_paragraph(p)
-        elif b_type == "list":
-            items = block.get("items", [])
-            ordered = bool(block.get("ordered", False))
-            for idx, item_text in enumerate(items, start=block.get("start", 1)):
-                p = RtfParagraph(
-                    align="left",
-                    space_before_pt=0.0 if theme == "official" else 1.0,
-                    space_after_pt=0.0 if theme == "official" else 2.0,
-                    first_line_indent_chars=0.0,
-                    left_indent_pt=36.0 if theme == "official" else 18.0,
-                    first_line_indent_pt=-18.0 if theme == "official" else None,
-                    tabs_pt=[36.0] if theme == "official" else [],
-                    line_spacing_mult=1.15 if theme == "official" else 1.2,
-                    widow_control=None if theme == "official" else True,
-                )
-                prefix = f"{idx}. " if ordered else "• "
-                p.add_text(prefix, font=body_font, size_pt=body_size, bold=ordered and theme != "official", latin_font=latin_font)
-                p.add_text(str(item_text), font=body_font, size_pt=body_size, latin_font=latin_font)
-                doc.add_paragraph(p)
-        elif b_type == "table":
-            rows_data = block.get("rows", [])
-            has_header = bool(block.get("header", True))
-            col_widths = block.get("col_widths")
-            table = RtfTable()
-            num_cols = max(len(r) for r in rows_data) if rows_data else 1
-            available_width = doc.page_width_twips - doc.margin_left_twips - doc.margin_right_twips
-            default_cell_w = available_width // num_cols
-            if default_cell_w < 1:
-                raise ValueError("Too many table columns for the printable width")
-            if col_widths and (len(col_widths) != num_cols or any(type(w) not in (int, float) or not math.isfinite(w) or w < 0.05 for w in col_widths)
-                               or sum(int(w * 20) for w in col_widths) > available_width):
-                raise ValueError("Column widths must fit the page and match the table")
-
-            col_alignments = block.get("col_alignments", ["left"] * num_cols)
-            if (not isinstance(col_alignments, list) or len(col_alignments) != num_cols
-                    or any(a not in ("left", "center", "right", "justify") for a in col_alignments)):
-                raise ValueError("col_alignments must match columns and use supported paragraph alignments")
-            border_mode = block.get("borders", "all")
-            if type(border_mode) is bool:
-                border_mode = "all" if border_mode else "none"
-            if border_mode not in ("all", "none", "outer"):
-                raise ValueError("borders must be all, none or outer")
-            border_width = block.get("border_width_pt", 0.5)
-            if type(border_width) not in (int, float) or not math.isfinite(border_width) or not 0.05 <= border_width <= 12:
-                raise ValueError("border_width_pt must be finite and between 0.05 and 12")
-            merge_cells = normalized_merges(rows_data, block.get("merges", []), has_header and block.get("repeat_header", True))
-            for r_idx, row_values in enumerate(rows_data):
-                is_hdr = has_header and (r_idx == 0)
-                row = RtfTableRow(is_header=is_hdr and block.get("repeat_header", True), keep_with_next=is_hdr,
-                                  keep_together=block.get("row_keep_together", True if theme == "official" else is_hdr))
-                for c_idx, val in enumerate(row_values):
-                    c_width = int(col_widths[c_idx] * 20) if col_widths and c_idx < len(col_widths) else default_cell_w
-                    edges = True if border_mode == "all" else []
-                    if border_mode == "outer":
-                        edges = (["top"] if r_idx == 0 else []) + (["bottom"] if r_idx == len(rows_data) - 1 else [])
-                        edges += (["left"] if c_idx == 0 else []) + (["right"] if c_idx == num_cols - 1 else [])
-                    merge = merge_cells.get((r_idx, c_idx))
-                    cell = RtfTableCell(
-                        width_twips=c_width,
-                        borders=edges,
-                        border_width_pt=border_width,
-                        hmerge=merge[0] if merge else None,
-                        vmerge=merge[1] if merge else None,
-                        bg_color_idx=6 if is_hdr and theme != "official" else 0,
-                        valign="center",
-                    )
-                    if theme == "official":
-                        paragraph = RtfParagraph(align="center" if is_hdr else col_alignments[c_idx], first_line_indent_chars=0,
-                                                 line_spacing_mult=1.15, widow_control=None)
-                        paragraph.add_text(str(val), font=FONT_FANGSONG, size_pt=16, bold=is_hdr, latin_font=latin_font)
-                        cell.paragraphs.append(paragraph)
-                    else:
-                        cell.add_text(str(val), font=FONT_SIMHEI if is_hdr else FONT_SIMSUN, size_pt=10.5,
-                                      align="center" if is_hdr else col_alignments[c_idx], bold=is_hdr)
-                    row.add_cell(cell)
-                table.add_row(row)
-            doc.add_table(table)
-        elif b_type == "callout":
-            text = block.get("text", "")
-            p = RtfParagraph(
-                align="left",
-                space_before_pt=4.0,
-                space_after_pt=4.0,
-                first_line_indent_chars=0.0,
-                left_indent_pt=14.0,
-                right_indent_pt=14.0,
-                line_spacing_mult=1.2,
-            )
-            p.add_text(text, font=FONT_KAITI, size_pt=11.0, italic=True)
-            doc.add_paragraph(p)
-        elif b_type == "page_break":
-            doc.add_page_break()
-
-    return doc
+    from wps_rtf_doc_builder import build_document_from_spec as _build
+    return _build(spec)

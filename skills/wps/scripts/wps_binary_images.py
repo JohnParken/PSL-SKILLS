@@ -2,7 +2,9 @@
 
 from base64 import b64encode
 from bisect import bisect_left
+from dataclasses import dataclass
 from hashlib import sha256
+from typing import Any, Optional
 
 from wps_access import ParseError, require
 from wps_binary_officeart import inline_metro_blob, picture_store_entries
@@ -237,38 +239,63 @@ def _mark_recovered_placeholders(result, pairs):
                 issue['message'] = 'U+0001 positions remain placeholders; PNG availability is recorded per location.'
 
 
-def add_binary_images(result, *, region, word, data, table, pieces, positions, fib_end, cb_mac,
-                      header_mapping, table_spans, data_spans, links, piece_prms, include_bytes, charts_only=False):
+@dataclass(frozen=True)
+class BinaryImageOptions:
+    """Bundled stream/layout inputs for extracting stored MS-DOC PNG metadata."""
+
+    region: Any
+    word: Any
+    data: Any
+    table: Any
+    pieces: Any
+    positions: Any
+    fib_end: int
+    cb_mac: int
+    header_mapping: Any
+    table_spans: Any
+    data_spans: Any
+    links: Any
+    piece_prms: Any
+    include_bytes: bool
+    charts_only: bool = False
+
+
+def add_binary_images(result, options: Optional[BinaryImageOptions] = None, **legacy_kwargs):
     """Publish PNG metadata and return independently framed inline chart links."""
+    opts = options if options is not None else BinaryImageOptions(**legacy_kwargs)
     markers = _picture_markers(result)
-    if not (links or markers):
+    if not (opts.links or markers):
         return []
-    require(len(links) + len(markers) <= MAX_IMAGE_REFERENCES, word.location(),
+    require(len(opts.links) + len(markers) <= MAX_IMAGE_REFERENCES, opts.word.location(),
             'Binary image reference budget exceeded', 'resource_limit')
     issues = []
-    word_spans = _word_metadata_spans(result, word, pieces, fib_end, cb_mac, header_mapping)
-    evidence = _checked_image(lambda: _picture_character_evidence(word, table, pieces, positions, fib_end, table_spans,
-                              word_spans, piece_prms, markers), word.location(), issues)
+    word_spans = _word_metadata_spans(result, opts.word, opts.pieces, opts.fib_end, opts.cb_mac, opts.header_mapping)
+    evidence = _checked_image(lambda: _picture_character_evidence(opts.word, opts.table, opts.pieces, opts.positions,
+                              opts.fib_end, opts.table_spans, word_spans, opts.piece_prms, markers),
+                              opts.word.location(), issues)
     floating_available = evidence is not None
     evidence = evidence or {}
     offsets = evidence.get('stored_picture_offsets', {})
     word_spans.extend(evidence.get('fkp_ranges', ()))
-    reserve = _image_scan_budget(word)
-    pairs = _floating_images(region, word, word_spans, links, issues, reserve) if floating_available and not charts_only else []
-    inline_images, charts, picture_sources = _inline_objects(data, data_spans, markers, offsets, issues, reserve, charts_only=charts_only)
+    reserve = _image_scan_budget(opts.word)
+    pairs = (_floating_images(opts.region, opts.word, word_spans, opts.links, issues, reserve)
+             if floating_available and not opts.charts_only else [])
+    inline_images, charts, picture_sources = _inline_objects(
+        opts.data, opts.data_spans, markers, offsets, issues, reserve, charts_only=opts.charts_only)
     pairs.extend(inline_images)
     pairs, charts = _exclude_overlapping_records(pairs, charts, picture_sources, issues)
-    if charts_only:
+    if opts.charts_only:
         result["issues"].extend(issues)
         return charts
-    images, bytes_emitted, omitted = _image_records(pairs, include_bytes)
+    images, bytes_emitted, omitted = _image_records(pairs, opts.include_bytes)
     _mark_recovered_placeholders(result, pairs)
     result['binary_images'] = {
-        'scope': 'stored_png_only', 'status': 'partial' if issues or len(pairs) != len(links) + len(markers) or omitted else 'extracted',
+        'scope': 'stored_png_only',
+        'status': 'partial' if issues or len(pairs) != len(opts.links) + len(markers) or omitted else 'extracted',
         'image_count': len(images), 'reference_count': len(pairs),
-        'inline_marker_count': len(markers), 'floating_reference_count': len(links),
-        'unresolved_reference_count': len(links) + len(markers) - len(pairs),
-        'bytes_requested': include_bytes, 'bytes_emitted': bytes_emitted, 'images_omitted_by_byte_budget': omitted,
+        'inline_marker_count': len(markers), 'floating_reference_count': len(opts.links),
+        'unresolved_reference_count': len(opts.links) + len(markers) - len(pairs),
+        'bytes_requested': opts.include_bytes, 'bytes_emitted': bytes_emitted, 'images_omitted_by_byte_budget': omitted,
         'images': images,
     }
     if omitted:

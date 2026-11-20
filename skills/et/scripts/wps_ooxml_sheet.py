@@ -17,9 +17,9 @@ from wps_ooxml import (
 )
 from wps_ooxml_text import TextReader
 from wps_ooxml_worksheet import (
-    MAIN_NAMESPACES, MAX_SST, STRICT, SheetContext, coordinate, integer,
-    is_main, load_part_xml, need, note_foreign_attributes, read_worksheet,
-    relationship_id,
+    MAIN_NAMESPACES, MAX_SST, STRICT, PackageEnv, SheetContext, WorkbookStyles,
+    coordinate, integer, is_main, load_part_xml, need, note_foreign_attributes,
+    read_worksheet, relationship_id,
 )
 
 # Re-exported for existing callers (comments reader, VML notes and tests).
@@ -336,16 +336,18 @@ def read_bytes(data, *, _cell_store_factory=None, read_charts=False):
                 if content_type is not None and content_type != WORKSHEET_TYPE:
                     report.add('worksheet_content_type_mismatch', sheet=name,
                                part=sheet_part, content_type=str(content_type)[:120])
-                context = SheetContext(
+                package_env = PackageEnv(
                     package=package, budget=budget, report=report, types=types,
-                    sheet_part=sheet_part, sheet_name=name, namespace=namespace,
-                    conformance=conformance, strings=strings, styles=styles,
-                    string_encoding=shared_string_encoding,
-                    formats=formats, number_formats=number_formats,
-                    date_system=date_system, text_reader=text_reader,
-                    used_parts=used_parts, used_comment_parts=used_comment_parts,
-                    main_part=part,
+                    text_reader=text_reader, used_parts=used_parts,
+                    used_comment_parts=used_comment_parts, main_part=part,
                 )
+                workbook_styles = WorkbookStyles(
+                    namespace=namespace, conformance=conformance, strings=strings,
+                    string_encoding=shared_string_encoding, styles=styles,
+                    formats=formats, number_formats=number_formats,
+                    date_system=date_system,
+                )
+                context = SheetContext(package_env, workbook_styles, sheet_part, name)
                 context.chart_reader = chart_reader
                 if _cell_store_factory is not None:
                     context.cells = _cell_store_factory(name)

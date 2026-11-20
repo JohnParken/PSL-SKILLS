@@ -1,6 +1,6 @@
 ---
 name: et
-version: "20261119.0634.2207"
+version: "20261120.2147.0000"
 description: 读取金山 WPS 表格（.et/.ett）的文字、保存值、公式缓存及可提取图表，适合查看表头、筛选排序、去重及指定范围统计。保留文本编号并报告读取缺口与数据质量问题；仅支持部分格式，不重算公式、不修改原表；原生 XLSX/XLSM 使用 xlsx。
 ---
 
@@ -64,7 +64,7 @@ execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-roo
 | 解释 partial 原因、判断覆盖 | `<skill-root>/references/reading-assessment.md` |
 | 特殊格式、CFB/BIFF 恢复、编码、图表与元数据 | `<skill-root>/references/advanced-spreadsheet-routing.md` |
 | 用户明确要求交付文件，或归档/清理遇错 | `<skill-root>/references/result-delivery.md` |
-| 跨 Skill 的参数、版本与兼容契约 | `<skill-root>/scripts/docs/cli-contract.md` |
+| 跨 Skill 的参数、版本与兼容契约 | `<skill-root>/references/cli-contract.md` |
 
 预览/分析先自检对应入口，再对同一原件和指定矩形操作；不要先遍历读取页。混合任务只取必要分支的并集；多源计算后填写 XLSX 模板交由宿主定位独立 table-workflow，ET 不写回原件。
 

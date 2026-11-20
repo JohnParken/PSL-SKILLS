@@ -2,8 +2,6 @@
 
 维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
-路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
-
 所有公开入口（文件 API、读取 CLI、read/metadata 协议、BIFF/OOXML 分支）统一使用内容优先的容错读取，不再提供 strict/legacy 策略。旧 `--compatibility`、`--salvage-unknown-metadata`、`--chart-policy` 仅为兼容而接受：不改变行为，读取结果附加一次 `compatibility_option_ignored`、`salvage_option_ignored` 或图表忽略诊断。BIFF8 接受有明确编码编号的 CodePage 874、932、936、949、950、1200、1250、1251、1252 作为声明元数据保留，不重新编码或转换保存值；未知 CodePage、缺失 Date1904 或 WsBool 降级为 issue 并继续读取原始保存值。详细边界见非单元格拒绝分类（`<skill-root>/references/et-noncell-compatibility.md`）。
 
 公式仅使用 `Formula` 记录中已有的保存缓存，不重算；缓存新鲜度仍未验证。

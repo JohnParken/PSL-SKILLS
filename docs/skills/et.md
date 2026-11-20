@@ -1,6 +1,6 @@
 # ET：WPS 表格只读提取与统计
 
-核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261119.0634.2207`（默认有界内容页，完整内容与证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
+核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261120.2147.0000`（默认有界内容页，完整内容与证据按需）。这是仓库级架构与接口说明，不替代业务执行前必须读取的 [SKILL.md](../../skills/et/SKILL.md)。
 
 普通读取、工作表概况及常规续页可只读 Skill 入口；复杂查询、原 schema 消费、最终文件交付分别按任务取对应说明，不递归预读。
 
@@ -86,7 +86,7 @@ flowchart TD
 | [wps_biff8_drawing.py](../../skills/et/scripts/wps_biff8_drawing.py)、[wps_biff8_drawing_notes.py](../../skills/et/scripts/wps_biff8_drawing_notes.py)、[wps_biff8_retain.py](../../skills/et/scripts/wps_biff8_retain.py) | 绘图/对象/图表有界 opaque 保留、已确认 Note 批注文字/作者/单元格读取及共享原始证据助手；不执行、不渲染 |
 | [wps_biff8_hyperlinks.py](../../skills/et/scripts/wps_biff8_hyperlinks.py) | HLink/HLinkTooltip 有界只读元数据（ref/display/target/location/tooltip）；目标不解析、不跟随、不联网 |
 | [wps_ooxml_sheet.py](../../skills/et/scripts/wps_ooxml_sheet.py) | OOXML 包/关系/内容类型/样式入口；未知关系忽略、外来扩展属性允许、诊断聚合 |
-| [wps_ooxml_worksheet.py](../../skills/et/scripts/wps_ooxml_worksheet.py)、[wps_ooxml.py](../../skills/et/scripts/wps_ooxml.py) | 值承载工作表与单元格容错解析，及有界 ZIP/XML 安全原语 |
+| [wps_ooxml_worksheet.py](../../skills/et/scripts/wps_ooxml_worksheet.py)、[wps_ooxml_worksheet_meta.py](../../skills/et/scripts/wps_ooxml_worksheet_meta.py)、[wps_ooxml.py](../../skills/et/scripts/wps_ooxml.py) | 值承载工作表、合并/批注/绘图元数据与单元格容错解析，及有界 ZIP/XML 安全原语 |
 | [wps_ooxml_text.py](../../skills/et/scripts/wps_ooxml_text.py)、[wps_ooxml_escape.py](../../skills/et/scripts/wps_ooxml_escape.py) | OOXML 保存文本的 `_xHHHH_` 单次解码、字面保护、编码证据与统一保留文字预算 |
 | [wps_result.py](../../skills/et/scripts/wps_result.py) | 完整 JSON 预算（默认64 MiB/上限256 MiB）、一次自动精简、`--output` 清单写入 |
 | [wps_diagnostics.py](../../skills/et/scripts/wps_diagnostics.py)、[wps_read_view.py](../../skills/et/scripts/wps_read_view.py) | 提取评估、遗漏诊断、绑定来源的有界输出 |
@@ -170,7 +170,7 @@ BIFF8 数字格式在父样式引用有效且保存 ID 一致时会返回继承�
 
 ### 跨 Skill 接口
 
-[CLI 契约](../../skills/et/scripts/docs/cli-contract.md) 定义 `psl_capabilities_v1`、`interface_version=1`、`operations=[read,metadata]`，接口版本与 Skill 时间戳版本分开管理。
+[CLI 契约](../../skills/et/references/cli-contract.md) 定义 `psl_capabilities_v1`、`interface_version=1`、`operations=[read,metadata]`，接口版本与 Skill 时间戳版本分开管理。
 
 - `read` 请求含 `raw: bytes`、`source: str` 及可选 `compatibility`；`compatibility` 仅为兼容接受、不改变行为并附 `compatibility_option_ignored`。`source` 只是标签，不会触发文件扫描；raw 传输上限 64 MiB、读取器输入预算 32 MiB。
 - 响应 `result.extraction` 是原生产者编码的完整 UTF-8 JSON 字节，另有 `exit_code`；read 不自动精简，按128 MiB帧扣除封装并计算 Base64 开销后的预算（略低于96 MiB）编码。超限返回结构化 resource_limit、退出1；metadata 与错误诊断也核验最终帧，诊断不得不省略时明确标记 diagnostics_omitted。不能只检查协议层 ok。
@@ -221,7 +221,7 @@ CFB 文件头 FAT 数量为 0 时，可从 DIFAT 明确列出的 FAT 扇区推�
 - [任务入口与范围](../../skills/et/SKILL.md)
 - [ET/ETT 格式说明](../../skills/et/references/et-ett-readonly.md)
 - [表格分析及统计口径](../../skills/et/references/table-analysis.md)
-- [公开能力与编码契约](../../skills/et/scripts/docs/cli-contract.md)
+- [公开能力与编码契约](../../skills/et/references/cli-contract.md)
 - [结果预算编码](../../skills/et/scripts/wps_result.py)
 - [字节预算与分页定点回归](../../skills/et/scripts/test/test_et_output_budget.py)、[元数据回归](../../skills/et/scripts/test/test_metadata_api.py)
 - [源码测试目录](../../skills/et/scripts/test/)（不随业务运行包分发）

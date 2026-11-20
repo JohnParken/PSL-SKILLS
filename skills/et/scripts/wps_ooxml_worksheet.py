@@ -5,21 +5,31 @@ inline/shared-string text, column/merge/hyperlink/view metadata and best-effort
 comments. Every malformed optional or value-bearing item is recorded as an
 aggregated issue and skipped where necessary; only XML/ZIP safety faults abort.
 """
-from bisect import bisect_right
+from dataclasses import dataclass
 from decimal import Decimal
 import re
 
 from wps_ooxml import (
     TRANSITIONAL_REL, STRICT_REL, fromstring, is_security_error, read_part,
-    relationships, rels_path, split_tag,
+    split_tag,
 )
 from wps_ooxml_stream import prepare_worksheet
 from wps_ooxml_escape import decode_ooxml_text
 from wps_numeric import interpret_number
 from wps_ooxml_text import MAX_CELL_TEXT, TextReader, is_main
+from wps_ooxml_worksheet_meta import (
+    apply_row_column_styles as _apply_row_column_styles,
+    column_style_for,
+    read_columns as _read_columns,
+    read_filters as _read_filters,
+    read_hyperlinks as _read_hyperlinks,
+    read_merges as _read_merges,
+    read_sheet_relations,
+    read_sheet_views as _read_sheet_views,
+    report_unknown_worksheet_elements as _report_unknown_worksheet_elements,
+)
 from wps_iso_date import parse_iso_date
 from wps_sheet_comments import read_comments
-from wps_sheet_views import ooxml_sheet_views
 
 TRANS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 STRICT = 'http://purl.oclc.org/ooxml/spreadsheetml/main'
@@ -133,31 +143,57 @@ def load_part_xml(package, name, budget, report, code, **detail):
         return None
 
 
+@dataclass(frozen=True)
+class PackageEnv:
+    """Package-level XML access, budget, and shared diagnostic tracking."""
+
+    package: object
+    budget: object
+    report: object
+    types: object
+    text_reader: object
+    used_parts: set
+    used_comment_parts: set
+    main_part: str
+
+
+@dataclass(frozen=True)
+class WorkbookStyles:
+    """Workbook-wide strings, style formats, number formats, and date system."""
+
+    namespace: str
+    conformance: str
+    strings: object
+    styles: object
+    formats: object
+    number_formats: object
+    date_system: object
+    string_encoding: tuple = ()
+
+
 class SheetContext:
     """Immutable workbook facts plus mutable shared reader state for one worksheet."""
 
-    def __init__(self, *, package, budget, report, types, sheet_part, sheet_name, namespace,
-                 conformance, strings, styles, formats, number_formats, date_system,
-                 text_reader, used_parts, used_comment_parts, main_part,
-                 string_encoding=()):
-        self.package = package
-        self.budget = budget
-        self.report = report
-        self.types = types
+    def __init__(self, package_env: PackageEnv, workbook_styles: WorkbookStyles,
+                 sheet_part: str, sheet_name: str):
+        self.package = package_env.package
+        self.budget = package_env.budget
+        self.report = package_env.report
+        self.types = package_env.types
+        self.text_reader = package_env.text_reader
+        self.used_parts = package_env.used_parts
+        self.used_comment_parts = package_env.used_comment_parts
+        self.main_part = package_env.main_part
+        self.namespace = workbook_styles.namespace
+        self.conformance = workbook_styles.conformance
+        self.strings = workbook_styles.strings
+        self.string_encoding = workbook_styles.string_encoding
+        self.styles = workbook_styles.styles
+        self.formats = workbook_styles.formats
+        self.number_formats = workbook_styles.number_formats
+        self.date_system = workbook_styles.date_system
         self.sheet_part = sheet_part
         self.sheet_name = sheet_name
-        self.namespace = namespace
-        self.conformance = conformance
-        self.strings = strings
-        self.string_encoding = string_encoding
-        self.styles = styles
-        self.formats = formats
-        self.number_formats = number_formats
-        self.date_system = date_system
-        self.text_reader = text_reader
-        self.used_parts = used_parts
-        self.used_comment_parts = used_comment_parts
-        self.main_part = main_part
         self.rows = []
         self.columns = []
         self.merges = []
@@ -518,295 +554,32 @@ def parse_row(context, row_node, seen_rows):
         context.cells[ref] = item
 
 
-def read_sheet_relations(context, ws_root):
-    """Load worksheet relationships; only comments/VML are read, never followed."""
-    report = context.report
-    relations = relationships(context.package, context.sheet_part, context.budget,
-                              report=report, scope='worksheet', sheet=context.sheet_name)
-    context.used_parts.add(rels_path(context.sheet_part))
-    for relationship, relation in relations.items():
-        kind = relation.get('kind')
-        if relation.get('external') or kind is None:
-            continue
-        if kind in ('comments', 'vmlDrawing'):
-            if relation.get('path'):
-                context.used_parts.add(relation['path'])
-            continue
-        report.add('worksheet_relationship_not_followed', sheet=context.sheet_name,
-                   relationship_kind=str(kind)[:60], relationship_id=relationship)
-    return relations, ws_root
-
-
 def read_sheet_views(context, ws_root):
-    report = context.report
-    sheet = context.sheet_name
-    worksheet_tag = context.tag
-    containers = main_children(ws_root, 'sheetViews')
-    if len(containers) > 1:
-        report.add('duplicate_sheet_views_ignored', sheet=sheet)
-    if not containers:
-        return []
-    views, other_settings = ooxml_sheet_views(containers[0], worksheet_tag, coordinate)
-    if not views or any(view.get('issues') for view in views):
-        report.add('saved_sheet_view_partially_read', sheet=sheet,
-                   element=worksheet_tag('sheetViews'))
-    if other_settings:
-        report.add('worksheet_metadata_not_interpreted', sheet=sheet,
-                   element=worksheet_tag('sheetViews'))
-    return views
+    return _read_sheet_views(context, ws_root, main_children, coordinate)
 
 
 def read_columns(context, ws_root):
-    report = context.report
-    sheet = context.sheet_name
-    columns = context.columns
-    for container in main_children(ws_root, 'cols'):
-        if len(columns) >= MAX_COLUMN_RANGES:
-            report.add('column_metadata_limit_reached', sheet=sheet, kept=MAX_COLUMN_RANGES)
-            break
-        for col in container:
-            if len(columns) >= MAX_COLUMN_RANGES:
-                report.add('column_metadata_limit_reached', sheet=sheet,
-                           kept=MAX_COLUMN_RANGES)
-                break
-            if not is_main(col, 'col'):
-                report.add('worksheet_metadata_not_interpreted', sheet=sheet,
-                           element=str(col.tag)[:120])
-                continue
-            try:
-                first = integer(col.get('min'), 16384)
-                last = integer(col.get('max'), 16384)
-            except ValueError:
-                report.add('column_reference_not_interpreted', sheet=sheet,
-                           raw=str(col.get('min'))[:20])
-                continue
-            if first < 1 or last < first:
-                report.add('column_range_not_interpreted', sheet=sheet,
-                           raw=str(col.get('min'))[:20])
-                continue
-            raw_hidden = col.get('hidden')
-            if raw_hidden is None:
-                hidden_saved = False
-            elif raw_hidden in ('0', '1', 'false', 'true'):
-                hidden_saved = raw_hidden in ('1', 'true')
-            else:
-                hidden_saved = False
-                report.add('saved_visibility_flag_not_interpreted', sheet=sheet,
-                           column=first, raw=raw_hidden[:20])
-            columns.append({'first_zero_based': first - 1, 'last_zero_based': last - 1,
-                            'style_index_raw': col.get('style'),
-                            'hidden_saved': hidden_saved, 'hidden_cause': 'unknown',
-                            **saved_dimension(col.get('width'), 'width_chars')})
-    previous_end = -1
-    for entry in sorted(columns, key=lambda item: item['first_zero_based']):
-        if entry['first_zero_based'] <= previous_end:
-            report.add('overlapping_column_ranges_not_applied', sheet=sheet,
-                       first=entry['first_zero_based'] + 1)
-        previous_end = max(previous_end, entry['last_zero_based'])
+    _read_columns(context, ws_root, main_children, integer, saved_dimension, MAX_COLUMN_RANGES)
 
 
 def read_merges(context, ws_root):
-    report = context.report
-    sheet = context.sheet_name
-    merges = context.merges
-    checked = 0
-    for container in main_children(ws_root, 'mergeCells'):
-        declared = container.get('count')
-        if declared is not None and re.fullmatch(r'[0-9]{1,10}', declared):
-            if int(declared) != len(container):
-                report.add('merge_count_mismatch', sheet=sheet)
-        for merge in container:
-            if not is_main(merge, 'mergeCell'):
-                report.add('worksheet_metadata_not_interpreted', sheet=sheet,
-                           element=str(merge.tag)[:120])
-                continue
-            if len(merges) >= MAX_MERGES:
-                report.add('merge_count_limit_reached', sheet=sheet,
-                           kept=MAX_MERGES, cell_value_impact='metadata_only')
-                continue
-            try:
-                bounds = cell_range(merge.get('ref', ''))
-            except ValueError:
-                report.add('merge_range_not_interpreted', sheet=sheet,
-                           raw=str(merge.get('ref'))[:40])
-                continue
-            if (bounds[0], bounds[2]) == (bounds[1], bounds[3]):
-                report.add('single_cell_merge_ignored', sheet=sheet,
-                           cell=str(merge.get('ref'))[:20])
-                continue
-            if checked < MAX_MERGE_OVERLAP_CHECKS:
-                checked += 1
-                overlaps = any(
-                    not (bounds[1] < other['bounds_zero_based'][0]
-                         or bounds[0] > other['bounds_zero_based'][1]
-                         or bounds[3] < other['bounds_zero_based'][2]
-                         or bounds[2] > other['bounds_zero_based'][3])
-                    for other in merges)
-                if overlaps:
-                    report.add('overlapping_merges_retained', sheet=sheet,
-                               cell=str(merge.get('ref'))[:20])
-            merges.append({'range': merge.get('ref'), 'bounds_zero_based': bounds})
-    if len(merges) > MAX_MERGE_OVERLAP_CHECKS:
-        report.add('merge_overlap_check_bounded', sheet=sheet,
-                   checked=MAX_MERGE_OVERLAP_CHECKS)
+    _read_merges(context, ws_root, main_children, cell_range, MAX_MERGES, MAX_MERGE_OVERLAP_CHECKS)
 
 
 def read_hyperlinks(context, ws_root, relations):
-    report = context.report
-    sheet = context.sheet_name
-    hyperlinks = context.hyperlinks
-    seen = {item['cell'] for item in hyperlinks}
-    for container in main_children(ws_root, 'hyperlinks'):
-        for link in container:
-            if not is_main(link, 'hyperlink'):
-                report.add('worksheet_metadata_not_interpreted', sheet=sheet,
-                           element=str(link.tag)[:120])
-                continue
-            if len(hyperlinks) >= MAX_HYPERLINKS:
-                report.add('hyperlink_count_limit_reached', sheet=sheet, kept=MAX_HYPERLINKS)
-                return
-            ref = link.get('ref')
-            try:
-                if ':' in (ref or ''):
-                    cell_range(ref)
-                else:
-                    coordinate(ref)
-            except ValueError:
-                report.add('hyperlink_reference_not_interpreted', sheet=sheet,
-                           raw=str(ref)[:40])
-                continue
-            if ref in seen:
-                report.add('duplicate_hyperlink_ignored', sheet=sheet, cell=ref)
-                continue
-            seen.add(ref)
-            location = link.get('location')
-            raw_relationship = relationship_id(link)
-            relation = relations.get(raw_relationship) if raw_relationship else None
-            hyperlink = {'cell': ref, 'location_raw': location,
-                         'display_raw': link.get('display'),
-                         'tooltip_raw': link.get('tooltip'),
-                         'relationship_id_raw': raw_relationship,
-                         'target_resolved': False, 'followed': False,
-                         'source': {'part': context.sheet_part, 'cell': ref}}
-            if relation is not None:
-                hyperlink['relationship_external'] = bool(relation.get('external'))
-                if relation.get('external') and relation.get('target_raw'):
-                    hyperlink['target_raw'] = relation['target_raw']
-            hyperlinks.append(hyperlink)
-            if location is not None:
-                report.add('internal_hyperlink_target_not_resolved', sheet=sheet, cell=ref)
-            else:
-                report.add('hyperlink_target_not_followed', sheet=sheet, cell=ref)
+    _read_hyperlinks(context, ws_root, relations, main_children, cell_range, coordinate, relationship_id, MAX_HYPERLINKS)
 
 
 def read_filters(context, ws_root):
-    report = context.report
-    sheet = context.sheet_name
-    for filter_node in main_children(ws_root, 'autoFilter'):
-        if context.filters:
-            report.add('duplicate_filter_definition_ignored', sheet=sheet)
-            continue
-        try:
-            cell_range(filter_node.get('ref', ''))
-        except ValueError:
-            report.add('filter_range_not_interpreted', sheet=sheet,
-                       raw=str(filter_node.get('ref'))[:40])
-            continue
-        context.filters.append({'range': filter_node.get('ref'),
-                                'conditions_decoded': False})
-        report.add('filter_conditions_not_evaluated', sheet=sheet)
-
-
-def column_style_for(columns, column_index):
-    """Find the saved column-format metadata covering one zero-based column."""
-    starts = [entry['first_zero_based'] for entry in columns]
-    position = bisect_right(starts, column_index) - 1
-    while position >= 0:
-        entry = columns[position]
-        if entry['first_zero_based'] <= column_index <= entry['last_zero_based']:
-            return entry
-        position -= 1
-    return None
+    _read_filters(context, ws_root, main_children, cell_range)
 
 
 def apply_row_column_styles(context):
-    """Apply saved row/column formats to numeric cells only when unambiguous."""
-    report = context.report
-    sheet = context.sheet_name
-    styles = context.styles
-    styled_rows = {entry['row_zero_based']: entry for entry in context.rows
-                   if entry['style_index_raw'] is not None}
-    styled_columns = [entry for entry in context.columns
-                      if entry['style_index_raw'] is not None]
-    for ref, item in context.cells.items():
-        if item['type'] != 'number' or item['cell_style_explicit']:
-            continue
-        row_index, column_index = coordinate(ref)
-        candidates = []
-        if row_index in styled_rows:
-            entry = styled_rows[row_index]
-            candidates.append(('row', entry['style_index_raw'],
-                               entry['custom_format_raw'] in ('1', 'true')))
-        column_entry = column_style_for(styled_columns, column_index)
-        if column_entry is not None:
-            candidates.append(('column', column_entry['style_index_raw'], True))
-        if not candidates:
-            continue
-        valid = []
-        for origin, raw_index, active in candidates:
-            if (active and re.fullmatch(r'[0-9]{1,4}', raw_index or '')
-                    and int(raw_index) < len(styles)):
-                inherited_index = int(raw_index)
-                resolution = context.number_formats.resolve(inherited_index)
-                if resolution['status'] == 'resolved':
-                    valid.append((origin, inherited_index, resolution))
-        matched = None
-        if len(valid) == len(candidates):
-            if len(valid) == 1:
-                matched = valid[0]
-            elif (len(valid) == 2
-                  and valid[0][2]['number_format_id'] == valid[1][2]['number_format_id']):
-                origin, inherited_index, resolution = valid[0]
-                resolution = dict(resolution)
-                resolution['source'] = {
-                    'equivalent_sources': [entry[2]['source'] for entry in valid]}
-                matched = ('row_and_column_equivalent', inherited_index, resolution)
-        if matched is None:
-            item['numeric_interpretation'] = {
-                'status': 'unknown',
-                'reason': 'row_or_column_style_inheritance_unresolved',
-                'source_value_unchanged': True,
-            }
-            report.add('number_style_inheritance_not_resolved', sheet=sheet, cell=ref)
-            continue
-        origin, inherited_index, resolution = matched
-        inherited_format = resolution['number_format_id']
-        interpreted = interpret_number(item['value'], inherited_format,
-                                       context.formats.get(inherited_format),
-                                       context.date_system)
-        interpreted['number_format_source'] = resolution['source']
-        interpreted['basis'] = 'stored_number_and_unambiguous_' + origin + '_cell_xf'
-        interpreted['style_source'] = {'kind': origin, 'xf_index': inherited_index,
-                                       'part': context.sheet_part}
-        item['numeric_interpretation'] = interpreted
+    _apply_row_column_styles(context, coordinate)
 
 
 def report_unknown_worksheet_elements(context, ws_root):
-    report = context.report
-    sheet = context.sheet_name
-    known = {'sheetData', 'sheetViews', 'cols', 'mergeCells', 'hyperlinks',
-             'autoFilter', 'legacyDrawing'}
-    metadata = {'dimension', 'sheetFormatPr', 'pageMargins'}
-    for child in ws_root:
-        namespace, local = split_tag(child.tag)
-        if namespace in MAIN_NAMESPACES and local in known:
-            continue
-        if namespace in MAIN_NAMESPACES and local in metadata:
-            report.add('worksheet_metadata_not_interpreted', sheet=sheet,
-                       element=str(child.tag)[:120])
-            continue
-        report.add('worksheet_metadata_not_interpreted', sheet=sheet,
-                   element=str(child.tag)[:120])
+    _report_unknown_worksheet_elements(context, ws_root, MAIN_NAMESPACES)
 
 
 def read_worksheet(context):

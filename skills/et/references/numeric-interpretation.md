@@ -2,8 +2,6 @@
 
 维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
-路径占位符说明：`<skill-root>` 是 ET Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 ET 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
-
 数字解释附在 `numeric_interpretation`。原始 Decimal、XF 和格式 ID、自定义格式、日期系统及公式缓存状态均随单元格保留。
 
 BIFF8 单元格 XF 的 `fAtrNum` 置位时使用其直接格式。未置位时，核对 `ixfParent` 指向的独立 `StyleXF`，并要求父子保存的格式 ID 一致。继承结果以 `number_format_source` 记录父 XF 索引和格式 ID。父引用无效返回 `style_inheritance_unresolved`，格式 ID 冲突返回 `cell_parent_number_format_conflict`。OOXML 的两层格式来源见 `<skill-root>/references/style-inheritance.md`。

@@ -2,8 +2,6 @@
 
 维护资源说明：文中 `docs/maintenance/wps/` 与 `skills/wps/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
-路径占位符说明：`<skill-root>` 是 WPS Skill 根目录的文档占位符，不是实际目录或 Shell 变量。取得宿主本次实际读取 WPS 主入口 `SKILL.md` 的真实 `file_path`，若为相对路径，先按该次读取时宿主已确认的基准目录解析为绝对路径，再去掉末尾文件名；所得目录才是 `<skill-root>`，不是当前参考文档所在目录。读取资源或执行命令前，将路径中的 `<skill-root>` 整体替换为该真实目录，保留其后的资源路径；命令中将替换后的完整路径作为一个参数正确引用，嵌入 execute 字符串时按其语法转义。不要将占位符原样交给文件工具或执行器，不按当前工作目录、其他会话路径、环境变量或宿主掩码猜测。无法取得主入口的真实读取路径时，停止依赖操作并报告无法定位。
-
 显式 `--hidden-text annotate` 在支持的二进制 MS-DOC 中读取 `PlcBteChpx` 与 `ChpxFkp`，保留全局 CP 范围、物理文本 FC、FKP/属性组偏移和可识别的原始修改操作。CP证据只覆盖已请求的主正文或主正文加附加故事，不包含末尾额外终止CP。默认 `include` 不读取这些额外结构，保持既有行为。`exclude`、accepted/original 修订过滤仍不支持；annotate 不过滤或复制文字。
 
 目前识别 CHPX 内的 `sprmCFVanish`、`sprmCFWebHidden`、字段隐藏及插入/删除修订操作，保留 toggle 原数值和顺序，不把操作数当成最终属性。`0x80/0x81` 与样式有关，Web 隐藏也只适用于对应视图。无 CHPX 或未识别修饰符均不等于文字可见。结果始终为 partial，`effective_visibility/effective_revisions=unknown`。
