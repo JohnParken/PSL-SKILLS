@@ -15,3 +15,6 @@ __pycache__/
 
 # Local uv regression environment, never part of a runtime skill.
 /.venv/
+
+# Local experimental plugin artifacts, never part of skill source packages.
+/plugins/
