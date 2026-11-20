@@ -4,9 +4,9 @@
 
 ## 目标运行环境与跨平台开发
 
-- Skill 的主要实际运行环境是云端 Linux 容器；开发环境可能为 macOS、Windows 或 Linux。设计与运行验收优先面向云端 Linux 容器，不将本地开发环境等同于目标运行环境。
-- 开发与维护工具避免无必要的平台假设，兼顾上述开发平台；路径、文件操作、权限、锁和命令入口按实际能力处理。确有平台要求时明确声明并检测，缺失时清楚报告，不为兼容降低安全边界或引入额外依赖。
-- 优先在目标 Linux 容器中验证实际运行流程，并记录真实平台、运行条件及通过、失败、跳过和未验证范围。其他平台的结果不能替代目标环境验收；未执行的平台不得声称已测试或保证兼容。
+- Skill 面向实际部署的本地 Python 环境运行（可能为 macOS、Windows 或 Linux），不需要依赖云端或本地 Linux 容器。设计与运行验收以当前实际目标运行环境为准。
+- 开发与维护工具避免无必要的平台假设，兼顾上述平台；路径、文件操作、权限、锁和命令入口按实际能力处理。确有平台要求时明确声明并检测，缺失时清楚报告，不为兼容降低安全边界或引入额外依赖。
+- 在当前目标环境中验证实际运行流程，并记录真实平台、运行条件及通过、失败、跳过和未验证范围。未执行的平台不得声称已测试或保证兼容。
 
 ## 项目源码与分发边界
 
@@ -65,7 +65,7 @@
 - 新建或维护有文件交付物的 Skill 时，按 [公共生命周期技能](skills/artifact-lifecycle/SKILL.md) 设计收尾；业务运行需使用归档/清理能力时先读取其真实入口并定位脚本。纯对话和仅读stdout不建立无用清单；技能开发发布ZIP不属于运行时交付物清理。
 - 临时文件须创建前显式登记本轮尚不存在的路径；用户原件、主文件、最终文件和其他任务文件受保护，不按扩展名扫描、不认领未知历史文件。业务技能负责生成及验收，成功后处理最终文件归档再封存清理；生成或编辑失败后，待生产进程退出立即按原清单清理本次创建、归属明确且可安全删除的临时文件，不因可能重试而保留。未知、仍占用、身份变化或状态不明的文件保护并报告清理未完成；恢复仅用原清单核对状态，重新生成须从原始输入建立新任务。
 - 归档复制失败保留主文件，不重跑生成。归档成功即提示“🎉 文件归档成功，请到云空间查看。 ☁️✨”，无需等待宿主云空间映射确认，不宣称已验证上传完成或展示时效。核对非空完整清单，汇总 success 且全部项 copied/already_archived 才是全部成功；保留 archive_message，按实际结果展示 archive_user_notice。失败、部分成功、跳过、待交接和未知分别如实报告，不套用全部成功；业务与清理状态独立，主业务失败不称生成成功。隐藏归档路径、目录、ID及原始日志，保留真实主文件链接，不虚构下载。
-- 公共技能只依赖Python标准库，独立包自包含；运行时按真实平台能力自检，缺少安全文件操作能力时停止，不降级删除。目标Linux容器与其他平台验证分别记录，不将本机通过视为跨平台保证。
+- 公共技能只依赖Python标准库，独立包自包含；运行时按真实平台能力自检，缺少安全文件操作能力时停止，不降级删除。当前平台与其他平台验证分别记录，不将本机通过视为跨平台保证。
 - 已接入专用自动收尾的流程（如DOCX runner）继续使用原流程，勿重复登记或清理。本规则不自动迁移其他Skill或授权删除既存残留；公共包不可用时报告缺失，不猜相邻安装位置。维护DOCX来源与公共副本时运行 `tests/test_artifact_lifecycle_parity.py` 一致性回归，审阅差异并同步适用实现、来源记录、版本及独立包，不允许静默分叉。
 
 ## Skill 标头必填字段
@@ -90,7 +90,7 @@
 
 - **DeepAgents 生产命令（所有执行型业务 Skill）。** 由本次真实入口定位并替换 `<skill-root>`，以宿主 `execute(command=完整非空命令字符串)` 执行。解释器和脚本路径分别完整引用：标准库使用 `"<skill-root>/scripts/.venv/bin/python" -I -S -B "<skill-root>/scripts/入口.py"`；依赖第三方组件时保留 `-I -B`，不用屏蔽 site-packages 的 `-S`。命令内有 stdin 时一次提供完整内容。部署方预置该解释器，缺失、不可执行或依赖不符时停止，不激活、不回退 PATH、不自动创建或安装。该部署位置不随源码或运行 ZIP 打包；受控子进程可用 `sys.executable` 继承解释器。无脚本指导 Skill 不新增命令。
 - **本地实际测试与仓库维护。** 从默认 `python3` 启动，保留测试要求的隔离选项；先报告实际版本及所需依赖。条件不足则如实报告跳过或受阻，不换解释器以制造通过结果。测试进程可用 `sys.executable` 继承默认解释器。部署路径专项验收与普通本地回归分开记录；历史命令和结果保留原环境。本地通过不等于部署验收通过。
-- **可选的 uv 项目回归（仓库根目录）。** 普通本地测试仍报告默认 `python3` 结果；明确使用 uv 时另记项目环境结果，不代替默认解释器或 Linux 部署验收。`pyproject.toml` 与 `uv.lock` 只用于开发；不提交 `.venv/`，不随 Skill 分发，不改系统默认解释器。默认组没有第三方依赖。下列命令在项目目录执行，选择已安装的 Python 3.12；需复现具体补丁版本时将 `3.12` 替换为该版本（本轮为 `3.12.12`）：
+- **可选的 uv 项目回归（仓库根目录）。** 普通本地测试仍报告默认 `python3` 结果；明确使用 uv 时另记项目环境结果，不代替默认解释器验收。`pyproject.toml` 与 `uv.lock` 只用于开发；不提交 `.venv/`，不随 Skill 分发，不改系统默认解释器。默认组没有第三方依赖。下列命令在项目目录执行，选择已安装的 Python 3.12；需复现具体补丁版本时将 `3.12` 替换为该版本（本轮为 `3.12.12`）：
   ```sh
   uv sync --locked --no-default-groups --no-python-downloads --python 3.12
   uv run --locked --no-default-groups --no-python-downloads --python 3.12 python -I -S -B -c "import sys, pyexpat; print(sys.version, pyexpat.EXPAT_VERSION); assert pyexpat.version_info >= (2, 6, 0)"
@@ -99,26 +99,6 @@
   uv run --locked --no-default-groups --no-python-downloads --python 3.12 python -I -S -B tools/run_skill_tests.py tests -p test_skill_loading_benchmark.py
   ```
   TL 套件按需用独立组，如 `uv run --locked --group tl-docx --python 3.12 python -I -B tools/run_skill_tests.py skills/tl-docx/scripts/test`；TL-PPTX 同理选 `tl-pptx`，专项独立安装验收仍按其要求预置环境。不要在需导入第三方包的路径加 `-S`，也不要为标准库 Skill 移除 `-S`。更新任一 TL Skill 的直接依赖时，同步根配置的对应组并运行 `uv lock`；生产依赖仍以该 Skill 的 requirements.txt 为准。
-- **OrbStack Linux 容器全量回归（macOS 宿主机下验证目标 Linux 环境）。**
-  - **隔离原则：** 不要在 Linux 容器内复用宿主机创建的 `.venv/`（包含 macOS 二进制），也不要调用通过 OrbStack `cmdlinks` 转发回宿主机执行的 Mach-O `uv`/Python（会退化为 `darwin` 平台）。应在 Linux 容器内使用原生 `git`、`python3.12` 以及位于仓库外部的 Linux 独立虚拟环境（如 `"$HOME/tl-pptx-venv"`），同时保持系统默认 `python3` 不变。
-  - **一次性环境准备（在容器内执行）：** 安装原生 `git`（供 `test_skill_loading_benchmark.py` 使用）与原生 Linux `uv` / Python `3.12.12`（供 `ofd` 生成、`table-workflow`、`test_skill_runtime_packages.py` 及 `docx` 使用）；在仓库外创建独立 venv（如 `"$HOME/tl-pptx-venv"`）并安装 `skills/tl-pptx/requirements.txt` 与 `skills/tl-docx/requirements.txt`。
-  - **标准库 Skill 测试（保留 `-I -S -B`）：** 若之前在宿主机无 `-B` 运行过 Python，先清理 `skills/` 下残留的 `__pycache__`，避免触发 `pptx` 只读安装快照检查失败：
-    ```sh
-    # 将 <suite> 替换为 docx、et、ofd、pptx、wps、xlsx、artifact-lifecycle、skill-development-standards
-    orb python3.12 -I -S -B tools/run_skill_tests.py skills/<suite>/scripts/test
-    orb python3.12 -I -S -B tools/run_skill_tests.py tests/pptx
-    ```
-  - **TL 系列与仓库集成全量测试（保留 `-I -B`，不加 `-S`）：**
-    ```sh
-    orb bash -c '"$HOME/tl-pptx-venv/bin/python" -I -B tools/run_skill_tests.py skills/tl-docx/scripts/test'
-    orb bash -c 'TL_PPTX_TEST_VENV="$HOME/tl-pptx-venv" "$HOME/tl-pptx-venv/bin/python" -I -B tools/run_skill_tests.py skills/tl-pptx/scripts/test'
-    orb bash -c 'TL_PPTX_TEST_VENV="$HOME/tl-pptx-venv" "$HOME/tl-pptx-venv/bin/python" -I -B tools/run_skill_tests.py tests'
-    ```
-  - **规范与文档检查：**
-    ```sh
-    orb bash -c 'for s in skills/*; do [ -d "$s" ] && python3.12 -I -S -B skills/skill-development-standards/scripts/check_skill.py "$s" --strict; done'
-    orb python3.12 -I -S -B tools/check_project_docs.py
-    ```
 - 使用独立部署解释器不改变非 `tl-` Skill 原有的标准库、外部软件或安装限制，也不放宽独立运行、路径、输入保护、归档清理、代码质量和测试验收要求。组件依赖与维护工具分开管理；随包公共运行时仍遵守其来源契约。
 
 ## 更新时的依赖与说明一致性
