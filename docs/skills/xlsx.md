@@ -1,6 +1,6 @@
 # xlsx：标准库表格读取、有限编辑与分析
 
-> 早期导读核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；当前 Skill 版本：`20261119.0634.2207`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 早期导读核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；当前 Skill 版本：`20261120.2147.0000`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/xlsx/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 当前路由（整合基线 `a05a1d5`）：普通 XLSX/XLSM 完整读取直接用入口；基础区域分析直接读 `references/data-analysis.md`，高级专项按 `references/task-routes.md` 选择参考。参见[本轮路由与验证记录](../maintenance/xlsx/prompt-loading-20261118.md)。
 
@@ -70,7 +70,7 @@ flowchart TD
 | [run_xlsx_task.py](../../skills/xlsx/scripts/run_xlsx_task.py) | 白名单写文件 CLI；stdin 规格、具名配置、冲突版本名、子进程结果与本轮中间文件收尾 |
 | [xlsx_delivery.py](../../skills/xlsx/scripts/xlsx_delivery.py)、[xlsx_lifecycle.py](../../skills/xlsx/scripts/xlsx_lifecycle.py) | 路径检查、追加 `delivery`；显式归档/登记/封存/清理入口 |
 
-公式引擎将纯通配匹配职责拆到同包 `formula_wildcards.py`，`formula_engine.py` 保留兼容导出；不改变公式语法、运算预算、类型或错误语义，也不扩大函数支持范围。
+公式引擎将纯通配匹配职责拆到同包 `formula_wildcards.py`，并将词法与递归下降解析拆到同包 [formula_parser.py](../../skills/xlsx/scripts/formula_parser.py)，`formula_engine.py` 保留兼容导出；不改变公式语法、运算预算、类型或错误语义，也不扩大函数支持范围。
 
 ## 任务流程
 
@@ -120,7 +120,7 @@ flowchart TD
 
 `open_metadata` 完整解析并遵守相同输入/会话预算，仅省去 cells/merges 的构造与跨进程传输；返回 `workbook_metadata_v1`、原序表名、来源诊断和不透明句柄，用完 `release`。`typed_values` 与 `address_many` 每批最多 10000 项，保留顺序及重复项，任一错误整批拒绝；旧标量操作不变。消费方先检查新增能力，不能静默逐格回退。
 
-线上使用有界 UTF-8 JSON 行，Decimal、bytes、tuple、dict 分别使用明确标签编码，禁止 pickle、动态恢复类及执行对象。帧上限 128 MiB、深度 64；最多 64 个活跃句柄、累计 `open` 输入 256 MiB、会话 200000 请求。必须同时校验协议、关联 ID、`ok` 和业务状态。`patch/calculate/publish` 出错后对应句柄失效。详见 [公开 CLI 契约](../../skills/xlsx/scripts/docs/cli-contract.md) 与 [协议编码器](../../skills/xlsx/scripts/xlsx_cli_protocol.py)。
+线上使用有界 UTF-8 JSON 行，Decimal、bytes、tuple、dict 分别使用明确标签编码，禁止 pickle、动态恢复类及执行对象。帧上限 128 MiB、深度 64；最多 64 个活跃句柄、累计 `open` 输入 256 MiB、会话 200000 请求。必须同时校验协议、关联 ID、`ok` 和业务状态。`patch/calculate/publish` 出错后对应句柄失效。详见 [公开 CLI 契约](../../skills/xlsx/references/cli-contract.md) 与 [协议编码器](../../skills/xlsx/scripts/xlsx_cli_protocol.py)。
 
 `publish` 独占写新文件并回读 ZIP 部件，不等于业务验收或归档；编排方须先 `verify`，发布后复核文件及原件指纹，再显式 `delivery`。标准业务 CLI/runner 自动收尾，不重复归档。
 
@@ -154,7 +154,7 @@ flowchart TD
 - [requirements.txt](../../skills/xlsx/requirements.txt)：主流程 Python 3.9+，无第三方依赖；完整目录包含运行时与 `assets/minimal_xlsx`。XML 解析由 [xlsx_xml.py](../../skills/xlsx/scripts/xlsx_xml.py) 拒绝 DTD/实体声明。
 - 归档/清理要求实际平台支持 `dir_fd`、`O_NOFOLLOW`、`O_DIRECTORY` 等安全原语；默认归档发布需同文件系统硬链接，缺失不降级覆盖或不安全删除。
 - `xlsx_reader.py`、`libreoffice_recalc.py` 等是旧工具，不是主流程：前者需 pandas/openpyxl，后者需外部软件。旧行插入/移动 CLI 已禁用；`formula_check.py` 仅启发式静态检查，不能证明已计算。见 [legacy 边界](../../skills/xlsx/references/validate.md#legacy-utilities)。
-- 源码测试位于 [scripts/test](../../skills/xlsx/scripts/test)，不随业务运行包分发；跨 Skill/生命周期一致性测试位于仓库 `tests/`，不属于普通任务步骤。历史 [validate.md](../../skills/xlsx/references/validate.md) 和 [跨表 CLI 验证记录](../../skills/table-workflow/scripts/docs/cli-contract.md) 记录 macOS 上的合成、部分真实公开样本及隔离安装验证，不代表本次重新运行，也不能替代云端 Linux、Windows、Excel 视觉/重算或真实宿主交付验收。
+- 源码测试位于 [scripts/test](../../skills/xlsx/scripts/test)，不随业务运行包分发；跨 Skill/生命周期一致性测试位于仓库 `tests/`，不属于普通任务步骤。历史 [validate.md](../../skills/xlsx/references/validate.md) 和 [跨表 CLI 验证记录](../../skills/table-workflow/references/cli-contract.md) 记录 macOS 上的合成、部分真实公开样本及隔离安装验证，不代表本次重新运行，也不能替代云端 Linux、Windows、Excel 视觉/重算或真实宿主交付验收。
 
 本次导读只核对入口、关键实现、引用契约与基线树，不声称任何未执行的功能测试通过。
 
@@ -163,7 +163,7 @@ flowchart TD
 - 任务路由与边界：[SKILL.md](../../skills/xlsx/SKILL.md)、[写入与结果](../../skills/xlsx/references/write-contract.md)、[结果解释](../../skills/xlsx/references/result-boundaries.md)。
 - 数据/输出范围：[数据分析](../../skills/xlsx/references/data-analysis.md)、[有界读取](../../skills/xlsx/references/bounded-reading.md)。
 - 新能力定点回归：[批量值与元数据](../../skills/xlsx/scripts/test/test_bulk_metadata_api.py)、[写索引](../../skills/xlsx/scripts/test/test_write_index.py)。
-- 对外接口：[CLI 契约](../../skills/xlsx/scripts/docs/cli-contract.md)、[CLI 实现](../../skills/xlsx/scripts/xlsx_cli.py)。
+- 对外接口：[CLI 契约](../../skills/xlsx/references/cli-contract.md)、[CLI 实现](../../skills/xlsx/scripts/xlsx_cli.py)。
 - 交付与清理：[runner](../../skills/xlsx/scripts/run_xlsx_task.py)、[生命周期契约](../../skills/xlsx/references/delivery-lifecycle.md)、[副本来源](../../skills/xlsx/references/lifecycle-upstream.json)。
 - 组合场景：[table-workflow 导读](table-workflow.md)。
 

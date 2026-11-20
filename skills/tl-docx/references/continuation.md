@@ -1,7 +1,5 @@
 # 结构化续读与稳定错误
 
-路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
-
 `has_more=true` 时提供 `continuation={action:"read",source:实际任务相对源文件名,parameters:{...}}`。`parameters` 包含有效 `max_output_bytes`、`cursor` 和全部当前视图选项；显式缓存只提供本批当前 `cache_token`，不再次传 `cache`。未列选项沿用CLI默认，末页无continuation；提示本身计入字节预算，不用它绕过partial、分片或缓存身份检查。输出不含内部缓存/归档/安装路径，不带output或delivery，不自动覆盖先前导出。
 
 把请求作为参数数据重放，禁止拼接成未转义Shell。键名下划线转为CLI连字符；true布尔键对应开关，`include_related=false` 特别映射为 `--body-only`；数组逐项重复 `--flag=value`，其他非布尔值使用 `--flag=value`（保护前导短横值）。最后加 `--` 后再传source，保护空格、引号和前导短横文件名。保留所有返回参数，不凭记忆补默认视图。逐批核对 `start` 等于前批 `end`、`total` 一致及源/选项未变化；`has_more=false` 才表示所选视图的记录收齐，仍须保留 `coverage`、`document_coverage` 和 partial 缺口。游标不是 offset，禁止自行解码修改或跳过失败批次。若宿主截断 JSON，先报告未收齐，不能从不完整字段猜下一页。

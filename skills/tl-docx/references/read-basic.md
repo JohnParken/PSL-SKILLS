@@ -1,7 +1,5 @@
 # 普通读取
 
-路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
-
 ```console
 "<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" read "文档.docx" --max-output-bytes 12000
 ```

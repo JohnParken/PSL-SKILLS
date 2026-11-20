@@ -1,27 +1,37 @@
 """Read location-addressed text and object records from a DOCX package."""
 
 from collections import Counter
-from hashlib import sha256
 
 from tl_resource_limits import check_count, validate_report
+from tl_read_drawings import (
+    A_NS,
+    C_NS,
+    PIC_NS,
+    R_NS,
+    V_NS,
+    WPG_NS,
+    WP_NS,
+    WPS_NS,
+    W_NS,
+    _is_ns,
+    _is_word,
+    _name,
+    chart,
+    chart_series,
+    drawing,
+    drawing_properties,
+    drawing_textbox,
+    image,
+    textbox,
+)
 from tl_read_numbering import NumberingReader
 from tl_read_parts import PartCatalog, STORIES, section_references
 from tl_read_styles import read_styles, heading_outline
-from tl_read_charts import read_chart
 from tl_read_revisions import revision_issues, revision_text, selected_children, text
 
 
-W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
-WP_NS = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
-A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
-C_NS = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 M_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math"
-V_NS = "urn:schemas-microsoft-com:vml"
-WPS_NS = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
-WPG_NS = "http://schemas.microsoft.com/office/word/2010/wordprocessingGroup"
-PIC_NS = "http://schemas.openxmlformats.org/drawingml/2006/picture"
 SUPPORTED_CHOICES = {A_NS, C_NS, PIC_NS, WP_NS, WPS_NS, WPG_NS}
 WRAPPERS = {
     "sdt", "sdtContent", "customXml", "ins", "del", "moveFrom", "moveTo",
@@ -34,15 +44,6 @@ STORY_ROOTS = {
     "header": "hdr", "footer": "ftr", "footnote": "footnotes",
     "endnote": "endnotes", "comment": "comments",
 }
-
-
-def _name(tag):
-    if not isinstance(tag, str):
-        return "", ""
-    if tag.startswith("{"):
-        namespace, local = tag[1:].split("}", 1)
-        return namespace, local
-    return "", tag
 
 
 def _qname(node):
@@ -81,14 +82,6 @@ def _path(node, sibling_indexes=None):
         parts.append(_qname(current) + "[" + str(index) + "]")
         current = parent
     return "/" + "/".join(reversed(parts))
-
-
-def _is_word(node, local):
-    return node.tag == "{" + W_NS + "}" + local
-
-
-def _is_ns(node, namespace, local):
-    return node.tag == "{" + namespace + "}" + local
 
 
 def _children(node):
@@ -403,234 +396,25 @@ class ReportReader:
         return relation
 
     def _drawing_properties(self, node):
-        current = node
-        while current is not None:
-            for child in current.iter():
-                if _is_ns(child, WP_NS, "docPr") or _is_ns(child, PIC_NS, "cNvPr"):
-                    values = {}
-                    for key, attribute in (
-                        ("description", "descr"), ("title", "title"), ("name", "name"),
-                    ):
-                        value = child.get(attribute)
-                        if value:
-                            values[key] = value
-                    if values:
-                        return values
-            if _is_word(current, "p"):
-                break
-            current = current.getparent()
-        return {}
+        return drawing_properties(node)
 
     def _drawing(self, node, part, context):
-        before_records, before_issues = len(self.records), len(self.issues)
-
-        def visit(current):
-            for child in self._selected_children(current, part):
-                namespace, local = _name(child.tag)
-                if (namespace == WPS_NS and local == 'wsp') or (namespace == V_NS and local in {'shape', 'rect', 'oval', 'line', 'polyline', 'roundrect', 'arc', 'curve'}):
-                    self._issue('drawing_geometry_not_rendered', part, self._path(child),
-                                available_content='supported_text_and_image_references_only')
-                if local == 'relIds' and namespace == 'http://schemas.openxmlformats.org/drawingml/2006/diagram':
-                    self._issue('smartart_content_not_decoded', part, self._path(child))
-                if _is_ns(child, A_NS, 'graphicData'):
-                    uri = child.get('uri')
-                    if uri and uri not in (C_NS, PIC_NS, WPS_NS, WPG_NS):
-                        self._issue('drawing_graphic_data_unsupported', part, self._path(child), namespace=uri)
-                if _is_word(child, "txbxContent"):
-                    self._textbox(child, part, context)
-                    continue
-                if _is_ns(child, A_NS, "txBody"):
-                    self._drawing_textbox(child, part, context)
-                    continue
-                if _is_ns(child, A_NS, "blip") or _is_ns(child, V_NS, "imagedata"):
-                    self._image(child, part, context)
-                    continue
-                if _is_ns(child, C_NS, "chart") or child.tag.endswith("}chart"):
-                    self._chart(child, part, context)
-                    continue
-                visit(child)
-
-        visit(node)
-        if len(self.records) == before_records and len(self.issues) == before_issues:
-            self._issue('drawing_content_not_read', part, self._path(node))
+        drawing(self, node, part, context)
 
     def _textbox(self, node, part, context):
-        paragraphs = self._find_wrapped(node, "p", stop={"tbl", "txbxContent"})
-        texts = [self._text(paragraph) for paragraph in paragraphs]
-        self.textbox_count += 1
-        record = self._record(
-            "textbox", part, node,
-            text="\n".join(texts),
-            paragraph_count=len(texts),
-            text_format="wordprocessingml",
-        )
-        record.update(context)
-        for paragraph in paragraphs:
-            self._paragraph_objects(paragraph, part, context)
-        for table in self._find_wrapped(node, "tbl", stop={"tbl"}):
-            self._table(table, part, context)
+        textbox(self, node, part, context)
 
     def _drawing_textbox(self, node, part, context):
-        paragraphs = []
-        for paragraph in node.iter():
-            if _is_ns(paragraph, A_NS, "p"):
-                pieces = []
-                for child in paragraph:
-                    if _is_ns(child, A_NS, "br"):
-                        pieces.append("\n")
-                    elif _is_ns(child, A_NS, "r") or _is_ns(child, A_NS, "fld"):
-                        pieces.extend(
-                            item.text or "" for item in child.iter()
-                            if _is_ns(item, A_NS, "t")
-                        )
-                paragraphs.append("".join(pieces))
-        self.textbox_count += 1
-        record = self._record(
-            "textbox", part, node,
-            text="\n".join(paragraphs),
-            paragraph_count=len(paragraphs),
-            text_format="drawingml",
-        )
-        record.update(context)
+        drawing_textbox(self, node, part, context)
 
     def _image(self, node, part, context):
-        relationship_id = node.get("{" + R_NS + "}embed")
-        if relationship_id is None:
-            relationship_id = node.get("{" + R_NS + "}link")
-        if relationship_id is None:
-            relationship_id = node.get("{" + R_NS + "}id")
-        relation = self._relation(part, relationship_id, "image") if relationship_id else None
-        properties = self._drawing_properties(node)
-        self.image_references += 1
-        target = None if relation is None else relation.get("target")
-        external = None if relation is None else relation.get("external")
-        resource_part = target if not external and target in self.names else None
-        if resource_part is not None:
-            self.image_targets.add(resource_part)
-        elif relation is not None and not external:
-            self._issue(
-                "image_part_missing", part, self._path(node), relationship_id=relationship_id,
-                target=target,
-            )
-        fields = {
-            "relationship_id": relationship_id,
-            "resource_part": resource_part,
-            "target": target,
-            "external": external,
-            "relationship_type": None if relation is None else relation.get("type"),
-            **properties,
-        }
-        fields.update(context)
-        if resource_part in self.names:
-            if resource_part not in self.image_hashes:
-                self.image_hashes[resource_part] = sha256(self.package.read(resource_part)).hexdigest()
-            fields["resource_sha256"] = self.image_hashes[resource_part]
-        self._record("image", part, node, **fields)
-        if relationship_id is None or relationship_id == "" or relation is None:
-            self._issue("image_relationship_unavailable", part, self._path(node), relationship_id=relationship_id)
+        image(self, node, part, context)
 
     def _chart(self, node, part, context):
-        relationship_id = node.get("{" + R_NS + "}id")
-        relation = self._relation(part, relationship_id, "chart") if relationship_id else None
-        chart_index = self.chart_count + 1
-        target = None if relation is None or relation.get("external") else relation.get("target")
-        chart_data = {"title": None, "series": [], "external_data_id": None, "issues": []}
-        if target is not None and target in self.names:
-            try:
-                chart_root = self.package.xml(target)
-            except ValueError as exc:
-                if str(exc) != 'Malformed XML part':
-                    raise
-                chart_data['issues'].append('chart_part_unreadable')
-            else:
-                try:
-                    chart_data = read_chart(chart_root)
-                except (KeyError, TypeError, ValueError):
-                    chart_data['issues'].append('chart_part_unreadable')
-        elif relation is None:
-            chart_data["issues"].append("chart_relationship_unavailable")
-        elif relation.get("external"):
-            chart_data["issues"].append("external_chart_not_read")
-        else:
-            chart_data["issues"].append("chart_part_missing")
-
-        workbook = None
-        external_id = chart_data.get("external_data_id")
-        if external_id and target:
-            workbook = self._relation(target, external_id, None)
-            if workbook is None:
-                chart_data["issues"].append("chart_workbook_relationship_unavailable")
-            elif not workbook.get("type", "").endswith(("/package", "/oleObject")):
-                self._issue(
-                    "relationship_type_unexpected", target, self._path(node),
-                    relationship_id=external_id,
-                    expected=["package", "oleObject"],
-                    actual=workbook.get("type"),
-                )
-                chart_data["issues"].append("chart_workbook_relationship_unavailable")
-            elif workbook.get("external"):
-                chart_data["issues"].append("external_workbook_not_followed")
-            elif workbook.get("target") in self.names:
-                chart_data["issues"].append("embedded_workbook_not_read")
-            else:
-                chart_data["issues"].append("embedded_workbook_part_missing")
-
-        self.chart_count += 1
-        chart_record = self._record(
-            "chart", part, node,
-            chart_index=chart_index,
-            chart_part=target,
-            relationship_id=relationship_id,
-            title=chart_data.get("title"),
-            annotations=chart_data.get("annotations", []),
-            series_count=len(chart_data.get("series", [])),
-            workbook_source=workbook,
-            issues=list(dict.fromkeys(chart_data.get("issues", []))),
-        )
-        chart_record.update(context)
-        for code in chart_record["issues"]:
-            self._issue(code, target or part, self._path(node), chart_index=chart_index)
-        for series in chart_data.get("series", []):
-            self._chart_series(chart_index, target or part, series)
+        chart(self, node, part, context)
 
     def _chart_series(self, chart_index, part, series):
-        points = series.get("points", [])
-        numeric_count = 0
-        for point in points:
-            value = point.get("value")
-            if value is not None:
-                numeric_count += 1
-        self.chart_series_count += 1
-        self.chart_numeric_count += numeric_count
-        record = {
-            "type": "chart_series",
-            "part": part,
-            "path": series.get("path", "/"),
-            "chart_index": chart_index,
-            "series_index": series.get("series_index"),
-            "source_index": series.get("source_index"),
-            "chart_type": series.get("chart_type"),
-            "name": series.get("name"),
-            "name_formula": series.get("name_formula"),
-            "category_formula": series.get("category_formula"),
-            "value_formula": series.get("value_formula"),
-            "category_source": series.get("category_source"),
-            "value_source": series.get("value_source"),
-            "format_code": series.get("format_code"),
-            "points": points,
-            "numeric_value_count": numeric_count,
-            "issues": series.get("issues", []),
-        }
-        for key in ('category_levels', 'x_formula', 'x_source', 'x_format_code',
-                    'y_formula', 'y_source', 'y_format_code', 'bubble_size_formula',
-                    'bubble_size_source', 'bubble_size_format_code'):
-            if key in series:
-                record[key] = series[key]
-        self.records.append(record)
-        self.counts["chart_series"] += 1
-        for code in record["issues"]:
-            self._issue(code, part, record["path"], chart_index=chart_index,
-                        series_index=record["series_index"])
+        chart_series(self, chart_index, part, series)
 
     def _find_wrapped(self, node, local, stop=None):
         stop = stop or set()

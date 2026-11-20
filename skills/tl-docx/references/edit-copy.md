@@ -1,7 +1,5 @@
 # 修改副本
 
-路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
-
 ```sh
 "<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" edit "原报告.docx" "修订版.docx" <<'JSON'
 {"operations":[{"type":"format_run","paragraph_index":0,"expected_text":"原文标题","run_index":0,"expected_run_text":"原文标题","format":{"font_east_asia":"黑体","size_pt":18}}]}

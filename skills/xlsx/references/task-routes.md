@@ -1,7 +1,5 @@
 # XLSX 专项任务路由
 
-路径占位符说明：`<skill-root>` 指本次实际读取 XLSX 主入口 `SKILL.md` 的真实 `file_path` 去掉文件名所得目录；相对路径先按本次已确认的读取基准解析。它不是 Shell 变量，也不是当前参考文档目录。使用前整体替换为真实根目录，并将替换后的完整路径作为一个参数正确引用；无法定位时停止，不猜工作目录、环境变量、其他会话路径或宿主掩码。脚本、参考、模板及依赖清单均从该根目录定位。
-
 普通读取和简单静态创建直接使用主入口，无需本页。只在明确需要下表专项能力时读取本页，再直达该项；不要展开全部参考。
 
 ## 按当前任务选择
@@ -32,5 +30,5 @@
 
 上述分析专项与 `<skill-root>/references/analysis-contract.md` 组成必需并集，不经 data-analysis 大导航；仅命中基础统计或 ET JSON 消费才读 data-analysis；ET 另加来源契约。专项明确要求的业务依赖仍须读取；导出或创建配置文件还须按写入/收尾规则管理。锚点只定位文字，不是 read_file 的选段参数；按真实 schema 读取，返回截断时补齐所需约束后再执行。
 
-维护跨技能接口时才读 `<skill-root>/scripts/docs/cli-contract.md`；迁移旧内存调用才读 `<skill-root>/references/workflow-api.md`。不把维护或历史验收资料加载到普通业务任务。
+维护跨技能接口时才读 `<skill-root>/references/cli-contract.md`；迁移旧内存调用才读 `<skill-root>/references/workflow-api.md`。不把维护或历史验收资料加载到普通业务任务。
 

@@ -1,6 +1,6 @@
 ---
 name: xlsx
-version: "20261119.0634.2207"
+version: "20261120.2147.0000"
 description: 读取 XLSX/XLSM、创建 XLSX 报告、修改指定单元格及导入导出 CSV/TSV，适合区域统计、分组汇总、表间核对与公式子集计算。保留原件并报告缓存和未计算项；不做任意结构编辑或直接处理 XLS/XLSB、ET；多源填入既有模板交给 table-workflow。
 license: MIT
 ---
@@ -68,7 +68,7 @@ execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-roo
 | 工具失败/截断或自检异常 | 分别读 `<skill-root>/references/tool-execution.md`、`<skill-root>/references/environment-results.md` |
 | 自建临时文件、归档故障或清理恢复 | `<skill-root>/references/delivery-lifecycle.md` |
 
-复杂规格用 Python dict/list 和 JSON 序列化，不手拼长 JSON；需要时读 `<skill-root>/references/complex-json.md`。锚点不是 read_file 选段参数，按真实 schema 读取并补齐截断。维护接口才读 `<skill-root>/scripts/docs/cli-contract.md`；旧内存调用迁移才读 `<skill-root>/references/workflow-api.md`。
+复杂规格用 Python dict/list 和 JSON 序列化，不手拼长 JSON；需要时读 `<skill-root>/references/complex-json.md`。锚点不是 read_file 选段参数，按真实 schema 读取并补齐截断。维护接口才读 `<skill-root>/references/cli-contract.md`；旧内存调用迁移才读 `<skill-root>/references/workflow-api.md`。
 
 ## 读取与输出选择
 

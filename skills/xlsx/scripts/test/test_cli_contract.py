@@ -22,7 +22,7 @@ from xlsx_cli import Session, capabilities, verify
 
 class ContractTests(unittest.TestCase):
     def test_capabilities_and_documented_operations_match(self):
-        doc = (SCRIPTS/'docs'/'cli-contract.md').read_text(encoding='utf-8')
+        doc = (SCRIPTS.parent/'references'/'cli-contract.md').read_text(encoding='utf-8')
         self.assertEqual(capabilities()['protocol'], PROTOCOL)
         for operation in capabilities()['operations']:
             self.assertIn(operation, doc)
@@ -75,7 +75,7 @@ class ContractTests(unittest.TestCase):
 
     def test_document_wire_example_is_executable(self):
         import re
-        doc = (SCRIPTS/'docs'/'cli-contract.md').read_text(encoding='utf-8')
+        doc = (SCRIPTS.parent/'references'/'cli-contract.md').read_text(encoding='utf-8')
         raw = re.search(r'```json\n([^`]+)\n```', doc).group(1).encode('utf-8')
         child = subprocess.run([sys.executable, '-I', '-S', '-B', str(SCRIPTS/'xlsx_cli.py'), 'call'], input=raw+b'\n', capture_output=True)
         self.assertEqual(child.returncode, 0, child.stderr)

@@ -1,7 +1,5 @@
 # 批量填充模板
 
-路径占位符说明：从宿主实际读取本主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`。相对读取路径先按宿主确认的基准目录解析。调用前替换 `<skill-root>` 并引用完整路径。无法定位或确认执行器映射时停止并报告。
-
 ```sh
 "<skill-root>/scripts/.venv/bin/python" -I -B "<skill-root>/scripts/tl_docx.py" replace 模板.docx 已填充.docx --require-no-placeholders <<'JSON'
 {"parts":["word/document.xml","word/header1.xml"],"replacements":[{"old":"{{ 公司 }}","new":"星河科技","count":2},{"old":"{{ 标题 }}","new":"月报"}]}
