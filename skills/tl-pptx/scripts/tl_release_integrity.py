@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import stat
 
-PIN = "84474e5296c66d39c1848eb1408a1144d20f55c261e451575278c9f231328aef"
+PIN = "2e870de7df7ceeee2e86c0babd3b56c835fa9b4a6eabe819d569a8aa678dfdad"
 INDEX = "references/tl-release-integrity.json"
 SELF = "scripts/tl_release_integrity.py"
 

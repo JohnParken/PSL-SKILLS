@@ -1,5 +1,7 @@
 # ET高级兼容、命名区域与审计
 
+按需单篇加载提示：本页仅作为专项路由目录；处理具体格式兼容、编号或命名问题时，只加载命中的那一篇子参考（如 `biff8-defined-names.md`、`et-noncell-compatibility.md`、`embedded-charts.md` 或 `et-ett-readonly.md`），不要把同组其他格式参考一并预先展开。
+
 维护资源说明：文中 `docs/maintenance/et/` 与 `skills/et/scripts/test/` 均以宿主确认的仓库根目录为基准，仅供源码维护，不随运行包分发；运行任务不读取或执行。没有仓库时跳过维护资料，不按 Skill 安装目录拼接。
 
 所有公开入口（文件 API、读取 CLI、read/metadata 协议、BIFF/OOXML 分支）统一使用内容优先的容错读取，不再提供 strict/legacy 策略。旧 `--compatibility`、`--salvage-unknown-metadata`、`--chart-policy` 仅为兼容而接受：不改变行为，读取结果附加一次 `compatibility_option_ignored`、`salvage_option_ignored` 或图表忽略诊断。BIFF8 接受有明确编码编号的 CodePage 874、932、936、949、950、1200、1250、1251、1252 作为声明元数据保留，不重新编码或转换保存值；未知 CodePage、缺失 Date1904 或 WsBool 降级为 issue 并继续读取原始保存值。详细边界见非单元格拒绝分类（`<skill-root>/references/et-noncell-compatibility.md`）。

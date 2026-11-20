@@ -19,6 +19,7 @@ import stat
 import struct
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -34,14 +35,16 @@ NAMES = ('artifact-lifecycle', 'bank-writing', 'document-navigation', 'docx', 'e
 # imports fail in each directly tested runtime. This is not an OS security
 # sandbox and is not inherited by workflow's explicitly addressed subprocesses.
 RUNTIME_GUARD = """import json, os, runpy, sys
-entry, denied_json = sys.argv[1:3]
+entry, denied_json, allowed_json = sys.argv[1:4]
 denied = json.loads(denied_json)
-sys.argv = [entry] + sys.argv[3:]
+allowed = json.loads(allowed_json)
+sys.argv = [entry] + sys.argv[4:]
 def audit(event, args):
     if event == 'open' and isinstance(args[0], (str, bytes, os.PathLike)):
         path = os.path.realpath(os.fsdecode(args[0]))
-        if any(path == root or path.startswith(root + os.sep) for root in denied):
-            raise PermissionError('Independent runtime attempted undeclared source/package access: ' + path)
+        if not any(path == root or path.startswith(root + os.sep) for root in allowed):
+            if any(path == root or path.startswith(root + os.sep) for root in denied):
+                raise PermissionError('Independent runtime attempted undeclared source/package access: ' + path)
 sys.addaudithook(audit)
 runpy.run_path(entry, run_name='__main__')
 """
@@ -130,10 +133,13 @@ class SkillRuntimePackages(unittest.TestCase):
         if name == 'skill-development-standards':
             allowed.update(NAMES)
         denied = [str(ROOT.resolve())] + [str(path.resolve()) for key, path in self.installs.items() if key not in allowed]
+        allowed_paths = []
+        if site_packages:
+            allowed_paths = [os.path.realpath(p) for p in (sysconfig.get_path('purelib'), sysconfig.get_path('platlib'), sys.prefix) if p]
         flags = ['-I', '-B'] if site_packages else ['-I', '-S', '-B']
         result = subprocess.run([sys.executable, *flags, '-c', RUNTIME_GUARD,
                                  str(self.installs[name] / 'scripts' / script), json.dumps(denied),
-                                 *map(str, args)], cwd=self.work, env=self.env, text=True,
+                                 json.dumps(allowed_paths), *map(str, args)], cwd=self.work, env=self.env, text=True,
                                 input=None if payload is None else json.dumps(payload, ensure_ascii=False),
                                 capture_output=True, timeout=90)
         self.assertIn(result.returncode, expected if isinstance(expected, tuple) else (expected,),

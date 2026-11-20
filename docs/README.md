@@ -37,15 +37,15 @@
 | [bank-writing](skills/bank-writing.md) | 20261119.0634.2207 | 银行材料写作、月报与跨期经营分析；讲话、客户投诉及公关，邮件短结构与可选合成示例；仅交付文本，表格计算按需交接。 |
 | [docx](skills/docx.md) | 20261120.2019.5451 | DOCX 创建、DOCX/DOTX 读取与受控编辑。默认可读全文或按章节读取正文、表内连续编号与公式存储文本、文本框、合并表格、图表缓存及图片引用。显式 --report 保留结构JSON，续读复用解析结果。 |
 | [tl-docx](skills/tl-docx.md) | 20261120.2147.0000 | 基于 python-docx 的独立 Word 入口。普通读取默认有用内容与图表，`--full` 获取完整记录；支持继承标题、表格/图表缓存、报告导出、Profile、分节尺寸、模板替换与受控编辑。 |
-| [xlsx](skills/xlsx.md) | 20261120.2147.0000 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
+| [xlsx](skills/xlsx.md) | 20261120.2315.3746 | 电子表格读取、创建、受控编辑、公式子集及分析；不直接读取 ET/ETT。 |
 | [wps](skills/wps.md) | 20261120.2147.0000 | 默认精简 content 读取文字、表格/嵌套关系、对象文字及支持的二进制/OOXML 图表保存值；PNG和布局证据显式 maximum，原结构显式 --profile full；创建或重排 RTF，从 DOCX 导出 RTF/MS-DOC。 |
-| [et](skills/et.md) | 20261120.2147.0000 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
-| [ofd](skills/ofd.md) | 20261120.2054.3020 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
+| [et](skills/et.md) | 20261120.2315.3746 | ET/ETT 的 BIFF5/7核心、BIFF8/OOXML 保存值；CLI 默认有界内容页（含支持的 OOXML 图表保存值，可续读），原 schema 用 --profile full；有限数字格式与富文本解释、BIFF8 批注与超链接只读元数据、表头预览与统计；不重算公式、不写回办公文件。 |
+| [ofd](skills/ofd.md) | 20261120.2315.3746 | OFD 1.0/1.1/1.2 默认按页读取标题、文字与页码，明确要求时读取结构；支持模板/页面文字筛选及长段游标续读；创建、生成和编辑服务暂不提供。 |
 | [pptx](skills/pptx.md) | 20261119.0634.2207 | 受限 SVG 创建；默认文字/备注、结构化表格和图表保存值，内容/数学缺口诊断；整页或显式页内续读，按需加载参考；不任意编辑。 |
-| [tl-pptx](skills/tl-pptx.md) | 20261120.2147.0000 | 完整原生能力与安全入口迁移；纯离线本地执行且无浏览器渲染预览，支持批量文本测量/SVG 预检、SVG 新建/完整 builder/导入重建，保留模板和普通备注，移除旁白/字幕/视频及旧布尔轮廓残留。 |
+| [tl-pptx](skills/tl-pptx.md) | 20261120.2315.3746 | 完整原生能力与安全入口迁移；纯离线本地执行且无浏览器渲染预览，支持批量文本测量/SVG 预检、SVG 新建/完整 builder/导入重建，保留模板和普通备注，移除旁白/字幕/视频及旧布尔轮廓残留。 |
 | [table-workflow](skills/table-workflow.md) | 20261120.2054.3020 | 多源聚合、维表补列、业务勾稽与既有 XLSX 模板填报；显式依赖 XLSX，ET 来源另依赖 ET。 |
 | [artifact-lifecycle](skills/artifact-lifecycle.md) | 20261120.2054.3020 | 显式临时清单、已验收产物归档、封存与受控清理；不生成或验收业务内容。 |
-| [skill-development-standards](skills/skill-development-standards.md) | 20261120.2054.3020 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
+| [skill-development-standards](skills/skill-development-standards.md) | 20261120.2315.3746 | Skill 维护规范与静态检查器；结构检查不能替代真实业务、视觉或宿主验收。 |
 
 ## 整体架构图
 

@@ -1,6 +1,6 @@
 # OFD：默认文本读取
 
-文档核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261120.2054.3020`。业务执行以本轮所需 Skill 及参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
+文档核对日期：2026-11-12。本文历史源码参考基线 [`9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7`](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)，当前 Skill 版本为 `20261120.2315.3746`。业务执行以本轮所需 Skill 及参考为准；本文说明当前读取路径；OFD 写入服务暂不提供。
 
 读取脚本只向 stdout 返回结果，不创建 OFD 或磁盘结果。若需要保存 JSON，由宿主在已确认任务根目录安全创建新文件，不覆盖已有文件。输入路径、内部归档与受控临时工作区按原规则处理。
 
@@ -48,7 +48,7 @@ flowchart TD
 | [read_ofd.py](../../skills/ofd/scripts/read_ofd.py) | 只读 CLI/API、显式结构兼容入口、版本策略、页面与文字编排、输出投影和兼容导出 |
 | [ofd_common.py](../../skills/ofd/scripts/ofd_common.py) | 共享限制与异常、环境自检、受限文件读取、包路径及 XML/文字原语 |
 | [ofd_package.py](../../skills/ofd/scripts/ofd_package.py) | ZIP/XML 安全解析、预算、引用与不透明载荷角色 |
-| [ofd_structure.py](../../skills/ofd/scripts/ofd_structure.py) | XML 存储目录、文字来源与页面出现交叉索引 |
+| [ofd_structure.py](../../skills/ofd/scripts/ofd_structure.py) | XML 存储目录、文字来源、页面出现交叉索引及有界阅读投影（`project_output` / `project_reading`） |
 | [package_ofd.py](../../tools/package_ofd.py) | 维护分发包；排除私人字体和缓存，使用新 ZIP 文件，不属于业务生成入口 |
 
 ## 任务流程

@@ -1,6 +1,6 @@
 # TL PPTX：完整原生能力迁移与安全入口
 
-Skill 版本：`20261120.2147.0000`。第二阶段离线精简版，已改为独立发行完整性核验；纯离线本地运行、无无头浏览器/视觉渲染预览，开放离线批量 `text-measure`/`svg-check` 预检并清理了未启用的旧 `skia-pathops`/`uharfbuzz` 布尔/轮廓脚本、`sound_sync.py` 及空 `tts_backends/` 目录。本页以仓库根目录为维护基准；运行请读 [SKILL.md](../../skills/tl-pptx/SKILL.md)。
+Skill 版本：`20261120.2315.3746`。第二阶段离线精简版，已改为独立发行完整性核验；纯离线本地运行、无无头浏览器/视觉渲染预览，开放离线批量 `text-measure`/`svg-check` 预检并清理了未启用的旧 `skia-pathops`/`uharfbuzz` 布尔/轮廓脚本、`sound_sync.py` 及空 `tts_backends/` 目录。本页以仓库根目录为维护基准；运行请读 [SKILL.md](../../skills/tl-pptx/SKILL.md)。
 
 ## 目标和当前能力
 

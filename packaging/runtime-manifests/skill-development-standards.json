@@ -2,6 +2,7 @@
   "schema_version": 1,
   "files": [
     "SKILL.md",
+    "references/checker-and-advanced-rules.md",
     "requirements.txt",
     "scripts/check_skill.py",
     "scripts/test/test_check_skill.py",

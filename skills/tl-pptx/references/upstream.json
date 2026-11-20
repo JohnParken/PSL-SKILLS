@@ -12269,8 +12269,8 @@
     },
     {
       "target": "scripts/svg_to_pptx/drawingml/converter_entry.py",
-      "sha256": "667001275d76077d16d66f4eb2b6fb90ab71cbf0035f4114996afcf051d9d93a",
-      "bytes": 26475,
+      "sha256": "da24d30db5804abd64905aded3feee8c42dfcb994f9a0586fddae88e6307eaf3",
+      "bytes": 26880,
       "stage1_record": {
         "target": "scripts/svg_to_pptx/drawingml/converter_entry.py",
         "sha256": "667001275d76077d16d66f4eb2b6fb90ab71cbf0035f4114996afcf051d9d93a",
@@ -13097,8 +13097,8 @@
     },
     {
       "target": "scripts/svg_to_pptx/drawingml/elements_text.py",
-      "sha256": "f085257aaa0efe5343496d4ab439117c4e273cc1c8a7d8c1538a21dee50c6c3d",
-      "bytes": 27655,
+      "sha256": "cff97f1dc1ddbef7fcf3ce714ae7e34d2142c24b83266d5691d16d8f69bab7e8",
+      "bytes": 27906,
       "stage1_record": {
         "target": "scripts/svg_to_pptx/drawingml/elements_text.py",
         "sha256": "f085257aaa0efe5343496d4ab439117c4e273cc1c8a7d8c1538a21dee50c6c3d",
@@ -20749,7 +20749,7 @@
       "new_local_adapter_or_guard": 18
     }
   },
-  "skill_version": "20261120.2147.0000",
+  "skill_version": "20261120.2315.3746",
   "removed_from_runtime": [
     {
       "target": "scripts/narration_sync.py",
