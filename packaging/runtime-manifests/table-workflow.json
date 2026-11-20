@@ -2,10 +2,10 @@
   "schema_version": 1,
   "files": [
     "SKILL.md",
+    "references/cli-contract.md",
     "references/plan-contract.md",
     "references/quality-and-lookups.md",
     "requirements.txt",
-    "scripts/docs/cli-contract.md",
     "scripts/table_workflow.py",
     "scripts/table_workflow_cli_protocol.py",
     "scripts/workflow_cli_client.py",

@@ -1,6 +1,6 @@
 # table-workflow：多源表格分析与模板填报
 
-> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261119.0634.2207`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
+> 核对日期：2026-11-07；历史源码参考基线：[9fcf9fc](https://github.com/JohnParken/PSL-SKILLS/tree/9fcf9fca339dd0f6491f7e64e4777f9dc57e61a7)；Skill 版本：`20261120.2054.3020`。本文是仓库级实现导读，不替代 [SKILL.md](../../skills/table-workflow/SKILL.md) 的运行约束。源码与契约审查之外，此前文档定点回归另见 [历史核验记录](../skill-docs-validation-20261107.json)，不代表真实业务或全量验收。
 
 所有业务交付文件入口只接收裸文件名，脚本固定写入已确认任务根目录 `./`；`./文件名`、子目录、绝对/父目录及 Windows 路径均拒绝。输入路径、内部归档与受控临时工作区保持原规则，多产物分别提供不同裸文件名。旧带目录输出的 CLI/API 调用需迁移，不通过切换到输入或安装目录规避。
 
@@ -45,7 +45,7 @@ flowchart TD
 
 **当前标准 CLI 默认采用跨进程公开能力，不直接导入相邻 Skill 的私有 Python 对象。** `Dependencies` 虽继承 `LegacyDependencies`，其构造器不调用旧构造器；只复用通用环境逻辑，并在已确认根下查询能力、启动 CLI。`WorkbookView` 是分离快照加不透明句柄，不是提供方的 `Workbook.parts/sheets/changed` 私有状态。
 
-`LegacyDependencies` 只保留给显式旧内存集成及兼容回归，标准 CLI 不自动回退它。参考中出现的 `Workbook.from_bytes/region_from_book` 等旧内存接口名称，不能据此将当前默认链路画成私有模块耦合。依据是 [workflow_runtime.py](../../skills/table-workflow/scripts/workflow_runtime.py)、[workflow_cli_client.py](../../skills/table-workflow/scripts/workflow_cli_client.py) 和 [CLI 契约](../../skills/table-workflow/scripts/docs/cli-contract.md)。
+`LegacyDependencies` 只保留给显式旧内存集成及兼容回归，标准 CLI 不自动回退它。参考中出现的 `Workbook.from_bytes/region_from_book` 等旧内存接口名称，不能据此将当前默认链路画成私有模块耦合。依据是 [workflow_runtime.py](../../skills/table-workflow/scripts/workflow_runtime.py)、[workflow_cli_client.py](../../skills/table-workflow/scripts/workflow_cli_client.py) 和 [CLI 契约](../../skills/table-workflow/references/cli-contract.md)。
 
 ### 主要模块与入口
 
@@ -132,7 +132,7 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 
 协议保留 Decimal、bytes、tuple、复合 dict 键类型，使用明确 JSON 标签，不使用 pickle、动态类或远程代码执行。每帧最多 128 MiB、深度 64，拒绝浮点字面量、重复键及非有限值；业务 stdin 的十进制数字则由 `read_request` 直接解析为 Decimal，两者不是同一个报文 schema。
 
-客户端逐次核对协议、关联 ID、`ok` 与业务结果，保留有界 stderr。会话请求超时为 120 秒，stderr 最多保留 8192 字节并标记截断；当前默认 `run_process` 的依赖自检/ET 调用也采用 120 秒，而旧计划参考仍写 60 秒。超时、损坏或未知结果按 uncertain/not_started 等实际状态停止，不自动回退旧 API 或重试有副作用的 publish/delivery。详见 [CLI 契约](../../skills/table-workflow/scripts/docs/cli-contract.md)。
+客户端逐次核对协议、关联 ID、`ok` 与业务结果，保留有界 stderr。会话请求超时为 120 秒，stderr 最多保留 8192 字节并标记截断；当前默认 `run_process` 的依赖自检/ET 调用也采用 120 秒，而旧计划参考仍写 60 秒。超时、损坏或未知结果按 uncertain/not_started 等实际状态停止，不自动回退旧 API 或重试有副作用的 publish/delivery。详见 [CLI 契约](../../skills/table-workflow/references/cli-contract.md)。
 
 ### 资源上限
 
@@ -186,7 +186,7 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 
 ## 验证证据与本次未验证范围
 
-维护证据入口为 [validation.md](../maintenance/table-workflow/validation.md) 和 [CLI 契约的维护记录](../../skills/table-workflow/scripts/docs/cli-contract.md)。跨 Skill 测试位于仓库 `tests/test_table_workflow*.py`，不随该 Skill 单独运行，也不是普通成功任务的必读材料。
+维护证据入口为 [validation.md](../maintenance/table-workflow/validation.md) 和 [CLI 契约的维护记录](../../skills/table-workflow/references/cli-contract.md)。跨 Skill 测试位于仓库 `tests/test_table_workflow*.py`，不随该 Skill 单独运行，也不是普通成功任务的必读材料。
 
 已有记录区分了合成 XLSX/BIFF/OOXML ET 后缀样例、公开银行 XLSX 样本及合成维表/模板；真实银行样本的期望采用独立 OOXML/Fraction 核对，不能据此声称多份真实 ET 附件验收。CLI 记录还包含 macOS/Python 3.12.11 上的公开能力传输、只读独立安装、空外部 PATH、归档及兼容回放。基准中 CLI 比 legacy 有额外序列化成本，不是性能提升证明。
 
@@ -196,8 +196,8 @@ XLSX 依赖必须声明 `interface_version=2`、`delivery_filename_only=true`，
 
 - 运行总入口：[SKILL.md](../../skills/table-workflow/SKILL.md)、[table_workflow.py](../../skills/table-workflow/scripts/table_workflow.py)。
 - 计划与质量：[计划契约](../../skills/table-workflow/references/plan-contract.md)、[质量政策](../../skills/table-workflow/references/quality-and-lookups.md)、[workflow_quality.py](../../skills/table-workflow/scripts/workflow_quality.py)。
-- 默认依赖路径：[workflow_runtime.py](../../skills/table-workflow/scripts/workflow_runtime.py)、[workflow_cli_client.py](../../skills/table-workflow/scripts/workflow_cli_client.py)、[CLI 契约](../../skills/table-workflow/scripts/docs/cli-contract.md)。
-- 格式所有方：[XLSX 公开 CLI](../../skills/xlsx/scripts/xlsx_cli.py)、[XLSX 能力契约](../../skills/xlsx/scripts/docs/cli-contract.md)、[xlsx 导读](xlsx.md)、[ET 主入口](../../skills/et/SKILL.md)。
+- 默认依赖路径：[workflow_runtime.py](../../skills/table-workflow/scripts/workflow_runtime.py)、[workflow_cli_client.py](../../skills/table-workflow/scripts/workflow_cli_client.py)、[CLI 契约](../../skills/table-workflow/references/cli-contract.md)。
+- 格式所有方：[XLSX 公开 CLI](../../skills/xlsx/scripts/xlsx_cli.py)、[XLSX 能力契约](../../skills/xlsx/references/cli-contract.md)、[xlsx 导读](xlsx.md)、[ET 主入口](../../skills/et/SKILL.md)。
 - 新能力回归（本轮执行范围见核验记录）：[名称分页](../../tests/test_table_workflow_names.py)、[大表与批量目标键](../../tests/test_table_workflow_large_tables.py)。
 - 证据边界：[validation.md](../maintenance/table-workflow/validation.md)。
 

@@ -272,10 +272,10 @@ def _root_resources(text: str, rel: str, skill: Path, issues: list[Issue], execu
     notice = next((line for line in prose.splitlines() if line.startswith("路径占位符说明：")), "")
     required_notice = ("<skill-root>", "占位符", "主入口", "SKILL.md", "file_path",
                        "相对", "基准", "去掉", "替换", "完整路径", "停止")
-    if execution and not all(word in notice for word in required_notice):
+    if execution and rel == "SKILL.md" and not all(word in notice for word in required_notice):
         issues.append(Issue("error", "root-notice", rel,
                             "Explain the root placeholder, entry file_path, relative read base, filename removal, "
-                            "full-path substitution and stop condition in every Markdown file."))
+                            "full-path substitution and stop condition in SKILL.md."))
     if re.search(r"<skill[_-]dir>|<skill_root>|\.\./SKILL\.md", text):
         issues.append(Issue("error", "path-style", rel, "Use <skill-root> consistently."))
     for value in re.findall(r"`([^`\n]+)`", prose):

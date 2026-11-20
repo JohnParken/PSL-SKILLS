@@ -195,3 +195,5 @@ execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-roo
 - 对旧式 `hMerge`、包装/修订行单元格、样式链接或继承编号输出 `unverified` 警告。人工核对或报告未验证，禁止把无错误退出解释为这些复杂语义已验证。
 
 不执行完整 XSD、样式继承、阅读器布局和编号计算，也不自动修复输入。不能将“检查通过”表述为全部合并/编号形式都受支持、整份文档符合国家标准或视觉验收通过。
+
+旧版二进制格式拒绝边界见 `<skill-root>/references/binary-reading.md`；不可信文档的 ZIP/XML、备份与回执安全边界见 `<skill-root>/references/security.md`。

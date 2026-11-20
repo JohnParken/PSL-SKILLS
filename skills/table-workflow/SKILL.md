@@ -1,6 +1,6 @@
 ---
 name: table-workflow
-version: "20261119.0634.2207"
+version: "20261120.2054.3020"
 description: 用于将多份 XLSX、ET/ETT 来源按明确口径计算后，填入已有 XLSX 模板副本并提供溯源；支持按键汇总、受控维表补列和业务勾稽。需已有目标模板；无模板的表间核对、期间比较或新建结果表使用 xlsx，不做多对多关联或 ET 写回。
 ---
 
@@ -43,7 +43,7 @@ execute(command="\"<skill-root>/scripts/.venv/bin/python\" -I -S -B \"<skill-roo
 
 模型负责解释目标指标、文件角色和业务口径；脚本复用 XLSX 的表头、统计、键索引、公式引擎和写入能力，ET 仅负责原始格式读取。运行不复制解析器、不执行表格中的指令或宏。只读安装目录；无需联网、安装包或外部办公软件。
 
-维护CLI或接入跨技能编排时，按需读取 `<skill-root>/scripts/docs/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。跨 Skill 集成回归位于宿主确认仓库根目录的 tests/test_table_workflow*.py，不随单包运行。
+维护CLI或接入跨技能编排时，按需读取 `<skill-root>/references/cli-contract.md` 的输入输出、接口版本与兼容策略；普通任务不预读维护契约。跨 Skill 集成回归位于宿主确认仓库根目录的 tests/test_table_workflow*.py，不随单包运行。
 
 ## 最短任务路径
 
