@@ -1,6 +1,6 @@
 ---
 name: tl-pptx
-version: "20261120.1814.3037"
+version: "20261120.2147.0000"
 description: 离线创建可编辑的 PowerPoint 演示文稿，或在保留原生结构的前提下导入与重建已有 PPTX。适合汇报、教学、图片页面重建、按模板制作及版式美化，支持图表、表格、公式、备注和受控动画；不提供联网检索、旁白字幕、视频或浏览器视觉预览，客户端效果另行验收。
 dependency:
   python:
@@ -67,7 +67,7 @@ dependency:
 
 需要备注、转场、`spec_lock` 主题规范或原生往返时直达 `<skill-root>/references/usage.md` 的 build/rebuild 可复制例子。离线模板/图标包（仅在任务目录已提供对应 ZIP 时选用）按需读取 `<skill-root>/references/offline-assets.md`，不全量加载或自动下载。图表/表格/公式直达 `<skill-root>/references/native-objects.md`；需要 SVG 图表样式或视觉风格目录参考时，按需查阅 `<skill-root>/assets/visualizations/charts/charts_index.json` 或 `<skill-root>/assets/template-catalogs/` 索引，不要递归预读全部来源和维护资料。
 
-受门禁保护的入口须通过 tl-pptx 文件清单、来源材料与 SHA-256 检查；失败即停止，禁止模拟成功或绕过。此检查不证明上游官方发行身份，整包真实性需用独立取得的可信发行摘要核对。未开放的库功能不等于业务入口。依赖条件见 `<skill-root>/references/dependency-groups.json`；已安装组件不等于字体授权或 Office 视觉已验收。业务仅使用本表公开入口，缺入口或门禁阻塞时明确报告，不直接绕到内部脚本。
+受门禁保护的入口须通过 tl-pptx 文件清单、来源材料与 SHA-256 检查；失败即停止，禁止模拟成功或绕过。此检查不证明上游官方发行身份，整包真实性需用独立取得的可信发行摘要核对。未开放的库功能不等于业务入口。依赖条件见 `<skill-root>/references/dependency-groups.json`，来源与许可边界见 `<skill-root>/references/upstream.md`；已安装组件不等于字体授权或 Office 视觉已验收。业务仅使用本表公开入口，缺入口或门禁阻塞时明确报告，不直接绕到内部脚本。
 
 ## 范围与结果核验
 

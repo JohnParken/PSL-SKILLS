@@ -1,7 +1,5 @@
 # 来源与独立运行边界
 
-路径占位符说明：从宿主实际读取主入口 `SKILL.md` 的真实 `file_path` 去掉文件名确定 `<skill-root>`；相对读取路径先按本次已确认的基准目录解析。使用前替换占位符并引用完整路径，参考文档目录不是根目录；无法定位时停止并报告，不猜路径。
-
 ## 来源
 
 - 项目：`https://github.com/hugohe3/ppt-master`。
@@ -11,7 +9,7 @@
 - TL 新增公开安全入口对输入做快照、预算与路径校验，在私有任务工作区调用上游核心，再独占发布与归档。保留 `convert` 快捷组包与 `build` 完整 builder 两条明确用途；import/rebuild 从验证后的源 PPTX 重建可信基线。公共生命周期副本自包含，不依赖相邻 Skill。
 - 完整迁移目标与当前可调用入口分开。非官方衍生版核验自身运行清单及 SHA-256，当前七项依赖之外的工具或服务不自动启用；未开放的 CLI 不可绕过。部分支持代码或工作流文档存在不代表部署/服务/视觉验收完成。
 
-大型离线模板/图标/声音库以独立可选数据包保留，轻量清单和许可边界见 `<skill-root>/references/offline-assets.md`、`<skill-root>/references/offline-assets.json`；主包不内嵌大型 ZIP，不自动联网。历史拆分映射保存在 `<skill-root>/references/upstream-splits.json`，其旧哈希不替代当前来源记录。
+大型离线模板/图标/声音库以独立可选数据包保留，轻量清单和许可边界见 `<skill-root>/references/offline-assets.md`、`<skill-root>/references/offline-assets.json`；主包不内嵌大型 ZIP，不自动联网。历史第一阶段拆分映射已归档至仓库维护目录，不随运行包分发，其旧哈希不替代当前来源记录。
 
 逐文件源路径、固定上游 SHA、最终 SHA-256、职责拆分映射及有意差异保存在 `<skill-root>/references/upstream.json`。该清单也记录公共归档副本来源和版本；用于维护与核验，不是普通任务的预读材料。
 

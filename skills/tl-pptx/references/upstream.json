@@ -18013,8 +18013,8 @@
     },
     {
       "target": "scripts/svg_to_pptx/pptx_package/builder_export.py",
-      "sha256": "635befbfd8f62f079202cdaad2934300bff1ed8b6186f3e9a0145175183f73ae",
-      "bytes": 28636,
+      "sha256": "1c5c18eac8cf9dffa1f9e5a2dc1e8a182d946705af80fd293de085d3eaef240d",
+      "bytes": 18489,
       "sources": [
         {
           "repository": "https://github.com/hugohe3/ppt-master",
@@ -18116,8 +18116,42 @@
     },
     {
       "target": "scripts/svg_to_pptx/pptx_package/builder_export_slides.py",
-      "sha256": "fbdb95bcf987d55f6a1b8b2953e94d4886097d0a46319e12c37553876bf2f8e7",
-      "bytes": 48634,
+      "sha256": "46c99e162373d50baa71cf853bac1cac2f93e61a715695839ba7e1b82c708de9",
+      "bytes": 19939,
+      "sources": [
+        {
+          "repository": "https://github.com/hugohe3/ppt-master",
+          "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
+          "path": "skills/ppt-master/scripts/svg_to_pptx/pptx_package/builder.py",
+          "sha256": "8f1a61e2a20cd1924c8801072d69ca889e5875ef083fac3f28e95c7f4ea42c80",
+          "git_blob": "95bde42bd5366817a465eb962a806bb4d78405bc"
+        }
+      ],
+      "origin": {
+        "repository": "https://github.com/hugohe3/ppt-master",
+        "commit": "7e0df6705de0cd24345210d31f07fcb5a32b6900",
+        "path": "skills/ppt-master/scripts/svg_to_pptx/pptx_package/builder.py",
+        "sha256": "8f1a61e2a20cd1924c8801072d69ca889e5875ef083fac3f28e95c7f4ea42c80",
+        "git_blob": "95bde42bd5366817a465eb962a806bb4d78405bc"
+      },
+      "classification": "upstream_adapted_or_split",
+      "changes": [
+        "Historical mapping note: Explicit BuildState phase extraction; reversible statement AST; original try/finally and complete function signature retained.",
+        "Current target bytes differ from the pinned source; source/symbol split evidence is preserved below. No blanket byte-equivalence claim."
+      ],
+      "mapping_evidence": [
+        {
+          "source": "skills/ppt-master/scripts/svg_to_pptx/pptx_package/builder.py",
+          "map": "tl-pptx-builder-map.json",
+          "full_record": "references/upstream-splits.json"
+        }
+      ],
+      "mapping_evidence_status": "Historical worker records; current classification/hash supersede older unchanged/limited-capability claims."
+    },
+    {
+      "target": "scripts/svg_to_pptx/pptx_package/builder_export_slide_helpers.py",
+      "sha256": "a927d0bdf4766e41bf15ab4aa56961f573f630d1b36d4ff3a1742aeba1e7ae0e",
+      "bytes": 16718,
       "sources": [
         {
           "repository": "https://github.com/hugohe3/ppt-master",
@@ -19749,8 +19783,8 @@
     },
     {
       "target": "scripts/svg_to_pptx/pptx_package/template_validation_package.py",
-      "sha256": "48a23632d38617f968b8e8b21261aac505a8237560e53dedfa9e385d7fa69068",
-      "bytes": 32860,
+      "sha256": "b4517d9bcc08d02461f37717df66c403e710f5b61d3e4f48a6176e8afa66107a",
+      "bytes": 35121,
       "sources": [
         {
           "repository": "https://github.com/hugohe3/ppt-master",
@@ -20387,16 +20421,6 @@
       }
     },
     {
-      "target": "scripts/tl_import_api.py",
-      "sha256": "7291a728614b3d1adcb8c2b3d15d77ddae870d80fef725769686a9a2cd48b0fd",
-      "bytes": 168,
-      "classification": "new_local_adapter_or_guard",
-      "origin": {
-        "kind": "new local",
-        "description": "Library compatibility entry; use the host-safe tl-pptx runner for file operations."
-      }
-    },
-    {
       "target": "scripts/tl_package_guard.py",
       "sha256": "0f7668d92e3a7d84ad19cc2b9274161a5691809c8e1b93271bcd542755437d3c",
       "bytes": 15375,
@@ -20706,7 +20730,7 @@
     "Stage2 checkpoint frozen after source refresh; original official-distribution gate remains unresolved, not bypassed. Public capabilities and conditional blocked operations are documented separately.",
     "The redundant four-line importer alias is named tl_import_api.py to avoid a module/package name collision; pptx_to_svg package API and public TL commands remain intact. Generated builder license pointers reference the actual retained reference files."
   ],
-  "split_mapping_file": "references/upstream-splits.json",
+  "split_mapping_file": "docs/maintenance/tl-pptx/upstream-splits.json",
   "integrity_gate_status": {
     "status": "independent_tl_release",
     "official_distribution": false,
@@ -20719,13 +20743,13 @@
     "classifications": {
       "upstream_byte_identical": 190,
       "new_local_asset_index": 3,
-      "upstream_adapted_or_split": 301,
+      "upstream_adapted_or_split": 302,
       "shared_lifecycle_unchanged": 4,
       "adapted": 1,
-      "new_local_adapter_or_guard": 19
+      "new_local_adapter_or_guard": 18
     }
   },
-  "skill_version": "20261120.1814.3037",
+  "skill_version": "20261120.2147.0000",
   "removed_from_runtime": [
     {
       "target": "scripts/narration_sync.py",
@@ -20856,6 +20880,11 @@
       "target": "scripts/svg_to_pptx/text_outline_glyphs.py",
       "prior_sha256": "50470898ca38f21879a186cc16fbfaa512442197f51b5c687e62aa93c4f0566a",
       "reason": "Removed dead upstream text_outline_glyphs module requiring excluded uharfbuzz"
+    },
+    {
+      "target": "scripts/tl_import_api.py",
+      "prior_sha256": "7291a728614b3d1adcb8c2b3d15d77ddae870d80fef725769686a9a2cd48b0fd",
+      "reason": "Removed unreferenced 4-line library compatibility shim"
     }
   ]
 }
