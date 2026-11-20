@@ -99,6 +99,26 @@
   uv run --locked --no-default-groups --no-python-downloads --python 3.12 python -I -S -B tools/run_skill_tests.py tests -p test_skill_loading_benchmark.py
   ```
   TL 套件按需用独立组，如 `uv run --locked --group tl-docx --python 3.12 python -I -B tools/run_skill_tests.py skills/tl-docx/scripts/test`；TL-PPTX 同理选 `tl-pptx`，专项独立安装验收仍按其要求预置环境。不要在需导入第三方包的路径加 `-S`，也不要为标准库 Skill 移除 `-S`。更新任一 TL Skill 的直接依赖时，同步根配置的对应组并运行 `uv lock`；生产依赖仍以该 Skill 的 requirements.txt 为准。
+- **OrbStack Linux 容器全量回归（macOS 宿主机下验证目标 Linux 环境）。**
+  - **隔离原则：** 不要在 Linux 容器内复用宿主机创建的 `.venv/`（包含 macOS 二进制），也不要调用通过 OrbStack `cmdlinks` 转发回宿主机执行的 Mach-O `uv`/Python（会退化为 `darwin` 平台）。应在 Linux 容器内使用原生 `git`、`python3.12` 以及位于仓库外部的 Linux 独立虚拟环境（如 `"$HOME/tl-pptx-venv"`），同时保持系统默认 `python3` 不变。
+  - **一次性环境准备（在容器内执行）：** 安装原生 `git`（供 `test_skill_loading_benchmark.py` 使用）与原生 Linux `uv` / Python `3.12.12`（供 `ofd` 生成、`table-workflow`、`test_skill_runtime_packages.py` 及 `docx` 使用）；在仓库外创建独立 venv（如 `"$HOME/tl-pptx-venv"`）并安装 `skills/tl-pptx/requirements.txt` 与 `skills/tl-docx/requirements.txt`。
+  - **标准库 Skill 测试（保留 `-I -S -B`）：** 若之前在宿主机无 `-B` 运行过 Python，先清理 `skills/` 下残留的 `__pycache__`，避免触发 `pptx` 只读安装快照检查失败：
+    ```sh
+    # 将 <suite> 替换为 docx、et、ofd、pptx、wps、xlsx、artifact-lifecycle、skill-development-standards
+    orb python3.12 -I -S -B tools/run_skill_tests.py skills/<suite>/scripts/test
+    orb python3.12 -I -S -B tools/run_skill_tests.py tests/pptx
+    ```
+  - **TL 系列与仓库集成全量测试（保留 `-I -B`，不加 `-S`）：**
+    ```sh
+    orb bash -c '"$HOME/tl-pptx-venv/bin/python" -I -B tools/run_skill_tests.py skills/tl-docx/scripts/test'
+    orb bash -c 'TL_PPTX_TEST_VENV="$HOME/tl-pptx-venv" "$HOME/tl-pptx-venv/bin/python" -I -B tools/run_skill_tests.py skills/tl-pptx/scripts/test'
+    orb bash -c 'TL_PPTX_TEST_VENV="$HOME/tl-pptx-venv" "$HOME/tl-pptx-venv/bin/python" -I -B tools/run_skill_tests.py tests'
+    ```
+  - **规范与文档检查：**
+    ```sh
+    orb bash -c 'for s in skills/*; do [ -d "$s" ] && python3.12 -I -S -B skills/skill-development-standards/scripts/check_skill.py "$s" --strict; done'
+    orb python3.12 -I -S -B tools/check_project_docs.py
+    ```
 - 使用独立部署解释器不改变非 `tl-` Skill 原有的标准库、外部软件或安装限制，也不放宽独立运行、路径、输入保护、归档清理、代码质量和测试验收要求。组件依赖与维护工具分开管理；随包公共运行时仍遵守其来源契约。
 
 ## 更新时的依赖与说明一致性
